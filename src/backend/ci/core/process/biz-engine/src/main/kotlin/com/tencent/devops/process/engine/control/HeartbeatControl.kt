@@ -42,18 +42,16 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class HeartbeatControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
@@ -114,7 +112,6 @@ class HeartbeatControl @Autowired constructor(
                 "executeCount(${event.executeCount} != ${container.executeCount})")
             return
         }
-        var found = false
 
         // # 5806 完善构建进程超时提示信息
         val tipMessage = I18nUtil.getCodeLanMessage(
@@ -122,32 +119,16 @@ class HeartbeatControl @Autowired constructor(
             params = arrayOf("${TimeUnit.MILLISECONDS.toSeconds(elapse)}")
         )
 
-        // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask = pipelineTaskService.getRunningTask(container.projectId, container.buildId)
-        runningTask.forEach { taskMap ->
-            if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
-                found = true
-                val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
-                buildLogPrinter.addRedLine(
-                    buildId = container.buildId,
-                    message = tipMessage,
-                    tag = taskMap["taskId"].toString(),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
-                )
-            }
-        }
-
-        if (!found) {
-            // #2365 在Set Up Job位置记录心跳超时信息
-            buildLogPrinter.addRedLine(
-                buildId = container.buildId,
-                message = tipMessage,
-                tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerHashId,
-                executeCount = container.executeCount
-            )
-        }
+        // #2365 在Set Up Job位置记录心跳超时信息
+        buildLogPrinter.addRedLine(
+            buildId = container.buildId,
+            message = tipMessage,
+            tag = VMUtils.genStartVMTaskId(container.containerId),
+            containerHashId = container.containerHashId,
+            executeCount = container.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(container.containerId)
+        )
         // 终止当前容器下的任务
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(

@@ -1,5 +1,8 @@
 <template>
-    <div class="pipeline-template-list" v-bkloading="{ isLoading }">
+    <div
+        class="pipeline-template-list"
+        v-bkloading="{ isLoading }"
+    >
         <div class="template-list-content">
             <div class="view-table-wrapper">
                 <template v-if="isEnabledPermission">
@@ -50,7 +53,8 @@
                     @getApiData="getTempFromSelf"
                 >
                 </template-table>
-                <empty-tips v-if="showSelfEmpty"
+                <empty-tips
+                    v-if="showSelfEmpty"
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
                     :btn-disabled="emptyTipsConfig.btnDisabled"
@@ -70,10 +74,17 @@
             :title="$t('template.addTemplate')"
             :cancel-text="$t('cancel')"
             width="480"
-            @confirm="createTemplate">
+            @confirm="createTemplate"
+        >
             <div>
-                <form-field :required="false" :label="$t('template.name')" :is-error="errors.has(&quot;templateName&quot;)" :error-msg="errors.first(&quot;templateName&quot;)">
-                    <input class="bk-form-input"
+                <form-field
+                    :required="false"
+                    :label="$t('template.name')"
+                    :is-error="errors.has(&quot;templateName&quot;)"
+                    :error-msg="errors.first(&quot;templateName&quot;)"
+                >
+                    <input
+                        class="bk-form-input"
                         maxlength="30"
                         :placeholder="$t('template.nameInputTips')"
                         v-focus="isFocus()"
@@ -141,7 +152,27 @@
                     name: '',
                     desc: '',
                     labels: [],
-                    stages: [{ containers: [{ '@type': 'trigger', name: this.$t('buildTrigger'), elements: [{ '@type': 'manualTrigger', name: this.$t('manualTrigger'), id: 'T-1-1-1', canElementSkip: true, useLatestParameters: false, executeCount: 1, canRetry: false, classType: 'manualTrigger', taskAtom: '' }], params: [], canRetry: false, classType: 'trigger' }], id: 'stage-1' }]
+                    stages: [{
+                        containers: [{
+                            '@type': 'trigger',
+                            name: this.$t('buildTrigger'),
+                            elements: [{
+                                '@type': 'manualTrigger',
+                                name: this.$t('manualTrigger'),
+                                id: 'T-1-1-1',
+                                canElementSkip: true,
+                                useLatestParameters: false,
+                                executeCount: 1,
+                                canRetry: false,
+                                classType: 'manualTrigger',
+                                taskAtom: ''
+                            }],
+                            params: [],
+                            canRetry: false,
+                            classType: 'trigger'
+                        }],
+                        id: 'stage-1'
+                    }]
                 },
                 hasCreatePermission: false,
                 isEnabledPermission: false
@@ -260,31 +291,31 @@
 </script>
 
 <style lang='scss'>
-    @import './../../scss/conf';
 
     .pipeline-template-list {
-        padding-bottom: 20px;
-        .template-list-content {
-            margin: 0 auto;
-            padding-top: 16px;
-            width: 1200px;
-            h3 {
-                font-weight: normal;
-                font-size: 16px;
-                .small-title {
-                    font-size: 14px;
-                    vertical-align: middle;
-                    border-bottom: 1px dotted #63656E;
-                    margin-left: 4px;
-                    cursor: pointer;
-                }
-            }
+        padding: 20px 100px;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: auto;
+
+        .template-empty-placeholder {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        > header {
+            width: 100%;
+            text-align: right;
             .add-template {
-                height: 33px;
-                line-height: 31px;
-                padding: 0 13px;
+                flex-shrink: 0;
             }
         }
+
         #templateName {
             margin-top: 3px;
         }

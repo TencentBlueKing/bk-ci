@@ -29,15 +29,19 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
@@ -267,6 +271,34 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
         envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId)
+        return Result(true)
+    }
+
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_EDIT)
+    override fun enableNodeEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashId: String,
+        enableNode: Boolean
+    ): Result<Boolean> {
+        if (!environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = HashUtil.decodeIdToLong(envHashId),
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+        envService.enableNodeEnv(
+            projectId = projectId,
+            envHashId = envHashId,
+            nodeHashId = nodeHashId,
+            enableNode = enableNode
+        )
         return Result(true)
     }
 

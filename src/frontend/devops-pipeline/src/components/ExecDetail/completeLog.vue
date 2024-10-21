@@ -1,17 +1,21 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="execDetail.pipelineName"
         :status="execDetail.status"
         current-tab="log"
     >
         <template v-slot:content>
-            <plugin-log :build-id="execDetail.id" :execute-count="executeCount" :exec-detail="execDetail" />
+            <plugin-log
+                :build-id="execDetail.id"
+                :exec-detail="execDetail"
+                :execute-count="executeCount"
+            />
         </template>
     </detail-container>
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import detailContainer from './detailContainer'
     import pluginLog from './log/pluginLog'
 
@@ -24,13 +28,11 @@
             executeCount: {
                 type: Number,
                 default: 1
+            },
+            execDetail: {
+                type: Object,
+                required: true
             }
-        },
-
-        computed: {
-            ...mapState('atom', [
-                'execDetail'
-            ])
         }
     }
 </script>

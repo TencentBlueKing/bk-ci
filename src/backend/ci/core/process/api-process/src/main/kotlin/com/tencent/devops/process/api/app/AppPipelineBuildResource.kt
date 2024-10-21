@@ -75,7 +75,10 @@ interface AppPipelineBuildResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "手动启动流水线")
@@ -93,7 +96,10 @@ interface AppPipelineBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildId>
 
     @Operation(summary = "手动停止流水线")
@@ -338,6 +344,18 @@ interface AppPipelineBuildResource {
         buildNoEnd: Int?,
         @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
-        buildMsg: String?
+        buildMsg: String?,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>?,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 }

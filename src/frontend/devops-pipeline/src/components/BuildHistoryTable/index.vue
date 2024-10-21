@@ -1,358 +1,673 @@
 <template>
-    <div class="build-history-table-container">
-        <bk-table
-            class="bkdevops-build-history-table"
-            :data="data"
-            :row-class-name="handleRowStyle"
-            :empty-text="$t('history.filterNullTips')"
-            @row-click="handleRowClick"
-            @header-dragend="handleDragend"
-            size="small"
+    <div
+        class="build-history-table-container"
+        v-bkloading="{ isLoading }"
+    >
+        <filter-bar
+            @query="handlePageChange"
+        />
+        <bk-exception
+            class="no-build-history-exception"
+            v-if="!isLoading && !isQuerying && buildHistoryList.length === 0"
+            type="empty"
         >
-            <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
-                <template v-if="col.prop === 'buildNum'" v-slot="props">
-                    <span class="build-num-status">
-                        <router-link
-                            :class="{ [props.row.status]: true }"
-                            :to="getArchiveUrl(props.row)"
-                        >{{ getBuildNumHtml(props.row) }}</router-link
+            <div class="no-build-history-box">
+                <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
+                <div class="no-build-history-box-tip">
+                    <div class="no-build-history-box-rows">
+                        <p
+                            v-for="(row, index) in emptyTips"
+                            :key="index"
                         >
-                        <logo
-                            v-if="props.row.status === 'STAGE_SUCCESS'"
-                            v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')"
-                            name="flag"
-                            class="devops-icon"
-                            size="12"
-                            fill="#34d97b"
-                        />
-                        <i
-                            v-else-if="retryable(props.row)"
-                            title="rebuild"
-                            class="devops-icon icon-retry"
-                            @click.stop="retry(props.row.id)"
-                        />
-                        <i
-                            v-else-if="
-                                props.row.status === 'QUEUE' ||
-                                    props.row.status === 'RUNNING' ||
-                                    !props.row.endTime
-                            "
-                            :class="{
-                                'devops-icon': true,
-                                'spin-icon': true,
-                                'running-icon': true,
-                                'icon-hourglass': props.row.status === 'QUEUE',
-                                'icon-circle-2-1': props.row.status === 'RUNNING' || !props.row.endTime
+                            {{ $t(row) }}
+                        </p>
+                    </div>
+                    <bk-button
+                        v-if="!isReleasePipeline && !isDebug"
+                        @click="goEdit"
+                        theme="primary"
+                        size="large"
+                        v-perm="{
+                            hasPermission: canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        {{ $t('goEdit') }}
+                    </bk-button>
+                    <span
+                        v-else
+                        v-bk-tooltips="tooltip"
+                    >
+                        <bk-button
+                            :disabled="!executable"
+                            @click="buildNow"
+                            theme="primary"
+                            size="large"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
                             }"
                         >
-                        </i>
+                            {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                        </bk-button>
                     </span>
-                </template>
-                <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
-                    <stage-steps
-                        v-if="props.row.stageStatus"
-                        :steps="props.row.stageStatus"
-                    ></stage-steps>
-                    <span v-else>--</span>
-                </template>
-                <template v-else-if="col.prop === 'material'" v-slot="props">
+                </div>
+            </div>
+        </bk-exception>
+        <div
+            class="bkdevops-build-history-table-wrapper"
+            ref="tableBox"
+            :style="{ height: `${tableHeight}px` }"
+            v-else
+        >
+            <bk-table
+                class="bkdevops-build-history-table"
+                :max-height="$refs?.tableBox?.offsetHeight"
+                :data="buildHistoryList"
+                :key="tableColumnKeys.join('-')"
+                :row-class-name="handleRowStyle"
+                :empty-text="$t('history.filterNullTips')"
+                :pagination="pagination"
+                @row-click="handleRowClick"
+                @header-dragend="handleDragend"
+                @page-change="handlePageChange"
+                @page-limit-change="handleLimitChange"
+            >
+                <bk-table-column
+                    v-for="col in tableColumnFields"
+                    v-bind="col"
+                    :prop="col.id"
+                    :label="$t(col.label)"
+                    :key="col.id"
+                    show-overflow-tooltip
+                >
                     <template
-                        v-if="Array.isArray(props.row.material) && props.row.material.length > 0"
+                        v-if="col.id === 'buildNum'"
+                        v-slot="props"
+                    >
+                        <span class="build-num-status">
+                            <router-link
+                                :class="{ [props.row.status]: true }"
+                                :to="getArchiveUrl(props.row)"
+                            >
+                                {{ getBuildNumHtml(props.row) }}
+                            </router-link>
+                            <logo
+                                v-if="props.row.status === 'STAGE_SUCCESS'"
+                                v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')"
+                                name="flag"
+                                class="devops-icon"
+                                size="12"
+                                fill="#34d97b"
+                            />
+                            <i
+                                v-else-if="
+                                    props.row.status === 'QUEUE' ||
+                                        props.row.status === 'RUNNING' ||
+                                        !props.row.endTime
+                                "
+                                :class="{
+                                    'devops-icon': true,
+                                    'icon-hourglass hourglass-queue': props.row.status === 'QUEUE',
+                                    'icon-circle-2-1 spin-icon': props.row.status === 'RUNNING' || !props.row.endTime
+                                }"
+                            >
+                            </i>
+                        </span>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'stageStatus'"
+                        v-slot="props"
+                    >
+                        <stage-steps
+                            v-if="props.row.stageStatus"
+                            :steps="props.row.stageStatus"
+                            :build-id="props.row.id"
+                        ></stage-steps>
+                        <span v-else>--</span>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'material'"
+                        v-slot="props"
                     >
                         <div
-                            @click.stop=""
-                            v-for="material in props.row.material"
-                            :key="material.aliasName"
-                            class="material-item"
+                            class="build-material-cell"
+                            v-for="(material, mIndex) in props.row.visibleMaterial"
+                            :key="mIndex"
                         >
-                            <p
-                                v-bk-tooltips="{
-                                    content: generateMaterial(material),
-                                    delay: [300, 0],
-                                    allowHTML: false
-                                }"
-                                :class="{ 'show-commit-times': material.commitTimes > 1 }"
-                                @click="handleRowClick(props.row)"
-                            >
-                                {{ generateMaterial(material) }}
-                            </p>
+                            <MaterialItem
+                                :material="material"
+                                :show-more="false"
+                                :key="material.aliasName"
+                                @click.stop=""
+                            />
                             <span
-                                class="material-commit-id"
-                                v-if="material.newCommitId"
-                                :title="material.newCommitId"
-                                @click.stop="goCodeRecords(props.row, material.aliasName)"
+                                :class="['commit-times', {
+                                    'commit-times-visible': material.commitTimes > 1
+                                }]"
                             >
-                                <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
-                                <span class="commit-times" v-if="material.commitTimes > 1"
-                                >{{ material.commitTimes }} commit</span
-                                >
+                                {{ material.commitTimes }}
+                            </span>
+                            <span
+                                :class="['show-all-material-entry', 'history-text-link', {
+                                    'show-all-material-entry-visible': props.row.material.length > 3
+                                        && props.row.visibleMaterial.length === mIndex + 1
+                                }]"
+                                @click.stop="showMoreMaterial(props.row, mIndex)"
+                            >
+                                <i class="devops-icon icon-ellipsis" />
                             </span>
                         </div>
+                        <span v-if="props.row.visibleMaterial.length === 0">--</span>
                     </template>
-                    <span v-else>--</span>
-                </template>
-                <template v-else-if="col.prop === 'artifactList'" v-slot="props">
-                    <template v-if="props.row.hasArtifactories">
-                        <div class="artifact-list-cell">
-                            <qrcode
-                                v-if="props.row.active && props.row.shortUrl"
-                                :text="props.row.shortUrl"
-                                :size="76"
-                            >{{ props.row.shortUrl }}</qrcode
-                            >
-                            <p
-                                class="artifact-entry history-text-link"
-                                @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
-                            >
-                                {{ $t("history.fileUnit", [props.row.artifactList.length]) }}（{{
-                                    props.row.sumSize
-                                }}）
-                            </p>
-                        </div>
-                    </template>
-                    <span v-else>--</span>
-                </template>
-                <template v-else-if="col.prop === 'appVersions'" v-slot="props">
-                    <template v-if="props.row.appVersions.length">
-                        <div class="build-app-version-list" v-bk-tooltips="versionToolTipsConf">
-                            <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">
-                                {{ appVersion }}
-                            </p>
-                        </div>
-                        <div id="app-version-tooltip-content">
-                            <p v-for="(appVersion, index) in props.row.appVersions" :key="index">
-                                {{ appVersion }}
-                            </p>
-                        </div>
-                    </template>
-                    <span v-else>--</span>
-                </template>
-                <template v-else-if="col.prop === 'startType'" v-slot="props">
-                    <p class="trigger-cell">
-                        <logo size="14" :name="props.row.startType" />
-                        <span>{{ props.row.userId }}</span>
-                    </p>
-                </template>
-                <template v-else-if="col.prop === 'entry'" v-slot="props">
-                    <p
-                        class="entry-link"
-                        @click.stop="showLog(props.row.id, props.row.buildNum, true)"
+                    <template
+                        v-else-if="col.id === 'artifactList'"
+                        v-slot="props"
                     >
-                        {{ $t("history.completedLog") }}
-                    </p>
-                </template>
-                <template v-else-if="col.prop === 'remark'" v-slot="props">
-                    <div class="remark-cell">
-                        <span
-                            :class="{ 'remark-span': true, active: props.row.active }"
-                            v-bk-tooltips="{
-                                content: props.row.remark,
-                                width: 500,
-                                disabled: !props.row.remark,
-                                delay: [300, 0],
-                                allowHTML: false
-                            }"
-                        >
-                            {{ props.row.remark || "--" }}
-                        </span>
-                        <bk-popover ref="remarkPopup" trigger="click" theme="light" placement="left">
-                            <i
-                                class="devops-icon icon-edit remark-entry"
-                                @click.stop="activeRemarkInput(props.row)"
+                        <template v-if="props.row.hasArtifactories">
+                            <div class="artifact-list-cell">
+                                <p
+                                    class="artifact-entry history-text-link"
+                                    @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
+                                    v-html="`${$t('history.fileUnit', [props.row.artifactList.length])}<span>（${props.row.sumSize}）</span>`"
+                                />
+                                <div
+                                    v-if="props.row.shortUrl"
+                                    @click.stop=""
+                                >
+                                    <bk-popover
+                                        theme="light"
+                                        trigger="click"
+                                        placement="bottom-end"
+                                    >
+                                        <bk-button
+                                            text
+                                            theme="primary"
+                                        >
+                                            <i class="devops-icon icon-qrcode" />
+                                        </bk-button>
+                                        <div
+                                            class="build-qrcode-popup"
+                                            slot="content"
+                                        >
+                                            <span v-html="$t('scanQRCodeView')"></span>
+                                            <qrcode
+                                                :text="props.row.shortUrl"
+                                                :size="76"
+                                            >
+                                                {{ props.row.shortUrl }}
+                                            </qrcode>
+                                        </div>
+                                    </bk-popover>
+                                </div>
+                            </div>
+                        </template>
+                        <span v-else>--</span>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'appVersions'"
+                        v-slot="props"
+                    >
+                        <template v-if="props.row.appVersions.length">
+                            <div
+                                class="build-app-version-list"
+                                v-bk-tooltips="versionToolTipsConf"
+                            >
+                                <p
+                                    v-for="(appVersion, index) in props.row.visibleAppVersions"
+                                    :key="index"
+                                >
+                                    {{ appVersion }}
+                                </p>
+                            </div>
+                            <div id="app-version-tooltip-content">
+                                <p
+                                    v-for="(appVersion, index) in props.row.appVersions"
+                                    :key="index"
+                                >
+                                    {{ appVersion }}
+                                </p>
+                            </div>
+                        </template>
+                        <span v-else>--</span>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'startType'"
+                        v-slot="props"
+                    >
+                        <p class="trigger-cell">
+                            <logo
+                                size="14"
+                                :name="props.row.startType"
                             />
-                            <div slot="content">
+                            <span>{{ props.row.userId }}</span>
+                        </p>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'entry'"
+                        v-slot="props"
+                    >
+                        <p
+                            class="entry-link"
+                            @click.stop="showLog(props.row)"
+                        >
+                            {{ $t("history.completedLog") }}
+                        </p>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'remark'"
+                        v-slot="props"
+                    >
+                        <div class="remark-cell">
+                            <div
+                                @click.stop=""
+                                v-if="activeRemarkIndex === props.row.index"
+                                class="pipeline-build-remark-editor"
+                            >
                                 <bk-input
                                     type="textarea"
                                     ref="remarkInput"
                                     rows="3"
+                                    :disabled="isChangeRemark"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />
-                                <div class="remark-edit-footer">
-                                    <bk-button
-                                        size="small"
-                                        theme="primary"
-                                        @click="handleRemarkChange(props.row)"
-                                    >{{ $t("confirm") }}</bk-button
-                                    >
-                                    <bk-button size="small" @click="resetRemark">{{
-                                        $t("cancel")
-                                    }}</bk-button>
-                                </div>
+                                <i
+                                    v-if="isChangeRemark"
+                                    class="devops-icon icon-circle-2-1 spin-icon"
+                                />
+                                <template v-else>
+                                    <i
+                                        class="devops-icon icon-check-small"
+                                        @click.stop="handleRemarkChange(props.row)"
+                                    />
+                                    <i
+                                        class="devops-icon icon-close-small"
+                                        @click.stop="resetRemark"
+                                    />
+                                </template>
                             </div>
-                        </bk-popover>
-                    </div>
-                </template>
-                <template v-else-if="col.prop === 'pipelineVersion'" v-slot="props">
-                    <div>
-                        <span>{{ props.row[col.prop] }}</span>
-                        <logo
-                            v-if="isNotLatest(props)"
-                            v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
-                            size="12"
-                            class="version-tips"
-                            name="warning-circle"
-                        />
-                    </div>
-                </template>
-                <template v-else-if="col.prop === 'errorCode'" v-slot="props">
-                    <template v-if="props.row.errorInfoList.length > 0">
-                        <div
-                            @click.stop=""
-                            class="error-code-item"
-                            :style="`max-width: ${col.width - 30}px`"
-                            v-for="item in props.row.errorInfoList"
-                            :key="item.taskId"
-                        >
-                            <logo class="svg-error-icon" size="16" :name="item.icon" />
-                            <span
-                                v-bk-tooltips="{
-                                    content: item.title,
-                                    maxWidth: 500,
-                                    delay: [300, 0],
-                                    allowHTML: false
-                                }"
-                                v-if="item.title"
-                            >
-                                {{ item.title }}
-                            </span>
+                            <template v-else>
+                                <span
+                                    :class="{ 'remark-span': true, active: props.row.active }"
+                                    v-bk-tooltips="{
+                                        allowHTML: false,
+                                        content: props.row.remark,
+                                        maxWidth: 500,
+                                        disabled: !props.row.remark, delay: [300, 0]
+                                    }"
+                                >
+                                    {{ props.row.remark || "--" }}
+                                </span>
+                                <i
+                                    class="devops-icon icon-edit-line remark-entry"
+                                    @click.stop="activeRemarkInput(props.row)"
+                                />
+                            </template>
                         </div>
                     </template>
-                    <span v-else>--</span>
-                </template>
-                <template v-else v-slot="props">
-                    {{ props.row[col.prop] }}
-                </template>
-            </bk-table-column>
-            <empty-tips
-                v-if="emptyTipsConfig"
-                class="build-list-table-empty-tips"
-                slot="empty"
-                v-bind="emptyTipsConfig"
-            ></empty-tips>
-        </bk-table>
-        <portal to="artifactory-popup">
-            <div
-                ref="artifactPopup"
-                class="artifact-list-popup"
-                v-show="actifactories.length"
-                v-bk-clickoutside="hideArtifactoriesPopup"
-            >
-                <div class="artifact-list-header">
-                    <h2>{{ $t("history.artifactList") }}</h2>
-                    <span @click.stop="gotoArtifactoryList" class="history-text-link">{{
-                        $t("detail")
-                    }}</span>
-                </div>
-                <span ref="popupTriangle" class="popup-triangle"></span>
-                <ul class="artifact-list-ul" v-if="visibleIndex !== -1">
-                    <li v-for="artifactory in actifactories" :key="artifactory.name">
-                        <p>
-                            <span :title="artifactory.name" class="artifact-name">{{
-                                artifactory.name
-                            }}</span>
-                            <span class="artifact-size">{{ artifactory.size }}</span>
-                        </p>
-                        <bk-popover
-                            v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            ref="popover"
-                            placement="top"
-                            :content="$t('download')"
-                            transfer
-                        >
-                            <i
-                                class="devops-icon icon-download download-link history-text-link"
-                                @click.stop="downloadFile(artifactory)"
-                            />
-                        </bk-popover>
-                        <bk-popover
-                            v-if="artifactory.artifactoryType === 'PIPELINE'"
-                            ref="popover"
-                            placement="top"
-                            :content="$t('history.copyToCustomArtifactory')"
-                            transfer
-                        >
-                            <Logo
-                                class="icon-copy"
-                                name="copy"
-                                size="12"
-                                @click.stop.native="copyToCustom(artifactory)"
-                            ></Logo>
-                        </bk-popover>
-                    </li>
-                    <footer
-                        v-if="needShowAll"
-                        @click.stop="showAllArtifactory"
-                        class="history-text-link"
+                    <template
+                        v-else-if="col.id === 'pipelineVersion'"
+                        v-slot="props"
                     >
-                        {{ $t("history.showAll") }}
-                    </footer>
-                </ul>
-            </div>
-        </portal>
+                        <div>
+                            <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
+                            <logo
+                                v-if="isNotLatest(props)"
+                                v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
+                                size="12"
+                                class="version-tips"
+                                name="warning-circle"
+                            />
+                        </div>
+                    </template>
+                    <template
+                        v-else-if="col.id === 'errorCode'"
+                        v-slot="props"
+                    >
+                        <div
+                            v-if="props.row.errorInfoList.length > 0"
+                            class="error-code-cell"
+                        >
+                            <ul class="error-code-list">
+                                <li
+                                    class="error-code-item"
+                                    v-for="item in props.row.errorInfoList"
+                                    :key="item.taskId"
+                                >
+                                    <span v-if="item.title">{{ $t(item.title) }}</span>
+                                    <span>
+                                        ({{ item.errCode }})
+                                    </span>
+                                </li>
+                            </ul>
+                            <i
+                                @click.stop="showErrorInfoPopup(props.row.index)"
+                                class="devops-icon icon-list"
+                            />
+                        </div>
+                        <span v-else>--</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="!isDebug"
+                    :label="$t('operate')"
+                    fixed="right"
+                    width="80"
+                >
+                    <template v-slot="props">
+                        <bk-button
+                            v-if="retryable(props.row)"
+                            text
+                            theme="primary"
+                            size="small"
+                            @click.stop="retry(props.row.id)"
+                        >
+                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
+                        </bk-button>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    type="setting"
+                    :tippy-options="{ zIndex: 3000 }"
+                >
+                    <TableColumnSetting
+                        ref="tableSetting"
+                        :selected-column-keys="tableColumnKeys"
+                        :all-table-column-map="allTableColumnMap"
+                        @change="handleColumnChange"
+                        @reset="handleColumnReset"
+                    />
+                </bk-table-column>
+                <empty-exception
+                    slot="empty"
+                    type="search-empty"
+                    @clear="clearFilter"
+                />
+            </bk-table>
+        </div>
+
+        <bk-dialog
+            v-model="isShowMoreArtifactories"
+            render-directive="if"
+            :width="640"
+            header-position="left"
+            :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
+            @cancel="hideArtifactoriesPopup"
+        >
+            <p class="artifactory-popup-header">
+                <bk-button
+                    text
+                    theme="primary"
+
+                    @click.stop="gotoArtifactoryList"
+                >
+                    <span class="go-outputs-btn">
+                        <logo
+                            name="tiaozhuan"
+                            size="18"
+                        />
+                        {{ $t("goOutputs") }}
+                    </span>
+                </bk-button>
+            </p>
+            <ul
+                class="build-artifact-list-ul"
+                v-if="visibleIndex !== -1"
+            >
+                <li
+                    v-for="artifactory in actifactories"
+                    :key="artifactory.name"
+                >
+                    <p class="build-artifact-name">
+                        <i :class="['devops-icon', `icon-${artifactory.icon}`]"></i>
+                        <span
+                            :title="artifactory.name"
+                            class="artifact-name-span"
+                        >
+                            {{ artifactory.name }}
+                        </span>
+                        <span class="artifact-size">
+                            ({{ artifactory.size }})
+                        </span>
+                    </p>
+                    <div class="build-artifactory-operation">
+                        <bk-button
+                            v-if="artifactory.artifactoryType !== 'IMAGE'"
+                            text
+                            size="small"
+                            theme="primary"
+                            @click.stop="downloadFile(artifactory)"
+                        >
+                            {{ $t('download') }}
+                        </bk-button>
+                        <bk-button
+                            v-if="artifactory.artifactoryType === 'PIPELINE'"
+                            text
+                            size="small"
+                            theme="primary"
+                            @click.stop.native="copyToCustom(artifactory)"
+                        >
+                            {{ $t('history.copyToCustomArtifactory') }}
+                        </bk-button>
+                    </div>
+                </li>
+            </ul>
+            <footer slot="footer">
+                <bk-button @click="hideArtifactoriesPopup">
+                    {{ $t('close') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
+        <bk-dialog
+            v-model="isShowMoreMaterial"
+            render-directive="if"
+            :width="640"
+            header-position="left"
+            :title="`#${activeBuild && activeBuild.buildNum} - ${$t('editPage.material')}`"
+            @cancel="hideMoreMaterial"
+        >
+            <template v-if="activeBuild">
+                <div
+                    class="all-build-material-row"
+                    v-for="material in activeBuild.material"
+                    :key="material.aliasName"
+                >
+                    <MaterialItem
+                        :is-fit-content="false"
+                        :material="material"
+                        :show-more="false"
+                    />
+                </div>
+            </template>
+            <footer slot="footer">
+                <bk-button @click="hideMoreMaterial">
+                    {{ $t('close') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
+        <bk-dialog
+            v-model="showErorrInfoDialog"
+            render-directive="if"
+            :width="640"
+            header-position="left"
+            :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.errorCode')}`"
+            @cancel="hideErrorInfoPopup"
+        >
+            <ul
+                class="error-info-list"
+                v-if="activeBuild"
+            >
+                <li
+                    v-for="item in activeBuild.errorInfoList"
+                    :key="item.errCode"
+                >
+                    <logo
+                        :name="item.icon"
+                        size="18"
+                    />
+                    <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }">
+                        {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
+                    </p>
+                </li>
+            </ul>
+            <footer slot="footer">
+                <bk-button @click="hideErrorInfoPopup">
+                    {{ $t('close') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
-    import emptyTips from '@/components/devops/emptyTips'
-    import qrcode from '@/components/devops/qrcode'
+    import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import TableColumnSetting from '@/components/BuildHistoryTable/TableColumnSetting'
+    import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMiniTime, convertMStoString } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import EmptyException from '@/components/common/exception'
+    import qrcode from '@/components/devops/qrcode'
+    import {
+        BUILD_HISTORY_TABLE_COLUMNS_MAP,
+        BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
+        errorTypeMap,
+        extForFile
+    } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    const LS_COLUMN_KEY = 'shownColumnsKeys'
     export default {
         name: 'build-history-table',
         components: {
             Logo,
             qrcode,
-            emptyTips,
-            StageSteps
+            StageSteps,
+            MaterialItem,
+            FilterBar,
+            TableColumnSetting,
+            EmptyException
         },
-        mixins: [pipelineConstMixin],
         props: {
-            buildList: {
-                type: Array,
-                default: []
-            },
-            columns: {
-                type: Array,
-                default: BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
-            },
-            emptyTipsConfig: {
-                type: Object
-            },
-            currentPipelineVersion: {
-                type: [String, Number],
-                default: 1
-            },
             showLog: {
                 type: Function
             },
-            loadingMore: {
-                type: Boolean
-            }
+            isDebug: Boolean
         },
         data () {
+            const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
+            const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
+                RESOURCE_ACTION,
+                isShowMoreMaterial: false,
+                isShowMoreArtifactories: false,
+                showErorrInfoDialog: false,
                 activeIndex: 0,
+                activeRemarkIndex: 0,
                 tempRemark: '',
                 isChangeRemark: false,
-                activeRemarkIndex: -1,
                 visibleIndex: -1,
-                isShowAll: false,
                 retryingMap: {},
-                stoping: {}
+                buildHistories: [],
+                stoping: {},
+                isLoading: false,
+                tableColumnKeys: initSortedColumns,
+                tableHeight: null
             }
         },
         computed: {
+            ...mapGetters({
+                historyPageStatus: 'pipelines/getHistoryPageStatus',
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+            }),
+            ...mapState('atom', [
+                'pipelineInfo',
+                'activePipelineVersion'
+            ]),
+            allTableColumnMap () {
+                return BUILD_HISTORY_TABLE_COLUMNS_MAP
+            },
+            tableColumnFields () {
+                return this.tableColumnKeys.map(key => this.allTableColumnMap[key])
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            routePipelineVersion () {
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions.canExecute ?? true
+            },
+            isQuerying () {
+                return this.historyPageStatus?.isQuerying ?? false
+            },
+            canManualStartup () {
+                return this.pipelineInfo?.canManualStartup ?? true
+            },
+            executable () {
+                return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
+            },
+            emptyTips () {
+                return [...(
+                    !this.isReleasePipeline && !this.isDebug
+                        ? [
+                            'onlyDraftBuildHistoryTips',
+                            'onlyDraftBuildHistoryIdTips'
+                        ]
+                        : this.canManualStartup
+                            ? [
+                                'noBuildHistoryTips'
+                            ]
+                            : []
+                ), 'buildHistoryIdTips']
+            },
+            tooltip () {
+                return this.executable
+                    ? {
+                        disabled: true
+                    }
+                    : {
+                        content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        delay: [300, 0]
+                    }
+            },
             versionToolTipsConf () {
                 return {
-                    allowHtml: true,
                     delay: 500,
                     content: '#app-version-tooltip-content'
+                }
+            },
+            pagination () {
+                const { count, pageSize, page } = this.historyPageStatus
+                return {
+                    limit: pageSize,
+                    current: page,
+                    count
                 }
             },
             statusIconMap () {
@@ -364,8 +679,8 @@
                     SKIP: 'redo-arrow'
                 }
             },
-            data () {
-                return this.buildList.map((item, index) => {
+            buildHistoryList () {
+                return this.buildHistories.map((item, index) => {
                     const active = index === this.activeIndex
                     const hasArtifactories
                         = Array.isArray(item.artifactList) && item.artifactList.length > 0
@@ -384,12 +699,11 @@
                             return {
                                 ...artifactory,
                                 name: artifactory.name,
+                                icon: extForFile(artifactory.name),
                                 size: convertFileSize(artifactory.size, 'B')
                             }
                         })
                         : []
-                    const needShowAll
-                        = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
                     const stageStatus = item.stageStatus
                         ? item.stageStatus.slice(1).map((stage) => ({
                             ...stage,
@@ -403,82 +717,187 @@
                         index,
                         active,
                         hasArtifactories,
-                        needShowAll,
                         shortUrl,
                         appVersions,
                         visibleAppVersions:
                             !active && Array.isArray(appVersions) && appVersions.length > 1
                                 ? appVersions.slice(0, 1)
                                 : appVersions,
-                        startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
-                        endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
-                        queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        executeTime: item.executeTime
-                            ? `${convertMStoString(item.executeTime)} (${item.executeCount}/${
-                                item.executeCount
-                            })`
-                            : '--',
-                        material:
-                            !active && Array.isArray(item.material) && item.material.length > 1
-                                ? item.material.slice(0, 1)
-                                : item.material,
+                        startTime: item.startTime ? convertTime(item.startTime) : '--',
+                        endTime: item.endTime ? convertTime(item.endTime) : '--',
+                        queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
+                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
+                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        visibleMaterial:
+                            Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
-                        artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
-                        visible: this.visibleIndex === index,
+                        artifactories,
                         stageStatus,
                         errorInfoList:
-            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
-              ? item.errorInfoList.slice(0, 1)
-              : item.errorInfoList
-            )?.map((err) => {
-              return {
-                title: err?.errorMsg ?? '--',
-                icon: errorTypeMap[err.errorType]?.icon
-              }
-            }) ?? []
+                            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
+                                ? item.errorInfoList.slice(0, 1)
+                                : item.errorInfoList)?.map(err => {
+                                    return {
+                                    ...err,
+                                    errCode: err?.errorCode ?? '--',
+                                    ...(
+                                        errorTypeMap[err.errorType] ?? {}
+                                    )
+                                }
+                                }) ?? []
                     }
                 })
             },
             actifactories () {
-                const { data, visibleIndex } = this
-                return data[visibleIndex] && data[visibleIndex].artifactories
-                    ? data[visibleIndex].artifactories
-                    : []
+                return this.activeBuild?.artifactories ?? []
+            },
+            activeBuild () {
+                const { buildHistoryList, visibleIndex } = this
+                return buildHistoryList[visibleIndex] ?? null
             },
             currentBuildId () {
-                const { data, visibleIndex } = this
-                return data[visibleIndex] && data[visibleIndex].id
+                return this.activeBuild.id
             },
-            needShowAll () {
-                return this.data[this.visibleIndex].needShowAll
-            },
-            columnList () {
-                return this.columns.map((key) => this.column[key]).filter((m) => !!m)
-            },
-            column () {
-                Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map((item) => {
-                    const localStorageVal = localStorage.getItem(`${item}Width`)
-                    if (localStorageVal) {
-                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
-                    }
-                    return item
-                })
-                return this.BUILD_HISTORY_TABLE_COLUMNS_MAP
+            historyQuerys () {
+                const { historyPageStatus: { query, searchKey, page, pageSize } } = this
+                return {
+                    query,
+                    searchKey,
+                    page,
+                    pageSize
+                }
             }
         },
         watch: {
-            buildList () {
-                this.resetRemark()
+            'activePipelineVersion.version' (newVersion) {
+                if ((newVersion !== this.routePipelineVersion)) {
+                    this.handlePageChange(1)
+                }
+            },
+            historyQuerys: {
+                handler (val) {
+                    const { query, searchKey, page, pageSize } = val
+                    const queryMap = new URLSearchParams({
+                        page,
+                        pageSize,
+                        ...query,
+                        ...flatSearchKey(searchKey)
+                    })
+                    this.$router.push({
+                        query: Object.fromEntries(queryMap.entries())
+                    })
+                },
+                deep: true
             }
         },
+        mounted () {
+            webSocketMessage.installWsMessage(this.requestHistory)
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+
+        beforeDestroy () {
+            webSocketMessage.unInstallWsMessage()
+            window.removeEventListener('resize', this.updateTableHeight)
+        },
+
         methods: {
-            ...mapActions('pipelines', ['updateBuildRemark']),
+            ...mapActions('pipelines', [
+                'updateBuildRemark',
+                'requestPipelinesHistory',
+                'setHistoryPageStatus',
+                'resetHistoryFilterCondition'
+            ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
+            },
+            handleColumnChange (columns) {
+                this.tableColumnKeys = columns
+                this.$refs.tableSetting.$parent.instance?.hide()
+                localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
+            },
+            handleColumnReset () {
+                this.tableColumnKeys = [...BUILD_HISTORY_TABLE_DEFAULT_COLUMNS]
+                localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(BUILD_HISTORY_TABLE_DEFAULT_COLUMNS))
+                this.$refs.tableSetting.$parent.instance?.hide()
+            },
+            async requestHistory () {
+                try {
+                    const version = this.routePipelineVersion
+                    if (!version) return
+                    this.isLoading = true
+                    this.resetRemark()
+                    const {
+                        projectId,
+                        pipelineId
+                    } = this
+                    const res = await this.requestPipelinesHistory({
+                        projectId,
+                        pipelineId,
+                        isDebug: this.isDebug
+                    })
+                    this.setHistoryPageStatus({
+                        count: res.count
+                    })
+                    this.buildHistories = res.records
+                } catch (err) {
+                    if (err.code === 403) {
+                        this.hasNoPermission = true
+                    } else {
+                        this.$showTips({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
+                            this.$router.push({
+                                name: 'PipelineManageList'
+                            })
+                        }
+                    }
+                } finally {
+                    this.isLoading = false
+                }
+            },
+            handlePageChange (page) {
+                this.setHistoryPageStatus({
+                    page
+                })
+                this.$nextTick(() => {
+                    this.requestHistory()
+                })
+            },
+            handleLimitChange (limit) {
+                this.setHistoryPageStatus({
+                    page: 1,
+                    pageSize: limit
+                })
+                this.$router.push({
+                    params: this.$route.params,
+                    query: {
+                        ...this.$route.query,
+                        page: 1,
+                        pageSize: limit
+                    }
+                })
+                this.$nextTick(() => {
+                    this.requestHistory()
+                })
+            },
+            showMoreMaterial (row, mIndex) {
+                if (row.material.length > 3 && row.visibleMaterial.length - 1 === mIndex) {
+                    this.isShowMoreMaterial = true
+                    this.visibleIndex = row.index
+                }
+            },
+            hideMoreMaterial () {
+                this.visibleIndex = -1
+                this.isShowMoreMaterial = false
+            },
             isNotLatest ({ $index }) {
-                const length = this.data.length
+                const length = this.buildHistoryList.length
                 // table最后一条记录必不变化
                 if ($index === length - 1) return false
-                const current = this.data[$index]
-                const before = this.data[$index + 1]
+                const current = this.buildHistoryList[$index]
+                const before = this.buildHistoryList[$index + 1]
                 return current.pipelineVersion !== before.pipelineVersion
             },
             getStageTooltip (stage) {
@@ -492,23 +911,9 @@
                 }
             },
             activeRemarkInput (row) {
+                this.activeIndex = row.index
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
-                const instance = this.getRemarkPopupInstance(row.index)
-                if (instance) {
-                    instance.show()
-                    this.$nextTick(() => {
-                        const el = this.$refs.remarkInput && this.$refs.remarkInput[row.index]
-                        el && el.focus()
-                    })
-                }
-            },
-            getRemarkPopupInstance (activeRemarkIndex) {
-                return (
-                    this.$refs.remarkPopup
-                    && this.$refs.remarkPopup[activeRemarkIndex]
-                    && this.$refs.remarkPopup[activeRemarkIndex].instance
-                )
             },
             retryable (row) {
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
@@ -524,7 +929,6 @@
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
                         this.$set(row, 'remark', tempRemark)
-                        this.resetRemark()
                         await this.updateBuildRemark({
                             ...params,
                             buildId: row.id,
@@ -534,8 +938,6 @@
                             theme: 'success',
                             message: this.$t('updateSuc')
                         })
-                    } else {
-                        this.resetRemark()
                     }
                 } catch (e) {
                     console.log(e)
@@ -544,24 +946,14 @@
                         message: this.$t('updateFail')
                     })
                     this.$set(row, 'remark', preRemark)
+                } finally {
+                    this.resetRemark()
                 }
             },
             resetRemark () {
-                const remarkPopupInstance = this.getRemarkPopupInstance(this.activeRemarkIndex)
-                remarkPopupInstance && remarkPopupInstance.hide()
-
-                this.$nextTick(() => {
-                    this.isChangeRemark = false
-                    this.tempRemark = ''
-                    this.activeRemarkIndex = -1
-                })
-            },
-            generateMaterial (material) {
-                return material
-                    ? `${material.aliasName || '--'}${
-                        material.branchName ? `@${material.branchName}` : ''
-                    }`
-                    : '--'
+                this.activeRemarkIndex = -1
+                this.isChangeRemark = false
+                this.tempRemark = ''
             },
             handleRowStyle ({ row, rowIndex }) {
                 return rowIndex === this.activeIndex ? 'expand-row is-row-hover' : 'is-row-hover'
@@ -575,12 +967,15 @@
                     this.activeIndex = row.index
                 }
             },
-            handleDragend (newWidth, oldWidth, column) {
+            handleDragend (newWidth, oldWidth, column, event) {
+                console.log(column)
                 localStorage.setItem(`${column.property}Width`, newWidth)
-                this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
+                if (this.allTableColumnMap[column.property]?.width) {
+                    this.allTableColumnMap[column.property].width = newWidth
+                }
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
-                const { projectId, pipelineId } = this.$route.params
+                const { projectId, pipelineId } = this
                 return {
                     name: 'pipelinesDetail',
                     params: {
@@ -594,10 +989,8 @@
             },
 
             gotoArtifactoryList () {
-                const { data, visibleIndex } = this
-                const row = data[visibleIndex]
-                if (row) {
-                    const url = this.getArchiveUrl(data[visibleIndex], 'outputs')
+                if (this.activeBuild) {
+                    const url = this.getArchiveUrl(this.activeBuild, 'outputs')
                     this.$router.push(url)
                 }
             },
@@ -610,29 +1003,20 @@
             },
 
             hideArtifactoriesPopup () {
-                this.isShowAll = false
+                this.isShowMoreArtifactories = false
                 this.visibleIndex = -1
             },
             showArtifactoriesPopup (e, index = -1) {
                 this.visibleIndex = index
-                this.$nextTick(() => {
-                    const ele = this.$refs.artifactPopup
-                    const popupTriangle = this.$refs.popupTriangle
-                    if (ele && popupTriangle) {
-                        const triangleStyle = getComputedStyle(popupTriangle)
-                        const eleStyle = getComputedStyle(ele)
-                        const targetRect = e.target.getBoundingClientRect()
-
-                        ele.style.top = `${targetRect.y - parseInt(triangleStyle.top)}px`
-                        ele.style.left = `${Math.max(
-                            0,
-                            targetRect.x - parseInt(eleStyle.width) - 16
-                        )}px`
-                    }
-                })
+                this.isShowMoreArtifactories = true
             },
-            showAllArtifactory () {
-                this.isShowAll = true
+            hideErrorInfoPopup () {
+                this.showErorrInfoDialog = false
+                this.visibleIndex = -1
+            },
+            showErrorInfoPopup (index = -1) {
+                this.visibleIndex = index
+                this.showErorrInfoDialog = true
             },
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
@@ -649,7 +1033,7 @@
                     })
                     window.open(res.url, '_self')
                 } catch (err) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
@@ -660,7 +1044,7 @@
             async copyToCustom (artifactory) {
                 let message, theme
                 try {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     const params = {
                         files: [artifactory.name],
                         copyAll: false
@@ -704,13 +1088,13 @@
                         message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
 
-                        this.$emit('update-table')
+                        this.requestHistory()
                     } else {
                         message = this.$t('subpage.rebuildFail')
                         theme = 'error'
                     }
                 } catch (err) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
@@ -730,6 +1114,33 @@
                     return row.buildNumAlias
                 }
                 return '#' + row.buildNum
+            },
+            buildNow () {
+                this.$router.push({
+                    name: 'executePreview',
+                    query: {
+                        ...(this.isDebug ? { debug: '' } : {})
+                    },
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.[this.isDebug ? 'version' : 'releaseVersion']
+                    }
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.[this.isDebug ? 'version' : 'releaseVersion']
+                    }
+                })
+            },
+            clearFilter () {
+                this.resetHistoryFilterCondition()
+                this.$nextTick(() => {
+                    this.requestHistory()
+                })
             }
         }
     }
@@ -756,9 +1167,11 @@
   }
 }
 .build-history-table-container {
-  margin-top: 10px;
+  flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .build-list-table-empty-tips {
@@ -769,238 +1182,284 @@
 .history-text-link {
   cursor: pointer;
   &:hover {
-    color: $primaryColor;
+    color: $primaryColor !important;
   }
+}
+
+.no-build-history-exception {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .no-build-history-box {
+        display: grid;
+        grid-gap: 12px;
+        font-size: 12px;
+        color: #979BA5;
+        margin-top: -20px;
+        .no-build-history-box-tip {
+            background: #FAFBFD;
+            padding: 24px;
+
+            .no-build-history-box-rows {
+                margin-bottom: 24px;
+                > p {
+                    text-align: left;
+                    line-height: 24px;
+                }
+            }
+        }
+
+    }
 }
 
 .expand-row {
-  height: 148px;
+  height: 96px;
   cursor: pointer;
 }
-.bkdevops-build-history-table {
-  border-top: 1px solid #e6e6e6;
-  border-left: 1px solid #e6e6e6;
-  color: #333333;
-  .bk-table-header-wrapper {
-    height: 43px;
-  }
-  .bk-table-body-wrapper {
-    tr:hover {
-      .remark-entry {
-        display: inline-block;
+.all-build-material-row {
+    padding: 8px 0;
+    border-bottom: 2px solid #EAEBF0;
+    &:first-child {
+        border-top: 2px solid #EAEBF0;
+    }
+}
+.bkdevops-build-history-table-wrapper {
+    flex: 1;
+    overflow: hidden;
+    .bkdevops-build-history-table {
+      color: #333333;
+      &.bk-table-enable-row-transition .bk-table-body td {
+            transition: none;
+        }
+      .bk-table-header-wrapper {
+        height: 43px;
       }
-    }
-  }
-  tr:hover {
-    background-color: transparent;
-    > td {
-      background-color: transparent !important;
-    }
-  }
-  .build-num-status {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    .devops-icon {
-      margin-left: 6px;
-      display: inline-block;
-    }
-    .icon-retry {
-      font-size: 14px;
-      cursor: pointer;
-      &:hover {
-        color: $primaryColor;
+      .bk-table-body-wrapper {
+        tr:hover {
+          .remark-entry {
+            display: inline-block;
+          }
+        }
       }
-    }
-  }
-  .material-item {
-    display: flex;
-    p.show-commit-times {
-      @include ellipsis();
-    }
-    .material-commit-id {
-      cursor: pointer;
-      color: $primaryColor;
-      padding: 0 6px;
-      display: flex;
-      .commit-nums {
-        min-width: 64px;
-      }
-      .commit-times {
-        padding: 0 6px;
-        margin-left: 4px;
-        min-width: 82px;
-        background: #333333;
-        color: white;
-        border-radius: 20px;
-        text-align: center;
-        @include ellipsis();
-      }
-    }
-  }
-  .trigger-cell {
-    display: flex;
-    align-items: center;
-    > svg {
-      fill: currentColor;
-    }
-    > span {
-      padding-left: 4px;
-    }
-  }
-  .artifact-list-cell {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    canvas {
-      padding: 2px;
-      border: 1px solid #dde4eb;
-    }
-  }
-  .build-app-version-list {
-    display: flex;
-    flex-direction: column;
-    > p {
-      @include ellipsis();
-    }
-  }
-  .remark-cell {
-    position: relative;
-    display: flex;
-    .remark-span {
-      cursor: pointer;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 1;
-      overflow: hidden;
-      &.active {
-        -webkit-line-clamp: 5;
-      }
-    }
-    .remark-entry {
-      display: none;
-      cursor: pointer;
-      vertical-align: middle;
-      margin-left: 10px;
-      &:hover {
-        color: $primaryColor;
-      }
-    }
-  }
 
-  .error-code-item {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    > span {
-      margin-left: 4px;
-      @include ellipsis();
+      .build-num-status {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        .devops-icon {
+          margin-left: 6px;
+          display: inline-block;
+        }
+        .icon-retry {
+          font-size: 14px;
+          cursor: pointer;
+          &:hover {
+            color: $primaryColor;
+          }
+        }
+      }
+      .build-material-cell {
+        display: flex;
+        align-items: center;
+        .commit-times {
+            padding: 0 6px;
+            margin-left: 4px;
+            background: #F0F1F5;
+            border-radius: 50%;
+            color: #979BA5;
+            text-align: center;
+            @include ellipsis();
+            display: none;
+            &.commit-times-visible {
+                display: inline-flex;
+            }
+        }
+        .show-all-material-entry {
+            padding: 0 10px;
+            color: #979BA5;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 3px;
+            opacity: 0;
+            pointer-events: none;
+            &-visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+      }
+      .trigger-cell {
+        display: flex;
+        align-items: center;
+        > svg {
+          fill: currentColor;
+        }
+        > span {
+          padding-left: 4px;
+        }
+      }
+      .artifact-list-cell {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        .artifact-entry {
+            > b {
+                color: $primaryColor;
+            }
+            > span {
+                color: #C4C6CC;
+            }
+        }
+      }
+      .build-app-version-list {
+        display: flex;
+        flex-direction: column;
+        > p {
+          @include ellipsis();
+        }
+      }
+      .remark-cell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        .remark-span {
+          cursor: pointer;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 1;
+          overflow: hidden;
+          &.active {
+            -webkit-line-clamp: 3;
+          }
+        }
+        .remark-entry {
+          display: none;
+          cursor: pointer;
+          vertical-align: middle;
+          margin-left: 4px;
+          padding: 6px;
+          color: $primaryColor;
+
+        }
+      }
+      .pipeline-build-remark-editor {
+        display: grid;
+        grid-auto-flow: column;
+        grid-gap: 4px;
+        width: 100%;
+        grid-auto-columns: 1fr auto auto;
+        margin: 10px 0;
+        align-items: flex-start;
+        .devops-icon {
+            font-size: 24px;
+            cursor: pointer;
+            &.icon-check-small {
+                color: $successColor;
+            }
+            &.spin-icon {
+                font-size: 14px;
+
+            }
+        }
+      }
     }
-    .svg-error-icon {
-      min-width: 12px;
-      min-height: 12px;
-      flex-shrink: 0;
+    .error-code-cell{
+        display: flex;
+        align-items: center;
+        grid-gap: 10px;
+        .icon-list {
+        color: $primaryColor;
+        cursor: pointer;
+        }
+        .error-code-list {
+            flex: 1;
+            .error-code-item {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            > span {
+                @include ellipsis();
+            }
+            }
+        }
     }
-  }
-  .version-tips {
+    .version-tips {
     display: inline-block;
     vertical-align: -1px;
     color: #f6b026;
     font-size: 0;
-  }
-}
-.artifact-list-popup {
-  position: absolute;
-  width: 800px;
-  background: white;
-  right: 150px;
-  top: 0;
-  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.35);
-  z-index: 1;
-  font-size: 12px;
-  .popup-triangle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    right: -5px;
-    top: 50px;
-    background: white;
-    transform: rotate(-45deg);
-    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.35);
-  }
-  .artifact-list-header {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0 20px 0 24px;
-    height: 40px;
-    background: $bgHoverColor;
-    border-bottom: 2px solid #e6e7ea;
-    > h2 {
-      position: relative;
-      margin: 0;
-      flex: 1;
-      color: #4a4a4a;
-      font-size: 14px;
-      cursor: default;
-      &:before {
-        content: "";
-        position: absolute;
-        height: 14px;
-        width: 4px;
-        left: -6px;
-        top: 3.5px;
-        background: $fontWeightColor;
-      }
     }
-  }
-  .artifact-list-ul {
-    overflow: auto;
-    max-height: 430px;
-    position: relative;
-    background-color: white;
-    z-index: 2;
-    > li {
-      height: 32px;
-      border-bottom: 1px solid #e6e7ea;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 0 20px;
-      > p {
-        flex: 1;
-        display: flex;
-        align-items: center;
-      }
-      .artifact-name {
-        max-width: 600px;
-        @include ellipsis();
-      }
-      .artifact-size {
-        color: $fontLighterColor;
-        margin-left: 30px;
-      }
-      .download-link {
-        margin-right: 18px;
-        font-weight: bold;
-      }
-      .icon-copy {
-        fill: $fontWeightColor;
-        cursor: pointer;
-        &:hover {
-          fill: $primaryColor;
-        }
-      }
-    }
-    > footer {
-      text-align: center;
-      line-height: 35px;
-    }
-  }
 }
 
-.remark-edit-footer {
-  margin: 10px 0;
-  text-align: right;
+.build-qrcode-popup {
+    text-align: center;
+    color: #63656E;
+    display: grid;
+    grid-gap: 8px;
+}
+.artifactory-popup-header {
+    margin-bottom: 16px;
+    .go-outputs-btn {
+        display: grid;
+        align-items: center;
+        grid-gap: 6px;
+        grid-auto-flow: column;
+    }
+}
+.build-artifact-list-ul {
+    border-top: 1px solid #EAEBF0;
+    max-height: calc(100vh / 3);
+    overflow: auto;
+    > li {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #EAEBF0;
+        font-size: 12px;
+        .build-artifact-name {
+            display: grid;
+            grid-gap: 6px;
+            grid-auto-flow: column;
+            align-items: center;
+            .artifact-name-span {
+                @include ellipsis();
+            }
+
+        }
+        .artifact-size {
+            color: #C4C6CC;
+        }
+        .build-artifactory-operation {
+            display: grid;
+            grid-gap: 10px;
+            grid-auto-flow: column;
+            flex-shrink: 0;
+        }
+    }
+}
+.error-info-list {
+    > li {
+        font-size: 12px;
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: auto auto 1fr;
+        align-items: flex-start;
+        grid-gap: 6px;
+        word-break: break-all;
+        padding: 8px 0;
+        border-bottom: 1px solid #EAEBF0;
+        line-height: 22px;
+        &:first-child {
+            border-top: 1px solid #EAEBF0;
+        }
+        > p {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+        }
+    }
 }
 </style>

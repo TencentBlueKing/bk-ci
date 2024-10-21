@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 
 /**
  * 对流水线模型中的设置的agent进行检查的扩展点
@@ -42,10 +43,25 @@ interface ModelCheckPlugin {
 
     /**
      * 检查[model]编排的完整性，并返回[JobSize + ElementSize = MetaSize]所有元素数量
+     * @param userId 操作人
+     * @param oauthUser 当前流水线权限代持人
      * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
     @Throws(ErrorCodeException::class)
-    fun checkModelIntegrity(model: Model, projectId: String?): Int
+    fun checkModelIntegrity(
+        model: Model,
+        projectId: String?,
+        userId: String,
+        isTemplate: Boolean = false,
+        oauthUser: String? = null
+    ): Int
+
+    /**
+     * 检查[setting]配置的完整性
+     * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
+     */
+    @Throws(ErrorCodeException::class)
+    fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?)
 
     /**
      * 清理Model--不删除里面的Element内的逻辑

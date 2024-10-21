@@ -1,5 +1,8 @@
 <template>
-    <div ref="container" class="devops-container">
+    <div
+        ref="container"
+        class="devops-container"
+    >
         <router-view></router-view>
     </div>
 </template>
@@ -8,7 +11,7 @@
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
 
-    @Component()
+    @Component
     export default class DevopsContainer extends Vue {
     }
 </script>

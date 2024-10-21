@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.SensitiveApiService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -39,11 +39,25 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
     private val sensitiveApiService: SensitiveApiService
 ) : ServiceSensitiveApiPermissionResource {
 
-    override fun verifyApi(atomCode: String, apiName: String): Result<Boolean> {
+    override fun verifyApi(
+        signFileName: String?,
+        fileShaContent: String?,
+        osName: String?,
+        osArch: String?,
+        storeCode: String,
+        apiName: String,
+        storeType: String,
+        version: String?
+    ): Result<Boolean> {
         return sensitiveApiService.verifyApi(
-            storeType = StoreTypeEnum.ATOM,
-            storeCode = atomCode,
-            apiName = apiName
+            signFileName = signFileName,
+            fileShaContent = fileShaContent,
+            osName = osName,
+            osArch = osArch,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            storeCode = storeCode,
+            apiName = apiName,
+            version = version
         )
     }
 }

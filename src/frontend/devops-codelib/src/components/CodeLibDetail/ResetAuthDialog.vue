@@ -45,7 +45,10 @@
                     </bk-radio>
                 </bk-radio-group>
 
-                <div class="codelib-oauth" v-if="isOAUTH">
+                <div
+                    class="codelib-oauth"
+                    v-if="isOAUTH"
+                >
                     <bk-button
                         theme="primary"
                         :loading="isSaveLoading"
@@ -84,11 +87,13 @@
                         <bk-radio
                             class="mr20"
                             value="SSH"
+                            :disabled="repoInfo.enablePac"
                         >
                             SSH
                         </bk-radio>
                         <bk-radio
                             value="HTTP"
+                            :disabled="repoInfo.enablePac"
                         >
                             {{ $t('codelib.用户名+密码') }}
                         </bk-radio>
@@ -102,7 +107,10 @@
                     </template>
                 </bk-radio-group>
 
-                <div class="codelib-oauth" v-if="isOAUTH">
+                <div
+                    class="codelib-oauth"
+                    v-if="isOAUTH"
+                >
                     <bk-button
                         theme="primary"
                         :loading="isSaveLoading"
@@ -170,7 +178,8 @@
                 </bk-radio-group>
             </bk-form-item>
             <template
-                v-if="!isOAUTH">
+                v-if="!isOAUTH"
+            >
                 <bk-form-item
                     :label="addressTitle"
                     :required="true"
@@ -204,9 +213,13 @@
                             v-for="(option, index) in tickets"
                             :key="option.credentialId"
                             :id="option.credentialId"
-                            :name="option.credentialId">
-                            <span class="name" :title="option.credentialId">
-                                {{option.credentialId}}
+                            :name="option.credentialId"
+                        >
+                            <span
+                                class="name"
+                                :title="option.credentialId"
+                            >
+                                {{ option.credentialId }}
                             </span>
                             <i
                                 class="devops-icon icon-edit2 cre-icon"
@@ -243,10 +256,10 @@
 </template>
 
 <script>
-    import _ from 'lodash'
+    import { cloneDeep } from 'lodash-es'
     import {
-        mapState,
-        mapActions
+        mapActions,
+        mapState
     } from 'vuex'
     import {
         getCodelibConfig,
@@ -353,7 +366,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
@@ -364,7 +377,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
@@ -391,7 +404,6 @@
                     }
 
                     if (this.isGit) {
-                        console.log(val, 11)
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
                             this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')

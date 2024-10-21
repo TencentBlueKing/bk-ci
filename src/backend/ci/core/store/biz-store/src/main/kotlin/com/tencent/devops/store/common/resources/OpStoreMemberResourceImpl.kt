@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreMemberResource
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreMemberService
 
@@ -80,6 +80,12 @@ class OpStoreMemberResourceImpl : OpStoreMemberResource {
     }
 
     private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
-        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.lowercase()}MemberService")
+        val beanName = "${storeType.name.lowercase()}MemberService"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            SpringContextUtil.getBean(StoreMemberService::class.java, beanName)
+        } else {
+            // 获取默认的成员bean对象
+            SpringContextUtil.getBean(StoreMemberService::class.java)
+        }
     }
 }

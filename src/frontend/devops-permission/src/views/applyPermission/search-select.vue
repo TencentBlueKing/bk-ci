@@ -53,14 +53,14 @@
                       <span class="value-text">{{ input.value }}</span>
                     </li>
                   </template>
-                  <li v-else class="menu-item no-search-data">{{ '查询无数据' }}</li>
+                  <li v-else class="menu-item no-search-data">{{ t('查询无数据') }}</li>
                 </ul>
               </template>
               <!-- 菜单默认列表 -->
               <template v-else-if="optionList.length">
                 <ul class="search-list-menu">
                   <div v-for="option in optionList" :key="option.id">
-                    <div v-bk-tooltips="{ content: $t('尚未加入项目。项目成员才可以根据资源实例查询'), placement: 'right', disabled: !option.disabled }">
+                    <div v-bk-tooltips="{ content: t('尚未加入项目。项目成员才可以根据资源实例查询'), placement: 'right', disabled: !option.disabled }">
                       <li
                         :key="option.id"
                         class="menu-item"
@@ -111,7 +111,7 @@
                         </li>
                       </div>
                     </template>
-                    <p v-else class="no-search-data">{{ '查询无数据' }}</p>
+                    <p v-else class="no-search-data">{{ t('查询无数据') }}</p>
                   </ul>
                   <div>
                     <div v-if="showMenu" class="cascader-panel">
@@ -155,6 +155,7 @@ import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
 import scrollLoadList from './scroll-load-list.vue'
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'searchSelect',
@@ -275,12 +276,6 @@ export default {
       },
       deep: true
     },
-    projectCode: {
-      handler (val) {
-        this.searchSelectValue = []
-      },
-      deep: true
-    },
     curProject: {
       async handler (val) {
         if (val && val.englishName !== this.$route.query.project_code) {
@@ -295,6 +290,7 @@ export default {
     }
   },
   data() {
+    const { t } = useI18n();
     return {
       list: [],
       selectInfo: {},
@@ -317,7 +313,8 @@ export default {
       hasActionId: false,
       hasLoadEnd: false,
       titleType: '',
-      placeholder: this.$t('资源实例/用户组/描述/操作/ID'),
+      placeholder: t('资源实例/用户组/描述/操作/ID'),
+      t,
     }
   },
   async created() {

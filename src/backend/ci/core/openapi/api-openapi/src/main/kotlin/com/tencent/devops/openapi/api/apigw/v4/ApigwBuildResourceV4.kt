@@ -95,7 +95,16 @@ interface ApigwBuildResourceV4 {
                     description = "当需要指定启动时流水线变量 var1 为 foobar 时",
                     value = "{\"var1\": \"foobar\"}"
                 ),
-                ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}")
+                ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}"),
+                ExampleObject(
+                    description = "如需指定自定义触发材料时, 需传入特定参数, " +
+                            "详情请查看: https://github.com/TencentBlueKing/bk-ci/issues/10302",
+                    value = "{" +
+                                "\"BK_CI_MATERIAL_ID\": \"触发材料ID\"," +
+                                "\"BK_CI_MATERIAL_NAME\": \"触发材料名称\"," +
+                                "\"BK_CI_MATERIAL_URL\": \"触发材料链接\"" +
+                            "}"
+                )
             ]
         )
         values: Map<String, String>?,
@@ -153,7 +162,7 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建号(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildNumber")
         buildNumber: Int?,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)
@@ -225,19 +234,19 @@ interface ApigwBuildResourceV4 {
         )
         @QueryParam("updateTimeDesc")
         updateTimeDesc: Boolean? = null,
-        @Parameter(description = "代码库别名", required = false)
+        @Parameter(description = "源材料代码库别名", required = false)
         @QueryParam("materialAlias")
         materialAlias: List<String>?,
         @Parameter(description = "代码库URL", required = false)
         @QueryParam("materialUrl")
         materialUrl: String?,
-        @Parameter(description = "分支", required = false)
+        @Parameter(description = "源材料分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @Parameter(description = "commitId", required = false)
+        @Parameter(description = "源材料commitId", required = false)
         @QueryParam("materialCommitId")
         materialCommitId: String?,
-        @Parameter(description = "commitMessage", required = false)
+        @Parameter(description = "源材料commitMessage", required = false)
         @QueryParam("materialCommitMessage")
         materialCommitMessage: String?,
         @Parameter(description = "状态", required = false)
@@ -287,7 +296,13 @@ interface ApigwBuildResourceV4 {
         startUser: List<String>?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
@@ -308,7 +323,10 @@ interface ApigwBuildResourceV4 {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
@@ -491,11 +509,14 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id（e-开头）", required = true)
+        @Parameter(description = "步骤Id（e-开头）", required = false)
         @QueryParam("elementId")
-        elementId: String,
+        elementId: String?,
         @Parameter(description = "审核信息", required = true)
-        params: ReviewParam
+        params: ReviewParam,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(

@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.ContainerStartInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -110,6 +111,27 @@ interface ServicePipelineTaskResource {
         @PathParam("taskId")
         taskId: String
     ): Result<BuildStatus?>
+
+    @Operation(summary = "获取流水线指定任务的构建详情")
+    @GET
+    @Path("/projects/{projectId}/builds/{buildId}/task_detail")
+    fun getTaskBuildDetail(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "任务ID", required = false)
+        @QueryParam("taskId")
+        taskId: String?,
+        @Parameter(description = "任务ID", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<PipelineBuildTask?>
 
     @Operation(summary = "获取流水线指定Job的构建状态")
     @GET

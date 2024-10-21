@@ -1,12 +1,14 @@
 <template>
     <div>
-        <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
-            <bk-icon type="angle-double-right" class="angle-double-right-icon" />
-            <!-- <Icon
-                name="angle-double-right"
+        <div
+            class="expand-btn"
+            v-if="isListFlod"
+            @click="handleExpandList"
+        >
+            <bk-icon
+                type="angle-double-right"
                 class="angle-double-right-icon"
-                size="16"
-            /> -->
+            />
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -53,7 +55,10 @@
                             }
                         }"
                     >
-                        <div v-if="isListFlod" class="mask"></div>
+                        <div
+                            v-if="isListFlod"
+                            class="mask"
+                        ></div>
                         <Icon
                             class="codelib-logo"
                             :name="codelibIconMap[props.row.type]"
@@ -70,13 +75,17 @@
                         >
                             {{ props.row.aliasName }}
                         </div>
-                        <!-- <span
+                        <span
                             v-if="props.row.enablePac"
                             class="pac-icon"
                         >
-                            <Icon name="PACcode" size="22" class="pac-code-icon" />
+                            <Icon
+                                name="PACcode"
+                                size="22"
+                                class="pac-code-icon"
+                            />
                             PAC
-                        </span> -->
+                        </span>
                     </div>
                 </template>
             </bk-table-column>
@@ -148,22 +157,49 @@
             >
                 <template slot-scope="props">
                     <bk-button
+                        v-if="props.row.type === 'CODE_GIT' && !props.row.enablePac"
                         theme="primary"
                         text
+                        class="mr10"
                         v-perm="{
-                            hasPermission: props.row.canDelete,
+                            hasPermission: props.row.canView,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: RESOURCE_TYPE,
                                 resourceCode: props.row.repositoryHashId,
-                                action: RESOURCE_ACTION.DELETE
+                                action: RESOURCE_ACTION.VIEW
                             }
                         }"
-                        @click.stop="deleteCodeLib(props.row)"
+                        @click="toDetailInit(props.row)"
                     >
-                        {{ $t('codelib.delete') }}
+                        {{ $t('codelib.去开启PAC') }}
                     </bk-button>
+                    <span
+                        v-bk-tooltips="{
+                            content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                            disabled: !props.row.enablePac
+                        }"
+                    >
+                        <bk-button
+                            theme="primary"
+                            text
+                            v-perm="{
+                                hasPermission: props.row.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RESOURCE_TYPE,
+                                    resourceCode: props.row.repositoryHashId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
+                            }"
+                            :disabled="props.row.enablePac"
+                            @click.stop="deleteCodeLib(props.row)"
+                        >
+                            {{ $t('codelib.delete') }}
+                        </bk-button>
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -174,10 +210,14 @@
                     :fields="tableColumn"
                     :selected="selectedTableColumn"
                     :size="tableSize"
-                    @setting-change="handleSettingChange" />
+                    @setting-change="handleSettingChange"
+                />
             </bk-table-column>
             <template #empty>
-                <EmptyTableStatus :type="aliasName ? 'search-empty' : 'empty'" @clear="resetFilter" />
+                <EmptyTableStatus
+                    :type="aliasName ? 'search-empty' : 'empty'"
+                    @clear="resetFilter"
+                />
             </template>
         </bk-table>
         <UsingPipelinesDialog
@@ -464,28 +504,30 @@
 
             handleRowSelect (row) {
                 this.$emit('update:curRepo', row)
-                if (this.isListFlod) {
-                    this.selectId = row.repositoryHashId
-                    this.scmType = row.type
-                    this.$router.push({
-                        query: {
-                            ...this.$route.query,
-                            id: row.repositoryHashId,
-                            page: this.page,
-                            scmType: row.type,
-                            limit: this.pagination.limit
-                        }
-                    })
-                    localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
-                        scmType: row.type,
+                if (this.isListFlod) this.toDetailInit(row)
+            },
+
+            toDetailInit (row) {
+                this.selectId = row.repositoryHashId
+                this.scmType = row.type
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
                         id: row.repositoryHashId,
                         page: this.page,
-                        limit: this.pagination.limit,
-                        projectId: this.projectId
-                    }))
-                    this.$emit('updateFlod', true)
-                    this.$emit('update:curRepoId', row.repositoryHashId)
-                }
+                        scmType: row.type,
+                        limit: this.pagination.limit
+                    }
+                })
+                localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
+                    scmType: row.type,
+                    id: row.repositoryHashId,
+                    page: this.page,
+                    limit: this.pagination.limit,
+                    projectId: this.projectId
+                }))
+                this.$emit('update:isListFlod', true)
+                this.$emit('update:curRepoId', row.repositoryHashId)
             },
 
             handleSettingChange ({ fields, size }) {
@@ -715,6 +757,7 @@
     }
     .pac-icon {
         position: relative;
+        flex-shrink: 0;
         font-size: 12px;
         margin-left: 10px;
         color: #699DF4;
@@ -735,7 +778,7 @@
     .name-flod {
         position: relative;
         display: inline-block;
-        max-width: 300px;
+        max-width: 280px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;

@@ -104,6 +104,22 @@ object I18nUtil {
     }
 
     /**
+     * 获取蓝鲸标准的语言Header Key
+     */
+    fun getBKLanguageKey(): String {
+        return BK_LANGUAGE
+    }
+
+    /**
+     * 获取Http Cookie中用户携带的语言（蓝鲸标准）
+     * @return 语言,如果没有,则为空
+     */
+    fun getBKLanguageFromCookie(): String? {
+        val request = BkApiUtil.getHttpServletRequest()
+        return request?.let { CookieUtil.getCookieValue(request, BK_LANGUAGE) }
+    }
+
+    /**
      * 获取Http Cookie中用户携带的语言
      * @return 语言,如果没有,则为空
      */
@@ -221,7 +237,7 @@ object I18nUtil {
     fun I18Variable.getCodeLanMessage(): String {
         return getCodeLanMessage(
             messageCode = code,
-            params = params.toTypedArray()
+            params = params?.toTypedArray()
         )
     }
 

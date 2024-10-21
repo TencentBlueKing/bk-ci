@@ -1,5 +1,8 @@
 <template>
-    <article class="detail-artifactory-home" v-bkloading="{ isLoading }">
+    <article
+        class="detail-artifactory-home"
+        v-bkloading="{ isLoading }"
+    >
         <bk-table
             :data="artifactories"
             :outer-border="false"
@@ -20,8 +23,14 @@
                             name="docker-svgrepo-com"
                             size="30"
                         />
-                        <i v-else :class="['devops-icon', `icon-${props.row.icon}`]"></i>
-                        <span class="ml5" :title="props.row.name">{{ props.row.name }}</span>
+                        <i
+                            v-else
+                            :class="['devops-icon', `icon-${props.row.icon}`]"
+                        ></i>
+                        <span
+                            class="ml5"
+                            :title="props.row.name"
+                        >{{ props.row.name }}</span>
                     </div>
                 </template>
             </bk-table-column>
@@ -37,9 +46,6 @@
                 prop="size"
                 show-overflow-tooltip
             >
-                <template slot-scope="props">
-                    {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
-                </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('details.repoType')"
@@ -49,7 +55,10 @@
                 show-overflow-tooltip
             >
             </bk-table-column>
-            <bk-table-column :label="$t('operate')" width="150">
+            <bk-table-column
+                :label="$t('operate')"
+                width="150"
+            >
                 <template slot-scope="props">
                     <artifact-download-button
                         :output="props.row"
@@ -60,7 +69,6 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        
     </article>
 </template>
 
@@ -132,8 +140,8 @@
                                 size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
-                        if (this.artifactories.length <= 0) {
-                            this.$emit('hidden')
+                        if (this.artifactories.length > 0) {
+                            this.$emit('toggle', true)
                         }
                     })
                     .catch((err) => {

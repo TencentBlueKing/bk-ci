@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
-import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.Record2
@@ -241,6 +239,21 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun batchUpdateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: Set<Long>,
+        status: AgentStatus
+    ): Int {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.update(this)
+                .set(STATUS, status.status)
+                .where(ID.`in`(ids))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
     fun updateAgentVersion(
         dslContext: DSLContext,
         id: Long,
@@ -347,6 +360,19 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun getAgentByAgentIds(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        projectId: String
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(ids))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
     fun getAgentByNodeIdAllProj(dslContext: DSLContext, nodeIdList: List<Long>): Result<Record2<Long, String>> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.select(
@@ -402,61 +428,12 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun saveAgentEnvs(dslContext: DSLContext, agentId: Long, envStr: String) {
+    fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
-                .where(ID.eq(agentId))
+                .where(ID.`in`(agentIds))
                 .execute()
-        }
-    }
-
-    fun addAgentAction(
-        dslContext: DSLContext,
-        projectId: String,
-        agentId: Long,
-        action: String
-    ) {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                AGENT_ID,
-                ACTION,
-                ACTION_TIME
-            )
-                .values(
-                    projectId,
-                    agentId,
-                    action,
-                    LocalDateTime.now()
-                ).execute()
-        }
-    }
-
-    fun listAgentActions(
-        dslContext: DSLContext,
-        projectId: String,
-        agentId: Long,
-        offset: Int,
-        limit: Int
-    ): Result<TEnvironmentThirdpartyAgentActionRecord> {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .orderBy(ACTION_TIME.desc(), ID.desc()) // fix 时间相同时，增加ID排序
-                .limit(offset, limit)
-                .fetch()
-        }
-    }
-
-    fun getAgentActionsCount(dslContext: DSLContext, projectId: String, agentId: Long): Long {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            return dslContext.selectCount().from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .fetchOne(0, Long::class.java)!!
         }
     }
 

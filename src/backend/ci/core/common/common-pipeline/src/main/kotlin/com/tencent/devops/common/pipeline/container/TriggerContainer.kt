@@ -55,9 +55,9 @@ data class TriggerContainer(
     @get:Schema(title = "参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
     @get:Schema(title = "模板参数构建", required = false)
-    val templateParams: List<BuildFormProperty>? = null,
+    var templateParams: List<BuildFormProperty>? = null,
     @get:Schema(title = "构建版本号", required = false)
-    val buildNo: BuildNo? = null,
+    var buildNo: BuildNo? = null,
     @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
@@ -73,7 +73,7 @@ data class TriggerContainer(
     @get:Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
     @get:Schema(title = "用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
+    override var jobId: String? = null,
     @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
     @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
@@ -81,7 +81,10 @@ data class TriggerContainer(
     @get:Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
     @get:Schema(title = "开机任务序号", required = false, readOnly = true)
-    override var startVMTaskSeq: Int? = null
+    override var startVMTaskSeq: Int? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "trigger"
@@ -99,9 +102,11 @@ data class TriggerContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? = null
 
-    override fun isContainerEnable(): Boolean {
+    override fun containerEnabled(): Boolean {
         return true
     }
+
+    override fun setContainerEnable(enable: Boolean) = Unit
 
     override fun transformCompatibility() {
         super.transformCompatibility()

@@ -83,15 +83,27 @@ interface ServiceLogResource {
         @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @Parameter(description = "对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false
     ): Result<QueryLogs>
 
     @Operation(summary = "获取更多日志")
@@ -131,12 +143,18 @@ interface ServiceLogResource {
         @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @Parameter(description = "对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -170,12 +188,18 @@ interface ServiceLogResource {
         @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @Parameter(description = "对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -201,12 +225,18 @@ interface ServiceLogResource {
         @Parameter(description = "对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @Parameter(description = "对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -230,10 +260,13 @@ interface ServiceLogResource {
         buildId: String,
         @Parameter(description = "对应elementId", required = true)
         @QueryParam("tag")
-        tag: String,
+        tag: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

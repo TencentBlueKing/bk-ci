@@ -29,11 +29,11 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
-import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
-import com.tencent.devops.store.pojo.common.SensitiveApiInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApproveReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiNameInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface SensitiveApiService {
@@ -70,9 +70,15 @@ interface SensitiveApiService {
         sensitiveApiApproveReq: SensitiveApiApproveReq
     ): Result<Boolean>
 
+    @Suppress("LongParameterList")
     fun verifyApi(
+        signFileName: String? = null,
+        fileShaContent: String? = null,
+        osName: String? = null,
+        osArch: String? = null,
         storeType: StoreTypeEnum,
         storeCode: String,
-        apiName: String
+        apiName: String,
+        version: String? = null
     ): Result<Boolean>
 }

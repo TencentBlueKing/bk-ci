@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.4
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -27,8 +27,12 @@
 | T_AUTH_OAUTH2_SCOPE | 授权范围表 |
 | T_AUTH_OAUTH2_SCOPE_OPERATION | 授权操作信息表 |
 | T_AUTH_RESOURCE | 资源表 |
+| T_AUTH_RESOURCE_AUTHORIZATION | 资源授权管理表 |
 | T_AUTH_RESOURCE_GROUP | 资源关联用户组表 |
+| T_AUTH_RESOURCE_GROUP_APPLY | 用户组申请记录表 |
 | T_AUTH_RESOURCE_GROUP_CONFIG | 资源用户组配置表 |
+| T_AUTH_RESOURCE_GROUP_MEMBER | 资源组成员 |
+| T_AUTH_RESOURCE_SYNC | 同步 IAM 资源 |
 | T_AUTH_RESOURCE_TYPE | 权限资源类型表 |
 | T_AUTH_STRATEGY | 权限策略表 |
 | T_AUTH_TEMPORARY_VERIFY_RECORD | 迁移-鉴权记录表 |
@@ -375,6 +379,25 @@
 |  11   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
 |  12   | UPDATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
 
+**表名：** <a>T_AUTH_RESOURCE_AUTHORIZATION</a>
+
+**说明：** 资源授权管理表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  5   | RESOURCE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 资源名  |
+|  6   | HANDOVER_FROM |   varchar   | 64 |   0    |    N     |  N   |       | 授予人  |
+|  7   | HANDOVER_FROM_CN_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 授予人中文名称  |
+|  8   | HANDOVER_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 授予时间  |
+|  9   | CREATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  10   | UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
 **表名：** <a>T_AUTH_RESOURCE_GROUP</a>
 
 **说明：** 资源关联用户组表
@@ -395,6 +418,25 @@
 |  10   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的 IAM 组 ID  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  13   | DESCRIPTION |   varchar   | 512 |   0    |    Y     |  N   |       | 用户组描述  |
+|  14   | IAM_TEMPLATE_ID |   int   | 10 |   0    |    Y     |  N   |       | 人员模板 ID  |
+
+**表名：** <a>T_AUTH_RESOURCE_GROUP_APPLY</a>
+
+**说明：** 用户组申请记录表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
+|  4   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
+|  5   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 状态,0-审批中,1-审批成功,2-审批超时  |
+|  6   | NUMBER_OF_CHECKS |   int   | 10 |   0    |    Y     |  N   |   0    | 检查次数，用于同步组数据  |
+|  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  8   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_AUTH_RESOURCE_GROUP_CONFIG</a>
 
@@ -409,11 +451,48 @@
 |  3   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  4   | GROUP_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 用户组名称  |
 |  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式,0-开启时创建,1-启用权限管理时创建  |
-|  6   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
-|  7   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
-|  8   | ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 用户组拥有的资源操作  |
-|  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  6   | GROUP_TYPE |   int   | 10 |   0    |    N     |  N   |   0    | 用户组类型 0-默认组 1-自定义组  |
+|  7   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
+|  8   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
+|  9   | ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 用户组拥有的资源操作  |
+|  10   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  11   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
+**表名：** <a>T_AUTH_RESOURCE_GROUP_MEMBER</a>
+
+**说明：** 资源组成员
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  5   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
+|  6   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
+|  7   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
+|  8   | MEMBER_NAME |   varchar   | 512 |   0    |    N     |  N   |       | 成员名  |
+|  9   | MEMBER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 成员类型,用户/组织/模板  |
+|  10   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
+|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
+**表名：** <a>T_AUTH_RESOURCE_SYNC</a>
+
+**说明：** 同步 IAM 资源
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态,0-同步中,1-同步成功,2-同步失败  |
+|  3   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  4   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时  |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  6   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_AUTH_RESOURCE_TYPE</a>
 

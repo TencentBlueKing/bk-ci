@@ -30,8 +30,8 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.I18nSourceEnum
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-流水线插件信息")

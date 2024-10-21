@@ -30,6 +30,8 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.IModelTemplate
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -55,8 +57,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -122,19 +126,32 @@ abstract class Element(
     open var stepId: String? = null, // 用于上下文键值设置
     @get:Schema(title = "各项耗时", required = true)
     open var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    open var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
     @get:Schema(title = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorCode: Int? = null,
     @get:Schema(title = "错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorMsg: String? = null,
-    @get:Schema(title = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(
+        title = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
     open var atomName: String? = null,
     @get:Schema(title = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
-    @get:Schema(title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
-    open var classifyName: String? = null
-) {
+    @get:Schema(
+        title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false
+    )
+    open var classifyName: String? = null,
+    @get:Schema(title = "任务运行进度", required = false)
+    open var progressRate: Double? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null,
+    var asyncStatus: String? = null
+) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
 
@@ -148,7 +165,9 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun isElementEnable(): Boolean {
+    open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
+
+    open fun elementEnabled(): Boolean {
         return additionalOptions?.enable ?: true
     }
 
@@ -167,11 +186,11 @@ abstract class Element(
     open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 除非是本身的[isElementEnable]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
+     * 除非是本身的[elementEnabled]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
      * [rerun]允许对状态进行重置为QUEUE
      */
     fun initStatus(rerun: Boolean = false): BuildStatus {
-        return if (!isElementEnable()) { // 插件未启用
+        return if (!elementEnabled()) { // 插件未启用
             BuildStatus.SKIP // 跳过
         } else if (rerun) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
             BuildStatus.QUEUE

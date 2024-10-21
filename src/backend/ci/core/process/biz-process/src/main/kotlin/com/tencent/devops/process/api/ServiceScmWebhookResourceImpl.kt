@@ -32,29 +32,38 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val pipelineWebhookService: PipelineWebhookService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = GithubWebhookEvent(githubWebhook = webhook)
         ))
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
-        return Result(pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)?.id ?: ""
+        )
+    }
+
+    override fun webhookCommitNew(projectId: String, webhookCommit: WebhookCommit): Result<BuildId?> {
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)
+        )
     }
 
     override fun listScmWebhook(

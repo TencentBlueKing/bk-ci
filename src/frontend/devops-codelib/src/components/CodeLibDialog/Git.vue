@@ -34,7 +34,10 @@
                 </bk-radio>
             </bk-radio-group>
 
-            <div class="codelib-oauth" v-if="!hasPower && isOAUTH">
+            <div
+                class="codelib-oauth"
+                v-if="!hasPower && isOAUTH"
+            >
                 <bk-button
                     theme="primary"
                     @click="openValidate"
@@ -85,7 +88,7 @@
                 </bk-input>
             </bk-form-item>
             
-            <!-- <bk-form-item
+            <bk-form-item
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
@@ -109,18 +112,20 @@
                     <p>1. {{ $t('codelib.同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC (Pipeline As Code) 模式') }}</p>
                     <p>
                         2. {{ $t('codelib.PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。') }}
-                        <bk-popover width="380" placement="right-end">
+                        <bk-popover
+                            width="380"
+                            placement="right-end"
+                        >
                             <a>{{ $t('codelib.查看同步规则') }}</a>
                             <div slot="content">
                                 <p>{{ $t('codelib.同步规则：') }}</p>
                                 <p>- {{ $t('codelib.新增 YAML 时，当前项目下将新增一条对应的流水线') }}</p>
                                 <p>- {{ $t('codelib.修改 YAML 后，新触发自动以最新的 YAML 配置为准') }}</p>
-                                <p>- {{ $t('codelib.删除 YAML 时，若触发过 CI 的所有分支上的 YAML 均已删除，则同步删除蓝盾上的流水线（包括基本信息和执行历史）') }}</p>
                             </div>
                         </bk-popover>
                     </p>
                 </div>
-            </bk-form-item> -->
+            </bk-form-item>
         </template>
         <template v-else-if="!isOAUTH">
             <bk-form-item
@@ -134,7 +139,10 @@
                     v-model.trim="codelib.url"
                 >
                 </bk-input>
-                <span class="error-tips" v-if="urlErrMsg">
+                <span
+                    class="error-tips"
+                    v-if="urlErrMsg"
+                >
                     {{ urlErrMsg }}
                 </span>
             </bk-form-item>
@@ -171,8 +179,12 @@
                         v-for="(option, index) in credentialList"
                         :key="option.credentialId"
                         :id="option.credentialId"
-                        :name="option.credentialId">
-                        <span class="name" :title="option.credentialId">
+                        :name="option.credentialId"
+                    >
+                        <span
+                            class="name"
+                            :title="option.credentialId"
+                        >
                             {{ option.credentialId }}
                         </span>
                         <i
@@ -182,7 +194,10 @@
                         </i>
                     </bk-option>
                 </bk-select>
-                <span class="add-cred-btn" @click="addCredential">{{ $t('codelib.new') }}</span>
+                <span
+                    class="add-cred-btn"
+                    @click="addCredential"
+                >{{ $t('codelib.new') }}</span>
             </bk-form-item>
         </template>
     </bk-form>

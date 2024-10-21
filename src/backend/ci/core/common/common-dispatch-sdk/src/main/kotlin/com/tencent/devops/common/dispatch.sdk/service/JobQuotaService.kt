@@ -34,15 +34,16 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
@@ -112,7 +113,7 @@ class JobQuotaService constructor(
         queueTimeoutMinutes: Int,
         jobType: JobQuotaVmType,
         demoteQueueRouteKeySuffix: String,
-        startupEvent: IPipelineEvent
+        startupEvent: IEvent
     ) {
         val maxJobRetry = queueTimeoutMinutes * 60 * 1000 / RETRY_DELTA
         val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
@@ -129,8 +130,10 @@ class JobQuotaService constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -146,8 +149,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -155,7 +160,7 @@ class JobQuotaService constructor(
             if (startupEvent is PipelineAgentStartupEvent) {
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
-            dispatchService.redispatch(startupEvent)
+            dispatchService.redispatch(transferDemoteEvent(startupEvent))
         } else if (startupEvent.retryTime < maxJobRetry) {
             logger.info("$logPrefix DemoteQueue job quota excess. delay: " +
                     "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
@@ -167,8 +172,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -176,7 +183,7 @@ class JobQuotaService constructor(
             if (startupEvent is PipelineAgentStartupEvent) {
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
-            dispatchService.redispatch(startupEvent)
+            dispatchService.redispatch(transferDemoteEvent(startupEvent))
         } else {
             logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
                     "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
@@ -191,7 +198,7 @@ class JobQuotaService constructor(
     }
 
     fun checkAndAddRunningJob(
-        agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent,
+        agentLessStartupEvent: PipelineBuildLessStartupEvent,
         vmType: JobQuotaVmType?
     ): Boolean {
         if (null == vmType || !jobQuotaEnable) {
@@ -266,6 +273,43 @@ class JobQuotaService constructor(
         } catch (e: Throwable) {
             logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota failed.", e)
             true
+        }
+    }
+
+    private fun transferDemoteEvent(event: IEvent): IEvent {
+        if (event is PipelineAgentStartupEvent) {
+            return PipelineAgentStartupDemoteEvent(
+                source = event.source,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                pipelineName = event.pipelineName,
+                userId = event.userId,
+                buildId = event.buildId,
+                buildNo = event.buildNo,
+                vmSeqId = event.vmSeqId,
+                taskName = event.taskName,
+                os = event.os,
+                vmNames = event.vmNames,
+                channelCode = event.channelCode,
+                dispatchType = event.dispatchType,
+                containerId = event.containerId,
+                containerHashId = event.containerHashId,
+                queueTimeoutMinutes = event.queueTimeoutMinutes,
+                atoms = event.atoms,
+                executeCount = event.executeCount,
+                customBuildEnv = event.customBuildEnv,
+                dockerRoutingType = event.dockerRoutingType,
+                routeKeySuffix = event.routeKeySuffix,
+                jobId = event.jobId,
+                ignoreEnvAgentIds = event.ignoreEnvAgentIds,
+                singleNodeConcurrency = event.singleNodeConcurrency,
+                allNodeConcurrency = event.allNodeConcurrency,
+                dispatchQueueStartTimeMilliSecond = event.dispatchQueueStartTimeMilliSecond,
+                actionType = event.actionType,
+                delayMills = event.delayMills
+            )
+        } else {
+            return event
         }
     }
 }

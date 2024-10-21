@@ -5,22 +5,24 @@
   "private": true,
   "dependencies": {
     "vee-validate": "^2.0.3",
-    "vue": "2.6.12",
+    "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.16.0",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-loader": "^8.2.2",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-friendly-formatter": "~4.0.1",
+    "eslint-import-resolver-node": "^0.3.9",
     "eslint-loader": "^2.1.2",
     "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "6.2.2",
@@ -30,13 +32,11 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "15.9.8",
-    "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "2.6.12",
-    "webpack": "^5.58.1"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",
@@ -47,5 +47,18 @@
     "url": ""
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "nx": {
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/ticket/*.json",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/ticket"
+        ]
+      }
+    }
+  }
 }

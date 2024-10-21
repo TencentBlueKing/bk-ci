@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.4
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -15,6 +15,7 @@
 | T_LEAF_ALLOC | ID 管理数据表 |
 | T_MESSAGE_CODE_DETAIL | code 码详情表 |
 | T_NOTICE |  |
+| T_OPERATIONAL_PRODUCT | 运营产品信息表 |
 | T_PROJECT | 项目信息表 |
 | T_PROJECT_APPROVAL | 项目审批表 |
 | T_PROJECT_DATA_MIGRATE_HISTORY | 项目数据迁移历史表 |
@@ -159,6 +160,21 @@
 |  8   | REDIRECT_URL |   varchar   | 200 |   0    |    Y     |  N   |       | 跳转地址  |
 |  9   | NOTICE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 消息类型:0.弹框 1.跑马灯  |
 |  10   | SERVICE_NAME |   varchar   | 1024 |   0    |    Y     |  N   |       | 服务名称  |
+
+**表名：** <a>T_OPERATIONAL_PRODUCT</a>
+
+**说明：** 运营产品信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PRODUCT_ID |   int   | 10 |   0    |    N     |  Y   |       | 运营产品 ID  |
+|  2   | PRODUCT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 运营产品名称  |
+|  3   | PLAN_PRODUCT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 规划产品名称  |
+|  4   | DEPT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 部门名称  |
+|  5   | BG_NAME |   varchar   | 64 |   0    |    N     |  N   |       | BG 名称  |
+|  6   | CREATED_AT |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_PROJECT</a>
 
@@ -376,6 +392,7 @@
 |  26   | new_window |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否打开新标签页  |
 |  27   | new_windowUrl |   varchar   | 200 |   0    |    Y     |  N   |       | 新标签页地址  |
 |  28   | cluster_type |   varchar   | 32 |   0    |    N     |  N   |       | 集群类型  |
+|  29   | DOC_URL |   varchar   | 255 |   0    |    N     |  N   |       | 文档链接  |
 
 **表名：** <a>T_SERVICE_TYPE</a>
 

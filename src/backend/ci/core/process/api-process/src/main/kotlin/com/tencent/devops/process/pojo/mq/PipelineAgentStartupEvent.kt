@@ -28,12 +28,12 @@
 package com.tencent.devops.process.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_STARTUP)
+@Event(StreamBinding.PIPELINE_AGENT_STARTUP)
 data class PipelineAgentStartupEvent(
     override val source: String,
     override val projectId: String,
@@ -55,9 +55,21 @@ data class PipelineAgentStartupEvent(
     val executeCount: Int?,
     val customBuildEnv: Map<String, String>? = null,
     val dockerRoutingType: String? = "VM",
+    override var routeKeySuffix: String? = null,
     val jobId: String? = null,
     val ignoreEnvAgentIds: Set<String>? = null,
+    val singleNodeConcurrency: Int? = null,
+    val allNodeConcurrency: Int? = null,
+    // 用来计算 dispatch 排队过程中的耗时
+    var dispatchQueueStartTimeMilliSecond: Long? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0
+) : IPipelineEvent(
+    actionType = actionType,
+    source = source,
+    projectId = projectId,
+    pipelineId = pipelineId,
+    userId = userId,
+    delayMills = delayMills,
+    routeKeySuffix = routeKeySuffix
+)

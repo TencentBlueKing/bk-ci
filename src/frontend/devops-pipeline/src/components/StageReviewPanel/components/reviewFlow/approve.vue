@@ -2,7 +2,10 @@
     <section>
         <span class="review-subtitle">
             {{ $t('stageReview.approvalFlow') }}
-            <span class="review-clock" v-bk-tooltips="{ content: $t('stageReview.timeOutTips') }">
+            <span
+                class="review-clock"
+                v-bk-tooltips="{ content: $t('stageReview.timeOutTips') }"
+            >
                 <i class="bk-icon icon-clock"></i>
                 {{ computedTime }}
             </span>
@@ -20,11 +23,21 @@
         <span class="review-subtitle mt12">
             {{ $t('stageReview.currentStatus') }}<span class="gray-color ml20">{{ computedStatusTxt }}</span>
         </span>
-        <bk-radio-group v-model="isCancel" class="review-result">
-            <bk-radio :value="false" :disabled="disabled">
+        <bk-radio-group
+            v-model="isCancel"
+            class="review-result"
+        >
+            <bk-radio
+                :value="false"
+                :disabled="disabled"
+            >
                 {{ $t('stageReview.approve') }} <span class="gray-color">（{{ $t('stageReview.approveRes') }}）</span>
             </bk-radio>
-            <bk-radio :value="true" :disabled="disabled" class="ml135">
+            <bk-radio
+                :value="true"
+                :disabled="disabled"
+                class="ml135"
+            >
                 {{ $t('stageReview.abort') }} <span class="gray-color">（{{ $t('stageReview.abortRes') }}）</span>
             </bk-radio>
         </bk-radio-group>
@@ -36,7 +49,8 @@
             :rows="3"
             :maxlength="200"
             :disabled="disabled"
-            v-model="suggest">
+            v-model="suggest"
+        >
         </bk-input>
         <span class="error-message">{{ errMessage }}</span>
     </section>
@@ -76,7 +90,7 @@
                     if (curExecIndex === index) status = 'loading'
 
                     let icon = index + 1
-                    if (!status) icon = `${index + 1} bk-devops-icon`
+                    if (!status) icon = index + 1
 
                     return { status, title: item.name, icon }
                 }
@@ -146,9 +160,6 @@
         margin: 25px 0 32px;
         ::v-deep .bk-step {
             max-width: 367.56px;
-        }
-        ::v-deep .bk-devops-icon {
-            font-family: 'bk-devops' !important;
         }
     }
     .review-result {

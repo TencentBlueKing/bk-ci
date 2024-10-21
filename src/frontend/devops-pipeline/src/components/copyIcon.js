@@ -1,3 +1,4 @@
+import { copyToClipboard } from '@/utils/util'
 import { bkMessage } from 'bk-magic-vue'
 import createLocale from '../../../locale'
 const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
@@ -5,16 +6,13 @@ const locale = i18n.locale
 const messages = i18n.messages[locale]
 const message = messages.copySuc
 
-function copyTxt (value) {
-    const input = document.createElement('input')
-    document.body.appendChild(input)
-    input.setAttribute('value', value)
-    input.select()
-    if (document.execCommand('copy')) {
-        document.execCommand('copy')
+async function copyTxt (value) {
+    try {
+        await copyToClipboard(value)
         bkMessage({ theme: 'success', message })
+    } catch (error) {
+        bkMessage({ theme: 'error', message: error.message })
     }
-    document.body.removeChild(input)
 }
 
 export default {
@@ -26,7 +24,7 @@ export default {
 
     render (h, ctx) {
         const props = ctx.props || {}
-        const value = props.value || ''
+        const value = props.value ?? ''
         const style = {
             cursor: 'pointer'
         }

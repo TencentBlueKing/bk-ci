@@ -14,8 +14,8 @@ spring:
 # spring cloud stream 配置，common-stream
     stream:
       binders:
-        extend-rabbit:
-          type: rabbit
+        rabbit:
+          type: core-rabbit
           environment:
             spring:
               rabbitmq:
@@ -23,7 +23,24 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-      default-binder: extend-rabbit
+          type: extend-rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+        pulsar:
+          type: pulsar
+          environment:
+            spring:
+              pulsar:
+                serviceUrl: __BK_CI_PULSAR_URL__
+                tokenAuthValue: __BK_CI_PULSAR_AUTH_TOKEN__
+                tenant: __BK_CI_PULSAR_TENANT__
+                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: __BK_CI_MQ_DEFAULT_BINDER__
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
@@ -40,20 +57,6 @@ spring:
     pool:
       max-active: 16
       max-wait:  2000
-# rabbitmq config
-  rabbitmq:
-    # 引擎核心业务MQ
-    core:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
-    # 拓展功能模块MQ -- 如果主rabbitmq出现性能瓶颈, 可以考虑使用额外的实例
-    extend:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
   metrics:
     servo:
       enabled: false
@@ -225,6 +228,33 @@ spring:
       - index: 56
         name: T_PIPELINE_DATA_CLEAR
         databaseShardingStrategy: SHARDING
+      - index: 57
+        name: T_PIPELINE_OPERATION_LOG
+        databaseShardingStrategy: SHARDING
+      - index: 58
+        name: T_PIPELINE_YAML_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 59
+        name: T_PIPELINE_YAML_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 60
+        name: T_PIPELINE_YAML_SYNC
+        databaseShardingStrategy: SHARDING
+      - index: 61
+        name: T_PIPELINE_YAML_BRANCH_FILE
+        databaseShardingStrategy: SHARDING
+      - index: 62
+        name: T_PIPELINE_YAML_VIEW
+        databaseShardingStrategy: SHARDING
+      - index: 63
+        name: T_PIPELINE_WEBHOOK_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 64
+        name: T_PIPELINE_TIMER_BRANCH
+        databaseShardingStrategy: SHARDING
+      - index: 65
+        name: T_PIPELINE_BUILD_HISTORY_DEBUG
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -257,6 +287,7 @@ devopsGateway:
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  whiteProxy: __BK_CI_PRIVATE_URL__
 
 # certificate server 配置
 certificate:

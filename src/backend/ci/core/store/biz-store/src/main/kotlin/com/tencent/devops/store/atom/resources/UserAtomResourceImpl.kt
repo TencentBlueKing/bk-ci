@@ -31,19 +31,22 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
+import com.tencent.devops.store.atom.service.AtomPropService
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.UnInstallReq
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.atom.service.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomService) :
-    UserAtomResource {
+class UserAtomResourceImpl @Autowired constructor(
+    private val atomService: AtomService,
+    private val atomPropService: AtomPropService
+) : UserAtomResource {
 
     override fun getPipelineAtom(
         projectCode: String,
@@ -132,5 +135,9 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
         return atomService.uninstallAtom(userId, projectCode, atomCode, unInstallReq)
+    }
+
+    override fun getAtomOutputInfos(atomInfos: Set<String>): Result<Map<String, String>?> {
+        return Result(atomPropService.getAtomOutputInfos(atomInfos))
     }
 }

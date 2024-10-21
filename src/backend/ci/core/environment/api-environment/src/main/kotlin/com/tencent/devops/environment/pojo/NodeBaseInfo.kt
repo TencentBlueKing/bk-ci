@@ -58,5 +58,9 @@ data class NodeBaseInfo(
     @get:Schema(title = "显示名称", required = false)
     val displayName: String?,
     @get:Schema(title = "所属业务, 默认-1表示没有绑定业务")
-    val bizId: Long? = -1
+    val bizId: Long? = -1,
+    @get:Schema(title = "当前环境是否启用这个 node")
+    val envEnableNode: Boolean?,
+    @get:Schema(title = "最后更新时间")
+    val lastModifyTime: Long? = null
 )

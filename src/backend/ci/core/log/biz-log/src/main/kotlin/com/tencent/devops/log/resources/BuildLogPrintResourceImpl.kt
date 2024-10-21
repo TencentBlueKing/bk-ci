@@ -125,9 +125,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logMode: String?
+        logMode: String?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -142,9 +144,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 finished = false,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = LogStorageMode.parse(logMode)
+                logStorageMode = LogStorageMode.parse(logMode),
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)
@@ -155,9 +159,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         finished: Boolean,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logMode: String?
+        logMode: String?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -169,9 +175,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 finished = finished,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = LogStorageMode.parse(logMode)
+                logStorageMode = LogStorageMode.parse(logMode),
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(false)
@@ -215,8 +223,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            reverse = false
         )
         recordMultiLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs
@@ -245,8 +256,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null
         )
         recordMultiLogCount(afterLogs.data?.logs?.size ?: 0)
 

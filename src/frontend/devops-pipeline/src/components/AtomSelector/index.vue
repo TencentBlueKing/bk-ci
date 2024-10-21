@@ -1,12 +1,39 @@
 <template>
     <portal to="atom-selector-popup">
         <transition name="selector-slide">
-            <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
+            <div
+                v-if="showAtomSelectorPopup"
+                class="atom-selector-popup"
+            >
                 <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    <h3>
+                        {{ $t('editPage.chooseAtom') }}<i
+                            @click="freshAtomList"
+                            class="devops-icon icon-refresh atom-fresh"
+                            :class="fetchingAtomList ? 'spin-icon' : ''"
+                        />
+                    </h3>
+                    <bk-input
+                        class="atom-search-input"
+                        ref="searchStr"
+                        :clearable="true"
+                        :placeholder="$t('editPage.searchTips')"
+                        right-icon="icon-search"
+                        :value="searchKey"
+                        @input="handleClear"
+                        @right-icon-click="handleSearch"
+                        @enter="handleSearch"
+                    ></bk-input>
                 </header>
-                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
+                <bk-tab
+                    v-if="!searchKey"
+                    class="atom-tab"
+                    size="small"
+                    ref="tab"
+                    :active.sync="classifyCode"
+                    type="unborder-card"
+                    v-bkloading="{ isLoading: fetchingAtomList }"
+                >
                     <bk-tab-panel
                         ref="atomListDom"
                         v-for="classify in classifyCodeList"
@@ -17,7 +44,8 @@
                         render-directive="if"
                         :class="[{ [getClassifyCls(classify)]: true }, 'tab-section']"
                     >
-                        <atom-card v-for="(atom) in curTabList"
+                        <atom-card
+                            v-for="(atom) in curTabList"
                             :key="atom.atomCode"
                             :atom="atom"
                             :container="container"
@@ -31,14 +59,28 @@
                                 [getAtomClass(atom.atomCode)]: true
                             }"
                         ></atom-card>
-                        <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                        <div
+                            class="empty-atom-list"
+                            v-if="curTabList.length <= 0 && !fetchingAtomList"
+                        >
                             <empty-tips type="no-result"></empty-tips>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>
-                <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
-                    <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
-                    <atom-card v-for="atom in installArr"
+                <section
+                    v-else
+                    class="search-result"
+                    ref="searchResult"
+                    v-bkloading="{ isLoading: fetchingAtomList }"
+                >
+                    <h3
+                        v-if="installArr.length"
+                        class="search-title"
+                    >
+                        {{ $t('newlist.installed') }}（{{ installArr.length }}）
+                    </h3>
+                    <atom-card
+                        v-for="atom in installArr"
                         :key="atom.atomCode"
                         :atom="atom"
                         :container="container"
@@ -52,8 +94,14 @@
                         }"
                     ></atom-card>
 
-                    <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
-                    <atom-card v-for="atom in uninstallArr"
+                    <h3
+                        v-if="uninstallArr.length"
+                        class="search-title gap-border"
+                    >
+                        {{ $t('editPage.notInstall') }}（{{ uninstallArr.length }}）
+                    </h3>
+                    <atom-card
+                        v-for="atom in uninstallArr"
                         :key="atom.atomCode"
                         :atom="atom"
                         :container="container"
@@ -67,7 +115,10 @@
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
-                    <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                    <div
+                        class="empty-atom-list"
+                        v-if="curTabList.length <= 0 && !fetchingAtomList"
+                    >
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
@@ -90,6 +141,8 @@
             EmptyTips
         },
         props: {
+            showAtomYaml: Boolean,
+            atomYaml: String,
             container: {
                 type: Object,
                 default: () => ({})
@@ -97,6 +150,9 @@
             element: {
                 type: Object,
                 default: () => ({})
+            },
+            beforeClose: {
+                type: Function
             },
             elementIndex: Number
         },
@@ -178,13 +234,15 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
+                        // 收起变量侧栏
+                        this.setShowVariable(false)
                         this.fetchClassify()
                         this.fetchAtomList()
                         setTimeout(() => {
-                            this.$refs.searchStr.focus()
+                            this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
-                        this.clearSearch()
+                        this.clearSearch(false)
                     }
                 },
                 immediate: true
@@ -223,6 +281,7 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setRequestAtomData',
+                'setShowVariable',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
@@ -237,15 +296,16 @@
                     this.isThrottled = true
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
-                        const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
-        
+                        let queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
+
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
+                            queryProjectAtomFlag = false
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
-                        
+
                         await this.fetchAtoms({
                             projectCode: this.projectCode,
                             category: this.category,
@@ -291,20 +351,22 @@
                 })
                 this.clearAtomData()
             },
-            clearSearch () {
+            clearSearch (refetch = true) {
                 const input = this.$refs.searchStr || {}
                 input.curValue = ''
                 this.searchKey = ''
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
-                this.fetchAtomList()
+                if (refetch) {
+                    this.fetchAtomList()
+                }
             },
             close () {
+                this.beforeClose?.()
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },
 
-            freshAtomList (searchKey) {
+            freshAtomList () {
                 if (this.fetchingAtomList) return
                 if (this.searchKey) {
                     this.$refs.searchResult.scrollTo(0, 0)
@@ -337,13 +399,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
-        margin: 10px 0;
+        top: 64px;
         &:before {
             content: '';
             display: block;
@@ -358,6 +419,7 @@
             right: -6px;
             top: 136px;
         }
+
         .not-recommend {
             text-decoration: line-through;
         }
@@ -468,6 +530,9 @@
                 line-height: 50px;
                 margin-right: 15px;
                 color: $fontLighterColor;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 .devops-icon {
                     fill: currentColor
                 }
@@ -531,6 +596,7 @@
                 }
                 .select-atom-btn:hover {
                     background-color: $primaryColor;
+                    border-color: $primaryColor;
                     color: white;
                 }
                 .atom-link {

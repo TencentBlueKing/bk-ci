@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
@@ -36,10 +37,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Stage(
     @get:Schema(title = "容器集合", required = true)
     val containers: List<Container> = listOf(),
-    @get:Schema(title = "阶段ID", required = false)
+    @get:Schema(title = "阶段ID (系统标识，用户不可编辑)", required = false)
     var id: String?,
     @get:Schema(title = "阶段名称", required = true)
     var name: String? = "",
+    @get:Schema(title = "阶段ID (用户可编辑)", required = false)
+    var stageIdForUser: String? = null,
     @get:Schema(title = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
     @get:Schema(title = "阶段状态", required = false, readOnly = true)
@@ -67,8 +70,11 @@ data class Stage(
     @get:Schema(title = "步骤运行次数", required = false, readOnly = true)
     var executeCount: Int? = null,
     @get:Schema(title = "各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null
-) {
+    var timeCost: BuildRecordTimeCost? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
+) : IModelTemplate {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */
@@ -102,7 +108,7 @@ data class Stage(
         }
     }
 
-    fun isStageEnable(): Boolean {
+    fun stageEnabled(): Boolean {
         return stageControlOption?.enable ?: true
     }
 }

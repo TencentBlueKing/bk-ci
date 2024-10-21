@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.service.SampleAtomReleaseService
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -49,7 +50,8 @@ import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -89,7 +91,24 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         branch: String?,
         validOsNameFlag: Boolean?,
         validOsArchFlag: Boolean?
-    ) = Unit
+    ) {
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        record?.let {
+            RedisLock(
+                redisOperation,
+                "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:${record.atomCode}",
+                60L
+            ).use { redisLock ->
+                redisLock.lock()
+                marketAtomDao.setupAtomLatestTestFlag(
+                    dslContext = dslContext,
+                    userId = userId,
+                    atomCode = record.atomCode,
+                    atomId = atomId
+                )
+            }
+        }
+    }
 
     override fun validateUpdateMarketAtomReq(
         userId: String,

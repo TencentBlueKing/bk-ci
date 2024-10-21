@@ -31,15 +31,15 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -65,7 +65,6 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -80,7 +79,7 @@ import java.util.concurrent.TimeUnit
  *
  * @version 1.0
  */
-@Suppress("UNUSED", "LongParameterList")
+@Suppress("LongParameterList", "LongMethod", "MagicNumber")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMStartupTaskAtom @Autowired constructor(
@@ -89,8 +88,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildVariableService: BuildVariableService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineAsCodeService: PipelineAsCodeService,
@@ -111,10 +109,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         // 解决BUG:93319235,env变量提前替换
         val context = pipelineContextService.getAllBuildContext(runVariables)
-        val buildEnv = param.customBuildEnv?.map { mit ->
-            mit.key to EnvUtils.parseEnv(mit.value, context)
-        }?.toMap()
-        val fixParam = param.copy(customBuildEnv = buildEnv)
+        val buildEnv = param.customEnv?.map { mit ->
+            NameAndValue(mit.key, EnvUtils.parseEnv(mit.value, context))
+        }
+        val fixParam = param.copy(customEnv = buildEnv)
 
         try {
             atomResponse = if (!checkBeforeStart(task, param, context)) {
@@ -130,16 +128,20 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = param.jobId,
+                stepId = task.stepId
             )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Fail to execute the task atom", e)
             atomResponse = AtomResponse(
@@ -153,8 +155,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Fail to execute the task atom", ignored)
             atomResponse = AtomResponse(
@@ -241,7 +245,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
 
         val dispatchType = dispatchTypeBuilder.getDispatchType(task, param)
-
+        val customBuildEnv = mutableMapOf<String, String>()
+        param.customEnv?.forEach {
+            if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
+        }
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
                 source = "vmStartupTaskAtom",
@@ -263,9 +270,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
-                customBuildEnv = param.customBuildEnv,
+                customBuildEnv = customBuildEnv,
                 jobId = container.jobId,
-                ignoreEnvAgentIds = ignoreEnvAgentIds
+                ignoreEnvAgentIds = ignoreEnvAgentIds,
+                singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
+                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency
             )
         )
     }
@@ -280,7 +289,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
             val asCode by lazy {
-                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(task.projectId, task.pipelineId)
+                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+                    task.projectId, task.pipelineId, task.buildId, null
+                )
                 val asCodeEnabled = asCodeSettings?.enable == true
                 val contextPair = if (asCodeEnabled) {
                     EnvReplacementParser.getCustomExecutionContextByMap(variables)
@@ -311,22 +322,16 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                             arrayOf(env.key, version)
                         ),
                         tag = task.taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
                     )
                     return false
                 }
             }
         }
         return true
-    }
-
-    private fun getBuildZone(container: Container): Zone? {
-        return when {
-            container !is VMBuildContainer -> null
-            container.enableExternal == true -> Zone.EXTERNAL
-            else -> null
-        }
     }
 
     override fun tryFinish(
@@ -354,6 +359,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
@@ -385,9 +391,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
                     )
                 }
-                // 发送后就将参数置空防止下次重复发送事件
 
-                thirdPartyAgentMonitorPrint(task)
+                try {
+                    thirdPartyAgentMonitorPrint(task)
+                } catch (ignore: Exception) {
+                    // 忽略掉因调用打印接口出错而导致调度失败的问题
+                }
             }
 
             AtomResponse(
@@ -416,7 +425,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 vmSeqId = task.containerId,
                 containerHashId = task.containerHashId,
                 userId = task.starter,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                stepId = task.stepId
             )
             client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
         }

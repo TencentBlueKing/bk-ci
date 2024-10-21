@@ -35,5 +35,13 @@ function _M:get_cookie(cookie_name)
     return cookie_value
 end
 
+function _M:set_cookie(cookie_table)
+    local cookie, err = ck:new()
+    if not cookie then
+        ngx.log(ngx.STDERR, "failed to get request cookies: ", err)
+        return nil
+    end
+    return cookie:set(cookie_table)
+end
 
 return _M

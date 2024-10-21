@@ -29,7 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
@@ -50,6 +50,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -58,6 +59,7 @@ import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -130,15 +132,15 @@ class ProjectDao {
         }
     }
 
-    fun listMigrateProjects(
+    fun listProjectsByCondition(
         dslContext: DSLContext,
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
-                .where(buildMigrateProjectCondition(migrateProjectConditionDTO))
+                .where(buildProjectCondition(projectConditionDTO))
                 .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)
@@ -146,15 +148,21 @@ class ProjectDao {
         }
     }
 
-    fun buildMigrateProjectCondition(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    fun buildProjectCondition(
+        projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TProject.T_PROJECT) {
-            with(migrateProjectConditionDTO) {
+            with(projectConditionDTO) {
                 conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
-                conditions.add(ENABLED.eq(true))
+                if (channelCode == null) {
+                    conditions.add(
+                        CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name))
+                    )
+                } else {
+                    conditions.add(CHANNEL.eq(channelCode))
+                }
+                enabled?.let { conditions.add(ENABLED.eq(enabled)) }
                 centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
                 deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
                 bgId?.let { conditions.add(BG_ID.eq(bgId)) }
@@ -175,16 +183,18 @@ class ProjectDao {
                         else -> {}
                     }
                 }
-                if (migrateProjectConditionDTO.routerTag == null) {
-                    conditions.add(
-                        ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
-                            .or(ROUTER_TAG.isNull)
-                    )
-                } else {
-                    conditions.add(
-                        ROUTER_TAG.like("%${migrateProjectConditionDTO.routerTag!!.value}%")
-                            .or(ROUTER_TAG.like("%devx%"))
-                    )
+                routerTag?.let {
+                    if (routerTag == AuthSystemType.RBAC_AUTH_TYPE) {
+                        conditions.add(
+                            ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
+                                .or(ROUTER_TAG.like("%devx%"))
+                                .let { if (includeNullRouterTag == true) it.or(ROUTER_TAG.isNull()) else it }
+                        )
+                    } else {
+                        conditions.add(
+                            ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
+                        )
+                    }
                 }
             }
         }
@@ -514,7 +524,8 @@ class ProjectDao {
         routerTag: String?,
         otherRouterTagMaps: Map<String, String>?,
         remoteDevFlag: Boolean?,
-        productId: Int?
+        productId: Int?,
+        channelCode: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!projectName.isNullOrBlank()) {
@@ -542,6 +553,7 @@ class ProjectDao {
             conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
             conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
         }
+        channelCode?.let { conditions.add(CHANNEL.eq(channelCode)) }
         return conditions
     }
 
@@ -559,7 +571,8 @@ class ProjectDao {
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
-        productId: Int? = null
+        productId: Int? = null,
+        channelCode: String? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -573,7 +586,8 @@ class ProjectDao {
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
                 remoteDevFlag = remoteDevFlag,
-                productId = productId
+                productId = productId,
+                channelCode = channelCode
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -608,6 +622,7 @@ class ProjectDao {
                                     it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).desc())
                                 }
                             }
+
                             ProjectSortType.ENGLISH_NAME -> {
                                 if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
                                     it.orderBy(ENGLISH_NAME.asc())
@@ -615,6 +630,7 @@ class ProjectDao {
                                     it.orderBy(ENGLISH_NAME.desc())
                                 }
                             }
+
                             else -> {
                                 it
                             }
@@ -669,11 +685,11 @@ class ProjectDao {
                 )
                 .let {
                     it.takeIf { projectName != null }?.and(
-                        PROJECT_NAME.like("%${projectName!!.trim()}%")
+                        lower(PROJECT_NAME).like("%${projectName!!.trim().lowercase(Locale.getDefault())}%")
                     ) ?: it
                 }
                 .let { it.takeIf { projectId != null }?.and(ENGLISH_NAME.eq(projectId)) ?: it }
-                .and(CHANNEL.eq("BS"))
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
@@ -683,7 +699,7 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq("BS"))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -743,7 +759,8 @@ class ProjectDao {
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
-        productId: Int? = null
+        productId: Int? = null,
+        channelCode: String? = null
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -757,7 +774,8 @@ class ProjectDao {
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
                 remoteDevFlag = remoteDevFlag,
-                productId = productId
+                productId = productId,
+                channelCode = channelCode
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }

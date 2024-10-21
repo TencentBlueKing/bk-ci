@@ -33,7 +33,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -105,12 +104,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
+        val buildInfo = pipelineBuildDao.getUserBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
         ) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
@@ -128,10 +125,9 @@ class PipelineBuildDetailService @Autowired constructor(
             }
         }
 
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNo = triggerContainer.buildNo
-        if (buildNo != null) {
-            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
+        val triggerContainer = model.getTriggerContainer()
+        triggerContainer.buildNo?.apply {
+            currentBuildNo = buildSummaryRecord?.buildNo ?: buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
@@ -180,7 +176,8 @@ class PipelineBuildDetailService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            triggerReviewers = triggerReviewers
+            triggerReviewers = triggerReviewers,
+            debug = buildInfo.debug
         )
     }
 
@@ -367,13 +364,5 @@ class PipelineBuildDetailService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
-    }
-
-    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
-        return pipelineBuildDao.getBuildInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId
-        )?.pipelineId
     }
 }

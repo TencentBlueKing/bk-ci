@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -54,12 +55,13 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId.PROJECT
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -75,11 +77,11 @@ import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -93,7 +95,6 @@ import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -131,7 +132,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
     val client: Client,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -447,7 +448,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
         }
         val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
-        return projectInfo.copy(tipsStatus = tipsStatus)
+        return projectInfo.copy(
+            tipsStatus = tipsStatus,
+            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
+        )
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
@@ -473,10 +477,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val beforeProductName = if (record.productId != null) {
+            getProductByProductId(record.productId)
+        } else {
+            null
+        }
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            beforeProductName = beforeProductName?.productName
         )
     }
 
@@ -542,7 +552,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
-                    subjectScopesStr = subjectScopesStr,
+                    afterSubjectScopes = subjectScopes,
                     projectUpdateInfo = projectUpdateInfo
                 )
                 val projectId = projectInfo.projectId
@@ -558,8 +568,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
                         finalNeedApproval = finalNeedApproval,
-                        beforeSubjectScopesStr = projectInfo.subjectScopes,
-                        afterSubjectScopesStr = subjectScopesStr
+                        beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                        afterSubjectScopes = subjectScopes
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
@@ -692,29 +702,35 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         originalProjectName: String,
         modifiedProjectName: String,
         finalNeedApproval: Boolean,
-        beforeSubjectScopesStr: String,
-        afterSubjectScopesStr: String
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
     ): Boolean {
+        val isSubjectScopesChange = isSubjectScopesChange(
+            beforeSubjectScopes = beforeSubjectScopes,
+            afterSubjectScopes = afterSubjectScopes
+        )
         return originalProjectName != modifiedProjectName || finalNeedApproval ||
-            beforeSubjectScopesStr != afterSubjectScopesStr
+            isSubjectScopesChange
     }
 
     private fun getUpdateApprovalStatus(
         needApproval: Boolean?,
         projectInfo: TProjectRecord,
-        subjectScopesStr: String,
+        afterSubjectScopes: List<SubjectScopeInfo>,
         projectUpdateInfo: ProjectUpdateInfo
     ): Pair<Boolean, Int> {
         val authNeedApproval = projectPermissionService.needApproval(needApproval)
         val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
+            val isSubjectScopesChange = isSubjectScopesChange(
+                beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                afterSubjectScopes = afterSubjectScopes
+            )
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
             val finalNeedApproval = authNeedApproval &&
-                (projectInfo.subjectScopes != subjectScopesStr ||
-                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
-                    projectInfo.productId != projectUpdateInfo.productId
-                    )
+                (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
+                    projectInfo.productId != projectUpdateInfo.productId)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
@@ -725,6 +741,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 当创建驳回时，需要再审批,状态又为重新创建
             Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)
         }
+    }
+
+    private fun isSubjectScopesChange(
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
+    ): Boolean {
+        val beforeIds = beforeSubjectScopes.map { it.id }.toSet()
+        val afterIds = afterSubjectScopes.map { it.id }.toSet()
+        return beforeIds != afterIds
     }
 
     private fun updateApprovalInfo(
@@ -867,9 +892,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectId: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<ProjectWithPermission> {
+    ): Pagination<ProjectByConditionDTO> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectsResp = mutableListOf<ProjectWithPermission>()
+        val projectsResp = mutableListOf<ProjectByConditionDTO>()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
         projectDao.listProjectsForApply(
@@ -881,7 +906,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             limit = sqlLimit.limit
         ).forEach {
             projectsResp.add(
-                ProjectWithPermission(
+                ProjectByConditionDTO(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
@@ -995,18 +1020,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listMigrateProjects(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+    override fun listProjectsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
-    ): List<ProjectWithPermission> {
-        return projectDao.listMigrateProjects(
+    ): List<ProjectByConditionDTO> {
+        return projectDao.listProjectsByCondition(
             dslContext = dslContext,
-            migrateProjectConditionDTO = migrateProjectConditionDTO,
+            projectConditionDTO = projectConditionDTO,
             limit = limit,
             offset = offset
         ).map {
-            ProjectWithPermission(
+            ProjectByConditionDTO(
                 projectName = it.projectName,
                 englishName = it.englishName,
                 permission = true,
@@ -1400,6 +1425,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
+    }
+
+    override fun setDisableWhenInactiveFlag(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            val projectInfo = getByEnglishName(
+                englishName = it
+            ) ?: return@forEach
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.disableWhenInactive = false
+            projectDao.updatePropertiesByCode(
+                dslContext = dslContext,
+                projectCode = it,
+                properties = properties
+            )
+        }
+        return true
     }
 
     override fun updateProjectProperties(

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.interceptor
 
+import com.tencent.devops.common.api.enums.CheckoutRepositoryType
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -101,6 +101,11 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                                 if (!noScm) {
                                     return@outer
                                 }
+                                // 如果插件配置代码库信息,已在PipelineTimerBuildListener已校验源代码是否有变更
+                                if (ele.enableRepoConfig()) {
+                                    noScm = false
+                                    return@outer
+                                }
                             }
                         }
                         // 解析变量
@@ -110,7 +115,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                     } else if (noScm && container is VMBuildContainer) {
                         container.elements.forEach ele@{ ele ->
                             // 插件没有启用或者是post action不需要比较变更
-                            if (!ele.isElementEnable() || ele.additionalOptions?.elementPostInfo != null) {
+                            if (!ele.elementEnabled() || ele.additionalOptions?.elementPostInfo != null) {
                                 return@ele
                             }
                             val (existScmElement, codeChange) = scmElementCheck(
@@ -419,7 +424,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         if (input !is Map<*, *>) return false
 
         // checkout插件[按仓库URL输入]不校验代码变更
-        if (ele.getAtomCode() == "checkout" && input["repositoryType"] == RepositoryTypeNew.URL.name) return true
+        if (
+            ele.getAtomCode() == "checkout" &&
+            CheckoutRepositoryType.skipTimerTriggerChange(input["repositoryType"]?.toString())
+        ) return true
         val repositoryConfig = getMarketBuildRepoConfig(input, variables) ?: return false
 
         val gitPullMode = EnvUtils.parseEnv(input["pullType"] as String?, variables)

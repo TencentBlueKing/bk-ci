@@ -8,6 +8,8 @@ data class MigrateResourceDTO(
     val resourceType: String? = null,
     @get:Schema(title = "项目ID列表")
     val projectCodes: List<String>? = null,
+    @get:Schema(title = "是否包含router_tag为null的项目")
+    val includeNullRouterTag: Boolean? = false,
     @get:Schema(title = "是否迁移项目级资源")
     val migrateProjectResource: Boolean? = false,
     @get:Schema(title = "是否迁移项目级默认用户组")

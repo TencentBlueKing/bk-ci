@@ -46,7 +46,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -83,7 +83,9 @@ class RbacPermissionMigrateService constructor(
     private val authMigrationDao: AuthMigrationDao,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val cacheService: RbacCacheService,
-    private val permissionResourceMemberService: PermissionResourceMemberService
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
+    private val migrateResourceGroupService: MigrateResourceGroupService
 ) : PermissionMigrateService {
 
     companion object {
@@ -149,22 +151,22 @@ class RbacPermissionMigrateService constructor(
 
     override fun allToRbacAuth(): Boolean {
         logger.info("start to migrate all project")
-        toRbacAuthByCondition(MigrateProjectConditionDTO())
+        toRbacAuthByCondition(ProjectConditionDTO())
         return true
     }
 
     override fun toRbacAuthByCondition(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean {
-        logger.info("start to migrate project by condition|$migrateProjectConditionDTO")
+        logger.info("start to migrate project by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = migrateProjectConditionDTO,
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
                     limit = limit,
                     offset = offset
                 ).data ?: break
@@ -209,8 +211,12 @@ class RbacPermissionMigrateService constructor(
             resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
-                it.routerTag != null && (
-                    it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || it.routerTag!!.contains("devx"))
+                val r = it.routerTag
+                if (migrateResourceDTO.includeNullRouterTag == true) {
+                    r == null || r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx")
+                } else {
+                    r != null && (r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx"))
+                }
             }
         val traceId = MDC.get(TraceTag.BIZID)
         projectInfoList.forEach {
@@ -270,9 +276,11 @@ class RbacPermissionMigrateService constructor(
             val limit = PageUtil.MAX_PAGE_SIZE
             var count = 0
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                        enabled = true,
+                        includeNullRouterTag = migrateResourceDTO.includeNullRouterTag
                     ),
                     limit = limit,
                     offset = offset
@@ -448,6 +456,7 @@ class RbacPermissionMigrateService constructor(
                         watcher = watcher
                     )
                 }
+
                 AuthSystemType.V3_AUTH_TYPE -> {
                     migrateV3Auth(
                         projectCode = projectCode,
@@ -584,12 +593,15 @@ class RbacPermissionMigrateService constructor(
             is IamException -> {
                 exception.errorMsg
             }
+
             is ErrorCodeException -> {
                 exception.defaultMessage
             }
+
             is CompletionException -> {
                 exception.cause?.message ?: exception.message
             }
+
             else -> {
                 exception.toString()
             }
@@ -604,15 +616,20 @@ class RbacPermissionMigrateService constructor(
         )
     }
 
-    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+    override fun autoRenewal(
+        validExpiredDay: Int,
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = migrateProjectConditionDTO,
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO.copy(
+                        enabled = true
+                    ),
                     limit = limit,
                     offset = offset
                 ).data ?: break
@@ -620,7 +637,8 @@ class RbacPermissionMigrateService constructor(
                     migrateProjectsExecutorService.submit {
                         MDC.put(TraceTag.BIZID, traceId)
                         autoRenewal(
-                            projectCode = migrateProject.englishName
+                            projectCode = migrateProject.englishName,
+                            validExpiredDay = validExpiredDay
                         )
                     }
                 }
@@ -630,7 +648,10 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    private fun autoRenewal(projectCode: String) {
+    private fun autoRenewal(
+        projectCode: String,
+        validExpiredDay: Int
+    ) {
         var offset = 0
         val limit = 100
         val startTime = System.currentTimeMillis()
@@ -652,7 +673,8 @@ class RbacPermissionMigrateService constructor(
                     permissionResourceMemberService.autoRenewal(
                         projectCode = projectCode,
                         resourceType = resourceType,
-                        resourceCode = resourceCode
+                        resourceCode = resourceCode,
+                        validExpiredDay = validExpiredDay
                     )
                 } catch (ignored: Throwable) {
                     logger.error("Failed to auto renewal|$projectCode|$resourceType|$resourceCode")
@@ -661,5 +683,24 @@ class RbacPermissionMigrateService constructor(
             offset += limit
         } while (resourceSize == limit)
         logger.info("Finish to auto renewal|$projectCode|${System.currentTimeMillis() - startTime}")
+    }
+
+    override fun migrateResourceAuthorization(projectCodes: List<String>): Boolean {
+        return migrateResourceAuthorizationService.migrateResourceAuthorization(
+            projectCodes = projectCodes
+        )
+    }
+
+    override fun migrateAllResourceAuthorization(): Boolean {
+        return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
+    }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            migrateResourceGroupService.fixResourceGroups(
+                projectCode = it
+            )
+        }
+        return true
     }
 }

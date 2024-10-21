@@ -29,21 +29,27 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
+import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.SelectForStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -56,7 +62,8 @@ class RepositoryDao {
         aliasName: String,
         url: String,
         type: ScmType,
-        atom: Boolean? = false
+        atom: Boolean? = false,
+        enablePac: Boolean?
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -74,7 +81,8 @@ class RepositoryDao {
                     UPDATED_TIME,
                     IS_DELETED,
                     UPDATED_USER,
-                    ATOM
+                    ATOM,
+                    ENABLE_PAC
                 ).values(
                     projectId,
                     userId,
@@ -85,7 +93,8 @@ class RepositoryDao {
                     now,
                     false,
                     userId,
-                    atom
+                    atom,
+                    enablePac
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -123,7 +132,8 @@ class RepositoryDao {
         projectIds: Collection<String>,
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
-        repositoryIds: Set<Long>?
+        repositoryIds: Set<Long>?,
+        enablePac: Boolean? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -136,6 +146,9 @@ class RepositoryDao {
 
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -215,6 +228,89 @@ class RepositoryDao {
         }
     }
 
+    fun listRepositoryAuthorization(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<RepositoryInfo> {
+        val repositoryAuthorizationQuery = buildRepositoryAuthorizationQuery(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.select()
+                .from(repositoryAuthorizationQuery)
+                .limit(limit)
+                .offset(offset)
+                .skipCheck()
+                .fetch()
+                .map {
+                    RepositoryInfo(
+                        repositoryId = it[REPOSITORY_ID],
+                        repositoryHashId = HashUtil.encodeOtherLongId(it[REPOSITORY_ID]),
+                        aliasName = it[ALIAS_NAME],
+                        url = it[URL],
+                        type = ScmType.valueOf(it[TYPE]),
+                        createUser = it[USER_ID],
+                        createdTime = it[CREATED_TIME].timestampmilli(),
+                        updatedTime = it[UPDATED_TIME].timestampmilli()
+                    )
+                }
+        }
+    }
+
+    fun countRepositoryAuthorization(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        val repositoryAuthorizationQuery = buildRepositoryAuthorizationQuery(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        return dslContext.fetchCount(repositoryAuthorizationQuery)
+    }
+
+    private fun buildRepositoryAuthorizationQuery(
+        dslContext: DSLContext,
+        projectId: String
+    ): SelectForStep<out Record> {
+        val tRepositoryCodeGit = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+        with(TRepository.T_REPOSITORY) {
+            val codeGitQuery = dslContext.select(
+                REPOSITORY_ID,
+                ALIAS_NAME,
+                URL,
+                TYPE,
+                USER_ID,
+                CREATED_TIME,
+                UPDATED_TIME
+            )
+                .from(this)
+                .join(tRepositoryCodeGit)
+                .on(REPOSITORY_ID.eq(tRepositoryCodeGit.REPOSITORY_ID))
+                .where(IS_DELETED.eq(false))
+                .and(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(ScmType.CODE_GIT.name))
+                .and(tRepositoryCodeGit.AUTH_TYPE.eq(RepoAuthType.OAUTH.name))
+
+            val gitHubQuery = dslContext.select(
+                REPOSITORY_ID,
+                ALIAS_NAME,
+                URL,
+                TYPE,
+                USER_ID,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).from(this)
+                .where(IS_DELETED.eq(false))
+                .and(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(ScmType.GITHUB.name))
+
+            return codeGitQuery.unionAll(gitHubQuery).orderBy(CREATED_TIME.desc())
+        }
+    }
+
     fun listByProject(
         dslContext: DSLContext,
         projectIds: Collection<String>,
@@ -250,7 +346,8 @@ class RepositoryDao {
         offset: Int,
         limit: Int,
         sortBy: String? = null,
-        sortType: String? = null
+        sortType: String? = null,
+        enablePac: Boolean? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -262,6 +359,10 @@ class RepositoryDao {
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
+            }
+
             when (repositoryTypes) {
                 null -> {
                 }
@@ -313,6 +414,16 @@ class RepositoryDao {
         }
     }
 
+    fun getOrNull(dslContext: DSLContext, repositoryId: Long, projectId: String? = null): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            val query = dslContext.selectFrom(this).where(REPOSITORY_ID.eq(repositoryId))
+            if (!projectId.isNullOrBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            return query.and(IS_DELETED.eq(false)).fetchOne()
+        }
+    }
+
     fun getByName(dslContext: DSLContext, projectId: String, repositoryName: String): TRepositoryRecord {
         with(TRepository.T_REPOSITORY) {
             return dslContext.selectFrom(this)
@@ -320,8 +431,8 @@ class RepositoryDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .fetchAny() ?: throw NotFoundException(
-                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
-                )
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryName))
+            )
         }
     }
 
@@ -463,6 +574,79 @@ class RepositoryDao {
                 .join(tRepository).on(REPOSITORY_ID.eq(tRepository.REPOSITORY_ID))
                 .where(tRepository.REPOSITORY_HASH_ID.`in`(repositoryHashIdList))
                 .fetchInto(String::class.java)
+        }
+    }
+
+    fun getPacRepositoryByIds(dslContext: DSLContext, repositoryIds: List<Long>): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ENABLE_PAC.eq(true))
+                .and(IS_DELETED.eq(false))
+                .fetchOne()
+        }
+    }
+
+    fun enablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .set(ENABLE_PAC, true)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun disablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ENABLE_PAC, false)
+                .setNull(YAML_SYNC_STATUS)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updateYamlSyncStatus(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        syncStatus: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(YAML_SYNC_STATUS, syncStatus)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updateStoreRepoProject(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(PROJECT_ID, projectId)
+                .set(USER_ID, userId)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
         }
     }
 }

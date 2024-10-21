@@ -1,8 +1,18 @@
 <template>
-    <div class="exec-material-row">
+    <div
+        :class="['exec-material-row', {
+            'fit-content': isFitContent
+        }]"
+    >
         <div class="material-row-info-spans">
-            <span v-for="field in materialInfoKeys" :key="field">
-                <logo :name="iconArray[field] || 'commit'" size="14" />
+            <span
+                v-for="field in materialInfoKeys"
+                :key="field"
+            >
+                <logo
+                    :name="iconArray[field] || 'commit'"
+                    size="14"
+                />
                 <bk-link
                     v-if="includeLink(field)"
                     class="material-span"
@@ -18,7 +28,10 @@
                 >
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch, allowHTML: false }">{{ material.webhookSourceBranch }}</span>
                     <i class="devops-icon icon-arrows-right"></i>
-                    <logo :name="iconArray[field] || 'commit'" size="14" />
+                    <logo
+                        :name="iconArray[field] || 'commit'"
+                        size="14"
+                    />
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch, allowHTML: false }">{{ material.webhookBranch }}</span>
                 </span>
                 <bk-popover
@@ -27,13 +40,24 @@
                     :delay="[300, 0]"
                     class="material-span-tooltip-box"
                 >
-                    <span class="material-span">
+                    <span
+                        :class="{
+                            'material-span': true,
+                            'material-url': field === 'materialId'
+                        }"
+                        @click="handleToLink(field)"
+                    >
                         {{ materialInfoValueMap[field] }}
                     </span>
                 </bk-popover>
             </span>
         </div>
-        <span v-if="showMore" @mouseenter="emitMouseEnter" class="exec-more-material">
+        <span
+            v-if="showMore"
+            @mouseenter="emitMouseEnter"
+            @click="emitClick"
+            class="exec-more-material"
+        >
             <i class="devops-icon icon-ellipsis" />
         </span>
     </div>
@@ -42,12 +66,16 @@
     import Logo from '@/components/Logo'
     import { getMaterialIconByType } from '@/utils/util'
     export default {
-        emits: ['mouseEnter'],
+        emits: ['mouseEnter', 'click'],
         components: {
             Logo
         },
         props: {
             isWebhook: Boolean,
+            isFitContent: {
+                type: Boolean,
+                default: true
+            },
             showMore: {
                 type: Boolean,
                 default: true
@@ -89,7 +117,9 @@
                     reviewId: 'webhook-review',
                     webhookSourceTarget: 'branch',
                     parentPipelineName: 'pipeline',
-                    parentBuildNum: 'sharp'
+                    parentBuildNum: 'sharp',
+                    materialName: scmIcon,
+                    materialId: 'link'
                 }
             },
             materialInfoKeys () {
@@ -157,10 +187,15 @@
                             'parentBuildNum'
                         ]
                     default:
-                        return [
-                            'webhookAliasName',
-                            'webhookBranch'
-                        ]
+                        return this.material?.materialId
+                            ? [
+                                'materialName',
+                                'materialId'
+                            ]
+                            : [
+                                'webhookAliasName',
+                                'webhookBranch'
+                            ]
                 }
             },
             materialInfoValueMap () {
@@ -173,6 +208,9 @@
         methods: {
             emitMouseEnter () {
                 this.$emit('mouseenter')
+            },
+            emitClick () {
+                this.$emit('click')
             },
             includeLink (field) {
                 return [
@@ -207,7 +245,92 @@
                     default:
                         return this.material?.linkUrl ?? ''
                 }
+            },
+
+            handleToLink (field) {
+                if (field === 'materialId') {
+                    window.open(this.getLink(field), '_blink')
+                }
             }
         }
     }
 </script>
+<style lang="scss">
+    @import "@/scss/mixins/ellipsis";
+    .exec-material-row {
+            // padding: 0 0 8px 0;
+            display: grid;
+            grid-gap: 20px;
+            height: 38px;
+            grid-auto-flow: column;
+            &.fit-content {
+                grid-auto-columns: minmax(auto, max-content) 36px;
+                .material-row-info-spans {
+                    grid-auto-columns: minmax(auto, max-content);
+                }
+            }
+
+            .material-row-info-spans {
+                display: grid;
+                grid-auto-flow: column;
+                grid-gap: 20px;
+                > span {
+                    @include ellipsis();
+                    display: inline-flex;
+                    min-width: auto;
+                    align-items: center;
+                    > svg {
+                        flex-shrink: 0;
+                        margin-right: 6px;
+                    }
+                }
+            }
+            &.visible-material-row {
+              border: 1px solid transparent;
+              padding-bottom: 0px;
+              align-items: center;
+
+            }
+            .exec-more-material {
+                display: inline-flex;
+                align-items: center;
+
+            }
+
+            .mr-source-target {
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-gap: 6px;
+                .icon-arrows-right {
+                    color: #C4C6CC;
+                    font-weight: 800;
+                }
+                > span {
+                    @include ellipsis();
+                }
+            }
+            .material-span-tooltip-box {
+                flex: 1;
+                overflow: hidden;
+                font-size: 0;
+                > .bk-tooltip-ref {
+                    width: 100%;
+                    .material-span {
+                        width: 100%;
+                    }
+                }
+            }
+            .material-span {
+              @include ellipsis();
+              font-size: 12px;
+              .bk-link-text {
+                font-size: 12px;
+              }
+            }
+            .material-url {
+                color: #3a84ff;
+                cursor: pointer;
+            }
+          }
+</style>

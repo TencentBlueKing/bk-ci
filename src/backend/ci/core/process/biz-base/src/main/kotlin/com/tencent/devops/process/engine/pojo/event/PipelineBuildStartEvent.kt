@@ -27,19 +27,19 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  *
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_START)
+@Event(StreamBinding.PIPELINE_BUILD_START)
 data class PipelineBuildStartEvent(
     override val source: String,
     override val projectId: String,
@@ -51,5 +51,6 @@ data class PipelineBuildStartEvent(
     override var actionType: ActionType,
     override var delayMills: Int = 0,
     val buildNoType: BuildNoType? = null,
-    val executeCount: Int? = 1
+    val executeCount: Int = 1,
+    val debug: Boolean? = false
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

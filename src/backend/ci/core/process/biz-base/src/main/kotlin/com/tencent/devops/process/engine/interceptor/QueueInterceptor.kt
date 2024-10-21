@@ -31,20 +31,22 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
-import com.tencent.devops.process.engine.control.lock.PipelineNextQueueLock
+import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -60,7 +62,6 @@ class QueueInterceptor @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineUrlBean: PipelineUrlBean
@@ -85,6 +86,7 @@ class QueueInterceptor @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
+
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
                     task = task,
@@ -93,6 +95,7 @@ class QueueInterceptor @Autowired constructor(
                     runningCount = buildSummaryRecord.runningCount,
                     queueCount = buildSummaryRecord.queueCount
                 )
+
             runLockType == PipelineRunLockType.GROUP_LOCK ->
                 checkRunLockWithGroupType(
                     task = task,
@@ -100,14 +103,19 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser,
                     runningCount = buildSummaryRecord.runningCount
                 )
-            task.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
+
+            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
+                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                task.maxConRunningQueueSize
+            ) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_MAX_PARALLEL,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${task.maxConRunningQueueSize}"
+                    ) + " ${max(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
                 )
+
             else -> Response(data = BuildStatus.RUNNING)
         }
     }
@@ -129,6 +137,7 @@ class QueueInterceptor @Autowired constructor(
             // 设置了最大排队数量限制为0，但此时没有构建正在执行
             task.maxQueueSize == 0 && runningCount == 0 && queueCount == 0 ->
                 Response(data = BuildStatus.RUNNING)
+
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
@@ -137,6 +146,7 @@ class QueueInterceptor @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
+
             queueCount >= task.maxQueueSize -> {
                 if (groupName == null) {
                     outQueueCancelBySingle(
@@ -179,8 +189,10 @@ class QueueInterceptor @Autowired constructor(
                 buildId = buildInfo.buildId,
                 message = "[$pipelineId] queue outSize,cancel first Queue build",
                 tag = "QueueInterceptor",
-                jobId = "",
-                executeCount = 1
+                containerHashId = "",
+                executeCount = 1,
+                jobId = null,
+                stepId = "QueueInterceptor"
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
@@ -203,7 +215,7 @@ class QueueInterceptor @Autowired constructor(
         task: InterceptData
     ) {
         // 因为排队队列是流水线级别，所以是取消当前流水线下同一并发组最早排队的构建，不一定是项目级别下同一并发组最早的构建。
-        val buildInfo = PipelineNextQueueLock(redisOperation, pipelineId).use { pipelineLock ->
+        val buildInfo = ConcurrencyGroupLock(redisOperation, projectId, groupName).use { pipelineLock ->
             pipelineLock.lock()
             pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
                 projectId = projectId,
@@ -223,11 +235,18 @@ class QueueInterceptor @Autowired constructor(
             )
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                    "a higher priority waiting request</a> for group($groupName) exists",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
+                    params = arrayOf(
+                        groupName,
+                        "<a target='_blank' href='$detailUrl'>${task.buildId}</a>"
+                    )
+                ),
                 tag = "QueueInterceptor",
-                jobId = "",
-                executeCount = 1
+                containerHashId = "",
+                executeCount = 1,
+                jobId = null,
+                stepId = "QueueInterceptor"
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(

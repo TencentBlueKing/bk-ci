@@ -30,7 +30,7 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 /**
  * 权限中心迁移服务
@@ -55,7 +55,7 @@ interface PermissionMigrateService {
     /**
      * 按条件升级到rbac权限
      */
-    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+    fun toRbacAuthByCondition(projectConditionDTO: ProjectConditionDTO): Boolean
 
     /**
      * 对比迁移鉴权结果
@@ -97,6 +97,24 @@ interface PermissionMigrateService {
     ): Boolean
 
     fun autoRenewal(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        validExpiredDay: Int,
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean
+
+    /**
+     * 迁移资源授权--按照项目
+     */
+    fun migrateResourceAuthorization(
+        projectCodes: List<String>
+    ): Boolean
+
+    /**
+     * 全量迁移资源授权
+     */
+    fun migrateAllResourceAuthorization(): Boolean
+
+    /**
+     * 修复资源组数据，存在同步iam资源组数据，数据库 iam组id为NULL的情况，需要进行修复
+     */
+    fun fixResourceGroups(projectCodes: List<String>): Boolean
 }

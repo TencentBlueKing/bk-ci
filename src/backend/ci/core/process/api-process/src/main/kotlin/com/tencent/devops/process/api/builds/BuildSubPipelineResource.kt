@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -100,7 +101,10 @@ interface BuildSubPipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int? = 1
     ): Result<ProjectBuildId>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
@@ -133,7 +137,10 @@ interface BuildSubPipelineResource {
         @QueryParam("runMode")
         runMode: String,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
+        executeCount: Int? = 1
     ): Result<ProjectBuildId>
 
     @Operation(summary = "获取子流水线启动参数")
@@ -148,7 +155,19 @@ interface BuildSubPipelineResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "是否包含常量", required = false, example = "")
+        @QueryParam("includeConst")
+        includeConst: Boolean? = true,
+        @Parameter(description = "是否包含非入参", required = false, example = "")
+        @QueryParam("includeNotRequired")
+        includeNotRequired: Boolean? = true,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        parentProjectId: String,
+        @Parameter(description = "当前流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        parentPipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
 
     @Operation(summary = "根据流水线名称获取流水线ID")

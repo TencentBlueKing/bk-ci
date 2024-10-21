@@ -1,80 +1,138 @@
 <template>
-    <div class="notify-setting-comp" v-if="subscription">
-        <bk-form>
-            <bk-form-item :label="$t('settings.noticeType')" :required="true">
-                <bk-checkbox-group :value="subscription.types" @change="value => updateSubscription('types', value)">
-                    <bk-checkbox v-for="item in noticeList" :key="item.id" :value="item.value">
+    <div class="notify-setting-comp">
+        <bk-form
+            v-if="subscription"
+            ref="notifyForm"
+            class="new-ui-form"
+            form-type="vertical"
+            :label-width="580"
+            :model="subscription"
+            :rules="notifyRules"
+        >
+            <bk-form-item
+                property="types"
+                :label="$t('settings.noticeType')"
+                error-display-type="normal"
+                :required="true"
+            >
+                <bk-checkbox-group
+                    :value="subscription.types"
+                    @change="value => updateSubscription('types', value)"
+                >
+                    <bk-checkbox
+                        v-for="item in noticeList"
+                        :key="item.id"
+                        :value="item.value"
+                    >
                         {{ item.name }}
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.additionUser')" :required="true">
-                <staff-input
+            <bk-form-item :label="$t('settings.additionUser')">
+                <user-input
+                    name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
-                    :placeholder="$t('settings.additionUserPlaceholder')">
-                </staff-input>
+                    :placeholder="$t('settings.additionUserPlaceholder')"
+                >
+                </user-input>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.noticeContent')" :required="true">
-                <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
+            <bk-form-item
+                property="content"
+                :label="$t('settings.noticeContent')"
+                error-display-type="normal"
+                :required="true"
+            >
+                <bk-input
+                    type="textarea"
+                    :value="subscription.content"
+                    @change="value => updateSubscription('content', value)"
+                />
             </bk-form-item>
-            <!-- <bk-form-item>
-                <atom-checkbox style="width: auto"
+
+            <bk-form-item class="checkbox-item">
+                <atom-checkbox
+                    style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
                     :text="$t('settings.pipelineLink')"
                     :desc="$t('settings.pipelineLinkDesc')"
-                    :value="subscription.detailFlag">
-                </atom-checkbox>
-            </bk-form-item> -->
-            <bk-form-item v-if="subscription.wechatGroupFlag">
-                <atom-checkbox
-                    style="width: auto"
-                    name="wechatGroupFlag"
-                    :text="$t('settings.enableGroup')"
-                    :desc="groupIdDesc"
-                    :handle-change="updateSubscription"
-                    :value="subscription.wechatGroupFlag">
-                </atom-checkbox>
-                <group-id-selector style="margin-left: -150px" class="item-groupid"
-                    :handle-change="updateSubscription"
-                    name="wechatGroup"
-                    :value="subscription.wechatGroup"
-                    :placeholder="$t('settings.groupIdTips')"
-                    icon-class="icon-question-circle"
-                    desc-direction="top">
-                </group-id-selector>
-                <atom-checkbox
-                    v-if="subscription.wechatGroupFlag"
-                    style="width: auto;margin-top: -45px;"
-                    name="wechatGroupMarkdownFlag"
-                    :text="$t('settings.wechatGroupMarkdownFlag')"
-                    :handle-change="updateSubscription"
-                    :value="subscription.wechatGroupMarkdownFlag">
+                    :value="subscription.detailFlag"
+                >
                 </atom-checkbox>
             </bk-form-item>
+
+            <template v-if="subscription.types.includes('WEWORK_GROUP')">
+                <bk-form-item :label="$t('settings.groupIdLabel')">
+                    <group-id-selector
+                        class="item-groupid"
+                        :handle-change="updateSubscription"
+                        name="wechatGroup"
+                        :value="subscription.wechatGroup"
+                        :placeholder="$t('settings.groupIdTips')"
+                        icon-class="icon-question-circle"
+                        desc-direction="top"
+                    >
+                    </group-id-selector>
+                </bk-form-item>
+                <bk-form-item class="checkbox-item">
+                    <atom-checkbox
+                        style="width: auto;"
+                        name="wechatGroupMarkdownFlag"
+                        :text="$t('settings.wechatGroupMarkdownFlag')"
+                        :handle-change="updateSubscription"
+                        :value="subscription.wechatGroupMarkdownFlag"
+                    >
+                    </atom-checkbox>
+                </bk-form-item>
+            </template>
         </bk-form>
     </div>
 </template>
 
 <script>
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import StaffInput from '@/components/atomFormField/StaffInput'
+    import UserInput from '@/components/atomFormField/UserInput/index.vue'
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
-            StaffInput
+            AtomCheckbox,
+            UserInput
         },
         props: {
             subscription: Object,
             updateSubscription: Function
+        },
+        data () {
+            return {
+                notifyRules: {
+                    types: [
+                        {
+                            message: this.$t('requiredSelectItem'),
+                            trigger: 'blur',
+                            validator: function (val) {
+                                return val.length >= 1
+                            }
+                        }
+                    ],
+                    content: [
+                        {
+                            required: true,
+                            message: this.$t('requiredItem'),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
+            }
         },
         computed: {
             noticeList () {
                 return [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
                     { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 6, name: this.$t('settings.weworkGroup'), value: 'WEWORK_GROUP' },
                     { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
@@ -88,12 +146,22 @@
 </script>
 
 <style lang="scss">
-    .notify-setting-comp{
+    .notify-setting-comp {
+        .bk-form .bk-form-content {
+            min-height: 24px;
+        }
+        .bk-form .bk-form-item .bk-label {
+            font-weight: 400;
+        }
+        .bk-form-item.checkbox-item .bk-form-content {
+            min-height: 18px;
+            line-height: 18px;
+        }
         .bk-form-checkbox {
             display: inline-block;
-            line-height: 34px;
             padding: 0;
-            width: 220px;
+            width: auto;
+            margin-right: 24px;
         }
         .notify-setting-no-data {
             vertical-align: top;

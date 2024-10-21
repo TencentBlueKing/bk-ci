@@ -49,4 +49,13 @@ interface MetricsDataReportService {
     fun saveDispatchJobMetrics(
         dispatchJobMetricsDataList: List<DispatchJobMetricsData>
     ): Boolean
+
+    /**
+     * 上报Job并发数据
+     * @param dispatchJobMetricsData job并发数据上报传输对象
+     * @return 布尔值
+     */
+    fun metricsJobDispatchDataReport(
+        dispatchJobMetricsData: DispatchJobMetricsData
+    ): Boolean
 }

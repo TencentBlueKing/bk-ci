@@ -34,12 +34,14 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
@@ -173,6 +175,9 @@ interface ServiceBuildResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -221,7 +226,10 @@ interface ServiceBuildResource {
         channelCode: ChannelCode,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @Operation(summary = "重试流水线-重试或者跳过失败插件")
@@ -240,7 +248,7 @@ interface ServiceBuildResource {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)
@@ -320,12 +328,15 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "步骤Id", required = true)
         @PathParam("elementId")
-        elementId: String,
+        elementId: String?,
         @Parameter(description = "审核信息", required = true)
         params: ReviewParam,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(summary = "触发审核")
@@ -487,12 +498,24 @@ interface ServiceBuildResource {
         @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String? = null,
-        @Parameter(description = "触发人", required = false)
+        @Parameter(description = "执行人", required = false)
         @QueryParam("startUser")
         startUser: List<String>? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")
@@ -641,6 +664,9 @@ interface ServiceBuildResource {
         @Parameter(description = "状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
+        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<List<String>>
@@ -815,7 +841,10 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @Parameter(description = "启动类型", required = false)
         @QueryParam("startType")
-        startType: StartType
+        startType: StartType,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")
@@ -884,4 +913,32 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @Operation(summary = "添加构建的容器耗时")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateContainerTimeout")
+    fun updateContainerTimeout(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "containerId/vmSeqId")
+        @QueryParam("containerId")
+        containerId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        @BkField(required = true)
+        executeCount: Int,
+        @Parameter(description = "要写入的耗时", required = true)
+        @BkField(required = true)
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    )
 }

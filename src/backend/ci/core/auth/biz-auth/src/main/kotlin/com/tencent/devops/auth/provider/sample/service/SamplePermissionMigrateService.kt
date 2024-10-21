@@ -30,10 +30,13 @@ package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
 
-class SamplePermissionMigrateService : PermissionMigrateService {
+class SamplePermissionMigrateService(
+    val migrateResourceAuthorizationService: MigrateResourceAuthorizationService
+) : PermissionMigrateService {
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         return true
     }
@@ -46,7 +49,7 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+    override fun toRbacAuthByCondition(projectConditionDTO: ProjectConditionDTO): Boolean {
         return true
     }
 
@@ -82,7 +85,22 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+    override fun autoRenewal(
+        validExpiredDay: Int,
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean {
         return true
     }
+
+    override fun migrateResourceAuthorization(projectCodes: List<String>): Boolean {
+        return migrateResourceAuthorizationService.migrateResourceAuthorization(
+            projectCodes = projectCodes
+        )
+    }
+
+    override fun migrateAllResourceAuthorization(): Boolean {
+        return migrateResourceAuthorizationService.migrateAllResourceAuthorization()
+    }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Boolean = true
 }

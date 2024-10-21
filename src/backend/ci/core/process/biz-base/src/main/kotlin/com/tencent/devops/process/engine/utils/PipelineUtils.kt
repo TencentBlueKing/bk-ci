@@ -72,6 +72,17 @@ object PipelineUtils {
                     )
                 )
             }
+            if (param.constant == true) {
+                if (param.defaultValue.toString().isBlank()) throw OperationException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.ERROR_PIPELINE_CONSTANTS_BLANK_ERROR,
+                        params = arrayOf(param.id)
+                    )
+                )
+                // 常量一定不作为入参，且只读不可覆盖
+                param.required = false
+                param.readOnly = true
+            }
             map[param.id] = param
         }
         return map
@@ -103,6 +114,15 @@ object PipelineUtils {
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
+            }
+        }
+    }
+
+    fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
             }
         }
     }
@@ -139,6 +159,39 @@ object PipelineUtils {
     }
 
     /**
+     * 将流水线常量转换成模板常量
+     */
+    fun fixedTemplateParam(model: Model): Model {
+        val triggerContainer = model.getTriggerContainer()
+        val params = mutableListOf<BuildFormProperty>()
+        val templateParams = mutableListOf<BuildFormProperty>()
+        triggerContainer.params.forEach {
+            if (it.constant == true) {
+                templateParams.add(it)
+            } else {
+                params.add(it)
+            }
+        }
+        val fixedTriggerContainer = triggerContainer.copy(
+            params = params,
+            templateParams = if (templateParams.isEmpty()) {
+                null
+            } else {
+                templateParams
+            }
+        )
+        val stages = ArrayList<Stage>()
+        model.stages.forEachIndexed { index, stage ->
+            if (index == 0) {
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
+            } else {
+                stages.add(stage)
+            }
+        }
+        return model.copy(stages = stages)
+    }
+
+    /**
      * 通过流水线参数和模板编排生成新Model
      */
     @Suppress("ALL")
@@ -151,14 +204,16 @@ object PipelineUtils {
         labels: List<String>? = null,
         defaultStageTagId: String?
     ): Model {
-        val templateTrigger = templateModel.stages[0].containers[0] as TriggerContainer
+        val templateTrigger = templateModel.getTriggerContainer()
         val instanceParam = if (templateTrigger.templateParams == null) {
             BuildPropertyCompatibilityTools.mergeProperties(templateTrigger.params, param ?: emptyList())
         } else {
             BuildPropertyCompatibilityTools.mergeProperties(
                 from = templateTrigger.params,
                 to = BuildPropertyCompatibilityTools.mergeProperties(
-                    from = templateTrigger.templateParams!!, to = param ?: emptyList()
+                    // 模板常量需要变成流水线常量
+                    from = templateTrigger.templateParams!!.map { it.copy(constant = true) },
+                    to = param ?: emptyList()
                 )
             )
         }

@@ -27,14 +27,40 @@
 
 package com.tencent.devops.process.plugin.trigger.timer.listener
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN
+import com.tencent.devops.process.engine.pojo.PipelineTimer
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 /**
  *  MQ实现的流水线原子任务执行事件
@@ -45,18 +71,37 @@ import org.springframework.stereotype.Component
 class PipelineTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val serviceTimerBuildResource: ServiceTimerBuildResource,
-    private val pipelineTimerService: PipelineTimerService
-) : BaseListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
+    private val pipelineTimerService: PipelineTimerService,
+    private val scmProxyService: ScmProxyService,
+    private val triggerEventService: PipelineTriggerEventService,
+    private val pipelineRepositoryService: PipelineRepositoryService
+) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
+        val pipelineTimer =
+            pipelineTimerService.get(projectId = event.projectId, pipelineId = event.pipelineId) ?: return
+        with(pipelineTimer) {
+            when {
+                repoHashId.isNullOrBlank() ->
+                    timerTrigger(event = event)
+
+                else ->
+                    repoTimerTrigger(
+                        event = event,
+                        pipelineTimer = pipelineTimer
+                    )
+            }
+        }
+    }
+
+    private fun timerTrigger(event: PipelineTimerBuildEvent, params: Map<String, String> = emptyMap()): String? {
         with(event) {
             try {
-
                 val buildResult = serviceTimerBuildResource.timerTrigger(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = emptyMap(),
+                    params = params,
                     channelCode = channelCode
                 )
 
@@ -67,11 +112,186 @@ class PipelineTimerBuildListener @Autowired constructor(
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
                 }
+                return buildResult.data
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
-                logger.warn("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}")
+                logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
+            }
+            return null
+        }
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun repoTimerTrigger(event: PipelineTimerBuildEvent, pipelineTimer: PipelineTimer) {
+        val messages = mutableSetOf<String>()
+        val branchMessages = mutableMapOf<String/*messageCode*/, MutableSet<String>/*branch*/>()
+        with(pipelineTimer) {
+            try {
+                val finalBranchs = if (branchs.isNullOrEmpty()) {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = repoHashId!!,
+                        repositoryName = null,
+                        repositoryType = RepositoryType.ID
+                    )
+                    val defaultBranch = scmProxyService.getDefaultBranch(
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig
+                    ) ?: return
+                    listOf(defaultBranch)
+                } else {
+                    branchs
+                }
+                if (finalBranchs.isNullOrEmpty()) {
+                    logger.info("time scheduled branch not found|$projectId|$pipelineId")
+                    messages.add(I18nUtil.getCodeLanMessage(ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY))
+                    return
+                }
+                finalBranchs.forEach { branch ->
+                    if (noScm == true) {
+                        branchTimerTrigger(
+                            event = event,
+                            repoHashId = repoHashId!!,
+                            branch = branch,
+                            branchMessages = branchMessages
+                        )
+                    } else {
+                        timerTrigger(
+                            event = event,
+                            params = mapOf(
+                                BK_REPO_WEBHOOK_HASH_ID to repoHashId!!,
+                                PIPELINE_WEBHOOK_BRANCH to branch
+                            )
+                        )
+                    }
+                }
+            } catch (ignored: Exception) {
+                logger.warn("repo scheduled trigger fail|$projectId|$pipelineId|$repoHashId|$branchs")
+                messages.add(ignored.message ?: "scheduled trigger failed")
+            }
+            messages.addAll(
+                branchMessages.map { (messageCode, branchs) ->
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = messageCode,
+                        params = arrayOf(branchs.joinToString(","))
+                    )
+                }
+            )
+            if (messages.isNotEmpty()) {
+                saveTriggerEvent(
+                    projectId = projectId,
+                    userId = event.userId,
+                    pipelineId = pipelineId,
+                    reasonDetail = PipelineTriggerFailedMsg(JsonUtil.toJson(messages))
+                )
             }
         }
+    }
+
+    private fun branchTimerTrigger(
+        event: PipelineTimerBuildEvent,
+        repoHashId: String,
+        branch: String,
+        branchMessages: MutableMap<String, MutableSet<String>>
+    ) {
+        val repositoryConfig = RepositoryConfig(
+            repositoryHashId = repoHashId,
+            repositoryName = null,
+            repositoryType = RepositoryType.ID
+        )
+        with(event) {
+            logger.info("start to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch")
+            try {
+                val revision = scmProxyService.recursiveFetchLatestRevision(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repositoryConfig = repositoryConfig,
+                    branchName = branch,
+                    variables = emptyMap()
+                ).data?.revision ?: run {
+                    branchMessages.computeIfAbsent(ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND) {
+                        mutableSetOf()
+                    }.add(branch)
+                    return
+                }
+                val timerBranch = pipelineTimerService.getTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repoHashId = repoHashId,
+                    branch = branch
+                )
+                if (timerBranch == null || timerBranch.revision != revision) {
+                    val buildId = timerTrigger(
+                        event = event,
+                        params = mapOf(
+                            BK_REPO_WEBHOOK_HASH_ID to repoHashId,
+                            PIPELINE_WEBHOOK_BRANCH to branch
+                        )
+                    ) ?: return
+                    logger.info("success to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch|$buildId")
+                    pipelineTimerService.saveTimerBranch(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repoHashId = repoHashId,
+                        branch = branch,
+                        revision = revision
+                    )
+                } else {
+                    logger.info("branch scheduled trigger fail,revision not change|$pipelineId|$repoHashId|$branch")
+                    branchMessages.computeIfAbsent(ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE) {
+                        mutableSetOf()
+                    }.add(branch)
+                }
+            } catch (ignored: Exception) {
+                logger.warn("branch scheduled trigger fail|$projectId|$pipelineId|$repoHashId|$branch", ignored)
+                branchMessages.computeIfAbsent(ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN) {
+                    mutableSetOf()
+                }.add(branch)
+            }
+        }
+    }
+
+    private fun saveTriggerEvent(
+        projectId: String,
+        userId: String,
+        pipelineId: String,
+        reasonDetail: PipelineTriggerReasonDetail
+    ) {
+        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId = pipelineId) ?: run {
+            logger.warn("time trigger pipeline not found|$projectId|$pipelineId")
+            return
+        }
+        val requestId = MDC.get(TraceTag.BIZID)
+        val eventId = triggerEventService.getEventId()
+        val triggerEventBuilder = PipelineTriggerEventBuilder()
+        triggerEventBuilder.requestId(requestId)
+        triggerEventBuilder.projectId(projectId)
+        triggerEventBuilder.eventId(eventId)
+        triggerEventBuilder.triggerUser(userId)
+        triggerEventBuilder.createTime(LocalDateTime.now())
+        triggerEventBuilder.triggerType(PipelineTriggerType.TIME_TRIGGER.name)
+        triggerEventBuilder.eventSource(userId)
+        triggerEventBuilder.eventType(PipelineTriggerType.TIME_TRIGGER.name)
+        triggerEventBuilder.eventDesc(
+            I18Variable(
+                code = TIMING_START_EVENT_DESC,
+                params = listOf(userId)
+            ).toJsonStr()
+        )
+
+        val triggerDetailBuilder = PipelineTriggerDetailBuilder()
+        triggerDetailBuilder.eventId(eventId)
+        triggerDetailBuilder.projectId(projectId)
+        triggerDetailBuilder.pipelineId(pipelineId = pipelineId)
+        triggerDetailBuilder.pipelineName(pipeline.pipelineName)
+        triggerDetailBuilder.detailId(triggerEventService.getDetailId())
+        triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
+        triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+        triggerDetailBuilder.reasonDetail(reasonDetail)
+
+        triggerEventService.saveEvent(
+            triggerEvent = triggerEventBuilder.build(),
+            triggerDetail = triggerDetailBuilder.build()
+        )
     }
 }

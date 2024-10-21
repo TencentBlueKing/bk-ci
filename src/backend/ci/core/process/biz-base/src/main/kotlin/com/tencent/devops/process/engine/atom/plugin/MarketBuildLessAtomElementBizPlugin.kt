@@ -28,14 +28,20 @@
 package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import org.springframework.beans.factory.annotation.Autowired
 
 @ElementBiz
-class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtomElement> {
+class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
+    private val elementBizPluginServices: List<IElementBizPluginService>
+) : ElementBizPlugin<MarketBuildLessAtomElement> {
 
     override fun elementClass(): Class<MarketBuildLessAtomElement> {
         return MarketBuildLessAtomElement::class.java
@@ -49,7 +55,8 @@ class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtom
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        container: Container
+        container: Container,
+        yamlInfo: PipelineYamlVo?
     ) = Unit
 
     override fun beforeDelete(element: MarketBuildLessAtomElement, param: BeforeDeleteParam) {
@@ -57,5 +64,29 @@ class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtom
         MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), element.version, param)
     }
 
-    override fun check(element: MarketBuildLessAtomElement, appearedCnt: Int) = Unit
+    override fun check(
+        projectId: String?,
+        userId: String,
+        stage: Stage,
+        container: Container,
+        element: MarketBuildLessAtomElement,
+        contextMap: Map<String, String>,
+        appearedCnt: Int,
+        isTemplate: Boolean,
+        oauthUser: String?
+    ): ElementCheckResult {
+        return elementBizPluginServices.find {
+            it.supportElement(element)
+        }?.check(
+            projectId = projectId,
+            userId = userId,
+            stage = stage,
+            container = container,
+            element = element,
+            contextMap = contextMap,
+            appearedCnt = appearedCnt,
+            isTemplate = isTemplate,
+            oauthUser = oauthUser
+        ) ?: ElementCheckResult(true)
+    }
 }

@@ -1,6 +1,6 @@
 import { showLoginPopup } from '@/utils/util'
 import eventBus from './eventBus'
-
+import store from '@/store'
 interface UrlParam {
     url: string
     refresh: boolean
@@ -26,10 +26,19 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
-    
     utilMap.updateTabTitle = function (title: string): void {
+        const { platformInfo } = (store.state as any).platFormConfig
         if (title) {
             document.title = title
+        } else if (!title && platformInfo) {
+            const currentPage = window.currentPage
+            const platformName = platformInfo.i18n.name || platformInfo.name
+            const brandName = platformInfo.i18n.brandName || platformInfo.brandName
+            let platformTitle = `${platformName} | ${brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            }
+            document.title = platformTitle
         }
     }
 
@@ -96,15 +105,14 @@ function iframeUtil (router: any) {
         send(target, 'leaveCancelOrder', '')
     }
 
-    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme, cancelText }):void {
+    utilMap.leaveConfirm = function ({ content = '离开后，新编辑的数据将丢失', type, subHeader, theme, ...restConf }):void {
         const iframeBox: any = document.getElementById('iframe-box')
         eventBus.$bkInfo({
             type: type || theme,
             theme: theme || type,
-            title,
             subTitle: content,
-            cancelText,
             subHeader: subHeader ? eventBus.$createElement('p', {}, subHeader) : null,
+            ...restConf,
             confirmFn: () => {
                 utilMap.leaveConfirmOrder(iframeBox.contentWindow)
             },

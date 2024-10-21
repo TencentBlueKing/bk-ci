@@ -28,13 +28,17 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.service.CacheProjectInfoService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -48,6 +52,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
 ) : ProjectBuildSummaryService {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(ProjectBuildSummaryServiceImpl::class.java)
         private fun projectBuildKey(key: String) = "ProjectBuild:$key"
     }
 
@@ -61,11 +66,15 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
-            val productId = cacheProjectInfoService.getProjectId(projectId)
+            val projectVO = cacheProjectInfoService.getProject(projectId)
+            if (projectVO?.enabled == false) {
+                logger.info("Project [${projectVO.englishName}] has disabled, skip build count")
+                return
+            }
             projectBuildSummaryDao.saveBuildCount(
                 dslContext = dslContext,
                 projectId = projectId,
-                productId = productId,
+                productId = projectVO?.productId ?: 0,
                 trigger = trigger
             )
         }
@@ -79,7 +88,12 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
-            val productId = cacheProjectInfoService.getProjectId(projectId)
+            logger.info("save Project User:$projectId|$userId|$theDate")
+            val projectVO = cacheProjectInfoService.getProject(projectId)
+            if (projectVO?.enabled == false) {
+                logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
+                return
+            }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 val insert = projectBuildSummaryDao.saveProjectUser(
@@ -91,11 +105,29 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                     projectBuildSummaryDao.saveUserCount(
                         dslContext = dslContext,
                         projectId = projectId,
-                        productId = productId,
+                        productId = projectVO?.productId ?: 0,
                         theDate = theDate
                     )
                 }
             }
         }
+    }
+
+    override fun saveProjectUserOperateMetrics(
+        userOperateCounterData: UserOperateCounterData
+    ) {
+        projectBuildSummaryDao.saveUserOperateCount(
+            dslContext = dslContext,
+            projectUserOperateMetricsData2OperateCount = userOperateCounterData.getUserOperationCountMap()
+        )
+    }
+
+    override fun getProjectActiveUserCount(
+        baseQueryReq: BaseQueryReqVO
+    ): ProjectUserCountV0? {
+        return projectBuildSummaryDao.getProjectUserCount(
+            dslContext = dslContext,
+            baseQueryReq = baseQueryReq
+        )
     }
 }

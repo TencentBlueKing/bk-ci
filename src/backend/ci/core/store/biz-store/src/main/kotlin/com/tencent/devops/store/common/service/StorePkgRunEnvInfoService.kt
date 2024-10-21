@@ -27,8 +27,8 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StorePkgRunEnvInfoService {

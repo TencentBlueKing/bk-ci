@@ -485,7 +485,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 if (defaultEnvNum != 1) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                        params = arrayOf(osName, defaultEnvNum.toString())
+                        params = arrayOf(TASK_JSON_NAME, osName, defaultEnvNum.toString())
                     )
                 }
             }

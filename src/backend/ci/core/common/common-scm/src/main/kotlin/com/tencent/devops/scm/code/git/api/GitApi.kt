@@ -42,6 +42,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -55,13 +56,13 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import java.net.URLEncoder
 
 @Suppress("ALL")
 open class GitApi {
@@ -71,6 +72,8 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
+        // 接口分页最大行数
+        const val MAX_PAGE_SIZE = 500
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
@@ -254,7 +257,7 @@ open class GitApi {
         logger.info("Start to create branches of host $host by project $projectName")
         val body = JsonUtil.getObjectMapper().writeValueAsString(
             mapOf(
-                Pair("branch", branch),
+                Pair("branch_name", branch),
                 Pair("ref", ref)
             )
         )
@@ -338,9 +341,16 @@ open class GitApi {
         }
     }
 
-    fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(
+        host: String,
+        token: String,
+        projectName: String,
+        page: Int = 1,
+        pageSize: Int = MAX_PAGE_SIZE
+    ): List<GitHook> {
         try {
-            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
+            val pageQueryStr = "page=$page&per_page=$pageSize"
+            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", pageQueryStr)
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
                 getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_WEBHOOK), request)
             )
@@ -668,5 +678,49 @@ open class GitApi {
             return null
         }
         return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
+
+    fun listMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        sourceBranch: String?,
+        targetBranch: String?,
+        state: String?,
+        page: Int,
+        perPage: Int
+    ): List<GitMrInfo> {
+        val queryParams =
+            "source_branch=$sourceBranch&target_branch=$targetBranch&state=$state&page=$page&per_page=$perPage"
+        val url = "projects/${urlEncode(projectName)}/merge_requests"
+        logger.info("list mr for project($projectName): url($url)")
+        val request = get(host, token, url, queryParams)
+        return JsonUtil.getObjectMapper().readValue<List<GitMrInfo>>(
+            getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_MR), request)
+        )
+    }
+
+    fun createMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): GitMrInfo {
+        val body = JsonUtil.getObjectMapper().writeValueAsString(gitCreateMergeRequest)
+        val url = "projects/${urlEncode(projectName)}/merge_requests/"
+        logger.info("create mr for project($projectName): url($url), $body")
+        val request = post(host, token, url, body)
+        try {
+            return callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR),
+                request = request,
+                classOfT = GitMrInfo::class.java
+            )
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_FAIL))
+            }
+            throw t
+        }
     }
 }

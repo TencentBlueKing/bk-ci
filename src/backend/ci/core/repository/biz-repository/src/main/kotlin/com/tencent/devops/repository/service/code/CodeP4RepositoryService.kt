@@ -39,11 +39,12 @@ import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -75,7 +76,8 @@ class CodeP4RepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_P4
+                type = ScmType.CODE_P4,
+                enablePac = repository.enablePac
             )
             repositoryCodeP4Dao.create(
                 dslContext = transactionContext,
@@ -139,7 +141,9 @@ class CodeP4RepositoryService @Autowired constructor(
             projectName = record.projectName,
             userName = record.userName,
             projectId = repository.projectId,
-            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId)
+            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -188,12 +192,12 @@ class CodeP4RepositoryService @Autowired constructor(
         )
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeP4Dao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(RepoAuthType.HTTP.name, it.credentialId)
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(RepoAuthType.HTTP.name, it.credentialId)
         }) ?: mapOf()
     }
 
@@ -214,6 +218,30 @@ class CodeP4RepositoryService @Autowired constructor(
     ): Boolean {
         return sourceRepo.url != targetRepo.url
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeP4Repository
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeP4RepositoryService::class.java)

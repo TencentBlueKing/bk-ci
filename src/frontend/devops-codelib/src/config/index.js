@@ -16,7 +16,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import _ from 'lodash'
+import { isPlainObject } from 'lodash-es'
 export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
 
 export const CODE_REPOSITORY_SEARCH_VAL = 'codelib_search_val'
@@ -39,7 +39,7 @@ export const listColumnsCache = {
     getItem (key) {
         try {
             const allCache = JSON.parse(localStorage.getItem(listColumnsCache.key))
-            if (!_.isPlainObject(allCache)) {
+            if (!isPlainObject(allCache)) {
                 return false
             }
             if (!key) {
@@ -121,16 +121,6 @@ export const codelibConfig = {
         typeName: 'codeP4'
     }
 }
-
-export const codelibTypes = [
-    'SVN',
-    'GitHub',
-    'GitLab',
-    // 'Git',
-    'TGit',
-    'P4'
-]
-
 /**
  * 根据仓库类型获取仓库配置
  * method getCodelibConfig

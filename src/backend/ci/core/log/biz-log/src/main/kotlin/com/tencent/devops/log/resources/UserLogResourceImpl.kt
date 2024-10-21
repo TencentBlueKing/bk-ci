@@ -81,9 +81,12 @@ class UserLogResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            archiveFlag = archiveFlag
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag,
+            reverse = false
         )
         recordListLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs
@@ -119,8 +122,10 @@ class UserLogResourceImpl @Autowired constructor(
             end = end,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
+            jobId = null,
+            stepId = null,
             archiveFlag = archiveFlag
         )
     }
@@ -150,8 +155,10 @@ class UserLogResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
+            jobId = null,
+            stepId = null,
             archiveFlag = archiveFlag
         )
         recordListLogCount(afterLogs.data?.logs?.size ?: 0)
@@ -178,9 +185,11 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag ?: "",
             subTag = subTag ?: "",
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
             fileName = fileName,
+            jobId = null,
+            stepId = null,
             archiveFlag = archiveFlag
         )
     }
@@ -201,6 +210,7 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount,
+            stepId = null,
             archiveFlag = archiveFlag
         )
     }

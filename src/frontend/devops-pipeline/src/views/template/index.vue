@@ -1,10 +1,14 @@
 <template>
-    <div class="biz-container pipeline-subpages" v-bkloading="{ isLoading }">
+    <div
+        class="biz-container pipeline-subpages"
+        v-bkloading="{ isLoading }"
+    >
         <div class="biz-side-bar">
             <side-bar
                 :nav="nav"
                 :side-menu-list="sideMenuList"
-                :sub-system-name="'pipelines'">
+                :sub-system-name="'pipelines'"
+            >
             </side-bar>
         </div>
         <template v-if="!isLoading">
@@ -86,7 +90,7 @@
         },
 
         created () {
-            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
+            this.$updateTabTitle?.()
             const { projectId, templateId } = this.$route.params
             this.$store.dispatch('requestProjectDetail', { projectId })
             this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {
@@ -125,9 +129,6 @@
 <style lang="scss">
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .biz-content {
         width: 100%;

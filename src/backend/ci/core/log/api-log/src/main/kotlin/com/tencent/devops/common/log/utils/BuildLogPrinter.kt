@@ -46,9 +46,11 @@ class BuildLogPrinter(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -58,9 +60,11 @@ class BuildLogPrinter(
                         message = message,
                         tag = tag,
                         subTag = subTag,
-                        jobId = jobId,
+                        containerHashId = containerHashId,
                         logType = LogType.LOG,
-                        executeCount = executeCount
+                        executeCount = executeCount,
+                        jobId = jobId,
+                        stepId = stepId
                     )
                 )
             }
@@ -91,15 +95,19 @@ class BuildLogPrinter(
         groupName: String,
         tag: String,
         subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int
+        containerHashId: String? = null,
+        executeCount: Int,
+        jobId: String?,
+        stepId: String?
     ) = addLine(
         buildId = buildId,
         message = "##[group]$groupName",
         tag = tag,
         subTag = subTag,
+        containerHashId = containerHashId,
+        executeCount = executeCount,
         jobId = jobId,
-        executeCount = executeCount
+        stepId = stepId
     )
 
     fun addFoldEndLine(
@@ -107,24 +115,52 @@ class BuildLogPrinter(
         groupName: String,
         tag: String,
         subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int
+        containerHashId: String? = null,
+        executeCount: Int,
+        jobId: String?,
+        stepId: String?
     ) = addLine(
         buildId = buildId,
         message = "##[endgroup]$groupName",
         tag = tag,
         subTag = subTag,
+        containerHashId = containerHashId,
+        executeCount = executeCount,
         jobId = jobId,
-        executeCount = executeCount
+        stepId = stepId
     )
+
+    fun addAIErrorLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        containerHashId: String? = null,
+        executeCount: Int,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
+    ) {
+        addErrorLine(
+            buildId = buildId,
+            message = "$LOG_AI_FLAG$message",
+            tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            subTag = subTag,
+            jobId = jobId,
+            stepId = stepId
+        )
+    }
 
     fun addErrorLine(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -134,9 +170,11 @@ class BuildLogPrinter(
                         message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
                         tag = tag,
                         subTag = subTag,
-                        jobId = jobId,
+                        containerHashId = containerHashId,
                         logType = LogType.ERROR,
-                        executeCount = executeCount
+                        executeCount = executeCount,
+                        jobId = jobId,
+                        stepId = stepId
                     )
                 )
             }
@@ -151,9 +189,11 @@ class BuildLogPrinter(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -163,9 +203,11 @@ class BuildLogPrinter(
                         message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
                         tag = tag,
                         subTag = subTag,
-                        jobId = jobId,
+                        containerHashId = containerHashId,
                         logType = LogType.DEBUG,
-                        executeCount = executeCount
+                        executeCount = executeCount,
+                        jobId = jobId,
+                        stepId = stepId
                     )
                 )
             }
@@ -180,9 +222,11 @@ class BuildLogPrinter(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) {
         try {
             doWithCircuitBreaker {
@@ -192,9 +236,11 @@ class BuildLogPrinter(
                         message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
                         tag = tag,
                         subTag = subTag,
-                        jobId = jobId,
+                        containerHashId = containerHashId,
                         logType = LogType.DEBUG,
-                        executeCount = executeCount
+                        executeCount = executeCount,
+                        jobId = jobId,
+                        stepId = stepId
                     )
                 )
             }
@@ -209,16 +255,20 @@ class BuildLogPrinter(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgYellow().a(message).reset().toString(),
         tag = tag,
         subTag = subTag,
+        containerHashId = containerHashId,
+        executeCount = executeCount,
         jobId = jobId,
-        executeCount = executeCount
+        stepId = stepId
     )
 
     @Suppress("UNUSED")
@@ -226,40 +276,50 @@ class BuildLogPrinter(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgGreen().a(message).reset().toString(),
         tag = tag,
         subTag = subTag,
+        containerHashId = containerHashId,
+        executeCount = executeCount,
         jobId = jobId,
-        executeCount = executeCount
+        stepId = stepId
     )
 
     fun addRedLine(
         buildId: String,
         message: String,
         tag: String,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgRed().a(message).reset().toString(),
         tag = tag,
         subTag = subTag,
+        containerHashId = containerHashId,
+        executeCount = executeCount,
         jobId = jobId,
-        executeCount = executeCount
+        stepId = stepId
     )
 
     fun stopLog(
         buildId: String,
         tag: String? = null,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int? = null,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String? = null,
+        stepId: String? = null
     ) {
         try {
             genLogPrintPrintResource().updateLogStatus(
@@ -267,8 +327,10 @@ class BuildLogPrinter(
                 finished = true,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
@@ -278,17 +340,21 @@ class BuildLogPrinter(
     fun startLog(
         buildId: String,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int? = null,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String? = null,
+        stepId: String? = null
     ) {
         try {
             genLogPrintPrintResource().addLogStatus(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
@@ -299,17 +365,21 @@ class BuildLogPrinter(
         message: String,
         tag: String,
         subTag: String? = null,
-        jobId: String? = null,
+        containerHashId: String? = null,
         logType: LogType,
-        executeCount: Int
+        executeCount: Int,
+        jobId: String?,
+        stepId: String?
     ) = LogMessage(
         message = message,
         timestamp = System.currentTimeMillis(),
         tag = tag,
         subTag = subTag,
-        jobId = jobId ?: "",
+        containerHashId = containerHashId ?: "",
         logType = logType,
-        executeCount = executeCount
+        executeCount = executeCount,
+        jobId = jobId ?: "",
+        stepId = stepId ?: ""
     )
 
     private fun genLogPrintPrintResource(): ServiceLogPrintResource {
@@ -335,5 +405,7 @@ class BuildLogPrinter(
         private const val LOG_ERROR_FLAG = "##[error]"
 
         private const val LOG_WARN_FLAG = "##[warning]"
+
+        private const val LOG_AI_FLAG = "##[ai]"
     }
 }

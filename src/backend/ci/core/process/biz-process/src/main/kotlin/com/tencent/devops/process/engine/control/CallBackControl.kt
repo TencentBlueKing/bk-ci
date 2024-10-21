@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -42,13 +41,16 @@ import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.BuildEvent
 import com.tencent.devops.common.pipeline.event.CallBackData
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallbackConstants.DEVOPS_ALL_PROJECT
 import com.tencent.devops.common.pipeline.event.PipelineEvent
+import com.tencent.devops.common.pipeline.event.ProjectCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.event.SimpleJob
 import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
+import com.tencent.devops.common.pipeline.utils.EventUtils.toEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.HttpRetryUtils
@@ -119,6 +121,22 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
+    fun projectCreate(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_CREATE)
+    }
+
+    fun projectUpdate(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_UPDATE)
+    }
+
+    fun projectEnable(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_ENABLE)
+    }
+
+    fun projectDisable(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, false, CallBackEvent.PROJECT_DISABLE)
+    }
+
     fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
         with(event) {
             logger.info("$projectId|STREAM_ENABLED|callback stream enable event")
@@ -163,35 +181,41 @@ class CallBackControl @Autowired constructor(
         sendToCallBack(CallBackData(event = callBackEvent, data = pipelineEvent), list)
     }
 
+    private fun callBackProjectEvent(
+        projectId: String,
+        projectName: String,
+        userId: String,
+        enable: Boolean,
+        callBackEvent: CallBackEvent
+    ) {
+        logger.info("$projectId|$projectName|$callBackEvent|callback project event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = DEVOPS_ALL_PROJECT,
+            events = callBackEvent.name
+        )
+        if (list.isEmpty()) {
+            logger.info("no [$callBackEvent] project callback")
+            return
+        }
+
+        val projectEvent = ProjectCallbackEvent(
+            projectId = projectId,
+            projectName = projectName,
+            enable = enable,
+            userId = userId
+        )
+
+        sendToCallBack(CallBackData(event = callBackEvent, data = projectEvent), list)
+    }
+
     fun callBackBuildEvent(event: PipelineBuildStatusBroadCastEvent) {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-
-        val callBackEvent =
-            if (event.taskId.isNullOrBlank()) {
-                if (event.stageId.isNullOrBlank()) {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_START
-                    } else {
-                        CallBackEvent.BUILD_END
-                    }
-                } else {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_STAGE_START
-                    } else {
-                        CallBackEvent.BUILD_STAGE_END
-                    }
-                }
-            } else {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_TASK_START
-                } else if (event.actionType == ActionType.REFRESH) {
-                    CallBackEvent.BUILD_TASK_PAUSE
-                } else {
-                    CallBackEvent.BUILD_TASK_END
-                }
-            }
+        if (event.atomCode != null && VmOperateTaskGenerator.isVmAtom(event.atomCode!!)) {
+            return
+        }
+        val callBackEvent = event.toEventType() ?: return
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
         val list = mutableListOf<ProjectPipelineCallBack>()
@@ -201,7 +225,8 @@ class CallBackControl @Autowired constructor(
                 events = callBackEvent.name
             )
         )
-        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val pipelineCallback = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model
             ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
         if (pipelineCallback.isNotEmpty()) {
             list.addAll(pipelineCallback)
@@ -232,7 +257,8 @@ class CallBackControl @Autowired constructor(
             trigger = modelDetail.trigger,
             stageId = event.stageId,
             taskId = event.taskId,
-            buildNo = modelDetail.buildNum
+            buildNo = modelDetail.buildNum,
+            debug = modelDetail.debug
         )
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
@@ -245,9 +271,11 @@ class CallBackControl @Autowired constructor(
                 is PipelineEvent -> {
                     data.pipelineId
                 }
+
                 is BuildEvent -> {
                     data.buildId
                 }
+
                 else -> ""
             }
             val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")
@@ -275,6 +303,13 @@ class CallBackControl @Autowired constructor(
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
             .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz())
             .post(RequestBody.create(JSON, requestBody))
+            .let { builder ->
+                // 回调填自定义header
+                callBack.secretParam?.run {
+                    secret(builder)
+                }
+                builder
+            }
             .build()
 
         var errorMsg: String? = null
@@ -316,7 +351,11 @@ class CallBackControl @Autowired constructor(
                 request.url.toString()
             ).substringBefore("?")
             Counter.builder(PIPELINE_CALLBACK_COUNT)
-                .tags(Tags.of("status", status.name).and("host", URL(realUrl).host))
+                .tags(
+                    Tags.of("status", status.name)
+                        .and("host", URL(realUrl).host)
+                        .and("event", callBack.events)
+                )
                 .register(meterRegistry)
                 .increment()
             saveHistory(

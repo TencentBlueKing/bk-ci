@@ -34,8 +34,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -131,7 +133,9 @@ interface BuildJobResource {
         vmSeqId: String,
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @Parameter(description = "执行结果", required = false)
+        result: BuildJobResult? = null
     ): Result<Boolean>
 
     @Operation(summary = "Job超时触发")
@@ -170,6 +174,7 @@ interface BuildJobResource {
     @Operation(summary = "Job心跳请求V1版")
     @POST
     @Path("/heartbeat/v1")
+    @Suppress("LongParameterList")
     fun jobHeartbeatV1(
         @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -185,7 +190,9 @@ interface BuildJobResource {
         vmName: String,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int? = null
+        executeCount: Int? = null,
+        @Parameter(description = "心跳请求报文体", required = false)
+        jobHeartbeatRequest: JobHeartbeatRequest? = null
     ): Result<HeartBeatInfo>
 
     @Operation(summary = "job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话

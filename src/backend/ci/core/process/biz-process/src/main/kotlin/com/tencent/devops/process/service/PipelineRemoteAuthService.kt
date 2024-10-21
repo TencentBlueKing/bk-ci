@@ -108,7 +108,14 @@ class PipelineRemoteAuthService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
             )
         }
-        var userId = pipelineReportService.getPipelineInfo(pipeline.projectId, pipeline.pipelineId)?.lastModifyUser
+        // 获取授权人
+        var userId = pipelineReportService.getPipelineOauthUser(
+            pipelineId = pipeline.pipelineId,
+            projectId = pipeline.projectId
+        ) ?: pipelineReportService.getPipelineInfo(
+            projectId = pipeline.projectId,
+            pipelineId = pipeline.pipelineId
+        )?.lastModifyUser
 
         if (userId.isNullOrBlank()) {
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")
@@ -154,7 +161,9 @@ class PipelineRemoteAuthService @Autowired constructor(
                         arrayOf("$sourceIp")
                     ),
                     tag = taskId,
-                    executeCount = 1
+                    executeCount = 1,
+                    jobId = null,
+                    stepId = taskId
                 )
             }
             BuildId(

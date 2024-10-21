@@ -94,6 +94,16 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：节点[{0}]没有使用权限
     // "2105046" 环境管理: 不在CMDB中的IP [{0}]; 无权限的IP [{1}], 请确认当前用户[{2}]或节点导入人[{3}]是否为这些节点的主备负责人 - 脚本执行｜文件分发
     const val ERROR_NODE_IP_ILLEGAL = "2105046"
+    const val ERROR_CMDB_INTERFACE_TIME_OUT = "2105047" // 环境管理: CMDB接口请求超时，请重试
+    const val ERROR_CMDB_RESPONSE = "2105048" // 环境管理: CMDB接口请求异常，请重试
+    const val ERROR_SCRIPT_EXECUTE_HOST_EMPTY = "2105049" // 环境管理: 脚本执行: 主机为空
+    const val ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY = "2105050" // 环境管理: 文件分发: 执行目标主机为空
+    const val ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY = "2105051" // 环境管理: 文件分发: 文件源主机为空
+    const val ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB = "2105052" // 环境管理: 环境中的[{0}]不在CC/CMDB中
+    const val ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB = "2105053" // 环境管理: 节点中的[{0}]不在CC/CMDB中
+    const val ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT = "2105054" // 环境管理: 请求的job实例不属于当前项目或已过期(超过一个月)
+    const val ERROR_FAIL_TO_CREATE_AGENT_INSTALL_TASK = "2105055" // 环境管理: 创建Agent安装任务失败：{0}
+    const val ERROR_INPUT_TOO_MANY_IP = "2105056" // 环境管理: 输入的IP数量不可超过{0}
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

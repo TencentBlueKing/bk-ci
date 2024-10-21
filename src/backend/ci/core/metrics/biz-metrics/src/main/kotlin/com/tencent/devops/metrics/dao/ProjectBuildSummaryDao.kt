@@ -28,9 +28,14 @@
 
 package com.tencent.devops.metrics.dao
 
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.model.metrics.tables.TProjectBuildSummaryDaily
 import com.tencent.devops.model.metrics.tables.TProjectUserDaily
+import com.tencent.devops.model.metrics.tables.TProjectUserOperateDaily
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
@@ -95,6 +100,27 @@ class ProjectBuildSummaryDao {
         }
     }
 
+    fun getProjectUserCount(
+        dslContext: DSLContext,
+        baseQueryReq: BaseQueryReqVO
+    ): ProjectUserCountV0? {
+        val startDateTime =
+            DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
+        val endDateTime =
+            DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
+        return with(TProjectUserDaily.T_PROJECT_USER_DAILY) {
+            val users = dslContext.selectDistinct(USER_ID).from(this)
+                .where(PROJECT_ID.eq(baseQueryReq.projectId))
+                .and(CREATE_TIME.between(startDateTime, endDateTime))
+                .fetchInto(String::class.java)
+            ProjectUserCountV0(
+                projectId = baseQueryReq.projectId!!,
+                userCount = users.size,
+                users = users.joinToString(separator = ",")
+            )
+        }
+    }
+
     fun saveUserCount(
         dslContext: DSLContext,
         projectId: String,
@@ -111,6 +137,39 @@ class ProjectBuildSummaryDao {
                 .onDuplicateKeyUpdate()
                 .set(USER_COUNT, USER_COUNT + 1)
                 .execute()
+        }
+    }
+
+    fun saveUserOperateCount(
+        dslContext: DSLContext,
+        projectUserOperateMetricsData2OperateCount: Map<String, Int>
+    ) {
+        with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                USER_ID,
+                OPERATE,
+                THE_DATE,
+                OPERATE_COUNT,
+                CREATE_TIME
+            ).also { insert ->
+                projectUserOperateMetricsData2OperateCount.forEach { (projectUserOperateMetricsDataKey, operateCount) ->
+                    val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
+                        projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
+                    )
+                    insert.values(
+                        projectUserOperateMetricsData.projectId,
+                        projectUserOperateMetricsData.userId,
+                        projectUserOperateMetricsData.operate,
+                        projectUserOperateMetricsData.theDate,
+                        operateCount,
+                        LocalDateTime.now()
+                    ).onDuplicateKeyUpdate()
+                        .set(OPERATE_COUNT, OPERATE_COUNT + operateCount)
+                        .execute()
+                }
+            }
         }
     }
 }

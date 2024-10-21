@@ -23,10 +23,13 @@
                 :data="searchList"
                 clearable
                 :show-condition="false"
-                :placeholder="$t('codelib.事件ID/触发器类型/事件类型/触发人/流水线名称')"
+                :placeholder="filterTips"
             >
             </search-select>
-            <span class="refresh-icon" @click="handleRefresh">
+            <span
+                class="refresh-icon"
+                @click="handleRefresh"
+            >
                 <bk-icon type="refresh" />
             </span>
         </header>
@@ -37,8 +40,10 @@
             v-bkloading="{ isLoading: pageLoading }"
         >
             <ul class="trigger-timeline">
-                <li class="timeline-dot"
-                    v-for="(data, key, index) in timelineMap" :key="index"
+                <li
+                    class="timeline-dot"
+                    v-for="(data, key, index) in timelineMap"
+                    :key="index"
                 >
                     <div class="timeline-section">
                         <TimelineCollapse
@@ -51,9 +56,19 @@
                     </div>
                 </li>
             </ul>
-            <div class="timeline-footer" v-if="!showEnd" v-bkloading="{ isLoading: isLoadingMore }">
-                <a v-if="!hasLoadEnd" @click="getListData">{{ $t('codelib.加载更多') }}</a>
-                <span v-else class="load-end">{{ $t('codelib.到底啦') }}</span>
+            <div
+                class="timeline-footer"
+                v-if="!showEnd"
+                v-bkloading="{ isLoading: isLoadingMore }"
+            >
+                <a
+                    v-if="!hasLoadEnd"
+                    @click="getListData"
+                >{{ $t('codelib.加载更多') }}</a>
+                <span
+                    v-else
+                    class="load-end"
+                >{{ $t('codelib.到底啦') }}</span>
             </div>
         </section>
         <EmptyTableStatus
@@ -136,6 +151,9 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            filterTips () {
+                return this.searchList.map(item => item.name).join(' / ')
+            },
             searchList () {
                 const list = [
                     {
@@ -165,6 +183,15 @@
                                 keyword
                             })
                         }
+                    },
+                    {
+                        name: this.$t('codelib.触发结果'),
+                        id: 'reason',
+                        children: [
+                            { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS' },
+                            { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED' },
+                            { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH' }
+                        ]
                     }
                 ]
                 return list.filter((data) => {

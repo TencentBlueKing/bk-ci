@@ -45,9 +45,10 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -78,9 +79,10 @@ class TaskBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -92,9 +94,10 @@ class TaskBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(
@@ -200,7 +203,11 @@ class TaskBuildRecordService(
                 taskVar.remove(Element::errorType.name)
                 taskVar.remove(Element::errorCode.name)
                 taskVar.remove(Element::errorMsg.name)
-
+                // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
+                if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, taskId = taskId, executeCount = executeCount
+                )
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -371,6 +378,7 @@ class TaskBuildRecordService(
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                val now = LocalDateTime.now()
                 val recordTask = recordTaskDao.getRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -384,6 +392,8 @@ class TaskBuildRecordService(
                     )
                     return@transaction
                 }
+                // 插件存在自动重试，永远更新一次当前时间为结束时间
+                recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
                 if (atomVersion != null) {
                     // 将插件的执行版本刷新
@@ -404,7 +414,7 @@ class TaskBuildRecordService(
                         recordTask.timestamps,
                         mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                                BuildRecordTimeStamp(null, now.timestampmilli())
                         )
                     )
                 }
@@ -428,7 +438,7 @@ class TaskBuildRecordService(
                     taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = buildStatus,
                     startTime = null,
-                    endTime = LocalDateTime.now(),
+                    endTime = now,
                     timestamps = timestamps
                 )
             }
@@ -463,17 +473,20 @@ class TaskBuildRecordService(
                     taskId = taskId,
                     executeCount = executeCount
                 ) ?: run {
-                    logger.warn(
-                        "ENGINE|$buildId|updateTaskByMap| get task($taskId) record failed."
-                    )
+                    logger.warn("ENGINE|$buildId|updateTaskRecord| get task($taskId) record failed.")
                     return@transaction
                 }
                 var startTime: LocalDateTime? = null
                 var endTime: LocalDateTime? = null
                 val now = LocalDateTime.now()
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-                if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
-                    startTime = now
+                if (buildStatus?.isRunning() == true) {
+                    if (recordTask.startTime == null) startTime = now
+                    // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
+                    if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
+                        dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId,
+                        buildId = buildId, taskId = taskId, executeCount = executeCount
+                    )
                 }
                 if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
                     endTime = now
@@ -513,6 +526,25 @@ class TaskBuildRecordService(
             buildId = buildId,
             taskId = taskId,
             executeCount = executeCount
+        )
+    }
+
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        recordTaskDao.updateAsyncStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
         )
     }
 

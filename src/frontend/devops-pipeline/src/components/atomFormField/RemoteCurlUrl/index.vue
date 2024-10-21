@@ -1,8 +1,14 @@
 <template>
-    <div v-bkloading="{ isLoading }" class="remote-trigger">
-        <route-tips :visible="true" :tips="$t('editPage.remoteCurlTips')"></route-tips>
+    <div
+        v-bkloading="{ isLoading }"
+        class="remote-trigger"
+    >
+        <route-tips
+            :visible="true"
+            :tips="$t('editPage.remoteCurlTips')"
+        ></route-tips>
         <p>{{ $t('editPage.example') }}：</p>
-        <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -H "X-DEVOPS-UID: " -d "{{stringifyParmas}}" </p>
+        <p class="curl-url">curl -X POST {{ baseUrl }}/external/pipelines/{{ value }}/build -H "Content-Type: application/json" -H "X-DEVOPS-UID: " -d "{{ stringifyParmas }}" </p>
     </div>
 </template>
 
@@ -63,10 +69,8 @@
         }
     }
     .curl-url {
-        font-weight: bold;
-        color: #c7c7c7;
-        background: #373636;
-        border-radius: 5px;
+        color: #63656E;
+        background: #F5F7FA;
         padding: 10px;
         word-break: break-word;
     }

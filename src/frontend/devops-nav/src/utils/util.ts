@@ -1,5 +1,4 @@
 import { showLoginModal } from '@blueking/login-modal'
-
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)
@@ -181,7 +180,7 @@ export function ifShowNotice (currentNotice) {
 }
 
 export function showLoginPopup () {
-    const successUrl = `${window.location.origin}/console/static/login_success.html`
+    const successUrl = `${window.location.origin}/console/static/login_done.html`
 
     // 系统的登录页地址
     const siteLoginUrl = window.getLoginUrl()

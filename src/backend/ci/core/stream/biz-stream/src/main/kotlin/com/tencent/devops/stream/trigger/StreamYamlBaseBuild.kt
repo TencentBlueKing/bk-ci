@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
@@ -45,7 +46,6 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
@@ -155,7 +155,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 // md5不一致时更新蓝盾的model
                 if (oldMd5 != md5) {
                     // 编辑流水线model
-                    processClient.edit(
+                    processClient.editPipeline(
                         userId = userId,
                         projectId = projectCode,
                         pipelineId = pipeline.pipelineId,
@@ -181,7 +181,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
             } else {
                 // 编辑流水线model
-                processClient.edit(
+                processClient.editPipeline(
                     userId = userId,
                     projectId = projectCode,
                     pipelineId = pipeline.pipelineId,
@@ -262,7 +262,10 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(pipeline.displayName),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                        pipeline.displayName,
+                        action.data.context.pipelineAsCodeSettings
+                    ),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -338,6 +341,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
         }
 
+        action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock.locked")
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildLock = StreamBuildLock(
             redisOperation = redisOperation,
@@ -347,6 +351,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         var buildId = ""
         try {
             buildLock.lock()
+            action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock")
             logger.info(
                 "StreamYamlBaseBuild|startBuild|start|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId"
@@ -430,6 +435,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         ignore: Throwable,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.errorStartBuild")
         logger.warn(
             "StreamYamlBaseBuild|errorStartBuild|${action.data.getGitProjectId()}|" +
                 "${pipeline.pipelineId}|$gitBuildId",
@@ -468,6 +474,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.afterStartBuild")
         try {
             val event = gitRequestEventDao.getWithEvent(
                 dslContext = dslContext, id = action.data.context.requestEventId!!
@@ -477,8 +484,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectCode = action.getProjectCode(),
                 event = event,
                 gitProjectId = action.data.getGitProjectId().toLong(),
-                messageType = UserMessageType.ONLY_SUCCESS,
-                isSave = true
+                messageType = UserMessageType.ONLY_SUCCESS
             )
 
             if (action is StreamRepoTriggerAction) {

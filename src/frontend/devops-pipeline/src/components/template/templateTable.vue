@@ -1,5 +1,8 @@
 <template>
-    <section class="template-table" v-if="listData.length">
+    <section
+        class="template-table"
+        v-if="listData.length"
+    >
         <table class="bk-table template-list-table">
             <thead>
                 <tr>
@@ -13,18 +16,34 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(row, index) of listData" :key="index">
+                <tr
+                    v-for="(row, index) of listData"
+                    :key="index"
+                >
                     <td colspan="7">
                         <table style="border: 0">
                             <tr>
-                                <td width="10%" class="icon-item">
-                                    <img :src="row.logoUrl" class="pipeline-icon" v-if="row.logoUrl">
-                                    <logo size="40" name="pipeline" v-else></logo>
+                                <td
+                                    width="10%"
+                                    class="icon-item"
+                                >
+                                    <img
+                                        :src="row.logoUrl"
+                                        class="pipeline-icon"
+                                        v-if="row.logoUrl"
+                                    >
+                                    <logo
+                                        size="40"
+                                        name="pipeline"
+                                        v-else
+                                    ></logo>
                                 </td>
-                                <td width="20%" :class="{
-                                    'template-name': true,
-                                    'manager-user': isEnabledPermission ? row.canView : row.canEdit
-                                }"
+                                <td
+                                    width="20%"
+                                    :class="{
+                                        'template-name': true,
+                                        'manager-user': isEnabledPermission ? row.canView : row.canEdit
+                                    }"
                                     :title="row.name"
                                 >
                                     <span
@@ -41,16 +60,42 @@
                                             }
                                         }"
                                     >
-                                        {{row.name}}
+                                        {{ row.name }}
                                     </span>
-                                    <span v-else @click="editTemplate(row)">{{row.name}}</span>
+                                    <span
+                                        v-else
+                                        @click="editTemplate(row)"
+                                    >{{ row.name }}</span>
                                 </td>
-                                <td width="10%" class="template-version" :title="row.versionName">{{ row.versionName }}</td>
-                                <td width="10%">{{templateTypeFilter(row.templateType)}}</td>
-                                <td width="30%" class="template-code">
-                                    <section class="codelib-box" :title="handleFormat(row.associateCodes)">
-                                        <div class="codelib-item" v-for="(entry, eIndex) in (row.associateCodes || []).slice(0, 3)" :key="eIndex">{{ entry }}</div>
-                                        <div class="codelib-item ellipsis" v-if="row.associateCodes.length > 3">......</div>
+                                <td
+                                    width="10%"
+                                    class="template-version"
+                                    :title="row.versionName"
+                                >
+                                    {{ row.versionName }}
+                                </td>
+                                <td width="10%">{{ templateTypeFilter(row.templateType) }}</td>
+                                <td
+                                    width="30%"
+                                    class="template-code"
+                                >
+                                    <section
+                                        class="codelib-box"
+                                        :title="handleFormat(row.associateCodes)"
+                                    >
+                                        <div
+                                            class="codelib-item"
+                                            v-for="(entry, eIndex) in (row.associateCodes || []).slice(0, 3)"
+                                            :key="eIndex"
+                                        >
+                                            {{ entry }}
+                                        </div>
+                                        <div
+                                            class="codelib-item ellipsis"
+                                            v-if="row.associateCodes.length > 3"
+                                        >
+                                            ......
+                                        </div>
                                     </section>
                                 </td>
                                 <td width="8%">
@@ -79,7 +124,10 @@
                                         {{ row.associatePipelines.length }}
                                     </div>
                                 </td>
-                                <td width="16%" :class="[{ 'not-permission': !isManagerUser && !isEnabledPermission }, 'handler-btn']">
+                                <td
+                                    width="16%"
+                                    :class="[{ 'not-permission': !isManagerUser && !isEnabledPermission }, 'handler-btn']"
+                                >
                                     <span
                                         v-if="isEnabledPermission"
                                         @click="toInstanceList(row)"
@@ -102,10 +150,17 @@
                                     >
                                         {{ $t('template.instantiate') }}
                                     </span>
-                                    <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
+                                    <span
+                                        @click.stop="showTools(row)"
+                                        :class="[{ 'has-show': row.showMore }, 'show-more']"
+                                        data-name="btns"
+                                    >
                                         {{ $t('more') }}
                                         <template v-if="isEnabledPermission">
-                                            <ul v-show="row.showMore" class="btn-more">
+                                            <ul
+                                                v-show="row.showMore"
+                                                class="btn-more"
+                                            >
                                                 <li
                                                     @click="copyTemplate(row)"
                                                     data-name="copy"
@@ -166,18 +221,35 @@
                                                     }"
                                                     key="deleteBtn"
                                                 >
-                                                    {{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}
+                                                    {{ ['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete') }}
                                                 </li>
                                             </ul>
                                         </template>
                                         <template v-else>
-                                            <ul v-show="row.showMore" class="btn-more">
-                                                <li @click="copyTemplate(row)" data-name="copy">{{ $t('clone') }}</li>
+                                            <ul
+                                                v-show="row.showMore"
+                                                class="btn-more"
+                                            >
+                                                <li
+                                                    @click="copyTemplate(row)"
+                                                    data-name="copy"
+                                                >{{ $t('clone') }}</li>
                                                 <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
-                                                    <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">{{ $t('template.alreadyToStore') }}</li>
-                                                    <li @click="toRelativeStore(row)" v-else data-name="store">{{ $t('template.toStore') }}</li>
+                                                    <li
+                                                        v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
+                                                        data-name="stored"
+                                                        class="has-stored"
+                                                    >{{ $t('template.alreadyToStore') }}</li>
+                                                    <li
+                                                        @click="toRelativeStore(row)"
+                                                        v-else
+                                                        data-name="store"
+                                                    >{{ $t('template.toStore') }}</li>
                                                 </template>
-                                                <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}</li>
+                                                <li
+                                                    @click="deleteTemplate(row)"
+                                                    data-name="delete"
+                                                >{{ ['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete') }}</li>
                                             </ul>
                                         </template></span>
                                 </td>
@@ -207,13 +279,17 @@
             :title="copyTemp.title"
             :close-icon="copyTemp.closeIcon"
             @confirm="copyConfirmHandler"
-            @cancel="copyCancelHandler">
+            @cancel="copyCancelHandler"
+        >
             <template>
                 <section class="copy-pipeline bk-form">
                     <div class="bk-form-item">
                         <label class="bk-label">{{ $t('template.name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" class="bk-form-input" :placeholder="$t('template.nameInputTips')"
+                            <input
+                                type="text"
+                                class="bk-form-input"
+                                :placeholder="$t('template.nameInputTips')"
                                 v-model="copyTemp.templateName"
                                 :class="{ 'is-danger': copyTemp.nameHasError }"
                                 @input="copyTemp.nameHasError = false"
@@ -222,18 +298,33 @@
                                 maxlength="30"
                             >
                         </div>
-                        <p v-if="errors.has('copyTemplateName')" class="error-tips err-name">{{ $t('template.nameErrTips') }}</p>
+                        <p
+                            v-if="errors.has('copyTemplateName')"
+                            class="error-tips err-name"
+                        >
+                            {{ $t('template.nameErrTips') }}
+                        </p>
                     </div>
 
                     <div class="bk-form-item">
                         <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
-                            <span v-bk-tooltips.bottom-end="'选“是”则将流水线设置应用于复制后的模版'" class="bottom-end">
+                            <span
+                                v-bk-tooltips.bottom-end="'选“是”则将流水线设置应用于复制后的模版'"
+                                class="bottom-end"
+                            >
                                 <i class="bk-icon icon-info-circle"></i>
                             </span>
                         </label>
                         <div class="bk-form-content">
                             <bk-radio-group v-model="copyTemp.isCopySetting">
-                                <bk-radio v-for="(entry, key) in copySettings" :key="key" :value="entry.value" class="form-radio">{{ entry.label }}</bk-radio>
+                                <bk-radio
+                                    v-for="(entry, key) in copySettings"
+                                    :key="key"
+                                    :value="entry.value"
+                                    class="form-radio"
+                                >
+                                    {{ entry.label }}
+                                </bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
@@ -400,8 +491,8 @@
                 const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
                 navConfirm({ type: 'warning', content })
-                    .then(() => {
-                        this.confirmDeleteTemplate(row)
+                    .then((val) => {
+                        val && this.confirmDeleteTemplate(row)
                     }).catch(() => {})
             },
 

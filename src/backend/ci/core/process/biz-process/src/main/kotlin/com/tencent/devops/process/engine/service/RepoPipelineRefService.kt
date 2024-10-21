@@ -50,7 +50,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
@@ -74,7 +75,7 @@ import kotlin.reflect.jvm.isAccessible
 @Service
 class RepoPipelineRefService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val modelTaskDao: PipelineModelTaskDao,
@@ -201,7 +202,7 @@ class RepoPipelineRefService @Autowired constructor(
         channel: String
     ) {
         val repoPipelineRefInfos = mutableListOf<RepoPipelineRefInfo>()
-        val variables = mutableMapOf<String, String>()
+        var variables = mutableMapOf<String, String>()
         model?.stages?.forEachIndexed { index, stage ->
             if (index == 0) {
                 val container = stage.containers[0] as TriggerContainer
@@ -209,6 +210,8 @@ class RepoPipelineRefService @Autowired constructor(
                 container.params.forEach { param ->
                     variables[param.id] = param.defaultValue.toString()
                 }
+                // 填充[variables.]前缀
+                variables = PipelineVarUtil.fillVariableMap(variables).toMutableMap()
                 analysisTriggerContainer(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -251,7 +254,12 @@ class RepoPipelineRefService @Autowired constructor(
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach e@{ element ->
             val (triggerType, eventType, repositoryConfig) =
                 RepositoryConfigUtils.buildWebhookConfig(element = element, variables = variables)
-
+            // 当事件触发代码库类型为self时,不需要解析代码库引用,因为保存时还不知道关联的代码库,只有发布时才知道
+            if (repositoryConfig.repositoryType == RepositoryType.ID &&
+                repositoryConfig.repositoryHashId.isNullOrBlank()
+            ) {
+                return@e
+            }
             repoPipelineRefInfos.add(
                 RepoPipelineRefInfo(
                     projectId = projectId,

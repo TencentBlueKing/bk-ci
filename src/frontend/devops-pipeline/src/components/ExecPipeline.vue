@@ -1,6 +1,9 @@
 <template>
     <div class="exec-pipeline-wrapper">
-        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
+        <div
+            ref="scrollViewPort"
+            class="pipeline-model-scroll-viewport"
+        >
             <p></p>
         </div>
         <div class="pipeline-exec-summary">
@@ -21,7 +24,10 @@
                     >
                         <p class="exec-count-select-option">
                             <span>{{ item.name }}</span>
-                            <span v-if="item.timeCost" class="exec-count-time-cost">{{ item.timeCost }}</span>
+                            <span
+                                v-if="item.timeCost"
+                                class="exec-count-time-cost"
+                            >{{ item.timeCost }}</span>
                             <span class="exec-count-select-option-user">{{ item.user }}</span>
                         </p>
                     </bk-option>
@@ -45,7 +51,10 @@
                 >
                     <span class="title-item">
                         <p>{{ step.title }}</p>
-                        <span v-bk-tooltips="step.popup" class="time-step-divider">
+                        <span
+                            v-bk-tooltips="step.popup"
+                            class="time-step-divider"
+                        >
                             <p></p>
                         </span>
                     </span>
@@ -58,11 +67,7 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <!-- <div class="bk-button-group">
-                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
-                        {{ item.label }}
-                    </bk-button>
-                </div> -->
+                <!-- <mode-switch /> -->
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -72,7 +77,20 @@
                 >
                     {{ $t("details.hideSkipStep") }}
                 </bk-checkbox>
-                <bk-button text theme="primary" @click="showCompleteLog">
+                <bk-checkbox
+                    :true-value="true"
+                    :false-value="false"
+                    v-model="isExpandAllMatrix"
+                    @change="expandAllMatrix"
+                    style="margin-right: 16px;"
+                >
+                    {{ $t("details.isExpandJob") }}
+                </bk-checkbox>
+                <bk-button
+                    text
+                    theme="primary"
+                    @click="showCompleteLog"
+                >
                     <i class="devops-icon icon-txt"></i>
                     {{ $t("history.viewLog") }}
                 </bk-button>
@@ -114,7 +132,12 @@
                     visible: showErrors
                 }"
             >
-                <bk-button text class="drag-dot" theme="normal" @click="toggleErrorPopup">
+                <bk-button
+                    text
+                    class="drag-dot"
+                    theme="normal"
+                    @click="toggleErrorPopup"
+                >
                     <i class="bk-icon icon-angle-up toggle-error-popup-icon" />
                 </bk-button>
                 <bk-tab
@@ -131,7 +154,11 @@
                             :href="pipelineErrorGuideLink"
                         >
                             <span class="fix-error-jump">
-                                <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
+                                <logo
+                                    class="fix-error-jump-icon"
+                                    size="20"
+                                    name="tiaozhuan"
+                                />
                                 {{ $t("details.pipelineErrorGuide") }}
                             </span>
                         </bk-link>
@@ -150,7 +177,10 @@
                             highlight-current-row
                         >
                             <bk-table-column width="80">
-                                <div slot-scope="props" class="exec-error-type-cell">
+                                <div
+                                    slot-scope="props"
+                                    class="exec-error-type-cell"
+                                >
                                     <span class="exec-error-locate-icon">
                                         <Logo
                                             v-if="isActiveErrorAtom(props.row)"
@@ -233,14 +263,21 @@
                 }}</span>
             </div>
             <ul class="pipeline-time-detail-sum-list">
-                <li v-for="cost in timeDetailRows" :key="cost.field">
+                <li
+                    v-for="cost in timeDetailRows"
+                    :key="cost.field"
+                >
                     <span>{{ cost.label }}</span>
                     <span class="constant-width-num">{{ cost.value }}</span>
                 </li>
             </ul>
         </div>
         <template v-if="execDetail && showLog">
-            <complete-log @close="hideCompleteLog" :execute-count="executeCount"></complete-log>
+            <complete-log
+                @close="hideCompleteLog"
+                :execute-count="executeCount"
+                :exec-detail="execDetail"
+            ></complete-log>
         </template>
     </div>
 </template>
@@ -252,6 +289,7 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapState } from 'vuex'
@@ -261,13 +299,15 @@
             CheckAtomDialog,
             CompleteLog,
             Logo,
-            MiniMap
+            MiniMap,
+            BkPipeline
         },
         props: {
             execDetail: {
                 type: Object,
                 required: true
-            }
+            },
+            isRunning: Boolean
         },
         data () {
             return {
@@ -275,10 +315,10 @@
                 showLog: false,
                 retryTaskId: '',
                 skipTask: false,
+                isExpandAllMatrix: this.$route.hash.indexOf('collapsedAllJob') === -1,
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
-                pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
@@ -286,13 +326,20 @@
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
-                scrollElement: '.pipeline-detail-wrapper.biz-content'
+                scrollElement: '.pipeline-detail-wrapper.biz-content',
+                isShowCheckDialog: false
             }
         },
         computed: {
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapState('common', ['ruleList', 'templateRuleList']),
-            ...mapState('atom', ['hideSkipExecTask', 'showPanelType', 'isPropertyPanelVisible']),
-
+            ...mapState('atom', [
+                'hideSkipExecTask',
+                'showPanelType',
+                'isPropertyPanelVisible'
+            ]),
             panels () {
                 return [
                     {
@@ -300,9 +347,6 @@
                         label: this.$t('Errors')
                     }
                 ]
-            },
-            isRunning () {
-                return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
             timeDetailConf () {
                 return {
@@ -380,21 +424,6 @@
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
-            },
-            pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
             },
             timeSteps () {
                 return [
@@ -475,6 +504,9 @@
         updated () {
             this.setScrollBarPostion()
         },
+        created () {
+            loadI18nMessages(this.$i18n)
+        },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
@@ -490,6 +522,7 @@
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
+                this.expandAllMatrix()
             })
         },
         beforeDestroy () {
@@ -555,7 +588,7 @@
                 const scrollViewPort = this.$refs.scrollViewPort
                 if (scrollEle && scrollViewPort) {
                     scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
-                    parent?.removeEventListener?.('scroll', this.handelVerticalScroll)
+                    parent?.removeEventListener('scroll', this.handelVerticalScroll)
                     scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
                 }
             },
@@ -655,10 +688,8 @@
             },
             async reviewAtom (atom) {
                 // 人工审核
-                if (atom?.computedReviewers?.includes?.(this.userName)) {
-                    this.currentAtom = atom
-                    this.toggleCheckDialog(true)
-                }
+                this.currentAtom = atom
+                this.toggleCheckDialog(true)
             },
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow
@@ -879,6 +910,26 @@
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            expandAllMatrix () {
+                try {
+                    for (let i = 0; i < this.execDetail.model.stages.length; i++) {
+                        const stage = this.execDetail.model.stages[i]
+                        for (let j = 0; j < stage.containers.length; j++) {
+                            const matrix = stage.containers[j]
+                            if (matrix.matrixGroupFlag) {
+                                for (let k = 0; k < matrix.groupContainers.length; k++) {
+                                    const container = matrix.groupContainers[k]
+                                    this.$refs.bkPipeline.expandMatrix(stage.id, matrix.id, container.id, this.isExpandAllMatrix)
+                                }
+                            } else {
+                                this.$refs.bkPipeline.expandJob(stage.id, matrix.id, this.isExpandAllMatrix)
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('expaned error', error)
+                }
             }
         }
     }
@@ -994,7 +1045,7 @@
     padding: 16px 24px;
     flex-shrink: 0;
     .hide-skip-pipeline-task {
-      padding: 0 16px 0 24px;
+      padding: 0 16px 0 0;
       position: relative;
       &:after {
         content: "";

@@ -61,7 +61,7 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.status.isReadyToRun()
+                commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -81,9 +81,11 @@ class CheckConditionalSkipContainerCmd constructor(
             buildLogPrinter.addErrorLine(
                 buildId = container.buildId,
                 message = "[${e.kind}] condition of job is invalid: ${e.message}",
-                jobId = container.containerHashId,
+                containerHashId = container.containerHashId,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                executeCount = commandContext.executeCount
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "j(${container.containerId}) check condition failed"
@@ -106,6 +108,9 @@ class CheckConditionalSkipContainerCmd constructor(
         val jobControlOption = containerControlOption.jobControlOption
         val conditions = jobControlOption.customVariables ?: emptyList()
 
+        // #10751 如果设置了job不可用，则直接跳过，无需判断后续的条件
+        if (!jobControlOption.enable) return true
+
         val message = StringBuilder()
         val needSkip = if (containerControlOption.inFinallyStage) {
             skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
@@ -126,26 +131,27 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 buildId = container.buildId,
                 message = message.toString(),
-                jobId = container.containerHashId
+                containerHashId = container.containerHashId,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
 
         if (needSkip) {
             LOG.info(
                 "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
             )
         }
         return needSkip

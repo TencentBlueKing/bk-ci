@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -49,8 +50,11 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind.UPDATE
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
@@ -73,18 +77,19 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_WIP
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
@@ -182,19 +187,6 @@ class TGitMrTriggerHandler(
         )
     }
 
-    override fun preMatch(event: GitMergeRequestEvent): WebhookMatchResult {
-        if (event.object_attributes.action == "close" ||
-            (
-                event.object_attributes.action == "update" &&
-                    event.object_attributes.extension_action != "push-update"
-                )
-        ) {
-            logger.info("Git web hook is ${event.object_attributes.action} merge request")
-            return WebhookMatchResult(false)
-        }
-        return WebhookMatchResult(true)
-    }
-
     override fun getEventFilters(
         event: GitMergeRequestEvent,
         projectId: String,
@@ -203,6 +195,13 @@ class TGitMrTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val wipFilter = KeywordSkipFilter(
+                pipelineId = pipelineId,
+                enable = skipWip,
+                keyWord = KEYWORD_SKIP_WIP,
+                triggerOnMessage = getMessage(event),
+                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
+            )
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -248,33 +247,42 @@ class TGitMrTriggerHandler(
                     params = listOf(sourceBranch)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
+                keyWord = KEYWORD_SKIP_CI,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "mrAction",
-                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
-                included = convert(includeMrAction)
+                triggerOn = if (repository is CodeGitlabRepository && getAction(event) == UPDATE.value) {
+                    TGitMrEventAction.PUSH_UPDATE.value
+                } else {
+                    TGitMrEventAction.getActionValue(event)
+                } ?: "",
+                included = convert(includeMrAction).ifEmpty {
+                    listOf("empty-action")
+                },
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.MR_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
             )
 
-            var mrChangeFiles: Set<String>? = null
+            // 只有开启路径匹配时才查询mr change file list
+            val changeFiles = if (tryGetChangeFilePath(this)) {
+                val mrId = if (repository is CodeGitlabRepository) {
+                    event.object_attributes.iid
+                } else {
+                    event.object_attributes.id
+                }
+                eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
+            } else {
+                null
+            }?.toList() ?: emptyList()
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    // 只有开启路径匹配时才查询mr change file list
-                    val changeFiles = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
-                        null
-                    } else {
-                        val mrId = if (repository is CodeGitlabRepository) {
-                            event.object_attributes.iid
-                        } else {
-                            event.object_attributes.id
-                        }
-                        eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
-                    }?.toList() ?: emptyList()
-                    mrChangeFiles = changeFiles.toSet()
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -304,15 +312,16 @@ class TGitMrTriggerHandler(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event,
-                changeFiles = mrChangeFiles,
+                changeFiles = changeFiles.toSet(),
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr()
             )
             return listOf(
-                userFilter, targetBranchFilter,
+                wipFilter, userFilter, targetBranchFilter,
                 sourceBranchFilter, skipCiFilter, pathFilter,
                 commitMessageFilter, actionFilter, thirdFilter
             )
@@ -336,6 +345,7 @@ class TGitMrTriggerHandler(
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit.message
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE] = event.object_attributes.mergeType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] = event.object_attributes.mergeCommitSha ?: ""
 
@@ -368,7 +378,11 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
-
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = if (getAction(event) == TGitMergeActionKind.MERGE.value) {
+            event.object_attributes.target_branch
+        } else {
+            event.object_attributes.source_branch
+        }
         // 有覆盖风险的上下文做二次确认
         startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
@@ -453,30 +467,30 @@ class TGitMrTriggerHandler(
         )
     }
 
-    private fun getI18Code(event: GitMergeRequestEvent) = with(getAction(event)) {
+    private fun getI18Code(event: GitMergeRequestEvent) = with(event) {
         when {
-            this == GitMergeRequestEvent.ACTION_CLOSED -> {
+            // 关闭
+            isClosed() -> {
                 WebhookI18nConstants.TGIT_MR_CLOSED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_CREATED -> {
+            // 创建
+            isCreated() -> {
                 WebhookI18nConstants.TGIT_MR_CREATED_EVENT_DESC
             }
             // MR源分支提交更新
-            (this == GitMergeRequestEvent.ACTION_UPDATED &&
-                event.object_attributes.extension_action == "push-update") -> {
+            isUpdate() -> {
                 WebhookI18nConstants.TGIT_MR_PUSH_UPDATED_EVENT_DESC
             }
-            // MR更新
-            this == GitMergeRequestEvent.ACTION_UPDATED -> {
+            // MR基础信息更新
+            isUpdateInfo() -> {
                 WebhookI18nConstants.TGIT_MR_UPDATED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_REOPENED -> {
+            // 重新打开
+            isReopen() -> {
                 WebhookI18nConstants.TGIT_MR_REOPENED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_MERGED -> {
+            // 合并MR
+            isMerged() -> {
                 WebhookI18nConstants.TGIT_MR_MERGED_EVENT_DESC
             }
 
@@ -484,5 +498,9 @@ class TGitMrTriggerHandler(
                 ""
             }
         }
+    }
+
+    private fun tryGetChangeFilePath(webHookParams: WebHookParams) = with(webHookParams) {
+        !excludePaths.isNullOrBlank() || !includePaths.isNullOrBlank() || enableThirdFilter == true
     }
 }

@@ -31,7 +31,7 @@ package com.tencent.devops.auth.api.migrate
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -40,6 +40,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_MIGRATE", description = "权限-迁移")
@@ -73,7 +74,7 @@ interface OpAuthMigrateResource {
     @Operation(summary = "按条件升级到rbac权限")
     fun toRbacAuthByCondition(
         @Parameter(description = "按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 
     @POST
@@ -137,7 +138,31 @@ interface OpAuthMigrateResource {
     @Path("/autoRenewal")
     @Operation(summary = "自动续期")
     fun autoRenewal(
+        @Parameter(description = "小于该值才会被续期,若传空,则默认用户在用户组中的过期时间小于180天会被自动续期", required = true)
+        @QueryParam("validExpiredDay")
+        validExpiredDay: Int?,
         @Parameter(description = "按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateResourceAuthorization")
+    @Operation(summary = "迁移资源授权-按照项目")
+    fun migrateResourceAuthorization(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateAllResourceAuthorization")
+    @Operation(summary = "迁移资源授权-全量")
+    fun migrateAllResourceAuthorization(): Result<Boolean>
+
+    @POST
+    @Path("/fixResourceGroups")
+    @Operation(summary = "修复资源组")
+    fun fixResourceGroups(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
     ): Result<Boolean>
 }

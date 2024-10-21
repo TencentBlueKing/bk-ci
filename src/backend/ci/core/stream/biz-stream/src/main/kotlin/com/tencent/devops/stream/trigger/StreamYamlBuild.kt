@@ -41,12 +41,12 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
-import com.tencent.devops.process.yaml.modelCreate.ModelCreate
-import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
-import com.tencent.devops.process.yaml.modelCreate.inner.GitData
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.modelCreate.inner.PipelineInfo
-import com.tencent.devops.process.yaml.modelCreate.inner.StreamData
+import com.tencent.devops.process.yaml.creator.ModelCreate
+import com.tencent.devops.process.yaml.creator.QualityRulesException
+import com.tencent.devops.process.yaml.creator.inner.GitData
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.creator.inner.PipelineInfo
+import com.tencent.devops.process.yaml.creator.inner.StreamData
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -155,6 +155,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.gitStartBuild")
         logger.info(
             "StreamYamlBuild|gitStartBuild" +
                 "|eventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -187,7 +188,10 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
+                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                            realPipeline.displayName,
+                            action.data.context.pipelineAsCodeSettings
+                        ),
                         updateLastModifyUser = true
                     )
                 }
@@ -235,6 +239,7 @@ class StreamYamlBuild @Autowired constructor(
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )
                 }
+
                 is QualityRulesException -> {
                     Triple(
                         false,
@@ -246,6 +251,7 @@ class StreamYamlBuild @Autowired constructor(
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
+
                 else -> {
                     logger.warn("StreamYamlBuild|gitStartBuild|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
@@ -320,6 +326,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.startBuildPipeline")
         logger.info(
             "StreamYamlBuild|startBuildPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -399,6 +406,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
+        action.data.watcherStart("streamYamlBuild.savePipeline.StreamBuildLock")
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),

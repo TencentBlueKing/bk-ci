@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
@@ -38,44 +39,44 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
-import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_REDISPATCH
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
+import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
 import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
-import com.tencent.devops.dispatch.constants.BK_SCHEDULING_SELECTED_AGENT
 import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_MOST_IDLE
 import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_PARALLEL_AVAILABLE
+import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
+import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
+import com.tencent.devops.dispatch.service.tpaqueue.TPAQueueService
+import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
+import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
-import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
-import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
-import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
-import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.SetContextVarData
-import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("UNUSED", "ComplexMethod", "LongMethod", "NestedBlockDepth", "MagicNumber")
@@ -83,26 +84,41 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
-    private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
-    private val thirdPartyAgentBuildService: ThirdPartyAgentService
+    private val commonUtil: TPACommonUtil,
+    private val thirdPartyAgentBuildService: ThirdPartyAgentService,
+    private val tpaQueueService: TPAQueueService,
+    private val tpaSingleQueueService: TPASingleQueueService
 ) {
     fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
                 event.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 event.dispatchType is ThirdPartyDevCloudDispatchType
 
+    // 按 Redis 灰度使用新排队逻辑的项目或者流水线
+    // project to pipeline1;pipeline2;.....
+    private fun useNewQueue(projectId: String, pipelineId: String): Boolean {
+        val v = redisOperation.hget(
+            DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE, projectId
+        ) ?: return false
+        if (v.isBlank()) {
+            return true
+        }
+        return v.split(";").toSet().contains(pipelineId)
+    }
+
     fun startUp(dispatchMessage: DispatchMessage) {
         when (dispatchMessage.event.dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
                 val dispatchType = dispatchMessage.event.dispatchType as ThirdPartyAgentIDDispatchType
+                // 没有复用逻辑的直接调度
                 if (!dispatchType.agentType.isReuse()) {
                     buildByAgentId(dispatchMessage, dispatchType)
                     return
                 }
-                // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
+                // 只要是复用就先拿一下上下文，可能存在同stage但被复用的已经跑完了
                 val agentId = dispatchMessage.getAgentReuseContextVar(dispatchType.displayName)
 
-                // 是复用，但是和被复用对象在同一stage且先后顺序未知
+                // 是复用，但是和被复用对象在同一stage且先后顺序未知，且被复用对象还没有跑完，这里拿复用对象的资源调度
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
                     dispatchType.displayName = dispatchType.reusedInfo!!.value
                     buildByAgentId(dispatchMessage, dispatchType)
@@ -120,13 +136,25 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 }
 
-                buildByAgentId(dispatchMessage, dispatchType.copy(displayName = agentId, agentType = AgentType.ID))
+                // 到了这里就剩两种
+                // 1、绝对复用有先后区别
+                // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
+                buildByAgentId(
+                    dispatchMessage,
+                    dispatchType.copy(displayName = agentId, agentType = AgentType.REUSE_JOB_ID, reusedInfo = null)
+                )
             }
 
             is ThirdPartyAgentEnvDispatchType -> {
                 val dispatchType = dispatchMessage.event.dispatchType as ThirdPartyAgentEnvDispatchType
                 if (!dispatchType.agentType.isReuse()) {
-                    buildByEnvId(dispatchMessage, dispatchType)
+                    if (useNewQueue(dispatchMessage.event.projectId, dispatchMessage.event.pipelineId)) {
+                        tpaQueueService.queue(
+                            ThirdPartyAgentDispatchData(dispatchMessage, dispatchType)
+                        )
+                    } else {
+                        buildByEnvId(dispatchMessage, dispatchType)
+                    }
                     return
                 }
                 // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
@@ -135,7 +163,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
                 // AgentEnv 类型的需要等到被复用对象选出节点再执行
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
-                    logWarn(
+                    log(
                         dispatchMessage.event,
                         I18nUtil.getCodeLanMessage(
                             messageCode = AGENT_REUSE_MUTEX_WAIT_REUSED_ENV,
@@ -170,9 +198,9 @@ class ThirdPartyDispatchService @Autowired constructor(
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
-                        agentType = AgentType.ID,
+                        agentType = AgentType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
-                        reusedInfo = dispatchType.reusedInfo
+                        reusedInfo = null
                     )
                 )
                 return
@@ -202,7 +230,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentIDDispatchType
     ) {
-
+        dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentResult = if (dispatchType.idType()) {
             client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(dispatchMessage.event.projectId, dispatchType.displayName)
@@ -241,20 +269,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (!doAgentInQueue(
-                dispatchMessage = dispatchMessage,
-                agent = agentResult.data!!,
-                workspace = dispatchType.workspace,
-                dockerInfo = dispatchType.dockerInfo,
-                envId = null,
-                ignoreEnvAgentIds = null,
-                hasReuseMutex = dispatchType.hasReuseMutex()
-            )
-        ) {
+        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = null)) {
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -267,226 +285,34 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
             )
         }
+
+        // 错误结束的在最外边有处理了，这里只管正常逻辑的
+        commonUtil.updateQueueTime(
+            event = dispatchMessage.event,
+            createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
+            endTime = LocalDateTime.now().timestampmilli()
+        )
     }
 
-    private fun doAgentInQueue(
+    private fun agentInQueue(
         dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentDispatch,
         agent: ThirdPartyAgent,
-        workspace: String?,
-        dockerInfo: ThirdPartyAgentDockerInfo?,
-        envId: Long?,
-        ignoreEnvAgentIds: Set<String>?,
-        hasReuseMutex: Boolean
+        envId: Long?
     ): Boolean {
-        val event = dispatchMessage.event
-        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agent.agentId)
-        try {
-            if (redisLock.tryLock()) {
-                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(
-                        projectId = event.projectId,
-                        agentId = agent.agentId
-                    )
-                ) {
-                    logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
-                    logWarn(
-                        dispatchMessage.event,
-                        ErrorCodeEnum.BUILD_MACHINE_UPGRADE_IN_PROGRESS.getErrorMessage(
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ) + " - ${agent.hostname}/${agent.ip}"
-                    )
-                    return false
-                }
-
-                // #10082 对于复用的机器和被复用的，需要加锁校验看看这台机器能不能使用
-                if (hasReuseMutex) {
-                    val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(event.projectId, agent.agentId)
-                    val lock = RedisLockByValue(
-                        redisOperation = redisOperation,
-                        lockKey = lockKey,
-                        lockValue = event.buildId,
-                        expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
-                    )
-                    // 没有拿到锁说明现在这台机被复用互斥占用不能选
-                    if (!lock.tryLock()) {
-                        logWarn(
-                            dispatchMessage.event,
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
-                                language = I18nUtil.getDefaultLocaleLanguage(),
-                                params = arrayOf(
-                                    "${agent.agentId}|${agent.hostname}/${agent.ip}", redisOperation.get(lockKey) ?: ""
-                                )
-                            )
-                        )
-                        return false
-                    }
-                    try {
-                        // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，jobId需要为根节点id
-                        // 只用给env类型的根节点设置，因为id类型的在引擎 AgentReuseMutexCmd 直接写入了
-                        val dispatch = dispatchMessage.event.dispatchType
-                        if ((dispatch is ThirdPartyAgentEnvDispatchType) &&
-                            dispatch.reusedInfo != null &&
-                            dispatch.reusedInfo!!.jobId == null
-                        ) {
-                            client.get(ServiceVarResource::class).setContextVar(
-                                SetContextVarData(
-                                    projectId = dispatchMessage.event.projectId,
-                                    pipelineId = dispatchMessage.event.pipelineId,
-                                    buildId = dispatchMessage.event.buildId,
-                                    contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
-                                    contextVal = agent.agentId,
-                                    readOnly = true
-                                )
-                            )
-                        }
-                    } catch (e: Exception) {
-                        logger.error("inQueue|doAgentInQueue|error", e)
-                    }
-                }
-
-                // #5806 入库失败就不再写Redis
-                inQueue(
-                    agent = agent,
-                    dispatchMessage = dispatchMessage,
-                    agentId = agent.agentId,
-                    workspace = workspace,
-                    dockerInfo = if (dockerInfo == null) {
-                        null
-                    } else {
-                        ThirdPartyAgentDockerInfoDispatch(
-                            agentId = dispatchMessage.id,
-                            secretKey = dispatchMessage.secretKey,
-                            info = dockerInfo
-                        )
-                    },
-                    envId = envId,
-                    ignoreEnvAgentIds = ignoreEnvAgentIds
-                )
-
-                // 保存构建详情
-                saveAgentInfoToBuildDetail(dispatchMessage = dispatchMessage, agent = agent)
-
-                logger.info(
-                    "${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
-                            "agent=${agent.agentId}"
-                )
-                log(
-                    dispatchMessage.event,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SCHEDULING_SELECTED_AGENT,
-                        params = arrayOf(agent.hostname, agent.ip),
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
-                return true
-            } else {
-                logWarn(
-                    dispatchMessage.event,
-                    ErrorCodeEnum.BUILD_MACHINE_BUSY.getErrorMessage(
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + "(Agent is busy) - ${agent.hostname}/${agent.ip}"
-                )
-                return false
-            }
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
-    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
-        buildLogPrinter.addLine(
-            buildId = event.buildId,
-            message = logMessage,
-            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
-        )
-    }
-
-    private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
-        buildLogPrinter.addYellowLine(
-            buildId = event.buildId,
-            message = logMessage,
-            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
-        )
-    }
-
-    private fun inQueue(
-        agent: ThirdPartyAgent,
-        dispatchMessage: DispatchMessage,
-        agentId: String,
-        workspace: String?,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
-        envId: Long?,
-        ignoreEnvAgentIds: Set<String>?
-    ) {
-        thirdPartyAgentBuildService.queueBuild(
+        return tpaSingleQueueService.doAgentInQueue(
+            data = ThirdPartyAgentDispatchData(
+                dispatchMessage = dispatchMessage,
+                dispatchType = dispatchType
+            ),
             agent = agent,
-            thirdPartyAgentWorkspace = workspace ?: "",
-            dispatchMessage = dispatchMessage,
-            retryCount = 0,
-            dockerInfo = dockerInfo,
-            envId = envId,
-            ignoreEnvAgentIds = ignoreEnvAgentIds
-        )
-
-        thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
-            agent.secretKey,
-            ThirdPartyRedisBuild(
-                projectId = dispatchMessage.event.projectId,
-                pipelineId = dispatchMessage.event.pipelineId,
-                buildId = dispatchMessage.event.buildId,
-                agentId = agentId,
-                vmSeqId = dispatchMessage.event.vmSeqId,
-                vmName = agent.hostname,
-                channelCode = dispatchMessage.event.channelCode,
-                atoms = dispatchMessage.event.atoms
-            )
-        )
-
-        // 添加上下文关键字 jobs.<job_id>.container.node_alias
-        if (dispatchMessage.event.jobId.isNullOrBlank()) {
-            return
-        }
-        try {
-            val detail = client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
-                userId = dispatchMessage.event.userId,
-                projectId = dispatchMessage.event.projectId,
-                agentHashId = agentId
-            ).data
-            if (detail == null) {
-                logger.warn("inQueue|setContextVar|getAgentDetail $agentId is null")
-                return
-            }
-            client.get(ServiceVarResource::class).setContextVar(
-                SetContextVarData(
-                    projectId = dispatchMessage.event.projectId,
-                    pipelineId = dispatchMessage.event.pipelineId,
-                    buildId = dispatchMessage.event.buildId,
-                    contextName = "jobs.${dispatchMessage.event.jobId}.container.node_alias",
-                    contextVal = detail.displayName,
-                    readOnly = true
-                )
-            )
-        } catch (e: Exception) {
-            logger.error("inQueue|setContextVar|error", e)
-        }
-    }
-
-    private fun saveAgentInfoToBuildDetail(dispatchMessage: DispatchMessage, agent: ThirdPartyAgent) {
-        client.get(ServiceBuildResource::class).saveBuildVmInfo(
-            projectId = dispatchMessage.event.projectId,
-            pipelineId = dispatchMessage.event.pipelineId,
-            buildId = dispatchMessage.event.buildId,
-            vmSeqId = dispatchMessage.event.vmSeqId,
-            vmInfo = VmInfo(ip = agent.ip, name = agent.ip)
+            envId = envId
         )
     }
 
     @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth", "MagicNumber")
     private fun buildByEnvId(dispatchMessage: DispatchMessage, dispatchType: ThirdPartyAgentEnvDispatchType) {
+        dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentsResult = try {
             if (dispatchType.idType()) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -537,9 +363,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
 
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -558,9 +383,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                         "dispatchType=$dispatchType|err=null agents"
             )
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -576,10 +400,10 @@ class ThirdPartyDispatchService @Autowired constructor(
         val (envId, agentResData) = if (dispatchType.idType()) {
             Pair(
                 HashUtil.decodeIdToLong(dispatchType.envName),
-                (agentsResult.data!! as List<ThirdPartyAgent>)
+                (agentsResult.data!! as List<EnvNodeAgent>)
             )
         } else {
-            (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
+            (agentsResult.data as Pair<Long?, List<EnvNodeAgent>>)
         }
 
         if (agentResData.isEmpty()) {
@@ -595,62 +419,110 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
+        val disableAgentIds =
+            agentResData.filter { !it.enableNode }.associate { it.agent.agentId to it.nodeDisplayName }
+        if (disableAgentIds.isNotEmpty()) {
+            log(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ENV_NODE_DISABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf(disableAgentIds.map { "[${it.key}][${it.value}]" }.joinToString(","))
+                )
+            )
+        }
+
+        /**
+         * 1. 现获取当前正常的agent列表
+         * 2. 获取可用的agent列表
+         * 3. 优先调用可用的agent执行任务
+         * 4. 如果启动可用的agent失败再调用有任务的agent
+         */
+        val activeAgents = agentResData.filter {
+            it.agent.status == AgentStatus.IMPORT_OK &&
+                    (dispatchMessage.event.os == it.agent.os || dispatchMessage.event.os == VMBaseOS.ALL.name) &&
+                    it.enableNode
+        }.map { it.agent }
+        if (activeAgents.isEmpty()) {
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_NO_AGENT_AVAILABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+                errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                        )
+            )
+        }
+
+        var jobEnvActiveAgents = activeAgents
+        if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
+            val data = ThirdPartyAgentDispatchData(dispatchMessage, dispatchType)
+            val agentMap = activeAgents.associateBy { it.agentId }
+            dispatchMessage.event.ignoreEnvAgentIds?.forEach {
+                val a = agentMap[it]
+                commonUtil.logWithAgentUrl(data, BK_ENV_WORKER_ERROR_IGNORE, arrayOf(it), a?.nodeId, a?.agentId)
+            }
+            jobEnvActiveAgents = activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+            if (jobEnvActiveAgents.isEmpty()) {
+                throw BuildFailureException(
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
+                        params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
+            }
+        }
+
+        screenEnvNode(dispatchMessage, dispatchType, jobEnvActiveAgents, envId)
+    }
+
+    private fun screenEnvNode(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long?
+    ) {
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
             if (lock) {
-                /**
-                 * 1. 现获取当前正常的agent列表
-                 * 2. 获取可用的agent列表
-                 * 3. 优先调用可用的agent执行任务
-                 * 4. 如果启动可用的agent失败再调用有任务的agent
-                 */
-                val activeAgents = agentResData.filter {
-                    it.status == AgentStatus.IMPORT_OK &&
-                            (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
-                }
+                // 判断是否有 jobEnv 的限制，检查全集群限制
+                checkAllNodeConcurrency(envId, dispatchMessage)
 
-                var jobEnvActiveAgents = activeAgents
-                if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
-                    log(
-                        buildLogPrinter,
-                        dispatchMessage,
-                        message = I18nUtil.getCodeLanMessage(
-                            messageCode = BK_ENV_WORKER_ERROR_IGNORE,
-                            params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
-                    )
-                    jobEnvActiveAgents =
-                        activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
-                    if (jobEnvActiveAgents.isEmpty()) {
-                        throw BuildFailureException(
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
-                                params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            )
-                        )
-                    }
-                }
+                // 判断是否有 jobEnv 的限制，筛选单节点的并发数
+                val activeAgents = checkSingleNodeConcurrency(dispatchMessage, envId, agents)
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
-                if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
-                        activeAgents = jobEnvActiveAgents,
+                if (activeAgents.isNotEmpty() && pickupAgent(
+                        activeAgents = activeAgents,
                         dispatchMessage = dispatchMessage,
                         dispatchType = dispatchType,
                         envId = envId
                     )
                 ) {
+                    // 错误结束的在最外边有处理了，这里只管正常逻辑的
+                    commonUtil.updateQueueTime(
+                        event = dispatchMessage.event,
+                        createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
+                        endTime = LocalDateTime.now().timestampmilli()
+                    )
                     return
                 }
             } else {
-                log(
-                    buildLogPrinter,
-                    dispatchMessage,
-                    message = I18nUtil.getCodeLanMessage(
+                logWarn(
+                    dispatchMessage.event,
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BK_ENV_BUSY,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
@@ -662,15 +534,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                         "dispatchType=$dispatchType|Not Found, Retry!"
             )
 
-            logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
             )
-
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
@@ -679,6 +549,109 @@ class ThirdPartyDispatchService @Autowired constructor(
                             language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
                         )
+            )
+        }
+    }
+
+    private fun checkSingleNodeConcurrency(
+        dispatchMessage: DispatchMessage,
+        envId: Long?,
+        activeAgents: List<ThirdPartyAgent>
+    ): List<ThirdPartyAgent> {
+        if (dispatchMessage.event.singleNodeConcurrency == null) {
+            return activeAgents
+        }
+        if (envId == null || dispatchMessage.event.jobId.isNullOrBlank()) {
+            logger.warn(
+                "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.singleNodeConcurrency,
+                envId,
+                dispatchMessage.event.jobId
+            )
+            return activeAgents
+        }
+
+        val jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
+        val m = thirdPartyAgentBuildService.countAgentsJobRunningAndQueueAll(
+            pipelineId = dispatchMessage.event.pipelineId,
+            envId = envId,
+            jobId = dispatchMessage.event.jobId!!,
+            agentIds = activeAgents.map { it.agentId }.toSet(),
+            projectId = dispatchMessage.event.projectId
+        )
+        activeAgents.forEach {
+            // 为空说明当前节点没有记录就是没有任务直接加，除非并发是0的情况
+            if (m[it.agentId] == null && dispatchMessage.event.singleNodeConcurrency!! > 0) {
+                jobEnvActiveAgents.add(it)
+                return@forEach
+            }
+            if (m[it.agentId]!! < dispatchMessage.event.singleNodeConcurrency!!) {
+                jobEnvActiveAgents.add(it)
+                return@forEach
+            }
+        }
+        // 没有一个节点满足则进入排队机制
+        if (jobEnvActiveAgents.isEmpty()) {
+            log(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_THIRD_JOB_NODE_CURR,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf(
+                        dispatchMessage.event.singleNodeConcurrency!!.toString(),
+                        (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
+                    )
+                )
+            )
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                errorMessage = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR.getErrorMessage()
+            )
+        }
+
+        return jobEnvActiveAgents.toList()
+    }
+
+    private fun checkAllNodeConcurrency(
+        envId: Long?,
+        dispatchMessage: DispatchMessage
+    ) {
+        if (dispatchMessage.event.allNodeConcurrency == null) {
+            return
+        }
+        if (envId != null && !dispatchMessage.event.jobId.isNullOrBlank()) {
+            val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
+                pipelineId = dispatchMessage.event.pipelineId,
+                envId = envId,
+                jobId = dispatchMessage.event.jobId!!,
+                projectId = dispatchMessage.event.projectId
+            )
+            if (c >= dispatchMessage.event.allNodeConcurrency!!) {
+                log(
+                    dispatchMessage.event,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_THIRD_JOB_ENV_CURR,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(
+                            c.toString(),
+                            dispatchMessage.event.allNodeConcurrency!!.toString(),
+                            (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
+                        )
+                    )
+                )
+                throw DispatchRetryMQException(
+                    errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                    errorMessage = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR.getErrorMessage()
+                )
+            }
+        } else {
+            logger.warn(
+                "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.allNodeConcurrency,
+                envId,
+                dispatchMessage.event.jobId
             )
         }
     }
@@ -728,12 +701,12 @@ class ThirdPartyDispatchService @Autowired constructor(
          * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
          */
         logDebug(
-            buildLogPrinter, dispatchMessage,
-            message = "retry: ${dispatchMessage.event.retryTime} | " +
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_SEARCHING_AGENT,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_SEARCHING_AGENT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
         )
         if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
             logger.info(
@@ -744,7 +717,8 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_MAX_BUILD_SEARCHING_AGENT,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -762,7 +736,8 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_SEARCHING_AGENT_MOST_IDLE,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -787,7 +762,8 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_SEARCHING_AGENT_PARALLEL_AVAILABLE,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -806,10 +782,9 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         if (dispatchMessage.event.retryTime == 1) {
-            log(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_NO_AGENT_AVAILABLE,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 )
@@ -885,15 +860,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             return false
         }
         hasTryAgents.add(agent.agentId)
-        return doAgentInQueue(
-            dispatchMessage = dispatchMessage,
-            agent = agent,
-            workspace = dispatchType.workspace,
-            dockerInfo = dispatchType.dockerInfo,
-            envId = envId,
-            ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds,
-            hasReuseMutex = dispatchType.hasReuseMutex()
-        )
+        return agentInQueue(dispatchMessage, dispatchType, agent, envId)
     }
 
     private fun getRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
@@ -935,13 +902,13 @@ class ThirdPartyDispatchService @Autowired constructor(
             dockerRunningCnt: Int
         ): Boolean {
             return if (dockerBuilder) {
-                agent.dockerParallelTaskCount != null &&
+                (agent.dockerParallelTaskCount == 0) || (agent.dockerParallelTaskCount != null &&
                         agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+                        agent.dockerParallelTaskCount!! > dockerRunningCnt)
             } else {
-                agent.parallelTaskCount != null &&
+                (agent.parallelTaskCount == 0) || (agent.parallelTaskCount != null &&
                         agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt
+                        agent.parallelTaskCount!! > runningCnt)
             }
         }
     }
@@ -963,39 +930,47 @@ class ThirdPartyDispatchService @Autowired constructor(
             }
             sortQ.add(Triple(it, runningCnt, dockerRunningCnt))
             logDebug(
-                buildLogPrinter, dispatchMessage,
-                message = "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
+                dispatchMessage.event,
+                "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
             )
         }
         sortQ.sortBy { it.second + it.third }
         return sortQ
     }
 
-    fun log(
-        buildLogPrinter: BuildLogPrinter,
-        dispatchMessage: DispatchMessage,
-        message: String
-    ) {
+    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
         buildLogPrinter.addLine(
-            buildId = dispatchMessage.event.buildId,
-            message = message,
-            tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
     }
 
-    fun logDebug(
-        buildLogPrinter: BuildLogPrinter,
-        dispatchMessage: DispatchMessage,
-        message: String
-    ) {
+    private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
+        buildLogPrinter.addYellowLine(
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = null
+        )
+    }
+
+    private fun logDebug(event: PipelineAgentStartupEvent, message: String) {
         buildLogPrinter.addDebugLine(
-            buildId = dispatchMessage.event.buildId,
+            buildId = event.buildId,
             message = message,
-            tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
     }
 
@@ -1008,9 +983,15 @@ class ThirdPartyDispatchService @Autowired constructor(
         ).data?.get(AgentReuseMutex.genAgentContextKey(jobId))
     }
 
+    fun finishBuild(event: PipelineAgentShutdownEvent) {
+        tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
+        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyDispatchService::class.java)
         private val availableAgentMatcher = AvailableAgent()
         private val idleAgentMatcher = IdleAgent()
+        const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
     }
 }

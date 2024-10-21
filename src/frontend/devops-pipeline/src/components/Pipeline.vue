@@ -1,18 +1,30 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: $t('editPage.saving') }">
-        <header v-if="showHeader" class="create-pipeline-header">
+    <div
+        class="create-pipeline-wrapper"
+        v-bkloading="loadingConf"
+    >
+        <header
+            v-if="showHeader"
+            class="create-pipeline-header"
+        >
             <div>
-                <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
+                <slot name="pipeline-name">
+                    <span
+                        style="cursor: default"
+                        :title="pipeline.name"
+                    >{{ pipeline.name }}</span>
+                </slot>
             </div>
             <div class="pipeline-bar">
                 <slot name="pipeline-bar"></slot>
             </div>
         </header>
-        <div v-if="pipeline" class="scroll-container">
+        <div
+            v-if="hasPipelineModel"
+            class="scroll-container"
+        >
             <div class="scroll-wraper">
                 <bk-pipeline
-                    v-if="pipeline"
-
                     :pipeline="pipeline"
                     :user-name="userName"
                     :editable="pipelineEditable"
@@ -28,8 +40,28 @@
                 </bk-pipeline>
             </div>
         </div>
+        <div
+            v-else-if="pipelineEditable"
+            :class="['empty-pipeline-stage', {
+                'empty-pipeline-stage-disabled': !pipelineEditable
+            }]"
+            @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })"
+        >
+            <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
+            <span>{{ $t('clickToAddStage') }}</span>
+        </div>
 
-        <bk-dialog v-model="isStageShow"
+        <bk-exception
+            v-else
+            type="empty"
+            scene="part"
+        >
+            {{ $t('noPipelineStageTips') }}
+        </bk-exception>
+
+        <bk-dialog
+            v-if="pipelineEditable"
+            v-model="isStageShow"
             :width="stageTypeDialogWidth"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
@@ -38,18 +70,27 @@
         >
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
-                    <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
+                    <li
+                        v-for="os in osList"
+                        :key="os.value"
+                        @click="insert(os.value)"
+                        :class="os.className"
+                    >
                         <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
                 </ul>
             </section>
         </bk-dialog>
-        <template v-if="container">
-            <atom-selector :container="container" :element="element" v-bind="editingElementPos" />
+        <template v-if="container && pipelineEditable">
+            <atom-selector
+                :container="container"
+                :element="element"
+                v-bind="editingElementPos"
+            />
         </template>
         <template v-if="editingElementPos">
-            <template v-if="typeof editingElementPos.elementIndex !== 'undefined'">
+            <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
                 <atom-property-panel
                     :element-index="editingElementPos.elementIndex"
                     :container-index="editingElementPos.containerIndex"
@@ -59,7 +100,7 @@
                     :is-instance-template="pipeline.instanceFromTemplate"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.containerIndex !== 'undefined'">
+            <template v-else-if="(typeof editingElementPos.containerIndex !== 'undefined')">
                 <container-property-panel
                     :title="panelTitle"
                     :container-index="editingElementPos.containerIndex"
@@ -69,14 +110,14 @@
                     :editable="pipelineEditable"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel.isShow">
+            <template v-else-if="(typeof editingElementPos.stageIndex !== 'undefined') && showStageReviewPanel.isShow">
                 <stage-review-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
                     :editable="pipelineEditable"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+            <template v-else-if="(typeof editingElementPos.stageIndex !== 'undefined')">
                 <stage-property-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
@@ -88,21 +129,22 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { isObject } from '../utils/util'
     import AtomPropertyPanel from './AtomPropertyPanel'
+    import AtomSelector from './AtomSelector'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
     import StageReviewPanel from './StageReviewPanel'
-    import AtomSelector from './AtomSelector'
-    import { isObject } from '../utils/util'
-
     export default {
         components: {
             StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
             StageReviewPanel,
-            AtomSelector
+            AtomSelector,
+            BkPipeline
         },
         props: {
             isSaving: {
@@ -146,7 +188,6 @@
                 'getStage'
             ]),
             ...mapState('atom', [
-                'isPropertyPanelVisible',
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
@@ -160,6 +201,9 @@
             routeParams () {
                 return this.$route.params
             },
+            hasPipelineModel () {
+                return this.pipeline?.stages?.length > 0
+            },
             isStageShow: {
                 get () {
                     return this.isStagePopupShow
@@ -168,6 +212,12 @@
                     this.setInsertStageState({
                         isStagePopupShow: value
                     })
+                }
+            },
+            loadingConf () {
+                return {
+                    isLoading: this.isSaving,
+                    title: this.$t?.('editPage.saving')
                 }
             },
             stageTypeDialogWidth () {
@@ -229,6 +279,9 @@
                     : [...this.ruleList]
             }
         },
+        created () {
+            loadI18nMessages(this.$i18n)
+        },
         beforeDestroy () {
             this.toggleAtomSelectorPopup(false)
             this.togglePropertyPanel({
@@ -243,17 +296,18 @@
                 'addAtom',
                 'addContainer',
                 'addStage',
-                'setPipeline',
                 'setPipelineEditing',
                 'toggleStageReviewPanel'
             ]),
             handleAddStage ({ stageIndex, isParallel, isFinally }) {
-                this.setInsertStageState({
-                    isStagePopupShow: true,
-                    isAddParallelStage: isParallel,
-                    insertStageIsFinally: isFinally,
-                    insertStageIndex: stageIndex
-                })
+                if (this.pipelineEditable) {
+                    this.setInsertStageState({
+                        isStagePopupShow: true,
+                        isAddParallelStage: isParallel,
+                        insertStageIsFinally: isFinally,
+                        insertStageIndex: stageIndex
+                    })
+                }
             },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
@@ -278,7 +332,8 @@
                 return getStage(pipeline.stages, stageIndex)
             },
             handlePipelineChange (pipeline) {
-                this.setPipeline(pipeline)
+                if (!this.editable) return
+                console.log('11111, handlePipelineChange')
                 this.setPipelineEditing(true)
             },
             resetInsertStageState () {
@@ -383,6 +438,29 @@
             border-top: 2px dashed #c3cdd7;
        }
     }
+    .empty-pipeline-stage {
+        width: 280px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background: #EFF5FF;
+        border: 1px solid #D4E8FF;
+        border-radius: 2px;
+        font-size: 12px;
+        color: #3A84FF;
+        i {
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        &.empty-pipeline-stage-disabled {
+            cursor: not-allowed;
+            background: #F7F7F7;
+            border: 1px solid #E6E6E6;
+            color: #C3CDD7;
+        }
+    }
 
     .stage-type-list {
         display: flex;
@@ -435,5 +513,4 @@
     .bk-tooltip-inner {
         max-width: 450px;
     }
-
 </style>

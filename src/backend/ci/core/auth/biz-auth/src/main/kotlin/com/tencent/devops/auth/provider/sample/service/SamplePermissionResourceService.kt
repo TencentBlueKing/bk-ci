@@ -29,11 +29,15 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Pagination
 import java.time.LocalDateTime
 
-class SamplePermissionResourceService : PermissionResourceService {
+class SamplePermissionResourceService constructor(
+    private val permissionAuthorizationService: PermissionAuthorizationService
+) : PermissionResourceService {
     override fun resourceCreateRelation(
         userId: String,
         projectCode: String,
@@ -48,24 +52,36 @@ class SamplePermissionResourceService : PermissionResourceService {
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ) = true
+    ): Boolean {
+        permissionAuthorizationService.modifyResourceAuthorization(
+            listOf(
+                ResourceAuthorizationDTO(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
+            )
+        )
+        return true
+    }
 
     override fun resourceDeleteRelation(
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ) = true
+    ): Boolean {
+        permissionAuthorizationService.deleteResourceAuthorization(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        return true
+    }
 
     override fun resourceCancelRelation(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-
-    override fun hasManagerPermission(
-        userId: String,
-        projectId: String,
         resourceType: String,
         resourceCode: String
     ) = true

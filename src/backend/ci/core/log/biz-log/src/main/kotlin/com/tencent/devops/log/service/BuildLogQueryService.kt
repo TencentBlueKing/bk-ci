@@ -61,10 +61,13 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
-        archiveFlag: Boolean? = null
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean? = null,
+        reverse: Boolean?
     ): Result<QueryLogs> {
         validateAuth(
             userId = userId,
@@ -81,10 +84,13 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 debug = debug ?: false,
                 logType = logType,
-                subTag = subTag,
                 tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId,
+                reverse = reverse
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -103,11 +109,13 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         page: Int?,
         pageSize: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<PageQueryLogs> {
         validateAuth(
@@ -127,10 +135,12 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
                 page = page ?: -1,
-                pageSize = pageSize ?: -1
+                pageSize = pageSize ?: -1,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -153,9 +163,11 @@ class BuildLogQueryService @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<QueryLogs> {
         validateAuth(
@@ -179,8 +191,10 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -200,9 +214,11 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<QueryLogs> {
         validateAuth(
@@ -223,8 +239,10 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -245,9 +263,11 @@ class BuildLogQueryService @Autowired constructor(
         logType: LogType?,
         size: Int?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<QueryLogs> {
         validateAuth(
@@ -264,13 +284,15 @@ class BuildLogQueryService @Autowired constructor(
             val result = logService.queryLogsBeforeLine(
                 buildId = buildId,
                 end = end,
-                size = size,
                 debug = debug ?: false,
                 logType = logType,
+                size = size,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -286,8 +308,9 @@ class BuildLogQueryService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        tag: String,
+        tag: String?,
         executeCount: Int?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<QueryLogStatus> {
         validateAuth(
@@ -302,7 +325,8 @@ class BuildLogQueryService @Autowired constructor(
             logStatusService.getStorageMode(
                 buildId = buildId,
                 tag = tag,
-                executeCount = executeCount ?: 1
+                executeCount = executeCount ?: 1,
+                stepId = stepId
             )
         )
     }
@@ -323,7 +347,15 @@ class BuildLogQueryService @Autowired constructor(
             archiveFlag = archiveFlag
         )
         val lastLineNum = indexService.getLastLineNum(buildId)
-        val finished = logStatusService.isFinish(buildId, null, null, null, null)
+        val finished = logStatusService.isFinish(
+            buildId = buildId,
+            tag = null,
+            subTag = null,
+            containerHashId = null,
+            executeCount = null,
+            jobId = null,
+            stepId = null
+        )
         return Result(
             QueryLogLineNum(
                 buildId = buildId,
@@ -339,10 +371,12 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         fileName: String?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Response {
         validateAuth(
@@ -361,9 +395,11 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                fileName = fileName
+                fileName = fileName,
+                jobId = jobId,
+                stepId = stepId
             )
             success = true
             return result
@@ -381,9 +417,11 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<EndPageQueryLogs> {
         validateAuth(
@@ -404,9 +442,11 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                size = size
+                size = size,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -426,9 +466,11 @@ class BuildLogQueryService @Autowired constructor(
         logType: LogType?,
         size: Int?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         subTag: String? = null,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean? = null
     ): Result<QueryLogs> {
         validateAuth(
@@ -449,9 +491,11 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                size = size
+                size = size,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)

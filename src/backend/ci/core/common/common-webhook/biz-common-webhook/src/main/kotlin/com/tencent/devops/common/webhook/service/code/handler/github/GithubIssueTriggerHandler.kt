@@ -29,9 +29,12 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
@@ -160,6 +163,9 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID] = milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ACTION] = event.action
             startParams[PIPELINE_GIT_EVENT_URL] = buildIssuesUrl(event)
+            startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
+            startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
+            startParams[PIPELINE_GIT_ACTION] = event.convertAction()
         }
         return startParams
     }
@@ -173,6 +179,6 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
     }
 
     private fun buildIssuesUrl(event: GithubIssuesEvent) = with(event) {
-        issue.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/issues/${issue.number}"
+        issue.htmlUrl ?: "${repository.getRepoUrl()}/issues/${issue.number}"
     }
 }

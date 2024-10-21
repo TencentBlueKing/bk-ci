@@ -37,7 +37,7 @@ data class ManualReviewParam(
     @get:Schema(title = "参数名", required = true)
     var key: String = "",
     @get:Schema(title = "参数内容(Any 类型)", required = true, type = "string")
-    var value: Any? = "",
+    var value: Any? = null,
     @get:Schema(title = "参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
     @get:Schema(title = "是否必填", required = true)
@@ -57,7 +57,7 @@ data class ManualReviewParam(
     fun parseValueWithType(variables: Map<String, String>) {
         value = if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
             when (valueType) {
-                ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> variables[key].toBoolean()
                 // TODO 将入库保存的字符串转回数组对象
                 else -> variables[key]
             }

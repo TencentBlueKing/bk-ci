@@ -12,17 +12,28 @@
                         :class="{
                             'collapse-item-header': true,
                             'active': activeIndex === index
-                        }" @click="handleShowDetail(item, index)">
+                        }"
+                        @click="handleShowDetail(item, index)"
+                    >
                         <div class="title">
-                            <StatusIcon class="icon" :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
-                            <span class="desc" :title="getEventDescTitle(item.eventDesc)" v-html="item.eventDesc"></span>
+                            <StatusIcon
+                                class="icon"
+                                :status="item.total === item.success ? 'normal' : 'error'"
+                            ></StatusIcon>
+                            <span
+                                class="desc"
+                                :title="getEventDescTitle(item.eventDesc)"
+                                v-html="item.eventDesc"
+                            ></span>
                             <span class="trigger-time">
                                 {{ new Date(item.eventTime).toLocaleString().split('.').join('-') }}
                             </span>
-                            <span :class="{
-                                'success-num': true,
-                                'red': item.success !== item.total
-                            }">
+                            <span
+                                :class="{
+                                    'success-num': true,
+                                    'red': item.success !== item.total
+                                }"
+                            >
                                 ({{ item.success }}/{{ item.total }})
                             </span>
                         </div>
@@ -40,9 +51,10 @@
                                         action: RESOURCE_ACTION.USE
                                     }
                                 }"
+                                v-bk-tooltips="$t('codelib.重放此事件，符合条件的流水线将触发执行')"
                                 @click.stop="handleReplayAll(eventId)"
                             >
-                                {{ $t('codelib.一键重新触发') }}
+                                {{ $t('codelib.全部重放') }}
                             </a>
                             <bk-icon
                                 :class="{
@@ -52,7 +64,23 @@
                                 type="angle-right"
                             />
                         </div>
-                        
+                    </div>
+                    <div
+                        v-if="activeIndex === index"
+                        class="filter-tab"
+                    >
+                        <div
+                            v-for="(tab, tabIndex) in filterTabList"
+                            :key="tabIndex"
+                            :class="{
+                                'tab-item': true,
+                                'active': filterTab === tab.id
+                            }"
+                            @click="handleToggleTab(tab)"
+                        >
+                            {{ tab.name }}
+                            <span class="num">{{ reasonNumMap[tab.key] }}</span>
+                        </div>
                     </div>
                     <div
                         class="trigger-list-table"
@@ -62,20 +90,33 @@
                             :class="{
                                 'is-show-table': activeIndex === index
                             }"
-                            v-bkloading="{ isLoading }">
+                            v-bkloading="{ isLoading }"
+                        >
                             <tbody>
-                                <tr v-for="detail in eventDetailList" :key="detail.detailId">
+                                <tr
+                                    v-for="detail in eventDetailList"
+                                    :key="detail.detailId"
+                                >
                                     <td width="25%">
                                         <div class="cell">{{ detail.pipelineName }}</div>
                                     </td>
                                     <td width="75%">
-                                        <div class="cell" v-if="detail.status === 'SUCCEED'">
+                                        <div
+                                            class="cell"
+                                            v-if="detail.status === 'SUCCEED'"
+                                        >
                                             <StatusIcon :status="detail.status"></StatusIcon>
                                             {{ detail.reason }}  |
                                             <span v-html="detail.buildNum"></span>
                                         </div>
-                                        <div class="cell" v-else>
-                                            <div v-for="i in detail.reasonDetailList" :key="i">
+                                        <div
+                                            class="cell"
+                                            v-else
+                                        >
+                                            <div
+                                                v-for="i in detail.reasonDetailList"
+                                                :key="i"
+                                            >
                                                 <StatusIcon :status="detail.status"></StatusIcon>
                                                 <span style="color: red;">{{ detail.reason }}</span>  |
                                                 <span>{{ i }}</span>
@@ -85,7 +126,9 @@
                                     <td class="replay-btn">
                                         <div class="cell">
                                             <a
-                                                class="click-trigger"
+                                                :class="{
+                                                    'click-trigger': isZH
+                                                }"
                                                 v-perm="{
                                                     hasPermission: curRepo.canUse,
                                                     disablePermissionApi: true,
@@ -96,9 +139,10 @@
                                                         action: RESOURCE_ACTION.USE
                                                     }
                                                 }"
+                                                v-bk-tooltips="$t('codelib.重放此事件，仅触发当前流水线')"
                                                 @click="handleReplay(detail)"
                                             >
-                                                {{ $t('codelib.重新触发') }}
+                                                {{ $t('codelib.重放') }}
                                             </a>
                                         </div>
                                     </td>
@@ -111,18 +155,24 @@
                             small
                             v-bind="pagination"
                             @change="handleChangePage"
-                            @limit-change="handleChangeLimit">
+                            @limit-change="handleChangeLimit"
+                        >
                         </bk-pagination>
                     </div>
                     <div
                         class="trigger-list-table"
-                        v-else-if="activeIndex === index && !eventDetailList.length">
+                        v-else-if="activeIndex === index && !eventDetailList.length"
+                    >
                         <table
                             :class="{
                                 'is-show-table': activeIndex === index
                             }"
-                            v-bkloading="{ isLoading }">
-                            <EmptyTableStatusVue class="empty-table" type="empty" />
+                            v-bkloading="{ isLoading }"
+                        >
+                            <EmptyTableStatusVue
+                                class="empty-table"
+                                type="empty"
+                            />
                         </table>
                     </div>
                 </div>
@@ -164,6 +214,7 @@
             }
         },
         data () {
+            const reason = this.searchValue.find(i => i.id === 'reason')?.values[0].id || ''
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -175,27 +226,42 @@
                     current: 1,
                     limit: 10,
                     count: 0
-                }
+                },
+                isZH: true,
+                filterTab: reason,
+                reason,
+                reasonNumMap: {}
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTabList () {
+                return [
+                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS', key: 'triggerSuccess' },
+                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED', key: 'triggerFailed' },
+                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH', key: 'triggerNotMatch' }
+                ]
             }
+        },
+        created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
         },
         methods: {
             ...mapActions('codelib', [
                 'fetchEventDetail',
+                'fetchTriggerReasonNum',
                 'replayAllEvent',
                 'replayEvent'
             ]),
 
             /**
-             * 一键重新触发
+             * 全部重放
              */
             handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.是否一键重新触发？'),
+                    title: this.$t('codelib.是否全部重放？'),
                     subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
                     confirmFn: async () => {
@@ -242,12 +308,13 @@
             /**
              * 展示触发事件详情
              */
-            handleShowDetail (data, index) {
+            async handleShowDetail (data, index) {
                 this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
                 this.eventId = data.eventId
-                this.getEventDetail()
+                await this.handleFetchTriggerReasonNum()
+                await this.getEventDetail()
             },
 
             getEventDetail () {
@@ -258,6 +325,7 @@
                     eventId: this.eventId,
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
+                    reason: this.filterTab,
                     pipelineId
                 }).then(res => {
                     this.eventDetailList = res.records
@@ -277,6 +345,27 @@
             },
             getEventDescTitle (str) {
                 return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+            },
+            handleToggleTab (tab) {
+                this.filterTab = tab.id
+                this.getEventDetail()
+            },
+
+            async handleFetchTriggerReasonNum () {
+                try {
+                    const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
+
+                    this.reasonNumMap = await this.fetchTriggerReasonNum({
+                        projectId: this.projectId,
+                        eventId: this.eventId,
+                        pipelineId
+                    })
+                    if (!this.reason) {
+                        this.filterTab = this.filterTabList.find(i => this.reasonNumMap[i.key] > 0)?.id
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
             }
         }
     }
@@ -357,6 +446,9 @@
                 transform: rotate(90deg);
             }
         }
+        .trigger-user {
+            color: #979BA5;
+        }
         .trigger-time {
             padding-left: 8px;
             color: #979BA5;
@@ -369,9 +461,40 @@
                 color: red;
             }
         }
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            height: 42px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            .tab-item {
+                font-size: 12px;
+                height: 42px;
+                line-height: 42px;
+                padding: 0 15px;
+                border-right: 1px solid #dfe0e5;
+                cursor: pointer;
+                &:last-child {
+                    border: none
+                }
+                &:hover {
+                    color: #3a84ff;
+                }
+                &.active {
+                    color: #3a84ff;
+                }
+            }
+            .num {
+                color: #979ba5;
+                background: #f0f5ff;
+                border-radius: 50%;
+                padding: 2px;
+            }
+        }
         .trigger-list-table {
             width: 100%;
-            margin: 8px 0;
+            margin-bottom: 8px;
             border: 1px solid #dfe0e5;
             border-radius: 2px;
             transition: opacity 3s linear;
@@ -405,6 +528,10 @@
             .cell {
                 display: inline-block;
                 width: 110px;
+            }
+            .click-trigger {
+                display: inline-block;
+                margin-left: 22px;
             }
         }
     }

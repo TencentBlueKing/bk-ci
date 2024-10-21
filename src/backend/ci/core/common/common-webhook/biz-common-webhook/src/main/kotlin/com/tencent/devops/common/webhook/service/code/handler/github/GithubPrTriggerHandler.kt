@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -60,6 +61,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
@@ -81,6 +83,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -91,10 +94,13 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
-class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
+class GithubPrTriggerHandler @Autowired constructor(
+    val eventCacheService: EventCacheService
+) : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubPrTriggerHandler::class.java)
@@ -242,6 +248,17 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 homepage = event.repository.url
             )
         )
+        if (repository != null && !projectId.isNullOrBlank()) {
+            // 注意：PR[fork库 → main库]
+            eventCacheService.getGithubCommitInfo(
+                githubRepoName = event.pullRequest.head.repo.fullName,
+                commitId = event.pullRequest.head.ref,
+                repo = repository,
+                projectId = projectId
+            )?.run {
+                startParams[PIPELINE_GIT_COMMIT_MESSAGE] = commit.message
+            }
+        }
         return startParams
     }
 
@@ -263,6 +280,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
                 pullRequest.requestedReviewers.joinToString(",") { it.login ?: "" }
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
                 pullRequest.milestone?.dueOn ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =

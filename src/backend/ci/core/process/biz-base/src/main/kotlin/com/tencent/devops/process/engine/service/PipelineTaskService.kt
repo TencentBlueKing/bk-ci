@@ -179,7 +179,8 @@ class PipelineTaskService @Autowired constructor(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
                     "status" to it.status,
-                    "executeCount" to (it.executeCount ?: 1)
+                    "executeCount" to (it.executeCount ?: 1),
+                    "stepId" to (it.stepId ?: "")
                 )
             )
         }
@@ -220,13 +221,17 @@ class PipelineTaskService @Autowired constructor(
         transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String? = null,
+        executeCount: Int? = null
     ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId,
+            executeCount = executeCount
         )
     }
 
@@ -291,12 +296,14 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getBuildTask(projectId: String, buildId: String, taskId: String): PipelineBuildTask? {
+    fun getBuildTask(projectId: String, buildId: String, taskId: String?, stepId: String? = null): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId,
+            executeCount = null
         )
     }
 
@@ -325,7 +332,9 @@ class PipelineTaskService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = updateTaskInfo.projectId,
                 buildId = updateTaskInfo.buildId,
-                taskId = updateTaskInfo.taskId
+                taskId = updateTaskInfo.taskId,
+                stepId = null,
+                executeCount = null
             )
         }
         if (updateTaskInfo.taskStatus.isFinish()) {
@@ -448,8 +457,10 @@ class PipelineTaskService @Autowired constructor(
                 buildId = buildId,
                 message = "[${taskRecord.taskName}] failed, and retry $nextCount",
                 tag = taskRecord.taskId,
-                jobId = taskRecord.containerId,
-                executeCount = 1
+                containerHashId = taskRecord.containerId,
+                executeCount = 1,
+                jobId = null,
+                stepId = taskRecord.stepId
             )
         }
         return isRry
@@ -496,8 +507,10 @@ class PipelineTaskService @Autowired constructor(
             buildId = buildId,
             message = "[${taskRecord.taskName}] pause, waiting ...",
             tag = taskRecord.taskId,
-            jobId = taskRecord.containerId,
-            executeCount = taskRecord.executeCount ?: 1
+            containerHashId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount ?: 1,
+            jobId = null,
+            stepId = taskRecord.stepId
         )
 
         pauseBuild(task = taskRecord)
