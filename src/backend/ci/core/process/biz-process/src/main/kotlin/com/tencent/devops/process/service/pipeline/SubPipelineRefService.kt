@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
+import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -308,7 +309,12 @@ class SubPipelineRefService @Autowired constructor(
                     containerName = it.containerName,
                     subPipelineId = it.subPipelineId,
                     subProjectId = it.subProjectId,
-                    subPipelineName = it.subPipelineName ?: ""
+                    subPipelineName = it.subPipelineName ?: "",
+                    taskProjectId = it.taskProjectId,
+                    taskPipelineType = SubPipelineType.valueOf(it.taskPipelineType),
+                    taskPipelineId = it.taskPipelineId,
+                    taskPipelineName = it.taskPipelineName,
+                    containerSeq = it.containerSeq
                 )
             }
             logger.info("check circular dependency|subRefList[$subRefList]")

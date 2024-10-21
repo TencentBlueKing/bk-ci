@@ -90,6 +90,11 @@ class SubPipelineRefDao {
                     .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_PIPELINE_ID, it.subPipelineId)
                     .set(SUB_PIPELINE_NAME, it.subPipelineName)
+                    .set(CONTAINER_SEQ, it.containerSeq)
+                    .set(TASK_PROJECT_ID, it.taskProjectId)
+                    .set(TASK_PIPELINE_TYPE, it.taskPipelineType.name)
+                    .set(TASK_PIPELINE_ID, it.taskPipelineId)
+                    .set(TASK_PIPELINE_NAME, it.taskPipelineName)
                     .execute()
             }
         }
