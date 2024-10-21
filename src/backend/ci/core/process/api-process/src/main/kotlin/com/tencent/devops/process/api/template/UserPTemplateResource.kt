@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.PTemplateOrderByType
 import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -46,9 +46,9 @@ import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -177,10 +177,10 @@ interface UserPTemplateResource {
         storeFlag: Boolean?,
         @Parameter(description = "模版排序字段", required = false, example = "CREATE_TIME")
         @QueryParam("orderBy")
-        orderBy: PTemplateOrderByType? = PTemplateOrderByType.CREATE_TIME,
+        orderBy: PTemplateOrderByType? = null,
         @Parameter(description = "orderBy排序顺序", required = false)
         @QueryParam("sort")
-        sort: PTemplateSortType?,
+        sort: PTemplateSortType? = null,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
