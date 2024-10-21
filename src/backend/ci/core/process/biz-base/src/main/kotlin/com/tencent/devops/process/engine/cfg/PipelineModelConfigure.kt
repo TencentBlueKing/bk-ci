@@ -60,7 +60,8 @@ class PipelineModelConfigure {
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
-        taskCommonSettingConfig = taskCommonSettingConfig
+        taskCommonSettingConfig = taskCommonSettingConfig,
+        elementBizPluginService = listOf()
     )
 
     @Bean
