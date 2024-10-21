@@ -213,7 +213,7 @@ class SubPipelineRefService @Autowired constructor(
             if (container is TriggerContainer || !container.containerEnabled()) {
                 return@c
             }
-            container.elements.forEachIndexed{ taskIndex, element ->
+            container.elements.forEachIndexed { taskIndex, element ->
                 if (element.elementEnabled()) {
                     subPipelineService.getSubPipelineParam(
                         element = element,
@@ -232,7 +232,7 @@ class SubPipelineRefService @Autowired constructor(
                                 subPipelineId = it.pipelineId,
                                 channel = channel,
                                 subPipelineName = it.pipelineName,
-                                containerSeq = "${stageIndex + 1}_${jobIndex + 1}_${taskIndex + 1}",
+                                containerSeq = "${stageIndex + 1}-${jobIndex + 1}-${taskIndex + 1}",
                                 taskProjectId = it.taskProjectId,
                                 taskPipelineId = it.taskPipelineId,
                                 taskPipelineType = it.taskPipelineType,
