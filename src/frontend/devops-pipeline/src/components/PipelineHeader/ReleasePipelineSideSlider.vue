@@ -309,6 +309,7 @@
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -361,6 +362,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
+                'pipeline',
                 'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
@@ -430,6 +432,14 @@
             },
             hasPacSupportScmTypeList () {
                 return this.pacSupportScmTypeList?.length > 0
+            },
+            canManualStartup () {
+                try {
+                    const manualAtom = this.pipeline?.stages?.[0]?.containers[0]?.elements?.find(e => e.atomCode === 'manualTrigger')
+                    return manualAtom?.additionalOptions?.enable
+                } catch (error) {
+                    return false
+                }
             }
         },
         watch: {
@@ -600,7 +610,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { yamlInfo, version, versionName, versionNum, targetUrl }
+                        data: { yamlInfo, version, versionName, versionNum, targetUrl, updateBuildNo }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -622,6 +632,7 @@
                                 : null
                         }
                     })
+
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
                             ? {
@@ -632,7 +643,9 @@
                                 versionNum,
                                 baseVersion: version,
                                 baseVersionName: versionName,
-                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                                pipelineName: this.pipelineName,
+                                canManualStartup: this.canManualStartup
                             }
                             : {}),
                         ...(
@@ -693,12 +706,19 @@
                                 }
                             }, this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc')),
                             h('h3', {
+                                class: 'release-info-text',
                                 domProps: {
                                     innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
                                         versionName
                                     ])
                                 }
                             }),
+                            updateBuildNo && !tipsArrayLength
+                                ? h('div', { class: 'warning-box' }, [
+                                    h(Logo, { size: 14, name: 'warning-circle-fill' }),
+                                    h('span', this.$t('buildNoBaseline.resetRequiredTips'))
+                                ])
+                                : null,
                             ...(tipsArrayLength > 0
                                 ? [
                                     h(
@@ -775,17 +795,30 @@
                                                 on: {
                                                     click: () => {
                                                         this.$bkInfo.close(instance.id)
-                                                        this.$router.push({
-                                                            name: 'executePreview',
-                                                            params: {
-                                                                ...this.$route.params,
-                                                                version: this.pipelineInfo?.releaseVersion
-                                                            }
-                                                        })
+                                                        if (!updateBuildNo) {
+                                                            this.$router.push({
+                                                                name: 'executePreview',
+                                                                params: {
+                                                                    ...this.$route.params,
+                                                                    version: this.pipelineInfo?.releaseVersion
+                                                                }
+                                                            })
+                                                        } else {
+                                                            this.$router.push({
+                                                                name: 'pipelinesHistory',
+                                                                params: {
+                                                                    projectId,
+                                                                    pipelineId,
+                                                                    type: 'pipeline',
+                                                                    isDirectShowVersion: true,
+                                                                    version: this.pipelineInfo?.releaseVersion
+                                                                }
+                                                            })
+                                                        }
                                                     }
                                                 }
                                             },
-                                            this.$t('goExec')
+                                            this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
                                         ),
                                     h(
                                         'bk-button',
@@ -793,7 +826,7 @@
                                             on: {
                                                 click: () => {
                                                     this.$bkInfo.close(instance.id)
-                                                    this.$router.push({
+                                                    !updateBuildNo && this.$router.push({
                                                         name: 'pipelinesHistory',
                                                         params: {
                                                             projectId,
@@ -805,7 +838,7 @@
                                                 }
                                             }
                                         },
-                                        this.$t('checkPipeline')
+                                        this.$t(!updateBuildNo ? 'checkPipeline' : 'return')
                                     )
 
                                 ]
@@ -1149,6 +1182,27 @@
             font-weight: 700;
             font-size: 14px;
             margin: 0 0 10px 0;
+        }
+    }
+
+    .release-info-text {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: #F5F6FA;
+        border-radius: 2px;
+    }
+
+    .warning-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        background: #FFF4E2;
+        padding: 6px 10px;
+        font-size: 14px;
+        border-radius: 2px;
+        
+        span {
+            margin-left: 10px;
         }
     }
 

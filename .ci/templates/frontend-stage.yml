@@ -37,7 +37,7 @@ stages:
           - uses: calculatehash@1.*
             id: calculate
             with:
-              file_path: src/frontend/package.json,src/frontend/*/package.json
+              file_path: src/frontend/pnpm-lock.yaml
               calculate_func: md5
           - uses: cache@3.*
             id: cache
@@ -47,20 +47,29 @@ stages:
                 src/frontend/node_modules
                 src/frontend/*/node_modules
               skipSaveWhenCacheHit: true
+          - name: "generate version log"
+            run: |
+              cd CHANGELOG
+              python genBundledVersionLog.py 2
           - name: "Bash"
             run: |
               cd src/frontend
-
+              export PATH="$(pwd)/.pnpm-global:$PATH"
+              pnpm config set global-bin-dir $(pwd)/.pnpm-global
+              pnpm i -g pnpm@latest
+              $(pwd)/.pnpm-global/pnpm -v
+              source ~/.bashrc
+              pnpm -v
               if [ ${cacheHit} == 'false' ]
               then
-                echo "cache hit fail , run yarn now..."
-                yarn
+                echo "cache hit fail , run pnpm now..."
+                $(pwd)/.pnpm-global/pnpm install
               else
                 echo "package.json has not changed, use cache"
               fi
-              ls -l ./node_modules
-              chmod -R 777 ./
-              yarn public -e "${{ parameters.env }}" -t tencent -l v2
+              export NODE_OPTIONS=--openssl-legacy-provider
+              export NX_BASE=develop
+              $(pwd)/.pnpm-global/pnpm public
 
               cd ./frontend/ || exit 1
 
@@ -75,6 +84,8 @@ stages:
               cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
               cp ./stream/frontend#stream#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no stream module"
               
+              cp ${{ ci.workspace }}/CHANGELOG/bundledVersionLog*.json ${{ ci.workspace }}/ci/frontend/
+
               cd ${{ ci.workspace }}/scripts/
               cp -rf ci_env_${{ parameters.env }}.properties ci_env.properties
 

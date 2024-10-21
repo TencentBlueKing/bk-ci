@@ -1,7 +1,19 @@
 <template>
-    <bk-tab :active.sync="active" ext-cls="manual-install-tab" type="unborder-card" v-bkloading="{ isLoading: !commandStep.type }">
-        <bk-tab-panel name="method" :label="$t('environment.安装方式')">
-            <a class="iwiki-link" :href="commandStep.networkPolicyDocLink" target="_blank">
+    <bk-tab
+        :active.sync="active"
+        ext-cls="manual-install-tab"
+        type="unborder-card"
+        v-bkloading="{ isLoading: !commandStep.type }"
+    >
+        <bk-tab-panel
+            name="method"
+            :label="$t('environment.安装方式')"
+        >
+            <a
+                class="iwiki-link"
+                :href="commandStep.networkPolicyDocLink"
+                target="_blank"
+            >
                 {{ $t('environment.无法连通网络？') }}
             </a>
             <div class="form-item">
@@ -23,7 +35,11 @@
                     {{ $t('environment.在目标主机通过 shell 安装：') }}
                 </label>
                 <div class="line-content">
-                    <ul class="bk-line" v-for="(item, index) in commandStep.steps" :key="item">
+                    <ul
+                        class="bk-line"
+                        v-for="(item, index) in commandStep.steps"
+                        :key="item"
+                    >
                         <li class="line-dot">
                             <div class="line-index">{{ index + 1 }}</div>
                             <div class="line-section">
@@ -61,10 +77,16 @@
                 </bk-table-column>
             </bk-table>
         </bk-tab-panel> -->
-        <bk-tab-panel name="log" :label="$t('environment.安装日志')">
+        <bk-tab-panel
+            name="log"
+            :label="$t('environment.安装日志')"
+        >
             <div class="install-status">
                 <template v-if="['PENDING', 'RUNNING'].includes(installStatus)">
-                    <Icon class="icon" name="loading" />
+                    <Icon
+                        class="icon"
+                        name="loading"
+                    />
                     <span>{{ $t('environment.installingTips') }}</span>
                 </template>
                 <template v-else-if="installStatus === 'SUCCESS'">
@@ -83,8 +105,16 @@
                     </bk-button> -->
                 </template>
             </div>
-            <div ref="editor" class="log-wrapper">
-                <div ref="executeScriptLog2" v-once id="executeScriptLog2" style="height: 100%;" />
+            <div
+                ref="editor"
+                class="log-wrapper"
+            >
+                <div
+                    ref="executeScriptLog2"
+                    v-once
+                    id="executeScriptLog2"
+                    style="height: 100%;"
+                />
             </div>
         </bk-tab-panel>
     </bk-tab>

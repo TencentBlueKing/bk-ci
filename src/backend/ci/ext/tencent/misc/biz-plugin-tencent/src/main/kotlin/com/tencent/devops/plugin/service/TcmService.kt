@@ -69,12 +69,16 @@ class TcmService {
             "username" to userId,
             "operator" to userId
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps request body for userId($userId): $requestBody")
         val request = Request.Builder()
-                .url(getAppsUrl)
-                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
-                .build()
+            .url(getAppsUrl)
+            .header("X-Bkapi-Authorization", headerStr)
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val body = response.body!!.string()
             logger.info("tcm get apps response body for userId($userId): $body")
@@ -99,12 +103,16 @@ class TcmService {
             "app_id" to ccid,
             "tcm_app_id" to tcmAppId
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps templates request body for userId($userId): $requestBody")
         val request = Request.Builder()
-                .url(getTemplatesUrl)
-                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
-                .build()
+            .url(getTemplatesUrl)
+            .header("X-Bkapi-Authorization", headerStr)
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val body = response.body!!.string()
             logger.info("tcm get apps templates response body for userId($userId): $body")
@@ -135,12 +143,16 @@ class TcmService {
             "tcm_app_id" to tcmAppId,
             "template_id" to templateId
         )
+        val headerStr = JsonUtil.toJson(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps template info request body for userId($userId): $requestBody")
         val request = Request.Builder()
-                .url(getTemplateInfoUrl)
-                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
-                .build()
+            .url(getTemplateInfoUrl)
+            .header("X-Bkapi-Authorization", headerStr)
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val body = response.body!!.string()
             logger.info("tcm get apps template info response body for userId($userId): $body")

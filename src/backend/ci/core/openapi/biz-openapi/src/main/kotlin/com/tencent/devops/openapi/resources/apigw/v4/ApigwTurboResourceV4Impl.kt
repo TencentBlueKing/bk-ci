@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTurboResourceV4
@@ -37,6 +38,7 @@ import com.tencent.devops.turbo.api.IServiceTurboController
 import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
+import com.tencent.devops.turbo.vo.ResourceCostSummary
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
@@ -133,5 +135,27 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_TURBO_V4|getServerResourcesSummary: $startDate|$endDate|$pageSize|$pageNum")
         return client.getSpringMvc(IServiceResourceStatController::class)
             .getSummary(startDate, endDate, pageNum, pageSize)
+    }
+
+    override fun triggerAutoUpload(
+        userId: String,
+        projectId: String,
+        month: String,
+        startDate: String?,
+        endDate: String?
+    ): Response<Boolean> {
+        logger.info("OPENAPI_TURBO_V4|triggerAutoUpload: $userId|$projectId|$month|$startDate|$endDate")
+        return client.getSpringMvc(IServiceResourceStatController::class)
+            .triggerAutoUpload(userId, projectId, month, startDate, endDate)
+    }
+
+    override fun triggerManualUpload(
+        userId: String,
+        projectId: String,
+        summary: ResourceCostSummary
+    ): Response<Boolean> {
+        logger.info("OPENAPI_TURBO_V4|triggerManualUpload: $userId|$projectId|${JsonUtil.toJson(summary)}")
+        return client.getSpringMvc(IServiceResourceStatController::class)
+            .triggerManualUpload(userId, projectId, summary)
     }
 }

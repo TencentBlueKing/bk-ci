@@ -2,7 +2,6 @@ package com.tencent.devops.environment.pojo.job.ccreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.annotation.SkipLogField
-
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class CCFindHostBizRelationsReq(

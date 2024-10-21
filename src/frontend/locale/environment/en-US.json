@@ -239,7 +239,8 @@
         "usage": "Usage",
         "installMethod": "Installation Method",
         "remoteInstall": "Remote Installation",
-        "manualInstall": "Manual Installation"
+        "manualInstall": "Manual Installation",
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -427,17 +428,19 @@
     "安装日志": "Installation Log",
     "网络策略": "Network Policy",
     "安装方式：": "Installation Method:",
-    "在目标主机通过 shell 安装：": "在目标主机通过 shell 安装：",
-    "1、Linux/Unix 系統使用非 root 安装时，要求可以免密sudo执行/tmp/setup_agent.sh 脚本": "1、Linux/Unix 系統使用非 root 安装时，要求可以免密sudo执行/tmp/setup_agent.sh 脚本",
-    "2、直连 Agent 端：保证与蓝鯨服务端以下端口互通，可使用telnet来确认端口是否可通": "2、直连 Agent 端：保证与蓝鯨服务端以下端口互通，可使用telnet<IP><PORT>来确认端口是否可通",
-    "源地址": "源地址",
-    "目标地址": "目标地址",
-    "协议": "协议",
-    "用途": "用途",
+    "在目标主机通过 shell 安装：": "Install on target host via shell:",
+    "1、Linux/Unix 系統使用非 root 安装时，要求可以免密sudo执行/tmp/setup_agent.sh 脚本": "1. For Linux/Unix systems, when installing without root, ensure the ability to execute /tmp/setup_agent.sh script with passwordless sudo.",
+    "2、直连 Agent 端：保证与蓝鯨服务端以下端口互通，可使用telnet来确认端口是否可通": "2. Directly connected Agent: Ensure connectivity to the following ports on the BlueKing server. You can use telnet <IP> <PORT> to confirm port connectivity.",
+    "源地址": "Source Address",
+    "目标地址": "Destination Address",
+    "协议": "Protocol",
+    "用途": "Purpose",
     "启用": "Enable",
     "停用": "Disable",
     "启用成功": "Enable successful",
     "停用成功": "Disable successful",
-    "无法连通网络？": "无法连通网络？",
-    "正在生成手动安装命令": "正在生成手动安装命令"
+    "无法连通网络？": "Unable to connect to the network?",
+    "正在生成手动安装命令": "Generating manual installation command",
+    "已加载X条": "{0} items loaded",
+    "共X个节点": "Total: {0} items"
 }

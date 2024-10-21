@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -60,6 +59,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -91,7 +91,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val templateFacadeService: TemplateFacadeService
 ) {
 
     companion object {
@@ -257,7 +258,11 @@ class SubPipelineStartUpService @Autowired constructor(
                 )
             val model = resource.model
 
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
+            templateFacadeService.printModifiedTemplateParams(
+                projectId = projectId, pipelineId = pipelineId,
+                pipelineParams = triggerContainer.params, paramValues = parameters
+            )
             // #6090 拨乱反正
             val params = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
@@ -310,13 +315,13 @@ class SubPipelineStartUpService @Autowired constructor(
                     params[it.key] = BuildParameters(key = it.key, value = it.value)
                 }
             }
-            // 启动子流水线时使用子流水线的代持人身份，存量数据父流水线的最后修改人可能没有子流水线执行权限
+            // 启动子流水线时使用子流水线的代持人身份，存量数据父流水线的权限代持人可能没有子流水线执行权限
             val oauthUser = pipelineRepositoryService.getPipelineOauthUser(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: readyToBuildPipelineInfo.lastModifyUser
             // 校验父流水线授权人是否有子流水线执行权限
-            checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
+            checkPermission(userId = oauthUser, projectId = projectId, pipelineId = pipelineId)
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
                 userId = oauthUser,
@@ -429,7 +434,7 @@ class SubPipelineStartUpService @Autowired constructor(
 
     private fun needCheckSubElement(element: Element, atomCode: String): Boolean {
         return when {
-            !element.isElementEnable() -> false
+            !element.elementEnabled() -> false
             (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) &&
                 element.getAtomCode() != atomCode -> false
             element is SubPipelineCallElement && element.subPipelineId.isBlank() -> false
@@ -459,13 +464,22 @@ class SubPipelineStartUpService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         includeConst: Boolean?,
-        includeNotRequired: Boolean?
+        includeNotRequired: Boolean?,
+        parentProjectId: String = "",
+        parentPipelineId: String = ""
     ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        val startUser = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(startUser, projectId, pipelineId, ChannelCode.BS)
+        val oauthUser = if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank()) {
+            pipelineRepositoryService.getPipelineOauthUser(
+                projectId = parentProjectId,
+                pipelineId = parentPipelineId
+            ) ?: userId
+        } else {
+            userId
+        }
+        val result = pipelineBuildFacadeService.buildManualStartupInfo(oauthUser, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties.filter {
             val const = if (includeConst == false) { it.constant != true } else { true }

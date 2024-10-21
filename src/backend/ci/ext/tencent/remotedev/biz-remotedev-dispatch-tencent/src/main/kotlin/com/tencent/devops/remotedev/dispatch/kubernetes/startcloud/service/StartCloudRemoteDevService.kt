@@ -43,8 +43,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -68,10 +66,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
-    private val startCloudRedisUtils: StartCloudRedisUtils,
     private val startAndBcsCommonService: StartAndBcsCommonService
 ) : RemoteDevInterface {
-    //
+
     @Value("\${startCloud.appName}")
     val contentProviderName: String = "IEG_BKCI"
 
@@ -89,20 +86,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 ""
             }
             // 迁移orderId
-            startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+            workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
-        }
-
-        kotlin.runCatching {
-            workspaceClient.createUser(
-                userId,
-                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.appName))
-            )
-        }.onFailure {
-            logger.warn("create user failed.|${it.message}")
-            if (it is WorkspaceDispatchException) {
-                throw it
-            }
         }
 
         // 生产创建start资源的订单号
@@ -126,13 +111,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.devFile.quotaType?.getInternal() ?: false
+                    internal = event.devFile.quotaType?.getInternal() ?: false,
+                    pvcs = event.devFile.pvcs
                 )
             )
         )
 
         // 创建成功后保存pipelineId
-        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+        workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
         return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
     }
@@ -176,14 +162,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+    override fun rebuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        imageCosFile: String,
+        formatDataDisk: Boolean?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.REBUILD,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
-                image = imageCosFile
+                image = imageCosFile,
+                formatDataDisk = formatDataDisk
             )
         )
 
@@ -207,7 +199,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
             )
         )
         return resp.taskUid
@@ -228,7 +220,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
                 cgsId = cgsId
             ),
             actionMsg = imageId

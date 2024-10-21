@@ -29,10 +29,11 @@ package com.tencent.devops.remotedev.websocket.push
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
+import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
@@ -41,44 +42,49 @@ import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 
-@Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
+@Event(StreamBinding.WEBSOCKET_TMP_FANOUT)
 data class WorkspaceWebsocketPush(
     val type: WebSocketActionType,
     @get:Schema(title = "行为是否成功")
     val status: Boolean,
     val anyMessage: Any,
     val projectId: String,
-    val userIds: Set<String>,
+    override val userId: String,
     override val redisOperation: RedisOperation,
-    override var page: String?,
-    override var notifyPost: NotifyPost
+    override var page: String?
 ) : WebsocketPush(
-    userId = userIds.firstOrNull() ?: "",
+    userId = userId,
     pushType = WebSocketType.AMD,
     redisOperation = redisOperation,
     page = page,
-    notifyPost = notifyPost
+    notifyPost = NotifyPost(
+        module = "remotedev",
+        level = NotityLevel.LOW_LEVEL.getLevel(),
+        message = "",
+        dealUrl = null,
+        code = 200,
+        webSocketType = "IFRAME",
+        page = page
+    )
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceWebsocketPush::class.java)
     }
 
-    // 同时向 user 和 page 的 session 推送。可以同时兼容概览页面和详情页面
-    override fun findSession(page: String): Set<String>? {
-        val userSession = mutableSetOf<String>()
-        userIds.forEach {
-            userSession.addAll(
-                WsRedisUtils.getSessionIdByUserId(redisOperation, it) ?: emptySet()
-            )
-        }
-        val pageSession = super.findSession(page) ?: emptySet()
-        val instanceManage = if (projectId.isNotBlank()) {
-            super.findSession(WorkspacePageBuild.instanceManage(projectId)) ?: emptySet()
-        } else {
-            emptySet()
-        }
-        return userSession.plus(pageSession).plus(instanceManage)
+    override fun findSession(page: String) = super.findSession(page) ?: emptySet()
+    fun findSession() = findSession(page!!)
+
+    @Deprecated(
+        "暂时兼容老客户端ws对应的session， 后期会考虑去掉", ReplaceWith("null", "")
+    )
+    private fun oldSession() = WsRedisUtils.getSessionIdByUserId(redisOperation, userId) ?: emptySet()
+
+    /*预留给控制台的session*/
+    private fun projectSession() = if (projectId.isNotBlank()) {
+        super.findSession(WorkspacePageBuild.instanceManage(projectId)) ?: emptySet()
+    } else {
+        emptySet()
     }
 
     override fun buildMqMessage(): SendMessage {
@@ -86,7 +92,7 @@ data class WorkspaceWebsocketPush(
             notifyPost = notifyPost,
             userId = userId,
             page = page,
-            sessionList = findSession(page!!)
+            sessionList = findSession().plus(oldSession()).plus(projectSession())
         )
     }
 

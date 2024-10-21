@@ -20,10 +20,11 @@ data class Moa2faVerifyRespData(
     @JsonProperty("StackTrace")
     val stackTrace: String,
     @JsonProperty("Data")
-    val data: VerifySessionData
+    val data: VerifySessionData?
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VerifySessionData(
     val sessionId: String,
-    val status: String
+    val status: String,
+    val buttonType: String?
 )

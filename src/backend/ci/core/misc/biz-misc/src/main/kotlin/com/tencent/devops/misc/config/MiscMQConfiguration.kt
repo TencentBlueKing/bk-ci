@@ -27,76 +27,23 @@
 
 package com.tencent.devops.misc.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.misc.listener.PipelineArchiveListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
 @Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MiscMQConfiguration {
-
     @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
-    @Bean
-    fun pipelineCoreExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun pipelineArchiveQueue() = Queue(MQ.QUEUE_PIPELINE_ARCHIVE)
-
-    @Bean
-    fun pipelineArchiveQueueBind(
-        @Autowired pipelineArchiveQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineArchiveQueue)
-            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_ARCHIVE)
-    }
-
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun pipelineArchiveListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired pipelineArchiveQueue: Queue,
-        @Autowired pipelineArchiveListener: PipelineArchiveListener
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(pipelineArchiveListener, pipelineArchiveListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = pipelineArchiveQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 10,
-            concurrency = 5,
-            maxConcurrency = 10
-        )
-    }
+    @EventConsumer
+    fun pipelineMQArchiveConsumer(
+        @Autowired buildListener: PipelineArchiveListener
+    ) = ScsConsumerBuilder.build<PipelineArchiveEvent> { buildListener.execute(it) }
 }

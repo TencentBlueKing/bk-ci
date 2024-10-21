@@ -28,6 +28,8 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.auth.api.AuthUserAndDeptApi
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
@@ -47,7 +49,8 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectBuildSummaryDao: ProjectBuildSummaryDao,
     private val redisOperation: RedisOperation,
-    private val cacheProjectInfoService: CacheProjectInfoService
+    private val cacheProjectInfoService: CacheProjectInfoService,
+    private val authUserAndDeptApi: AuthUserAndDeptApi
 ) : ProjectBuildSummaryService {
 
     companion object {
@@ -87,9 +90,14 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
+            logger.info("save Project User:$projectId|$userId|$theDate")
             val projectVO = cacheProjectInfoService.getProject(projectId)
             if (projectVO?.enabled == false) {
                 logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
+                return
+            }
+            if (authUserAndDeptApi.checkUserDeparted(userId)) {
+                logger.debug("This user does not need to be save, because he has departed|$userId")
                 return
             }
             dslContext.transaction { configuration ->
@@ -109,6 +117,15 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun saveProjectUserOperateMetrics(
+        userOperateCounterData: UserOperateCounterData
+    ) {
+        projectBuildSummaryDao.saveUserOperateCount(
+            dslContext = dslContext,
+            projectUserOperateMetricsData2OperateCount = userOperateCounterData.getUserOperationCountMap()
+        )
     }
 
     override fun getProjectActiveUserCount(

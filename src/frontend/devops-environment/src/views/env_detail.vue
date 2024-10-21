@@ -2,23 +2,30 @@
     <div class="env-detail-wrapper">
         <content-header class="env-detail-header">
             <template slot="left">
-                <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
+                <i
+                    class="devops-icon icon-arrows-left"
+                    @click="toEnvList"
+                ></i>
                 {{ curEnvDetail.name }}
             </template>
         </content-header>
 
-        <div class="env-detail-container"
+        <div
+            class="env-detail-container"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
+            }"
+        >
             <div class="env-parameter-tab">
                 <div class="env-detail-nav">
                     <div
                         v-for="tab in tabs"
                         :key="tab.tab"
                         :class="['tab-nav-item', tab.cls, { activeItem: curItemTab === tab.tabName }]"
-                        @click="changeTab(tab.tabName)">{{ $t(`environment.${tab.label}`) }}
+                        @click="changeTab(tab.tabName)"
+                    >
+                        {{ $t(`environment.${tab.label}`) }}
                     </div>
                 </div>
                 <component
@@ -31,7 +38,6 @@
                 />
             </div>
         </div>
-       
     </div>
 </template>
 

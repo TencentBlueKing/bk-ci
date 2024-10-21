@@ -1,14 +1,46 @@
 <template>
-    <article class="detail-home" v-bkloading="{ isLoading }">
-        <bread-crumbs :bread-crumbs="navList" :type="type">
-            <router-link :to="{ name: 'atomWork' }" class="g-title-work" v-if="type !== 'ide'"> {{ $t('store.工作台') }} </router-link>
+    <article
+        class="detail-home"
+        v-bkloading="{ isLoading }"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="type"
+        >
+            <router-link
+                :to="{ name: 'atomWork' }"
+                class="g-title-work"
+                v-if="type !== 'ide'"
+            >
+                {{ $t('store.工作台') }}
+            </router-link>
         </bread-crumbs>
 
-        <main class="store-main" v-if="!isLoading">
-            <component :is="`${type}Info`" :detail="detail" class="detail-info" :current-tab.sync="currentTab"></component>
-            <bk-tab type="unborder-card" :active.sync="currentTab" class="detail-tabs">
-                <bk-tab-panel :name="tab.name" :label="tab.label" v-for="(tab, index) in tabList[type].filter(x => !x.hidden)" :key="index">
-                    <component :is="tab.componentName" v-bind="tab.bindData"></component>
+        <main
+            class="store-main"
+            v-if="!isLoading"
+        >
+            <component
+                :is="`${type}Info`"
+                :detail="detail"
+                class="detail-info"
+                :current-tab.sync="currentTab"
+            ></component>
+            <bk-tab
+                type="unborder-card"
+                :active.sync="currentTab"
+                class="detail-tabs"
+            >
+                <bk-tab-panel
+                    :name="tab.name"
+                    :label="tab.label"
+                    v-for="(tab, index) in tabList[type].filter(x => !x.hidden)"
+                    :key="index"
+                >
+                    <component
+                        :is="tab.componentName"
+                        v-bind="tab.bindData"
+                    ></component>
                 </bk-tab-panel>
             </bk-tab>
         </main>
@@ -17,19 +49,19 @@
 
 <script>
     import api from '@/api'
-    import { mapActions, mapGetters } from 'vuex'
-    import ideInfo from '../../components/common/detail-info/ide'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions, mapGetters } from 'vuex'
     import atomInfo from '../../components/common/detail-info/atom'
-    import templateInfo from '../../components/common/detail-info/template'
+    import ideInfo from '../../components/common/detail-info/ide'
     import imageInfo from '../../components/common/detail-info/image'
     import serviceInfo from '../../components/common/detail-info/service'
-    import detailScore from '../../components/common/detailTab/detailScore'
+    import templateInfo from '../../components/common/detail-info/template'
     import codeSection from '../../components/common/detailTab/codeSection'
-    import yamlDetail from '../../components/common/detailTab/yamlDetail'
+    import detailScore from '../../components/common/detailTab/detailScore'
+    import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
-    import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
+    import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
         components: {

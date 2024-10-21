@@ -4,11 +4,13 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
+import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.dao.WorkspaceDao.Companion.workspaceWithWindowsMapper
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
@@ -275,6 +277,10 @@ class WorkspaceJoinDao {
             conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(search.zoneShortName?.joinToString("|")))
         }
 
+        if (!search.logicalArea.isNullOrEmpty()) {
+            conditions.add(logicalAreaGetZone(dslContext, search.logicalArea!!))
+        }
+
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
             val sql = if (search.onFuzzyMatch) {
@@ -387,6 +393,36 @@ class WorkspaceJoinDao {
             )
         }
         return this
+    }
+
+    private fun logicalAreaGetZone(dslContext: DSLContext, areas: List<WindowsResourceZoneConfigType>): Condition {
+        /*考虑到查询此频率不会太高，不做缓存。后续视情况可做缓存*/
+        val stMap = with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
+            dslContext.select(SHORT_NAME, TYPE).from(this)
+                .where(AVAILABLED.eq(1))
+                .skipCheck()
+                .fetch().groupBy({ it.value2() }) { it.value1() }
+        }
+        return if (WindowsResourceZoneConfigType.DEFAULT in areas) {
+            /*如果DEFAULT在查询中，则利用反查*/
+            val zoneIds = stMap.filter { WindowsResourceZoneConfigType.parse(it.key) !in areas }.flatMap { it.value }
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.notLikeRegex(
+                zoneIds.joinToString(
+                    separator = "$|^",
+                    prefix = "^",
+                    postfix = "$"
+                )
+            )
+        } else {
+            val zoneIds = stMap.filter { WindowsResourceZoneConfigType.parse(it.key) in areas }.flatMap { it.value }
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.likeRegex(
+                zoneIds.joinToString(
+                    separator = "$|^",
+                    prefix = "^",
+                    postfix = "$"
+                )
+            )
+        }
     }
 
     /**

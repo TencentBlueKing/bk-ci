@@ -84,6 +84,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         resourceCode: String,
+        allProjectMembersGroupFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<Pagination<IamGroupInfoVo>> {
@@ -94,7 +95,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
                     projectId = projectId,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    getAllProjectMembersGroup = true,
+                    getAllProjectMembersGroup = allProjectMembersGroupFlag ?: true,
                     page = page,
                     pageSize = pageSize
                 )

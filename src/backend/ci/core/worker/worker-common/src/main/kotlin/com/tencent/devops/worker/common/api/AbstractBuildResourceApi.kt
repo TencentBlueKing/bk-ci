@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.CommonEnv
@@ -200,7 +201,18 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
                     "Fail to request($request) with code ${response.code} ," +
                             " message ${response.message} and response ($responseContent)"
                 )
-                throw RemoteServiceException(errorMessage, response.code, responseContent)
+                val errorCode = if (responseContent != null && JsonSchemaUtil.isJsonObject(responseContent)) {
+                    val responseMap = JsonUtil.toMap(responseContent)
+                    responseMap[RemoteServiceException::errorCode.name]?.toString()?.toInt()
+                } else {
+                    null
+                }
+                throw RemoteServiceException(
+                    errorMessage = errorMessage,
+                    httpStatus = response.code,
+                    responseContent = responseContent,
+                    errorCode = errorCode
+                )
             }
             return response.body!!.string()
         }

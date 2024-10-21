@@ -32,12 +32,15 @@ import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -49,6 +52,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupApplyRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -69,7 +73,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val rbacCacheService: RbacCacheService,
     private val redisOperation: RedisOperation,
-    private val authResourceSyncDao: AuthResourceSyncDao
+    private val authResourceSyncDao: AuthResourceSyncDao,
+    private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -143,7 +149,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 groupCode = resourceGroup.groupCode,
-                iamGroupId = resourceGroup.relationId.toInt()
+                iamGroupId = resourceGroup.relationId
             )
         }
     }
@@ -162,6 +168,64 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             groupCode = resourceGroup.groupCode,
             iamGroupId = iamGroupId
         )
+    }
+
+    override fun syncIamGroupMembersOfApply() {
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            val limit = 100
+            var offset = 0
+            val startEpoch = System.currentTimeMillis()
+            val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
+            val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
+            do {
+                logger.info("sync members of apply | start")
+                // 获取7天内未审批单据
+                val records = authResourceGroupApplyDao.list(
+                    dslContext = dslContext,
+                    day = 7,
+                    limit = limit,
+                    offset = offset
+                )
+                val (recordsOfSuccess, recordsOfPending) = records.partition {
+                    try {
+                        val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
+                            it.memberId,
+                            it.iamGroupId.toString()
+                        )[it.iamGroupId]?.belong == true
+                        isMemberJoinedToGroup
+                    } catch (ignore: Exception) {
+                        logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                        false
+                    }
+                }
+                finalRecordsOfPending.addAll(recordsOfPending)
+                finalRecordsOfSuccess.addAll(recordsOfSuccess)
+                offset += limit
+            } while (records.size == limit)
+            if (finalRecordsOfPending.isNotEmpty()) {
+                authResourceGroupApplyDao.batchUpdate(
+                    dslContext = dslContext,
+                    ids = finalRecordsOfPending.map { it.id },
+                    applyToGroupStatus = ApplyToGroupStatus.PENDING
+                )
+            }
+            if (finalRecordsOfSuccess.isNotEmpty()) {
+                finalRecordsOfSuccess.forEach {
+                    syncIamGroupMember(
+                        projectCode = it.projectCode,
+                        iamGroupId = it.iamGroupId
+                    )
+                }
+                authResourceGroupApplyDao.batchUpdate(
+                    dslContext = dslContext,
+                    ids = finalRecordsOfSuccess.map { it.id },
+                    applyToGroupStatus = ApplyToGroupStatus.SUCCEED
+                )
+            }
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
+        }
     }
 
     override fun syncGroupAndMember(projectCode: String) {
@@ -226,12 +290,15 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             is IamException -> {
                 exception.errorMsg
             }
+
             is ErrorCodeException -> {
                 exception.defaultMessage
             }
+
             is CompletionException -> {
                 exception.cause?.message ?: exception.message
             }
+
             else -> {
                 exception.toString()
             }
@@ -262,7 +329,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
-            ).associateBy { it.relationId.toInt() }
+            ).associateBy { it.relationId }
 
             // 查询项目下用户组列表
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
@@ -304,16 +371,13 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         projectGroup.description != iamGroupInfo.description ||
                         projectGroup.iamTemplateId != templateId
                     ) {
-                        val toUpdateGroupRecord = authResourceGroupDao.convert(projectGroup)
-                        if (toUpdateGroupRecord != null) {
-                            toUpdateGroups.add(
-                                toUpdateGroupRecord.copy(
-                                    groupName = iamGroupInfo.name,
-                                    description = iamGroupInfo.description,
-                                    iamTemplateId = templateId
-                                )
+                        toUpdateGroups.add(
+                            projectGroup.copy(
+                                groupName = iamGroupInfo.name,
+                                description = iamGroupInfo.description,
+                                iamTemplateId = templateId
                             )
-                        }
+                        )
                     }
                 } else {
                     toAddGroups.add(
@@ -335,9 +399,23 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id })
+                authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id!! })
                 authResourceGroupDao.batchCreate(transactionContext, toAddGroups)
                 authResourceGroupDao.batchUpdate(transactionContext, toUpdateGroups)
+            }
+            if (toDeleteGroups.isNotEmpty()) {
+                resourceGroupPermissionService.deleteByGroupIds(
+                    projectCode = projectCode,
+                    iamGroupIds = toDeleteGroups.map { it.relationId }
+                )
+            }
+            if (toAddGroups.isNotEmpty()) {
+                toAddGroups.forEach {
+                    resourceGroupPermissionService.syncGroupPermissions(
+                        projectCode = projectCode,
+                        iamGroupId = it.relationId
+                    )
+                }
             }
         } finally {
             logger.info(

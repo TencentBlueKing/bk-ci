@@ -39,7 +39,8 @@ enum class TGitMrEventAction(val value: String) {
     CLOSE("close"),
     REOPEN("reopen"),
     PUSH_UPDATE("push-update"),
-    MERGE("merge");
+    MERGE("merge"),
+    EDIT("edit");
 
     companion object {
         fun getActionValue(event: GitMergeRequestEvent): String? {
@@ -51,7 +52,7 @@ enum class TGitMrEventAction(val value: String) {
                     if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
                         PUSH_UPDATE.value
                     } else {
-                        null
+                        EDIT.value
                     }
                 }
                 TGitMergeActionKind.MERGE.value -> MERGE.value

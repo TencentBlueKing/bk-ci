@@ -115,7 +115,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                     } else if (noScm && container is VMBuildContainer) {
                         container.elements.forEach ele@{ ele ->
                             // 插件没有启用或者是post action不需要比较变更
-                            if (!ele.isElementEnable() || ele.additionalOptions?.elementPostInfo != null) {
+                            if (!ele.elementEnabled() || ele.additionalOptions?.elementPostInfo != null) {
                                 return@ele
                             }
                             val (existScmElement, codeChange) = scmElementCheck(

@@ -27,23 +27,17 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 
-import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.dao.WindowsGpuResourceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
-import com.tencent.devops.remotedev.pojo.CgsResourceConfig
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
-import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +49,6 @@ class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceBcsClient: WorkspaceBcsClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
     @Value("\${startCloud.appName}")
@@ -132,7 +125,7 @@ class StartCloudInterfaceService @Autowired constructor(
     }
 
     // 同步更新云桌面资源池列表
-    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
+    fun realtimeStartCloudResourceList(): List<EnvironmentResourceData> {
         val resList = mutableListOf<EnvironmentResourceData>()
         val cgs = workspaceBcsClient.startListCgs()
         cgs.forEach {
@@ -160,17 +153,6 @@ class StartCloudInterfaceService @Autowired constructor(
             )
         }
         logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
-        if (resList.isNotEmpty()) {
-            windowsGpuResourceDao.deleteAllResource(dslContext)
-            windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
-        }
-        // 同步 gpu空闲资源数据
-        kotlin.runCatching {
-            getAllVmResource()
-        }.onFailure {
-            logger.warn("get all vm resource failed.|${it.message}")
-        }
-
         return resList
     }
 
@@ -179,94 +161,21 @@ class StartCloudInterfaceService @Autowired constructor(
         cgsIds: List<String>?,
         ips: List<String>?
     ): List<EnvironmentResourceData> {
+        val condition = when {
+            !cgsIds.isNullOrEmpty() && !ips.isNullOrEmpty() ->
+                fun(id: String, ip: String) = id in cgsIds && ip in ips
+
+            !cgsIds.isNullOrEmpty() ->
+                fun(id: String, _: String) = id in cgsIds
+
+            !ips.isNullOrEmpty() ->
+                fun(_: String, ip: String) = ip in ips
+
+            else -> return emptyList()
+        }
         logger.info("getCgsData|$cgsIds|$ips")
-        return windowsGpuResourceDao.getCgsResourceList(
-            dslContext = dslContext,
-            cgsIds = cgsIds,
-            ips = ips
-        ).map {
-            EnvironmentResourceData(
-                cgsId = it.cgsId,
-                cgsIp = it.cgsIp,
-                zoneId = it.zoneId,
-                machineType = it.machineType,
-                status = it.status,
-                userInstanceList = null,
-                locked = ByteUtils.byte2Bool(it.locked),
-                projectId = it.projectId,
-                disk = it.disk,
-                hdisk = it.hdisk,
-                imageStandard = ByteUtils.byte2Bool(it.imagestandard),
-                node = it.node,
-                image = it.image,
-                cpu = it.cpu,
-                mem = it.memory,
-                registerCgsTime = it.registerTime,
-                internal = ByteUtils.byte2Bool(it.internal),
-                macAddress = it.macAddress
-            )
-        }
-    }
-
-    /*
-     * 校验cgsId是否已被申请，并在运行中
-     * true:表示可分配
-     * false：表示已被分配使用中
-     */
-    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
-        logger.info("checkCgsRunning|cgsId|$cgsId|status|$status")
-        return windowsGpuResourceDao.getCgsWorkspace(
-            dslContext = dslContext,
-            cgsId = cgsId,
-            status = status
-        )?.let { false } ?: true
-    }
-
-    /**
-     * 获取cgs资源池的机型和区域列表
-     */
-    fun getCgsConfig(): CgsResourceConfig {
-        val machineTypeList = mutableListOf<String>()
-        val zoneList = mutableListOf<String>()
-        val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
-        cgsConfigList.forEach { cgs ->
-            if (!machineTypeList.contains(cgs.value2())) {
-                machineTypeList.add(cgs.value2())
-            }
-            if (!zoneList.contains(cgs.value1())) {
-                zoneList.add(cgs.value1())
-            }
-        }
-        logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
-
-        return CgsResourceConfig(
-            zoneList = zoneList,
-            machineTypeList = machineTypeList
-        )
-    }
-
-    // 获取vm空闲资源，包含Devcloud专区和其他
-    fun getAllVmResource() {
-        val resList = listOfNotNull(
-            workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, false)),
-            workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, true))
-        )
-            .flatten() // 将上述两个list合并成一个
-            .flatMap { resource ->
-                resource.machineResources?.map { mas ->
-                    ResourceVmRespDataMachineResource(
-                        zoneId = resource.zoneId,
-                        machineType = mas.machineType,
-                        cap = mas.cap ?: 0,
-                        used = mas.used ?: 0,
-                        free = mas.free ?: 0
-                    )
-                } ?: emptyList()
-            }
-
-        if (resList.isNotEmpty()) {
-            windowsGpuResourceDao.deleteVmResource(dslContext)
-            windowsGpuResourceDao.insertVmResource(dslContext, resList)
+        return realtimeStartCloudResourceList().filter {
+            condition(it.cgsId, it.cgsIp)
         }
     }
 }

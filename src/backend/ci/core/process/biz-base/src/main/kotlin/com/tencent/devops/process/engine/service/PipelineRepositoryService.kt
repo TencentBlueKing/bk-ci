@@ -181,7 +181,9 @@ class PipelineRepositoryService constructor(
                 )
             }
             if (runLockType == PipelineRunLockType.SINGLE ||
-                runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
+                runLockType == PipelineRunLockType.SINGLE_LOCK ||
+                runLockType == PipelineRunLockType.GROUP_LOCK ||
+                runLockType == PipelineRunLockType.MULTIPLE
             ) {
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -247,14 +249,16 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             yamlInfo = yamlInfo
         )
-
-        val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
+        val buildNo = triggerContainer.buildNo?.apply {
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            currentBuildNo = null
+        }
         var canManualStartup = false
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.isElementEnable()) {
+                if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
@@ -340,8 +344,12 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         yamlInfo: PipelineYamlVo? = null
     ): List<PipelineModelTask> {
-
-        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
+        val metaSize = modelCheckPlugin.checkModelIntegrity(
+            model = model,
+            projectId = projectId,
+            userId = userId,
+            oauthUser = getPipelineOauthUser(projectId, pipelineId)
+        )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 
@@ -885,6 +893,7 @@ class PipelineRepositoryService constructor(
         var operationLogParams = versionName
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
+        var updateBuildNo = false
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1053,6 +1062,13 @@ class PipelineRepositoryService constructor(
                             ) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
                             )
+                            draftVersion.model.getTriggerContainer().buildNo?.let {
+                                val releaseBuildNo = releaseResource.model.getTriggerContainer().buildNo
+                                // [关闭变为开启]或[修改buildNo数值]，都属于更新行为，需要提示更新
+                                if (releaseBuildNo == null || releaseBuildNo.buildNo != it.buildNo) {
+                                    updateBuildNo = true
+                                }
+                            }
                             draftVersion.version
                         } else {
                             // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
@@ -1178,7 +1194,8 @@ class PipelineRepositoryService constructor(
             pipelineName = model.name,
             version = version,
             versionNum = versionNum,
-            versionName = versionName
+            versionName = versionName,
+            updateBuildNo = updateBuildNo
         )
     }
 
@@ -1341,7 +1358,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1361,7 +1378,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1384,7 +1401,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        targetVersion: PipelineResourceVersion,
         ignoreBase: Boolean? = false,
         transactionContext: DSLContext? = null
     ): PipelineResourceVersion {
@@ -1400,9 +1417,9 @@ class PipelineRepositoryService constructor(
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(version.toString())
+                params = arrayOf(pipelineId)
             )
-            // 删除草稿并获取最新版本用于版本计算
+            // 删除草稿并获取最新版本用于版本号计算
             pipelineResourceVersionDao.clearDraftVersion(
                 dslContext = context,
                 projectId = projectId,
@@ -1413,19 +1430,9 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: releaseResource
-            // 获取目标的版本用于更新草稿
-            val targetVersion = pipelineResourceVersionDao.getVersionResource(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-                params = arrayOf(version.toString())
-            )
 
             // 计算版本号
+            val settingVersion = (latestResource.settingVersion ?: latestResource.version) + 1
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
@@ -1433,7 +1440,7 @@ class PipelineRepositoryService constructor(
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
-                settingVersion = targetVersion.settingVersion,
+                settingVersion = settingVersion,
                 createTime = now,
                 updateTime = now
             )
@@ -1800,7 +1807,11 @@ class PipelineRepositoryService constructor(
                 )
                     .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
                     .scopeId = pipelineModelVersion.projectId
-                pipelineResourceDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    pipelineResourceDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                    pipelineResourceVersionDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                }
             } finally {
                 lock.unlock()
             }

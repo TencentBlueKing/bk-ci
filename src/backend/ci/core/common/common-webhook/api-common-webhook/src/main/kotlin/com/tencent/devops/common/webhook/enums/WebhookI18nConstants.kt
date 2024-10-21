@@ -144,6 +144,12 @@ object WebhookI18nConstants {
     // Github Push操作类型不匹配
     const val PUSH_ACTION_NOT_MATCH = "bkRepoTriggerPushActionNotMatch"
 
+    // WIP阶段不触发
+    const val MR_SKIP_WIP = "bkRepoTriggerSkipWipNotMatch"
+
+    // 自定义触发控制不匹配
+    const val THIRD_FILTER_NOT_MATCH = "bkRepoTriggerThirdFilterNotMatch"
+
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
 }

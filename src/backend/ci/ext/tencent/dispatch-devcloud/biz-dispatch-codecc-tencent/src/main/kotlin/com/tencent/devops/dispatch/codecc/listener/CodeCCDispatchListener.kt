@@ -6,9 +6,11 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Credential
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -27,7 +29,7 @@ class CodeCCDispatchListener @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val dslContext: DSLContext,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) : BuildListener {
 
     companion object {
@@ -52,18 +54,22 @@ class CodeCCDispatchListener @Autowired constructor(
         return JobQuotaVmType.DOCKER_DEVCLOUD
     }
 
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is CodeCCDispatchType
+    }
+
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($event|$)")
         val buildHistory = pipelineDockerBuildDao.getBuild(dslContext, event.buildId, event.vmSeqId?.toInt() ?: 1)
         // 判断是否有docker vm构建记录，不存在则默认为devcloud构建
         if (buildHistory != null) {
-            pipelineEventDispatcher.dispatch(
+            sampleEventDispatcher.dispatch(
                 event.copy(routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix)
             )
             return
         }
 
-        pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix))
+        sampleEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix))
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
@@ -84,7 +90,7 @@ class CodeCCDispatchListener @Autowired constructor(
             )
 
             with(dispatchMessage.event) {
-                pipelineEventDispatcher.dispatch(
+                sampleEventDispatcher.dispatch(
                     PipelineAgentStartupEvent(
                         source = "vmStartupTaskAtom",
                         projectId = projectId,
@@ -131,7 +137,7 @@ class CodeCCDispatchListener @Autowired constructor(
                 poolNo = 0
             )
 
-            pipelineEventDispatcher.dispatch(
+            sampleEventDispatcher.dispatch(
                 PipelineAgentStartupEvent(
                     source = "vmStartupTaskAtom",
                     projectId = projectId,

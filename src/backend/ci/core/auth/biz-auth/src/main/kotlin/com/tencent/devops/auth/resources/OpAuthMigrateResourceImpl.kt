@@ -94,8 +94,11 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
 
-    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
-        permissionMigrateService.autoRenewal(projectConditionDTO)
+    override fun autoRenewal(validExpiredDay: Int?, projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(
+            validExpiredDay = validExpiredDay ?: 180,
+            projectConditionDTO = projectConditionDTO
+        )
         return Result(true)
     }
 
@@ -105,5 +108,9 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
 
     override fun migrateAllResourceAuthorization(): Result<Boolean> {
         return Result(permissionMigrateService.migrateAllResourceAuthorization())
+    }
+
+    override fun fixResourceGroups(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.fixResourceGroups(projectCodes))
     }
 }

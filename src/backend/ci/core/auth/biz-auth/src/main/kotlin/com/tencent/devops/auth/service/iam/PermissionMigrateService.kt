@@ -97,6 +97,7 @@ interface PermissionMigrateService {
     ): Boolean
 
     fun autoRenewal(
+        validExpiredDay: Int,
         projectConditionDTO: ProjectConditionDTO
     ): Boolean
 
@@ -111,4 +112,9 @@ interface PermissionMigrateService {
      * 全量迁移资源授权
      */
     fun migrateAllResourceAuthorization(): Boolean
+
+    /**
+     * 修复资源组数据，存在同步iam资源组数据，数据库 iam组id为NULL的情况，需要进行修复
+     */
+    fun fixResourceGroups(projectCodes: List<String>): Boolean
 }

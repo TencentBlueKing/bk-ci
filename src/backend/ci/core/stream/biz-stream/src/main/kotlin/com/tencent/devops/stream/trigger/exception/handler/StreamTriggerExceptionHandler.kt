@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.exception.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -59,6 +60,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
 
     fun <T> handle(
         action: BaseAction,
+        watcherStop: Boolean = true,
         f: () -> T?
     ): T? {
         try {
@@ -83,6 +85,11 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                 // 防止Hanlder处理过程中报错，兜底
                 logger.error("BKSystemErrorMonitor|StreamTriggerExceptionHandler|action|${action.format()}", e)
                 return null
+            }
+        } finally {
+            if (action.data.isWatcherInitialized && watcherStop) {
+                action.data.watcher.stop()
+                LogUtils.printCostTimeWE(action.data.watcher, warnThreshold = 5000, errorThreshold = 10000)
             }
         }
     }

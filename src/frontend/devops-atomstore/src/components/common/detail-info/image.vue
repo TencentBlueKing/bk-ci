@@ -1,41 +1,63 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <img
+            class="detail-pic atom-logo"
+            :src="detail.logoUrl"
+        >
         <hgroup class="store-item-detail detail-info-group">
-            <h3 :class="[{ 'not-recommend': detail.recommendFlag === false }, 'title-with-img']" :title="detail.recommendFlag === false ? $t('store.该镜像不推荐使用') : ''">
-                {{detail.name}}
+            <h3
+                :class="[{ 'not-recommend': detail.recommendFlag === false }, 'title-with-img']"
+                :title="detail.recommendFlag === false ? $t('store.该镜像不推荐使用') : ''"
+            >
+                {{ detail.name }}
             </h3>
             <div class="detail-info-row">
                 <h5 class="detail-info">
-                    <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                    <span> {{ $t('store.发布者：') }} </span><span>{{ detail.publisher || '-' }}</span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
+                    <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>
                 </h5>
-                <h5 class="detail-info detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
+                <h5
+                    class="detail-info detail-score"
+                    :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])"
+                >
                     <span> {{ $t('store.评分：') }} </span>
                     <p class="score-group">
-                        <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
-                        <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
+                        <comment-rate
+                            :rate="5"
+                            :width="14"
+                            :height="14"
+                            :style="{ width: starWidth }"
+                            class="score-real"
+                        ></comment-rate>
+                        <comment-rate
+                            :rate="0"
+                            :width="14"
+                            :height="14"
+                        ></comment-rate>
                     </p>
-                    <span class="rate-num">{{detail.totalNum || 0}}</span>
+                    <span class="rate-num">{{ detail.totalNum || 0 }}</span>
                 </h5>
             </div>
             <div class="detail-info-row">
                 <h5 class="detail-info">
-                    <span> {{ $t('store.镜像源：') }} </span><span>{{detail.imageSourceType | imageTypeFilter}}</span>
+                    <span> {{ $t('store.镜像源：') }} </span><span>{{ detail.imageSourceType | imageTypeFilter }}</span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                    <span> {{ $t('store.分类：') }} </span><span>{{ detail.classifyName || '-' }}</span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                    <span> {{ $t('store.热度：') }} </span><span>{{ detail.downloads || 0 }}</span>
                 </h5>
             </div>
-            <h5 class="detail-info detail-label" :title="`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`">
+            <h5
+                class="detail-info detail-label"
+                :title="`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`"
+            >
                 <span> {{ $t('store.镜像地址：') }} </span>
                 <span class="detail-image-address">
-                    <e>{{detail.imageRepoUrl}}{{detail.imageRepoUrl ? '/' : ''}}{{detail.imageRepoName}}:{{detail.imageTag}}</e>
+                    <e>{{ detail.imageRepoUrl }}{{ detail.imageRepoUrl ? '/' : '' }}{{ detail.imageRepoName }}:{{ detail.imageTag }}</e>
                     <i
                         class="bk-icon icon-clipboard"
                         :title="$t('store.复制')"
@@ -46,22 +68,45 @@
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <p>
-                    <bk-tag v-for="(label, index) in detail.labelList" :key="index">{{label.labelName}}</bk-tag>
+                    <bk-tag
+                        v-for="(label, index) in detail.labelList"
+                        :key="index"
+                    >
+                        {{ label.labelName }}
+                    </bk-tag>
                     <span v-if="!detail.labelList || detail.labelList.length <= 0 ">--</span>
                 </p>
             </h5>
-            <h5 class="detail-info detail-label" :title="detail.summary">
-                <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
+            <h5
+                class="detail-info detail-label"
+                :title="detail.summary"
+            >
+                <span> {{ $t('store.简介：') }} </span><span>{{ detail.summary || '-' }}</span>
             </h5>
         </hgroup>
         <template v-if="detail.needInstallToProject === 'NEED_INSTALL_TO_PROJECT_TRUE'">
-            <bk-popover placement="top" v-if="buttonInfo.disable">
-                <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
+            <bk-popover
+                placement="top"
+                v-if="buttonInfo.disable"
+            >
+                <button
+                    class="bk-button bk-primary"
+                    type="button"
+                    disabled
+                >
+                    {{ $t('store.安装') }}
+                </button>
                 <template slot="content">
-                    <p>{{buttonInfo.des}}</p>
+                    <p>{{ buttonInfo.des }}</p>
                 </template>
             </bk-popover>
-            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+            <button
+                class="detail-install"
+                @click="goToInstall"
+                v-else
+            >
+                {{ $t('store.安装') }}
+            </button>
         </template>
     </section>
 </template>

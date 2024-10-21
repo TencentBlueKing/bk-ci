@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -62,7 +62,7 @@ import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
@@ -432,7 +432,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean> {
         val storeId = storeBaseQueryDao.getComponentId(
             dslContext = dslContext,
@@ -443,15 +443,15 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
             dslContext = dslContext,
             storeId = storeId,
-            osName = installedPkgShaContentRequest.osName,
-            osArch = installedPkgShaContentRequest.osArch
+            osName = installedPkgFileShaContentRequest.osName,
+            osArch = installedPkgFileShaContentRequest.osArch
         )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         val storeBaseEnvExtDataPO = StoreBaseEnvExtDataPO(
             id = UUIDUtil.generate(),
             envId = baseEnvRecord.id,
             storeId = storeId,
-            fieldName = KEY_INSTALLED_PKG_SHA_CONTENT,
-            fieldValue = installedPkgShaContentRequest.installedPkgShaContent,
+            fieldName = "${KEY_FILE_SHA_CONTENT}_${installedPkgFileShaContentRequest.signFileName}",
+            fieldValue = installedPkgFileShaContentRequest.fileShaContent,
             creator = userId,
             modifier = userId
         )

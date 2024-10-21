@@ -28,12 +28,12 @@
 package com.tencent.devops.dispatch.docker.client.context
 
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 
 class BuildLessEndHandlerContext(
     val containerId: String = "",
     var buildLessHost: String = "",
-    val event: PipelineBuildLessShutdownDispatchEvent,
+    val event: PipelineBuildLessShutdownEvent,
     override var buildLogKey: String = "",
     override var agentId: String = "",
     override var secretKey: String = "",

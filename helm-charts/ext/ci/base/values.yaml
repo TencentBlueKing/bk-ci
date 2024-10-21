@@ -1,3 +1,9 @@
+# BCS Rollout配置
+rollout:
+  enabled: false
+  kind: Deployment
+  mirror: false
+
 # RBAC配置
 rbac:
   serviceAccount: bkci

@@ -28,12 +28,15 @@
 package com.tencent.devops.process.yaml.v2.check
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StageReviews(
     val flows: List<Flow>?,
     val variables: Map<String, ReviewVariable>?,
-    val description: String?
+    val description: String?,
+    @JsonProperty("chat-id")
+    val notifyGroups: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

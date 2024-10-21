@@ -130,4 +130,13 @@ class ExperienceDownloadDao {
                 .fetch()
         }
     }
+
+    fun listUserIdsByExperienceId(dslContext: DSLContext, experienceId: Long): List<String> {
+        with(TExperienceDownload.T_EXPERIENCE_DOWNLOAD) {
+            return dslContext.selectDistinct(USER_ID)
+                .from(this)
+                .where(EXPERIENCE_ID.eq(experienceId))
+                .fetch(USER_ID)
+        }
+    }
 }

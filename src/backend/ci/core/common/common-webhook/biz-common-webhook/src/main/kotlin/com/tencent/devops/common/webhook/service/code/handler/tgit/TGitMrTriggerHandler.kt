@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -81,7 +82,9 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_WIP
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -192,6 +195,13 @@ class TGitMrTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val wipFilter = KeywordSkipFilter(
+                pipelineId = pipelineId,
+                enable = skipWip,
+                keyWord = KEYWORD_SKIP_WIP,
+                triggerOnMessage = getMessage(event),
+                failedReason = I18Variable(WebhookI18nConstants.MR_SKIP_WIP).toJsonStr()
+            )
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -237,8 +247,9 @@ class TGitMrTriggerHandler(
                     params = listOf(sourceBranch)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
+                keyWord = KEYWORD_SKIP_CI,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
             val actionFilter = ContainsFilter(
@@ -306,10 +317,11 @@ class TGitMrTriggerHandler(
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr()
             )
             return listOf(
-                userFilter, targetBranchFilter,
+                wipFilter, userFilter, targetBranchFilter,
                 sourceBranchFilter, skipCiFilter, pathFilter,
                 commitMessageFilter, actionFilter, thirdFilter
             )
@@ -333,6 +345,7 @@ class TGitMrTriggerHandler(
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit.message
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE] = event.object_attributes.mergeType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] = event.object_attributes.mergeCommitSha ?: ""
 

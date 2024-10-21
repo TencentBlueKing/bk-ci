@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -49,6 +50,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_TASK_
 import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @Suppress("UNUSED", "TooManyFunctions")
 @ApiPriority(priority = 1)
@@ -117,13 +119,21 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
+    override fun endTask(
+        variables: Map<String, String>,
+        envBuildId: String,
+        retryCount: Int,
+        result: BuildJobResult
+    ): Result<Boolean> {
         if (envBuildId.isNotBlank()) {
             buildId = envBuildId
         }
 
         val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
-        val request = buildPost(path)
+        val request = buildPost(
+            path,
+            objectMapper.writeValueAsString(result).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        )
         val errorMessage = MessageUtil.getMessageByLocale(
             BUILD_FINISH_REQUEST_FAILED,
             AgentEnv.getLocaleLanguage()

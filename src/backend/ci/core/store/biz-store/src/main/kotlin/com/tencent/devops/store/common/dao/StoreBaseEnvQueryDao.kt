@@ -57,6 +57,22 @@ class StoreBaseEnvQueryDao {
         }
     }
 
+    fun getDefaultBaseEnvInfo(
+        dslContext: DSLContext,
+        storeId: String,
+        osName: String? = null
+    ): TStoreBaseEnvRecord? {
+        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_ID.eq(storeId))
+            conditions.add(DEFAULT_FLAG.eq(true))
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            dslContext.selectFrom(this).where(conditions).limit(1).fetchOne()
+        }
+    }
+
     fun batchQueryStoreLanguage(dslContext: DSLContext, storeIds: List<String>): Result<Record2<String, String>> {
         with(TStoreBaseEnv.T_STORE_BASE_ENV) {
             return dslContext.select(ID, LANGUAGE).from(this)

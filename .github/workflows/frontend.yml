@@ -25,24 +25,34 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.5.0
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - uses: actions/cache@v3
-        id: yarn-cache
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: src/frontend/pnpm-lock.yaml
+      - uses: nrwl/nx-set-shas@v4
         with:
-          path: src/frontend/**/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
-      - name: prefer offline
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn --prefer-offline && yarn install
-        working-directory: src/frontend
+          main-branch-name: master
       - run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
+      - run: |
+          pnpm install
           export NODE_OPTIONS=--openssl-legacy-provider
-          yarn public
+          pnpm public
         working-directory: src/frontend
-      - uses: actions/upload-artifact@v3
+      - name: generate version log
+        run: |
+          python genBundledVersionLog.py 1
+          cp bundledVersionLog*.json ../src/frontend/frontend/
+        working-directory: CHANGELOG
+      - uses: actions/upload-artifact@v4
         if: ${{ inputs.upload == 'true'  }}
         with:
           name: frontend

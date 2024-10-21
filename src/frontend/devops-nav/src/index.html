@@ -574,30 +574,30 @@
       )
     }
 
-    function detectNewVersion() {
-      var xhr = new XMLHttpRequest()
-      xhr.open('GET', '/console/', true)
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
-          var version = versions && versions[1]
-          console.log(version)
-          if (version !== '__BK_CI_VERSION__') {
-            console.log('has new Version', version)
-            const locale = getCookie('blueking_language')
+    // function detectNewVersion() {
+    //   var xhr = new XMLHttpRequest()
+    //   xhr.open('GET', '/console/', true)
+    //   xhr.onreadystatechange = function () {
+    //     if (xhr.readyState === 4 && xhr.status === 200) {
+    //       var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
+    //       var version = versions && versions[1]
+    //       console.log(version)
+    //       if (version !== '__BK_CI_VERSION__') {
+    //         console.log('has new Version', version)
+    //         const locale = getCookie('blueking_language')
 
-            const tips = locale === 'en' ? `There is a version update of the Blue Shield platform [${version}]. Click OK to refresh the page.` : `检测到蓝盾平台有版本更新【${version}】点击确定刷新页面`
-            window.confirm(tips) && window.location.reload()
-          } else {
-            setTimeout(() => {
-              window.requestIdleCallback(detectNewVersion)
-            }, 1000 * 60 * 5)
-          }
-        }
-      }
-      xhr.send()
-    }
-    window.requestIdleCallback(detectNewVersion)
+    //         const tips = locale === 'en' ? `There is a version update of the Blue Shield platform [${version}]. Click OK to refresh the page.` : `检测到蓝盾平台有版本更新【${version}】点击确定刷新页面`
+    //         window.confirm(tips) && window.location.reload()
+    //       } else {
+    //         setTimeout(() => {
+    //           window.requestIdleCallback(detectNewVersion)
+    //         }, 1000 * 60 * 5)
+    //       }
+    //     }
+    //   }
+    //   xhr.send()
+    // }
+    // window.requestIdleCallback(detectNewVersion)
   </script>
 </body>
 

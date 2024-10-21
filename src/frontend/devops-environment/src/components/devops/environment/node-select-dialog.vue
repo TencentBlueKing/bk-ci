@@ -1,11 +1,19 @@
 <template>
-    <bk-dialog v-model="nodeSelectConf.isShow" ext-cls="node-select-wrapper" :width="'900'" :close-icon="false">
-        <div v-bkloading="{
-            isLoading: loading.isLoading,
-            title: loading.title
-        }">
+    <bk-dialog
+        v-model="nodeSelectConf.isShow"
+        ext-cls="node-select-wrapper"
+        :width="'900'"
+        :close-icon="false"
+    >
+        <div
+            v-bkloading="{
+                isLoading: loading.isLoading,
+                title: loading.title
+            }"
+        >
             <div class="node-list-header">
-                <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
+                <div class="title">
+                    {{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
                         {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlerConf.curTotalCount }}
                         </span>{{ $t('environment.nodes') }}
@@ -18,23 +26,55 @@
                 <div class="search-input-row">
                     <div class="biz-search-input">
                         <div class="biz-ip-searcher-wrapper">
-                            <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
-                                <ul class="search-key" ref="searchKey">
-                                    <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
+                            <div
+                                class="biz-searcher"
+                                @click="focusSearch"
+                                ref="bizSearcher"
+                            >
+                                <ul
+                                    class="search-key"
+                                    ref="searchKey"
+                                >
+                                    <li
+                                        class="key-node"
+                                        v-for="(entry, index) in searchKeyList"
+                                        :key="index"
+                                    >
                                         <span>{{ entry }}</span>
-                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i
+                                            class="devops-icon icon-close"
+                                            @click="deleteKey(index)"
+                                        ></i>
                                     </li>
                                     <li class="input-item">
-                                        <input type="text" class="search-input" ref="searchInput" v-model="inputValue" :style="inputStyle"
-                                            @blur="handleBlur" @paste="paste" @keyup="keyupHandler">
+                                        <input
+                                            type="text"
+                                            class="search-input"
+                                            ref="searchInput"
+                                            v-model="inputValue"
+                                            :style="inputStyle"
+                                            @blur="handleBlur"
+                                            @paste="paste"
+                                            @keyup="keyupHandler"
+                                        >
                                     </li>
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
-                                <i class="devops-icon icon-search" @click="searchNode"></i>
+                                <i
+                                    class="devops-icon icon-close"
+                                    @click="deleteAllKey"
+                                    v-if="searchKeyList.length"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-search"
+                                    @click="searchNode"
+                                ></i>
                             </div>
-                            <div class="ip-searcher-footer" v-if="isSearchFooter">
+                            <div
+                                class="ip-searcher-footer"
+                                v-if="isSearchFooter"
+                            >
                                 <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
                             </div>
                         </div>
@@ -50,27 +90,57 @@
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                 >
-                    <bk-table-column width="60" :render-header="renderHeader">
+                    <bk-table-column
+                        width="60"
+                        :render-header="renderHeader"
+                    >
                         <template slot-scope="{ row }">
-                            <bk-checkbox :true-value="true" :false-value="false" :disabled="row.isEixtEnvNode"
-                                v-model="row.isChecked"></bk-checkbox>
+                            <bk-checkbox
+                                :true-value="true"
+                                :false-value="false"
+                                :disabled="row.isEixtEnvNode"
+                                v-model="row.isChecked"
+                            ></bk-checkbox>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" show-overflow-tooltip width="160">
+                    <bk-table-column
+                        label="IP"
+                        prop="ip"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('environment.nodeInfo.displayName')"
+                        prop="displayName"
+                        show-overflow-tooltip
+                        width="160"
+                    >
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
-                        prop="createdUser" width="200" show-overflow-tooltip>
+                    <bk-table-column
+                        :label="$t('environment.nodeInfo.hostName')"
+                        prop="name"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
+                        prop="createdUser"
+                        width="200"
+                        show-overflow-tooltip
+                    >
                         <template slot-scope="{ row }">
                             <div v-if="isShowOperateChange(row)">
-                                <div class="edit-operator" v-if="isCurrentUser(row)">
+                                <div
+                                    class="edit-operator"
+                                    v-if="isCurrentUser(row)"
+                                >
                                     <i class="devops-icon icon-exclamation-circle"></i>
                                     <span @click="changeCreatedUser(row.nodeHashId)">
-                                        {{$t('environment.nodeInfo.operatorModfied') }}
+                                        {{ $t('environment.nodeInfo.operatorModfied') }}
                                     </span>
                                 </div>
-                                <div class="prompt-operator" v-else>
+                                <div
+                                    class="prompt-operator"
+                                    v-else
+                                >
                                     <bk-popover placement="top">
                                         <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited')
                                         }}</span>
@@ -95,11 +165,23 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
+                    <bk-table-column
+                        :label="$t('environment.status')"
+                        prop="nodeStatus"
+                    >
                         <template slot-scope="{ row }">
-                            <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
-                            <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
-                            <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
+                            <StatusIcon
+                                v-if="successStatus.includes(row.nodeStatus)"
+                                status="success"
+                            />
+                            <StatusIcon
+                                v-else-if="failStatus.includes(row.nodeStatus)"
+                                status="error"
+                            />
+                            <StatusIcon
+                                v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)"
+                                status="normal"
+                            />
                             {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                         </template>
                     </bk-table-column>
@@ -128,9 +210,19 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">{{ nodeSelectConf.importText
-                }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="confirmFn"
+                    :disabled="nodeSelectConf.unselected"
+                >
+                    {{ nodeSelectConf.importText }}
+                </bk-button>
+                <bk-button
+                    theme="default"
+                    @click="cancelFn"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </bk-dialog>

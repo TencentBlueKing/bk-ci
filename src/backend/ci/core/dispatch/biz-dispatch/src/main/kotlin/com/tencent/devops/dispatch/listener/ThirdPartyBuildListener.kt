@@ -27,20 +27,26 @@
 
 package com.tencent.devops.dispatch.listener
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.ThirdPartyDispatchService
+import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class ThirdPartyBuildListener @Autowired constructor(
-    private val thirdPartyAgentService: ThirdPartyAgentService,
-    private val thirdPartyDispatchService: ThirdPartyDispatchService
+    private val thirdPartyDispatchService: ThirdPartyDispatchService,
+    private val tpaCommonUtil: TPACommonUtil
 ) : BuildListener {
 
     override fun getStartupQueue(): String {
@@ -56,6 +62,23 @@ class ThirdPartyBuildListener @Autowired constructor(
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
+        // 包一层用来计算耗时
+        try {
+            doOnStartup(dispatchMessage)
+        } catch (e: Throwable) {
+            // 抓到了肯定是需要结束的异常
+            if (dispatchMessage.event.dispatchQueueStartTimeMilliSecond != null) {
+                tpaCommonUtil.updateQueueTime(
+                    event = dispatchMessage.event,
+                    createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond!!,
+                    endTime = LocalDateTime.now().timestampmilli()
+                )
+            }
+            throw e
+        }
+    }
+
+    private fun doOnStartup(dispatchMessage: DispatchMessage) {
         try {
             thirdPartyDispatchService.startUp(dispatchMessage)
         } catch (e: DispatchRetryMQException) {
@@ -73,7 +96,13 @@ class ThirdPartyBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        thirdPartyAgentService.finishBuild(event)
+        thirdPartyDispatchService.finishBuild(event)
+    }
+
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is ThirdPartyAgentIDDispatchType ||
+            dispatchType is ThirdPartyAgentEnvDispatchType ||
+            dispatchType is ThirdPartyDevCloudDispatchType
     }
 
     override fun getVmType(): JobQuotaVmType? {

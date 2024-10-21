@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.cmdb.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class NewCmdbResp(
+data class NewCmdbResp<T>(
     @get:Schema(title = "状态码", required = true)
     var code: Int,
     @get:Schema(title = "请求ID", required = true)
@@ -37,5 +37,5 @@ data class NewCmdbResp(
     @get:Schema(title = "结果消息", required = true)
     var message: String?,
     @get:Schema(title = "返回数据", required = true)
-    var data: NewCmdbData
+    var data: NewCmdbScrollPageData<T>
 )

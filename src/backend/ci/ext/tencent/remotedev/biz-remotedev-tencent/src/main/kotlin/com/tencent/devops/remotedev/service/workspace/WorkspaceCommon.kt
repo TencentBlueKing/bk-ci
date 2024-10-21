@@ -51,7 +51,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
-import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -76,16 +75,16 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -114,7 +113,7 @@ class WorkspaceCommon @Autowired constructor(
     private val remotedevProjectService: RemotedevProjectService,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao,
     private val config: RemoteDevCommonConfig,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao
 ) {
@@ -228,7 +227,7 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.STOPPED
             }
 
-            workspaceInfo.status == EnvStatusEnum.deleted -> {
+            workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
                 deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
@@ -242,6 +241,7 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STARTING)
                 return WorkspaceStatus.STARTING
             }
+
             workspaceInfo.status == EnvStatusEnum.stopping -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.STOPPING)
                 return WorkspaceStatus.STOPPING
@@ -256,6 +256,7 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
                 return WorkspaceStatus.UPGRADING
             }
+
             workspaceInfo.status == EnvStatusEnum.copying -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.MAKING_IMAGE)
                 return WorkspaceStatus.MAKING_IMAGE
@@ -306,7 +307,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -318,13 +319,13 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) ||
-            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-            workspace.status.checkInProcess() || workspace.status.checkUnused()
+                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) ||
+                workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+                workspace.status.checkInProcess() || workspace.status.checkUnused()
     }
 
     fun updateStatusAndCreateHistory(
@@ -347,7 +348,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                "newStatus|$newStatus|action|$action"
+                    "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -377,13 +378,6 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName
         )
         if (lastHistory?.startTime != null) {
-            workspaceDao.updateWorkspaceUsageTime(
-                workspaceName = workspaceName,
-                usageTime = Duration.between(
-                    lastHistory.startTime, LocalDateTime.now()
-                ).seconds.toInt(),
-                dslContext = transactionContext
-            )
             workspaceHistoryDao.updateWorkspaceHistory(
                 dslContext = transactionContext,
                 id = lastHistory.id,
@@ -425,10 +419,10 @@ class WorkspaceCommon @Autowired constructor(
         return true
     }
 
-    fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
+    fun realtimeStartCloudResourceList(): List<EnvironmentResourceData> {
         return kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .syncStartCloudResourceList().data
+                .realtimeStartCloudResourceList().data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull() ?: emptyList()
@@ -456,19 +450,6 @@ class WorkspaceCommon @Autowired constructor(
             dslContext = dslContext,
             cgsId = cgsId
         ) > 0
-    }
-
-    // 获取cgs机型、区域
-    fun getCgsConfig(): CgsResourceConfig {
-        return kotlin.runCatching {
-            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .getCgsConfig().data
-        }.onFailure {
-            logger.warn("Error get cgs config: ${it.message}")
-        }.getOrNull() ?: CgsResourceConfig(
-            zoneList = emptyList(),
-            machineTypeList = emptyList()
-        )
     }
 
     /**
@@ -543,11 +524,11 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
-                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspaceName,
                         "cgsId" to cgsId,
+                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                         "userId" to it.userId
                     )
                 )
@@ -727,7 +708,7 @@ class WorkspaceCommon @Autowired constructor(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                streamBridge, AsyncPipelineEvent(
                     userId = info.userId ?: user,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

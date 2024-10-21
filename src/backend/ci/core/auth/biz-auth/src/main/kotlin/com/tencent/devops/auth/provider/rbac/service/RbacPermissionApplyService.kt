@@ -11,6 +11,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthI18nConstants.ACTION_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
@@ -64,7 +65,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
     val itsmService: ItsmService,
-    val deptService: DeptService
+    val deptService: DeptService,
+    val authResourceGroupApplyDao: AuthResourceGroupApplyDao
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -348,11 +350,41 @@ class RbacPermissionApplyService @Autowired constructor(
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
-        } catch (e: Exception) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(e.message ?: "")
+            // 记录单据，用于同步用户组
+            authResourceGroupApplyDao.batchCreate(
+                dslContext = dslContext,
+                applyJoinGroupInfo = applyJoinGroupInfo
             )
+        } catch (e: Exception) {
+            when {
+                e.message?.contains("审批人不允许为空") == true -> {
+                    val resourceCodes = authResourceGroupDao.listByRelationId(
+                        dslContext = dslContext,
+                        projectCode = applyJoinGroupInfo.projectCode,
+                        iamGroupIds = applyJoinGroupInfo.groupIds.map { it.toString() }
+                    ).distinctBy { it.resourceCode }.map { it.resourceCode }
+                    val listResourcesCreator = authResourceService.listResourcesCreator(
+                        projectCode = applyJoinGroupInfo.projectCode,
+                        resourceCodes = resourceCodes
+                    )
+                    val departedUsers = listResourcesCreator.filter {
+                        deptService.isUserDeparted(it)
+                    }.joinToString(",")
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
+                        params = arrayOf(
+                            "该资源的管理员${departedUsers}已离职，请麻烦联系项目管理员或者蓝盾小助手进行交接该用户的权限!"
+                        )
+                    )
+                }
+
+                else -> {
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
+                        params = arrayOf("${e.message}")
+                    )
+                }
+            }
         }
         return true
     }
@@ -421,12 +453,15 @@ class RbacPermissionApplyService @Autowired constructor(
             AuthResourceType.PIPELINE_DEFAULT.value -> {
                 String.format(pipelineDetailRedirectUri, projectCode, resourceCode)
             }
+
             AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> {
                 String.format(environmentDetailRedirectUri, projectCode, resourceCode)
             }
+
             AuthResourceType.CODECC_TASK.value -> {
                 String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode)
             }
+
             else -> null
         }
     }

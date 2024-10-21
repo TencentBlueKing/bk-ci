@@ -248,27 +248,21 @@ class ThirdPartyAgentBuildDao {
 
     fun getRunningAndQueueBuilds(
         dslContext: DSLContext,
-        agentId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        agentId: String,
+        hasDocker: Boolean
+    ): List<Pair<String, Int>> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            val dsl = dslContext.select(BUILD_ID, STATUS)
+                .from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
-                .and(DOCKER_INFO.isNull)
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            if (hasDocker) {
+                dsl.and(DOCKER_INFO.isNotNull)
+            } else {
+                dsl.and(DOCKER_INFO.isNull)
+            }
+            return dsl.and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
-        }
-    }
-
-    fun getDockerRunningAndQueueBuilds(
-        dslContext: DSLContext,
-        agentId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
-                .where(AGENT_ID.eq(agentId))
-                .and(DOCKER_INFO.isNotNull)
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .fetch()
+                .map { Pair(it[BUILD_ID], it[STATUS]) }
         }
     }
 
