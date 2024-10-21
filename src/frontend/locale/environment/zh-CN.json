@@ -2,7 +2,7 @@
     "environment": "环境",
     "node": "节点",
     "project": "项目",
-    "projectId": "项目英文名",    
+    "projectId": "项目英文名",
     "operateUser": "操作人",
     "operateTime": "操作时间",
     "addProject": "添加项目",
@@ -57,7 +57,7 @@
     "basicInfo": "基本信息",
     "deleteConfigItem": "确认删除该配置项",
     "noData": "暂无数据",
-    "noresultsFound":"未搜索到任何的结果",
+    "noresultsFound": "未搜索到任何的结果",
     "selected": "已选择",
     "nodes": "个节点",
     "clickToCopy": "点击复制",
@@ -239,7 +239,8 @@
         "usage": "用途",
         "installMethod": "安装方式",
         "remoteInstall": "远程安装",
-        "manualInstall": "手动安装"
+        "manualInstall": "手动安装",
+        "dockerMaxConcurrency": "docker构建最大并发数"
     },
     "nodeTypeMap": {
         "CC": "CC",

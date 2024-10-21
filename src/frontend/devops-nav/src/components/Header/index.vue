@@ -182,6 +182,12 @@
                     </li>
                     <li
                         class="bkci-dropdown-item"
+                        @click.stop="toggleShowVersionLog(true)"
+                    >
+                        {{ $t('releaseNotes') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
                         @click.stop="goToFeedBack"
                     >
                         {{ $t('feedback') }}
@@ -211,6 +217,10 @@
             @to-associate="handleToAssociate"
             @check-associate="handleCheckAssociate"
         />
+        <system-log
+            :show-system-log="showSystemLog"
+            :toggle-show-log="toggleShowVersionLog"
+        />
     </div>
 </template>
 
@@ -225,6 +235,7 @@
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
@@ -240,7 +251,8 @@
             Logo,
             DevopsSelect,
             LocaleSwitcher,
-            RemindAssociateOperationalDialog
+            RemindAssociateOperationalDialog,
+            SystemLog
         }
     })
     export default class Header extends Vue {
@@ -262,6 +274,7 @@
         isAbsoluteUrl = isAbsoluteUrl
         showOperationalDialog: boolean = false
 
+        showSystemLog: boolean = false
         langs: Array<any> = [
             {
                 icon: 'english',
@@ -488,6 +501,10 @@
 
         handleCheckAssociate () {
             this.checkRemindUserOfRelatedProduct()
+        }
+
+        toggleShowVersionLog (value: boolean) {
+            this.showSystemLog = value
         }
     }
 </script>

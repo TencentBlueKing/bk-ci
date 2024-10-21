@@ -199,4 +199,13 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun listViewIdsByPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): Result<Set<Long>> {
+        return Result(
+            pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId)
+        )
+    }
 }
