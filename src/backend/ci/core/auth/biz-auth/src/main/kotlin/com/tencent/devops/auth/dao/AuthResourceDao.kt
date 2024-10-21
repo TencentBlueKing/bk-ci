@@ -241,6 +241,19 @@ class AuthResourceDao {
         }
     }
 
+    fun listResourcesCreator(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceCodes: List<String>
+    ): List<String> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.select(CREATE_USER).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.`in`(resourceCodes))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun count(
         dslContext: DSLContext,
         projectCode: String,
