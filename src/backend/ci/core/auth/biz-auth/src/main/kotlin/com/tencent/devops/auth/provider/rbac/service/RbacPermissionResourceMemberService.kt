@@ -466,19 +466,23 @@ class RbacPermissionResourceMemberService(
             page = 1
         }
         val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
-        val members = mutableListOf<String>()
+
         val nowTimestamp = System.currentTimeMillis() / 1000
-        groupMemberInfoList.forEach { memberInfo ->
-            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
-                memberInfo.expiredAt > nowTimestamp) {
-                members.add(memberInfo.id)
-            }
-        }
+        val (members, deptInfoList) = groupMemberInfoList
+            .filter { it.expiredAt > nowTimestamp }
+            .partition { it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) }
+
         return BkAuthGroupAndUserList(
             displayName = groupInfo.name,
             roleId = groupInfo.id,
             roleName = groupInfo.name,
-            userIdList = members.toSet().toList(),
+            userIdList = members.map { it.id },
+            deptInfoList = deptInfoList.map { memberInfo ->
+                RoleGroupMemberInfo().apply {
+                    id = memberInfo.id
+                    name = memberInfo.name
+                }
+            },
             type = ""
         )
     }
