@@ -14,7 +14,9 @@
             @input="handleInput"
             @focus="handleFocus"
             @keypress.enter.prevent="handleEnterOption"
-@keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur"
+            @keydown.up.prevent="handleKeyup"
+            @keydown.down.prevent="handleKeydown"
+            @keydown.tab.prevent="handleBlur"
         />
         <i
             v-if="loading"

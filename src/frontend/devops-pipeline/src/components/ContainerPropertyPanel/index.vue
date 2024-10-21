@@ -23,7 +23,8 @@
                     v-validate.initial="'required'"
                     @keyup.enter="toggleEditName"
                     @input="handleContainerChange"
-:placeholder="$t('nameInputTips')" :value="container.name"
+                    :placeholder="$t('nameInputTips')"
+                    :value="container.name"
                 />
                 <p v-if="!nameEditing">{{ container.name }} ({{ stageIndex + 1 }}-{{ containerIndex + 1 }})</p>
                 <i

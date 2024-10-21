@@ -2,23 +2,43 @@
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
             <template v-if="obj.type === 'group'">
-                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
+                <form-field-group
+                    v-if="rely(obj, element)"
+                    :name="key"
+                    :value="element[key]"
+                    :handle-change="handleMethods"
+                    :key="key"
+                    v-bind="obj"
+                >
                     <template v-for="(i, index) in obj.children">
-                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
+                        <form-field
+                            :key="i.key"
+                            v-if="rely(i, element)"
+                            v-bind="i"
+                            :is-error="errors.has(i.key)"
+                            :error-msg="errors.first(i.key)"
+                        >
                             <component
                                 :is="i.component"
                                 :name="i.key"
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
                                 :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
                                 :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
-                                v-bind="i">
+                                v-bind="i"
+                            >
                             </component>
                         </form-field>
                     </template>
                 </form-field-group>
             </template>
             <template v-else>
-                <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" v-bind="obj" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field
+                    v-if="!obj.hidden && rely(obj, element)"
+                    :key="key"
+                    v-bind="obj"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
                     <component
                         :is="obj.component"
                         :name="key"
@@ -27,31 +47,69 @@
                         :value="element[key]"
                         :element="element"
                         :disabled="disabled"
-                        v-bind="obj">
+                        v-bind="obj"
+                    >
                     </component>
                 </form-field>
             </template>
         </template>
         <form-field v-if="Object.keys(customTriggerControlModel).length && !atomPropsModel?.branchSettings">
-            <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
-                <header class="var-header" style="height: 16px;" slot="header">
+            <accordion
+                show-checkbox
+                :show-content="enableThirdFilter"
+                key="customTriggerControl"
+                :is-version="true"
+            >
+                <header
+                    class="var-header"
+                    style="height: 16px;"
+                    slot="header"
+                >
                     <span>
                         {{ $t('editPage.customTriggerControl') }}
-                        <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('editPage.customTriggerControlTips')"></i>
-                        <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('editPage.customTriggerLinkDesc') }}</a>
+                        <i
+                            class="bk-icon icon-info-circle ml5"
+                            v-bk-tooltips="$t('editPage.customTriggerControlTips')"
+                        ></i>
+                        <a
+                            class="title-link"
+                            target="blink"
+                            :href="customTriggerDocsLink"
+                        >{{ $t('editPage.customTriggerLinkDesc') }}</a>
                     </span>
-                    <input class="accordion-checkbox" :disabled="disabled" :checked="enableThirdFilter" type="checkbox" @click.stop @change="toggleEnableThirdFilter" />
+                    <input
+                        class="accordion-checkbox"
+                        :disabled="disabled"
+                        :checked="enableThirdFilter"
+                        type="checkbox"
+                        @click.stop
+                        @change="toggleEnableThirdFilter"
+                    />
                 </header>
-                <div slot="content" class="bk-form bk-form-vertical" v-if="enableThirdFilter">
+                <div
+                    slot="content"
+                    class="bk-form bk-form-vertical"
+                    v-if="enableThirdFilter"
+                >
                     <template v-for="(obj, key) in customTriggerControlModel">
-                        <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                        <form-field
+                            :key="key"
+                            :desc="obj.desc"
+                            :desc-link="obj.descLink"
+                            :desc-link-text="obj.descLinkText"
+                            :required="obj.required"
+                            :label="obj.label"
+                            :is-error="errors.has(key)"
+                            :error-msg="errors.first(key)"
+                        >
                             <component
                                 :is="obj.component"
                                 :name="key"
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                                 :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
                                 :value="element[key]"
-                                v-bind="obj">
+                                v-bind="obj"
+                            >
                             </component>
                         </form-field>
                     </template>

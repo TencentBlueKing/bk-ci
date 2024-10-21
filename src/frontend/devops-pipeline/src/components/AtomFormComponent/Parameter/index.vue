@@ -19,7 +19,7 @@
                 :type="parameter.keyType"
                 :list-type="parameter.keyListType"
                 :url="parameter.keyUrl"
-:list="parameter.keyList"
+                :list="parameter.keyList"
             ></parameter-input>
             <span class="input-seg">=</span>
             <parameter-input
@@ -33,7 +33,7 @@
                 :type="parameter.valueType"
                 :list-type="parameter.valueListType"
                 :url="parameter.valueUrl"
-:list="parameter.valueList"
+                :list="parameter.valueList"
             ></parameter-input>
             <bk-checkbox
                 @change="updateParameters"

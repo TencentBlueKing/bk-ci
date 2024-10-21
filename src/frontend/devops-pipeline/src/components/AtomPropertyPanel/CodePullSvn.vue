@@ -1,12 +1,57 @@
 <template>
     <form class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in newModel">
-            <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component v-if="key === 'svnPath'" :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdate" :value="element[key]" v-bind="obj" :repository-hash-id="element[&quot;repositoryHashId&quot;]" :list="list"></component>
-                <component v-else-if="key === 'repositoryHashId'" :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdate" :value="element[key]" v-bind="obj" @change="listChange"></component>
-                <component v-else :is="obj.component" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdate" :value="element[key]" v-bind="obj"></component>
-                <p class="bk-form-help is-warning" v-if="key === 'path' && obj.warn">{{ obj.warn }}</p>
-                <route-tips :visible="true" :src-tips="srcTips" :path-tips="pathTips" v-if="key === 'path' && element['repositoryHashId']"></route-tips>
+            <form-field
+                v-if="!obj.hidden"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    v-if="key === 'svnPath'"
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleUpdate"
+                    :value="element[key]"
+                    v-bind="obj"
+                    :repository-hash-id="element[&quot;repositoryHashId&quot;]"
+                    :list="list"
+                ></component>
+                <component
+                    v-else-if="key === 'repositoryHashId'"
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleUpdate"
+                    :value="element[key]"
+                    v-bind="obj"
+                    @change="listChange"
+                ></component>
+                <component
+                    v-else
+                    :is="obj.component"
+                    :name="key"
+                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                    :handle-change="handleUpdate"
+                    :value="element[key]"
+                    v-bind="obj"
+                ></component>
+                <p
+                    class="bk-form-help is-warning"
+                    v-if="key === 'path' && obj.warn"
+                >
+                    {{ obj.warn }}
+                </p>
+                <route-tips
+                    :visible="true"
+                    :src-tips="srcTips"
+                    :path-tips="pathTips"
+                    v-if="key === 'path' && element['repositoryHashId']"
+                ></route-tips>
             </form-field>
         </template>
     </form>
