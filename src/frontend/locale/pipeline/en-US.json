@@ -1059,6 +1059,7 @@
     "bool": "Boolean",
     "enum": "Radio",
     "multiple": "Checkbox",
+    "checkbox": "Checkbox Confirmation Box",
     "svntag": "SVN branch or TAG",
     "gitref": "GIT branch or TAG",
     "codelib": "Code repository",
