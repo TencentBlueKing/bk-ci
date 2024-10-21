@@ -53,7 +53,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
-import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
@@ -81,8 +80,7 @@ open class DefaultModelCheckPlugin constructor(
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
     open val stageCommonSettingConfig: StageCommonSettingConfig,
     open val jobCommonSettingConfig: JobCommonSettingConfig,
-    open val taskCommonSettingConfig: TaskCommonSettingConfig,
-    open val elementBizPluginService: List<IElementBizPluginService>
+    open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(
@@ -349,7 +347,7 @@ open class DefaultModelCheckPlugin constructor(
         elementHolders: MutableMap<String, MutableList<ElementHolder>>
     ) {
         elementHolders.forEach { (atomCode, elements) ->
-            elementBizPluginService.filter { it.supportAtomCode(atomCode) }.forEach {
+            ElementBizRegistrar.getPluginService().filter { it.supportAtomCode(atomCode) }.forEach {
                 it.batchCheck(elements = elements, param = param)
             }
         }

@@ -59,7 +59,12 @@ class SubPipelineRefDao {
                     TASK_NAME,
                     SUB_PROJECT_ID,
                     SUB_PIPELINE_ID,
-                    SUB_PIPELINE_NAME
+                    SUB_PIPELINE_NAME,
+                    CONTAINER_SEQ,
+                    TASK_PROJECT_ID,
+                    TASK_PIPELINE_TYPE,
+                    TASK_PIPELINE_ID,
+                    TASK_PIPELINE_NAME
                 ).values(
                     it.projectId,
                     it.pipelineId,
@@ -71,7 +76,12 @@ class SubPipelineRefDao {
                     it.element.name,
                     it.subProjectId,
                     it.subPipelineId,
-                    it.subPipelineName
+                    it.subPipelineName,
+                    it.containerSeq,
+                    it.taskProjectId,
+                    it.taskPipelineType.name,
+                    it.taskPipelineId,
+                    it.taskPipelineName
                 ).onDuplicateKeyUpdate()
                     .set(STAGE_NAME, it.stageName)
                     .set(CONTAINER_NAME, it.containerName)
