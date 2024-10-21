@@ -2,7 +2,6 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.op.OpPermissionFacadeResource
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
-import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
