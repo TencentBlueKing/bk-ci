@@ -27,8 +27,40 @@
 
 package com.tencent.devops.project.pojo.enums
 
-enum class OrganizationType {
-    bg,
-    dept,
-    center
+enum class OrganizationType(val typeId: Int) {
+    bg(6),
+    businessLine(8),
+    dept(1),
+    center(7),
+    group(2);
+
+    companion object {
+        fun getOrganizationTypeName(typeId: Int): String {
+            values().forEach {
+                if (typeId == it.typeId) return it.name
+            }
+            return typeId.toString()
+        }
+
+        // 是否为部门以下层级
+        fun isBelowTheDept(typeId: Int): Boolean {
+            return typeId == center.typeId || typeId == group.typeId
+        }
+
+        fun isBusinessLine(typeId: Int): Boolean {
+            return typeId == businessLine.typeId
+        }
+
+        fun isDept(typeId: Int): Boolean {
+            return typeId == dept.typeId
+        }
+
+        fun isCenter(typeId: Int): Boolean {
+            return typeId == center.typeId
+        }
+
+        fun isGroup(typeId: Int): Boolean {
+            return typeId == group.typeId
+        }
+    }
 }

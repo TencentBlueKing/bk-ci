@@ -59,7 +59,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
-    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|gpt)"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -76,11 +76,12 @@ class JooqConfiguration {
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
-            val matchResult = pkgRegex.toRegex().find(packageName)
-            if (matchResult != null) {
-                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+            val matchResult = pkgRegex.toRegex().findAll(packageName)
+            if (matchResult.any()) {
+                val module = matchResult.last().value.substring(1)
+                val configuration = configurationMap["${module}JooqConfiguration"]
                 return if (configuration != null) {
-                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                    LOG.info("dslContext_init|${module}JooqConfiguration|${declaringClass.name}")
                     DSL.using(configuration)
                 } else {
                     null
@@ -136,6 +137,15 @@ class JooqConfiguration {
     }
 
     @Bean
+    fun gptJooqConfiguration(
+        @Qualifier("pluginDataSource")
+        pluginDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(pluginDataSource, executeListenerProviders)
+    }
+
+    @Bean
     fun qualityJooqConfiguration(
         @Qualifier("qualityDataSource")
         qualityDataSource: DataSource,
@@ -160,6 +170,15 @@ class JooqConfiguration {
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
         return generateDefaultConfiguration(environmentDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun imageJooqConfiguration(
+        @Qualifier("imageDataSource")
+        imageDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(imageDataSource, executeListenerProviders)
     }
 
     private fun generateDefaultConfiguration(

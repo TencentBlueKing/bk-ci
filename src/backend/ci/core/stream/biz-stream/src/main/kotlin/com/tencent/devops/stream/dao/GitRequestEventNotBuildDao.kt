@@ -29,13 +29,13 @@ package com.tencent.devops.stream.dao
 
 import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class GitRequestEventNotBuildDao {
@@ -226,19 +226,20 @@ class GitRequestEventNotBuildDao {
 
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
-        gitProjectId: Long,
         pipelineIds: Set<String>
-    ): List<TGitRequestEventNotBuildRecord>? {
+    ): List<Pair<String, String>>? {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(
-                    ID.`in`(
-                        dslContext.select(DSL.max(ID))
-                            .from(this)
-                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
-                    )
-                ).fetch()
+            val t2 = dslContext.select(DSL.max(ID).`as`("iid"))
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID).asTable("t2")
+            return dslContext.select(PIPELINE_ID, BRANCH).from(this)
+                .innerJoin(
+                    t2
+                ).on(ID.eq(t2.field("iid", Long::class.java)))
+                .fetch {
+                    Pair(it.value1(), it.value2())
+                }
         }
     }
 }

@@ -61,12 +61,15 @@ const atomFieldMixin = {
         descTooltips: {
             type: String,
             default: ''
+        },
+        readOnly: {
+            type: Boolean,
+            default: false
         }
     },
     data () {
         return {
-            title: '',
-            readOnly: false
+            title: ''
         }
     },
     watch: {
@@ -78,10 +81,8 @@ const atomFieldMixin = {
         const ele = document.querySelector('.atom-form-box')
         if (this.descTooltips.length && this.disabled) {
             this.title = this.descTooltips
-            this.readOnly = true
         } else if ((ele && ele.classList.contains('readonly')) || this.disabled) {
             this.title = this.value
-            this.readOnly = true
         }
     },
     methods: {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
@@ -51,6 +52,7 @@ import com.tencent.devops.artifactory.util.BkRepoUtils.toFileDetail
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
@@ -63,6 +65,7 @@ import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -92,11 +95,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     private val dockerRegistry: String? = null
 
     override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
-        val nodeDetail = bkRepoClient.getFileDetail(userId = userId,
+        val nodeDetail = bkRepoClient.getFileDetail(
+            userId = userId,
             projectId = projectId,
             repoName = BkRepoUtils.getRepoName(artifactoryType),
-            path = path)
-            ?: throw NotFoundException("file[$projectId|$artifactoryType|$path] not found")
+            path = path
+        ) ?: throw NotFoundException("file[$projectId|$artifactoryType|$path] not found")
         return nodeDetail.toFileDetail()
     }
 
@@ -109,12 +113,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        logo: Boolean?
+        staticFlag: Boolean?
     ): String {
         val pathSplit = file.name.split('.')
         val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
         val metadata = mutableMapOf<String, String>()
-        metadata["shaContent"] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        metadata[KEY_SHA_CONTENT] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
             metadata[it.key] = it.value!!
         }
@@ -145,7 +149,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             } else {
                 defaultUrl
             }
-        } else if (logo == true) {
+        } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,
@@ -265,11 +269,15 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGE_SIZE,
             totalPages = 1,
-            records = nodeList.map { buildFileInfo(it) }
+            records = nodeList.map { buildFileInfo(it, getPipelineNames(nodeList), getBuildNums(nodeList)) }
         )
     }
 
-    private fun buildFileInfo(it: QueryNodeInfo): FileInfo {
+    private fun buildFileInfo(
+        it: QueryNodeInfo,
+        pipelineNameMap: Map<String, String>,
+        buildNumMap: Map<String, String>
+    ): FileInfo {
         return if (parseArtifactoryType(it.repoName) == ArtifactoryType.IMAGE) {
             val (imageName, version) = DefaultPathUtils.getImageNameAndVersion(it.fullPath)
             val packageVersion = bkRepoClient.getPackageVersionInfo(
@@ -295,18 +303,101 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 )
             }
         } else {
+            buildGenericFileInfo(it, pipelineNameMap, buildNumMap)
+        }
+    }
+
+    private fun buildGenericFileInfo(
+        nodeInfo: QueryNodeInfo,
+        pipelineNameMap: Map<String, String>,
+        buildNumMap: Map<String, String>
+    ): FileInfo {
+        // 归档插件归档目录时，在目录多归档一个.bkci_pipeline文件, 记录归档目录的信息
+        return if (nodeInfo.name == ".bkci_pipeline") {
             FileInfo(
-                name = it.name,
-                fullName = it.name,
-                path = it.fullPath,
-                fullPath = it.fullPath,
-                size = it.size,
-                folder = it.folder,
-                properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
-                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                artifactoryType = parseArtifactoryType(it.repoName)
+                name = nodeInfo.path.split("/").lastOrNull { it.isNotBlank() } ?: StringPool.ROOT,
+                fullName = nodeInfo.path,
+                path = nodeInfo.path,
+                fullPath = nodeInfo.path,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
+            )
+        } else {
+            FileInfo(
+                name = nodeInfo.name,
+                fullName = getFullName(nodeInfo, pipelineNameMap, buildNumMap),
+                path = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
             )
         }
+    }
+
+    private fun getPipelineNames(nodeList: List<QueryNodeInfo>): Map<String, String> {
+        val pipelineIds = mutableSetOf<String>()
+        nodeList.filter { it.repoName == REPO_NAME_PIPELINE }.forEach {
+            val paths = it.fullPath.split("/")
+            if (paths.size < 3) {
+                logger.warn("illegal pipeline repo node fullPath: ${it.fullPath}")
+                return@forEach
+            }
+            pipelineIds.add(paths[1])
+        }
+        if (pipelineIds.size == 0) {
+            return emptyMap()
+        }
+        return client.get(ServicePipelineResource::class)
+            .getPipelineNameByIds(nodeList.first().projectId, pipelineIds).data.orEmpty()
+    }
+
+    private fun getBuildNums(nodeList: List<QueryNodeInfo>): Map<String, String> {
+        val buildIds = mutableSetOf<String>()
+        nodeList.filter { it.repoName == REPO_NAME_PIPELINE }.forEach {
+            val paths = it.fullPath.split("/")
+            if (paths.size < 3) {
+                logger.warn("illegal pipeline repo node fullPath: ${it.fullPath}")
+                return@forEach
+            }
+            buildIds.add(paths[2])
+        }
+        if (buildIds.size == 0) {
+            return emptyMap()
+        }
+        return client.get(ServicePipelineResource::class)
+            .getBuildNoByBuildIds(buildIds, nodeList.first().projectId).data.orEmpty()
+    }
+
+    private fun getFullName(
+        nodeInfo: QueryNodeInfo,
+        pipelineNameMap: Map<String, String>,
+        buildNumMap: Map<String, String>
+    ): String {
+        if (nodeInfo.repoName != REPO_NAME_PIPELINE) {
+            return nodeInfo.fullPath
+        }
+        val paths = nodeInfo.fullPath.split("/")
+        if (paths.size < 3) {
+            logger.warn("illegal pipeline repo node fullPath: ${nodeInfo.fullPath}")
+            return nodeInfo.fullPath
+        }
+        val pipelineId = paths[1]
+        val buildId = paths[2]
+        val pipelineName = pipelineNameMap[pipelineId]
+        val buildNum = buildNumMap[buildId]
+        if (pipelineName.isNullOrEmpty() || buildNum.isNullOrEmpty()) {
+            logger.warn("illegal pipelineId or buildId: $pipelineId, $buildId")
+            return nodeInfo.fullPath
+        }
+        return nodeInfo.fullPath.replace("/$pipelineId/$buildId", "/$pipelineName/$buildNum")
     }
 
     override fun generateDestPath(
@@ -318,14 +409,18 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ): String {
         val result = if (FileTypeEnum.BK_CUSTOM == fileType) {
             if (customFilePath.isNullOrBlank() || customFilePath.contains("..")) {
-                throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                    params = arrayOf("customFilePath"))
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("customFilePath")
+                )
             }
             customFilePath.removePrefix("/")
         } else {
             if (pipelineId.isNullOrBlank() || buildId.isNullOrBlank()) {
-                throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                    params = arrayOf("pipelineId or buildId"))
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("pipelineId or buildId")
+                )
             }
             val filePath = if (customFilePath.isNullOrBlank()) {
                 ""
@@ -360,7 +455,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             projectId = projectId,
             filePath = "/$filePath",
             artifactoryType = artifactoryType,
-            fileChannelType = fileChannelType, fullUrl = fullUrl)
+            fileChannelType = fileChannelType, fullUrl = fullUrl
+        )
     }
 
     override fun getFileDownloadUrls(

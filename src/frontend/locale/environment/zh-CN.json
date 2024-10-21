@@ -232,7 +232,8 @@
         "set": "台",
         "remaining": "还剩",
         "canApplyCount": "台可申请",
-        "selectNewNode": "请选择你的新节点"
+        "selectNewNode": "请选择你的新节点",
+        "dockerMaxConcurrency": "docker构建最大并发数"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -261,5 +262,9 @@
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知"
     },
-    "newPool": "创建"
+    "newPool": "创建",
+    "启用": "启用",
+    "停用": "停用",
+    "启用成功": "启用成功",
+    "停用成功": "停用成功"
 }

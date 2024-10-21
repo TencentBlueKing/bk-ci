@@ -256,7 +256,7 @@ class TGitApiService @Autowired constructor(
             ).data
         }?.let {
             TGitMrChangeInfo(
-                files = it.files.map { f ->
+                files = it.files!!.map { f ->
                     TGitChangeFileInfo(f)
                 }
             )
@@ -344,7 +344,7 @@ class TGitApiService @Autowired constructor(
                 ref = ref,
                 tokenType = cred.toTokenType()
             ).data
-        }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
+        }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
     override fun getProjectList(

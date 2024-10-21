@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -55,8 +56,9 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
+    private val repoPipelineRefService: RepoPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
         val watcher = Watcher(id = "${event.traceId}|DeletePipeline#${event.pipelineId}|${event.clearUpModel}")
@@ -89,6 +91,10 @@ class MQPipelineDeleteListener @Autowired constructor(
                 pipelineId = event.pipelineId,
                 deleteFlag = true
             )
+        }
+
+        watcher.safeAround("updateAgentPipelineRef") {
+            repoPipelineRefService.updateRepoPipelineRef(userId, "delete_pipeline", projectId, pipelineId)
         }
 
         watcher.safeAround("callback") {

@@ -29,12 +29,7 @@ package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.HTTP_400
-import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
-import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.constant.HTTP_405
-import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -47,24 +42,27 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitServerError
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import java.net.URLEncoder
 
 @Suppress("ALL")
 open class GitApi {
@@ -74,6 +72,8 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
+        // 接口分页最大行数
+        const val MAX_PAGE_SIZE = 500
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
@@ -144,7 +144,7 @@ open class GitApi {
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
-                if (it.url == hookUrl) {
+                if (it.url.contains(hookUrl)) {
                     val exist = when (event) {
                         null -> {
                             it.pushEvents
@@ -257,7 +257,7 @@ open class GitApi {
         logger.info("Start to create branches of host $host by project $projectName")
         val body = JsonUtil.getObjectMapper().writeValueAsString(
             mapOf(
-                Pair("branch", branch),
+                Pair("branch_name", branch),
                 Pair("ref", ref)
             )
         )
@@ -315,7 +315,7 @@ open class GitApi {
         return JsonUtil.getObjectMapper().writeValueAsString(params)
     }
 
-    private fun updateHook(
+    fun updateHook(
         host: String,
         hookId: Long,
         token: String,
@@ -341,9 +341,16 @@ open class GitApi {
         }
     }
 
-    private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(
+        host: String,
+        token: String,
+        projectName: String,
+        page: Int = 1,
+        pageSize: Int = MAX_PAGE_SIZE
+    ): List<GitHook> {
         try {
-            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
+            val pageQueryStr = "page=$page&per_page=$pageSize"
+            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", pageQueryStr)
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
                 getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_WEBHOOK), request)
             )
@@ -449,19 +456,8 @@ open class GitApi {
 
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
-        val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
-            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("Git token"))
-            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
-            HTTP_404 -> getMessageByLocale(
-                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
-                arrayOf("GIT", operation)
-            )
-            HTTP_405 -> getMessageByLocale(CommonMessageCode.GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
-            HTTP_422 -> getMessageByLocale(CommonMessageCode.GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
-            else -> "Git platform $operation fail"
-        }
-        throw GitApiException(code, msg)
+        val apiError = JsonUtil.to(body, GitServerError::class.java)
+        throw GitApiException(code, apiError.message ?: "")
     }
 
     fun listCommits(
@@ -658,5 +654,73 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun getGitSession(
+        host: String,
+        url: String,
+        username: String,
+        password: String
+    ): LoginSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", url, body)
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_SESSION_INFO),
+            request
+        ).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
+
+    fun listMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        sourceBranch: String?,
+        targetBranch: String?,
+        state: String?,
+        page: Int,
+        perPage: Int
+    ): List<GitMrInfo> {
+        val queryParams =
+            "source_branch=$sourceBranch&target_branch=$targetBranch&state=$state&page=$page&per_page=$perPage"
+        val url = "projects/${urlEncode(projectName)}/merge_requests"
+        logger.info("list mr for project($projectName): url($url)")
+        val request = get(host, token, url, queryParams)
+        return JsonUtil.getObjectMapper().readValue<List<GitMrInfo>>(
+            getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_MR), request)
+        )
+    }
+
+    fun createMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): GitMrInfo {
+        val body = JsonUtil.getObjectMapper().writeValueAsString(gitCreateMergeRequest)
+        val url = "projects/${urlEncode(projectName)}/merge_requests/"
+        logger.info("create mr for project($projectName): url($url), $body")
+        val request = post(host, token, url, body)
+        try {
+            return callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR),
+                request = request,
+                classOfT = GitMrInfo::class.java
+            )
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_FAIL))
+            }
+            throw t
+        }
     }
 }

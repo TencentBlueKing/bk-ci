@@ -1,0 +1,368 @@
+{
+  "allowedLicenses": [
+    {
+      "moduleLicense": "GNU GPL v2.0 license with classpath exception",
+      "moduleName": "com.tencent.kona:kona-crypto",
+      "desc": "Tencent 类库 , 可以直接引用"
+    },
+    {
+      "moduleLicense": "GNU GPL v2.0 license with classpath exception",
+      "moduleName": "com.tencent.kona:kona-pkix",
+      "desc": "Tencent 类库 , 可以直接引用"
+    },
+    {
+      "moduleLicense": "GNU General Public License (GPL)",
+      "moduleName": "org.tmatesoft.sqljet:sqljet",
+      "desc": "https://sqlite.org/copyright.html 属于公共领域完全不需要许可,使用上不受任何限制."
+    },
+    {
+      "moduleLicense": "The GNU General Public License, v2 with Universal FOSS Exception, v1.0",
+      "moduleName": "com.mysql:mysql-connector-j",
+      "desc": "向mysql免费申请MySQL Ready Partner (free) , 可允许绕开GPL协议,可以使用双协议而不冲突"
+    },
+    {
+      "moduleVersion": "8.0.31",
+      "moduleName": "mysql:mysql-connector-java",
+      "desc": "上同 com.mysql:mysql-connector-j "
+    },
+    {
+      "moduleName": "com.h2database:h2",
+      "moduleLicense": "MPL 2.0 or EPL 1.0",
+      "desc": "https://h2database.com/html/license.html h2 允许集成并分发他们, 使用EPL 1.0 或 MPL 2.0 ,没有传染性"
+    },
+    {
+      "moduleLicense": "TMate Open Source License",
+      "moduleName": "org.tmatesoft.svnkit:svnkit",
+      "category": "BSD-Like",
+      "desc": "SVN 代码库依赖, TMate Open Source License - https://svnkit.com/license.html"
+    },
+    {
+      "moduleLicense": "Trilead Library License (BSD-Like)",
+      "category": "BSD-Like",
+      "desc": "BSD 类型"
+    },
+    {
+      "moduleLicense": "Sequence Library License (BSD-like)",
+      "category": "BSD-Like",
+      "desc": "BSD 类型"
+    },
+    {
+      "moduleLicense": "The JSON License",
+      "category": "BSD-Like",
+      "moduleName": "org.json:json",
+      "desc": "BSD类型"
+    },
+    {
+      "moduleLicense": "Revised BSD",
+      "category": "BSD-Like",
+      "desc": "BSD 类型"
+    },
+    {
+      "moduleName": "org.antlr:antlr-runtime",
+      "category": "BSD",
+      "desc": "https://www.antlr.org/license.html 本身是BSD协议, jar包没带license扫不出来, 单独豁免"
+    },
+    {
+      "moduleName": "net.jcip:jcip-annotations",
+      "category": "CC0",
+      "desc": "https://creativecommons.org/licenses/by/2.5/  本身是CC协议, jar包没带license扫不出来, 单独豁免"
+    },
+    {
+      "moduleLicense": "Perforce Software",
+      "moduleName": "com.perforce:p4java",
+      "category": "BSD-Like",
+      "desc": "https://swarm.workshop.perforce.com/files/guest/perforce_software/p4java/main/samples/license.txt P4依赖"
+    },
+    {
+      "moduleName": "org.springframework.boot:spring-boot-dependencies",
+      "category": "Apache 2.0",
+      "desc": "Apache 2.0 类型, 本身没有带License,只能手动添加"
+    },
+    {
+      "moduleName": "org.springframework.cloud:spring-cloud-dependencies",
+      "category": "Apache 2.0",
+      "desc": "Apache 2.0 类型, 本身没有带License,只能手动添加"
+    },
+    {
+      "moduleVersion": "1.14.4",
+      "moduleName": "me.ahoo.cosid:cosid-dependencies",
+      "desc": "Apache 2.0 类型, 本身没有带License,只能手动添加"
+    },
+    {
+      "moduleLicense": "CDDL 1.1",
+      "moduleVersion": "2.0",
+      "moduleName": "javax.ws.rs:javax.ws.rs-api"
+    },
+    {
+      "moduleLicense": "EPL 2.0",
+      "moduleVersion": "2.1.6",
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api"
+    },
+    {
+      "moduleLicense": "\n                Dual license consisting of the CDDL v1.1 and GPL v2\n            ",
+      "moduleVersion": "1.1",
+      "moduleName": "javax.websocket:javax.websocket-api",
+      "category": "CDDL",
+      "desc": "双协议, 选CDDL v1.1"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License",
+      "moduleVersion": "1.2.11",
+      "moduleName": "ch.qos.logback:logback-classic",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License",
+      "moduleVersion": "1.2.11",
+      "moduleName": "ch.qos.logback:logback-core",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License, Version 2.1",
+      "moduleVersion": "0.9.5.4",
+      "moduleName": "com.mchange:c3p0",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License, Version 2.1",
+      "moduleVersion": "0.2.15",
+      "moduleName": "com.mchange:mchange-commons-java",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "MIT license",
+      "moduleVersion": "1.28",
+      "moduleName": "org.jvnet.winp:winp"
+    },
+    {
+      "moduleLicense": "The MIT license",
+      "moduleVersion": "1.28",
+      "moduleName": "org.jvnet.winp:winp"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License v2.1 or later",
+      "moduleVersion": "5.14.0",
+      "moduleName": "net.java.dev.jna:jna",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "LGPL, version 2.1",
+      "moduleVersion": "3.4.0",
+      "moduleName": "net.java.dev.jna:platform",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "Public Domain, per Creative Commons CC0",
+      "moduleVersion": "2.0.3",
+      "moduleName": "org.latencyutils:LatencyUtils",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "Mozilla Public License, Version 2.0",
+      "moduleVersion": "1.7R4",
+      "moduleName": "org.mozilla:rhino"
+    },
+    {
+      "moduleLicense": "Bouncy Castle Licence",
+      "category": "MIT-Like"
+    },
+    {
+      "moduleLicense": "Elastic License 2.0",
+      "desc": "Elastic License v2 只会限制直接提供ES API的云服务,以及破解其商业密钥解锁高级功能, 本项目不涉及直接提供ES API及商业版本功能"
+    },
+    {
+      "moduleLicense": "Public Domain"
+    },
+    {
+      "moduleLicense": "APL2",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "ASL 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache 2",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache-2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "ASL, version 2",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache License 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache License Version 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache License, 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache License, Version 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "The Apache License, Version 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "Apache Software License, version 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "The Apache Software License, Version 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "BSD",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD Zero Clause License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "The BSD License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD-2-Clause",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD 2-Clause License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "The 2-Clause BSD License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "The BSD 2-Clause License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD-3-Clause",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD License 3",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "3-Clause BSD License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "The 3-Clause BSD License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "BSD 3-clause New License",
+      "category": "BSD",
+      "desc": "都是BSD类似, 只是各个依赖有自己的写法,导致造成识别上的差异, 本质都是BSD协议"
+    },
+    {
+      "moduleLicense": "Common Development and Distribution License (CDDL) v1.0",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
+      "moduleLicense": "Eclipse Distribution License (New BSD License)",
+      "category": "BSD"
+    },
+    {
+      "moduleLicense": "Eclipse Public License, Version 1.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "Eclipse Public License - v 1.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "EPL 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "Eclipse Public License v2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "Eclipse Public License v. 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "Eclipse Public License - v 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
+      "moduleLicense": "MIT",
+      "category": "MIT"
+    },
+    {
+      "moduleLicense": "MIT License",
+      "category": "MIT"
+    },
+    {
+      "moduleLicense": "The MIT License",
+      "category": "MIT"
+    },
+    {
+      "moduleLicense": "The MIT License (MIT)",
+      "category": "MIT"
+    },
+    {
+      "moduleLicense": "MIT-0"
+    },
+    {
+      "moduleLicense": "Creative Commons Legal Code",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "PUBLIC DOMAIN",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
+      "moduleLicense": "WTFPL"
+    }
+  ]
+}

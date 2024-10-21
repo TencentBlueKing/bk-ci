@@ -36,7 +36,11 @@
                                 :key="service.id"
                                 class="collect-item"
                             >
-                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="service-logo" />
+                                <img
+                                    v-if="isAbsoluteUrl(service.logoUrl)"
+                                    :src="service.logoUrl"
+                                    class="service-logo"
+                                />
                                 <logo
                                     v-else
                                     class="service-logo"
@@ -67,7 +71,6 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
-                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
@@ -77,7 +80,6 @@
 </template>
 
 <script lang="ts">
-    import { mapDocumnetTitle } from '@/utils/constants'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
@@ -164,11 +166,6 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            return this.$t(mapDocumnetTitle(title)) as string
-        }
-
         gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
@@ -180,7 +177,6 @@
             }
             
             (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
-            document.title = this.getDocumentTitle(linkNew)
         }
 
         created () {

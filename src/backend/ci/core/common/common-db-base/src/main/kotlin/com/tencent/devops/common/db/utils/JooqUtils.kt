@@ -28,8 +28,6 @@
 package com.tencent.devops.common.db.utils
 
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
-import java.math.BigDecimal
-import java.sql.Timestamp
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record
@@ -37,16 +35,27 @@ import org.jooq.SelectOptionStep
 import org.jooq.SelectUnionStep
 import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
+import org.springframework.dao.DeadlockLoserDataAccessException
+import java.math.BigDecimal
+import java.sql.Timestamp
 
 object JooqUtils {
 
     const val JooqDeadLockMessage = "Deadlock found when trying to get lock; try restarting transaction"
 
-    fun <T> retryWhenDeadLock(action: () -> T): T {
+    fun <T> retryWhenDeadLock(retryTime: Int = 1, action: () -> T): T {
         return try {
             action()
         } catch (dae: DataAccessException) {
-            if (dae.isDeadLock()) action() else throw dae
+            if (retryTime - 1 < 0) {
+                throw dae
+            }
+            if (dae.isDeadLock()) retryWhenDeadLock(retryTime - 1, action) else throw dae
+        } catch (dae: DeadlockLoserDataAccessException) {
+            if (retryTime - 1 < 0) {
+                throw dae
+            }
+            retryWhenDeadLock(retryTime - 1, action)
         }
     }
 
@@ -76,16 +85,35 @@ object JooqUtils {
         )
     }
 
-    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+    /**
+     * 去掉双引号方便对比多数操作如 in，不然无法对比成功
+     */
+    fun jsonExtract(
+        t1: Field<String>,
+        t2: String,
+        lower: Boolean = false,
+        removeDoubleQuotes: Boolean = false
+    ): Field<String> {
+        var sql = "JSON_EXTRACT({0}, {1})"
+        if (removeDoubleQuotes) {
+            sql = "JSON_UNQUOTE($sql)"
+        }
+        if (lower) {
+            sql = "LOWER($sql)"
+        }
+        return DSL.field(sql, String::class.java, t1, t2)
+    }
+
+    inline fun <reified T> jsonExtractAny(t1: Field<String>, t2: String, lower: Boolean = false): Field<T> {
         return if (lower) {
             DSL.field(
                 "LOWER(JSON_EXTRACT({0}, {1}))",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         } else {
             DSL.field(
                 "JSON_EXTRACT({0}, {1})",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         }
     }

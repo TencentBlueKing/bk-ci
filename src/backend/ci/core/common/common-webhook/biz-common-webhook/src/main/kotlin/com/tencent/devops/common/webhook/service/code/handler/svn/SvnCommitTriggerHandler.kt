@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.svn
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_REVERSION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_USERNAME
@@ -43,6 +45,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -79,6 +82,20 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         return event.log
     }
 
+    override fun getEventDesc(event: SvnCommitEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.SVN_COMMIT_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: SvnCommitEvent): String {
+        return event.rep_name
+    }
+
     override fun getWebhookFilters(
         event: SvnCommitEvent,
         projectId: String,
@@ -92,25 +109,42 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 projectName = repository.projectName,
                 triggerOnProjectName = event.rep_name
             )
+            val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
-                triggerOnUser = getUsername(event),
+                triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
             val pathFilter = PathFilterFactory.newPathFilter(
                 PathFilterConfig(
                     pathFilterType = pathFilterType,
                     pipelineId = pipelineId,
-                    triggerOnPath = event.files.map { it.file },
+                    triggerOnPath = event.getMatchPaths(),
                     excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
                         WebhookUtils.getFullPath(
                             projectRelativePath = projectRelativePath,
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = getIncludePaths(projectRelativePath)
+                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_NOT_MATCH,
+                        params = listOf()
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_IGNORED,
+                        params = listOf()
+                    ).toJsonStr()
                 )
             )
             return listOf(projectNameFilter, userFilter, pathFilter)
@@ -155,5 +189,19 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = event.userName
         startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = event.commitTime ?: 0L
         return startParams
+    }
+
+    fun SvnCommitEvent.getMatchPaths() = if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
+        files.map { it.file }
+    } else {
+        // 超过上限则存在变更记录丢失, 用paths进行匹配
+        logger.info("File change information exceeds the limit|$totalFilesCount")
+        paths
+    }
+
+    companion object {
+        // 文件变更列表上限
+        const val FILES_COUNT_MAX = 999
+        private val logger = LoggerFactory.getLogger(SvnCommitTriggerHandler::class.java)
     }
 }

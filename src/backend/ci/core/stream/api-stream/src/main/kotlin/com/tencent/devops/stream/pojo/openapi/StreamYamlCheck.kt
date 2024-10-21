@@ -27,15 +27,14 @@
 
 package com.tencent.devops.stream.pojo.openapi
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("stream检验yaml格式模型")
+@Schema(title = "stream检验yaml格式模型")
 data class StreamYamlCheck(
-    @ApiModelProperty("yaml 原文", required = true)
+    @get:Schema(title = "yaml 原文", required = true)
     val originYaml: String,
-    @ApiModelProperty("模板类型", required = false)
+    @get:Schema(title = "模板类型", required = false)
     val templateType: String?,
-    @ApiModelProperty("是否为流水线yaml", required = true)
+    @get:Schema(title = "是否为流水线yaml", required = true)
     val checkCiFile: Boolean
 )

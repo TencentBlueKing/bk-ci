@@ -38,20 +38,36 @@
             v-if="row.status === 'NOT_JOINED'"
             @click="handleApply(row)"
           >{{ t('申请加入') }}</bk-button>
-          <bk-button
-            class="btn"
-            theme="primary"
-            text
-            v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
-            @click="handleRenewal(row)"
-          >{{ t('续期') }}</bk-button>
-          <bk-button
-            class="btn"
-            theme="primary"
-            text
-            v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
-            @click="handleShowLogout(row)"
-          >{{ t('退出') }}</bk-button>
+          <span
+            v-bk-tooltips="{
+              content: t('通过用户组获得权限，若需续期请联系项目管理员续期用户组'),
+              disabled: row.directAdded
+            }"
+          >
+            <bk-button
+              class="btn"
+              theme="primary"
+              text
+              :disabled="!row.directAdded"
+              v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
+              @click="handleRenewal(row)"
+            >{{ t('续期') }}</bk-button>
+          </span>
+          <span
+            v-bk-tooltips="{
+              content: t('通过用户组获得权限，若需退出先联系项目管理员退出用户组'),
+              disabled: row.directAdded
+            }"
+          >
+            <bk-button
+              class="btn"
+              theme="primary"
+              text
+              :disabled="!row.directAdded"
+              v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
+              @click="handleShowLogout(row)"
+            >{{ t('退出') }}</bk-button>
+          </span>
         </template>
       </bk-table-column>
     </bk-table>
@@ -68,7 +84,7 @@
       </template>
       <template v-slot:content>
         <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-          <div class="title">{{ t('流水线管理') }}</div>
+          <div class="title">{{ permissionTitle }}</div>
           <div class="content">
             <bk-checkbox
               v-for="(item, index) in groupPolicies"
@@ -95,8 +111,9 @@
     <apply-dialog
       :is-show="apply.isShow"
       :ajax-prefix="ajaxPrefix"
-      v-bind="apply"
+      :project-code="projectCode"
       :resource-type="resourceType"
+      v-bind="apply"
       @cancel="() => apply.isShow = false"
     />
   </article>
@@ -158,6 +175,16 @@ export default {
       groupPolicies: [],
       groupName: '',
     };
+  },
+  computed: {
+    permissionTitle () {
+      const titleMap = {
+        pipeline: this.t('流水线管理'),
+        pipeline_template: this.t('流水线模板管理'),
+        pipeline_group: this.t('流水线组管理'),
+      }
+      return titleMap[this.resourceType];
+    }
   },
 
   mounted() {

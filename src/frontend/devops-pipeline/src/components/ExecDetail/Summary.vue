@@ -1,11 +1,17 @@
 <template>
     <header class="exec-detail-summary">
-        <div v-if="visible" class="exec-detail-summary-info">
+        <div
+            v-if="visible"
+            class="exec-detail-summary-info"
+        >
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
                 </span>
-                <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
+                <div
+                    v-if="webhookInfo"
+                    class="exec-detail-summary-info-material-list"
+                >
                     <material-item
                         class="visible-material-row"
                         :material="webhookInfo"
@@ -14,13 +20,19 @@
                     >
                     </material-item>
                 </div>
-                <span class="no-exec-material" v-else>--</span>
+                <span
+                    class="no-exec-material"
+                    v-else
+                >--</span>
             </div>
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{
                     $t("details.material")
                 }}</span>
-                <div v-if="visibleMaterial" class="exec-detail-summary-info-material-list">
+                <div
+                    v-if="visibleMaterial"
+                    class="exec-detail-summary-info-material-list"
+                >
                     <material-item
                         class="visible-material-row"
                         :material="visibleMaterial[0]"
@@ -32,23 +44,80 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li v-for="(material, index) in visibleMaterial" :key="index">
+                        <li
+                            v-for="(material, index) in visibleMaterial"
+                            :key="index"
+                        >
                             <material-item :material="material" />
                         </li>
                     </ul>
                 </div>
-                <span class="no-exec-material" v-else>--</span>
+                <span
+                    class="no-exec-material"
+                    v-else
+                >--</span>
             </div>
-            <!-- <div>
-                <span class="exec-detail-summary-info-block-title">{{ $t("总耗时") }}</span>
-                <div class="exec-detail-summary-info-block-content">
-                    {{ executeTime }}
-                </div>
-            </div> -->
-            <div>
+            <div style="overflow: hidden;">
                 <span class="exec-detail-summary-info-block-title">{{ $t("history.tableMap.pipelineVersion") }}</span>
                 <div class="exec-detail-summary-info-block-content">
-                    v.{{ execDetail.curVersion }}
+                    <bk-popover
+                        v-if="isConstraintTemplate"
+                        trigger="click"
+                        class="instance-template-info"
+                        placement="bottom"
+                        width="360"
+                        theme="light"
+                    >
+                        <logo
+                            class="template-info-entry"
+                            name="constraint"
+                            size="14"
+                        />
+                        <div
+                            class="pipeline-template-info-popover"
+                            slot="content"
+                        >
+                            <header class="template-info-header">{{ $t('newlist.constraintModeDesc') }}</header>
+                            <section class="template-info-section">
+                                <p
+                                    v-for="row in templateRows"
+                                    :key="row.id"
+                                >
+                                    <label>{{ row.id }}：</label>
+                                    <span>{{ row.content }}</span>
+                                    <router-link
+                                        v-if="row.link"
+                                        class="template-link-icon"
+                                        :to="row.link"
+                                        target="_blank"
+                                    >
+                                        <logo
+                                            name="tiaozhuan"
+                                            size="14"
+                                        />
+                                    </router-link>
+                                </p>
+                            </section>
+                        </div>
+                    </bk-popover>
+                    <bk-popover
+                        placement="top"
+                        max-width="500"
+                    >
+                        <span class="pipeline-cur-version-span">
+                            {{ execDetail.curVersionName }}
+                        </span>
+                        <div slot="content">
+                            <p>
+                                <label>{{ $t('versionNum') }}：</label>
+                                <span>{{ execDetail.curVersionName }}</span>
+                            </p>
+                            <p>
+                                <label>{{ $t('versionDesc') }}：</label>
+                                <span>{{ curVersionDesc || '--' }}</span>
+                            </p>
+                        </div>
+                    </bk-popover>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -59,11 +128,22 @@
                         @click="showRemarkEdit"
                         class="devops-icon icon-edit exec-remark-edit-icon pointer"
                     />
-                    <span v-else class="pipeline-exec-remark-actions">
-                        <bk-button text theme="primary" @click="handleRemarkChange">{{
+                    <span
+                        v-else
+                        class="pipeline-exec-remark-actions"
+                    >
+                        <bk-button
+                            text
+                            theme="primary"
+                            @click="handleRemarkChange"
+                        >{{
                             $t("save")
                         }}</bk-button>
-                        <bk-button text theme="primary" @click="hideRemarkEdit">{{
+                        <bk-button
+                            text
+                            theme="primary"
+                            @click="hideRemarkEdit"
+                        >{{
                             $t("cancel")
                         }}</bk-button>
                     </span>
@@ -95,12 +175,13 @@
 </template>
 
 <script>
-    import { convertMStoString } from '@/utils/util'
+    import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
     export default {
         components: {
-            MaterialItem
+            MaterialItem,
+            Logo
         },
         props: {
             visible: {
@@ -118,15 +199,11 @@
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
-                isShowMoreMaterial: false
+                isShowMoreMaterial: false,
+                curVersionDesc: ''
             }
         },
         computed: {
-            executeTime () {
-                return this.execDetail.model?.timeCost?.totalCost
-                ? convertMStoString(this.execDetail.model?.timeCost?.totalCost)
-                : '--'
-            },
             visibleMaterial () {
                 if (
                     Array.isArray(this.execDetail?.material)
@@ -138,18 +215,65 @@
             },
             webhookInfo () {
                 return this.execDetail?.webhookInfo ?? null
+            },
+            instanceFromTemplate () {
+                return this.execDetail?.model.instanceFromTemplate ?? false
+            },
+            isConstraintTemplate () {
+                return this.instanceFromTemplate && this.execDetail?.templateInfo?.instanceType === 'CONSTRAINT'
+            },
+            templateRows () {
+                return [
+                    {
+                        id: this.$t('templateName'),
+                        content: this.execDetail?.templateInfo?.templateName ?? '--'
+                    },
+                    {
+                        id: this.$t('templateVersion'),
+                        content: this.execDetail?.templateInfo?.versionName ?? '--',
+                        link: {
+                            name: 'templateEdit',
+                            params: {
+                                templateId: this.execDetail?.templateInfo?.templateId
+                            }
+                        }
+                    }]
             }
+
         },
         watch: {
-            execDetail: function (val) {
-                if (val.remark !== this.tempRemark) {
-                    this.tempRemark = val.remark
-                    this.remark = val.remark
-                }
+            execDetail: {
+                handler: function (val, oldVal) {
+                    if (val.remark !== this.tempRemark) {
+                        this.tempRemark = val.remark
+                        this.remark = val.remark
+                    }
+                    if (val?.curVersion !== oldVal?.curVersion) {
+                        this.updateCurVersionDesc()
+                    }
+                },
+                immediate: true
             }
         },
         methods: {
-            ...mapActions('pipelines', ['updateBuildRemark']),
+            ...mapActions({
+                fetchVersionDetail: 'atom/getPipelineVersionInfo',
+                updateBuildRemark: 'pipelines/updateBuildRemark'
+            }),
+            async updateCurVersionDesc () {
+                try {
+                    const result = await this.fetchVersionDetail({
+                        version: this.execDetail.curVersion,
+                        ...this.$route.params
+                    })
+                    this.curVersionDesc = result.data.description
+                } catch (error) {
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
+                }
+            },
             showRemarkEdit () {
                 this.remarkEditable = true
             },
@@ -202,6 +326,20 @@
   position: relative;
   padding: 0 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
+  .instance-template-info {
+    display: inline-flex;
+    margin-right: 6px;
+    line-height: 1;
+    margin-right: 6px;
+  }
+  .template-info-entry {
+    color: #979ba5;
+    cursor: pointer;
+    &:hover {
+        color: $primaryColor;
+    }
+  }
+
   &-info {
     display: grid;
     grid-auto-flow: column;
@@ -213,6 +351,7 @@
     > div {
       display: flex;
       flex-direction: column;
+
       &:first-child {
         margin-left: -16px;
       }
@@ -247,71 +386,7 @@
                 opacity: 0;
               }
             }
-          }
-          .exec-material-row {
-            // padding: 0 0 8px 0;
-            display: grid;
-            grid-gap: 20px;
-            grid-auto-flow: column;
-            height: 38px;
-            grid-auto-columns: minmax(auto, max-content) 36px;
-            .material-row-info-spans {
-                display: grid;
-                grid-auto-flow: column;
-                grid-gap: 20px;
-                grid-auto-columns: minmax(auto, max-content);
-                > span {
-                    @include ellipsis();
-                    display: inline-flex;
-                    min-width: auto;
-                    align-items: center;
-                    > svg {
-                        flex-shrink: 0;
-                        margin-right: 6px;
-                    }
-                }
-            }
-            &.visible-material-row {
-              border: 1px solid transparent;
-              padding-bottom: 0px;
-              align-items: center;
 
-            }
-            .exec-more-material {
-                display: inline-flex;
-                align-items: center;
-
-            }
-
-            .mr-source-target {
-                display: grid;
-                align-items: center;
-                grid-auto-flow: column;
-                grid-gap: 6px;
-                .icon-arrows-right {
-                    color: #C4C6CC;
-                    font-weight: 800;
-                }
-                > span {
-                    @include ellipsis();
-                }
-            }
-            .material-span-tooltip-box {
-                flex: 1;
-                overflow: hidden;
-                > .bk-tooltip-ref {
-                    width: 100%;
-                    .material-span {
-                        width: 100%;
-                    }
-                }
-            }
-            .material-span {
-              @include ellipsis();
-              .bk-link-text {
-                font-size: 12px;
-              }
-            }
           }
         }
       }
@@ -343,6 +418,12 @@
       display: flex;
       align-items: center;
       line-height: 48px;
+      .pipeline-cur-version-span {
+        @include ellipsis();
+        text-decoration: underline;
+        text-decoration-skip-ink: none;
+        cursor: pointer;
+      }
 
       .exec-remark {
         width: 100%;
@@ -357,9 +438,47 @@
           &.bk-form-textarea {
             height: 32px;
           }
+
+          &.bk-textarea-wrapper {
+            margin-bottom: 14px;
+          }
         }
       }
     }
   }
+}
+.pipeline-template-info-popover {
+    .template-info-header {
+        color: #979ba5;
+    }
+    .template-info-section {
+        padding: 8px;
+        background: #f0f1f5;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        grid-gap: 10px;
+        margin-top: 12px;
+        > p {
+            display: flex;
+            align-items: center;
+            grid-gap: 8px;
+            > label {
+                color: #979ba5;
+                flex-shrink: 0;
+            }
+            .template-link-icon {
+                font-size: 0;
+                flex-shrink: 0;
+                cursor: pointer;
+                font-weight: bold;
+                color: $primaryColor;
+            }
+            > span {
+                font-weight: bold;
+                @include ellipsis();
+            }
+        }
+    }
 }
 </style>

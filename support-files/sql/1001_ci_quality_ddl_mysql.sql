@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_CONTROL_POINT`
     `UPDATE_USER`        varchar(64)        DEFAULT NULL COMMENT '更新用户',
     `CREATE_TIME`        datetime                              DEFAULT NULL COMMENT '创建时间',
     `UPDATE_TIME`        datetime                              DEFAULT NULL COMMENT '更新时间',
-    `ATOM_VERSION`       varchar(16)        DEFAULT '1.0.0' COMMENT '插件版本',
+    `ATOM_VERSION`       varchar(30)        DEFAULT '1.0.0' COMMENT '插件版本',
     `TEST_PROJECT`       varchar(64) NOT NULL DEFAULT '' COMMENT '测试的项目',
     `CONTROL_POINT_HASH_ID` varchar(64) DEFAULT NULL COMMENT '哈希ID',
     `TAG` VARCHAR(64) NULL,
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_INDICATOR`
     `UPDATE_USER`         varchar(64)            DEFAULT NULL COMMENT '更新用户',
     `CREATE_TIME`         datetime               DEFAULT NULL COMMENT '创建时间',
     `UPDATE_TIME`         datetime               DEFAULT NULL COMMENT '更新时间',
-    `ATOM_VERSION`        varchar(16)   NOT NULL DEFAULT '1.0.0' COMMENT '插件版本号',
+    `ATOM_VERSION`        varchar(30)   NOT NULL DEFAULT '1.0.0' COMMENT '插件版本号',
     `LOG_PROMPT`          varchar(1024) NOT NULL DEFAULT '' COMMENT '日志提示',
     PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB

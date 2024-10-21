@@ -30,9 +30,9 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.PipelineStageTag
 import com.tencent.devops.process.pojo.StageTagRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -43,50 +43,50 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_STAGE_TAG"], description = "OP-流水线-阶段标签")
+@Tag(name = "OP_PIPELINE_STAGE_TAG", description = "OP-流水线-阶段标签")
 @Path("/op/pipeline/stage/tag")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStageTagResource {
 
-    @ApiOperation("添加流水线阶段标签信息")
+    @Operation(summary = "添加流水线阶段标签信息")
     @POST
     @Path("/")
     fun add(
-        @ApiParam(value = "流水线阶段标签请求体", required = true)
+        @Parameter(description = "流水线阶段标签请求体", required = true)
         stageTagRequest: StageTagRequest
     ): Result<Boolean>
 
-    @ApiOperation("更新流水线阶段标签信息")
+    @Operation(summary = "更新流水线阶段标签信息")
     @PUT
     @Path("/{id}")
     fun update(
-        @ApiParam("流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String,
-        @ApiParam(value = "流水线阶段标签请求体", required = true)
+        @Parameter(description = "流水线阶段标签请求体", required = true)
         stageTagRequest: StageTagRequest
     ): Result<Boolean>
 
-    @ApiOperation("获取所有流水线阶段标签信息")
+    @Operation(summary = "获取所有流水线阶段标签信息")
     @GET
     @Path("/")
     fun listAllStageTags(): Result<List<PipelineStageTag>>
 
-    @ApiOperation("根据ID获取流水线阶段标签信息")
+    @Operation(summary = "根据ID获取流水线阶段标签信息")
     @GET
     @Path("/{id}")
     fun getStageTagById(
-        @ApiParam("流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String
     ): Result<PipelineStageTag?>
 
-    @ApiOperation("根据ID删除流水线阶段标签信息")
+    @Operation(summary = "根据ID删除流水线阶段标签信息")
     @DELETE
     @Path("/{id}")
     fun deleteStageTagById(
-        @ApiParam("流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

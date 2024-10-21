@@ -38,7 +38,7 @@ BEGIN
         ADD COLUMN `ERROR_MESSAGE` text DEFAULT NULL COMMENT '错误信息';
     END IF;
 
-     IF NOT EXISTS(SELECT 1
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_AUTH_IAM_CALLBACK'
@@ -46,6 +46,43 @@ BEGIN
     ALTER TABLE T_AUTH_IAM_CALLBACK ADD UNIQUE INDEX `UNIQ_RESOURCE` (`RESOURCE`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AUTH_RESOURCE_GROUP'
+                    AND INDEX_NAME = 'PROJECT_CODE_RELATION_ID_IDX') THEN
+    ALTER TABLE T_AUTH_RESOURCE_GROUP ADD INDEX `PROJECT_CODE_RELATION_ID_IDX` (`PROJECT_CODE`,`RELATION_ID`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_AUTH_RESOURCE'
+                        AND COLUMN_NAME = 'RESOURCE_CODE'
+                        AND COLLATION_NAME != 'utf8mb4_bin'
+                        ) THEN
+    ALTER TABLE T_AUTH_RESOURCE
+        MODIFY `RESOURCE_CODE` varchar(255) collate utf8mb4_bin not null comment '资源ID';
+    END IF;
+
+     IF EXISTS(SELECT 1
+                          FROM information_schema.COLUMNS
+                          WHERE TABLE_SCHEMA = db
+                            AND TABLE_NAME = 'T_AUTH_RESOURCE_GROUP'
+                            AND COLUMN_NAME = 'RESOURCE_CODE'
+                            AND COLLATION_NAME != 'utf8mb4_bin'
+                            ) THEN
+        ALTER TABLE T_AUTH_RESOURCE_GROUP
+            MODIFY `RESOURCE_CODE` varchar(255) collate utf8mb4_bin not null comment '资源ID';
+        END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AUTH_RESOURCE_GROUP_CONFIG'
+                    AND COLUMN_NAME = 'GROUP_TYPE') THEN
+    ALTER TABLE T_AUTH_RESOURCE_GROUP_CONFIG ADD COLUMN `GROUP_TYPE` Int(2) NOT NULL DEFAULT 0 COMMENT '用户组类型 0-默认组 1-自定义组' AFTER `CREATE_MODE`;
+    END IF;
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

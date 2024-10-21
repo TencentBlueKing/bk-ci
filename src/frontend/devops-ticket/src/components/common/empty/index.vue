@@ -1,7 +1,16 @@
 <template>
     <div class="paas-ci-empty">
-        <p class="code-check-title" v-if="isCodeCheck">{{ emptyTitle }}</p>
-        <img :src="calcSrc" :alt="$t('ticket.noData')" class="empty-pic">
+        <p
+            class="code-check-title"
+            v-if="isCodeCheck"
+        >
+            {{ emptyTitle }}
+        </p>
+        <img
+            :src="calcSrc"
+            :alt="$t('ticket.noData')"
+            class="empty-pic"
+        >
     </div>
 </template>
 

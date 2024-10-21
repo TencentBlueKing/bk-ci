@@ -1,5 +1,8 @@
 <template>
-    <section class="pipeline-edit-wrapper" v-bkloading="{ isLoading }">
+    <section
+        class="pipeline-edit-wrapper"
+        v-bkloading="{ isLoading }"
+    >
         <header class="create-pipeline-header">
             <div>
                 <span class="pointer">
@@ -9,6 +12,8 @@
         </header>
         <div class="setting-content-wrapper">
             <setting-base
+                :is-enabled-permission="isEnabledPermission"
+                :is-loading="isLoading"
                 @setState="setState"
                 @cancel="exit"
             ></setting-base>
@@ -17,33 +22,40 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import SettingBase from '@/components/pipelineSetting/settingBase/index.vue'
     import { navConfirm } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
             SettingBase
         },
+        props: {
+            isEnabledPermission: Boolean
+        },
         data () {
             return {
                 isEditing: false,
-                isLoading: true,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
                 cancelText: this.$t('cancel')
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'templateSetting'
+            ]),
             projectId () {
                 return this.$route.params.projectId
+            },
+            isLoading () {
+                return !this.templateSetting
             }
         },
         mounted () {
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.resetPipelineSetting()
             this.removeLeaveListenr()
         },
         beforeRouteUpdate (to, from, next) {
@@ -53,17 +65,14 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
-            ...mapActions('pipelines', [
-                'resetPipelineSetting'
-            ]),
-            setState ({ isLoading, isEditing }) {
-                this.isLoading = isLoading
+            setState (isEditing) {
+                console.log('setState', isEditing)
                 this.isEditing = isEditing
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)

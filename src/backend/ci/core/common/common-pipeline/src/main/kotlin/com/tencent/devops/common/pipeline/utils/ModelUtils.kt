@@ -83,7 +83,7 @@ object ModelUtils {
 
     fun canManualStartup(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is ManualTriggerElement && it.isElementEnable()) {
+            if (it is ManualTriggerElement && it.elementEnabled()) {
                 return true
             }
         }
@@ -92,7 +92,7 @@ object ModelUtils {
 
     fun canRemoteStartup(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is RemoteTriggerElement && it.isElementEnable()) {
+            if (it is RemoteTriggerElement && it.elementEnabled()) {
                 return true
             }
         }
@@ -101,7 +101,7 @@ object ModelUtils {
 
     fun stageNeedPause(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
-            if (it is RemoteTriggerElement && it.isElementEnable()) {
+            if (it is RemoteTriggerElement && it.elementEnabled()) {
                 return true
             }
         }
@@ -265,5 +265,24 @@ object ModelUtils {
                 }
             }
         }
+    }
+
+    /**
+     * 获取模型下的插件列表
+     * @param model 模型
+     * @return 插件列表
+     */
+    fun getModelAtoms(
+        model: Model
+    ): MutableSet<String> {
+        val atomCodes = mutableSetOf<String>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    atomCodes.add(element.getAtomCode())
+                }
+            }
+        }
+        return atomCodes
     }
 }

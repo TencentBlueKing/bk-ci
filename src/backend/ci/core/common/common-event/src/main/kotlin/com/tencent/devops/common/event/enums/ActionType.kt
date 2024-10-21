@@ -38,6 +38,7 @@ enum class ActionType {
     END, // 强制结束当前节点，会导致当前构建容器结束
     SKIP, // 跳过-不执行
     TERMINATE, // 终止
+    ARCHIVE, // 归档
     ;
 
     fun isStartOrRefresh() = isStart() || this == REFRESH

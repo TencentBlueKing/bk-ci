@@ -94,7 +94,7 @@ class StreamRepositoryPermissionServiceImpl @Autowired constructor(
             userId = userId,
             projectCode = projectId,
             action = authPermission.value,
-            token = tokenService.getSystemToken(null) ?: "",
+            token = tokenService.getSystemToken() ?: "",
             resourceCode = null
         ).data ?: false
     }

@@ -29,9 +29,9 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("mr绑定的TAPD单")
+@Schema(title = "mr绑定的TAPD单")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TapdWorkItem(
     val id: Long,

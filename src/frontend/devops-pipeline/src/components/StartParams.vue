@@ -1,14 +1,25 @@
 <template>
-    <section class="startup-parameter-box" v-bkloading="{ isLoading }">
+    <section
+        class="startup-parameter-box"
+        v-bkloading="{ isLoading }"
+    >
         <div class="startup-parameter-wrapper">
-            <div ref="parent" class="build-param-row" v-for="(param, index) in params" :key="index">
+            <div
+                ref="parent"
+                class="build-param-row"
+                v-for="(param, index) in params"
+                :key="index"
+            >
                 <span class="build-param-span">
-                    <span class="build-param-key-span" :title="param.key">
+                    <span
+                        class="build-param-key-span"
+                        :title="param.key"
+                    >
                         {{ param.key }}
                     </span>
                     <i
                         v-if="param.desc"
-                        v-bk-tooltips="param.desc"
+                        v-bk-tooltips="{ content: param.desc, allowHTML: false }"
                         class="devops-icon icon-question-circle"
                     />
                 </span>
@@ -44,7 +55,11 @@
                 :is-show.sync="isDetailShow"
                 @hidden="hideDetail"
             >
-                <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
+                <div
+                    v-if="activeParam"
+                    slot="content"
+                    class="startup-param-detail-wrapper"
+                >
                     <p>{{ activeParam.key }}</p>
                     <pre>{{ activeParam.value }}</pre>
                 </div>

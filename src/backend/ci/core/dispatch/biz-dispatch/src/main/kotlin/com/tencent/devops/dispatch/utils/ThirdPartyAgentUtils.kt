@@ -15,9 +15,9 @@ object ThirdPartyAgentUtils {
         }
 
         val tickets = try {
-            CommonUtils.getCredential(
+            DispatchCommonUtils.getCredential(
                 client = client,
-                projectId = projectId,
+                projectId = credInfo.credentialProjectId ?: projectId,
                 credentialId = credInfo.credentialId!!,
                 type = CredentialType.USERNAME_PASSWORD
             )
@@ -49,7 +49,7 @@ object ThirdPartyAgentUtils {
         } ?: return Pair(null, null)
 
         // 校验成功后获取跨项目的凭据
-        val acrossTickets = CommonUtils.getCredential(
+        val acrossTickets = DispatchCommonUtils.getCredential(
             client = client,
             projectId = across.targetProjectId,
             credentialId = credInfo.credentialId!!,

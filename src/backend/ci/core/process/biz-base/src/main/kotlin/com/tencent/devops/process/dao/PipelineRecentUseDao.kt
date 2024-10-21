@@ -55,4 +55,36 @@ class PipelineRecentUseDao {
                 .fetch(0, String::class.java)
         }
     }
+
+    fun listLastUseTimes(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        limit: Int
+    ): List<LocalDateTime> {
+        return with(TPipelineRecentUse.T_PIPELINE_RECENT_USE) {
+            dslContext.select(USE_TIME)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(USER_ID.eq(userId))
+                .orderBy(USE_TIME.desc())
+                .limit(limit)
+                .fetch(0, LocalDateTime::class.java)
+        }
+    }
+
+    fun deleteExpire(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        endTime: LocalDateTime
+    ) {
+        with(TPipelineRecentUse.T_PIPELINE_RECENT_USE) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(USER_ID.eq(userId))
+                .and(USE_TIME.lt(endTime))
+                .execute()
+        }
+    }
 }

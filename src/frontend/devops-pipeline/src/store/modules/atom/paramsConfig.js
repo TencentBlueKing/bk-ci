@@ -26,6 +26,7 @@ export const SVN_TAG = 'SVN_TAG'
 export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
+export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
 export const CUSTOM_FILE = 'CUSTOM_FILE'
 
@@ -35,35 +36,42 @@ function paramType (typeConst) {
 
 export const DEFAULT_PARAM = {
     [STRING]: {
-        id: 'string',
-        defaultValue: 'value',
+        id: '',
+        name: '',
+        defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: STRING,
         typeDesc: 'string',
-        required: true
+        required: true,
+        readOnly: false
     },
     [TEXTAREA]: {
         id: 'textarea',
+        name: 'textarea',
         defaultValue: '',
         desc: '',
         type: TEXTAREA,
         typeDesc: 'textarea',
-        required: true
+        required: true,
+        readOnly: false
     },
     [BOOLEAN]: {
         id: 'bool',
+        name: 'bool',
         defaultValue: true,
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
-        required: true
+        required: true,
+        readOnly: false
     },
     [ENUM]: {
-        id: 'enum',
+        id: 'select',
+        name: 'select',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -71,10 +79,12 @@ export const DEFAULT_PARAM = {
         type: ENUM,
         typeDesc: 'enum',
         options: [],
-        required: true
+        required: true,
+        readOnly: false
     },
     [MULTIPLE]: {
         id: 'multiple',
+        name: 'multiple',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -82,10 +92,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: MULTIPLE,
         typeDesc: 'multiple',
-        required: true
+        required: true,
+        readOnly: false
     },
     [SVN_TAG]: {
         id: 'svntag',
+        name: 'svntag',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -95,10 +107,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SVN_TAG,
         typeDesc: 'svntag',
-        required: true
+        required: true,
+        readOnly: false
     },
     [GIT_REF]: {
         id: 'gitref',
+        name: 'gitref',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -107,10 +121,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: GIT_REF,
         typeDesc: 'gitref',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CODE_LIB]: {
         id: 'codelib',
+        name: 'codelib',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -119,10 +135,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CODE_LIB,
         typeDesc: 'codelib',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CONTAINER_TYPE]: {
         id: 'buildResource',
+        name: 'buildResource',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -134,10 +152,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CONTAINER_TYPE,
         typeDesc: 'buildResource',
-        required: true
+        required: true,
+        readOnly: false
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
+        name: 'subPipeline',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -145,17 +165,20 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CUSTOM_FILE]: {
         id: 'file',
+        name: 'file',
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
-        required: true
+        required: true,
+        readOnly: false
     }
 }
 
@@ -203,6 +226,9 @@ export const CHECK_PARAM_LIST = Object.keys(CHECK_DEFAULT_PARAM).map(key => ({
     name: DEFAULT_PARAM[key].typeDesc
 }))
 
+// 常量时展示的变量列表
+export const CONST_TYPE_LIST = [STRING, TEXTAREA, ENUM, MULTIPLE]
+
 export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     id: key,
     name: DEFAULT_PARAM[key].typeDesc
@@ -226,8 +252,9 @@ export const ParamComponentMap = {
     [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
+    [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
-    [CUSTOM_FILE]: 'VuexInput'
+    [CUSTOM_FILE]: 'FileParamInput'
 }
 
 export const BOOLEAN_LIST = [
@@ -280,6 +307,10 @@ export const CODE_LIB_TYPE = [
     }
 ]
 
+export function isRemoteType (param) {
+    return param?.payload?.type === 'remote'
+}
+
 export const isStringParam = paramType(STRING)
 export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)
@@ -289,5 +320,6 @@ export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
+export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)

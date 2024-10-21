@@ -1,12 +1,25 @@
 <template>
-    <div class="install-atom-wrapper" v-bkloading="{ isLoading }">
-        <bread-crumbs :bread-crumbs="navList" :type="type"></bread-crumbs>
+    <div
+        class="install-atom-wrapper"
+        v-bkloading="{ isLoading }"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="type"
+        ></bread-crumbs>
 
-        <div class="install-atom-content" v-if="!isLoading">
-            <div class="sub-view-port" v-if="!isINstallSuccess">
+        <div
+            class="install-atom-content"
+            v-if="!isLoading"
+        >
+            <div
+                class="sub-view-port"
+                v-if="!isINstallSuccess"
+            >
                 <div class="atom-name">{{ name }}</div>
                 <div class="title"> {{ $t('store.请选择项目：') }} </div>
-                <bk-select v-model="project"
+                <bk-select
+                    v-model="project"
                     searchable
                     multiple
                     show-select-all
@@ -23,17 +36,50 @@
                         :key="item.projectCode"
                         :id="item.projectCode"
                         :name="item.projectName"
+                        :disabled="!item.pipelineTemplateInstallPerm"
+                        v-bk-tooltips="{
+                            content: $t('store.无该项目的模板安装权限'),
+                            disabled: item.pipelineTemplateInstallPerm
+                        }"
                     >
                     </bk-option>
-                    <div slot="extension" style="cursor: pointer;">
-                        <a href="/console/pm" target="_blank"><i class="devops-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
+                    <div
+                        slot="extension"
+                        style="cursor: pointer;"
+                    >
+                        <a
+                            href="/console/pm"
+                            target="_blank"
+                        ><i class="devops-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
                     </div>
                 </bk-select>
-                <p class="template-tip" v-if="type === 'template'">{{ $t('store.若模版中有未安装的插件，将自动安装') }}</p>
-                <div v-if="installError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
+                <p
+                    class="template-tip"
+                    v-if="type === 'template'"
+                >
+                    {{ $t('store.若模版中有未安装的插件，将自动安装') }}
+                </p>
+                <div
+                    v-if="installError"
+                    class="error-tips"
+                >
+                    {{ $t('store.项目不能为空') }}
+                </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="confirm"> {{ $t('store.安装') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('store.取消') }} </button>
+                    <button
+                        class="bk-button bk-primary"
+                        type="button"
+                        @click="confirm"
+                    >
+                        {{ $t('store.安装') }}
+                    </button>
+                    <button
+                        class="bk-button bk-default"
+                        type="button"
+                        @click="toBack"
+                    >
+                        {{ $t('store.取消') }}
+                    </button>
                 </div>
                 <section v-if="installedProject.length">
                     <p class="project-title">
@@ -43,20 +89,45 @@
                         <thead>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, index) in installedProject" :key="index">
+                            <tr
+                                v-for="(row, index) in installedProject"
+                                :key="index"
+                            >
                                 <td>{{ row.projectName }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </section>
             </div>
-            <div class="install-success-tips" v-else>
+            <div
+                class="install-success-tips"
+                v-else
+            >
                 <i class="devops-icon icon-check-circle"></i>
                 <h3> {{ $t('store.恭喜，已安装成功！') }} </h3>
                 <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click="backConsole"> {{ $t('store.工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="backToStore"> {{ $t('store.研发商店') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="toPipeline" v-if="['atom', 'template', 'image'].includes(type)"> {{ $t('store.流水线') }} </bk-button>
+                    <bk-button
+                        class="bk-button bk-primary"
+                        size="small"
+                        @click="backConsole"
+                    >
+                        {{ $t('store.工作台') }}
+                    </bk-button>
+                    <bk-button
+                        class="bk-button bk-default"
+                        size="small"
+                        @click="backToStore"
+                    >
+                        {{ $t('store.研发商店') }}
+                    </bk-button>
+                    <bk-button
+                        class="bk-button bk-default"
+                        size="small"
+                        @click="toPipeline"
+                        v-if="['atom', 'template', 'image'].includes(type)"
+                    >
+                        {{ $t('store.流水线') }}
+                    </bk-button>
                 </div>
             </div>
         </div>

@@ -27,29 +27,28 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("TriggerBuild请求")
+@Schema(title = "TriggerBuild请求")
 data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @ApiModelProperty("Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
+    @get:Schema(title = "yaml")
     val yaml: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
+    @get:Schema(title = "事件请求体")
     val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
+    @get:Schema(title = "模拟代码事件类型")
     val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
+    @get:Schema(title = "手动触发输入参数")
     val inputs: Map<String, String>? = null,
-    @ApiModelProperty("是否为子流水线触发")
-    val checkPipelineTrigger: Boolean = false
+    @get:Schema(title = "是否为子流水线触发")
+    val subPipelineTriggerId: String? = null
 )

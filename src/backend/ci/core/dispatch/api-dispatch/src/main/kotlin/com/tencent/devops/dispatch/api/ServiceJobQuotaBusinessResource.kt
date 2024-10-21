@@ -29,9 +29,9 @@ package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.POST
@@ -41,56 +41,59 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
+@Tag(name = "BUILD_JOBS_PROJECT_QUOTA", description = "Job配额管理")
 @Path("/service/quotas/running")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceJobQuotaBusinessResource {
 
-    @ApiOperation("上报一个JOB启动")
+    @Operation(summary = "上报一个JOB启动")
     @POST
     @Path("/job/projects/{projectId}/vmTypes/{vmType}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun checkAndAddRunningJob(
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @ApiParam(value = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam(value = "executeCount", required = true)
+        @Parameter(description = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int,
-        @ApiParam(value = "containerId", required = true)
+        @Parameter(description = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String,
-        @ApiParam(value = "containerHashId", required = false)
+        @Parameter(description = "containerHashId", required = false)
         @QueryParam("containerHashId")
-        containerHashId: String?
+        containerHashId: String?,
+        @Parameter(description = "channelCode", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = ""
     ): Result<Boolean>
 
-    @ApiOperation("上报一个JOB结束")
+    @Operation(summary = "上报一个JOB结束")
     @DELETE
     @Path("/job/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun removeRunningJob(
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = false)
+        @Parameter(description = "vmSeqId", required = false)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam(value = "executeCount", required = true)
+        @Parameter(description = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int
     ): Result<Boolean>

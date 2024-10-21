@@ -27,23 +27,21 @@
 
 package com.tencent.devops.process.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record4
+import org.jooq.RecordMapper
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -51,187 +49,148 @@ import org.springframework.stereotype.Repository
 @Repository
 class PipelineSettingDao {
 
-    // 新流水线创建的时候，设置默认的通知配置。
-    fun insertNewSetting(
+    fun saveSetting(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        isTemplate: Boolean = false,
-        successNotifyTypes: String = "",
-        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
-        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
-        pipelineAsCodeSettings: PipelineAsCodeSettings?
+        setting: PipelineSetting,
+        isTemplate: Boolean = false
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            return dslContext.insertInto(
+            // #6090 先查询存在情况再做刷新或插入
+            val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+            val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+            val insert = dslContext.insertInto(
                 this,
                 PROJECT_ID,
-                PIPELINE_ID,
                 NAME,
-                RUN_LOCK_TYPE,
                 DESC,
+                RUN_LOCK_TYPE,
+                PIPELINE_ID,
                 SUCCESS_RECEIVER,
                 FAIL_RECEIVER,
                 SUCCESS_GROUP,
                 FAIL_GROUP,
                 SUCCESS_TYPE,
                 FAIL_TYPE,
+                FAIL_WECHAT_GROUP_FLAG,
+                FAIL_WECHAT_GROUP,
+                FAIL_WECHAT_GROUP_MARKDOWN_FLAG,
+                SUCCESS_WECHAT_GROUP_FLAG,
+                SUCCESS_WECHAT_GROUP,
+                SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
+                SUCCESS_DETAIL_FLAG,
+                FAIL_DETAIL_FLAG,
                 SUCCESS_CONTENT,
                 FAIL_CONTENT,
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
                 MAX_PIPELINE_RES_NUM,
-                PIPELINE_AS_CODE_SETTINGS
-            )
-                .values(
-                    projectId,
-                    pipelineId,
-                    pipelineName,
-                    PipelineRunLockType.toValue(PipelineRunLockType.MULTIPLE),
-                    "",
-                    "\${{$PIPELINE_START_USER_NAME}}",
-                    "\${{$PIPELINE_START_USER_NAME}}",
-                    "",
-                    "",
-                    successNotifyTypes,
-                    failNotifyTypes,
-                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
-                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
-                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
-                    PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-                    isTemplate,
-                    maxPipelineResNum,
-                    pipelineAsCodeSettings?.let { self ->
-                        JsonUtil.toJson(self, false)
-                    }
-                )
-                .execute()
-        }
-    }
-
-    fun saveSetting(dslContext: DSLContext, setting: PipelineSetting, isTemplate: Boolean = false): Int {
-        with(TPipelineSetting.T_PIPELINE_SETTING) {
-            // #6090 先查询存在情况再做刷新或插入
-            val origin = getSetting(dslContext, setting.projectId, setting.pipelineId)
-            return if (origin == null) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    NAME,
-                    DESC,
-                    RUN_LOCK_TYPE,
-                    PIPELINE_ID,
-                    SUCCESS_RECEIVER,
-                    FAIL_RECEIVER,
-                    SUCCESS_GROUP,
-                    FAIL_GROUP,
-                    SUCCESS_TYPE,
-                    FAIL_TYPE,
-                    FAIL_WECHAT_GROUP_FLAG,
-                    FAIL_WECHAT_GROUP,
-                    FAIL_WECHAT_GROUP_MARKDOWN_FLAG,
-                    SUCCESS_WECHAT_GROUP_FLAG,
-                    SUCCESS_WECHAT_GROUP,
-                    SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
-                    SUCCESS_DETAIL_FLAG,
-                    FAIL_DETAIL_FLAG,
-                    SUCCESS_CONTENT,
-                    FAIL_CONTENT,
-                    WAIT_QUEUE_TIME_SECOND,
-                    MAX_QUEUE_SIZE,
-                    IS_TEMPLATE,
-                    MAX_PIPELINE_RES_NUM,
-                    MAX_CON_RUNNING_QUEUE_SIZE,
-                    BUILD_NUM_RULE,
-                    CONCURRENCY_GROUP,
-                    CONCURRENCY_CANCEL_IN_PROGRESS,
-                    CLEAN_VARIABLES_WHEN_RETRY,
-                    PIPELINE_AS_CODE_SETTINGS
-                ).values(
-                    setting.projectId,
-                    setting.pipelineName,
-                    setting.desc,
-                    PipelineRunLockType.toValue(setting.runLockType),
-                    setting.pipelineId,
-                    setting.successSubscription.users,
-                    setting.failSubscription.users,
-                    setting.successSubscription.groups.joinToString(","),
-                    setting.failSubscription.groups.joinToString(","),
-                    setting.successSubscription.types.joinToString(",") { it.name },
-                    setting.failSubscription.types.joinToString(",") { it.name },
-                    setting.failSubscription.wechatGroupFlag,
-                    setting.failSubscription.wechatGroup,
-                    setting.failSubscription.wechatGroupMarkdownFlag,
-                    setting.successSubscription.wechatGroupFlag,
-                    setting.successSubscription.wechatGroup,
-                    setting.successSubscription.wechatGroupMarkdownFlag,
-                    setting.successSubscription.detailFlag,
-                    setting.failSubscription.detailFlag,
-                    setting.successSubscription.content,
-                    setting.failSubscription.content,
-                    DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
-                    setting.maxQueueSize,
-                    isTemplate,
-                    setting.maxPipelineResNum,
-                    setting.maxConRunningQueueSize,
-                    setting.buildNumRule,
-                    setting.concurrencyGroup,
-                    setting.concurrencyCancelInProgress,
-                    setting.cleanVariablesWhenRetry,
-                    setting.pipelineAsCodeSettings?.let { self ->
-                        JsonUtil.toJson(self, false)
-                    }
-                ).execute()
-            } else {
-                val updateSetMoreStep = dslContext.update(this)
-                    .set(NAME, setting.pipelineName)
-                    .set(DESC, setting.desc)
-                    .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
-                    .set(SUCCESS_RECEIVER, setting.successSubscription.users)
-                    .set(FAIL_RECEIVER, setting.failSubscription.users)
-                    .set(SUCCESS_GROUP, setting.successSubscription.groups.joinToString(","))
-                    .set(FAIL_GROUP, setting.failSubscription.groups.joinToString(","))
-                    .set(SUCCESS_TYPE, setting.successSubscription.types.joinToString(",") { it.name })
-                    .set(FAIL_TYPE, setting.failSubscription.types.joinToString(",") { it.name })
-                    .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription.wechatGroupFlag)
-                    .set(FAIL_WECHAT_GROUP, setting.failSubscription.wechatGroup)
-                    .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
-                    .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
-                    .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
-                    .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
-                    .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
-                    .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
-                    .set(SUCCESS_CONTENT, setting.successSubscription.content)
-                    .set(FAIL_CONTENT, setting.failSubscription.content)
-                    .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
-                    .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
-                    .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
-                    .set(BUILD_NUM_RULE, setting.buildNumRule)
-                    .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
-                    .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
-                    .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
-                // pipelineAsCodeSettings 默认传空不更新
-                setting.pipelineAsCodeSettings?.let { self ->
-                    updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-                }
-                // maxConRunningQueueSize 默认传空不更新
-                if (setting.maxConRunningQueueSize != null) {
-                    updateSetMoreStep.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
-                }
-                updateSetMoreStep
-                    .where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
-                    .execute()
+                MAX_CON_RUNNING_QUEUE_SIZE,
+                BUILD_NUM_RULE,
+                CONCURRENCY_GROUP,
+                CONCURRENCY_CANCEL_IN_PROGRESS,
+                CLEAN_VARIABLES_WHEN_RETRY,
+                SUCCESS_SUBSCRIPTION,
+                FAILURE_SUBSCRIPTION,
+                VERSION
+            ).values(
+                setting.projectId,
+                setting.pipelineName,
+                setting.desc,
+                PipelineRunLockType.toValue(setting.runLockType),
+                setting.pipelineId,
+                setting.successSubscription?.users,
+                setting.failSubscription?.users,
+                setting.successSubscription?.groups?.joinToString(","),
+                setting.failSubscription?.groups?.joinToString(","),
+                setting.successSubscription?.types?.joinToString(",") { it.name },
+                setting.failSubscription?.types?.joinToString(",") { it.name },
+                setting.failSubscription?.wechatGroupFlag ?: false,
+                setting.failSubscription?.wechatGroup ?: "",
+                setting.failSubscription?.wechatGroupMarkdownFlag ?: false,
+                setting.successSubscription?.wechatGroupFlag ?: false,
+                setting.successSubscription?.wechatGroup ?: "",
+                setting.successSubscription?.wechatGroupMarkdownFlag ?: false,
+                setting.successSubscription?.detailFlag ?: false,
+                setting.failSubscription?.detailFlag ?: false,
+                setting.successSubscription?.content,
+                setting.failSubscription?.content,
+                DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
+                setting.maxQueueSize,
+                isTemplate,
+                setting.maxPipelineResNum,
+                setting.maxConRunningQueueSize,
+                setting.buildNumRule,
+                setting.concurrencyGroup,
+                setting.concurrencyCancelInProgress,
+                setting.cleanVariablesWhenRetry,
+                JsonUtil.toJson(successSubscriptionList, false),
+                JsonUtil.toJson(failSubscriptionList, false),
+                setting.version
+            ).onDuplicateKeyUpdate()
+                .set(NAME, setting.pipelineName)
+                .set(DESC, setting.desc)
+                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                .set(SUCCESS_RECEIVER, setting.successSubscription?.users)
+                .set(FAIL_RECEIVER, setting.failSubscription?.users)
+                .set(SUCCESS_GROUP, setting.successSubscription?.groups?.joinToString(","))
+                .set(FAIL_GROUP, setting.failSubscription?.groups?.joinToString(","))
+                .set(SUCCESS_TYPE, setting.successSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_TYPE, setting.failSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription?.wechatGroupFlag ?: false)
+                .set(FAIL_WECHAT_GROUP, setting.failSubscription?.wechatGroup ?: "")
+                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription?.wechatGroupFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription?.wechatGroup ?: "")
+                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription?.detailFlag ?: false)
+                .set(FAIL_DETAIL_FLAG, setting.failSubscription?.detailFlag ?: false)
+                .set(SUCCESS_CONTENT, setting.successSubscription?.content)
+                .set(FAIL_CONTENT, setting.failSubscription?.content)
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
+                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(VERSION, setting.version)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+            // pipelineAsCodeSettings 默认传空不更新
+            setting.pipelineAsCodeSettings?.let { self ->
+                insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
             }
+            return insert.execute()
         }
     }
 
-    fun getSetting(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineSettingRecord? {
+    fun getSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchOne()
+                .fetchOne(mapper)
+        }
+    }
+
+    fun getPipelineAsCodeSettings(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineAsCodeSettings? {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            return dslContext.select(PIPELINE_AS_CODE_SETTINGS)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne()?.component1()?.let { self ->
+                    JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                }
         }
     }
 
@@ -239,7 +198,7 @@ class PipelineSettingDao {
         dslContext: DSLContext,
         pipelineIds: Set<String>,
         projectId: String? = null
-    ): Result<TPipelineSettingRecord> {
+    ): List<PipelineSetting> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
@@ -248,7 +207,7 @@ class PipelineSettingDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -284,18 +243,17 @@ class PipelineSettingDao {
         name: String,
         pipelineId: String? = null,
         isTemplate: Boolean = false
-    ): Result<TPipelineSettingRecord> {
+    ): List<PipelineSetting> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            val conditions =
-                mutableListOf<Condition>(
-                    PROJECT_ID.eq(projectId),
-                    NAME.eq(name),
-                    IS_TEMPLATE.eq(isTemplate)
-                )
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                NAME.eq(name),
+                IS_TEMPLATE.eq(isTemplate)
+            )
             if (!pipelineId.isNullOrBlank()) conditions.add(PIPELINE_ID.eq(pipelineId))
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -311,13 +269,20 @@ class PipelineSettingDao {
         }
     }
 
-    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String) {
+    fun updateSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        name: String,
+        desc: String
+    ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            dslContext.update(this)
+            val result = dslContext.update(this)
                 .set(NAME, name)
                 .set(DESC, desc)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .execute()
+                .returning().fetchOne()
+            return mapper.map(result)
         }
     }
 
@@ -380,5 +345,86 @@ class PipelineSettingDao {
             }
             return update.execute()
         }
+    }
+
+    class PipelineSettingJooqMapper : RecordMapper<TPipelineSettingRecord, PipelineSetting> {
+        override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
+            return record?.let { t ->
+                val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                // 老数据兼容,老数据的启用企业微信群通知,转换成微信组通知类型
+                if (t.successWechatGroupFlag == true) {
+                    successType.add(PipelineSubscriptionType.WEWORK_GROUP)
+                }
+                val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                if (t.failWechatGroupFlag == true) {
+                    failType.add(PipelineSubscriptionType.WEWORK_GROUP)
+                }
+                var oldSuccessSubscription = Subscription(
+                    types = successType,
+                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.successReceiver ?: "",
+                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
+                    wechatGroup = t.successWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.successDetailFlag ?: false,
+                    content = t.successContent ?: ""
+                ).takeIf { successType.isNotEmpty() }
+                var oldFailSubscription = Subscription(
+                    types = failType,
+                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
+                    users = t.failReceiver ?: "",
+                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
+                    wechatGroup = t.failWechatGroup ?: "",
+                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.failDetailFlag ?: false,
+                    content = t.failContent ?: ""
+                ).takeIf { failType.isNotEmpty() }
+                // 如果新数组有值，则老数据被替换为新数据的首个元素
+                val successSubscriptionList = t.successSubscription?.let {
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        oldSuccessSubscription = list.first()
+                        list.map { s -> s.fixWeworkGroupType() }
+                    } else null
+                } ?: oldSuccessSubscription?.let { listOf(it) }
+                val failSubscriptionList = t.failureSubscription?.let {
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        oldFailSubscription = list.first()
+                        list.map { s -> s.fixWeworkGroupType() }
+                    } else null
+                } ?: oldFailSubscription?.let { listOf(it) }
+                PipelineSetting(
+                    projectId = t.projectId,
+                    pipelineId = t.pipelineId,
+                    pipelineName = t.name,
+                    desc = t.desc,
+                    runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                    successSubscription = oldSuccessSubscription ?: Subscription(),
+                    failSubscription = oldFailSubscription ?: Subscription(),
+                    successSubscriptionList = successSubscriptionList,
+                    failSubscriptionList = failSubscriptionList,
+                    labels = emptyList(), // 标签不在本表保存，在写入和查询时需要通过 PipelineGroupService.kt
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
+                    maxQueueSize = t.maxQueueSize,
+                    maxPipelineResNum = t.maxPipelineResNum,
+                    maxConRunningQueueSize = t.maxConRunningQueueSize,
+                    buildNumRule = t.buildNumRule,
+                    concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencyGroup = t.concurrencyGroup,
+                    cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
+                    pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                    },
+                    version = t.version ?: 1
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val mapper = PipelineSettingJooqMapper()
     }
 }

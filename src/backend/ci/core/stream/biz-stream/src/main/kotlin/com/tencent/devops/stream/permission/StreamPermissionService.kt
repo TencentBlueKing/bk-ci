@@ -69,7 +69,7 @@ class StreamPermissionService @Autowired constructor(
 
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = AuthPermission.WEB_CHECK.value,
             projectCode = projectId,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
@@ -106,7 +106,7 @@ class StreamPermissionService @Autowired constructor(
         logger.info("StreamPermissionService|checkPermissionAndOauth|user|$userId|projectId|$projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = permission.value,
             projectCode = projectId,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value

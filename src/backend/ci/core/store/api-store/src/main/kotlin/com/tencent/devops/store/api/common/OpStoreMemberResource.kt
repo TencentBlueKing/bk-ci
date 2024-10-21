@@ -29,12 +29,12 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -46,74 +46,74 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_STORE_MEMBER"], description = "OP-组件-用户")
+@Tag(name = "OP_STORE_MEMBER", description = "OP-组件-用户")
 @Path("/op/store/member/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStoreMemberResource {
 
-    @ApiOperation("获取store组件成员列表")
+    @Operation(summary = "获取store组件成员列表")
     @GET
     @Path("/list")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("store组件标识", required = true)
+        @Parameter(description = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @ApiParam("store组件类型", required = true)
+        @Parameter(description = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<List<StoreMemberItem?>>
 
-    @ApiOperation("添加store组件成员")
+    @Operation(summary = "添加store组件成员")
     @POST
     @Path("/add")
     fun add(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("调试项目", required = true)
+        @Parameter(description = "调试项目", required = true)
         @QueryParam("testProjectCode")
         testProjectCode: String?,
-        @ApiParam("添加成员请求报文")
+        @Parameter(description = "添加成员请求报文")
         @Valid
         storeMemberReq: StoreMemberReq
     ): Result<Boolean>
 
-    @ApiOperation("删除store组件成员")
+    @Operation(summary = "删除store组件成员")
     @DELETE
     @Path("/delete")
     fun delete(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("成员ID", required = true)
+        @Parameter(description = "成员ID", required = true)
         @QueryParam("id")
         id: String,
-        @ApiParam("store组件标识", required = true)
+        @Parameter(description = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @ApiParam("store组件类型", required = true)
+        @Parameter(description = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("查看store组件成员信息")
+    @Operation(summary = "查看store组件成员信息")
     @GET
     @Path("/view")
     fun view(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("store组件成员", required = true)
+        @Parameter(description = "store组件成员", required = true)
         @QueryParam("member")
         member: String,
-        @ApiParam("store组件标识", required = true)
+        @Parameter(description = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @ApiParam("store组件类型", required = true)
+        @Parameter(description = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<StoreMemberItem?>

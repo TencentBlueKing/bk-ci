@@ -1,6 +1,7 @@
 const path = require('path')
-// const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const { VueLoaderPlugin } = require('vue-loader')
+const TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = (env = {}, argv) => {
     const isDev = argv.mode === 'development'
@@ -27,6 +28,12 @@ module.exports = (env = {}, argv) => {
                 commonjs2: 'vue',
                 amd: 'vue',
                 root: 'Vue'
+            },
+            'bk-magic-vue': {
+                commonjs: 'bk-magic-vue',
+                commonjs2: 'bk-magic-vue',
+                amd: 'bk-magic-vue',
+                root: 'bkMagic'
             }
         },
         module: {
@@ -60,6 +67,7 @@ module.exports = (env = {}, argv) => {
             ]
         },
         plugins: [
+            // new BundleAnalyzerPlugin(),
             new VueLoaderPlugin()
             // new MiniCssExtractPlugin({
             //     filename: 'bk-pipeline.css',
@@ -70,7 +78,16 @@ module.exports = (env = {}, argv) => {
         optimization: {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
-            minimize: !isDev
+            minimize: !isDev,
+            removeEmptyChunks: true,
+            minimizer: [new TerserPlugin({
+                terserOptions: {
+                    format: {
+                        comments: false
+                    }
+                },
+                extractComments: false
+            })]
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],

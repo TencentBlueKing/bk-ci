@@ -28,37 +28,36 @@
 package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-文件信息-APP")
+@Schema(title = "版本仓库-文件信息-APP")
 data class AppFileInfo(
-    @ApiModelProperty("文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @ApiModelProperty("文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @ApiModelProperty("文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @ApiModelProperty("文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @ApiModelProperty("文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("是否文件夹", required = true)
+    @get:Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @ApiModelProperty("更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     var modifiedTime: Long,
-    @ApiModelProperty("仓库类型", required = true)
+    @get:Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("是否显示", required = true)
+    @get:Schema(title = "是否显示", required = true)
     val show: Boolean,
-    @ApiModelProperty("是否可下载", required = true)
+    @get:Schema(title = "是否可下载", required = true)
     val canDownload: Boolean,
-    @ApiModelProperty("版本信息", required = true)
+    @get:Schema(title = "版本信息", required = true)
     val version: String? = null,
-    @ApiModelProperty("logo链接", required = false)
+    @get:Schema(title = "logo链接", required = false)
     val logoUrl: String? = null,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String? = null,
-    @ApiModelProperty("MD5", required = false)
+    @get:Schema(title = "MD5", required = false)
     var md5: String? = null
 )

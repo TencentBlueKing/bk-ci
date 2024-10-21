@@ -53,6 +53,8 @@ spec:
       initContainers:
         - name: frontend
           image: {{ include "bkci-frontend.image" . }}
+          securityContext:
+            privileged: true
           volumeMounts:
           - mountPath: /tmp/frontend
             name: frontend

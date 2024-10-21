@@ -31,6 +31,10 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import java.io.File
+import java.io.InputStream
+import java.net.URLDecoder
+import javax.servlet.http.HttpServletResponse
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
@@ -38,9 +42,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
-import java.io.File
-import java.io.InputStream
-import java.net.URLDecoder
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_LOCAL)
@@ -60,6 +61,10 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
         val content = if (file.exists()) FileUtils.readFileToString(file) else ""
         logger.info("getAtomFileContent content: $content")
         return content
+    }
+
+    override fun downloadAtomFile(filePath: String, response: HttpServletResponse) {
+        // 插件文件存在本地硬盘，不需要下载
     }
 
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {

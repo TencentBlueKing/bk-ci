@@ -1,14 +1,33 @@
 <template>
-    <section class="pp-min-map" ref="minMapMain">
-        <main v-show="showMap" class="min-map-main">
+    <section
+        class="pp-min-map"
+        ref="minMapMain"
+    >
+        <main
+            v-show="showMap"
+            class="min-map-main"
+        >
             <canvas ref="minMapCanvas"></canvas>
-            <span class="min-map-nav"
+            <span
+                class="min-map-nav"
                 :style="`width: ${navWidth}px; height: ${navHeight}px; top: ${navTop}px; left: ${navLeft}px`"
                 @mousedown="startMove"
             ></span>
         </main>
-        <Logo name="mapSee" size="20" class="min-map-logo" v-if="showMap" @click.native="showMap = false"></Logo>
-        <Logo name="mapUnSee" size="20" class="min-map-logo" v-else @click.native="showMap = true"></Logo>
+        <Logo
+            name="mapSee"
+            size="20"
+            class="min-map-logo"
+            v-if="showMap"
+            @click.native="showMap = false"
+        ></Logo>
+        <Logo
+            name="mapUnSee"
+            size="20"
+            class="min-map-logo"
+            v-else
+            @click.native="showMap = true"
+        ></Logo>
     </section>
 </template>
 
@@ -193,9 +212,9 @@
                     const startX = (index * (pipelineStyle.itemWidth + pipelineStyle.stageMarginRight) - (pipelineStyle.stageWidth - pipelineStyle.itemWidth) / 2) * this.rate
                     const startY = 0
                     if (startX >= 0) {
-                        this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? stageStatusColor[stage.status] : pipelineStyle.stageColor
+                        this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' && stageStatusColor[stage.status] ? stageStatusColor[stage.status] : pipelineStyle.stageColor
                         this.canvasCtx.fillRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
-                        this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' ? stageBorderColor[stage.status] : pipelineStyle.stageColor
+                        this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' && stageBorderColor[stage.status] ? stageBorderColor[stage.status] : pipelineStyle.stageColor
                         this.canvasCtx.strokeRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
                     }
                     const containers = stage.containers || []
@@ -207,9 +226,9 @@
 
             drawContainer (container) {
                 const elements = container.elements || []
-                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? containerStatusColor[container.status] : pipelineStyle.containerColor
+                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' && containerStatusColor[container.status] ? containerStatusColor[container.status] : pipelineStyle.containerColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
-                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? containerStatusColor[container.status] : pipelineStyle.containerLeftColor
+                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' && containerStatusColor[container.status] ? containerStatusColor[container.status] : pipelineStyle.containerLeftColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.containerLeftWidth * this.rate, pipelineStyle.containerLeftWidth * this.rate)
                 this.drawContainer.y += (pipelineStyle.containerLeftWidth + pipelineStyle.containerBottomDis) * this.rate
                 if (elements.length <= 0) this.drawElement({})
@@ -218,7 +237,7 @@
             },
 
             drawElement (element) {
-                this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' ? atomBorderStatusColor[element.status] : pipelineStyle.atomBorderColor
+                this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' && atomBorderStatusColor[element.status] ? atomBorderStatusColor[element.status] : pipelineStyle.atomBorderColor
                 this.canvasCtx.strokeRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
                 this.canvasCtx.fillStyle = pipelineStyle.atomColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)

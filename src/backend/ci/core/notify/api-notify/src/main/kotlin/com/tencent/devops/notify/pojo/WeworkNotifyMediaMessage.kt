@@ -28,20 +28,19 @@ package com.tencent.devops.notify.pojo
 
 import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.io.InputStream
 
-@ApiModel("企业微信文本消息")
+@Schema(title = "企业微信文本消息")
 data class WeworkNotifyMediaMessage(
-    @ApiModelProperty("接收人Id", required = true)
+    @get:Schema(title = "接收人Id", required = true)
     val receivers: Collection<String>,
-    @ApiModelProperty("接收人类型", required = true)
+    @get:Schema(title = "接收人类型", required = true)
     val receiverType: WeworkReceiverType,
-    @ApiModelProperty("媒体内容", required = true)
+    @get:Schema(title = "媒体内容", required = true)
     var mediaInputStream: InputStream,
-    @ApiModelProperty("媒体内容类型", required = true)
+    @get:Schema(title = "媒体内容类型", required = true)
     var mediaType: WeworkMediaType,
-    @ApiModelProperty("媒体名称", required = true)
+    @get:Schema(title = "媒体名称", required = true)
     var mediaName: String
 )

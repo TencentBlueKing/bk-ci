@@ -49,6 +49,14 @@ import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
+import FormFieldGroup from './FormFieldGroup'
+import StaffInput from '@/components/atomFormField/StaffInput'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
+import EnumButton from '@/components/atomFormField/EnumButton'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
+import Tips from '@/components/AtomFormComponent/Tips'
+import SubParameter from '@/components/AtomFormComponent/SubParameter'
 
 const atomMixin = {
     props: {
@@ -93,7 +101,15 @@ const atomMixin = {
         QualitygateTips,
         AutoComplete,
         DevopsSelect,
-        AtomMarkdown
+        AtomMarkdown,
+        StaffInput,
+        FormFieldGroup,
+        CompositeInput,
+        ConditionalInputSelector,
+        EnumButton,
+        TipsSimple,
+        Tips,
+        SubParameter
     },
     computed: {
         ...mapGetters('atom', [
@@ -118,7 +134,6 @@ const atomMixin = {
         ...mapActions('atom', [
             'updateAtomInput',
             'updateWholeAtomInput',
-            'updateAtomOutput',
             'updateAtomOutputNameSpace',
             'updateAtom',
             'deleteAtomProps'
@@ -130,9 +145,10 @@ const atomMixin = {
                 propKey
             })
         },
-        handleUpdateElement (name, value) {
+        handleUpdateElement (name, value, changeEditStatus = true) {
             this.updateAtom({
                 element: this.element,
+                changeEditStatus,
                 newParam: {
                     [name]: value
                 }
@@ -150,14 +166,6 @@ const atomMixin = {
             this.updateWholeAtomInput({
                 atom: this.element,
                 newInput
-            })
-        },
-        handleUpdateAtomOutput (name, value) {
-            this.updateAtomOutput({
-                atom: this.element,
-                newParam: {
-                    [name]: value
-                }
             })
         },
         handleUpdateAtomOutputNameSpace (name, value) {

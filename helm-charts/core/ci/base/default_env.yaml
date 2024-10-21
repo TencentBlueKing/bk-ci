@@ -17,8 +17,7 @@ bkCiIamCallbackUser: bk_iam
 bkCiAppCode: bk_ci
 bkCiNotifyWeworkSendChannel: weworkAgent
 bkCiInfluxdbDb: agentMetrix
-bkCiEnvironmentAgentCollectorOn: true
-bkCiDocsUrl: https://bk.tencent.com/docs/markdown/持续集成平台/产品白皮书
+bkCiDocsUrl: https://bk.tencent.com
 bkCiArtifactoryRealm: local
 bkRepoHost: repo.demo.com
 bkRepoFqdn: repo.demo.com
@@ -31,12 +30,15 @@ bkCiClusterTag: devops
 bkCiRepositoryGithubServer: repository
 bkCiDockerRoutingType: KUBERNETES
 bkCiDockerJobQuotaEnable: false
+bkCiBcsEnable: false
 bkCiBcsCpu: 8.0
 bkCiBcsMemory: 16048
 bkCiKubernetesCpu: 8
 bkCiKubernetesMemory: 16048
+bkCiKubernetesEnable: true
 bkCiKubernetesHost: http://kubernetes-manager
 bkCiKubernetesToken: landun
+bkCiKubernetesBuilderTaint: ""
 bkCiDevopsToken: devops
 bkCiAppToken: test
 bkCiNotifyEmailSendChannel: blueking
@@ -47,3 +49,9 @@ bkCiFrontendIndex: "rewrite .* /$subsystem/index.html break"
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
+bkCiSm4Key: s31^dDjd!3k
+bkCiSm4Enabled: false
+bkCiMonitorRegister: false
+bkCiBuildDataClearSwitch: false
+bkCiOpenapiApiAuth: false
+bkCiMqDefaultBinder: core-rabbit

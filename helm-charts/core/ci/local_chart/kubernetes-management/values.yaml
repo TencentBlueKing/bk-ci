@@ -94,6 +94,7 @@ service:
 # kubernetesManager Deployment
 kubernetesManager:
   enabled: true
+  debug: false
   replicas: 1
   resources:
     requests:
@@ -120,7 +121,7 @@ kubernetesManager:
     targetCPU: 80
     targetMemory: 80
   # 使用的镜像
-  image: bkci/bkci-kubernetes-manager:0.0.31
+  image: bkci/bkci-kubernetes-manager:0.0.32
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace:
   redis:
@@ -147,11 +148,23 @@ kubernetesManager:
       apiToken:
         key: Devops-Token
         value: landun
-      rsaPrivateKey: |
+      rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点
       dataPath: /data/devops/workspace
       logPath: /data/devops/logs
+  # manager使用docker相关配置，会启用特权模式容器
+  docker:
+    enable: false
+    image: docker:24.0.1-dind
+    resources:
+      requests:
+        cpu: 50m
+        memory: 512Mi
+      limits:
+        cpu: 100m
+        memory: 1024Mi
+
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true

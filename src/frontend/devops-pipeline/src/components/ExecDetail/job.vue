@@ -1,22 +1,37 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="currentJob.name"
         :status="currentJob.status"
         :current-tab="currentTab"
     >
-        <span class="head-tab" slot="tab">
-            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span>
-            <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
+        <span
+            class="head-tab"
+            slot="tab"
+        >
+            <span
+                @click="currentTab = 'log'"
+                :class="{ active: currentTab === 'log' }"
+            >{{ $t('execDetail.log') }}</span>
+            <span
+                @click="currentTab = 'setting'"
+                :class="{ active: currentTab === 'setting' }"
+            >{{ $t('execDetail.setting') }}</span>
         </span>
-        <span slot="tool"
+        <span
+            slot="tool"
             v-if="currentTab === 'setting' && showDebugDockerBtn"
             class="head-tool"
             @click="handleDebug"
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
+            <error-summary
+                v-if="activeErorr && currentTab === 'log'"
+                :error="activeErorr"
+            ></error-summary>
             <template v-if="currentTab === 'log'">
-                <plugin-log :id="currentJob.containerHashId"
+                <plugin-log
+                    :id="currentJob.containerHashId"
                     :key="currentJob.containerHashId"
                     :build-id="execDetail.id"
                     :exec-detail="execDetail"
@@ -36,12 +51,14 @@
                     ref="jobLog"
                 />
             </template>
-            <container-content v-if="currentTab === 'setting'"
+            <container-content
+                v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
                 :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
+                :pipeline="pipeline"
                 ref="container"
             />
         </template>
@@ -72,6 +89,9 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            pipeline: {
+                type: Object
             }
         },
         data () {

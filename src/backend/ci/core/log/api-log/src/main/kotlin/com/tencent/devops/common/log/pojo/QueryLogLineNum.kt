@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.log.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("日志行号查询模型")
+@Schema(title = "日志行号查询模型")
 data class QueryLogLineNum(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
+    @get:Schema(title = "是否结束", required = true)
     var finished: Boolean,
-    @ApiModelProperty("日志存储状态", required = false)
+    @get:Schema(title = "日志存储状态", required = false)
     var lastLineNum: Long
 )

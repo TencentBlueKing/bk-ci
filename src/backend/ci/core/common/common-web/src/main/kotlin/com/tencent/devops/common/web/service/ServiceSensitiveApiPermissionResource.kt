@@ -28,16 +28,24 @@
 package com.tencent.devops.common.web.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_FILE_NAME
 import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 /**
- * 验证插件是否有调用敏感接口的权限,在store中实现
+ * 验证组件是否有调用敏感接口的权限,在store中实现
  */
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -46,17 +54,45 @@ import javax.ws.rs.core.MediaType
 interface ServiceSensitiveApiPermissionResource {
 
     /**
-     * 验证api是否已经审批
+     * 验证组件是否有该api接口的权限
      *
-     * @param atomCode 组件编码
+     * @param signFileName 签名文件名称
+     * @param fileShaContent 文件sha1摘要值
+     * @param osName 操作系统名称
+     * @param osArch 操作系统CPU架构
+     * @param storeCode 组件标识
      * @param apiName api接口名称
+     * @param storeType 组件类型
+     * @param version 组件版本
      */
-    @Path("verify/{atomCode}/{apiName}")
+    @Path("verify/{storeCode}/{apiName}")
     @GET
+    @Suppress("LongParameterList")
     fun verifyApi(
-        @PathParam("atomCode")
-        atomCode: String,
+        @Parameter(description = "签名文件名称", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_FILE_NAME)
+        signFileName: String? = null,
+        @Parameter(description = "文件sha1摘要值", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+        fileShaContent: String? = null,
+        @Parameter(description = "操作系统名称", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_OS_NAME)
+        osName: String? = null,
+        @Parameter(description = "操作系统CPU架构", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_OS_ARCH)
+        osArch: String? = null,
+        @PathParam("storeCode")
+        @Parameter(description = "组件标识", required = true)
+        storeCode: String,
         @PathParam("apiName")
-        apiName: String
+        @Parameter(description = "api接口名称", required = true)
+        apiName: String,
+        @QueryParam("storeType")
+        @Parameter(description = "组件类型", required = true)
+        @DefaultValue("ATOM")
+        storeType: String = "ATOM",
+        @QueryParam("version")
+        @Parameter(description = "组件版本", required = false)
+        version: String? = null
     ): Result<Boolean>
 }

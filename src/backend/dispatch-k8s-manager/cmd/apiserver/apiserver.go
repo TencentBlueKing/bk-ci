@@ -2,10 +2,13 @@ package main
 
 import (
 	"disaptch-k8s-manager/pkg/apiserver"
+	"disaptch-k8s-manager/pkg/buildless"
 	"disaptch-k8s-manager/pkg/config"
+	"disaptch-k8s-manager/pkg/constant"
 	"disaptch-k8s-manager/pkg/cron"
 	"disaptch-k8s-manager/pkg/db/mysql"
 	"disaptch-k8s-manager/pkg/db/redis"
+	"disaptch-k8s-manager/pkg/docker"
 	"disaptch-k8s-manager/pkg/kubeclient"
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/task"
@@ -55,9 +58,15 @@ func main() {
 
 	task.InitTask()
 
+	buildless.InitBuildLess()
+
 	if err := cron.InitCronJob(); err != nil {
 		fmt.Printf("init corn job error %v\n", err)
 		os.Exit(1)
+	}
+
+	if config.Config.Docker.Enable {
+		docker.InitDockerCli()
 	}
 
 	if err := apiserver.InitApiServer(filepath.Join(outDir, "logs", config.AccessLog)); err != nil {
@@ -69,7 +78,7 @@ func main() {
 }
 
 func initConfig(configDir string) {
-	if debug == "true" {
+	if debug == "true" || os.Getenv(constant.KubernetesManagerDebugEnable) == "true" {
 		config.Envs.IsDebug = true
 	} else {
 		config.Envs.IsDebug = false

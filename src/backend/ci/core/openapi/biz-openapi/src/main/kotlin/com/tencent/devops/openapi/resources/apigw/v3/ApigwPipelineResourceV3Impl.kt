@@ -33,14 +33,15 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -61,7 +62,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).status(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -90,7 +92,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         pipeline: Model
     ): Result<Boolean> {
         logger.info("OPENAPI_PIPELINE_V3|$userId|edit|$projectId|$pipelineId")
-        return client.get(ServicePipelineResource::class).edit(
+        return client.get(ServicePipelineResource::class).editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -178,7 +180,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            checkFlag = true
         )
     }
 
@@ -210,7 +213,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )

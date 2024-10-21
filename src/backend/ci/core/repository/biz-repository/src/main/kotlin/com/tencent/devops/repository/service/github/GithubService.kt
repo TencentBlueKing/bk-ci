@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
@@ -51,7 +50,6 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_TAGS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
-import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -60,20 +58,28 @@ import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryPermissions
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
+import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -81,6 +87,7 @@ class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
     private val githubRepositoryService: GithubRepositoryService,
+    private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val client: Client
@@ -135,7 +142,14 @@ class GithubService @Autowired constructor(
         ) {
             logger.warn("conclusion and completedAt must be null or not null together")
         }
-
+        checkRuns.output?.let {
+            if (it.reportData?.second?.isNotEmpty() == true) {
+                it.text = QualityUtils.getQualityReport(
+                    titleData = it.reportData!!.first,
+                    resultData = it.reportData!!.second
+                )
+            }
+        }
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
         val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
@@ -386,6 +400,74 @@ class GithubService @Autowired constructor(
             messageCode = messageCode,
             params = params
         )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult {
+        logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            githubTokenService.getAccessToken(userId)
+        } ?: return AuthorizeResult(
+            status = HTTP_403,
+            url = githubOAuthService.getGithubOauth(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = null,
+                popupTag = "",
+                resetType = resetType
+            ).redirectUrl
+        )
+        // 校验token是否有效
+        try {
+            githubUserService.getUser(accessToken.accessToken)
+        } catch (e: Exception) {
+            return AuthorizeResult(
+                status = HTTP_403,
+                url = githubOAuthService.getGithubOauth(
+                    projectId = projectId,
+                    userId = userId,
+                    repoHashId = null,
+                    popupTag = "",
+                    resetType = resetType
+                ).redirectUrl
+            )
+        }
+        logger.info("github isOAuth accessToken is: $accessToken")
+        return AuthorizeResult(200, "")
+    }
+
+    override fun getAccessToken(userId: String): GithubToken? {
+        return githubTokenService.getAccessToken(userId)
+    }
+
+    override fun getUser(token: String): GetUserResponse? {
+        return try {
+            githubUserService.getUser(token)
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github user failed: $ignored")
+            null
+        }
+    }
+
+    override fun getRepositoryPermissions(projectName: String, userId: String, token: String): RepositoryPermissions? {
+        return try {
+            githubRepositoryService.getRepositoryPermissions(
+                request = GetRepositoryPermissionsRequest(
+                    repoName = projectName,
+                    username = userId
+                ),
+                token = token
+            )
+        } catch (ignored: Exception) {
+            logger.warn("get github repository permissions failed: $ignored")
+            null
+        }
     }
 
     companion object {

@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmOauthFactory
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
@@ -93,7 +94,9 @@ class ScmOauthService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list the branches")
         val startEpoch = System.currentTimeMillis()
@@ -109,7 +112,7 @@ class ScmOauthService @Autowired constructor(
                 region = region,
                 userName = userName,
                 event = null
-            ).getBranches(search = search)
+            ).getBranches(search = search, page, pageSize)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -223,6 +226,72 @@ class ScmOauthService @Autowired constructor(
                 event = event
             )
                 .addWebHook(hookUrl)
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
+        }
+    }
+
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): List<GitHook> {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getWebHooks()
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ) {
+        logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val realHookUrl = if (!hookUrl.isNullOrBlank()) {
+                hookUrl
+            } else {
+                when (type) {
+                    ScmType.CODE_GIT -> {
+                        gitConfig.gitHookUrl
+                    }
+                    ScmType.CODE_GITLAB -> {
+                        gitConfig.gitlabHookUrl
+                    }
+                    ScmType.CODE_TGIT -> {
+                        gitConfig.tGitHookUrl
+                    }
+                    else -> {
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
+                    }
+                }
+            }
+            ScmOauthFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event
+            )
+                .updateWebHook(hookId = hookId, hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }

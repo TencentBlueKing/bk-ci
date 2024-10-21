@@ -3,9 +3,15 @@
         <!-- <span @click="closeLog" class="log-home-close-bar">
             <i class="devops-icon icon-angle-right"></i>
         </span> -->
-        <section v-bk-clickoutside="closeLog" :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
+        <section
+            v-bk-clickoutside="closeLog"
+            :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']"
+        >
             <header class="log-head">
-                <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
+                <span class="log-title"><status-icon
+                    :status="status"
+                    :is-hook="isHook"
+                ></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -105,7 +111,7 @@
                 overflow: hidden;
             }
             .log-head {
-                background-color: rgb(37, 41, 53);
+                background-color: #2E2E2E;
                 line-height: 48px;
                 padding: 5px 20px;
                 border-bottom: 1px solid;
@@ -126,7 +132,7 @@
                 }
             }
             &.black-theme {
-                background: #1e1e1e;
+                background: #1A1A1A;
             }
             &.white-theme {
                 background: #fff;

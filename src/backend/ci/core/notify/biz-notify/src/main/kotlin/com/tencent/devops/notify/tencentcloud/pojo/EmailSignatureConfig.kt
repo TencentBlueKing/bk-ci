@@ -1,15 +1,15 @@
 package com.tencent.devops.notify.tencentcloud.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class EmailSignatureConfig(
-    @ApiModelProperty("请求体")
+    @get:Schema(title = "请求体")
     override val payload: String,
-    @ApiModelProperty("密钥id")
+    @get:Schema(title = "密钥id")
     override val secretId: String,
-    @ApiModelProperty("密钥key")
+    @get:Schema(title = "密钥key")
     override val secretKey: String,
-    @ApiModelProperty("地域参数，用来标识希望操作哪个地域的数据")
+    @get:Schema(title = "地域参数，用来标识希望操作哪个地域的数据")
     override val region: String
 ) : TencentCloudSignatureConfig(
     httpRequestMethod = "POST",

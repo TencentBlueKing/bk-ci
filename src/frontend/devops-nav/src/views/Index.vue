@@ -3,7 +3,10 @@
         v-bkloading="loadingOption"
         class="devops-index"
     >
-        <div class="user-prompt" v-if="showAnnounce">
+        <div
+            class="user-prompt"
+            v-if="showAnnounce"
+        >
             <!-- <p><i class="bk-icon icon-info-circle-shape"></i>{{currentNotice.noticeContent}}</p> -->
             <p v-html="currentNotice.noticeContent"></p>
         </div>
@@ -67,7 +70,10 @@
             </main>
         </template>
 
-        <apply-project-dialog ref="applyProjectDialog" :project-code="curProjectCode" />
+        <apply-project-dialog
+            ref="applyProjectDialog"
+            :project-code="curProjectCode"
+        />
     </div>
 </template>
 
@@ -78,7 +84,6 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
-    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         components: {
@@ -166,8 +171,6 @@
         }
 
         created () {
-            const model = location.href.split('/')[4]
-            document.title = this.$t(mapDocumnetTitle(model)) as string
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
                     params: {

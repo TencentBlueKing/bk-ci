@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
@@ -42,7 +43,9 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -116,8 +119,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_TOKEN_FAIL
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -132,9 +136,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_SERCRT_WRONG
-                ),
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_SERCRT_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
@@ -156,8 +160,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_TOKEN_FAIL
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -171,7 +176,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
@@ -200,6 +207,65 @@ class CodeGitScmImpl constructor(
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
             logger.warn("Fail to add webhook of git", ignored)
+            throw ScmException(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_TOKEN_FAIL
+                ),
+                ScmType.CODE_GIT.name
+            )
+        }
+    }
+
+    override fun getWebHooks(): List<GitHook> {
+        if (token.isEmpty()) {
+            throw ScmException(
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_TOKEN_EMPTY
+                ),
+                ScmType.CODE_GIT.name
+            )
+        }
+        try {
+            return gitApi.getHooks(apiUrl, token, projectName)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get webhook of git", ignored)
+            throw ScmException(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_TOKEN_FAIL
+                ),
+                ScmType.CODE_GIT.name
+            )
+        }
+    }
+
+    override fun updateWebHook(hookId: Long, hookUrl: String) {
+        if (token.isEmpty()) {
+            throw ScmException(
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_TOKEN_EMPTY
+                ),
+                ScmType.CODE_GIT.name
+            )
+        }
+        if (hookUrl.isEmpty()) {
+            throw ScmException(
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_HOOK_URL_EMPTY
+                ),
+                ScmType.CODE_GIT.name
+            )
+        }
+        try {
+            gitApi.updateHook(
+                host = apiUrl,
+                hookId = hookId,
+                token = token,
+                projectName = projectName,
+                hookUrl = hookUrl,
+                event = event
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to update webhook of git", ignored)
             throw ScmException(
                 ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_TOKEN_FAIL
@@ -317,6 +383,16 @@ class CodeGitScmImpl constructor(
             host = apiUrl,
             token = token,
             url = url
+        )
+    }
+
+    override fun getLoginSession(): LoginSession? {
+        val url = "session"
+        return gitApi.getGitSession(
+            host = apiUrl,
+            url = url,
+            username = privateKey!!,
+            password = passPhrase!!
         )
     }
 

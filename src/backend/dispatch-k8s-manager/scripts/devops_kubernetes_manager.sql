@@ -38,3 +38,23 @@ CREATE TABLE IF NOT EXISTS `T_KUBERNETES_MANAGER_BUILDER_SCHEDULED_INFO`
   DEFAULT CHARSET = utf8mb4 COMMENT ='Kubernetes manager 调度历史信息表';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for T_KUBERNETES_BUILDLESS_HISTORY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_KUBERNETES_BUILDLESS_HISTORY`
+(
+    `ID`          bigint(20)  NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `POD_ID`     varchar(63) NOT NULL COMMENT 'k8s pod ID',
+    `PROJECT_ID`     varchar(63) NOT NULL COMMENT '蓝盾项目ID',
+    `PIPELINE_ID`    varchar(63) NOT NULL COMMENT '流水线ID',
+    `BUILD_ID` varchar(63) NOT NULL COMMENT '构建ID',
+    `VM_SEQ_ID`      varchar(16) NOT NULL COMMENT 'JOB序列号',
+    `EXECUTION_COUNT`      varchar(16) NOT NULL COMMENT '重试次数',
+    `STATUS`      varchar(16) NOT NULL COMMENT '当前任务状态',
+    `START_TIME` timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
+    `UPDATE_TIME` timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '任务详情修改时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `IDX_POD_ID` (`POD_ID`) USING BTREE COMMENT 'POD_ID 索引'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='Kubernetes buildless构建历史表';

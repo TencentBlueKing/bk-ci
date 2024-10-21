@@ -1,61 +1,104 @@
 <template>
-    <bk-container flex :col="12">
+    <bk-container
+        flex
+        :col="12"
+    >
         <bk-row>
             <bk-col :span="9">
                 <bk-row>
-                    <bk-col :span="4.5" class="g-progress-item">
+                    <bk-col
+                        :span="4.5"
+                        class="g-progress-item"
+                    >
                         <span class="g-progress-label">{{ $t('store.名称') }} :</span>
-                        <span class="g-progress-content">{{detail.imageName}}</span>
+                        <span class="g-progress-content">{{ detail.imageName }}</span>
                     </bk-col>
-                    <bk-col :span="4.5" class="g-progress-item">
+                    <bk-col
+                        :span="4.5"
+                        class="g-progress-item"
+                    >
                         <span class="g-progress-label">{{ $t('store.标识') }} :</span>
-                        <span class="g-progress-content">{{detail.imageCode}}</span>
+                        <span class="g-progress-content">{{ detail.imageCode }}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
-                    <bk-col :span="4.5" class="g-progress-item">
+                    <bk-col
+                        :span="4.5"
+                        class="g-progress-item"
+                    >
                         <span class="g-progress-label">{{ $t('store.范畴') }} :</span>
-                        <span class="g-progress-content">{{detail.categoryName}}</span>
+                        <span class="g-progress-content">{{ detail.categoryName }}</span>
                     </bk-col>
                     
-                    <bk-col :span="4.5" class="g-progress-item">
+                    <bk-col
+                        :span="4.5"
+                        class="g-progress-item"
+                    >
                         <span class="g-progress-label">{{ $t('store.分类') }} :</span>
-                        <span class="g-progress-content">{{detail.classifyName}}</span>
+                        <span class="g-progress-content">{{ detail.classifyName }}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
-                    <bk-col :span="9" class="g-progress-item">
+                    <bk-col
+                        :span="9"
+                        class="g-progress-item"
+                    >
                         <span class="g-progress-label">{{ $t('store.功能标签') }} :</span>
                         <section class="g-progress-content label-list">
-                            <span class="label-card" v-for="(label, index) in detail.labelList" :key="index">{{ label.labelName }}</span>
+                            <span
+                                class="label-card"
+                                v-for="(label, index) in detail.labelList"
+                                :key="index"
+                            >{{ label.labelName }}</span>
                         </section>
                     </bk-col>
                 </bk-row>
             </bk-col>
             <bk-col :span="3">
-                <img v-if="detail.logoUrl" :src="detail.logoUrl" class="g-progress-image">
+                <img
+                    v-if="detail.logoUrl"
+                    :src="detail.logoUrl"
+                    class="g-progress-image"
+                >
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.适用机器') }} :</span>
                 <section class="g-progress-content label-list">
-                    <span class="label-card" v-for="(agent, index) in filterAgents" :key="index">{{ agent }}</span>
+                    <span
+                        class="label-card"
+                        v-for="(agent, index) in filterAgents"
+                        :key="index"
+                    >{{ agent }}</span>
                 </section>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.简介') }} :</span>
-                <span class="g-progress-content">{{detail.summary}}</span>
+                <span class="g-progress-content">{{ detail.summary }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.详细描述') }} :</span>
                 <section class="g-progress-content">
-                    <p :class="{ 'overflow': !isDropdownShow }" ref="edit">
-                        <mavon-editor class="image-remark-input"
+                    <p
+                        :class="{ 'overflow': !isDropdownShow }"
+                        ref="edit"
+                    >
+                        <mavon-editor
+                            class="image-remark-input"
                             ref="mdHook"
                             v-model="detail.description"
                             :editable="false"
@@ -67,47 +110,70 @@
                             preview-back-ground="#fafbfd"
                         />
                     </p>
-                    <span class="toggle-btn" v-if="isOverflow" @click="isDropdownShow = !isDropdownShow">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
+                    <span
+                        class="toggle-btn"
+                        v-if="isOverflow"
+                        @click="isDropdownShow = !isDropdownShow"
+                    >{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
                         <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                     </span>
                 </section>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.镜像') }} :</span>
-                <span class="g-progress-content">{{(detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag}}</span>
+                <span class="g-progress-content">{{ (detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.镜像凭证') }} :</span>
-                <span class="g-progress-content">{{detail.ticketId}}</span>
+                <span class="g-progress-content">{{ detail.ticketId }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.发布者') }} :</span>
-                <span class="g-progress-content">{{detail.publisher}}</span>
+                <span class="g-progress-content">{{ detail.publisher }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.发布类型') }} :</span>
-                <span class="g-progress-content">{{detail.releaseType|releaseFilter}}</span>
+                <span class="g-progress-content">{{ detail.releaseType|releaseFilter }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.版本') }} :</span>
-                <span class="g-progress-content">{{detail.version}}</span>
+                <span class="g-progress-content">{{ detail.version }}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="g-progress-item">
+            <bk-col
+                :span="12"
+                class="g-progress-item"
+            >
                 <span class="g-progress-label">{{ $t('store.发布描述') }} :</span>
                 <span class="g-progress-content">
-                    <mavon-editor class="image-remark-input"
+                    <mavon-editor
+                        class="image-remark-input"
                         ref="mdHook"
                         v-model="detail.versionContent"
                         :editable="false"

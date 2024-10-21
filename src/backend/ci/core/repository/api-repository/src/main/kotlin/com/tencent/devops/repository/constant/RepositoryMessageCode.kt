@@ -37,8 +37,8 @@ package com.tencent.devops.repository.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -73,6 +73,27 @@ object RepositoryMessageCode {
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
+    const val ERROR_REPO_ENABLE_PAC_FAIL = "2115028" // 代码库开启PAC失败。
+    const val ERROR_REPO_CI_DIR_EXISTS = "2115029" // 代码库关闭PAC失败，CI文件夹仍存在。
+    const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2115030" // 工蜂项目({0})不存在或没有权限访问
+    const val ERROR_REPO_URL_HAS_ENABLED_PAC = "2115031" // 代码库已在项目[{0}]开启pac
+    const val ERROR_REPO_NOT_ENABLED_PAC = "2115032" // 代码库没有开启pac
+    const val ERROR_AUTH_TYPE_ENABLED_PAC = "2115033" // pac模式需要使用oauth
+    const val ERROR_MEMBER_NOT_FOUND = "2115034" // 仓库成员{0}不存在
+    const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
+    const val ERROR_DEFAULT_BRANCH_IS_EMPTY = "2115036" // 默认分支不能为空
+    const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115037" // 代码库已开启PAC。
+    const val PAC_REPO_CAN_NOT_DELETE = "2115038" // 代码库已开启PAC,不能删除
+    const val PAC_REPO_CAN_NOT_RENAME = "2115039" // 代码库已开启PAC,不能重命名
+
+    const val ATOM_REPO_CAN_NOT_EDIT = "2115040" // 插件仓库不得修改
+    const val ATOM_REPO_CAN_NOT_DELETE = "2115041" // 插件仓库不得删除
+
+    const val ERROR_USER_HAVE_NOT_USED_OAUTH = "2115042" // 用户没有使用过Oauth
+    const val ERROR_USER_HAVE_NOT_DOWNLOAD_PEM = "2115043" // 用户（{0}）无（{1}）项目下载权限
+    const val NOT_GITHUB_AUTHORIZED_BY_OAUTH = "2115044" // 用户[{0}]尚未进行GITHUB OAUTH授权，请先授权。
+    const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
@@ -82,4 +103,6 @@ object RepositoryMessageCode {
     const val OPERATION_GET_TAG = "OperationGetTag" // 获取指定Tag
     const val OPERATION_LIST_BRANCHS = "OperationListBranchs" // 获取分支列表
     const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
+
+    const val TRIGGER_CONDITION_PREFIX = "trigger.condition"
 }

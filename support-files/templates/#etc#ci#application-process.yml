@@ -7,6 +7,11 @@ spring:
         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
         password: __BK_CI_MYSQL_PASSWORD__
+    archiveDataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21921
 server:
@@ -89,7 +94,17 @@ scm:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm"
+    shardingField: PROJECT_ID
+  archiveFlag: Y
 
 stream:
   scmType: __BK_CI_STREAM_SCM_TYPE__
+
+api:
+  project:
+    permission:
+      switch: true

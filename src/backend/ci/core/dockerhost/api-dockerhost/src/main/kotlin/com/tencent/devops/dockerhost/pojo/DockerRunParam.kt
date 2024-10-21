@@ -27,23 +27,22 @@
 
 package com.tencent.devops.dockerhost.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerRun")
+@Schema(title = "DockerRun")
 data class DockerRunParam(
-    @ApiModelProperty("镜像名称，包括tag", required = true)
+    @get:Schema(title = "镜像名称，包括tag", required = true)
     val imageName: String,
-    @ApiModelProperty("镜像仓库用户名", required = true)
+    @get:Schema(title = "镜像仓库用户名", required = true)
     val registryUser: String?,
-    @ApiModelProperty("镜像仓库密码", required = true)
+    @get:Schema(title = "镜像仓库密码", required = true)
     val registryPwd: String?,
-    @ApiModelProperty("命令行", required = false)
+    @get:Schema(title = "命令行", required = false)
     val command: List<String>,
-    @ApiModelProperty("环境变量", required = false)
+    @get:Schema(title = "环境变量", required = false)
     val env: Map<String, String?>?,
-    @ApiModelProperty("并发构建池序号", required = false)
+    @get:Schema(title = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @ApiModelProperty("映射端口列表", required = false)
+    @get:Schema(title = "映射端口列表", required = false)
     val portList: List<Int>? = emptyList()
 )

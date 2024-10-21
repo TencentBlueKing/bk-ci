@@ -40,6 +40,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
@@ -52,6 +53,15 @@ import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.NotFoundException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -62,15 +72,6 @@ import org.springframework.util.FileCopyUtils
 import org.springframework.util.FileSystemUtils
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("UNUSED", "TooManyFunctions", "UnusedPrivateMember", "NestedBlockDepth", "MagicNumber")
@@ -357,7 +358,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        logo: Boolean?
+        staticFlag: Boolean?
     ): String {
         logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
@@ -383,7 +384,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         uploadFileToRepo(destPath, file)
         val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
-        fileProps = fileProps.plus("shaContent" to shaContent)
+        fileProps = fileProps.plus(KEY_SHA_CONTENT to shaContent)
         val path = destPath.substring(getBasePath().length)
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->

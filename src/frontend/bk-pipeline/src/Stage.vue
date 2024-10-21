@@ -1,6 +1,12 @@
 <template>
-    <div ref="stageRef" :class="pipelineStageCls">
-        <div @click.stop="stageEntryClick" class="pipeline-stage-entry">
+    <div
+        ref="stageRef"
+        :class="pipelineStageCls"
+    >
+        <div
+            @click.stop="stageEntryClick"
+            class="pipeline-stage-entry"
+        >
             <stage-check-icon
                 v-if="isMiddleStage"
                 class="check-in-icon"
@@ -8,10 +14,14 @@
                 :stage-index="stageIndex"
                 :stage-check="stage.checkIn"
                 :is-exec-detail="reactiveData.isExecDetail"
+                :editable="reactiveData.editable"
                 :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />
-            <span :title="stageTitle" :class="stageTitleCls">
+            <span
+                :title="stageTitle"
+                :class="stageTitleCls"
+            >
                 <Logo
                     v-if="!!stageStatusIcon"
                     v-bk-tooltips="isStageSkip ? t('skipStageDesc') : { disabled: true }"
@@ -27,7 +37,11 @@
                 size="14"
                 class="stage-entry-error-icon"
             />
-            <span @click.stop v-if="reactiveData.canSkipElement" class="check-total-stage">
+            <span
+                @click.stop
+                v-else-if="reactiveData.canSkipElement"
+                class="check-total-stage"
+            >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
                     v-model="stage.runStage"
@@ -36,13 +50,26 @@
                 ></bk-checkbox>
             </span>
             <span
-                v-if="canStageRetry"
+                v-else-if="canStageRetry"
                 @click.stop="triggerStageRetry"
                 class="stage-single-retry"
             >
                 {{ t("retry") }}
             </span>
-            <span v-if="!stage.isError" class="stage-entry-btns">
+            <stage-check-icon
+                v-else-if="showStageCheck(stage.checkOut)"
+                class="check-out-icon"
+                check-type="checkOut"
+                :stage-index="stageIndex"
+                :stage-check="stage.checkOut"
+                :is-exec-detail="reactiveData.isExecDetail"
+                :user-name="reactiveData.userName"
+                :stage-status="stageStatusCls"
+            />
+            <span
+                v-else
+                class="stage-entry-btns"
+            >
                 <Logo
                     class="copy-stage"
                     v-if="showCopyStage"
@@ -57,19 +84,13 @@
                     class="add-plus-icon close"
                 />
             </span>
-            <stage-check-icon
-                v-if="showStageCheck(stage.checkOut)"
-                class="check-out-icon"
-                check-type="checkOut"
-                :stage-index="stageIndex"
-                :stage-check="stage.checkOut"
-                :is-exec-detail="reactiveData.isExecDetail"
-                :user-name="reactiveData.userName"
-                :stage-status="stageStatusCls"
-            />
         </div>
         <span class="stage-connector">
-            <Logo size="14" name="right-shape" class="connector-angle" />
+            <Logo
+                size="14"
+                name="right-shape"
+                class="connector-angle"
+            />
         </span>
         <draggable
             v-model="computedContainer"
@@ -85,9 +106,10 @@
                 :container-index="index"
                 :stage-length="stageLength"
                 :editable="reactiveData.editable"
-                :can-skip-element="isShowCheckbox"
+                :can-skip-element="reactiveData.canSkipElement"
                 :handle-change="handleChange"
                 :stage-disabled="stageDisabled"
+                :is-trigger-stage="isTriggerStage"
                 :container-length="computedContainer.length"
                 :container="container"
                 :is-finally-stage="isFinallyStage"
@@ -100,10 +122,11 @@
 
         <template v-if="reactiveData.editable">
             <span
-                v-if="!isFirstStage"
                 class="add-menu"
+                v-if="!isTriggerStage"
                 @click.stop="toggleAddMenu(!isAddMenuShow)"
             >
+                <span class="add-plus-connector"></span>
                 <i :class="{ [iconCls]: true, active: isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line
@@ -147,22 +170,22 @@
 
 <script>
     import draggable from 'vuedraggable'
-    import StageContainer from './StageContainer'
-    import Logo from './Logo'
     import CruveLine from './CruveLine'
     import InsertStageMenu from './InsertStageMenu'
+    import Logo from './Logo'
     import StageCheckIcon from './StageCheckIcon'
+    import StageContainer from './StageContainer'
     import { localeMixins } from './locale'
 
-    import { getOuterHeight, hashID, randomString, eventBus } from './util'
     import {
-        CLICK_EVENT_NAME,
         ADD_STAGE,
-        DELETE_EVENT_NAME,
+        CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
+        DELETE_EVENT_NAME,
         STAGE_RETRY,
         STATUS_MAP
     } from './constants'
+    import { eventBus, getOuterHeight, hashID, isTriggerContainer, randomString } from './util'
 
     export default {
         components: {
@@ -191,7 +214,7 @@
                 required: true
             }
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         emits: [CLICK_EVENT_NAME, ADD_STAGE, DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {
@@ -212,17 +235,22 @@
                     return false
                 }
             },
+            isTriggerStage () {
+                try {
+                    return isTriggerContainer(this.stage?.containers?.[0])
+                } catch (e) {
+                    console.warn(e)
+                    return false
+                }
+            },
             canStageRetry () {
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.reactiveData.editable && !this.isFirstStage
+                return this.isMiddleStage && this.reactiveData.editable && !this.isTriggerStage
             },
             showDeleteStage () {
-                return this.reactiveData.editable && !this.stage.isTrigger
-            },
-            isFirstStage () {
-                return this.stageIndex === 0
+                return this.reactiveData.editable && !this.isTriggerStage
             },
             isLastStage () {
                 return this.stageIndex === this.stageLength - 1
@@ -231,7 +259,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !(this.stage.isTrigger || this.isFinallyStage)
+                return !(this.isTriggerStage || this.isFinallyStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -255,7 +283,7 @@
                     'pipeline-stage',
                     {
                         'is-final-stage': this.isFinallyStage,
-                        'pipeline-drag': this.reactiveData.editable && !this.stage.isTrigger,
+                        'pipeline-drag': this.reactiveData.editable && !this.isTriggerStage,
                         readonly: !this.reactiveData.editable || this.stageDisabled,
                         editable: this.reactiveData.editable,
                         'un-exec-this-time': this.reactiveData.isExecDetail && this.isUnExecThisTime
@@ -315,7 +343,7 @@
                 return this.stage && this.stage.status ? this.stage.status : ''
             },
             disableFinally () {
-                return this.hasFinallyStage || this.stageLength === 1
+                return this.hasFinallyStage
             },
             isStageSkip () {
                 return this.stage.status === STATUS_MAP.SKIP
@@ -391,7 +419,7 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = relatedelement.isTrigger
+                const isTriggerStage = isTriggerContainer(relatedelement?.containers?.[0])
                 const isFinallyStage = relatedelement.finally === true
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage
@@ -429,6 +457,7 @@
             },
             handleCopyContainer ({ containerIndex, container }) {
                 this.stage.containers.splice(containerIndex + 1, 0, container)
+                this.emitPipelineChange()
             },
             handleDeleteContainer ({ containerIndex }) {
                 if (Number.isInteger(containerIndex)) {
@@ -436,6 +465,7 @@
                 } else {
                     this.deleteStageHandler()
                 }
+                this.emitPipelineChange()
             },
             copyStage () {
                 try {
@@ -690,6 +720,15 @@ $entryBtnWidth: 80px;
     }
     .parallel-add {
       left: 50px;
+    }
+
+    .add-plus-connector {
+        position: absolute;
+        width: 24px;
+        height: 2px;
+        left: 17px;
+        top: 8px;
+        background-color: $primaryColor;
     }
   }
 

@@ -58,7 +58,8 @@ interface ProjectPermissionService {
 
     fun filterProjects(
         userId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String? = null
     ): List<String>?
 
     fun verifyUserProjectPermission(

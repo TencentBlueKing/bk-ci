@@ -28,14 +28,14 @@
 package com.tencent.devops.common.event.listener.trace
 
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 abstract class BaseTraceListener<in T : ITraceEvent>(val traceEventDispatcher: TraceEventDispatcher) :
-    Listener<T> {
+    EventListener<T> {
 
     companion object {
         private const val TryTime = 3

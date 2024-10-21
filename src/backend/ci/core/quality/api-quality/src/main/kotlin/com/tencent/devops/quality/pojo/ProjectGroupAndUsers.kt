@@ -27,15 +27,16 @@
 
 package com.tencent.devops.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-项目用户组和所有人员")
+@Schema(title = "质量红线-项目用户组和所有人员")
 data class ProjectGroupAndUsers(
-    @ApiModelProperty("组名称")
+    @get:Schema(title = "组名称")
     val groupName: String,
-    @ApiModelProperty("组ID")
+    @get:Schema(title = "组ID")
     val groupId: String,
-    @ApiModelProperty("组员")
+    @get:Schema(title = "组数字ID")
+    val groupRoleId: Int,
+    @get:Schema(title = "组员")
     val users: Set<String>
 )

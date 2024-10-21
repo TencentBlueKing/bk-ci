@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
@@ -47,11 +49,12 @@ class OpenArtifactoryResourceImpl(
     private val client: Client
 ) : OpenArtifactoryResource {
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun updateArtifactList(
         token: String,
         nodeCreatedEventPayload: NodeCreatedEventPayload
     ) {
-        val validateTokenFlag = clientTokenService.checkToken(null, token)
+        val validateTokenFlag = clientTokenService.checkToken(token)
         if (!validateTokenFlag) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

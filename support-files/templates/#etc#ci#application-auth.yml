@@ -29,3 +29,13 @@ itsm:
 codecc:
   openapi:
     token: __BK_CI_CODECC_OPENAPI_TOKEN__
+
+# 是否开启创建蓝盾项目同步注册监控空间，并注册监控权限资源
+monitor:
+  register: __BK_CI_MONITOR_REGISTER__
+  url: __BK_CI_MONITOR_URL__
+  iamSystem: __BK_CI_MONITOR_IAM_SYSTEM__
+
+# auth 服务加密，可修改
+aes:
+  auth: __BK_CI_AUTH_AES_AUTH_KEY__

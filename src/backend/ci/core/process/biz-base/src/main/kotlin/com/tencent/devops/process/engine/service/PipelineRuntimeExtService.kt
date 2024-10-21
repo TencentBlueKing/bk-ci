@@ -52,8 +52,8 @@ class PipelineRuntimeExtService @Autowired constructor(
         val redisLock = PipelineNextQueueLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getOneQueueBuild(dslContext, projectId = projectId, pipelineId = pipelineId)
+            val buildInfo = pipelineBuildDao.getOneQueueBuild(
+                dslContext, projectId = projectId, pipelineId = pipelineId
             )
             if (buildInfo != null) {
                 pipelineBuildDao.updateStatus(
@@ -106,13 +106,11 @@ class PipelineRuntimeExtService @Autowired constructor(
         buildId: String? = null,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getOneConcurrencyQueueBuild(
-                dslContext = dslContext,
-                projectId = projectId,
-                concurrencyGroup = concurrencyGroup,
-                pipelineId = pipelineId
-            )
+        val buildInfo = pipelineBuildDao.getOneConcurrencyQueueBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            pipelineId = pipelineId
         )
         val updateBuildId = buildId ?: buildInfo?.buildId
         if (buildInfo != null && updateBuildId == buildInfo.buildId) {
@@ -129,18 +127,12 @@ class PipelineRuntimeExtService @Autowired constructor(
     }
 
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
-        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId, buildId)
-        try {
-            redisLock.lock()
-            return pipelineBuildDao.updateStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                oldBuildStatus = buildStatus,
-                newBuildStatus = BuildStatus.UNEXEC
-            )
-        } finally {
-            redisLock.unlock()
-        }
+        return pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            oldBuildStatus = buildStatus,
+            newBuildStatus = BuildStatus.UNEXEC
+        )
     }
 }

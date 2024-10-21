@@ -28,9 +28,9 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,48 +41,48 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["EXTERNAL_GITHUB"], description = "External-Github")
+@Tag(name = "EXTERNAL_GITHUB", description = "External-Github")
 @Path("/external/github/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalGithubResource {
 
-    @ApiOperation("Github仓库提交")
+    @Operation(summary = "Github仓库提交")
     @POST
     @Path("/webhook/commit")
     fun webhookCommit(
-        @ApiParam(value = "事件类型", required = true)
+        @Parameter(description = "事件类型", required = true)
         @HeaderParam("X-GitHub-Event")
         event: String,
-        @ApiParam(value = "事件ID", required = true)
+        @Parameter(description = "事件ID", required = true)
         @HeaderParam("X-Github-Delivery")
         guid: String,
-        @ApiParam(value = "secretKey签名(sha1)", required = true)
+        @Parameter(description = "secretKey签名(sha1)", required = true)
         @HeaderParam("X-Hub-Signature")
         signature: String,
         body: String
     ): Result<Boolean>
 
-    @ApiOperation("Github apps 回调")
+    @Operation(summary = "Github apps 回调")
     @GET
     @Path("/oauth/callback")
     fun oauthCallback(
-        @ApiParam(value = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @ApiParam(value = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response
 
-    @ApiOperation("Oauth apps 回调")
+    @Operation(summary = "Oauth apps 回调")
     @GET
     @Path("/oauthApp/callback")
     fun oauthAppCallback(
-        @ApiParam(value = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @ApiParam(value = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response

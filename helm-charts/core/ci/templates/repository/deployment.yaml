@@ -13,7 +13,7 @@ metadata:
 spec:
   strategy:
     rollingUpdate:
-      maxSurge: 1
+      maxSurge: 25%
       maxUnavailable: 0
     type: RollingUpdate
   selector:
@@ -142,7 +142,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - sleep 10 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
+                  - sleep 20 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data

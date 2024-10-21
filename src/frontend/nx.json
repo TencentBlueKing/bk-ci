@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "public:master": {
+      "dependsOn": [
+        "^public:master"
+      ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{workspaceRoot}/frontend"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": [
+        "^public:master"
+      ],
+      "cache": true
+    }
+  },
+  "defaultBase": "master"
+}
