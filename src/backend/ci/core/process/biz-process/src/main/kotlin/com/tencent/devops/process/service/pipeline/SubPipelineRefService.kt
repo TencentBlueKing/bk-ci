@@ -167,7 +167,7 @@ class SubPipelineRefService @Autowired constructor(
                         pipelineName = pipelineName,
                         subPipelineRefList = subPipelineRefList,
                         contextMap = contextMap,
-                        stageIndex = stageIndex + 1
+                        stageIndex = stageIndex
                     )
                 }
             }
