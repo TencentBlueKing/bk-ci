@@ -347,7 +347,7 @@ open class DefaultModelCheckPlugin constructor(
         elementHolders: MutableMap<String, MutableList<ElementHolder>>
     ) {
         elementHolders.forEach { (atomCode, elements) ->
-            ElementBizRegistrar.getPluginService().filter { it.supportAtomCode(atomCode) }.forEach {
+            ElementBizRegistrar.getPluginService().values.filter { it.supportAtomCode(atomCode) }.forEach {
                 it.batchCheck(elements = elements, param = param)
             }
         }

@@ -32,7 +32,6 @@ import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * element编排插件注册器
@@ -43,7 +42,7 @@ object ElementBizRegistrar {
 
     private val elementPluginMaps = ConcurrentHashMap<String, ElementBizPlugin<*>>()
 
-    private val elementPluginServices = ConcurrentSkipListSet<IElementBizPluginService>()
+    private val elementPluginServices = ConcurrentHashMap<String, IElementBizPluginService>()
 
     /**
      * 注册[elementBizPlugin]流水线插件任务的编排插件处理器
@@ -65,8 +64,8 @@ object ElementBizRegistrar {
      * 注册插件服务
      */
     fun register(elementBizPluginService: IElementBizPluginService) {
-        logger.info("[REGISTER] plugin service| ${elementBizPluginService.javaClass}")
-        elementPluginServices.add(elementBizPluginService)
+        logger.info("[REGISTER] plugin service| ${elementBizPluginService.javaClass.name}")
+        elementPluginServices[elementBizPluginService::javaClass.name] = elementBizPluginService
     }
 
     /**
