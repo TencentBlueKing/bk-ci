@@ -176,6 +176,20 @@
                     name="buildResource"
                 />
             </form-field>
+            
+            <form-field
+                v-if="isLinuxOsDockerImage"
+            >
+                <LinuxOsDockerImage
+                    :editable="editable"
+                    :container="container"
+                    :version-list="versionList"
+                    :is-version-loading="isVersionLoading"
+                    :image-type-list="imageTypeList"
+                    :choose-image="chooseImage"
+                    :handle-container-change="handleContainerChange"
+                />
+            </form-field>
 
             <!-- windows公共构建机类型 -->
             <template v-if="buildResourceType === 'WINDOWS'">
@@ -442,10 +456,9 @@
                 />
             </div>
         </div>
-
         <image-selector
             :is-show.sync="showImageSelector"
-            v-if="showImagePublicTypeList.includes(buildResourceType)"
+            v-if="showImagePublicTypeList.includes(buildResourceType) || isLinuxOsDockerImage"
             :code="buildImageCode"
             :build-resource-type="buildResourceType"
             @choose="choose"
@@ -462,6 +475,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import LinuxOsDockerImage from './LinuxOsDockerImage'
     import Vue from 'vue'
     import { mapActions, mapGetters } from 'vuex'
     import BuildParams from './BuildParams'
@@ -491,7 +505,8 @@
             AtomCheckbox,
             ImageSelector,
             SelectInput,
-            CustomEnvField
+            CustomEnvField,
+            LinuxOsDockerImage
         },
         props: {
             containerIndex: Number,
@@ -623,10 +638,10 @@
                 return this.container.dispatchType.imageType
             },
             isBkStoreImageType () {
-                return this.buildImageType === 'BKSTORE'
+                return this.buildImageType === 'BKSTORE' || this.linuxOsDockerBuildImageType === 'BKSTORE'
             },
             buildImageCode () {
-                return this.container.dispatchType && this.container.dispatchType.imageCode
+                return this.container?.dispatchType?.imageCode || this.container?.dispatchType?.dockerInfo?.storeImage?.imageCode
             },
             buildImageVersion () {
                 return this.container.dispatchType.imageVersion
@@ -700,6 +715,15 @@
                     })
                 })
                 return jobIdList
+            },
+            isLinuxOsDockerImage () {
+                return this.container.baseOS === 'LINUX' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(this.buildResourceType)
+            },
+            dockerInfo () {
+                return this.container.dispatchType?.dockerInfo || {}
+            },
+            linuxOsDockerBuildImageType () {
+                return this.container.dispatchType?.dockerInfo?.imageType
             }
         },
         watch: {
@@ -756,8 +780,8 @@
                     })
                 )
             }
-            if (this.container.dispatchType?.imageCode) {
-                this.getVersionList(this.container.dispatchType.imageCode)
+            if (this.buildImageCode) {
+                this.getVersionList(this.buildImageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
             if (this.buildResourceType === 'WINDOWS') this.getWinData()
@@ -792,13 +816,14 @@
                         imageName: defaultBuildResource.name || '',
                         imageType: defaultBuildResource.imageType || '',
                         recommendFlag: defaultBuildResource.recommendFlag,
+                        dockerInfo: {},
                         [name]: val
                     })
                 )
                 if (val === 'MACOS') this.getMacOsData()
                 if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType?.imageCode) {
-                    this.getVersionList(this.container.dispatchType.imageCode)
+                    this.getVersionList(this.buildImageCode)
                 }
             },
 
@@ -813,40 +838,90 @@
             },
 
             changeImageVersion (value) {
-                this.handleContainerChange(
-                    'dispatchType',
-                    Object.assign({
-                        ...this.container.dispatchType,
-                        imageVersion: value,
-                        value: this.buildImageCode
-                    })
-                )
+                if (this.isLinuxOsDockerImage) {
+                    this.handleContainerChange(
+                        'dispatchType',
+                        Object.assign({
+                            ...this.container.dispatchType,
+                            dockerInfo: {
+                                ...this.container.dispatchType.dockerInfo,
+                                storeImage: {
+                                    ...this.container.dispatchType.dockerInfo.storeImage,
+                                    imageVersion: value
+                                }
+                            }
+                        })
+                    )
+                } else {
+                    this.handleContainerChange(
+                        'dispatchType',
+                        Object.assign({
+                            ...this.container.dispatchType,
+                            imageVersion: value,
+                            value: this.buildImageCode
+                        })
+                    )
+                }
             },
 
             choose (card) {
-                this.handleContainerChange(
-                    'dispatchType',
-                    Object.assign({
-                        ...this.container.dispatchType,
-                        imageCode: card.code,
-                        imageName: card.name,
-                        recommendFlag: card.recommendFlag
-                    })
-                )
+                if (this.isLinuxOsDockerImage) {
+                    this.handleContainerChange(
+                        'dispatchType',
+                        Object.assign({
+                            ...this.container.dispatchType,
+                            recommendFlag: card.recommendFlag,
+                            dockerInfo: {
+                                ...this.container.dispatchType.dockerInfo,
+                                storeImage: {
+                                    imageCode: card.code,
+                                    imageName: card.name
+                                }
+                            }
+                        })
+                    )
+                } else {
+                    this.handleContainerChange(
+                        'dispatchType',
+                        Object.assign({
+                            ...this.container.dispatchType,
+                            imageCode: card.code,
+                            imageName: card.name,
+                            recommendFlag: card.recommendFlag
+                        })
+                    )
+                }
+                    
                 return this.getVersionList(card.code).then(() => {
                     let chooseVersion = this.versionList[0] || {}
                     if (card.historyVersion) {
                         chooseVersion
                             = this.versionList.find((x) => x.versionValue === card.historyVersion) || {}
                     }
-                    this.handleContainerChange(
-                        'dispatchType',
-                        Object.assign({
-                            ...this.container.dispatchType,
-                            imageVersion: chooseVersion.versionValue,
-                            value: card.code
-                        })
-                    )
+                    if (this.isLinuxOsDockerImage) {
+                        this.handleContainerChange(
+                            'dispatchType',
+                            Object.assign({
+                                ...this.container.dispatchType,
+                                dockerInfo: {
+                                    ...this.container.dispatchType.dockerInfo,
+                                    storeImage: {
+                                        ...this.container.dispatchType.dockerInfo.storeImage,
+                                        imageVersion: chooseVersion.versionValue
+                                    }
+                                }
+                            })
+                        )
+                    } else {
+                        this.handleContainerChange(
+                            'dispatchType',
+                            Object.assign({
+                                ...this.container.dispatchType,
+                                imageVersion: chooseVersion.versionValue,
+                                value: card.code
+                            })
+                        )
+                    }
                 })
             },
 
@@ -1125,6 +1200,9 @@
                     cursor: not-allowed;
                 }
             }
+        }
+        .image-tag {
+            flex: 1;
         }
     }
 

@@ -433,7 +433,7 @@
                 })
             },
             leaveConfirm (to, from, next) {
-                if (this.template.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
+                if (this.template?.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
                     next(true)
                     return
                 }

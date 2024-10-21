@@ -29,11 +29,11 @@
 package com.tencent.devops.auth.provider.rbac.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
+@Event(StreamBinding.AUTH_RESOURCE_GROUP_CREATE)
 data class AuthResourceGroupCreateEvent(
     @get:Schema(title = "分级管理员ID或二级管理员ID")
     val managerId: Int,

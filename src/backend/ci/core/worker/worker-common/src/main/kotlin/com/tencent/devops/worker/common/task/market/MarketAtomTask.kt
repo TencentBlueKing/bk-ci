@@ -56,8 +56,11 @@ import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
+import com.tencent.devops.dispatch.constants.ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE
+import com.tencent.devops.dispatch.constants.ENV_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
@@ -73,6 +76,8 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_PARENT_ELEMENT_ID
+import com.tencent.devops.store.pojo.common.ATOM_POST_PARENT_TASK_ID
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
@@ -254,7 +259,6 @@ open class MarketAtomTask : ITask() {
             // 开关关闭则不再写入插件私有配置到input.json中
             inputVariables.putAll(getAtomSensitiveConfMap(atomCode))
         }
-        writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
@@ -315,14 +319,20 @@ open class MarketAtomTask : ITask() {
                     runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH] = atomExecutePath
                 }
             }
-            val additionalOptions = taskParams["additionalOptions"]
             // 获取插件post操作入口参数
+            val additionalOptions = taskParams[Element::additionalOptions.name]
             var postEntryParam: String? = null
             if (additionalOptions != null) {
                 val additionalOptionMap = JsonUtil.toMutableMap(additionalOptions)
                 val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
+                val parentTaskId = elementPostInfoMap?.get(ATOM_POST_PARENT_ELEMENT_ID)?.toString()
+                if (!parentTaskId.isNullOrBlank()) {
+                    inputVariables[ATOM_POST_PARENT_TASK_ID] = parentTaskId
+                }
             }
+
+            writeInputFile(atomTmpSpace, inputVariables)
             val atomTarget = atomRunConditionHandleService.handleAtomTarget(
                 target = atomData.target!!,
                 osType = AgentEnv.getOS(),
@@ -431,16 +441,16 @@ open class MarketAtomTask : ITask() {
         } else {
             // 如果是公共构建机，插件包缓存放入流水线的工作空间上一级目录中
             // 如果workspace路径是相对路径.，workspace.parentFile会为空，故需用file对象包装一下
-            File(workspace.parentFile, "").absolutePath
+            File(workspace.parentFile, "cache").absolutePath
         }
         val fileCacheDir = "$cacheDirPrefix${File.separator}$atomExecuteFileDir"
         // 获取构建机缓存文件区域大小
         val maxFileCacheSize = if (BuildEnv.isThirdParty()) {
-            AgentEnv.getEnvProp(AgentEnv.THIRD_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
-                ?: DEFAULT_THIRD_HOST_MAX_FILE_CACHE_SIZE
+            AgentEnv.getEnvProp(ENV_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE)?.toLong()
+                ?: DEFAULT_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE
         } else {
-            AgentEnv.getEnvProp(AgentEnv.PUBLIC_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
-                ?: DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
+            AgentEnv.getEnvProp(ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE)?.toLong()
+                ?: DEFAULT_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE
         }
         logger.info("getDiskLruFileCache fileCacheDir:$fileCacheDir,maxFileCacheSize:$maxFileCacheSize")
         val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, maxFileCacheSize)
@@ -1103,8 +1113,8 @@ open class MarketAtomTask : ITask() {
         private const val DIR_ENV = "bk_data_dir"
         private const val INPUT_ENV = "bk_data_input"
         private const val OUTPUT_ENV = "bk_data_output"
-        private const val DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE = 209715200L
-        private const val DEFAULT_THIRD_HOST_MAX_FILE_CACHE_SIZE = 2147483648L
+        private const val DEFAULT_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE = 209715200L
+        private const val DEFAULT_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE = 2147483648L
         private val logger = LoggerFactory.getLogger(MarketAtomTask::class.java)
     }
 }

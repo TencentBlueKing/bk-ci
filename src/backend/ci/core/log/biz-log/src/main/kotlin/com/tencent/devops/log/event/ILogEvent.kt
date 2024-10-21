@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.event
 
-import com.tencent.devops.common.stream.pojo.IEvent
+import com.tencent.devops.common.event.pojo.IEvent
 
 open class ILogEvent(
     open val buildId: String,

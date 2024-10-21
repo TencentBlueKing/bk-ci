@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.common
 
-const val BS_TASK_HOST = "_bsTaskHost_"
 const val BS_ATOM_STATUS_REFRESH_DELAY_MILLS = "_bsDelayMills_"
 const val BS_ATOM_START_TIME_MILLS = "_bsAtomStartTimeMills_"
 const val BS_ATOM_LOOP_TIMES = "_bsAtomLoopTimes_"

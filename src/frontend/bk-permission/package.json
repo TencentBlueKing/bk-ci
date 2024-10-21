@@ -1,10 +1,10 @@
 {
   "name": "bk-permission",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
-    "dev": "bk-cli-service-webpack dev",
+    "dev": "nx exec -- bk-cli-service-webpack dev",
     "build": "bk-cli-service-webpack build",
     "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix",
     "public": "webpack  --mode production",

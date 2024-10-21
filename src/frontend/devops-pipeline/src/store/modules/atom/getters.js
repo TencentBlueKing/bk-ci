@@ -51,6 +51,9 @@ export default {
     onlyBranchPipeline: state => {
         return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
     },
+    isCommittingPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+    },
     isReleaseVersion: state => {
         return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
     },
@@ -363,15 +366,16 @@ export default {
         return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
     },
     isThirdDockerContainer: state => container => {
-        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
+        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
-        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
+
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
