@@ -779,7 +779,6 @@
                 this.selectedTableColumn = [
                     { id: 'pipelineName' },
                     { id: 'ownGroupName' },
-                    { id: 'label' },
                     { id: 'latestExec' },
                     { id: 'lastExecTime' },
                     { id: 'lastModify' },
