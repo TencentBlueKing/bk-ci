@@ -76,7 +76,7 @@ object YamlObjects {
         val type = props?.type
         val va = Variable(
             value = if (type == VariablePropType.REPO_REF.value) {
-                variable["value"]?: mapOf<String,String>()
+                variable["value"] ?: mapOf<String, String>()
             } else {
                 variable["value"]?.toString()
             },
