@@ -371,29 +371,32 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            // 获取组件当前初始化项目
-            val initProjectInfo = storeProjectRelDao.getInitProjectInfoByStoreCode(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType.type.toByte()
-            )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            storeProjectRelDao.deleteUserStoreTestProject(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
-                userId = initProjectInfo.creator,
-                storeType = storeProjectInfo.storeType,
                 storeCode = storeProjectInfo.storeCode,
-                storeProjectType = StoreProjectTypeEnum.TEST
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
                 storeType = storeProjectInfo.storeType.type.toByte(),
-                storeCode = storeProjectInfo.storeCode,
                 projectCode = storeProjectInfo.projectId,
-                type = StoreProjectTypeEnum.TEST.type.toByte()
+                userId = storeProjectInfo.userId
             )
+            if (testProjectInfo == null) {
+                storeProjectRelDao.deleteUserStoreTestProject(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType,
+                    storeCode = storeProjectInfo.storeCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
+                )
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType.type.toByte(),
+                    storeCode = storeProjectInfo.storeCode,
+                    projectCode = storeProjectInfo.projectId,
+                    type = StoreProjectTypeEnum.TEST.type.toByte()
+                )
+            }
             val storeRepoHashId =
                 storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
             storeRepoHashId?.let {
