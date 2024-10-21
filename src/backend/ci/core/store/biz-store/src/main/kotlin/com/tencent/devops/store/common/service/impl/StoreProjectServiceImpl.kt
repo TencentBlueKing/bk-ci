@@ -371,12 +371,6 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            // 获取组件当前初始化项目
-            val initProjectInfo = storeProjectRelDao.getInitProjectInfoByStoreCode(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType.type.toByte()
-            )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
             val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
@@ -401,22 +395,6 @@ class StoreProjectServiceImpl @Autowired constructor(
                     storeCode = storeProjectInfo.storeCode,
                     projectCode = storeProjectInfo.projectId,
                     type = StoreProjectTypeEnum.TEST.type.toByte()
-                )
-            }
-            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType
-            )
-            storePipelineRel?.let {
-                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
-                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
-                client.get(ServicePipelineResource::class).delete(
-                    userId = userId,
-                    pipelineId = it.pipelineId,
-                    channelCode = ChannelCode.AM,
-                    projectId = initProjectInfo.projectCode,
-                    checkFlag = false
                 )
             }
             val storeRepoHashId =
