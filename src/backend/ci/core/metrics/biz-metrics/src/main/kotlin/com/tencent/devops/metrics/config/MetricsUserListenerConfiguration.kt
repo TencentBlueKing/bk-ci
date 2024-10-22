@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class MetricsUserListenerConfiguration {
     @EventConsumer
-    fun buildMetricsUserListener(
+    fun buildMetricsUserConsumer(
         @Autowired buildMetricsUserListener: BuildMetricsUserListener
     ) = ScsConsumerBuilder.build<PipelineBuildStatusBroadCastEvent> { buildMetricsUserListener.execute(it) }
 }
