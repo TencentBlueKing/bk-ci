@@ -54,28 +54,16 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         )
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
         val bkConfigJsonFile = File(storeArchivePath, CONFIG_JSON_NAME)
-        var signFilePaths: MutableList<String>? = null
         if (bkConfigJsonFile.exists()) {
-            val bkConfigJsonMap = JsonUtil.toMap(bkConfigJsonFile.readText())
-            val osInfos = bkConfigJsonMap[KEY_OS] as? List<Map<String, Any>>
-            signFilePaths = osInfos?.map { it[KEY_PACKAGE_PATH] as String }?.toMutableList()
             // 删除原压缩包
             File(storeArchivePath, disposition.fileName).deleteRecursively()
-        }
-        if (signFilePaths.isNullOrEmpty() && storeType == StoreTypeEnum.DEVX) {
-            signFilePaths = mutableListOf(disposition.fileName)
-            // 如果压缩包内没有配置签名文件则把已解压的文件删除
-            File(storeArchivePath).listFiles()?.filter { it.name != disposition.fileName }?.forEach { file ->
-                file.deleteRecursively()
-            }
         }
         directoryIteration(
             directoryFile = File(storeArchivePath),
             prefix = "${getStoreArchiveBasePath()}/${getPkgFileTypeDir(storeType)}",
             directoryPath = storeArchivePath,
             repoName = getBkRepoName(storeType),
-            storeType = storeType,
-            signFilePaths = signFilePaths
+            storeType = storeType
         )
         val frontendDir = buildStoreFrontendPath(storeType, storeCode, version)
         frontendDir?.let {
@@ -94,8 +82,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         prefix: String,
         directoryPath: String,
         repoName: String,
-        storeType: StoreTypeEnum,
-        signFilePaths: MutableList<String>? = null
+        storeType: StoreTypeEnum
     ) {
         directoryFile.walk().filter { it.path != directoryPath }.forEach { file ->
             if (file.isDirectory) {
@@ -104,13 +91,12 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                     prefix = prefix,
                     directoryPath = file.path,
                     repoName = repoName,
-                    storeType = storeType,
-                    signFilePaths = signFilePaths
+                    storeType = storeType
                 )
             } else {
                 val path = file.path.removePrefix(prefix)
                 logger.debug("uploadLocalFile fileName=${file.name}|path=$path")
-                val uploadRepoName = getUploadRepoName(signFilePaths, repoName, path)
+                val uploadRepoName = getUploadRepoName(repoName, storeType)
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
                     projectId = getBkRepoProjectId(storeType),
@@ -127,33 +113,24 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     }
 
     private fun getUploadRepoName(
-        signFilePaths: MutableList<String>?,
         repoName: String,
-        path: String
+        storeType: StoreTypeEnum
     ): String {
-        val uploadRepoName = when {
-            signFilePaths.isNullOrEmpty() -> repoName
-            else -> {
-                val signFilePath = signFilePaths.firstOrNull { path.endsWith(it) }
-                // 需要签名的文件先上传到临时仓库，待签名完成后再上传到正式仓库
-                if (signFilePath != null) {
-                    signFilePaths.remove(signFilePath)
-                    "$repoName-tmp"
-                } else {
-                    repoName
-                }
-            }
+        return if (storeType == StoreTypeEnum.DEVX) {
+            // devx应用的文件先上传到临时仓库，待签名完成后再上传到正式仓库
+            "$repoName-tmp"
+        } else {
+            repoName
         }
-        return uploadRepoName
     }
 
-    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
+    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {
         val tmpFile = DefaultPathUtils.randomFile()
         return try {
             bkRepoClient.downloadFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = getBkRepoProjectId(storeType),
-                repoName = getBkRepoName(storeType),
+                repoName = repoName ?: getBkRepoName(storeType),
                 fullPath = filePath,
                 destFile = tmpFile
             )
