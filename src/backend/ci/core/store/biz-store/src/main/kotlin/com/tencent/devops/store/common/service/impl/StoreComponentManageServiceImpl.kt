@@ -406,10 +406,17 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             projectCode = projectCode, storeCode = storeCode, storeType = storeType.type.toByte()
         )
         if (!checkFlag) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
-                params = arrayOf(projectCode, storeCode)
-            )
+            if (projectCode.isNotBlank()) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
+                    params = arrayOf(projectCode, storeCode)
+                )
+            } else {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                    params = arrayOf(storeCode)
+                )
+            }
         }
         return Result(true)
     }

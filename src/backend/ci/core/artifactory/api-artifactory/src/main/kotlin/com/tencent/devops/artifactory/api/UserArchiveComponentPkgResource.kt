@@ -41,6 +41,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -100,6 +101,7 @@ interface UserArchiveComponentPkgResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        @DefaultValue("")
         projectId: String,
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
