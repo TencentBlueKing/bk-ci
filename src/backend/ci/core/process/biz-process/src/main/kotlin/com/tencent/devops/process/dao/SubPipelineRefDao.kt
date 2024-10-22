@@ -147,15 +147,20 @@ class SubPipelineRefDao {
 
     fun batchDelete(
         dslContext: DSLContext,
-        ids: List<Long>
+        infos: List<Triple<String,String,String>>
     ) {
-        if (ids.isEmpty()) {
+        if (infos.isEmpty()) {
             return
         }
+        val refRecords = infos.map {
+            TPipelineSubRefRecord()
+                .setProjectId(it.first)
+                .setPipelineId(it.second)
+                .setTaskId(it.third)
+        }
         with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
-            dslContext.deleteFrom(this).where(
-                ID.`in`(ids)
-            ).execute()
+            dslContext.batchDelete(refRecords)
+                .execute()
         }
     }
 }

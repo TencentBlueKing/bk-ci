@@ -51,6 +51,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Suppress("ALL")
@@ -60,6 +61,7 @@ class SubPipelineRefService @Autowired constructor(
     private val modelTaskDao: PipelineModelTaskDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val subPipelineRefDao: SubPipelineRefDao,
+    @Lazy
     private val subPipelineService: SubPipelineCheckService
 ) {
     companion object {
@@ -181,10 +183,10 @@ class SubPipelineRefService @Autowired constructor(
                     pipelineId = pipelineId
                 )
                 val targetRefs = subPipelineRefList.associateBy { "${it.pipelineId}_${it.element.id}" }
-                val needDeleteIds = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
-                    .map { it.id }
+                val needDeleteInfos = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
+                    .map { Triple(it.projectId, it.pipelineId, it.taskId) }
                 // 删除无效数据
-                subPipelineRefDao.batchDelete(dslContext = transaction, ids = needDeleteIds)
+                subPipelineRefDao.batchDelete(dslContext = transaction, infos = needDeleteInfos)
                 // 添加新数据
                 subPipelineRefDao.batchAdd(
                     dslContext = transaction,
