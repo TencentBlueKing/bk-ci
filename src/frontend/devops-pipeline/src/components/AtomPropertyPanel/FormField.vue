@@ -85,7 +85,7 @@
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
-                        { label.trim() && (desc.trim() || customDesc) && <bk-popover placement="top" theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
+                        { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
                                 <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
                                 <div slot="content">
                                     {
