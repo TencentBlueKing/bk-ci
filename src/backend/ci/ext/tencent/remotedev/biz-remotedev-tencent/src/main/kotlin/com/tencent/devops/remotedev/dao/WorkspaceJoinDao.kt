@@ -262,13 +262,7 @@ class WorkspaceJoinDao {
 
         if (!search.sips.isNullOrEmpty()) {
             conditions.add(
-                TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(
-                    search.sips?.joinToString(
-                        separator = "$|^[^.]+.",
-                        prefix = "^[^.]+.",
-                        postfix = "$"
-                    )
-                )
+                TWorkspace.T_WORKSPACE.IP.`in`(search.sips)
             )
         }
 
