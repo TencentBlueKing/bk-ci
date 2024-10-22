@@ -166,7 +166,9 @@ class NotifyControl @Autowired constructor(
         }
 
         // 给拥有者的客户端发送消息
-        if (notifyData.notifyType == null || notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true) {
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true
+        ) {
             workspace.forEach { ws ->
                 notify4User(
                     userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
@@ -207,7 +209,6 @@ class NotifyControl @Autowired constructor(
                 )
             )
         }
-
     }
 
     fun notify4RemoteDevManager(
