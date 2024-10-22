@@ -44,6 +44,7 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
@@ -115,7 +116,9 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     storeType = storeType,
                     storeCode = storeCode,
                     version = version,
-                    configFileContent = bkConfigJsonFile.readText()
+                    queryComponentPkgEnvInfoParam = QueryComponentPkgEnvInfoParam(
+                        configFileContent = bkConfigJsonFile.readText()
+                    )
                 ).data
             } else {
                 listOf(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
