@@ -73,13 +73,13 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
 open class BkRepoDownloadService @Autowired constructor(
@@ -240,6 +240,110 @@ open class BkRepoDownloadService @Autowired constructor(
         """.trimIndent()
     }
 
+    override fun outerHapJson5Content(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String {
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
+        )
+
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
+
+        val creatorId = if (experienceHashId != null) {
+            val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
+            if (experience.isOk() && experience.data != null) {
+                experience.data!!.creator
+            } else {
+                userId
+            }
+        } else {
+            userId
+        }
+
+        // 获取IP下载链接
+        val hapExternalDownloadUrl = outerDownloadUrlByToken(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath,
+            ttl = ttl
+        )
+
+        // 获取IPA属性
+        val repoName = RepoUtils.getRepoByType(artifactoryType)
+        val path = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val fileProperties = bkRepoClient.listMetadata(
+            userId = creatorId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path
+        )
+        val fileDetail = bkRepoClient.getFileDetail(
+            userId = creatorId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path
+        )
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+        val sha256 = fileDetail!!.sha256
+        // TODO HAP versionCode? APIVersion?
+        return """
+            {
+              "app": {
+                "bundleName": "$bundleIdentifier",
+                "bundleType": "app",
+                "versionCode": 1000000,
+                "versionName": "$appVersion",
+                "label": "$appTitle",
+                "deployDomain": "${HomeHostUtil.outerServerHost()}",
+                "icons": {
+                  "normal": "$appIcon",
+                  "large": "$appIcon"
+                },
+                "minAPIVersion": "4.1.0(11)",
+                "targetAPIVersion": "4.1.0(11)",
+                "modules": [
+                  {
+                    "name": "$appTitle",
+                    "type": "entry",
+                    "deviceTypes": [
+                      "tablet",
+                      "phone"
+                    ],
+                    "packageUrl": "$hapExternalDownloadUrl",
+                    "packageHash": "$sha256"
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+    }
+
     @ActionAuditRecord(
         actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
@@ -264,6 +368,41 @@ open class BkRepoDownloadService @Autowired constructor(
         ).replace("+", "%20")
         val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
                 "$artifactoryType/filePlist?path=$normalizedPath" +
+                "&x-devops-project-id=$projectId"
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerHapJson5Url(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "outerHapJson5Url, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
+                "$artifactoryType/hapJson5?path=$normalizedPath" +
                 "&x-devops-project-id=$projectId"
         // 审计
         audit(

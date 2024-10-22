@@ -461,7 +461,7 @@ class ExperienceService @Autowired constructor(
 
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = if (experience.path.endsWith(".ipa")) PlatformEnum.IOS else PlatformEnum.ANDROID
+        val platform = PlatformEnum.ofTail(experience.path)
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -1342,17 +1342,15 @@ class ExperienceService @Autowired constructor(
     }
 
     fun lastParams(userId: String, name: String, projectId: String, bundleIdentifier: String): ExperienceCreate? {
-        val platform = when {
-            name.endsWith(".apk") -> {
-                PlatformEnum.ANDROID
-            }
+        val platform = PlatformEnum.ofTail(name).let {
+            when (it) {
+                PlatformEnum.UNKNOWN -> {
+                    return null
+                }
 
-            name.endsWith(".ipa") -> {
-                PlatformEnum.IOS
-            }
-
-            else -> {
-                return null
+                else -> {
+                    it
+                }
             }
         }
 
