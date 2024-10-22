@@ -446,6 +446,28 @@ class PipelineBuildDao {
         } else normal
     }
 
+    /**
+     * 跨分库查所有的构建ID
+     */
+    fun listBuildInfoByBuildIdsOnly(
+        dslContext: DSLContext,
+        buildIds: Collection<String>
+    ): List<BuildInfo> {
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .fetch(mapper)
+        }
+        return if (normal.isEmpty()) {
+            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                dslContext.selectFrom(this)
+                    .where(BUILD_ID.`in`(buildIds))
+                    .and(DELETE_TIME.isNull)
+                    .fetch(debugMapper)
+            }
+        } else normal
+    }
+
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
         projectId: String,
