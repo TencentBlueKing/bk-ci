@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
@@ -160,6 +161,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
             event.commits?.firstOrNull()?.author?.name ?: ""
         startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
         startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commits?.firstOrNull()?.message ?: ""
         if (!event.create_from.isNullOrBlank()) {
             startParams[PIPELINE_GIT_TAG_FROM] = event.create_from!!
         }

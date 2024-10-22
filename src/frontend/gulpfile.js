@@ -48,12 +48,18 @@ const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
 const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
+const gateWayTagMap = {
+    'dev': 'dev-rbac',
+    'test': 'test-rbac',
+    'stream': '',
+    'stream-gray': ''
+}
 
 async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
-                'X-GATEWAY-TAG': ['dev', 'test', 'stream', 'stream-gray'].includes(env) ? null : env
+                'X-GATEWAY-TAG': gateWayTagMap[env] ?? env
             }
         })
         const assets = await res.json()
@@ -121,9 +127,6 @@ task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), gener
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
 task('build', async () => {
-    const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
-    fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
-    
     return await execAsync()
 })
 
@@ -202,7 +205,7 @@ async function execAsync () {
             }
         })
         
-        spawnCmd.on('close', (code) => {
+        spawnCmd.on('close', async (code) => {
             console.log(`child process exited with code ${code}`)
             if (code) {
                 reject(Error('build failed'))
@@ -210,6 +213,8 @@ async function execAsync () {
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')
+            const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
+            fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
             resolve()
         })
     })

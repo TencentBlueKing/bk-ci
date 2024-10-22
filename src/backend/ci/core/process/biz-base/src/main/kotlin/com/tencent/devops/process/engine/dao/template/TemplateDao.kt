@@ -33,10 +33,11 @@ import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -44,6 +45,7 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -451,6 +453,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         offset: Int?,
         limit: Int?,
         queryModelFlag: Boolean = true
@@ -479,6 +483,8 @@ class TemplateDao {
             templateType = templateType,
             templateIdList = templateIdList,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = limit,
             tTemplate = tTemplate,
@@ -492,6 +498,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         limit: Int?,
         tTemplate: TTemplate,
@@ -546,7 +554,43 @@ class TemplateDao {
                 )
             )
             .where(conditions)
-            .orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
+
+        if (orderBy != null) {
+            val orderByField = when (orderBy) {
+                PTemplateOrderByType.NAME -> {
+                    tTemplate.TEMPLATE_NAME.let {
+                        if (sort == null || sort == PTemplateSortType.ASC) {
+                            it.asc()
+                        } else {
+                            it.desc()
+                        }
+                    }
+                }
+
+                PTemplateOrderByType.CREATOR -> {
+                    tTemplate.CREATOR.let {
+                        if (sort == null || sort == PTemplateSortType.ASC) {
+                            it.asc()
+                        } else {
+                            it.desc()
+                        }
+                    }
+                }
+
+                PTemplateOrderByType.CREATE_TIME -> {
+                    tTemplate.CREATED_TIME.let {
+                        if (sort == null || sort == PTemplateSortType.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
+                }
+            }
+            baseStep.orderBy(tTemplate.WEIGHT.desc(), orderByField, tTemplate.VERSION.desc())
+        } else {
+            baseStep.orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
+        }
 
         return if (null != offset && null != limit) {
             baseStep.limit(offset, limit).skipCheck().fetch()

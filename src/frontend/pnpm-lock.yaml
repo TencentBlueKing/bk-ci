@@ -1136,6 +1136,9 @@ importers:
       js-cookie:
         specifier: ^3.0.1
         version: 3.0.5
+      markdown-it:
+        specifier: ^14.1.0
+        version: 14.1.0
       sockjs-client:
         specifier: 1.3.0
         version: 1.3.0
@@ -1237,8 +1240,8 @@ importers:
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
       add-asset-html-webpack-plugin:
-        specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
+        specifier: ^6.0.0
+        version: 6.0.0(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1412,8 +1415,8 @@ importers:
   devops-pipeline:
     dependencies:
       '@blueking/log':
-        specifier: 2.1.5
-        version: 2.1.5(vue@2.7.16)
+        specifier: 2.2.2
+        version: 2.2.2(vue@2.7.16)
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
@@ -1423,6 +1426,9 @@ importers:
       '@tencent/bk-magic-vue':
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
+      '@tencent/gongfeng-copilot-monaco':
+        specifier: ^2.1.0
+        version: 2.1.0
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -1565,9 +1571,6 @@ importers:
       '@webpack-cli/serve':
         specifier: ^1.7.0
         version: 1.7.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))(webpack@5.76.1))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.76.1))
-      add-asset-html-webpack-plugin:
-        specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0)))(webpack@5.76.1(webpack-cli@4.10.0))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -3198,6 +3201,11 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
+  '@blueking/log@2.2.2':
+    resolution: {integrity: sha512-8TCh6cQAp/2NQt4FY8vETwA8BYEp6I5fVhbpT6PkpoFVyOBp5MJNCptOkDDCMPk3HcBHZNlcqH5KZiuRISBrGg==}
+    peerDependencies:
+      vue: ^2.5.22
+
   '@blueking/login-modal@1.0.4':
     resolution: {integrity: sha512-HMSIZl4QeRAPEVcD/FV2vysnZxJiDSVeLppVw65wvQnvNwos2JwqjoCSoS46Joe/JY/H0r89RgA2WIkneOekNg==}
 
@@ -4732,6 +4740,9 @@ packages:
     peerDependencies:
       vue: ^2.6.0
 
+  '@tencent/gongfeng-copilot-monaco@2.1.0':
+    resolution: {integrity: sha512-BKj29k3NR2bIAETxtdkfAE8VRTJqzyAa0kObaAEMgPZHOGL/skbTXMCBWv4oEIK1C7av+QTcAabmWA8JqWsSFQ==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.1.0.tgz}
+
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
@@ -5648,12 +5659,12 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  add-asset-html-webpack-plugin@5.0.2:
-    resolution: {integrity: sha512-tvizXk9TU8+0BMpygyLl3/ELnCkMfEFxBvrU1bbtgJMs+ZOZdXpAgM6zRljxtV6UsPIOVhcIUmZG9GYeaGiEJQ==}
-    engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+  add-asset-html-webpack-plugin@6.0.0:
+    resolution: {integrity: sha512-W5uv10hFCsYFwG6EM2pbV/RqLZT04jiUbR9uAaPSc2LC8XiGkEOfDtBagKzNxEKudK7i3EKWwPaFr8talsEb7g==}
+    engines: {node: ^16.13.0 || ^18.12.0 || >=20.0.0}
     peerDependencies:
-      html-webpack-plugin: ^3.0.4 || ^4.0.0-0 || ^5.0.0
-      webpack: ^4.0.0 || ^5.0.0
+      html-webpack-plugin: ^4.0.0 || ^5.0.0
+      webpack: ^5.0.0
 
   address@1.2.2:
     resolution: {integrity: sha512-4B/qKCfeE/ODUaAUpSwfzazo5x29WD4r3vXiWsB7I2mSDAihwEqKO+g8GELZUQSSAo5e1XTYh3ZVfLyxBc12nA==}
@@ -10002,7 +10013,7 @@ packages:
     resolution: {integrity: sha512-x7+VxdxOdlV3CYpjvRLBv5Lo9OJerlYanjwFrPR9fuGPjCiNiCzFgAWpiLAohSbsnH4ZAys3SBh+hq5rJosxUQ==}
 
   is-stream@1.1.0:
-    resolution: {integrity: sha1-EtSj3U5o4Lec6428hBc66A2RykQ=}
+    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==}
     engines: {node: '>=0.10.0'}
 
   is-stream@2.0.1:
@@ -10555,6 +10566,9 @@ packages:
   linkify-it@2.2.0:
     resolution: {integrity: sha512-GnAl/knGn+i1U/wjBz3akz2stz+HrHLsxMwHQGofCDfPvlf+gDKN58UtfmUquTY4/MXeE2x7k19KQmeoZi94Iw==}
 
+  linkify-it@5.0.0:
+    resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
+
   lint-staged@10.5.4:
     resolution: {integrity: sha512-EechC3DdFic/TdOPgj/RB3FicqE6932LTHCUm0Y2fsD9KGlLB+RwJl2q1IYBIvEsKzDOgn0D4gll+YxG5RsrKg==}
     hasBin: true
@@ -10907,6 +10921,10 @@ packages:
     resolution: {integrity: sha512-4y7uGv8bd2WdM9vpQsiQNo41Ln1NvhvDRuVt0k2JZQ+ezN2uaQes7lZeZ+QQUHOLQAtDaBJ+7wCbi+ab/KFs+w==}
     engines: {node: '>=0.10.0'}
 
+  markdown-it@14.1.0:
+    resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
+    hasBin: true
+
   markdown-it@8.4.2:
     resolution: {integrity: sha512-GcRz3AWTqSUphY3vsUqQSFMbgR38a4Lh3GWlHRh/7MRwz8mcu9n2IO7HOh+bXHrR9kOPDl5RNCaEsrneb+xhHQ==}
     hasBin: true
@@ -10960,6 +10978,9 @@ packages:
 
   mdurl@1.0.1:
     resolution: {integrity: sha512-/sKlQJCBYVY9Ers9hqzKou4H6V5UWc/M59TH2dvkt+84itfnq7uFOMLpOiOS4ujvHP4etln18fmIxA5R5fll0g==}
+
+  mdurl@2.0.0:
+    resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
   media-typer@0.3.0:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
@@ -11229,6 +11250,9 @@ packages:
 
   monaco-editor@0.40.0:
     resolution: {integrity: sha512-1wymccLEuFSMBvCk/jT1YDW/GuxMLYwnFwF9CDyYCxoTw2Pt379J3FUhwy9c43j51JdcxVPjwk0jm0EVDsBS2g==}
+
+  monaco-editor@0.51.0:
+    resolution: {integrity: sha512-xaGwVV1fq343cM7aOYB6lVE4Ugf0UyimdD/x5PWcWBMKENwectaEu77FAN7c5sFiyumqeJdX1RPTh1ocioyDjw==}
 
   monaco-languageserver-types@0.3.3:
     resolution: {integrity: sha512-4uJ6XaVwVamOQ1SXfBGusAqL4fTn7ZJzaybEinr2U5ZX7AKSjsbXWlu0X3Ah+hyefn+85+Ca7GZwbI87g55C8Q==}
@@ -11862,7 +11886,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   path-key@2.0.1:
-    resolution: {integrity: sha1-QRyttXTFoUDTpLGRDUDYDMn0C0A=}
+    resolution: {integrity: sha512-fEHGKCSmUSDPv4uoj8AlD+joPlq3peND+HRYyxFz4KPw4z926S/b8rIuFs2FYJg3BwsxJf6A9/3eIdLaYC+9Dw==}
     engines: {node: '>=4'}
 
   path-key@3.1.1:
@@ -13240,6 +13264,10 @@ packages:
 
   pumpify@1.5.1:
     resolution: {integrity: sha512-oClZI37HvuUJJxSKKrC17bZ9Cu0ZYhEAGPsPUy9KlMUmv9dKX2o77RUmq7f3XjIxbwyGwYzbzQ1L2Ks8sIradQ==}
+
+  punycode.js@2.3.1:
+    resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
+    engines: {node: '>=6'}
 
   punycode@1.4.1:
     resolution: {integrity: sha512-jmYNElW7yvO7TV33CjSmvSiE2yco3bV2czu/OzDKdMNVZQWfxCblURLhf+47syQRBntjfLdd/H0egrzIG+oaFQ==}
@@ -15019,6 +15047,9 @@ packages:
 
   uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
+
+  uc.micro@2.1.0:
+    resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
   ufo@1.5.4:
     resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
@@ -17316,6 +17347,17 @@ snapshots:
       - supports-color
       - webpack-command
 
+  '@blueking/log@2.2.2(vue@2.7.16)':
+    dependencies:
+      core-js: 3.26.0
+      vue: 2.7.16
+      webpack: 4.47.0(webpack-cli@3.3.12)
+      webpack-cli: 3.3.12(webpack@4.47.0)
+      worker-loader: 2.0.0(webpack@4.47.0(webpack-cli@3.3.12))
+    transitivePeerDependencies:
+      - supports-color
+      - webpack-command
+
   '@blueking/login-modal@1.0.4': {}
 
   '@blueking/platform-config@1.0.4':
@@ -19428,6 +19470,10 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.4.31(typescript@3.4.5)
 
+  '@tencent/gongfeng-copilot-monaco@2.1.0':
+    optionalDependencies:
+      monaco-editor: 0.51.0
+
   '@tootallnate/once@1.1.2':
     optional: true
 
@@ -21408,19 +21454,12 @@ snapshots:
 
   acorn@8.11.3: {}
 
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))):
+  add-asset-html-webpack-plugin@6.0.0(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))))(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))):
     dependencies:
       globby: 11.1.0
       html-webpack-plugin: 5.6.0(webpack@5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1)))
       micromatch: 4.0.7
       webpack: 5.76.1(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.76.1))
-
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.76.1(webpack-cli@4.10.0)))(webpack@5.76.1(webpack-cli@4.10.0)):
-    dependencies:
-      globby: 11.1.0
-      html-webpack-plugin: 5.6.0(webpack@5.76.1(webpack-cli@4.10.0))
-      micromatch: 4.0.7
-      webpack: 5.76.1(webpack-cli@4.10.0)
 
   address@1.2.2: {}
 
@@ -27614,6 +27653,10 @@ snapshots:
     dependencies:
       uc.micro: 1.0.6
 
+  linkify-it@5.0.0:
+    dependencies:
+      uc.micro: 2.1.0
+
   lint-staged@10.5.4:
     dependencies:
       chalk: 4.1.2
@@ -28043,6 +28086,15 @@ snapshots:
     dependencies:
       object-visit: 1.0.1
 
+  markdown-it@14.1.0:
+    dependencies:
+      argparse: 2.0.1
+      entities: 4.5.0
+      linkify-it: 5.0.0
+      mdurl: 2.0.0
+      punycode.js: 2.3.1
+      uc.micro: 2.1.0
+
   markdown-it@8.4.2:
     dependencies:
       argparse: 1.0.10
@@ -28108,6 +28160,8 @@ snapshots:
   mdn-data@2.0.4: {}
 
   mdurl@1.0.1: {}
+
+  mdurl@2.0.0: {}
 
   media-typer@0.3.0: {}
 
@@ -28451,6 +28505,9 @@ snapshots:
       webpack: 5.76.1(webpack-cli@4.10.0)
 
   monaco-editor@0.40.0: {}
+
+  monaco-editor@0.51.0:
+    optional: true
 
   monaco-languageserver-types@0.3.3:
     dependencies:
@@ -31144,6 +31201,8 @@ snapshots:
       inherits: 2.0.4
       pump: 2.0.1
 
+  punycode.js@2.3.1: {}
+
   punycode@1.4.1: {}
 
   punycode@2.3.1: {}
@@ -33372,6 +33431,8 @@ snapshots:
   ua-parser-js@0.7.38: {}
 
   uc.micro@1.0.6: {}
+
+  uc.micro@2.1.0: {}
 
   ufo@1.5.4: {}
 

@@ -126,7 +126,7 @@
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
-                    ...(runLockType === 'group_lock'
+                    ...(['group_lock', 'multiple'].includes(runLockType)
                         ? [{
                             key: 'parallelConfDetail'
                         }]
@@ -135,30 +135,51 @@
                 ]
             },
             parallelSettingRows () {
+                const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
+                if (runLockType === 'group_lock') {
+                    return [
+                        {
+                            key: 'concurrencyGroup',
+                            label: 'group.groupName',
+                            value: this.basicInfo?.concurrencyGroup ?? '--'
+                        },
+                        {
+                            key: 'concurrencyCancelInProgress',
+                            label: 'settings.stopWhenNewCome',
+                            value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
+                        },
+                        ...(!this.basicInfo?.concurrencyCancelInProgress
+                            ? [
+                                {
+                                    key: 'maxQueueSize',
+                                    label: 'settings.largestNum',
+                                    value: this.basicInfo?.maxQueueSize ?? '--'
+                                },
+                                {
+                                    key: 'waitQueueTimeMinute',
+                                    label: 'settings.lagestTime',
+                                    value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
+                                }
+    
+                            ]
+                            : []
+                        )
+                    ]
+                }
+
                 return [
-                    {
-                        key: 'concurrencyGroup',
-                        label: 'group.groupName',
-                        value: this.basicInfo?.concurrencyGroup ?? '--'
-                    },
-                    {
-                        key: 'concurrencyCancelInProgress',
-                        label: 'settings.stopWhenNewCome',
-                        value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
-                    },
                     ...(!this.basicInfo?.concurrencyCancelInProgress
                         ? [
                             {
-                                key: 'maxQueueSize',
-                                label: 'settings.largestNum',
-                                value: this.basicInfo?.maxQueueSize ?? '--'
+                                key: 'maxConRunningQueueSize',
+                                label: 'settings.concurrentMaxConcurrency',
+                                value: this.basicInfo?.maxConRunningQueueSize ?? '--'
                             },
                             {
                                 key: 'waitQueueTimeMinute',
-                                label: 'settings.lagestTime',
+                                label: 'settings.concurrentTimeout',
                                 value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                             }
-
                         ]
                         : []
                     )

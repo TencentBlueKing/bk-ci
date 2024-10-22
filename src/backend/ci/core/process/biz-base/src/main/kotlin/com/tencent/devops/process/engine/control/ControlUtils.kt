@@ -159,11 +159,11 @@ object ControlUtils {
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+                additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+                additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     /**
      * 对构建[buildId]的任务的流程控制条件[additionalOptions]进行排查，结合当前容器状态[containerFinalStatus]
@@ -371,22 +371,22 @@ object ControlUtils {
                 val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
                 logger.info(
                     "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
+                            "|result=$expressionResult"
                 )
                 message.append(
                     "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
+                            if (!expressionResult) {
+                                " will be skipped! "
+                            } else {
+                                ""
+                            }
                 )
                 expressionResult
             } catch (ignore: Exception) {
                 // 异常，则任务表达式为false
                 logger.info(
                     "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
+                            "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
@@ -419,7 +419,7 @@ object ControlUtils {
                 )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
+                            "|result=$expressionResult"
                 )
                 val resultIsTrue = if (expressionResult is EvaluationResult) {
                     expressionResult.equalsTrue
@@ -445,7 +445,7 @@ object ControlUtils {
                 // 异常，则任务表达式为false
                 logger.warn(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
+                            "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(

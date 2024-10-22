@@ -58,12 +58,12 @@ import com.tencent.devops.support.model.approval.MoaWorkItemCreateKeyAndValue
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateUiType
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import com.tencent.devops.support.model.approval.MoaWorkitemCreateCategoryType
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Primary
 @Service
@@ -128,15 +128,21 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         uiType = when (param.valueType) {
                             ManualReviewParamType.STRING -> MoaWorkItemCreateUiType.TEXT_BOX.value
                             ManualReviewParamType.TEXTAREA -> MoaWorkItemCreateUiType.TEXT_BOX.value
-                            ManualReviewParamType.BOOLEAN -> MoaWorkItemCreateUiType.RADIO_BOX.value
+                            ManualReviewParamType.BOOLEAN,
+                            ManualReviewParamType.CHECKBOX -> MoaWorkItemCreateUiType.RADIO_BOX.value
+
                             ManualReviewParamType.ENUM -> MoaWorkItemCreateUiType.DROP_DOWN_LIST.value
                             ManualReviewParamType.MULTIPLE -> MoaWorkItemCreateUiType.CHECK_BOX.value
+                            else -> MoaWorkItemCreateUiType.TEXT_BOX.value
                         },
                         values = when (param.valueType) {
                             ManualReviewParamType.STRING -> listOf(param.value.toString())
                             ManualReviewParamType.TEXTAREA -> listOf(param.value.toString())
-                            ManualReviewParamType.BOOLEAN -> listOf("true", "false")
+                            ManualReviewParamType.BOOLEAN,
+                            ManualReviewParamType.CHECKBOX -> listOf("true", "false")
+
                             ManualReviewParamType.ENUM, ManualReviewParamType.MULTIPLE -> param.options?.map { it.key }
+                            else -> listOf(param.value.toString())
                         }
                     ).apply {
                         if (param.valueType == ManualReviewParamType.STRING) {

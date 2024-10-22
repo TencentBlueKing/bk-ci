@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.transfer
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -60,7 +59,7 @@ class VariableTransfer {
 
     fun makeVariableFromModel(model: Model): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+        model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
             val props = when {
                 // 不带
@@ -163,19 +162,18 @@ class VariableTransfer {
     }
 
     fun makeRecommendedVersion(model: Model): RecommendedVersion? {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val res = if (triggerContainer.buildNo != null) {
-            with(triggerContainer.buildNo) {
-                RecommendedVersion(
-                    enabled = true, allowModifyAtStartup = this!!.required, buildNo = RecommendedVersion.BuildNo(
-                        this.buildNo,
-                        RecommendedVersion.Strategy.parse(this.buildNoType).alis
-                    )
+        val triggerContainer = model.getTriggerContainer()
+        val res = triggerContainer.buildNo?.let {
+            RecommendedVersion(
+                enabled = true,
+                allowModifyAtStartup = it.required,
+                buildNo = RecommendedVersion.BuildNo(
+                    it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
-            }
-        } else return null
+            )
+        } ?: return null
 
-        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+        triggerContainer.params.forEach {
             if (it.id == MAJORVERSION || it.id == "MajorVersion") {
                 res.major = it.defaultValue.toString().toIntOrNull() ?: 0
             }

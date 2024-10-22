@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -57,6 +56,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -95,10 +95,12 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }.toMutableMap()
+        val triggerContainer = model.getTriggerContainer()
+        val variables = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        )
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->

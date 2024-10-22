@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.docker.client.context
 
 import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 
 class BuildLessStartHandlerContext(
-    val event: PipelineBuildLessStartupDispatchEvent,
+    val event: PipelineBuildLessStartupEvent,
     var buildLessHost: String = "",
     var buildLessPort: Int = 80,
     var retryTime: Int = 0,

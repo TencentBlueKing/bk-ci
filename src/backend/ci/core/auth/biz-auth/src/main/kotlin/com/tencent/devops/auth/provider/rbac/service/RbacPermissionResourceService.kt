@@ -426,13 +426,8 @@ class RbacPermissionResourceService(
             return true
         }
         permissionSubsetManagerService.deleteSubsetManagerDefaultGroup(
-            subsetManagerId = resourceInfo.relationId.toInt(),
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        authResourceService.disable(
             userId = userId,
+            subsetManagerId = resourceInfo.relationId.toInt(),
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode

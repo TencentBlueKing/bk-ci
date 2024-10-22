@@ -373,12 +373,14 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project ${data.projectId} workspace list {}", data)
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
+        val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null
         val search = with(data) {
             WorkspaceSearch(
                 projectId = projectId?.let { listOf(it) },
                 workspaceName = workspaceName?.let { listOf(it) },
                 workspaceSystemType = systemType?.let { listOf(it) },
-                ips = ips,
+                ips = if (!fastSelect) ips else null,
+                sips = if (fastSelect) ips?.map { it.removeSuffix("$") } else null,
                 owner = owners?.toList() ?: owner?.let { listOf(it) },
                 status = status?.let { listOf(it) },
                 zoneShortName = zoneId?.let { listOf(it) },
@@ -604,6 +606,9 @@ class WorkspaceService @Autowired constructor(
             null
         }
 
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
         val data = result.map { res ->
             val name = res.workspaceName
 
@@ -647,6 +652,7 @@ class WorkspaceService @Autowired constructor(
                 currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip) }?.toSet() ?: emptySet(),
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
+                zoneType = specZoneConfig[res.zoneId]?.type ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type,
                 viewers = viewers[name]
             )
         }
@@ -996,7 +1002,8 @@ class WorkspaceService @Autowired constructor(
             name = workspace.workspaceName,
             creator = workspace.createUserId,
             owner = owner,
-            resourceId = resourceId
+            resourceId = resourceId,
+            displayName = workspace.displayName
         )
     }
 

@@ -27,23 +27,21 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.EXCHANGE_PROJECT_COUNT_LOGIN
-import com.tencent.devops.project.ROUTE_PROJECT_COUNT_LOGIN
 import com.tencent.devops.project.dao.UserDailyFirstAndLastLoginDao
 import com.tencent.devops.project.dao.UserDailyLoginDao
 import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.pojo.enums.OS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Service
 class CountService @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val dslContext: DSLContext,
     private val userDailyLoginDao: UserDailyLoginDao,
     private val userDailyFirstAndLastLoginDao: UserDailyFirstAndLastLoginDao,
@@ -55,12 +53,7 @@ class CountService @Autowired constructor(
 
         val ip = getIP(xRealIP, xForwardedFor)
         val os = getOs(userAgent)
-
-        rabbitTemplate.convertAndSend(
-            EXCHANGE_PROJECT_COUNT_LOGIN,
-            ROUTE_PROJECT_COUNT_LOGIN,
-            UserCountLogin(userId, os, ip)
-        )
+        UserCountLogin(userId, os, ip).sendTo(streamBridge)
     }
 
     private fun getIP(xRealIP: String?, xForwardedFor: String?): String {
