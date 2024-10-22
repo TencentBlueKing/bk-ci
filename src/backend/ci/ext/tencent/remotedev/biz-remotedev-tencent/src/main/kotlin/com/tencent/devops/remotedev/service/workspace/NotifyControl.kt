@@ -166,37 +166,48 @@ class NotifyControl @Autowired constructor(
         }
 
         // 给拥有者的客户端发送消息
-        workspace.forEach { ws ->
+        if (notifyData.notifyType == null || notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true) {
+            workspace.forEach { ws ->
+                notify4User(
+                    userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
+                    notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
+                    bodyParams = mutableMapOf(
+                        "operator" to userId,
+                        "workspaceName" to ws.workspaceName,
+                        "clientMsg" to messageContent,
+                        "projectId" to ws.projectId
+                    )
+                )
+            }
+        }
+
+        // 给所有云桌面的owner发送云桌面-跑马灯消息
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
+        ) {
             notify4User(
-                userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
-                notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
+                bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
+            )
+        }
+
+        // 给所有云桌面的owner发送邮件
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.EMAIL) == true
+        ) {
+            notify4User(
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                 bodyParams = mutableMapOf(
                     "operator" to userId,
-                    "workspaceName" to ws.workspaceName,
-                    "clientMsg" to messageContent,
-                    "projectId" to ws.projectId
+                    "title" to notifyData.title,
+                    "body" to (notifyData.desc ?: ""),
+                    "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
                 )
             )
         }
 
-        // 给所有云桌面的owner发送云桌面-跑马灯消息
-        notify4User(
-            userIds = userList,
-            notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
-            bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
-        )
-
-        // 给所有云桌面的owner发送邮件
-        notify4User(
-            userIds = userList,
-            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-            bodyParams = mutableMapOf(
-                "operator" to userId,
-                "title" to notifyData.title,
-                "body" to (notifyData.desc ?: ""),
-                "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
-            )
-        )
     }
 
     fun notify4RemoteDevManager(
