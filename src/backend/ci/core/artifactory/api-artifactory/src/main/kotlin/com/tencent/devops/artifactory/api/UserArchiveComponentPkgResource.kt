@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
@@ -97,6 +98,9 @@ interface UserArchiveComponentPkgResource {
         @Parameter(description = "用户Id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)

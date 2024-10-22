@@ -115,7 +115,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     storeType = storeType,
                     storeCode = storeCode,
                     version = version,
-                    queryConfigFileFlag = true
+                    configFileContent = bkConfigJsonFile.readText()
                 ).data
             } else {
                 listOf(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))

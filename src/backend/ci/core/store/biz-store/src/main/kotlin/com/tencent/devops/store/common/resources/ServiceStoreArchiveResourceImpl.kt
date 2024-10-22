@@ -78,8 +78,7 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?,
-        queryConfigFileFlag: Boolean?
+        osArch: String?
     ): Result<List<StorePkgEnvInfo>> {
         val storeReleaseSpecBusService = SpringContextUtil.getBean(
             StoreReleaseSpecBusService::class.java,
@@ -92,8 +91,29 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = version,
                 osName = osName,
-                osArch = osArch,
-                queryConfigFileFlag = queryConfigFileFlag
+                osArch = osArch
+            )
+        )
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        configFileContent: String
+    ): Result<List<StorePkgEnvInfo>> {
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+        )
+        return Result(
+            storeReleaseSpecBusService.getComponentPkgEnvInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                configFileContent = configFileContent
             )
         )
     }

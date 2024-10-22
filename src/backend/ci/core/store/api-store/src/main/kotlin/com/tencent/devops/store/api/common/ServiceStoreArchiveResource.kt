@@ -40,6 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -96,10 +97,27 @@ interface ServiceStoreArchiveResource {
         osName: String? = null,
         @Parameter(description = "操作系统架构", required = false)
         @QueryParam("osArch")
-        osArch: String? = null,
-        @Parameter(description = "是否从配置文件获取环境信息标识", required = false)
-        @QueryParam("queryConfigFileFlag")
-        queryConfigFileFlag: Boolean? = false
+        osArch: String? = null
+    ): Result<List<StorePkgEnvInfo>>
+
+    @Operation(summary = "根据配置文件内容获取组件包环境信息")
+    @POST
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/pkg/env/info/get")
+    fun getComponentPkgEnvInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "文件内容", required = true)
+        configFileContent: String
     ): Result<List<StorePkgEnvInfo>>
 
     @Operation(summary = "更新组件执行包相关信息")
