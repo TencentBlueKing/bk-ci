@@ -816,7 +816,6 @@
                         imageName: defaultBuildResource.name || '',
                         imageType: defaultBuildResource.imageType || '',
                         recommendFlag: defaultBuildResource.recommendFlag,
-                        dockerInfo: {},
                         [name]: val
                     })
                 )
