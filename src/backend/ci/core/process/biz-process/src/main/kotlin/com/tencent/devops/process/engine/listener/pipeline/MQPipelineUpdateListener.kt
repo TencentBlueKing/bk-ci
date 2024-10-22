@@ -38,7 +38,6 @@ import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -55,7 +54,6 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val agentPipelineRefService: AgentPipelineRefService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val repoPipelineRefService: RepoPipelineRefService,
-    private val subPipelineRefService: SubPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
@@ -97,12 +95,6 @@ class MQPipelineUpdateListener @Autowired constructor(
         watcher.safeAround("updateAgentPipelineRef") {
             with(event) {
                 repoPipelineRefService.updateRepoPipelineRef(userId, "update_pipeline", projectId, pipelineId)
-            }
-        }
-
-        watcher.safeAround("updateSubPipelineRef") {
-            with(event) {
-                subPipelineRefService.updateSubPipelineRef(userId, projectId, pipelineId)
             }
         }
 

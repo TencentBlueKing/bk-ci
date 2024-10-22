@@ -72,6 +72,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.SubPipelineRefService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
@@ -105,7 +106,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     companion object {
@@ -456,6 +458,13 @@ class PipelineVersionFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 staticViewIds = request.staticViews
+            )
+            // 更新子流水线插件引用信息
+            subPipelineRefService.updateSubPipelineRef(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = draftVersion.model
             )
             // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
             pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->

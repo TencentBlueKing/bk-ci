@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -142,15 +143,13 @@ class SubPipelineRefService @Autowired constructor(
         logger.info("user[$userId] delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
     }
 
-    fun updateSubPipelineRef(userId: String, projectId: String, pipelineId: String) {
-        logger.info("update sub pipeline ref|$userId|$projectId|$pipelineId")
-        val model = subPipelineService.getModel(projectId, pipelineId) ?: return
-        // 渠道
-        val channel = pipelineInfoDao.getPipelineInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )?.channel ?: ChannelCode.BS.name
+    fun updateSubPipelineRef(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        model: Model,
+        channel: String = ChannelCode.BS.name
+    ) {
         try {
             // 解析model，读取子流水线引用信息
             val stageSize = model.stages.size
@@ -174,7 +173,6 @@ class SubPipelineRefService @Autowired constructor(
                 }
             }
             logger.info("analysis sub pipeline ref|$subPipelineRefList")
-
             dslContext.transaction { configuration ->
                 val transaction = DSL.using(configuration)
                 val existsRefs = subPipelineRefDao.list(
@@ -196,6 +194,24 @@ class SubPipelineRefService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("analysisSubPipelineRefAndSave failed", e)
         }
+    }
+
+    fun updateSubPipelineRef(userId: String, projectId: String, pipelineId: String) {
+        logger.info("update sub pipeline ref|$userId|$projectId|$pipelineId")
+        val model = subPipelineService.getModel(projectId, pipelineId) ?: return
+        // 渠道
+        val channel = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.channel ?: ChannelCode.BS.name
+        updateSubPipelineRef(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channel = channel
+        )
     }
 
     private fun analysisSubPipelineRefAndSave(
