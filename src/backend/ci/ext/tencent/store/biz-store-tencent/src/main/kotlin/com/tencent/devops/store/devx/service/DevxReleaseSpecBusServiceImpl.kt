@@ -29,6 +29,7 @@ package com.tencent.devops.store.devx.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.APPROVE
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
@@ -99,6 +101,7 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_NAME_WITH_NAMESPACE
+import com.tencent.devops.store.pojo.devx.constants.KEY_STORE_RUN_CUSTOM_VAR
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -361,12 +364,20 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
         val storeCode = baseRecord.storeCode
         val storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt())
-        val buildDir = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+        val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
-            fieldName = KEY_BUILD_DIR
-        )?.fieldValue ?: ""
+            fieldNames = setOf(KEY_BUILD_DIR, KEY_REPOSITORY_NAME_WITH_NAMESPACE)
+        )
+        val buildDir = extFeatures.filter { it.fieldName == KEY_BUILD_DIR }.getOrNull(0)?.fieldValue ?: ""
+        val repositoryNameWithNamespace =
+            extFeatures.filter { it.fieldName == KEY_REPOSITORY_NAME_WITH_NAMESPACE }.getOrNull(0)?.fieldValue ?: ""
+        val storeRunCustomVar = if (repositoryNameWithNamespace.isBlank()) {
+            "$KEY_OS_NAME-pkg"
+        } else {
+            "$KEY_OS_NAME-repo"
+        }
         val startParamMap = mutableMapOf(
             KEY_STORE_CODE to storeCode,
             KEY_STORE_TYPE to storeType.name,
@@ -375,7 +386,9 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_WINDOWS_RUN_INFO to if (!windowsRunInfos.isNullOrEmpty()) JsonUtil.toJson(windowsRunInfos!!) else "[]",
             KEY_LINUX_RUN_INFO to if (!linuxRunInfos.isNullOrEmpty()) JsonUtil.toJson(linuxRunInfos!!) else "[]",
             KEY_DARWIN_RUN_INFO to if (!darwinRunInfos.isNullOrEmpty()) JsonUtil.toJson(darwinRunInfos!!) else "[]",
-            KEY_BUILD_DIR to buildDir
+            KEY_BUILD_DIR to buildDir,
+            KEY_REPOSITORY_NAME_WITH_NAMESPACE to repositoryNameWithNamespace,
+            KEY_STORE_RUN_CUSTOM_VAR to storeRunCustomVar
         )
         if (queryDefaultScriptFlag) {
             val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
