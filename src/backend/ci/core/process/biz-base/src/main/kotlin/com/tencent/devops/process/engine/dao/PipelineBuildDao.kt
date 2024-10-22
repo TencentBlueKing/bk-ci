@@ -449,7 +449,7 @@ class PipelineBuildDao {
     /**
      * 跨分库查所有的构建ID
      */
-    fun listBuildInfoByBuildIds(
+    fun listBuildInfoByBuildIdsOnly(
         dslContext: DSLContext,
         buildIds: Collection<String>
     ): List<BuildInfo> {
