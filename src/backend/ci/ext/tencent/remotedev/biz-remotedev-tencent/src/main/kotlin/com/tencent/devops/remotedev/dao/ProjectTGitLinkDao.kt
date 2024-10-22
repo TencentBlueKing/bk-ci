@@ -210,4 +210,29 @@ class ProjectTGitLinkDao {
             return dsl.fetch()
         }
     }
+
+    fun batchUpdateCred(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitIds: Set<Long>,
+        status: TGitRepoStatus,
+        oauthUser: String,
+        cred: String,
+        credType: TGitCredType
+    ) {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            dslContext.batch(
+                tgitIds.map {
+                    dslContext.update(this)
+                        .set(STATUS, status.name)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .set(OAUTH_USER, oauthUser)
+                        .set(CRED, cred)
+                        .set(CRED_TYPE, credType.name)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(TGIT_ID.eq(it))
+                }
+            ).execute()
+        }
+    }
 }

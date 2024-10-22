@@ -855,6 +855,16 @@ class GitProxyTGitService @Autowired constructor(
         }
 
         if (checkedId.isNotEmpty()) {
+            // 将信息凭据信息写入
+            projectTGitLinkDao.batchUpdateCred(
+                dslContext = dslContext,
+                projectId = data.projectId,
+                tgitIds = checkedId,
+                status = TGitRepoStatus.TO_BE_MIGRATED,
+                oauthUser = userId,
+                cred = data.credId ?: userId,
+                credType = credType
+            )
             val res = linkTGit(
                 projectId = data.projectId,
                 repoIds = checkedId,
@@ -1151,7 +1161,7 @@ class GitProxyTGitService @Autowired constructor(
             }
         }
         logger.info("dailyUserAuthDoCheck|canAvailableRecords|$canAvailableRecords")
-        logger.info("dailyUserAuthDoCheck|canAvailableRecords|$result")
+        logger.info("dailyUserAuthDoCheck|result|$result")
 
         val project = client.get(ServiceProjectResource::class)
             .listByProjectCode(setOf(projectId)).data?.firstOrNull()
