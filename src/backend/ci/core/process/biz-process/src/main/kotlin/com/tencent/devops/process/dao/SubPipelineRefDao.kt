@@ -147,7 +147,7 @@ class SubPipelineRefDao {
 
     fun batchDelete(
         dslContext: DSLContext,
-        infos: List<Triple<String,String,String>>
+        infos: List<Triple<String, String, String>>
     ) {
         if (infos.isEmpty()) {
             return
