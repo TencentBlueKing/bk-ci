@@ -25,48 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template
+package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.TemplateFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.auth.api.AuthPermission
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService
-) : UserPipelineTemplateResource {
+@Tag(name = "SERVICE_PIPELINE_PERMISSION", description = "服务-流水线-鉴权")
+@Path("/service/repositories/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceRepositoryPermissionResource {
 
-    override fun listQualityViewTemplates(
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/validate")
+    @Operation(summary = "校验用户是否有具体操作的权限")
+    fun validatePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        keywords: String?
-    ): Result<TemplateListModel> {
-        return Result(
-            templateFacadeService.listTemplate(
-                projectId = projectId,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                orderBy = null,
-                sort = null,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords
-            )
-        )
-    }
-
-    override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId, userId = userId, templateId = templateId, version = null
-        ))
-    }
+        @Parameter(description = "代码库hashId", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @QueryParam("permission")
+        @Parameter(description = "操作权限", required = false)
+        permission: AuthPermission
+    ): Result<Boolean>
 }

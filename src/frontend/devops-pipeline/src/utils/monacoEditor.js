@@ -11,20 +11,22 @@ class MonacoEditor {
     }
 
     static async init () {
-        const monaco = await import(
-            /* webpackMode: "lazy" */
-            /* webpackPrefetch: true */
-            /* webpackPreload: true */
-            /* webpackChunkName: "monaco-editor" */
-            'monaco-editor'
-        )
-        const monacoYaml = await import(
-            /* webpackMode: "lazy" */
-            /* webpackPrefetch: true */
-            /* webpackPreload: true */
-            /* webpackChunkName: "monaco-editor" */
-            'monaco-yaml'
-        )
+        const [monaco, monacoYaml] = await Promise.all([
+            import(
+                /* webpackMode: "lazy" */
+                /* webpackPrefetch: true */
+                /* webpackPreload: true */
+                /* webpackChunkName: "monaco-editor" */
+                'monaco-editor'
+            ),
+            import(
+                /* webpackMode: "lazy" */
+                /* webpackPrefetch: true */
+                /* webpackPreload: true */
+                /* webpackChunkName: "monaco-editor" */
+                'monaco-yaml'
+            )
+        ])
 
         const yamlConfig = monacoYaml.configureMonacoYaml(monaco, {
             enableSchemaRequest: true,
