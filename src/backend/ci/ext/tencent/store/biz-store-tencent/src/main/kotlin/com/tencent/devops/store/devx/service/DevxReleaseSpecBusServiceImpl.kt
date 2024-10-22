@@ -62,6 +62,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -263,9 +264,10 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        configFileContent: String
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
     ): List<StorePkgEnvInfo> {
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val configFileContent = queryComponentPkgEnvInfoParam.configFileContent
         if (configFileContent.isBlank()) {
             storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
             return storePkgEnvInfos
