@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -116,8 +117,8 @@ interface ServiceStoreArchiveResource {
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "文件内容", required = true)
-        configFileContent: String
+        @Parameter(description = "查询参数", required = true)
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
     ): Result<List<StorePkgEnvInfo>>
 
     @Operation(summary = "更新组件执行包相关信息")

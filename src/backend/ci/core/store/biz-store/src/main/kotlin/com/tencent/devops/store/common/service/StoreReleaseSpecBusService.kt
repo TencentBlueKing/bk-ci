@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -99,7 +100,7 @@ interface StoreReleaseSpecBusService {
      * @param storeType 组件类型
      * @param storeCode 组件标识
      * @param version 组件版本
-     * @param configFileContent 配置文件内容
+     * @param queryComponentPkgEnvInfoParam 获取组件包环境信息查询参数
      * @return 包环境信息列表
      */
     fun getComponentPkgEnvInfo(
@@ -107,7 +108,7 @@ interface StoreReleaseSpecBusService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        configFileContent: String
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
     ): List<StorePkgEnvInfo>
 
     /**
