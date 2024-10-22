@@ -1,58 +1,50 @@
 <template>
     <div style="width: 100%;">
         <h3>{{ $t('grammaticalDifferences') }}</h3>
-        <bk-table
-            :data="namingConventionData"
-            :outer-border="false"
-            row-auto-height
-            show-overflow-tooltip
-        >
-            <bk-table-column
-                :label="$t('differenceItem')"
-                prop="difference"
-                :width="140"
-            >
-                <template slot-scope="props">
-                    <div class="label-column">
-                        <p>{{ props.row.difference }}</p>
-                        <p>{{ props.row.differenceTip }}</p>
-                    </div>
-                </template>
-            </bk-table-column>
-            <bk-table-column
-                :label="$t('CLASSIC')"
-                prop="classic"
-                :width="290"
-            >
-                <template slot-scope="props">
-                    <div class="label-column">
-                        <div v-if="!props.row.classicKey">
-                            <p>{{ props.row.classic }}</p>
-                            <p>{{ props.row.classicExample }}</p>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>{{ $t('differenceItem') }}</th>
+                    <th>{{ $t('CLASSIC') }}</th>
+                    <th>{{ $t('CONSTRAINED') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr
+                    v-for="(row, index) in namingConventionData"
+                    :key="index"
+                >
+                    <td>
+                        <div class="label-column">
+                            <p>{{ row.difference }}</p>
+                            <p v-if="row.differenceTip">{{ row.differenceTip }}</p>
                         </div>
-                        <div v-else>
-                            <i18n
-                                tag="p"
-                                path="traditionalFunctionFormat"
-                            >
-                                <span class="classicKey">{{ $t('customExpressionsSatisfyRun') }}</span>
-                            </i18n>
+                    </td>
+                    <td style="width: 290px;">
+                        <div class="label-column">
+                            <div v-if="!row.classicKey">
+                                <p>{{ row.classic }}</p>
+                                <p>{{ row.classicExample }}</p>
+                            </div>
+                            <div v-else>
+                                <i18n
+                                    tag="p"
+                                    path="traditionalFunctionFormat"
+                                >
+                                    <span class="classicKey">{{ $t('customExpressionsSatisfyRun') }}</span>
+                                </i18n>
+                            </div>
                         </div>
-                    </div>
-                </template>
-            </bk-table-column>
-            <bk-table-column
-                :label="$t('CONSTRAINED')"
-                prop="constrainedMode"
-            >
-                <template slot-scope="props">
-                    <div class="label-column">
-                        <p>{{ props.row.constrainedMode }}</p>
-                        <p>{{ props.row.constrainedExample }}</p>
-                    </div>
-                </template>
-            </bk-table-column>
-        </bk-table>
+                    </td>
+                    <td>
+                        <div class="label-column">
+                            <p>{{ row.constrainedMode }}</p>
+                            <p>{{ row.constrainedExample }}</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </template>
 
@@ -105,5 +97,40 @@ p {
 }
 .classicKey {
   font-weight: 700;
+}
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+    th, td {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    tr {
+        background-color: #fff;
+        border-bottom: 1px solid #dfe0e5;
+        height: 43px;
+    }
+    td {
+        color: #575961;
+        font-size: 12px;
+    }
+    th {
+        background-color: #fafbfd;
+        text-align: left;
+        height: 43px;
+        overflow: hidden;
+        white-space: nowrap;
+        word-wrap: normal;
+        text-overflow: ellipsis;
+        font-weight: 400;
+        color: #313238
+    }
+    .label-column {
+        word-break: keep-all;
+        overflow-wrap: break-word;
+    }
+    .classicKey {
+        font-weight: 700;
+    }
 }
 </style>
