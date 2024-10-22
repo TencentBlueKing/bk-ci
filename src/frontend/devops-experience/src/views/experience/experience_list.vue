@@ -150,7 +150,6 @@
                                             action: EXPERIENCE_TASK_RESOURCE_ACTION.EDIT
                                         }
                                     }"
-                                    class="mr5"
                                     text
                                     @click.stop="toEditRow(props.row)"
                                 >
