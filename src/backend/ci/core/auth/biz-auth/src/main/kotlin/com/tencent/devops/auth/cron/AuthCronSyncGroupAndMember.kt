@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.cron
 
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
+import com.tencent.devops.auth.service.lock.CronSyncGroupPermissionsLock
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -45,22 +46,26 @@ class AuthCronSyncGroupAndMember(
         }
     }
 
-    @Scheduled(cron = "0 0 8,16 * * ?")
+    /**
+     * 10秒同步一次用户申请加入组的单据，若1周未审批单据，将不再进行扫描
+     * */
+    @Scheduled(initialDelay = 10000, fixedRate = 10000)
     fun syncIamGroupMembersOfApplyRegularly() {
         if (!enable) {
             return
         }
-        try {
-            logger.info("sync members of apply regularly | start")
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
+        CronSyncGroupPermissionsLock(redisOperation).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("sync members of apply regularly | running")
+                return@use
+            }
+            try {
+                logger.info("sync members of apply regularly | start")
                 permissionResourceGroupSyncService.syncIamGroupMembersOfApply()
                 logger.info("sync members of apply regularly | finish")
-            } else {
-                logger.info("sync members of apply regularly | running")
+            } catch (e: Exception) {
+                logger.warn("sync members of apply regularly | error", e)
             }
-        } catch (e: Exception) {
-            logger.warn("sync members of apply regularly | error", e)
         }
     }
 }

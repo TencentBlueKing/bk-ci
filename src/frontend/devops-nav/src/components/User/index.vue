@@ -6,7 +6,8 @@
         :arrow="false"
         ref="popoverRef"
         :on-hide="handleHide"
-        :on-show="handleShow">
+        :on-show="handleShow"
+    >
         <div
             class="user-entry"
         >

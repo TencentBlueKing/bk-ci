@@ -1,18 +1,36 @@
 <template>
-    <article class="list-init-home" v-bkloading="{ isloading }">
+    <article
+        class="list-init-home"
+        v-bkloading="{ isloading }"
+    >
         <main class="g-turbo-box init-main">
             <section class="init-title">
                 <h3 class="title-main g-turbo-deep-black-font"> {{ $t('turbo.欢迎使用 Turbo 加速方案') }} </h3>
                 <p class="title-main-content">{{ $t('turbo.welcome') }}</p>
                 <h5 class="title-recommend g-turbo-deep-black-font"> {{ $t('turbo.为你推荐的加速模式') }} </h5>
-                <h5 class="recommend-task" v-for="(recommend, index) in recommendList" :key="index">
+                <h5
+                    class="recommend-task"
+                    v-for="(recommend, index) in recommendList"
+                    :key="index"
+                >
                     <p class="task-main">
                         <span class="task-title g-turbo-deep-black-font">{{ recommend.engineName }}</span>
                         <span class="task-desc g-turbo-gray-font">{{ recommend.recommendReason }}</span>
                     </p>
                     <p class="task-buttons">
-                        <bk-button text class="task-doc" @click="goToDoc(recommend.docUrl)"> {{ $t('turbo.查看文档') }} </bk-button>
-                        <bk-button class="task-use" @click="goToCreate(recommend.engineCode)"> {{ $t('turbo.立即使用') }} </bk-button>
+                        <bk-button
+                            text
+                            class="task-doc"
+                            @click="goToDoc(recommend.docUrl)"
+                        >
+                            {{ $t('turbo.查看文档') }}
+                        </bk-button>
+                        <bk-button
+                            class="task-use"
+                            @click="goToCreate(recommend.engineCode)"
+                        >
+                            {{ $t('turbo.立即使用') }}
+                        </bk-button>
                     </p>
                 </h5>
             </section>

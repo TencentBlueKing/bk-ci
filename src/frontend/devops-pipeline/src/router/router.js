@@ -260,7 +260,7 @@ const routes = [
                         }
                     },
                     {
-                        path: 'draftDebug/:version',
+                        path: 'draftDebug',
                         name: 'draftDebugRecord',
                         meta: {
                             icon: 'pipeline',

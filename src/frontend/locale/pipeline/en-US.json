@@ -149,6 +149,10 @@
   "downloadLog": "Download Log",
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",
+  "successPraise": "Like Success",
+  "successDownPraise": "Down Like Success",
+  "successCancelPraise": "Cancel Like",
+  "successCancelDownPraise": "Cancel Down Like",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
@@ -184,13 +188,16 @@
     "waitApproval": "Waiting for previous approval. Approver: {0}",
     "opinionRequired": "When reject is selected, approval opinion is required",
     "userInputTips": "Please enter approvers. Pipeline variable is supported.",
+    "userGroupInputTips": "Please enter user group. Pipeline variable is supported.",
     "reviewRequire": "Name of approval flow and approvers are required",
     "addFlow": "Create approval step",
     "approveBy": "Approved by {0}: ",
     "editVariable": "Edit variable: ",
     "approveOpinion": "Approval Opinion: ",
     "approveTime": "Approval Time: ",
-    "approver": "Approver: "
+    "approver": "Approver: ",
+    "reviewer": "Reviewer",
+    "groups": "User Group"
   },
   "execDetail": {
     "log": "Log",
@@ -373,7 +380,11 @@
     "mdLink": "Markdown Link",
     "conCopySuc": "Copied Succeed",
     "additionDesc": "Description",
-    "voice": "Voice"
+    "voice": "Voice",
+    "concurrentMaxConcurrency": "Maximum Concurrency",
+    "concurrentTimeout": "Queue Timeout for Exceeding Limit",
+    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
+    "maxConcurrencyPlaceholder": "Default to system settings when not specified"
   },
   "template": {
     "addTemplate": "New Template",
@@ -446,7 +457,9 @@
       "desc": "You do not have permission to view the pipeline template, please apply for permission",
       "apply": "Apply"
     },
-    "editStoreTemplateTips": "The development store template does not support editing"
+    "editStoreTemplateTips": "The development store template does not support editing",
+    "lastModifiedDate": "Last Modified on",
+    "lastModifiedBy": "Updater"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -601,7 +614,7 @@
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
     "buildMsg": "Build Message"
-},
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -649,6 +662,7 @@
     "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
     "abort": "Cancel (immediately mark Stage success status)",
     "agree": "Continue execution",
+    "aiAnalysis": "AI service is not yet deployed, if you need to use it, please contact the administrator to deploy it.<a href=\"{0}\" target=\"_blank\" style=\"color:#3a84ff\">Learn more</a>",
     "statusMap": {
       "PAUSE": "Pause",
       "RUNNING": "Running",
@@ -767,7 +781,7 @@
     "image": "Image",
     "provideInfo": "Provided by {0}, modified {1} on {2}",
     "officialCertification": "Official Certification",
-    "thirdImageHolder": "Please enter the full image path, such as docker.io/bkci/ci",
+    "thirdImageHolder": "Please enter the full image path, such as xxx.xxx.com/your-namespace/your-imagename:1.0",
     "by": "by",
     "devnet": "Devnet VM",
     "onlySupport": "Only supported",
@@ -1026,7 +1040,13 @@
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
     "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
     "filePathTips": "Please enter directory, e.g., /a",
-    "fileNameTips": "File name, leave blank to auto-detect"
+    "fileNameTips": "File name, leave blank to auto-detect",
+    "enableDocker": "Enable Docker for Running Build Tasks",
+    "imagePullPolicy": "Image Pull Policy",
+    "alwaysPull": "Always pull on each run",
+    "ifNotPresent": "Pull only if not present locally",
+    "enableDockerTips": "When using this feature, please ensure that the build machine has Docker installed, and that the user running the third-party build agent has the necessary permissions to operate Docker.",
+    "enabledPrivileged": "Enable Privileged Mode"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1039,6 +1059,7 @@
     "bool": "Boolean",
     "enum": "Radio",
     "multiple": "Checkbox",
+    "checkbox": "Checkbox Confirmation Box",
     "svntag": "SVN branch or TAG",
     "gitref": "GIT branch or TAG",
     "codelib": "Code repository",
@@ -1115,7 +1136,7 @@
     "mutualTimeout": "Mutex Queue Timeout  (In minutes)",
     "mutualTimeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "queueLabel": " Mutex Queue Length",
-    "queuePlaceholder": " Please fill in an integer between 1 and 10",
+    "queuePlaceholder": " Please fill in an integer between 1 and 50",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",
@@ -1577,5 +1598,30 @@
   },
   "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
   "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
-  "versionNotMatch": "The current version is not the latest version and cannot be executed"
+  "versionNotMatch": "The current version is not the latest version and cannot be executed",
+  "buildNoBaseline": {
+    "buildNoBaseline": "Build Number Baseline",
+    "tips1": "1. This configuration sets the baseline value for the build number to increment according to the strategy:",
+    "tips2": "- When the pipeline runs for the first time, it will start incrementing based on this configuration.",
+    "tips3": "- After modifying the baseline value and releasing the version, if you want subsequent executions to start incrementing from the new baseline, please perform the 'Reset Current Build Number' operation in the variable view interface to make the changes take effect.",
+    "tips4": "2. There are two ways to reference it:",
+    "tips5": "- In pipeline orchestration, use the context ${{ ci.build-no }}",
+    "tips6": "- In the script files referenced by the pipeline, use the built-in environment variable ${{BK_CI_BUILD_NO}}",
+    "tips7": "3. Example: If the baseline value is 0 and the strategy is to increment by 1 each time, the build number for the next triggered run will be 1.",
+    "manualResetRequired": "Changes to the baseline value will not take effect automatically. Please make sure to manually reset it after release.",
+    "resetRequiredTips": "A change in the build number baseline value has been detected. Please manually reset the build number.",
+    "goReset": "Go Reset",
+    "baselineValue": "buildNo:",
+    "currentValue": "currentBuildNo:",
+    "resetBuildNo": "Reset Build Number",
+    "isSureReset": "Are you sure you want to reset the build number?",
+    "confirm": "Confirm Reset",
+    "CONSISTENT": "After reset, subsequent builds will be locked to {0}",
+    "SUCCESS_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next successful build will start counting from {1}",
+    "EVERY_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next build will start counting from {1}"
+  },
+  "deleteDraft": "Delete Draft",
+  "sureDeleteDraft": "Are you sure you want to delete this draft?",
+  "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
+  "noDraft": "No drafts available for deletion"
 }

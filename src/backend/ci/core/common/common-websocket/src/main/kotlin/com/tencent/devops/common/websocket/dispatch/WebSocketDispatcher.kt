@@ -27,52 +27,30 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
-import com.rabbitmq.client.ChannelContinuationTimeoutException
-import com.rabbitmq.client.impl.AMQImpl
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 class WebSocketDispatcher(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : EventDispatcher<WebsocketPush> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
     }
 
-    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: WebsocketPush) {
         events.forEach { event ->
             try {
-                send(event)
+                val mqMessage = event.buildMqMessage()
+                if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
+                    event.buildNotifyMessage(mqMessage)
+                    streamBridge.send(DefaultBindingUtils.getOutBindingName(event::class.java), mqMessage)
+                }
             } catch (ignored: Exception) {
-                if (ignored.cause is ChannelContinuationTimeoutException) {
-                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
-                    val cause = ignored.cause as ChannelContinuationTimeoutException
-                    if (cause.method is AMQImpl.Channel.Open) {
-                        send(event)
-                    }
-                } else {
-                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
-                }
-            }
-        }
-    }
-
-    private fun send(event: WebsocketPush) {
-        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-        val routeKey = eventType.routeKey
-        val mqMessage = event.buildMqMessage()
-        if (mqMessage != null && !mqMessage.sessionList.isNullOrEmpty()) {
-            event.buildNotifyMessage(mqMessage)
-            rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
-                if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
+                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
             }
         }
     }

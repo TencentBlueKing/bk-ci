@@ -1,8 +1,14 @@
 <template>
-    <div class="biz-container bkdevops-history-subpage pipeline-subpages" v-bkloading="{ isLoading }">
+    <div
+        class="biz-container bkdevops-history-subpage pipeline-subpages"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="isInfoReady">
             <div class="pipeline-subpages-header">
-                <router-view name="header" :is-switch-pipeline="isLoading"></router-view>
+                <router-view
+                    name="header"
+                    :is-switch-pipeline="isLoading"
+                ></router-view>
             </div>
             <router-view class="biz-content"></router-view>
         </template>

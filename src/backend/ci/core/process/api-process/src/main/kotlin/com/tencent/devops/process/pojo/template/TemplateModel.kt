@@ -77,5 +77,9 @@ data class TemplateModel(
     @get:Schema(title = "是否有模版编辑权限", required = true)
     val canEdit: Boolean? = null,
     @get:Schema(title = "是否有模版删除权限", required = true)
-    val canDelete: Boolean? = null
+    val canDelete: Boolean? = null,
+    @get:Schema(title = "创建者", required = false)
+    val creator: String,
+    @get:Schema(title = "更新时间", required = false)
+    val updateTime: Long
 )

@@ -10,10 +10,23 @@
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
-            <div class="base-info-panel-content" slot="content">
-                <p v-for="row in panel.rows" :key="row.key">
-                    <ul v-if="row.key === 'parallelConfDetail'" class="parallel-conf-detail">
-                        <li class="parallel-conf-detail-row" v-for="item in prarallelSettingRows" :key="item.key">
+            <div
+                class="base-info-panel-content"
+                slot="content"
+            >
+                <p
+                    v-for="row in panel.rows"
+                    :key="row.key"
+                >
+                    <ul
+                        v-if="row.key === 'parallelConfDetail'"
+                        class="parallel-conf-detail"
+                    >
+                        <li
+                            class="parallel-conf-detail-row"
+                            v-for="item in parallelSettingRows"
+                            :key="item.key"
+                        >
                             <label>
                                 {{ $t(item.label) }}
                             </label>
@@ -27,7 +40,11 @@
                         <span class="base-info-block-row-value">
                             <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                                 <template v-if="row.value.length > 0">
-                                    <bk-tag v-for="label in row.value" :key="label" class="base-info-block-row-value-label">
+                                    <bk-tag
+                                        v-for="label in row.value"
+                                        :key="label"
+                                        class="base-info-block-row-value-label"
+                                    >
                                         {{ label }}
                                     </bk-tag>
                                 </template>
@@ -109,7 +126,7 @@
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
-                    ...(runLockType === 'group_lock'
+                    ...(['group_lock', 'multiple'].includes(runLockType)
                         ? [{
                             key: 'parallelConfDetail'
                         }]
@@ -117,31 +134,52 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
+                const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
+                if (runLockType === 'group_lock') {
+                    return [
+                        {
+                            key: 'concurrencyGroup',
+                            label: 'group.groupName',
+                            value: this.basicInfo?.concurrencyGroup ?? '--'
+                        },
+                        {
+                            key: 'concurrencyCancelInProgress',
+                            label: 'settings.stopWhenNewCome',
+                            value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
+                        },
+                        ...(!this.basicInfo?.concurrencyCancelInProgress
+                            ? [
+                                {
+                                    key: 'maxQueueSize',
+                                    label: 'settings.largestNum',
+                                    value: this.basicInfo?.maxQueueSize ?? '--'
+                                },
+                                {
+                                    key: 'waitQueueTimeMinute',
+                                    label: 'settings.lagestTime',
+                                    value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
+                                }
+    
+                            ]
+                            : []
+                        )
+                    ]
+                }
+
                 return [
-                    {
-                        key: 'concurrencyGroup',
-                        label: 'group.groupName',
-                        value: this.basicInfo?.concurrencyGroup ?? '--'
-                    },
-                    {
-                        key: 'concurrencyCancelInProgress',
-                        label: 'settings.stopWhenNewCome',
-                        value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
-                    },
                     ...(!this.basicInfo?.concurrencyCancelInProgress
                         ? [
                             {
-                                key: 'maxQueueSize',
-                                label: 'settings.largestNum',
-                                value: this.basicInfo?.maxQueueSize ?? '--'
+                                key: 'maxConRunningQueueSize',
+                                label: 'settings.concurrentMaxConcurrency',
+                                value: this.basicInfo?.maxConRunningQueueSize ?? '--'
                             },
                             {
                                 key: 'waitQueueTimeMinute',
-                                label: 'settings.lagestTime',
+                                label: 'settings.concurrentTimeout',
                                 value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                             }
-
                         ]
                         : []
                     )

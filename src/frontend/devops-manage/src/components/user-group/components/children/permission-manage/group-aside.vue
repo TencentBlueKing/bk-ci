@@ -1,5 +1,5 @@
 <template>
-  <article class="group-aside">
+  <article :class="['group-aside', {'group-aside-height': showSelectProject}]">
     <template v-if="showSelectProject">
       <div class="select-project">
         <p class="title">{{ t('选择项目') }}</p>
@@ -37,7 +37,7 @@
       </div>
       <div class="line-split" v-if="!isNotProject" />
     </template>
-    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading">
+    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading" class='saide-content'>
       <scroll-load-list
         class="group-list"
         ref="loadList"
@@ -342,9 +342,10 @@ export default {
       return ajax
         .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.deleteObj.group.groupId}`)
         .then(() => {
-          this.handleHiddenDeleteGroup();
           this.refreshList();
           this.syncGroupAndMemberIAM();
+          this.syncDeleteGroupPermissions(this.deleteObj.group.groupId);
+          this.handleHiddenDeleteGroup();
           Message({
             theme: 'success',
             message: this.t('删除成功')
@@ -365,10 +366,25 @@ export default {
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
-    handleCreateGroup() {
+    async handleCreateGroup() {
       if (this.isNotProject) return
       this.activeTab = '';
-      this.$emit('create-group');
+      try {
+        const res = await http.getResource({
+          projectCode: this.curProjectCode,
+          resourceType: this.resourceType,
+          resourceCode: this.curProjectCode});
+          if(res) {
+            const role_id = res.iamGradeManagerId;
+            this.$emit('create-group', role_id);
+          }
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+      
     },
     handleCloseManage() {
       this.isClosing = true;
@@ -393,6 +409,7 @@ export default {
                 this.handleChooseGroup(group);
               })
               this.syncGroupAndMemberIAM();
+              this.syncGroupPermissions(data.data.id)
             break;
           case 'create_user_group_cancel':
             this.handleChooseGroup(this.groupList[0]);
@@ -412,16 +429,58 @@ export default {
           }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
+            break;
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+            
+          case 'submit_add_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_delete_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
         }
       }
     },
+
+    async syncDeleteGroupPermissions (groupId) {
+      try {
+        await http.syncDeleteGroupPermissions(this.curProjectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    
+    async syncGroupPermissions (groupId) {
+      if (!groupId) return
+      try {
+        await http.syncGroupPermissions(this.curProjectCode, groupId);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    
     async syncGroupIAM(groupId){
+      if (!groupId) return
       try {
         await http.syncGroupMember(this.curProjectCode, groupId);
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
@@ -431,7 +490,7 @@ export default {
       } catch (error) {
         Message({
           theme: 'error',
-          message: err.message
+          message: error.message
         });
       }
     },
@@ -503,6 +562,9 @@ export default {
   border-right: 1px solid #dde0e6;
   padding-top: 10px;
 }
+.group-aside-height {
+  height: calc(100% - 89px);
+}
 .select-project {
   padding: 10px 24px 0;
   .title {
@@ -510,6 +572,10 @@ export default {
     font-weight: 700;
     margin-bottom: 5px;
   }
+}
+.saide-content {
+  height: 100%;
+  overflow-y: auto;
 }
 .group-list {
   max-height: calc(100% - 70px);
