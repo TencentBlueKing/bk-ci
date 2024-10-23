@@ -26,8 +26,11 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_WECHAT
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 
+@Event(NOTIFY_WECHAT)
 class WechatNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

@@ -29,14 +29,14 @@ package com.tencent.devops.plugin.api.pojo
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * TGit提交检查事件
  */
-@Event(MQ.EXCHANGE_GIT_COMMIT_CHECK, MQ.ROUTE_GIT_COMMIT_CHECK)
+@Event(StreamBinding.ENGINE_GIT_COMMIT_CHECK)
 data class GitCommitCheckEvent(
     override val projectId: String,
     override val pipelineId: String,

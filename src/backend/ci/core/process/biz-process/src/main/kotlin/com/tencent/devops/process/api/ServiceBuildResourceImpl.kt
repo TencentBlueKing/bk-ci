@@ -64,6 +64,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -76,6 +77,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val containerBuildRecordService: ContainerBuildRecordService
 ) : ServiceBuildResource {
+
+    private val logger = LoggerFactory.getLogger(ServiceBuildResourceImpl::class.java)
+
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId, it must not empty.")
@@ -764,6 +768,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
+        if (buildNo != null) {
+            logger.info("API|manualStartupNew|$userId|$projectId|$pipelineId|buildNo=$buildNo")
+        }
         return Result(
             pipelineBuildFacadeService.buildManualStartup(
                 userId = userId,

@@ -212,6 +212,23 @@ class BuildRecordModelDao {
         }
     }
 
+    fun getBuildCancelUser(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            return dslContext.select(CANCEL_USER)
+                .from(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne()?.component1()
+        }
+    }
+
     companion object {
         private val mapper = BuildRecordPipelineJooqMapper()
     }

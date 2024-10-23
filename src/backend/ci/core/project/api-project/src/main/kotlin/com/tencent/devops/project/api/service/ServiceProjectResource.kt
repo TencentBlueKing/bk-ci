@@ -82,7 +82,7 @@ interface ServiceProjectResource {
 
     @POST
     @Path("/listProjectsByCondition/{offset}/{limit}")
-    @Operation(summary = "条件迁移项目实体")
+    @Operation(summary = "根据条件查询项目")
     fun listProjectsByCondition(
         @Parameter(description = "条件迁移项目实体", required = false)
         projectConditionDTO: ProjectConditionDTO,

@@ -32,8 +32,6 @@ import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
@@ -47,16 +45,15 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ALL")
 class PipelineBuildArtifactoryListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,
     private val client: Client
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildArtifactoryListener::class.java)!!
     }
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
         logger.info("PipelineBuildArtifactoryListener.run, event: $event")
         val userId = event.userId
         val projectId = event.projectId

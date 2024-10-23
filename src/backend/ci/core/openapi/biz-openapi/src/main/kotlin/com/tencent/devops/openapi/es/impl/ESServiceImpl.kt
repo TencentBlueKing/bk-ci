@@ -33,6 +33,7 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.openapi.es.ESIndexUtils
 import com.tencent.devops.openapi.es.ESMessage
 import com.tencent.devops.openapi.es.IESService
@@ -122,25 +123,37 @@ class ESServiceImpl constructor(
             while (true) {
                 val message = queue.take() ?: continue
                 buf.add(message)
-                if (buf.size == BULK_BUFFER_SIZE) {
-                    val currentEpoch = System.currentTimeMillis()
-                    try {
-                        prepareIndex()
-                        if (doAddMultiLines(buf) == 0) {
-                            throw ExecuteException(
-                                "None of lines is inserted successfully to ES "
-                            )
-                        } else {
-                            buf.clear()
+                if (buf.size >= BULK_BUFFER_SIZE) {
+                    RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
+                        override fun execute() {
+                            doAdd()
                         }
-                    } finally {
-                        val elapse = System.currentTimeMillis() - currentEpoch
-                        // #4265 当日志消息处理时间过长时打印消息内容
-                        if (elapse >= INDEX_STORAGE_WARN_MILLIS) logger.warn(
-                            " addBatchLogEvent spent too much time($elapse)"
-                        )
-                    }
+
+                        override fun fail(e: Throwable) {
+                            logger.error("add to es failed", e)
+                        }
+                    }, retryTime = 6, retryPeriodMills = 10000)
                 }
+            }
+        }
+
+        private fun doAdd() {
+            val currentEpoch = System.currentTimeMillis()
+            try {
+                prepareIndex()
+                if (doAddMultiLines(buf) == 0) {
+                    throw ExecuteException(
+                        "None of lines is inserted successfully to ES "
+                    )
+                } else {
+                    buf.clear()
+                }
+            } finally {
+                val elapse = System.currentTimeMillis() - currentEpoch
+                // #4265 当日志消息处理时间过长时打印消息内容
+                if (elapse >= INDEX_STORAGE_WARN_MILLIS) logger.warn(
+                    " addBatchLogEvent spent too much time($elapse)"
+                )
             }
         }
     }
@@ -269,7 +282,7 @@ class ESServiceImpl constructor(
         return try {
             logger.info(
                 "[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
-                        " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
+                    " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
             )
             val request = CreateIndexRequest(index)
                 .settings(
