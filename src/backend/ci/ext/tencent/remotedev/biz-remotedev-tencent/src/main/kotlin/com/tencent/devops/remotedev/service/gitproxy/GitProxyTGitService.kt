@@ -6,6 +6,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -1107,6 +1108,10 @@ class GitProxyTGitService @Autowired constructor(
         // 查询出现异常时，先打日志进行告警,不进行状态转换
         val throwFun: (e: Throwable, credType: TGitCredType, cred: String, repoIds: MutableSet<Long>?) -> Unit =
             throwFun@{ e, credType, cred, repoIds ->
+                // 401的不用告警，就是没有权限
+                if (e is RemoteServiceException && e.httpStatus == 401) {
+                    return@throwFun
+                }
                 repoIds?.forEach { id -> recordsTGitMap.remove(id) }
                 logger.error(
                     "$LOG_UPDATE_TGIT_ACL_TAG|filterRecordWithTGitProjectsData|$projectId|$credType|$cred error",

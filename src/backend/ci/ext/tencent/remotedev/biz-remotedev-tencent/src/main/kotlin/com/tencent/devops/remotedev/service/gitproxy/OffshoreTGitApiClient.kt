@@ -60,7 +60,7 @@ class OffshoreTGitApiClient @Autowired constructor(
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
                     if (throwE) {
-                        throw RemoteServiceException(" ${response.code}|$data")
+                        throw RemoteServiceException("${response.code}|$data", response.code)
                     } else {
                         logger.error("getProjectList fail|{}|{}", response.code, data)
                         return emptyList()
