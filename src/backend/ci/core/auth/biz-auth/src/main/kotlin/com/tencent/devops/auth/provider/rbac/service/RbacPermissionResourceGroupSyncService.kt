@@ -197,6 +197,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         isMemberJoinedToGroup
                     } catch (ignore: Exception) {
                         logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                        authResourceGroupApplyDao.delete(dslContext, it.id)
                         false
                     }
                 }
