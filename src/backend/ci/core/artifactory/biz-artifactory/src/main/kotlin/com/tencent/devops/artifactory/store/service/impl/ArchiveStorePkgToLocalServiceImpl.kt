@@ -74,13 +74,13 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
         )
     }
 
-    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
+    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {
         if (filePath.contains("../")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
         val charSet = Charsets.UTF_8.name()
-        val pkgFileTypeDir = getPkgFileTypeDir(storeType)
-        val file = File("$storeArchiveLocalBasePath/$pkgFileTypeDir/${URLDecoder.decode(filePath, charSet)}")
+        val fileRepoName = repoName ?: getPkgFileTypeDir(storeType)
+        val file = File("$storeArchiveLocalBasePath/$fileRepoName/${URLDecoder.decode(filePath, charSet)}")
         return if (file.exists()) {
             FileUtils.readFileToString(file, charSet)
         } else {

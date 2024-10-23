@@ -25,46 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.store.service
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface ArchiveStorePkgService {
-
-    /**
-     * 归档组件包
-     */
-    fun archiveStorePkg(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        archiveStorePkgRequest: ArchiveStorePkgRequest
-    ): Boolean
-
-    /**
-     * 获取组件相关文件内容
-     */
-    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): String
-
-    /**
-     * 删除组件包
-     */
-    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
-
-    /**
-     * 获取组件包文件下载链接
-     */
-    @Suppress("LongParameterList")
-    fun getComponentPkgDownloadUrl(
-        userId: String,
-        projectId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        version: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): String
-}
+@Schema(title = "研发商店-获取组件包环境信息查询条件")
+data class QueryComponentPkgEnvInfoParam(
+    @get:Schema(title = "文件内容", required = true)
+    val configFileContent: String
+)
