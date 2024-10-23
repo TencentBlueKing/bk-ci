@@ -92,7 +92,6 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
-import com.tencent.devops.remotedev.service.WorkspaceService.Companion.removeSuffixNumb
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -374,12 +373,14 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project ${data.projectId} workspace list {}", data)
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
+        val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null
         val search = with(data) {
             WorkspaceSearch(
                 projectId = projectId?.let { listOf(it) },
                 workspaceName = workspaceName?.let { listOf(it) },
                 workspaceSystemType = systemType?.let { listOf(it) },
-                ips = ips,
+                ips = if (!fastSelect) ips else null,
+                sips = if (fastSelect) ips?.map { it.removeSuffix("$") } else null,
                 owner = owners?.toList() ?: owner?.let { listOf(it) },
                 status = status?.let { listOf(it) },
                 zoneShortName = zoneId?.let { listOf(it) },

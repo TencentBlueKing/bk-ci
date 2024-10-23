@@ -25,21 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.metrics.listener.BuildMetricsUserListener
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Configuration
-@ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
-class MetricsUserListenerConfiguration {
-    @EventConsumer
-    fun buildMetricsUserConsumer(
-        @Autowired buildMetricsUserListener: BuildMetricsUserListener
-    ) = ScsConsumerBuilder.build<PipelineBuildStatusBroadCastEvent> { buildMetricsUserListener.execute(it) }
-}
+@Schema(title = "研发商店-获取组件包环境信息查询条件")
+data class QueryComponentPkgEnvInfoParam(
+    @get:Schema(title = "文件内容", required = true)
+    val configFileContent: String
+)
