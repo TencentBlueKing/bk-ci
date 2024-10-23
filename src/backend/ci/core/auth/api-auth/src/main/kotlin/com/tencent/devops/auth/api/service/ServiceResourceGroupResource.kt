@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
@@ -48,8 +49,25 @@ interface ServiceResourceGroupResource {
         resourceType: String,
         @Parameter(description = "用户组code,CI管理员为CI_MANAGER", required = true)
         @QueryParam("groupCode")
-        groupCode: BkAuthGroup
-    ): Result<Boolean>
+        groupCode: BkAuthGroup,
+        @Parameter(description = "用户组名称", required = true)
+        @QueryParam("groupName")
+        groupName: String?,
+        @Parameter(description = "用户组描述", required = true)
+        @QueryParam("groupDesc")
+        groupDesc: String?
+    ): Result<Int>
+
+    @POST
+    @Path("/{projectCode}/createCustomGroupAndPermissions/")
+    @Operation(summary = "创建自定义用户组和权限")
+    fun createCustomGroupAndPermissions(
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "自定义组创建请求体", required = true)
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Result<Int>
 
     @POST
     @Path("/{projectCode}/createGroup/")

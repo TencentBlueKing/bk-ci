@@ -34,10 +34,10 @@ import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.plugin.svn.service.TriggerSvnService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.SchedulingConfigurer
@@ -58,7 +58,7 @@ class PollSvnConfig : SchedulingConfigurer {
         pipelineWebhookDao: PipelineWebhookDao,
         dslContext: DSLContext,
         redisOperation: RedisOperation,
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): TriggerSvnService {
         return TriggerSvnService(
             client = client,
@@ -66,7 +66,7 @@ class PollSvnConfig : SchedulingConfigurer {
             pipelineWebhookDao = pipelineWebhookDao,
             dslContext = dslContext,
             redisOperation = redisOperation,
-            rabbitTemplate = rabbitTemplate
+            streamBridge = streamBridge
         )
     }
 

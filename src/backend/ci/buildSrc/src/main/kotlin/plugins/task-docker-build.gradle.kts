@@ -48,7 +48,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-server",
         "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8080",
         "-Xlog:gc*,gc+age=trace:file=/data/workspace/$service/jvm/gc-%t.log:time,level,tags",
-        "-XX:MaxGCPauseMillis=200",
+        "-XX:MaxGCPauseMillis=100",
         "-XX:+UseG1GC",
         "-XX:NativeMemoryTracking=summary",
         "-XX:+HeapDumpOnOutOfMemoryError",

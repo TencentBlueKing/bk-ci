@@ -46,7 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.apache.lucene.util.RamUsageEstimator
 import org.jooq.DSLContext
@@ -87,7 +87,7 @@ class MeasureServiceImpl : MeasureService {
     lateinit var pipelineEventDispatcher: PipelineEventDispatcher
 
     @Autowired
-    lateinit var measureEventDispatcher: MeasureEventDispatcher
+    lateinit var sampleEventDispatcher: SampleEventDispatcher
 
     @Value("\${build.atomMonitorData.report.switch:false}")
     private val atomMonitorSwitch: String = "false"
@@ -203,7 +203,7 @@ class MeasureServiceImpl : MeasureService {
                 ),
                 extData = extData
             )
-            measureEventDispatcher.dispatch(
+            sampleEventDispatcher.dispatch(
                 AtomMonitorReportBroadCastEvent(
                     pipelineId = pipelineId,
                     projectId = projectId,

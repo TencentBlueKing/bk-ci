@@ -101,6 +101,15 @@ interface UserAuthResourceGroupResource {
         @QueryParam("maxExpiredAt")
         @Parameter(description = "最大过期时间")
         maxExpiredAt: Long?,
+        @QueryParam("relatedResourceType")
+        @Parameter(description = "资源类型")
+        relatedResourceType: String?,
+        @QueryParam("relatedResourceCode")
+        @Parameter(description = "资源ID")
+        relatedResourceCode: String?,
+        @QueryParam("action")
+        @Parameter(description = "操作")
+        action: String?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,

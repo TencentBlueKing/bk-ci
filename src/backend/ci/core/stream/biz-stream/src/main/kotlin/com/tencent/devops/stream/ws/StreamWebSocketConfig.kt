@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.ws
 
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -36,5 +36,5 @@ import org.springframework.context.annotation.Configuration
 class StreamWebSocketConfig {
 
     @Bean
-    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+    fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 }

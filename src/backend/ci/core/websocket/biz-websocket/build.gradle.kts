@@ -28,7 +28,6 @@
 dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-websocket"))
-    api(project(":core:common:common-redis"))
     api(project(":core:project:api-project"))
     api(project(":core:websocket:api-websocket"))
     api("org.springframework.boot:spring-boot-starter-websocket")

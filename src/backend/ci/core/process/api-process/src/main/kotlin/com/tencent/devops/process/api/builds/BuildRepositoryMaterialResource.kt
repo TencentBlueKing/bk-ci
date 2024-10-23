@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CI_TASK_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -61,6 +62,9 @@ interface BuildRepositoryMaterialResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
         @Parameter(description = "物料列表", required = true)
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
+        pipelineBuildMaterials: List<PipelineBuildMaterial>,
+        @Parameter(description = "插件ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
+        taskId: String?
     ): Result<Int>
 }

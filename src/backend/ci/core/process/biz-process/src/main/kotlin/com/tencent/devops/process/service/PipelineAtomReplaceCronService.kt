@@ -73,8 +73,6 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
-import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -82,6 +80,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service

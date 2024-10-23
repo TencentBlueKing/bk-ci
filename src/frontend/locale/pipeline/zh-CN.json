@@ -456,7 +456,9 @@
       "desc": "你没有该模板查看权限，请申请权限",
       "apply": "申请加入"
     },
-    "editStoreTemplateTips": "研发商店模板不支持编辑"
+    "editStoreTemplateTips": "研发商店模板不支持编辑",
+    "lastModifiedDate": "更新时间",
+    "lastModifiedBy": "更新人"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -778,7 +780,7 @@
     "image": "镜像",
     "provideInfo": "{0} 提供，{1} 修改于 {2}",
     "officialCertification": "官方认证",
-    "thirdImageHolder": "请输入完整镜像路径，如 docker.io/bkci/ci",
+    "thirdImageHolder": "请输入完整镜像路径，如 xxx.xxx.com/your-namespace/your-imagename:1.0",
     "by": "由",
     "devnet": "Devnet 物理机",
     "onlySupport": "仅支持",
@@ -1037,7 +1039,13 @@
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
     "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
     "filePathTips": "请填写自定义仓库目录，如/a",
-    "fileNameTips": "文件名，留空则自动读取"
+    "fileNameTips": "文件名，留空则自动读取",
+    "enableDocker": "启用 Docker 运行构建任务",
+    "imagePullPolicy": "镜像拉取策略",
+    "alwaysPull": "每次运行时拉取",
+    "ifNotPresent": "当本地不存在时才拉取",
+    "enableDockerTips": "使用此功能时，请确保构建机已经安装Docker运行环境，且第三方构建机Agent的启动用户拥有Docker的操作权限",
+    "enabledPrivileged": "是否开启特权模式"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1050,6 +1058,7 @@
     "bool": "布尔值",
     "enum": "单选框",
     "multiple": "复选框",
+    "checkbox": "Checkbox确认框",
     "svntag": "SVN分支或TAG",
     "gitref": "GIT分支或TAG",
     "codelib": "代码库",
@@ -1126,7 +1135,7 @@
     "mutualTimeout": "最长等待时间（单位分钟）",
     "mutualTimeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "queueLabel": "队列最大任务数",
-    "queuePlaceholder": "请填写1-10之间的整数",
+    "queuePlaceholder": "请填写1-50之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",

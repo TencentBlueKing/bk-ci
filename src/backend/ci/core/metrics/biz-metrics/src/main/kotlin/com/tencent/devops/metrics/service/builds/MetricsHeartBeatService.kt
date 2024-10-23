@@ -157,7 +157,7 @@ class MetricsHeartBeatService @Autowired constructor(
          */
         private fun invalidUpdateCheck() {
             val updateKeys = redisOperation.hkeys(updateKey)?.ifEmpty { null } ?: return
-            val limit = LocalDateTime.now().plusHours(-1)
+            val limit = LocalDateTime.now().plusMinutes(-10)
             val needDelete = mutableListOf<String>()
             updateKeys.chunked(CHUNKED).forEach { keys ->
                 val updateValues = redisOperation.hmGet(updateKey, keys)

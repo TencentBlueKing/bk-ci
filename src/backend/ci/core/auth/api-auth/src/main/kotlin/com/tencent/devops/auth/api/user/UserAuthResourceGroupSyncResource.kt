@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.PUT
@@ -86,4 +87,34 @@ interface UserAuthResourceGroupSyncResource {
         @PathParam("projectId")
         projectId: String
     ): Result<AuthMigrateStatus>
+
+    @PUT
+    @Path("{groupId}/syncGroupPermissions")
+    @Operation(summary = "同步IAM组权限")
+    fun syncGroupPermissions(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("{groupId}/deleteGroupPermissions")
+    @Operation(summary = "删除IAM组权限")
+    fun deleteGroupPermissions(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Boolean>
 }

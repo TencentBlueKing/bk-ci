@@ -14,8 +14,8 @@ spring:
 # spring cloud stream 配置，common-stream
     stream:
       binders:
-        extend-rabbit:
-          type: rabbit
+        rabbit:
+          type: core-rabbit
           environment:
             spring:
               rabbitmq:
@@ -23,7 +23,24 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-      default-binder: extend-rabbit
+          type: extend-rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+        pulsar:
+          type: pulsar
+          environment:
+            spring:
+              pulsar:
+                serviceUrl: __BK_CI_PULSAR_URL__
+                tokenAuthValue: __BK_CI_PULSAR_AUTH_TOKEN__
+                tenant: __BK_CI_PULSAR_TENANT__
+                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: __BK_CI_MQ_DEFAULT_BINDER__
 # redis config
   data:
     redis:
@@ -37,25 +54,11 @@ spring:
       port: __BK_CI_REDIS_PORT__
       password: __BK_CI_REDIS_PASSWORD__
       database: __BK_CI_REDIS_DB__
-      ssl: 
+      ssl:
         enabled: __BK_CI_REDIS_SSL__
       pool:
         max-active: 16
         max-wait:  2000
-# rabbitmq config
-  rabbitmq:
-    # 引擎核心业务MQ
-    core:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
-    # 拓展功能模块MQ -- 如果主rabbitmq出现性能瓶颈, 可以考虑使用额外的实例
-    extend:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
   metrics:
     servo:
       enabled: false
