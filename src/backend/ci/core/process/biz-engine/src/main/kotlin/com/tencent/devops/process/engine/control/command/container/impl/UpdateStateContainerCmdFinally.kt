@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -114,7 +115,8 @@ class UpdateStateContainerCmdFinally(
                             jobId = commandContext.container.jobId,
                             stepId = null,
                             executeCount = executeCount,
-                            buildStatus = commandContext.buildStatus.name
+                            buildStatus = commandContext.buildStatus.name,
+                            type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
                         )
                     )
                 }
@@ -243,7 +245,8 @@ class UpdateStateContainerCmdFinally(
                     jobId = commandContext.container.jobId,
                     stepId = null,
                     executeCount = executeCount,
-                    buildStatus = commandContext.buildStatus.name
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
                 )
             )
 

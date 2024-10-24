@@ -44,6 +44,10 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
@@ -69,12 +73,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgent
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DeadlockLoserDataAccessException
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -83,6 +81,12 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DeadlockLoserDataAccessException
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -94,7 +98,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
     private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
     private val tokenService: ClientTokenService,
-    private val commonUtil: TPACommonUtil
+    private val commonUtil: TPACommonUtil,
+    private val pipelineEventDispatcher: SampleEventDispatcher
 ) {
     @Value("\${thirdagent.workerErrorTemplate:#{null}}")
     val workerErrorRtxTemplate: String? = null
@@ -205,7 +210,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                            "of project($projectId) and agent($agentId)"
+                        "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -238,9 +243,26 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                                " claim failed, cause: ${e.message} agent project($projectId)"
+                            " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
+                pipelineEventDispatcher.dispatch(
+                    // 第三方构建机启动
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "third-party-agent-start-$agentId", projectId = build.projectId,
+                        pipelineId = build.pipelineId, userId = build.startUser,
+                        buildId = build.buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = build.containerHashId, jobId = build.jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = build.executeCount,
+                        buildStatus = null, type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
+                        labels = mapOf(
+                            "agentId" to build.agentId,
+                            "envHashId" to (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                            "nodeHashId" to (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                            "agentIp" to build.agentIp
+                        )
+                    )
+                )
 
                 // 第三方构建机docker启动获取镜像凭据
                 val dockerInfo = if (build.dockerInfo == null) {
@@ -256,9 +278,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                                dockerInfo.credential?.user.isNullOrBlank() &&
-                                        dockerInfo.credential?.password.isNullOrBlank()
-                                ) &&
+                            dockerInfo.credential?.user.isNullOrBlank() &&
+                                dockerInfo.credential?.password.isNullOrBlank()
+                            ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -470,7 +492,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                    "of seq(${record.vmSeqId}) and status(${record.status})"
+                "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentByIdGlobal(record.projectId, record.agentId)
@@ -514,9 +536,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-                    buildRecord.status != PipelineTaskStatus.DONE.status ||
-                            buildRecord.status != PipelineTaskStatus.FAILURE.status
-                    )
+                buildRecord.status != PipelineTaskStatus.DONE.status ||
+                    buildRecord.status != PipelineTaskStatus.FAILURE.status
+                )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -572,9 +594,9 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
         val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
-                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-                "nodeDetail/${agentResult.data!!.nodeId}"
+            "nodeDetail/${agentResult.data!!.nodeId}"
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
@@ -819,7 +841,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         "oldIp" to agent.ip,
                         "newIp" to newIp,
                         "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-                                "nodeDetail/$nodeHashId"
+                            "nodeDetail/$nodeHashId"
                     )
                 )
             )

@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -55,7 +57,6 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -94,11 +95,11 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import kotlin.math.max
 
 /**
  * 构建控制器
@@ -279,6 +280,8 @@ class BuildStartControl @Autowired constructor(
                     )
                 )
                 broadcastStartEvent(buildInfo)
+            } else {
+                broadcastQueueEvent()
             }
         } finally {
             pipelineBuildLock.unlock()
@@ -502,7 +505,29 @@ class BuildStartControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.START,
                 executeCount = executeCount,
-                buildStatus = BuildStatus.RUNNING.name
+                buildStatus = BuildStatus.RUNNING.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_START
+            )
+        )
+    }
+
+    private fun PipelineBuildStartEvent.broadcastQueueEvent() {
+        /*暂不重复发送排队的PipelineBuildStatusBroadCastEvent，仅首次的时候发送即可。*/
+        if (this.source == BuildMonitorControl.START_EVENT_SOURCE) {
+            return
+        }
+        pipelineEventDispatcher.dispatch(
+            // build 排队
+            PipelineBuildStatusBroadCastEvent(
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = ActionType.START,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.QUEUE.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_QUEUE
             )
         )
     }

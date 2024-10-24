@@ -44,7 +44,8 @@ data class MetricsUserPO(
     val status: String,
     val atomCode: String?,
     val eventType: CallBackEvent,
-    var endTime: LocalDateTime?
+    var endTime: LocalDateTime?,
+    val labels: String?
 ) {
     constructor(event: PipelineBuildStatusBroadCastEvent) : this(
         startTime = event.eventTime ?: LocalDateTime.now(),
@@ -56,7 +57,8 @@ data class MetricsUserPO(
         status = checkNotNull(event.buildStatus),
         atomCode = event.atomCode,
         eventType = checkNotNull(event.toEventType()),
-        endTime = null
+        endTime = null,
+        labels = event.labels?.entries?.joinToString(separator = ";") { "${it.key}=${it.value}" },
     )
 
     companion object {
@@ -64,7 +66,7 @@ data class MetricsUserPO(
         fun load(str: String?): MetricsUserPO? {
             if (str.isNullOrBlank()) return null
             val list = str.split(DELIMITER)
-            if (list.size != 10) return null
+            if (list.size < 10) return null
             return MetricsUserPO(
                 LocalDateTime.ofInstant(Instant.ofEpochSecond(list[0].toLong()), ZoneOffset.ofHours(8)),
                 list[1],
@@ -77,7 +79,8 @@ data class MetricsUserPO(
                 CallBackEvent.valueOf(list[8]),
                 list[9].ifEmpty { null }?.let {
                     LocalDateTime.ofInstant(Instant.ofEpochSecond(it.toLong()), ZoneOffset.ofHours(8))
-                }
+                },
+                list.getOrNull(10)?.ifEmpty { null },
             )
         }
     }
@@ -92,6 +95,7 @@ data class MetricsUserPO(
             status + DELIMITER +
             (atomCode ?: "") + DELIMITER +
             eventType.name + DELIMITER +
-            (endTime?.toInstant(ZoneOffset.ofHours(8))?.epochSecond?.toString() ?: "")
+            (endTime?.toInstant(ZoneOffset.ofHours(8))?.epochSecond?.toString() ?: "") + DELIMITER +
+            (labels ?: "")
     }
 }

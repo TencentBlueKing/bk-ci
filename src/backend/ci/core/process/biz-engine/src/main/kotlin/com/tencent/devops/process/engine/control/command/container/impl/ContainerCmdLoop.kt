@@ -28,6 +28,9 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -52,10 +55,28 @@ class ContainerCmdLoop(
         // 需要将消息循环
         with(commandContext.container) {
             LOG.info("ENGINE|$buildId|${commandContext.event.source}]|EVENT_LOOP|$stageId|j($containerId)")
+            pipelineEventDispatcher.dispatch(
+                commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
+            )
+            if (commandContext.event.delayMills != DEFAULT_LOOP_TIME_MILLS) {
+                // job 排队轮询首次，暂时通过delayMills判定。
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "container-queue-loop-$containerId", projectId = projectId,
+                        pipelineId = pipelineId, userId = commandContext.event.userId,
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = containerHashId, jobId = jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = null, type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
+                        labels = mapOf(
+                            "latestSummary" to commandContext.latestSummary,
+                            "mutexGroup" to (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),
+                            "agentReuseMutex" to (controlOption.agentReuseMutex?.runtimeAgentOrEnvId ?: "")
+                        )
+                    )
+                )
+            }
         }
-        pipelineEventDispatcher.dispatch(
-            commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
-        )
         // #5454 增加可视化的互斥状态打印
         if (commandContext.latestSummary == "mutex_print" ||
             commandContext.latestSummary == "agent_reuse_mutex_print"

@@ -45,9 +45,12 @@ import org.springframework.context.annotation.Configuration
 class MetricsUserConfig {
 
     companion object {
+        const val gaugeBuildQueueKey = "pipeline_queue_time_seconds"
         const val gaugeBuildKey = "pipeline_running_time_seconds"
         const val gaugeBuildStatusKey = "pipeline_status_info"
+        const val gaugeBuildJobQueueKey = "pipeline_job_queue_time_seconds"
         const val gaugeBuildJobKey = "pipeline_job_running_time_seconds"
+        const val gaugeBuildAgentKey = "pipeline_agent_running_time_seconds"
         const val gaugeBuildStepKey = "pipeline_step_running_time_seconds"
         const val gaugeBuildStepStatusKey = "pipeline_step_status_info"
     }
