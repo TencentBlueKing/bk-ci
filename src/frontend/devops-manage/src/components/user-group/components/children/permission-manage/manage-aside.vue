@@ -283,7 +283,7 @@ const {
   memberPagination,
 } = storeToRefs(manageAsideStore);
 
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const removeUser = ref(null);
 const isChecking = ref(false);
 const overTable = ref([]);
@@ -373,7 +373,7 @@ async function handConfirm (flag) {
         emit('removeConfirm', removeUser.value, handOverForm.value);
       }
     } else {
-      emit('removeConfirm', removeUser.value);
+      emit('removeConfirm', removeUser.value, {});
     }
   } catch (error) {}
 }

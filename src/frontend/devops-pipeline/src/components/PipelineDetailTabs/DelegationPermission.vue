@@ -1,8 +1,15 @@
 <template>
-    <main class="delegation-permission" v-bkloading="{ isLoading }">
+    <main
+        class="delegation-permission"
+        v-bkloading="{ isLoading }"
+    >
         <section class="content-warpper">
             <header class="header">
-                <logo class="mr5" name="help-document-fill" size="20" />
+                <logo
+                    class="mr5"
+                    name="help-document-fill"
+                    size="20"
+                />
                 {{ $t('delegationPermission') }}
             </header>
             <div class="content">
@@ -10,18 +17,21 @@
                 <i18n
                     class="mt10"
                     tag="p"
-                    path="delegation.tips2">
+                    path="delegation.tips2"
+                >
                     <span class="highlight">{{ $t('delegation.pipelineExecPermission') }}</span>
                 </i18n>
                 <i18n
                     tag="p"
-                    path="delegation.tips3">
-                    <span class="highlight">{{ 'BK_CI_START_USER_ID' }}</span>
+                    path="delegation.tips3"
+                >
+                    <span class="highlight">{{ 'BK_CI_AUTHORIZER' }}</span>
                 </i18n>
                 <p class="mt20">{{ $t('delegation.tips4') }}</p>
                 <i18n
                     tag="p"
-                    path="delegation.tips5">
+                    path="delegation.tips5"
+                >
                     <span class="highlight">{{ $t('delegation.newOperator') }}</span>
                 </i18n>
             </div>
@@ -35,7 +45,8 @@
                         :class="{
                             'block-row-value': true,
                             'reset-row': !resourceAuthData.executePermission
-                        }">
+                        }"
+                    >
                         <span
                             :class="{
                                 'name': true,
@@ -48,7 +59,10 @@
                         >
                             {{ resourceAuthData.handoverFrom }}
                         </span>
-                        <bk-tag theme="danger" v-if="!resourceAuthData?.executePermission && !isLoading">{{ $t('delegation.expired') }}</bk-tag>
+                        <bk-tag
+                            theme="danger"
+                            v-if="!resourceAuthData?.executePermission && !isLoading"
+                        >{{ $t('delegation.expired') }}</bk-tag>
                         <span
                             class="refresh-auth"
                             v-perm="{
@@ -61,8 +75,13 @@
                                     action: RESOURCE_ACTION.MANAGE
                                 }
                             }"
-                            @click="handleShowResetDialog">
-                            <logo class="refresh-icon" name="refresh" size="14" />
+                            @click="handleShowResetDialog"
+                        >
+                            <logo
+                                class="refresh-icon"
+                                name="refresh"
+                                size="14"
+                            />
                             {{ $t('delegation.resetAuthorization') }}
                         </span>
                     </span>
@@ -75,23 +94,24 @@
         </section>
         
         <bk-dialog
-            ext-cls="reset-auth-confirm-dialog"
+            ext-cls="reset-auth-dialog"
             :value="showResetDialog"
             :show-footer="false"
             @value-change="handleToggleShowResetDialog"
         >
-            <span class="close-confirm-title">
+            <span class="reset-dialog-title">
                 {{ $t('delegation.confirmReset') }}
             </span>
-            <span class="close-confirm-tips">
+            <span class="reset-dialog-tips">
                 <i18n
                     tag="p"
-                    path="delegation.resetAuthTips1">
+                    path="delegation.resetAuthTips1"
+                >
                     <span class="highlight">{{ $t('delegation.yourPermission') }}</span>
                 </i18n>
                 <p>{{ $t('delegation.resetAuthTips2') }}</p>
             </span>
-            <span class="close-confirm-footer">
+            <span class="reset-dialog-footer">
                 <bk-button
                     class="mr10 btn"
                     theme="primary"
@@ -103,8 +123,41 @@
                 <bk-button
                     class="btn"
                     :loading="resetLoading"
-                    @click="showResetDialog = !showResetDialog">
+                    @click="showResetDialog = !showResetDialog"
+                >
                     {{ $t('delegation.cancel') }}
+                </bk-button>
+            </span>
+        </bk-dialog>
+
+        <bk-dialog
+            ext-cls="reset-auth-dialog"
+            v-model="showFailedDialog"
+            width="640"
+            :show-footer="false"
+            header-position="center"
+        >
+            <span class="reset-dialog-title">
+                {{ $t('delegation.resetFailed') }}
+            </span>
+            <div class="reset-failed-item">
+                <template v-for="(item, index) in failedArr">
+                    <div :key="item">
+                        <span v-if="index > 0">
+                            {{ index }}.
+                        </span>
+                        <span v-html="item" />
+                    </div>
+                </template>
+            </div>
+            <span class="reset-dialog-footer">
+                <bk-button
+                    class="btn"
+                    theme="primary"
+                    :loading="resetLoading"
+                    @click="showFailedDialog = !showFailedDialog"
+                >
+                    {{ $t('delegation.confirm') }}
                 </bk-button>
             </span>
         </bk-dialog>
@@ -127,7 +180,9 @@
                 isLoading: false,
                 showResetDialog: false,
                 resetLoading: false,
-                resourceAuthData: {}
+                resourceAuthData: {},
+                showFailedDialog: false,
+                failedArr: []
             }
         },
         computed: {
@@ -202,10 +257,15 @@
                     this.showResetDialog = false
                     if (res?.FAILED?.length) {
                         const message = res.FAILED[0]?.handoverFailedMessage || ''
-                        this.$bkMessage({
-                            theme: 'error',
-                            message
-                        })
+                        if (message.includes('<br/>')) {
+                            this.failedArr = message.split('<br/>')
+                            this.showFailedDialog = true
+                        } else {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message
+                            })
+                        }
                     } else {
                         this.fetchResourceAuth()
                         this.$bkMessage({
@@ -293,7 +353,7 @@
             margin-right: 2px;
         }
     }
-    .reset-auth-confirm-dialog {
+    .reset-auth-dialog {
         text-align: center;
         .bk-dialog-body {
             display: flex;
@@ -302,13 +362,13 @@
             max-height: calc(50vh - 50px);
         }
         
-        .close-confirm-title {
+        .reset-dialog-title {
             font-size: 20px;
             color: #313238;
             margin-bottom: 15px;
         }
         
-        .close-confirm-tips {
+        .reset-dialog-tips {
             text-align: left;
             color: #63656E;
             font-size: 12px;
@@ -318,10 +378,23 @@
                 color: #FF9C01;
             }
         }
-        .close-confirm-footer {
+        .reset-dialog-footer {
             margin-top: 24px;
             .btn {
                 width: 88px;
+            }
+        }
+        .reset-failed-item {
+            text-align: left;
+            max-height: 400px;
+            overflow: auto;
+            width: 100%;
+            color: #63656E;
+            font-size: 12px;
+            padding: 10px 20px;
+            background: #F5F7FA;
+            a {
+                color: #3A84FF;
             }
         }
     }

@@ -3,14 +3,20 @@
         :class="{
             'stage-check-icon': true,
             'pointer': true,
-            [reviewStatausIcon]: true,
+            [reviewStatusIcon]: true,
             'is-readonly-check-icon': !isExecDetail && !editable
         }"
         v-bk-tooltips.top="reviewTooltip"
         @click.stop="handleStageCheckIn"
     >
-        <Logo :name="reviewStatausIcon" size="28" />
-        <span class="stage-check-txt" v-if="checkTxt">{{ t(checkTxt) }}</span>
+        <Logo
+            :name="reviewStatusIcon"
+            size="28"
+        />
+        <span
+            class="stage-check-txt"
+            v-if="checkTxt"
+        >{{ t(checkTxt) }}</span>
     </div>
 </template>
 
@@ -81,7 +87,7 @@
                 }
                 return txt
             },
-            reviewStatausIcon () {
+            reviewStatusIcon () {
                 const { stageCheck = {} } = this
                 try {
                     if (stageCheck.isReviewError) return 'review-error'

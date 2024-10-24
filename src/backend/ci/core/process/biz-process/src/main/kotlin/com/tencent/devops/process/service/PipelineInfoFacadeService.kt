@@ -54,7 +54,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -63,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -78,6 +78,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSIO
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -135,6 +136,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
@@ -412,7 +414,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -714,7 +716,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        version = branchVersion.version,
+                        targetVersion = branchVersion.copy(
+                            model = getFixedModel(
+                                branchVersion.model, projectId, pipelineId, userId, pipelineInfo
+                            )
+                        ),
                         ignoreBase = true,
                         transactionContext = transactionContext
                     )
@@ -1184,6 +1190,30 @@ class PipelineInfoFacadeService @Autowired constructor(
         return result
     }
 
+    fun updateBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNo: BuildNoUpdateReq
+    ) {
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
+            params = buildNo.currentBuildNo.toString(),
+            description = null
+        )
+        pipelineBuildSummaryDao.updateBuildNo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo.currentBuildNo,
+            debug = false
+        )
+    }
+
     fun saveAll(
         userId: String,
         projectId: String,
@@ -1299,11 +1329,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineInfo: PipelineInfo
     ): Model {
         try {
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val buildNo = triggerContainer.buildNo
-            if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
-                    ?: buildNo.buildNo
+            val triggerContainer = model.getTriggerContainer()
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            triggerContainer.buildNo?.apply {
+                currentBuildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                    ?: buildNo
             }
             // 兼容性处理
             BuildPropertyCompatibilityTools.fix(triggerContainer.params)

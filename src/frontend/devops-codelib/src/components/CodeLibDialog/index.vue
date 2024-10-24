@@ -9,8 +9,16 @@
         :padding="24"
         :quick-close="false"
     >
-        <h3 slot="header" class="bk-dialog-title">{{ title }}</h3>
-        <component ref="form" :is="comName"></component>
+        <h3
+            slot="header"
+            class="bk-dialog-title"
+        >
+            {{ title }}
+        </h3>
+        <component
+            ref="form"
+            :is="comName"
+        ></component>
         <footer slot="footer">
             <template v-if="showDialogFooter">
                 <bk-button

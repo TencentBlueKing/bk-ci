@@ -16,11 +16,14 @@
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
           <div class="num-box" v-for="item in groupCountField" :key="item">
-            <i :class="{
-              'group-icon manage-icon manage-icon-user-shape': item === 'userCount',
-              'group-icon manage-icon manage-icon-organization': item === 'departmentCount',
-              'active': activeTab === group.groupId
-            }" />
+            <i
+              :class="['group-icon', 'manage-icon', {
+                'manage-icon-user-shape': item === 'userCount',
+                'manage-icon-user-template': item === 'templateCount',
+                'manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }]"
+            />
             <div class="group-num">{{ group[item] }}</div>
           </div>
           <bk-popover
@@ -188,8 +191,15 @@ export default {
       hasLoadEnd: false,
       isClosing: false,
       curGroupIndex: -1,
-      groupCountField: ['userCount', 'departmentCount'],
     };
+  },
+  computed: {
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
   },
   watch: {
     activeIndex(newVal) {
@@ -305,12 +315,38 @@ export default {
           }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
+            break;
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_add_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_delete_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
         }
+      }
+    },
+    async syncGroupPermissions(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupPermissions`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
       }
     },
     async syncGroupIAM(groupId){
       try {
-        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`)
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
       } catch (error) {
         Message({
           theme: 'error',

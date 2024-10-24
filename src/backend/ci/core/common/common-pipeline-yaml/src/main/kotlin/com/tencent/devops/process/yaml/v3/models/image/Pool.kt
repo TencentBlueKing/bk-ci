@@ -49,6 +49,7 @@ data class Pool(
     val workspace: String? = null,
     val buildType: BuildType? = BuildType.DEVCLOUD,
     val dockerInfo: ThirdPartyAgentDockerInfo? = null,
+    val lockResourceWith: String? = null,
     val image: PoolImage? = null
 )
 

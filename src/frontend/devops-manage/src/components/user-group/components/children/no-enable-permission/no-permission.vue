@@ -22,7 +22,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-const projectId = computed(() => route.params?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const props = defineProps({
   userId: String,
 });

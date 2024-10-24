@@ -1,22 +1,43 @@
 <template>
-    <bk-dialog v-model="constructToolConf.isShow"
+    <bk-dialog
+        v-model="constructToolConf.isShow"
         :width="'640'"
-        :close-icon="false">
+        :close-icon="false"
+    >
         <div
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
-            <div class="machine-params-form" v-if="hasPermission">
+            }"
+        >
+            <div
+                class="machine-params-form"
+                v-if="hasPermission"
+            >
                 <bk-form label-width="80">
                     <bk-form-item
                         required
                         :label="$t('environment.nodeInfo.model')"
                     >
                         <bk-radio-group v-model="constructImportForm.model">
-                            <bk-radio :value="'LINUX'" :disabled="isAgent">Linux</bk-radio>
-                            <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
-                            <bk-radio :value="'WINDOWS'" :disabled="isAgent">Windows</bk-radio>
+                            <bk-radio
+                                :value="'LINUX'"
+                                :disabled="isAgent"
+                            >
+                                Linux
+                            </bk-radio>
+                            <bk-radio
+                                :value="'MACOS'"
+                                :disabled="isAgent"
+                            >
+                                macOS
+                            </bk-radio>
+                            <bk-radio
+                                :value="'WINDOWS'"
+                                :disabled="isAgent"
+                            >
+                                Windows
+                            </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item
@@ -26,43 +47,82 @@
                         :desc="$t('environment.nodeInfo.buildMachineLocationTips')"
                     >
                         <bk-radio-group v-model="constructImportForm.location">
-                            <bk-radio v-for="(model, index) in gatewayList"
+                            <bk-radio
+                                v-for="(model, index) in gatewayList"
                                 :key="index"
                                 :value="model.zoneName"
                                 :disabled="isAgent"
-                            >{{ model.showName }}</bk-radio>
+                            >
+                                {{ model.showName }}
+                            </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                 </bk-form>
-                <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
-                <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
+                <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt') }}:</p>
+                <div
+                    class="construct-card-item command-tool-card"
+                    v-if="constructImportForm.model !== 'WINDOWS'"
+                >
                     <div class="command-line">
                         {{ constructImportForm.link || $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
-                    <div class="copy-button" v-if="constructImportForm.link">
-                        <a class="text-link copy-command"
-                            @click="copyCommand">
+                    <div
+                        class="copy-button"
+                        v-if="constructImportForm.link"
+                    >
+                        <a
+                            class="text-link copy-command"
+                            @click="copyCommand"
+                        >
                             {{ $t('environment.clickToCopy') }}</a>
                     </div>
                 </div>
-                <div class="construct-card-item command-tool-card windows-node-card" v-if="constructImportForm.model === 'WINDOWS'">
-                    <div class="command-line" v-if="constructImportForm.link">
-                        1.<a class="refresh-detail" :href="constructImportForm.link">{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
+                <div
+                    class="construct-card-item command-tool-card windows-node-card"
+                    v-if="constructImportForm.model === 'WINDOWS'"
+                >
+                    <div
+                        class="command-line"
+                        v-if="constructImportForm.link"
+                    >
+                        1.<a
+                            class="refresh-detail"
+                            :href="constructImportForm.link"
+                        >{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
                         <br>
-                        2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
+                        2.{{ $t('environment.check') }}【<a
+                            class="refresh-detail"
+                            target="_blank"
+                            :href="installDocsLink"
+                        >{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
                     </div>
-                    <div class="command-line" v-else>
+                    <div
+                        class="command-line"
+                        v-else
+                    >
                         {{ $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
                 <div class="construct-card-item connection-node-card">
-                    <p class="no-connection-node" v-if="connectNodeDetail.status === 'UN_IMPORT'">
-                        {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span class="refresh-detail" @click="requetConstructNode">{{ $t('environment.clickToRefresh') }}</span>
+                    <p
+                        class="no-connection-node"
+                        v-if="connectNodeDetail.status === 'UN_IMPORT'"
+                    >
+                        {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span
+                            class="refresh-detail"
+                            @click="requetConstructNode"
+                        >{{ $t('environment.clickToRefresh') }}</span>
                     </p>
-                    <div class="connected-node-msg" v-if="['UN_IMPORT_OK','IMPORT_EXCEPTION'].includes(connectNodeDetail.status)">
+                    <div
+                        class="connected-node-msg"
+                        v-if="['UN_IMPORT_OK','IMPORT_EXCEPTION'].includes(connectNodeDetail.status)"
+                    >
                         <div class="node-info">
-                            <img :src="defaultMachineCover" class="node-icon">
+                            <img
+                                :src="defaultMachineCover"
+                                class="node-icon"
+                            >
                             <div class="node-msg-intro">
                                 <p class="node-name">{{ connectNodeDetail.hostname }}</p>
                                 <p>
@@ -78,20 +138,37 @@
                         <!-- <div class="delete-handler"><i class="devops-icon icon-close"></i></div> -->
                     </div>
                 </div>
-                <p v-if="isAgent" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！</p>
+                <p
+                    v-if="isAgent"
+                    class="target-console-tips"
+                >
+                    {{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！
+                </p>
             </div>
 
-            <empty-tips v-if="!hasPermission"
+            <empty-tips
+                v-if="!hasPermission"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
-                :btns="emptyTipsConfig.btns">
+                :btns="emptyTipsConfig.btns"
+            >
             </empty-tips>
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
-                    @click="confirmFn">{{ constructToolConf.importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    :disabled="connectNodeDetail.status === 'UN_IMPORT'"
+                    @click="confirmFn"
+                >
+                    {{ constructToolConf.importText }}
+                </bk-button>
+                <bk-button
+                    theme="default"
+                    @click="cancelFn"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </bk-dialog>

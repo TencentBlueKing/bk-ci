@@ -27,8 +27,14 @@
                 </div>
 
                 <div class="filter-operation">
-                    <span :class="{ 'is-selected': isEnabled }" @click="isEnabled = true">{{ $t('启用中') }}</span>
-                    <span :class="{ 'is-selected': !isEnabled }" @click="isEnabled = false">{{ $t('已停用') }}</span>
+                    <span
+                        :class="{ 'is-selected': isEnabled }"
+                        @click="isEnabled = true"
+                    >{{ $t('启用中') }}</span>
+                    <span
+                        :class="{ 'is-selected': !isEnabled }"
+                        @click="isEnabled = false"
+                    >{{ $t('已停用') }}</span>
                 </div>
                 <bk-table
                     class="biz-table"
@@ -106,7 +112,8 @@
                     >
                         <template slot-scope="{ row, $index }">
                             <span class="project-status">
-                                <div class="enable-switcher"
+                                <div
+                                    class="enable-switcher"
                                     v-perm="{
                                         hasPermission: row.managePermission,
                                         disablePermissionApi: true,
@@ -135,14 +142,20 @@
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
                                 >
-                                    <img src="../assets/scss/logo/warning-circle-small.svg" alt="">
+                                    <img
+                                        src="../assets/scss/logo/warning-circle-small.svg"
+                                        alt=""
+                                    >
                                 </div>
                                 <div
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
                                 >
-                                    <img src="../assets/scss/logo/wait-small.svg" alt="">
+                                    <img
+                                        src="../assets/scss/logo/wait-small.svg"
+                                        alt=""
+                                    >
                                 </div>
                             </span>
                         </template>
@@ -207,12 +220,12 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import {
         handleProjectNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapActions } from 'vuex'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',

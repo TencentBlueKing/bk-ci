@@ -8,7 +8,7 @@
                 class="icon-angle-down"
                 :size="12"
                 name="angle-down"
-                :class="{ &quot;open&quot;: isContentShow }"
+                :class="{ 'open': isContentShow }"
             />
             <slot name="header" />
         </header>

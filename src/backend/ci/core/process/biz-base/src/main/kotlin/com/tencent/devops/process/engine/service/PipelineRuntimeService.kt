@@ -137,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -225,6 +225,13 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
         return pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId)
+    }
+
+    fun getRunningBuildCount(
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
     /** 根据状态信息获取并发组构建列表
@@ -372,7 +379,7 @@ class PipelineRuntimeService @Autowired constructor(
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int?,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -408,7 +415,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser
@@ -535,6 +542,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 result.distinct()
             }
+
             else -> emptyList()
         }
         return if (search.isNullOrBlank()) {
@@ -566,7 +574,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.sortedBy { it.aliasName },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
@@ -608,7 +616,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIdsOnly(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
@@ -768,7 +776,7 @@ class PipelineRuntimeService @Autowired constructor(
         // --- 第1层循环：Stage遍历处理 ---
         var afterRetryStage = false
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
-        val agentReuseMutexTree = AgentReuseMutexTree(mutableListOf())
+        val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
@@ -814,7 +822,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
-                        stageEnableFlag = stage.isStageEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -828,7 +836,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -841,7 +849,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -964,7 +972,8 @@ class PipelineRuntimeService @Autowired constructor(
                         startTime = stageStartTime,
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
-                        checkOut = stage.checkOut
+                        checkOut = stage.checkOut,
+                        stageIdForUser = stage.stageIdForUser
                     )
                 )
             }
@@ -987,6 +996,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = context.startBuildStatus,
                 rebuild = context.retryStartTaskId.isNullOrBlank(),
                 nowTime = context.now,
+                executeCount = context.executeCount,
                 buildParameters = buildInfo.buildParameters?.let { self ->
                     val newList = self.toMutableList()
                     val retryCount = context.executeCount - 1
@@ -1407,6 +1417,7 @@ class PipelineRuntimeService @Autowired constructor(
                 taskId = firstTaskId,
                 status = startBuildStatus,
                 actionType = actionType,
+                executeCount = executeCount,
                 buildNoType = buildNoType // 该字段是需要遍历Model‘获得，不过在审核阶段为null，不影响功能逻辑。
             ), // 监控事件
             PipelineBuildMonitorEvent(
@@ -1579,7 +1590,11 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
+    fun completeClaimBuildTask(
+        completeTask: CompleteTask,
+        endBuild: Boolean = false,
+        endBuildMsg: String? = null
+    ): PipelineBuildTask? {
         val buildTask = pipelineTaskService.getBuildTask(
             projectId = completeTask.projectId,
             buildId = completeTask.buildId,
@@ -1620,7 +1635,7 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     executeCount = buildTask.executeCount,
-                    reason = completeTask.errorMsg
+                    reason = endBuildMsg ?: completeTask.errorMsg
                 )
             )
         }
@@ -1670,7 +1685,6 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 startTime = if (latestRunningBuild.executeCount == 1) startTime else null,
-                executeCount = latestRunningBuild.executeCount,
                 debug = latestRunningBuild.debug
             )
             pipelineInfoDao.updateLatestStartTime(
@@ -1880,7 +1894,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String? = null,
         startUser: List<String>? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int? = null,
+        debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
         triggerUser: List<String>?
@@ -1909,7 +1923,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debugVersion = debugVersion,
+            debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser

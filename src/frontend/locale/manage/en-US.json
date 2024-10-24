@@ -255,5 +255,14 @@
     "该用户已离职，无需续期": "The user has left the company, no need to renew",
     "同步成功": "Sync successfully",
     "XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions of {0} have expired, no need for transfer. Are you sure you want to remove the user and clean up the expired permissions?",
-    "确定": "Confirm"
+    "确定": "Confirm",
+    "请选择项目": "Please select a project",
+    "过期时间": "Expiration Time",
+    "用户组名称": "User Group Name",
+    "未来 X 小时": "Next {0} Hours",
+    "未来 X 天": "Next {0} Days",
+    "过去 X 小时": "Last {0} Hours",
+    "过去 X 天": "Last {0} Days",
+    "所属服务": "Associated Service",
+    "资源": "Resource"
 }

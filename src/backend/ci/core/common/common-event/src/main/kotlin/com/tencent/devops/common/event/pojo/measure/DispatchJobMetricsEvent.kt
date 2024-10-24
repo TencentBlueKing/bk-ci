@@ -28,9 +28,10 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_DISPATCH_JOB_METRICS_FANOUT)
+@Event(destination = StreamBinding.METRICS_DISPATCH_JOB, binder = StreamBinder.EXTEND_RABBIT)
 data class DispatchJobMetricsEvent(
     override val projectId: String,
     override val pipelineId: String,

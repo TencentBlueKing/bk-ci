@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
@@ -10,8 +11,6 @@ import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
-import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -34,6 +33,11 @@ interface PermissionResourceMemberService {
 
     fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO
 
+    /**
+     *之所以将简单查询接口抽成单独方法，是因为该方法只用于查询用户名称/部门名称等，
+     *一方面，该方法职责比较单一；另一方面，该接口需要连表查询到授权资源表中授权人。
+     *复杂查询虽然需要查询各种权限，但是不需要关联授权资源表。
+     **/
     fun listProjectMembers(
         projectCode: String,
         memberType: String?,
@@ -44,24 +48,26 @@ interface PermissionResourceMemberService {
         pageSize: Int
     ): SQLPage<ResourceMemberInfo>
 
+    fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo>
+
+    fun listResourceGroupMembers(
+        projectCode: String,
+        memberId: String,
+        resourceType: String? = null,
+        iamGroupIds: List<Int>? = null,
+        minExpiredAt: Long? = null,
+        maxExpiredAt: Long? = null,
+        start: Int? = null,
+        limit: Int? = null
+    ): Pair<Long, List<AuthResourceGroupMember>>
+
     /**
-     * 获取用户有权限的用户组数量
+     * 获取用户在该项目加入的组
      * */
-    fun getMemberGroupsCount(
+    fun listMemberGroupIdsInProject(
         projectCode: String,
         memberId: String
-    ): List<MemberGroupCountWithPermissionsVo>
-
-    // 查询成员所在资源用户组详情，直接加入+通过用户组（模板）加入
-    @Suppress("LongParameterList")
-    fun getMemberGroupsDetails(
-        projectId: String,
-        memberId: String,
-        resourceType: String?,
-        iamGroupIds: List<Int>? = null,
-        start: Int?,
-        limit: Int?
-    ): SQLPage<GroupDetailsInfoVo>
+    ): List<Int>
 
     fun batchDeleteResourceGroupMembers(
         projectCode: String,
@@ -115,7 +121,8 @@ interface PermissionResourceMemberService {
     fun autoRenewal(
         projectCode: String,
         resourceType: String,
-        resourceCode: String
+        resourceCode: String,
+        validExpiredDay: Int
     )
 
     // 需审批版本
@@ -132,7 +139,7 @@ interface PermissionResourceMemberService {
         userId: String,
         projectCode: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
-    ): GroupDetailsInfoVo
+    ): Boolean
 
     fun renewalIamGroupMembers(
         groupId: Int,
@@ -161,7 +168,6 @@ interface PermissionResourceMemberService {
         expiredAt: Long
     ): Boolean
 
-    @Suppress("LongParameterList")
     fun batchAddResourceGroupMembers(
         projectCode: String,
         iamGroupId: Int,
