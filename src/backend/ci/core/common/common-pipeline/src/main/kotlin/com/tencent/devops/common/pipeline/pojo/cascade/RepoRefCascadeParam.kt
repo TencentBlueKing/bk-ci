@@ -33,7 +33,7 @@ class RepoRefCascadeParam : CascadeParam(
             BuildCascadeProps(
                 id = key,
                 options = listOf(BuildFormValue(defaultValue, defaultValue)),
-                searchUrl = "/process/api/user/buildParam/$projectId/repository/refs?search={words}&" +
+                searchUrl = "/process/api/user/buildParam/$projectId/repository/refs?search={branch}&" +
                         "repositoryType=NAME&repositoryId={parentValue}",
                 replaceKey = "{branch}"
             )
