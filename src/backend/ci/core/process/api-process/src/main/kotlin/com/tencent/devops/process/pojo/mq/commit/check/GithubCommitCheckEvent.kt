@@ -29,14 +29,14 @@ package com.tencent.devops.process.pojo.mq.commit.check
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * Github PullRequest 检查事件
  */
-@Event(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
+@Event(StreamBinding.ENGINE_GIT_COMMIT_CHECK_GITHUB)
 data class GithubCommitCheckEvent(
     override val projectId: String,
     override val pipelineId: String,
@@ -49,6 +49,7 @@ data class GithubCommitCheckEvent(
     val completedAt: Long?,
     val startTaskId: String? = null,
     val targetBranch: String? = null,
+    val pullRequestNumber: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override val source: String,
     override val userId: String,

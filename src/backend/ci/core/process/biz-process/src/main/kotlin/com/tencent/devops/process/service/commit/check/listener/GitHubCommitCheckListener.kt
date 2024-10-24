@@ -27,8 +27,7 @@
 
 package com.tencent.devops.process.service.commit.check.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
 import com.tencent.devops.process.service.commit.check.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,11 +35,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class GitHubCommitCheckListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<GithubCommitCheckEvent>(pipelineEventDispatcher) {
+    private val codeWebhookService: CodeWebhookService
+) : EventListener<GithubCommitCheckEvent> {
 
-    override fun run(event: GithubCommitCheckEvent) {
+    override fun execute(event: GithubCommitCheckEvent) {
         codeWebhookService.consumeGitHubPrEvent(event)
     }
 }

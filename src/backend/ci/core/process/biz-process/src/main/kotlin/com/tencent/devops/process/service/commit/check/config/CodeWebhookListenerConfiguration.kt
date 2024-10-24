@@ -27,26 +27,16 @@
 
 package com.tencent.devops.process.service.commit.check.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.process.service.commit.check.listener.CodeWebhookListener
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
+import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
 import com.tencent.devops.process.service.commit.check.listener.GitHubCommitCheckListener
 import com.tencent.devops.process.service.commit.check.listener.TGitCommitCheckListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
@@ -55,203 +45,23 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @Suppress("TooManyFunctions")
 class CodeWebhookListenerConfiguration {
+    @EventConsumer
+    fun tGitCommitCheckListen(
+        @Autowired tGitCommitCheckListener: TGitCommitCheckListener
+    ) = ScsConsumerBuilder.build<TGitCommitCheckEvent> { tGitCommitCheckListener.execute(it) }
 
-    companion object {
-        private const val BUILD_MAX_CONCURRENT = 10
-        private const val CHECK_MAX_CONCURRENT = 5
-    }
+    @EventConsumer
+    fun githubCommitCheckListen(
+        @Autowired gitHubCommitCheckListener: GitHubCommitCheckListener
+    ) = ScsConsumerBuilder.build<GithubCommitCheckEvent> { gitHubCommitCheckListener.execute(it) }
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
+    @EventConsumer
+    fun pipelineBuildQueueListen(
+        @Autowired codeWebhookService: CodeWebhookService
+    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { codeWebhookService.onBuildQueue(it) }
 
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun pipelineFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildQueueFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建结束广播交换机
-     */
-    @Bean
-    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Value("\${queueConcurrency.webhook:2}")
-    private val webhookConcurrency: Int? = null
-
-    /**
-     * 构建结束的webhook队列--- 并发小
-     */
-    @Bean
-    fun buildFinishCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_COMMIT_CHECK)
-
-    @Bean
-    fun buildFinishCodeWebhookQueueBind(
-        @Autowired buildFinishCodeWebhookQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(buildFinishCodeWebhookQueue).to(pipelineBuildFinishFanoutExchange)
-    }
-
-    @Bean
-    fun codeWebhookFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildFinishCodeWebhookQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeWebhookListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildFinished.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildFinishCodeWebhookQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = webhookConcurrency!!,
-            maxConcurrency = BUILD_MAX_CONCURRENT
-        )
-    }
-
-    @Bean
-    fun buildQueueCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK)
-
-    @Bean
-    fun buildQueueCodeWebhookQueueBind(
-        @Autowired buildQueueCodeWebhookQueue: Queue,
-        @Autowired pipelineBuildQueueFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(buildQueueCodeWebhookQueue).to(pipelineBuildQueueFanoutExchange)
-    }
-
-    @Bean
-    fun codeWebhookBuildQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildQueueCodeWebhookQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeWebhookListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildQueue.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildQueueCodeWebhookQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = webhookConcurrency!!,
-            maxConcurrency = BUILD_MAX_CONCURRENT
-        )
-    }
-
-    /**
-     * Git事件交换机
-     */
-    @Bean
-    fun tgitCommitCheckExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Value("\${queueConcurrency.webhook:1}")
-    private val gitCommitCheckConcurrency: Int? = null
-
-    /**
-     * gitcommit队列--- 并发小
-     */
-    @Bean
-    fun tgitCommitCheckQueue() = Queue(MQ.QUEUE_GIT_COMMIT_CHECK_EVENT)
-
-    @Bean
-    fun tgitCommitCheckQueueBind(
-        @Autowired tgitCommitCheckQueue: Queue,
-        @Autowired tgitCommitCheckExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(tgitCommitCheckQueue).to(tgitCommitCheckExchange)
-            .with(MQ.ROUTE_GIT_COMMIT_CHECK_EVENT)
-    }
-
-    @Bean
-    fun gitCommitCheckListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired tgitCommitCheckQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TGitCommitCheckListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = tgitCommitCheckQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = gitCommitCheckConcurrency!!,
-            maxConcurrency = CHECK_MAX_CONCURRENT
-        )
-    }
-
-    @Value("\${queueConcurrency.githubPr:1}")
-    private val githubPrConcurrency: Int? = null
-
-    /**
-     * github pr队列--- 并发小
-     */
-    @Bean
-    fun githubCommitCheckQueue() = Queue(MQ.QUEUE_GITHUB_COMMIT_CHECK_EVENT)
-
-    @Bean
-    fun githubPrQueueBind(
-        @Autowired githubCommitCheckQueue: Queue,
-        @Autowired tgitCommitCheckExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(githubCommitCheckQueue).to(tgitCommitCheckExchange)
-            .with(MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
-    }
-
-    @Bean
-    fun githubPrQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired githubCommitCheckQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: GitHubCommitCheckListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = githubCommitCheckQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = githubPrConcurrency!!,
-            maxConcurrency = CHECK_MAX_CONCURRENT
-        )
-    }
+    @EventConsumer
+    fun pipelineBuildFinishListen(
+        @Autowired codeWebhookService: CodeWebhookService
+    ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { codeWebhookService.onBuildFinished(it) }
 }

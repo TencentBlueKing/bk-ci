@@ -119,6 +119,8 @@ object StreamBinding {
 
     // Git webhook事件回调
     const val ENGINE_GIT_COMMIT_CHECK = "engine.git.commit.check"
+    const val ENGINE_GIT_COMMIT_CHECK_GIT = "engine.git.commit.check.git"
+    const val ENGINE_GIT_COMMIT_CHECK_GITHUB = "engine.git.commit.check.github"
     const val ENGINE_GITHUB_PR = "engine.github.pr"
 
     // SVN代码仓库webhook请求回

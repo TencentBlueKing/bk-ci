@@ -29,7 +29,6 @@ package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
@@ -49,11 +48,6 @@ class CodeWebhookListenerConfiguration {
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> {
         codeWebhookService.onBuildFinished(it)
     }
-
-    @EventConsumer
-    fun codeWebhookQueueConsumer(
-        @Autowired codeWebhookService: CodeWebhookService
-    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { codeWebhookService.onBuildQueue(it) }
 
     /**
      * gitcommit队列--- 并发小
