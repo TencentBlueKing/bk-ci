@@ -1605,16 +1605,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
     ): Boolean {
         logger.info("update plugin details display|$englishName|$pluginDetailsDisplayOrder")
-        val projectInfo = getByEnglishName(
-            englishName = englishName
-        ) ?: throw NotFoundException("project - $englishName is not exist!")
-        val properties = projectInfo.properties ?: ProjectProperties()
-        properties.pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
-        updateProjectProperties(
-            userId = null,
-            projectCode = englishName,
-            properties = properties
+        val projectInfo = getByEnglishName(englishName)
+            ?: throw NotFoundException("project - $englishName is not exist!")
+
+        val validDisplayOrder = setOf(
+            PluginDetailsDisplayOrder.LOG,
+            PluginDetailsDisplayOrder.ARTIFACT,
+            PluginDetailsDisplayOrder.CONFIG
         )
+
+        val isParamsLegal = pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
+
+        if (isParamsLegal) {
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
+            updateProjectProperties(null, englishName, properties)
+        } else {
+            throw IllegalArgumentException("The parameter is invalid. It must contain LOG, ARTIFACT, CONFIG in any order.")
+        }
+
         return true
     }
 
