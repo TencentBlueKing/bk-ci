@@ -70,10 +70,13 @@
                                             v-if="param.readOnly"
                                             class="read-only"
                                         >{{ $t('readonlyParams') }}</span>
-                                        <span class="default-value" v-bk-overflow-tips>
+                                        <span
+                                            class="default-value"
+                                            v-bk-overflow-tips
+                                        >
                                             {{
                                                 param.type === 'REPO_REF'
-                                                    ? `${param.defaultValue} @ ${param?.defaultBranch}`
+                                                    ? `${param.defaultValue['repo-name']} @ ${param?.defaultValue.branch}`
                                                     : param.defaultValue || '--'
                                             }}
                                         </span>

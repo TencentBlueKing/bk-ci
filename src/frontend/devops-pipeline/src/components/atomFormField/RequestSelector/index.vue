@@ -16,8 +16,8 @@
         :search-url="searchUrl"
         :replace-key="replaceKey"
         :data-path="dataPath"
-        :setting-key="paramId"
-        :display-key="paramName"
+        :setting-key="settingKey"
+        :display-key="displayKey"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
@@ -86,7 +86,15 @@
             },
             searchUrl: String,
             replaceKey: String,
-            dataPath: String
+            dataPath: String,
+            displayKey: {
+                type: String,
+                default: 'name'
+            },
+            settingKey: {
+                type: String,
+                default: 'id'
+            }
         },
         data () {
             return {

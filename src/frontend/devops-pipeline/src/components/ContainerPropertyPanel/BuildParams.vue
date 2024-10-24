@@ -334,6 +334,7 @@
                                             label-width="auto"
                                             v-if="isRepoParam(param.type)"
                                             :label="$t('editPage.repoName')"
+                                            required
                                             :is-error="errors.has(`param-${param.id}.defaultValue`)"
                                             :error-msg="errors.first(`param-${param.id}.defaultValue`)"
                                         >
@@ -341,7 +342,7 @@
                                                 v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
                                                 :disabled="disabled"
                                                 name="defaultValue"
-                                                :value="param.defaultValue"
+                                                :value="param.defaultValue['repo-name']"
                                                 :handle-change="(name, value) => handleChangeCodeRepo(name, value, index)"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 v-validate.initial="'required'"
@@ -353,16 +354,17 @@
                                             label-width="auto"
                                             v-if="isRepoParam(param.type)"
                                             :label="$t('editPage.branchName')"
-                                            :is-error="errors.has(`param-${param.id}.defaultBranch`)"
-                                            :error-msg="errors.first(`param-${param.id}.defaultBranch`)"
-                                            :key="param.defaultValue"
+                                            required
+                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :error-msg="errors.first(`param-${param.id}.defaultValue`)"
+                                            :key="param.defaultValue['repo-name']"
                                         >
                                             <request-selector
-                                                v-bind="getBranchOption(param.defaultValue)"
-                                                :disabled="disabled || !param.defaultValue"
-                                                name="defaultBranch"
-                                                :value="param.defaultBranch"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                v-bind="getBranchOption(param.defaultValue['repo-name'])"
+                                                :disabled="disabled || !param.defaultValue['repo-name']"
+                                                name="defaultValue"
+                                                :value="param.defaultValue.branch"
+                                                :handle-change="(name, value) => handleChangeBranch(name, value, index)"
                                                 :data-vv-scope="`param-${param.id}`"
                                                 v-validate.initial="'required'"
                                                 replace-key="{keyword}"
@@ -708,9 +710,27 @@
             handleChangeCodeRepo (key, value, paramIndex) {
                 const param = this.globalParams[paramIndex]
                 Object.assign(param, {
-                    [key]: value,
-                    defaultBranch: ''
+                    [key]: {
+                        'repo-name': value,
+                        branch: ''
+                    }
                 })
+                this.handleChange([
+                    ...this.renderParams
+                ])
+            },
+            handleChangeBranch (key, value, paramIndex) {
+                const param = this.globalParams[paramIndex]
+               
+                Object.assign(param, {
+                    [key]: {
+                        ...param.defaultValue,
+                        branch: value
+                    }
+                })
+                this.handleChange([
+                    ...this.renderParams
+                ])
             },
             handleUpdateParam (key, value, paramIndex) {
                 try {

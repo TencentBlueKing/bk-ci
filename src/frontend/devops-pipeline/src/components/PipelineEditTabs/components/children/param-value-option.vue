@@ -42,7 +42,7 @@
             :hide-colon="true"
             v-if="isRepoParam(param.type)"
             :label="$t('editPage.repoName')"
-            :desc="$t('editPage.repoNameTips', param.defaultValue)"
+            :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.repo-name }}'])"
             :required="true"
             :is-error="errors.has(`pipelineParam.defaultValue`)"
             :error-msg="errors.first(`pipelineParam.defaultValue`)"
@@ -51,7 +51,7 @@
                 v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
                 :disabled="disabled"
                 name="defaultValue"
-                :value="param.defaultValue"
+                :value="param.defaultValue['repo-name']"
                 :handle-change="(name, value) => handleChangeCodeRepo(name, value)"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
@@ -64,18 +64,18 @@
             :hide-colon="true"
             v-if="isRepoParam(param.type)"
             :label="$t('editPage.branchName')"
-            :desc="$t('editPage.branchNameTips', param.defaultBranch)"
+            :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.branch }}'])"
             :required="true"
-            :is-error="errors.has(`pipelineParam.defaultBranch`)"
-            :error-msg="errors.first(`pipelineParam.defaultBranch`)"
+            :is-error="errors.has(`pipelineParam.defaultValue`)"
+            :error-msg="errors.first(`pipelineParam.defaultValue`)"
             :key="param.defaultValue"
         >
             <request-selector
-                v-bind="getBranchOption(param.defaultValue)"
+                v-bind="getBranchOption(param.defaultValue['repo-name'])"
                 :disabled="disabled || !param.defaultValue"
-                name="defaultBranch"
-                :value="param.defaultBranch"
-                :handle-change="handleChange"
+                name="defaultValue"
+                :value="param.defaultValue.branch"
+                :handle-change="handleChangeBranch"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
                 replace-key="{keyword}"
@@ -559,7 +559,7 @@
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
             },
             getSearchBranchUrl () {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue}`
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue['repo-name']}`
             },
             handleUpdatePayload (key, val) {
                 this.handleChange(key, val)
@@ -595,8 +595,16 @@
                 this.handleChange(key, value)
             },
             handleChangeCodeRepo (key, value) {
-                this.handleChange(key, value)
-                this.handleChange('defaultBranch', '')
+                this.handleChange(key, {
+                    'repo-name': value,
+                    branch: ''
+                })
+            },
+            handleChangeBranch (key, value) {
+                this.handleChange(key, {
+                    ...this.param.defaultValue,
+                    branch: value
+                })
             }
         }
     }

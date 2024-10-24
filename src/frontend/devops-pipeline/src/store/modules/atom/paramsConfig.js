@@ -140,12 +140,12 @@ export const DEFAULT_PARAM = {
     [REPO_REF]: {
         id: 'reporef',
         name: 'reporef',
-        defaultValue: '',
+        defaultValue: {
+            'repo-name': '',
+            branch: ''
+        },
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
-        defaultBranch: '',
-        desc: '',
-        options: [],
         type: REPO_REF,
         typeDesc: 'reporef',
         required: true,
@@ -319,7 +319,9 @@ export function getBranchOption (name) {
         url: `/process/api/user/buildParam/{projectId}/repository/refs?repositoryType=NAME&repositoryId=${name}`,
         paramId: 'key',
         paramName: 'value',
-        searchable: true
+        searchable: true,
+        settingKey: 'key',
+        displayKey: 'value'
     }
 }
 

@@ -1048,8 +1048,7 @@
     "enabledPrivileged": "是否开启特权模式",
     "repoName": "代码库 (repo-name)",
     "branchName": "分支 (branch)",
-    "repoNameTips": "通过 ${{ variables.{0}.repo-name }} 引用",
-    "branchNameTips": "通过 ${{ variables.{0}.branch }} 引用",
+    "referencedTips": "通过 {0} 引用",
     "selectRepoTips": "请选择代码库",
     "selectBranchTips": "请选择分支"
   },

@@ -5,7 +5,7 @@
     "private": true,
     "author": "",
     "scripts": {
-        "dev": "nx exec -- webpack-cli serve --mode development --progress",
+        "dev": "webpack-cli serve --mode development --progress",
         "dll": "webpack --mode production --config webpack.dll.config.js",
         "public": "npm run dll && webpack --mode production",
         "public:dev": "cross-env NODE_ENV=dev  npm run public --",

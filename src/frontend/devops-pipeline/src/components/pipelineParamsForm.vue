@@ -37,18 +37,18 @@
                     param-value="value"
                     v-bind="Object.assign(
                         {},
+                        getBranchOption(param.value),
                         {
                             id: undefined,
-                            name: `${param.name}.branch`,
+                            name: 'devops' + param.name,
                             value: param.branchValue,
-                            searchUrl: getSearchBranchUrl(param),
-                            replaceKey: param.branchReplaceKey,
+                            searchUrl: getBranchSearchUrl(param),
+                            replaceKey: param.cascadeProps.children.replaceKey,
                             disabled: disabled,
                             placeholder: param.placeholder,
                             isDiffParam: highlightChangedParam && param.isChanged,
-                            handleChange: handleUpdateRepoBranch
-                        },
-                        getBranchOption(param.value)
+                            handleChange: (name, value) => handleUpdateRepoBranch(name, value)
+                        }
                     )"
                     :key="param.value"
                 />
@@ -98,7 +98,6 @@
         getBranchOption,
         isRepoParam
     } from '@/store/modules/atom/paramsConfig'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
 
     export default {
 
@@ -193,11 +192,14 @@
                         component: this.getParamComponentType(param),
                         name: param.id,
                         required: param.valueNotEmpty,
-                        value: isRepoParam(param.type) ? this.paramValues[`${param.id}.repo-name`] : this.paramValues[param.id],
-                        branchValue: isRepoParam(param.type) ? this.paramValues[`${param.id}.branch`] : '',
+                        value: isRepoParam(param.type) ? this.paramValues?.[param.id]?.['repo-name'] : this.paramValues[param.id],
+                        branchValue: isRepoParam(param.type) ? this.paramValues?.[param.id]?.branch : '',
                         ...restParam
                     }
                 })
+            },
+            repoRefBranchProp () {
+                return this.param?.cascadeProps?.children[0]
             }
         },
         methods: {
@@ -245,7 +247,11 @@
                 return this.paramList.find(param => `devops${param.name}` === name)
             },
             handleUpdateRepoBranch (name, value) {
-                this.handleParamChange(name, value)
+                const param = this.getParamByName(name)
+                this.handleParamChange(param.name, {
+                    'repo-name': param.value,
+                    branch: value
+                })
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
@@ -254,8 +260,10 @@
                     this.handleParamChange(param.name, value)
                 }
                 if (isRepoParam(param.type)) {
-                    this.handleParamChange(`${param.name}.repo-name`, value)
-                    this.handleParamChange(`${param.name}.branch`, '')
+                    this.handleParamChange(param.name, {
+                        'repo-name': value,
+                        branch: ''
+                    })
                 } else {
                     this.handleParamChange(param.name, value)
                 }
@@ -263,9 +271,8 @@
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
             },
-
-            getSearchBranchUrl (param) {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={words}&repositoryType=NAME&repositoryId=${param.value}`
+            getBranchSearchUrl (param) {
+                return param?.cascadeProps?.children?.searchUrl?.replace('{parentValue}', param.value)
             }
         }
     }

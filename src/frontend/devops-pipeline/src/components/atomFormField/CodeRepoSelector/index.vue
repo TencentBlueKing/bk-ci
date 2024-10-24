@@ -1,5 +1,9 @@
 <template>
-    <bk-select @toggle="toggleVisible" @selected="onChange" v-bind="selectProps">
+    <bk-select
+        @toggle="toggleVisible"
+        @selected="onChange"
+        v-bind="selectProps"
+    >
         <bk-option
             v-for="(item, index) in listData"
             :key="index"
@@ -7,7 +11,10 @@
             :name="item[displayKey]"
             :disabled="item.disabled"
         >
-            <slot name="option-item" v-bind="item"></slot>
+            <slot
+                name="option-item"
+                v-bind="item"
+            ></slot>
         </bk-option>
         <div slot="extension">
             <slot></slot>
@@ -42,10 +49,6 @@
                 type: Boolean,
                 default: false
             },
-            toggleVisible: {
-                type: Function,
-                default: () => () => {}
-            },
             list: {
                 type: Array,
                 default: []
@@ -69,7 +72,8 @@
             },
             searchUrl: String,
             replaceKey: String,
-            dataPath: String
+            dataPath: String,
+            cascadeProps: Object
         },
         data () {
             return {
@@ -107,16 +111,17 @@
                     'display-key': this.displayKey,
                     'show-select-all': this.showSelectAll
                 }
-                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                if (this.cascadeProps.searchUrl) props['remote-method'] = this.remoteMethod
                 return props
             }
         },
         watch: {
-            list: {
+            'cascadeProps.options': {
                 handler (list) {
                     this.listData = list
                 },
-                immediate: true
+                immediate: true,
+                deep: true
             }
         },
         methods: {
@@ -133,8 +138,8 @@
                     clearTimeout(this.remoteMethod.timeId)
                     this.remoteMethod.timeId = setTimeout(async () => {
                         try {
-                            const regExp = new RegExp(this.replaceKey, 'g')
-                            const url = this.searchUrl.replace(regExp, name)
+                            const regExp = new RegExp(this.cascadeProps.replaceKey, 'g')
+                            const url = this.cascadeProps.searchUrl.replace(regExp, name)
                             const data = await this.$ajax.get(url)
                             this.listData = this.getResponseData(data)
                             resolve()
@@ -144,6 +149,14 @@
                         }
                     }, 500)
                 })
+            },
+
+            async toggleVisible (value) {
+                if (!value) return
+                const regExp = new RegExp(this.cascadeProps.replaceKey, 'g')
+                const url = this.cascadeProps.searchUrl.replace(regExp, '')
+                const data = await this.$ajax.get(url)
+                this.listData = this.getResponseData(data)
             }
         }
     }

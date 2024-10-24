@@ -84,7 +84,7 @@
             </template>
         </header>
         <div
-            v-if="activeName.has(3)"
+            v-show="activeName.has(3)"
             class="params-collapse-content"
         >
             <bk-alert
@@ -316,6 +316,16 @@
                 }
                 this.activeName = new Set(this.activeName)
             },
+            diffObjectValues (defaultValue, value) {
+                for (const key in defaultValue) {
+                    if (Object.prototype.hasOwnProperty.call(defaultValue, key) && Object.prototype.hasOwnProperty.call(value, key)) {
+                        if (defaultValue[key] !== value[key]) {
+                            return true
+                        }
+                    }
+                }
+                return false
+            },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
                     const values = this.getExecuteParams(this.pipelineId)
@@ -326,7 +336,9 @@
                     }
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        isChanged: p.defaultValue !== p.value || p.defaultBranch !== p.branch,
+                        isChanged: Object.prototype.toString.call(p.defaultValue) === '[object Object]'
+                            ? this.diffObjectValues(p.defaultValue, p.value)
+                            : p.defaultValue !== p.value,
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
@@ -477,6 +489,11 @@
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId)
+                Object.keys(params).forEach(key => {
+                    if (Object.prototype.toString.call(params[key]) === '[object Object]') {
+                        params[key] = JSON.stringify(params[key])
+                    }
+                })
                 const skipAtoms = this.getSkipedAtoms()
                 console.log(params, skipAtoms)
                 try {

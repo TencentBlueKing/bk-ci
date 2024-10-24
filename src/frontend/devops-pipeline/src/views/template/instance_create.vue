@@ -512,20 +512,7 @@
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.paramValues[name] = value
                         item.params.forEach((val) => {
-                            const { type, id } = val
-                            if (type === 'REPO_REF' && name === `${id}.repo-name`) {
-                                val.defaultValue = value
-                                return
-                            }
-
-                            if (type === 'REPO_REF' && name === `${id}.branch`) {
-                                val.defaultBranch = value
-                                return
-                            }
-
-                            if (id === name) {
-                                val.defaultValue = value
-                            }
+                            val.defaultValue = value
                         })
                     }
                 })

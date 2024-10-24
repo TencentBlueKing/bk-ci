@@ -1049,8 +1049,7 @@
     "enabledPrivileged": "Enable Privileged Mode",
     "repoName": "Code Repositories (repo-name)",
     "branchName": "Branch (branch)",
-    "repoNameTips": "Referenced by ${{ variables.{0}.repo-name }}",
-    "branchNameTips": "Referenced by ${{ variables.{0}.branch }}",
+    "referencedTips": "Referenced by {0}",
     "selectRepoTips": "Please select a repository",
     "selectBranchTips": "Please select a branch"
   },

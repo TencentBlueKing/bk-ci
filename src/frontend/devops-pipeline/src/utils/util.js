@@ -631,18 +631,10 @@ export function getQueryParamString (query) {
 }
 
 export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
-    // 代码库和分支变量，需将参数拆分成两个
-    // 变量名.repo-name: xxx
-    // 变量名.branch: xxx
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
         if (param.id) {
-            if (param.type === 'REPO_REF') {
-                values[`${param.id}.repo-name`] = initValues[param.id] ?? param[valueKey]
-                values[`${param.id}.branch`] = initValues[param.id] ?? (valueKey === 'value' ? param.branch : param.defaultBranch)
-            } else {
-                values[param.id] = initValues[param.id] ?? param[valueKey]
-            }
+            values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values
     }, {})
