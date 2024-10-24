@@ -200,4 +200,12 @@ interface MarketAtomService {
         projectCode: String,
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean>
+
+    /**
+     * 更新插件敏感配置
+     */
+    fun updateAtomSensitiveCacheConfig(
+        atomCode: String,
+        atomVersion: String
+    )
 }

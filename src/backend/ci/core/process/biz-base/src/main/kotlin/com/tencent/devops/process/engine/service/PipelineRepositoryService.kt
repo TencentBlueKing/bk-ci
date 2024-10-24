@@ -58,7 +58,10 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -121,13 +124,13 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1360,11 +1363,27 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
+                        transferSensitiveParam(e)
                     }
                 }
             }
         }
         return resource
+    }
+
+    private fun transferSensitiveParam(atomElement: Element) {
+        if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
+            val atomCode = atomElement.getAtomCode()
+            val version = atomElement.version
+            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
+            val param = redisOperation.hget(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = "$versionPrefix*"
+            )
+            if (!param.isNullOrBlank()) {
+                atomElement.transferSensitiveParam(param.split(","))
+            }
+        }
     }
 
     fun getDraftVersionResource(

@@ -1463,4 +1463,13 @@ class AtomDao : AtomBaseDao() {
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
         return sql.skipCheck().fetch()
     }
+
+    fun getAtomProps(dslContext: DSLContext, atomCode: String, version: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(PROPS)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
+                .fetchOne(0, String::class.java)
+        }
+    }
 }

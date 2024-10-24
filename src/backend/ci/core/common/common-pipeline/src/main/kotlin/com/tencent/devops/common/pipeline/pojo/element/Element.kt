@@ -215,4 +215,6 @@ abstract class Element(
     }
 
     open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf()
+
+    open  fun transferSensitiveParam(params: List<String>) {}
 }
