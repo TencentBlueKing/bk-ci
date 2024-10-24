@@ -132,7 +132,7 @@
                 <plugin
                     :exec-detail="execDetail"
                     :editing-element-pos="editingElementPos"
-                    :properties="curProject.properties.pluginDetailsDisplayOrder"
+                    :properties="curProject.properties?.pluginDetailsDisplayOrder"
                     @close="hideSidePanel"
                 />
             </template>
@@ -257,6 +257,7 @@
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
             panels () {
+                console.log(this.execDetail, '------------------', this.curProject)
                 return [
                     {
                         name: 'executeDetail',
