@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -67,7 +68,8 @@ class ContainerCmdLoop(
                         buildId = buildId, taskId = null, actionType = ActionType.START,
                         containerHashId = containerHashId, jobId = jobId, stageId = null,
                         stepId = null, atomCode = null, executeCount = executeCount,
-                        buildStatus = null, type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
+                        buildStatus = BuildStatus.QUEUE.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
                         labels = mapOf(
                             "latestSummary" to commandContext.latestSummary,
                             "mutexGroup" to (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),

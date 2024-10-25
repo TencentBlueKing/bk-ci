@@ -49,6 +49,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -254,7 +255,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         buildId = build.buildId, taskId = null, actionType = ActionType.START,
                         containerHashId = build.containerHashId, jobId = build.jobId, stageId = null,
                         stepId = null, atomCode = null, executeCount = build.executeCount,
-                        buildStatus = null, type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
+                        buildStatus = BuildStatus.RUNNING.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
                         labels = mapOf(
                             "agentId" to build.agentId,
                             "envHashId" to (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
