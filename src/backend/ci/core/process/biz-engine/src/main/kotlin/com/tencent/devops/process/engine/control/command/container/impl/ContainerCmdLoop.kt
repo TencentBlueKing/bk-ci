@@ -56,11 +56,16 @@ class ContainerCmdLoop(
         // 需要将消息循环
         with(commandContext.container) {
             LOG.info("ENGINE|$buildId|${commandContext.event.source}]|EVENT_LOOP|$stageId|j($containerId)")
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
-            )
-            if (commandContext.event.delayMills != DEFAULT_LOOP_TIME_MILLS) {
-                // job 排队轮询首次，暂时通过delayMills判定。
+        }
+        pipelineEventDispatcher.dispatch(
+            commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
+        )
+        // #5454 增加可视化的互斥状态打印
+        if (commandContext.latestSummary == "mutex_print" ||
+            commandContext.latestSummary == "agent_reuse_mutex_print"
+        ) {
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            with(commandContext.container) {
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStatusBroadCastEvent(
                         source = "container-queue-loop-$containerId", projectId = projectId,
@@ -78,12 +83,6 @@ class ContainerCmdLoop(
                     )
                 )
             }
-        }
-        // #5454 增加可视化的互斥状态打印
-        if (commandContext.latestSummary == "mutex_print" ||
-            commandContext.latestSummary == "agent_reuse_mutex_print"
-        ) {
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
 }
