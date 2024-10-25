@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -62,6 +63,7 @@ import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
@@ -268,6 +270,11 @@ class PipelineBuildWebhookService @Autowired constructor(
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
             if (matchResult.isMatch) {
                 try {
+                    checkPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
@@ -312,6 +319,19 @@ class PipelineBuildWebhookService @Autowired constructor(
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
                             .buildNum(buildDetail?.buildNum.toString())
                     }
+                } catch (permissionException: PermissionForbiddenException) {
+                    logger.warn("check permission failed", permissionException)
+                    builder.eventSource(repo.repoHashId!!)
+                        .status(PipelineTriggerStatus.FAILED.name)
+                        .reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                        .reasonDetail(
+                            PipelineTriggerFailedErrorCode(
+                                errorCode = ProcessMessageCode.BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION,
+                                params = listOf(userId)
+                            )
+                        )
+                    // 当前流水线没有权限触发
+                    return false
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                     builder.eventSource(eventSource = repo.repoHashId!!)
@@ -513,7 +533,6 @@ class PipelineBuildWebhookService @Autowired constructor(
 //            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
 //        )
         val version = webhookCommit.version ?: pipelineInfo.version
-        checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
