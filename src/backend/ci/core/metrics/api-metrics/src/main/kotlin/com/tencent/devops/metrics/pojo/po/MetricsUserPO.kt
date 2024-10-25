@@ -58,7 +58,7 @@ data class MetricsUserPO(
         atomCode = event.atomCode,
         eventType = checkNotNull(event.toEventType()),
         endTime = null,
-        labels = event.labels?.entries?.joinToString(separator = ";") { "${it.key}=${it.value}" },
+        labels = event.labels?.entries?.joinToString(separator = ";") { "${it.key}=${it.value}" }
     )
 
     companion object {
@@ -80,7 +80,7 @@ data class MetricsUserPO(
                 list[9].ifEmpty { null }?.let {
                     LocalDateTime.ofInstant(Instant.ofEpochSecond(it.toLong()), ZoneOffset.ofHours(8))
                 },
-                list.getOrNull(10)?.ifEmpty { null },
+                list.getOrNull(10)?.ifEmpty { null }
             )
         }
     }
