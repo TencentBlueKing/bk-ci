@@ -88,9 +88,12 @@ class MetricsUserConfig {
         fun scrape(): String {
             return meterRegistry.scrape(
                 TextFormat.CONTENT_TYPE_004, setOf(
+                    gaugeBuildQueueKey,
                     gaugeBuildKey,
                     gaugeBuildStatusKey,
+                    gaugeBuildJobQueueKey,
                     gaugeBuildJobKey,
+                    gaugeBuildAgentKey,
                     gaugeBuildStepKey,
                     gaugeBuildStepStatusKey
                 )
