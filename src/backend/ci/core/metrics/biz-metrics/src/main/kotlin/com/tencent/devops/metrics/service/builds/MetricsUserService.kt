@@ -106,7 +106,10 @@ class MetricsUserService @Autowired constructor(
      */
     @Scheduled(cron = "0 0/10 * * * ?")
     fun checkBuildStatusJob() {
-        logger.info("=========>> check build status job start|${local.size}|${uncheckArray.size}|${registry.meters.size}<<=========")
+        logger.info(
+            "=========>> check build status job start|${local.size}|" +
+                "${uncheckArray.size}|${registry.meters.size}<<========="
+        )
         // 生成快照
         val unchecks = uncheckArray.toList()
         val ready2delete = mutableListOf<String>()
