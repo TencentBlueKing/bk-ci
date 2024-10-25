@@ -9,6 +9,7 @@
         <span
             class="head-tab"
             slot="tab"
+            v-if="isGetPluginHeadTab"
         >
             <template v-for="tab in sortedTabList">
                 <span
@@ -101,7 +102,8 @@
 
         computed: {
             ...mapState('atom', [
-                'globalEnvs'
+                'globalEnvs',
+                'isGetPluginHeadTab'
             ]),
 
             stages () {
