@@ -331,6 +331,15 @@ class MetricsUserService @Autowired constructor(
                         labels = labels
                     )
                     local[key]?.meters?.add(buildGauge)
+                    val buildStatusGauge = registerBuildStatusGauge(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        status = status,
+                        description = "build status metrics for $buildId",
+                        labels = labels
+                    )
+                    local[key]?.meters?.add(buildStatusGauge)
                 }
 
                 CallBackEvent.BUILD_START -> {
@@ -353,6 +362,7 @@ class MetricsUserService @Autowired constructor(
                     )
                     local[key]?.meters?.add(buildStatusGauge)
                 }
+
                 CallBackEvent.BUILD_JOB_QUEUE -> {
                     val buildJobGauge = registerBuildJobQueueGauge(
                         key = key,
@@ -448,6 +458,9 @@ class MetricsUserService @Autowired constructor(
                     CallBackEvent.BUILD_START -> {
                         /*去掉构建排队指标*/
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildQueueKey }?.run {
+                            metricsCacheService.removeCache(key)
+                        }
+                        metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildStatusKey }?.run {
                             metricsCacheService.removeCache(key)
                         }
                     }
