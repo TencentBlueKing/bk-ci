@@ -250,7 +250,7 @@ class ThirdPartyAgentService @Autowired constructor(
                     // 第三方构建机启动
                     PipelineBuildStatusBroadCastEvent(
                         source = "third-party-agent-start-$agentId", projectId = build.projectId,
-                        pipelineId = build.pipelineId, userId = build.startUser,
+                        pipelineId = build.pipelineId, userId = "",
                         buildId = build.buildId, taskId = null, actionType = ActionType.START,
                         containerHashId = build.containerHashId, jobId = build.jobId, stageId = null,
                         stepId = null, atomCode = null, executeCount = build.executeCount,
