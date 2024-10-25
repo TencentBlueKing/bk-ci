@@ -168,7 +168,9 @@ object StreamBinding {
     const val GIT_WEBHOOK_UNLOCK_EVENT = "webhook.unlock.event"
 
     // 蓝盾管理员
-    const val AUTH_REFRESH_FANOUT = "auth.refresh.exchange.fanout"
+    const val AUTH_MANGER_CHANGE_FANOUT = "auth.manager.change.fanout"
+    const val AUTH_MANGER_USER_CHANGE_FANOUT = "auth.manager.user.change.fanout"
+    const val AUTH_STRATEGY_UPDATE_FANOUT = "auth.strategy.update.fanout"
 
     // 流水线webhook commit记录
     const val PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "engine.pipeline.build.commits.finish.fanout"
