@@ -321,7 +321,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         var darwinRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            val osArch = baseEnvRecord.osArch ?: ""
+            val osArch = baseEnvRecord.osArch ?: " "
             val pkgPath = baseEnvRecord.pkgPath
             val signatureFileKey = getSignatureFileKey()
             val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
@@ -335,13 +335,13 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             )
             val signFilePaths = extEnvs?.filter { it.fieldName == signatureFileKey }?.getOrNull(0)?.fieldValue ?: "[]"
             val packScriptPath =
-                extEnvs?.filter { it.fieldName == OsConfigInfo::packScriptPath.name }?.getOrNull(0)?.fieldValue ?: ""
+                extEnvs?.filter { it.fieldName == OsConfigInfo::packScriptPath.name }?.getOrNull(0)?.fieldValue ?: " "
             if (packScriptPath.isBlank()) {
                 // 用户没有配置脚本，则需查出平台默认的打包脚本
                 queryDefaultScriptFlag = true
             }
             val packagePath =
-                extEnvs?.filter { it.fieldName == OsConfigInfo::packagePath.name }?.getOrNull(0)?.fieldValue ?: ""
+                extEnvs?.filter { it.fieldName == OsConfigInfo::packagePath.name }?.getOrNull(0)?.fieldValue ?: " "
             val fileType = pkgPath.substringAfterLast(".")
             // 暂时只支持windows操作系统的exe软件包签名
             if (osName.contains("win")) {
