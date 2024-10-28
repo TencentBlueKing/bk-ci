@@ -47,4 +47,9 @@ object AuthI18nConstants {
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_EXPIRED = "bkMemberExpiredAtDisplayExpired" // 有效期: 已过期
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_NORMAL = "bkMemberExpiredAtDisplayNormal" // 有效期: {0}天
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_PERMANENT = "bkMemberExpiredAtDisplayPermanent" // 有效期: 永久
+
+    const val BK_APPLY_TO_HANDOVER = "bkApplyToHandover" // 申请移交
+    const val BK_HANDOVER_GROUPS = "bkHandoverGroups" // 个权限用户组
+    const val BK_HANDOVER_AUTHORIZATIONS = "bkHandoverAuthorizations" // 个授权
+    const val BK_PROJECT = "bk_project" // 蓝盾项目
 }

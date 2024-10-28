@@ -73,7 +73,6 @@ class AuthAuthorizationDao {
                     .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverFromCnName)
                     .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
                     .set(HANDOVER_TIME, handoverDateTime)
-                    .where(CREATE_TIME.eq(UPDATE_TIME))
                     .execute()
             }
         }
@@ -191,6 +190,12 @@ class AuthAuthorizationDao {
             if (resourceName != null) {
                 conditions.add(RESOURCE_NAME.like("%$resourceName%"))
             }
+            if (!filterResourceCodes.isNullOrEmpty()) {
+                conditions.add(RESOURCE_CODE.`in`(filterResourceCodes))
+            }
+            if (!excludeResourceCodes.isNullOrEmpty()) {
+                conditions.add(RESOURCE_CODE.notIn(excludeResourceCodes))
+            }
             if (handoverFrom != null) {
                 conditions.add(HANDOVER_FROM.eq(handoverFrom))
             }
@@ -202,8 +207,22 @@ class AuthAuthorizationDao {
         return conditions
     }
 
+    fun listUserProjects(
+        dslContext: DSLContext,
+        userId: String
+    ): List<String> {
+        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.select(PROJECT_CODE)
+                .from(this)
+                .where(HANDOVER_FROM.eq(userId))
+                .groupBy(PROJECT_CODE)
+                .fetch().map { it.value1() }
+        }
+    }
+
     fun TAuthResourceAuthorizationRecord.convert(): ResourceAuthorizationResponse {
         return ResourceAuthorizationResponse(
+            id = id,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceName = resourceName,

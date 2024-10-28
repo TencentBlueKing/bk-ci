@@ -37,7 +37,6 @@ import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -68,7 +67,7 @@ import java.util.concurrent.Executors
  * rbac迁移服务
  */
 @Suppress("LongParameterList", "ReturnCount")
-class RbacPermissionMigrateService constructor(
+class RbacPermissionMigrateService (
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
@@ -82,7 +81,6 @@ class RbacPermissionMigrateService constructor(
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
-    private val cacheService: RbacCacheService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
     private val migrateResourceGroupService: MigrateResourceGroupService
