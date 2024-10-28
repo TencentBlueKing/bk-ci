@@ -27,160 +27,37 @@
 
 package com.tencent.devops.websocket.configuration
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.websocket.dispatch.TransferDispatch
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.dispatch.message.SendMessage
+import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
 import com.tencent.devops.websocket.servcie.ProjectProxyService
 import com.tencent.devops.websocket.servcie.ProjectProxyServiceImpl
-import com.tencent.devops.websocket.utils.HostUtils
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Configuration
 
-@Suppress("ALL")
-@Component
+@Configuration
 class WebsocketConfiguration {
-
-    @Value("\${queueConcurrency.pipelineWebSocket:1}")
-    private val webSocketQueueConcurrency: Int? = null
-
-    @Value("\${activeTrigger.pipelineWebSocket:10}")
-    private val webSocketActiveTrigger: Int? = null
-
-    @Value("\${maxConsumer.pipelineWebSocket:50}")
-    private val websocketMaxConsumerCount: Int? = null
-
-    @Value("\${devopsGateway.idc:#{null}}")
-    private val devopsGateway: String? = null
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(WebsocketConfiguration::class.java)
-    }
-
-    @Bean
-    fun websocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
-
-    /**
-     * 构建广播交换机
-     */
-    @Bean
-    fun pipelineWebSocketFanoutExchange(): FanoutExchange {
-        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, true, false)
-    }
-
-    /**
-     * 构建广播交换机
-     */
-    @Bean
-    fun cacheClearFanoutExchange(): FanoutExchange {
-        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_SESSION_CLEAR_FANOUT, true, false)
-    }
-
-    @Bean
-    fun rabbitAdmin(
-        @Autowired connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun pipelineWebSocketQueue(): Queue {
-        val hostIp = HostUtils.getHostIp(devopsGateway)
-        logger.info("WebSocket|Get the host ip: $hostIp")
-        return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + hostIp, true, false, true)
-    }
-
-    @Bean
-    fun cacheClearWebSocketQueue(): Queue {
-        val hostIp = HostUtils.getHostIp(devopsGateway)
-        logger.info("WebSocket|Get the host ip: $hostIp")
-        return Queue(MQ.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT + "." + hostIp, true, false, true)
-    }
-
-    @Bean
-    fun pipelineQueueBinding(
-        @Autowired pipelineWebSocketQueue: Queue,
-        @Autowired pipelineWebSocketFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineWebSocketQueue).to(pipelineWebSocketFanoutExchange)
-    }
-
-    @Bean
-    fun clearSessionQueueBinding(
-        @Autowired cacheClearWebSocketQueue: Queue,
-        @Autowired cacheClearFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(cacheClearWebSocketQueue).to(cacheClearFanoutExchange)
-    }
-
-    @Bean
-    fun webSocketListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired pipelineWebSocketQueue: Queue,
-        @Autowired buildListener: WebSocketListener
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = pipelineWebSocketQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = webSocketActiveTrigger!!,
-            concurrency = webSocketQueueConcurrency!!,
-            maxConcurrency = websocketMaxConsumerCount!!
-        )
-    }
-
-    @Bean
-    fun clearSessionListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired cacheClearWebSocketQueue: Queue,
-        @Autowired buildListener: CacheSessionListener
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = cacheClearWebSocketQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = webSocketActiveTrigger!!,
-            concurrency = webSocketQueueConcurrency!!,
-            maxConcurrency = 10
-        )
-    }
-
-    @Bean
-    fun transferDispatch(
-        rabbitTemplate: RabbitTemplate
-    ): TransferDispatch {
-        return TransferDispatch(rabbitTemplate)
-    }
-
     @Bean
     @ConditionalOnMissingBean(ProjectProxyService::class)
     fun projectProxyService(): ProjectProxyService = ProjectProxyServiceImpl()
+
+    @Bean
+    fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
+
+    @EventConsumer(true)
+    fun pipelineWebSocketConsumer(
+        @Autowired webSocketListener: WebSocketListener
+    ) = ScsConsumerBuilder.build<SendMessage> { webSocketListener.handleWebsocketEvent(it) }
+
+    @EventConsumer(true)
+    fun cacheClearWebSocketConsumer(
+        @Autowired cacheSessionListener: CacheSessionListener
+    ) = ScsConsumerBuilder.build<ClearSessionEvent> { cacheSessionListener.handleClearSessionEvent(it) }
 }

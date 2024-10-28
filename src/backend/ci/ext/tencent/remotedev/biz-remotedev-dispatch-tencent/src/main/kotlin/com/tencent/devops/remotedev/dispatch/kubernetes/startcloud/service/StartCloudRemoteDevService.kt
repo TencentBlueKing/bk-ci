@@ -111,7 +111,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.devFile.quotaType?.getInternal() ?: false
+                    internal = event.devFile.quotaType?.getInternal() ?: false,
+                    pvcs = event.devFile.pvcs,
+                    tolerations = if (event.devFile.specifyTaints != null) {
+                        listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(event.devFile.specifyTaints)))
+                    } else null,
+                    nodeSelector = if (event.devFile.specifyTaints != null) {
+                        mapOf("bkbcs.tencent.com/node-group" to checkNotNull(event.devFile.specifyTaints))
+                    } else null
                 )
             )
         )

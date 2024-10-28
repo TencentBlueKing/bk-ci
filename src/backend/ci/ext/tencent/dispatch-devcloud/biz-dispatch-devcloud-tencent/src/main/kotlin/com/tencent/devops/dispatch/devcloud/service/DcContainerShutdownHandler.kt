@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.devcloud.service
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
@@ -54,7 +54,7 @@ class DcContainerShutdownHandler @Autowired constructor(
     private val dcPersistenceBuildDao: DcPersistenceBuildDao,
     private val dispatchDevCloudClient: DispatchDevCloudClient,
     private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: SampleEventDispatcher
 ) : Handler<DcShutdownHandlerContext>() {
 
     companion object {

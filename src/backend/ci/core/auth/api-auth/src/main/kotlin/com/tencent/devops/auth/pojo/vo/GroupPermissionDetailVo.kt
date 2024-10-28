@@ -11,6 +11,8 @@ data class GroupPermissionDetailVo(
     @get:Schema(title = "操作名")
     @BkFieldI18n(convertName = "actionName")
     val name: String,
+    @get:Schema(title = "操作关联的资源类型")
+    val actionRelatedResourceType: String,
     @get:Schema(title = "关联资源")
-    val relatedResourceInfo: RelatedResourceInfo
+    val relatedResourceInfos: List<RelatedResourceInfo>
 )

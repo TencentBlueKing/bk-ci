@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -46,6 +45,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
@@ -703,10 +703,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return emptyList()
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }.toMutableMap()
+        val triggerContainer = model.getTriggerContainer()
+        val variables = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        ).toMutableMap()
         // 补充yaml流水线代码库信息
         variables[PIPELINE_PAC_REPO_HASH_ID] = repoHashId
 

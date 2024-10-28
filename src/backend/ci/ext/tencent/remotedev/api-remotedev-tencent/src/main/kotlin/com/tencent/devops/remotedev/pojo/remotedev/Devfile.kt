@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.pojo.remotedev
 
+import com.tencent.devops.remotedev.pojo.Pvc
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -18,7 +19,11 @@ data class Devfile(
     @get:Schema(title = "通过已有task uid进行创建")
     val environmentUid: String? = null,
     @get:Schema(title = "离岸专区 or dev cloud 专区？")
-    val quotaType: QuotaType? = null
+    val quotaType: QuotaType? = null,
+    @get:Schema(title = "指定数据盘大小")
+    val pvcs: List<Pvc> = emptyList(),
+    @get:Schema(title = "创建时指定污点")
+    val specifyTaints: String? = null
 ) {
     fun checkWorkspaceAutomaticCorrection() = uid != null && environmentUid != null
 }

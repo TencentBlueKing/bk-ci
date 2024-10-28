@@ -43,8 +43,8 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("ALL")
 @RestResource
@@ -59,7 +59,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -118,7 +118,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                streamBridge, AsyncPipelineEvent(
                     userId = info.userId ?: userId,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

@@ -42,26 +42,54 @@ class PipelineBuildMaterialService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(PipelineBuildMaterialService::class.java)
 
+    @SuppressWarnings("CyclomaticComplexMethod", "ComplexMethod")
     fun saveBuildMaterial(
         buildId: String,
         projectId: String,
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
+        pipelineBuildMaterials: List<PipelineBuildMaterial>,
+        taskId: String?
     ): Int {
-        var newPipelineBuildMaterials = pipelineBuildMaterials
-        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        val materialList = mutableListOf<PipelineBuildMaterial>()
+        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return 0
         // 如果找不到构建历史或重试时，不做原材料写入
-        if (pipelineBuildHistoryRecord == null ||
-            pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true
-        ) {
+        logger.info("save build material|buildId=$buildId|taskId=$taskId|${pipelineBuildMaterials.size}")
+        val material = pipelineBuildHistoryRecord.material
+        // 重试场景下，只要有空taskId，就直接返回
+        val containsEmptyTaskId = material?.find { it.taskId.isNullOrBlank() } != null || taskId.isNullOrBlank()
+        if (pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true && containsEmptyTaskId) {
+            logger.info("skip save build material")
             return 0
         }
-        val material = pipelineBuildHistoryRecord.material
+        val existTaskIds = material?.mapNotNull { it.taskId } ?: listOf()
         if (!material.isNullOrEmpty()) {
-            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(material)
+            materialList.addAll(material)
+            // 存在空TaskId，直接添加
+            // 不存在空TaskId，旧数据不存在当前TaskId上报的源材料时则添加
+            if ((!containsEmptyTaskId && !existTaskIds.contains(taskId)) || containsEmptyTaskId) {
+                materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
+            }
+        } else {
+            materialList.addAll(pipelineBuildMaterials.map { it.copy(taskId = taskId) })
         }
+        // 按顺序保存
+        val materials = JsonUtil.toJson(
+            bean = materialList.let { list ->
+                list.sortedWith { o1, o2 ->
+                    val (mainRepo1, createTime1) = (o1.mainRepo ?: false) to (o1.createTime ?: 0)
+                    val (mainRepo2, createTime2) = (o2.mainRepo ?: false) to (o2.createTime ?: 0)
+                    when {
+                        mainRepo1 == mainRepo2 -> if (mainRepo1) {
+                            createTime2.compareTo(createTime1)
+                        } else {
+                            (o1.aliasName ?: "").compareTo(o2.aliasName ?: "")
+                        }
 
-        val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
-        logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
+                        else -> mainRepo2.compareTo(mainRepo1)
+                    }
+                }
+            },
+            formatted = false
+        )
         pipelineBuildDao.updateBuildMaterial(
             dslContext = dslContext,
             projectId = projectId,

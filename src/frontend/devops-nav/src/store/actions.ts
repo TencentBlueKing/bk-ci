@@ -192,6 +192,13 @@ const actions: ActionTree<RootState, any> = {
     remindUserOfRelatedProduct (_, payload) {
         const { projectId } = payload
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/remindUserOfRelatedProduct`)
+    },
+    fetchVersionsLogList () {
+        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`)
+    },
+
+    fetchVersionsLogListEn () {
+        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`)
     }
 }
 

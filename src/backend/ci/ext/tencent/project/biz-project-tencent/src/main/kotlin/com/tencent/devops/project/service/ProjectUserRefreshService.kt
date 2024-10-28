@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INV
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.project.dao.ProjectFreshDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -55,7 +55,7 @@ class ProjectUserRefreshService @Autowired constructor(
     val userDao: UserDao,
     val projectUserDao: ProjectUserDao,
     val projectFreshDao: ProjectFreshDao,
-    val projectDispatcher: ProjectDispatcher,
+    val projectDispatcher: SampleEventDispatcher,
     val dslContext: DSLContext
 ) {
     private val executorService = Executors.newSingleThreadExecutor()

@@ -28,15 +28,14 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -48,26 +47,16 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineUpdateListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val repoPipelineRefService: RepoPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
-
-        if (event.buildNo != null) {
-            watcher.safeAround("updateBuildNo") {
-                pipelineRuntimeService.updateBuildNo(
-                    projectId = event.projectId, pipelineId = event.pipelineId,
-                    buildNo = event.buildNo!!.buildNo, debug = false
-                )
-            }
-        }
 
         watcher.safeAround("callback") {
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
