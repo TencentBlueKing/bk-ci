@@ -3,6 +3,7 @@ package com.tencent.devops.auth.resources.user
 import com.tencent.devops.auth.api.user.UserAuthResourceMemberResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
@@ -14,6 +15,7 @@ import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
@@ -27,7 +29,8 @@ import com.tencent.devops.common.web.RestResource
 class UserAuthResourceMemberResourceImpl(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionService: PermissionService,
-    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
+    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
+    private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthResourceMemberResource {
     override fun listProjectMembers(
         userId: String,
@@ -81,7 +84,7 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Result<GroupDetailsInfoVo> {
-        permissionResourceMemberService.renewalGroupMember(
+        permissionResourceGroupAndMemberFacadeService.renewalGroupMember(
             userId = userId,
             projectCode = projectId,
             renewalConditionReq = renewalConditionReq
@@ -96,13 +99,13 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
-    override fun batchRenewalGroupMembers(
+    override fun batchRenewalGroupMembersFromManager(
         userId: String,
         projectId: String,
         renewalConditionReq: GroupMemberRenewalConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.batchRenewalGroupMembers(
+            permissionResourceGroupAndMemberFacadeService.batchRenewalGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 renewalConditionReq = renewalConditionReq
@@ -111,13 +114,13 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
-    override fun batchRemoveGroupMembers(
+    override fun batchRemoveGroupMembersFromManager(
         userId: String,
         projectId: String,
         removeMemberDTO: GroupMemberCommonConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.batchDeleteResourceGroupMembers(
+            permissionResourceGroupAndMemberFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = removeMemberDTO
@@ -126,13 +129,13 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
-    override fun batchHandoverGroupMembers(
+    override fun batchHandoverGroupMembersFromManager(
         userId: String,
         projectId: String,
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.batchHandoverGroupMembers(
+            permissionResourceGroupAndMemberFacadeService.batchHandoverGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 handoverMemberDTO = handoverMemberDTO
@@ -148,7 +151,7 @@ class UserAuthResourceMemberResourceImpl(
         conditionReq: GroupMemberCommonConditionReq
     ): Result<BatchOperateGroupMemberCheckVo> {
         return Result(
-            permissionResourceMemberService.batchOperateGroupMembersCheck(
+            permissionResourceGroupAndMemberFacadeService.batchOperateGroupMembersCheck(
                 userId = userId,
                 projectCode = projectId,
                 batchOperateType = batchOperateType,
@@ -164,7 +167,7 @@ class UserAuthResourceMemberResourceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Result<List<ResourceMemberInfo>> {
         return Result(
-            permissionResourceMemberService.removeMemberFromProject(
+            permissionResourceGroupAndMemberFacadeService.removeMemberFromProject(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberFromProjectReq = removeMemberFromProjectReq
@@ -179,7 +182,7 @@ class UserAuthResourceMemberResourceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.removeMemberFromProjectCheck(
+            permissionResourceGroupAndMemberFacadeService.removeMemberFromProjectCheck(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberFromProjectReq = removeMemberFromProjectReq
@@ -187,7 +190,6 @@ class UserAuthResourceMemberResourceImpl(
         )
     }
 
-    @BkManagerCheck
     override fun getMemberGroupCount(
         userId: String,
         projectId: String,
@@ -197,8 +199,14 @@ class UserAuthResourceMemberResourceImpl(
         maxExpiredAt: Long?,
         relatedResourceType: String?,
         relatedResourceCode: String?,
-        action: String?
+        action: String?,
+        operateChannel: OperateChannel?
     ): Result<List<MemberGroupCountWithPermissionsVo>> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = operateChannel ?: OperateChannel.MANAGER
+        )
         return Result(
             permissionResourceGroupAndMemberFacadeService.getMemberGroupsCount(
                 projectCode = projectId,

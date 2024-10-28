@@ -191,6 +191,12 @@ class AuthAuthorizationDao {
             if (resourceName != null) {
                 conditions.add(RESOURCE_NAME.like("%$resourceName%"))
             }
+            if (!filterResourceCodes.isNullOrEmpty()) {
+                conditions.add(RESOURCE_CODE.`in`(filterResourceCodes))
+            }
+            if (!excludeResourceCodes.isNullOrEmpty()) {
+                conditions.add(RESOURCE_CODE.notIn(excludeResourceCodes))
+            }
             if (handoverFrom != null) {
                 conditions.add(HANDOVER_FROM.eq(handoverFrom))
             }
@@ -204,6 +210,7 @@ class AuthAuthorizationDao {
 
     fun TAuthResourceAuthorizationRecord.convert(): ResourceAuthorizationResponse {
         return ResourceAuthorizationResponse(
+            id = id,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceName = resourceName,

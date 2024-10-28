@@ -543,8 +543,10 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
+        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
-        maxExpiredAt: LocalDateTime? = null
+        maxExpiredAt: LocalDateTime? = null,
+        memberDeptInfos: List<String>? = null
     ): Map<String, Long> {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
@@ -552,8 +554,10 @@ class AuthResourceGroupMemberDao {
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
+            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
-            maxExpiredAt = maxExpiredAt
+            maxExpiredAt = maxExpiredAt,
+            memberDeptInfos = memberDeptInfos
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.select(RESOURCE_TYPE, count())
@@ -592,8 +596,10 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
+        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
+        memberDeptInfos: List<String>? = null,
         offset: Int? = null,
         limit: Int? = null
     ): List<AuthResourceGroupMember> {
@@ -603,8 +609,10 @@ class AuthResourceGroupMemberDao {
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
+            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
-            maxExpiredAt = maxExpiredAt
+            maxExpiredAt = maxExpiredAt,
+            memberDeptInfos = memberDeptInfos
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
@@ -622,8 +630,10 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
+        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
-        maxExpiredAt: LocalDateTime? = null
+        maxExpiredAt: LocalDateTime? = null,
+        memberDeptInfos: List<String>? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
@@ -641,12 +651,19 @@ class AuthResourceGroupMemberDao {
                         MEMBER_ID.`in`(iamTemplateIds)
                             .and(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
                     )
+                    .or(
+                        MEMBER_ID.`in`(memberDeptInfos)
+                            .and(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                    )
             )
             resourceType?.let { conditions.add(RESOURCE_TYPE.eq(resourceType)) }
             minExpiredAt?.let { conditions.add(EXPIRED_TIME.ge(minExpiredAt)) }
             maxExpiredAt?.let { conditions.add(EXPIRED_TIME.le(maxExpiredAt)) }
             if (!iamGroupIds.isNullOrEmpty()) {
                 conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
+            }
+            if (!excludeIamGroupIds.isNullOrEmpty()) {
+                conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
             }
         }
         return conditions

@@ -29,6 +29,7 @@ package com.tencent.devops.auth.pojo.request
 
 import com.tencent.devops.auth.constant.AuthMessageCode.INVALID_HANDOVER_TO
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -44,6 +45,8 @@ data class GroupMemberHandoverConditionReq(
     override var excludedUniqueManagerGroup: Boolean = false,
     @get:Schema(title = "目标对象")
     override val targetMember: ResourceMemberInfo,
+    @get:Schema(title = "操作渠道")
+    override val operateChannel: OperateChannel = OperateChannel.MANAGER,
     @get:Schema(title = "授予人")
     val handoverTo: ResourceMemberInfo
 ) : GroupMemberCommonConditionReq(
@@ -51,6 +54,7 @@ data class GroupMemberHandoverConditionReq(
     resourceTypes = resourceTypes,
     allSelection = allSelection,
     excludedUniqueManagerGroup = excludedUniqueManagerGroup,
+    operateChannel = operateChannel,
     targetMember = targetMember
 ) {
     fun checkHandoverTo() {

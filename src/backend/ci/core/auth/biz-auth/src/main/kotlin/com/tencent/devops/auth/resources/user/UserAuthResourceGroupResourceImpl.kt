@@ -33,6 +33,7 @@ import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -40,6 +41,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacad
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.BkManagerCheck
@@ -51,7 +53,8 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
-    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+    private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -69,7 +72,6 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         )
     }
 
-    @BkManagerCheck
     override fun getMemberGroupsDetails(
         userId: String,
         projectId: String,
@@ -81,9 +83,16 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
+        operateChannel: OperateChannel?,
         start: Int,
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = operateChannel ?: OperateChannel.MANAGER
+        )
+
         return Result(
             permissionResourceGroupAndMemberFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
@@ -126,7 +135,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.batchDeleteResourceGroupMembers(
+            permissionResourceGroupAndMemberFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = GroupMemberCommonConditionReq(

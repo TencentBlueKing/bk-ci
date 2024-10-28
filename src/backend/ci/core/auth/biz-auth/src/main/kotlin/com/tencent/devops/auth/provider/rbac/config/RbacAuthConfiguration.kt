@@ -43,6 +43,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceDao
@@ -207,7 +208,10 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         deptService: DeptService,
         iamV2ManagerService: V2ManagerService,
-        rbacCacheService: RbacCacheService
+        rbacCacheService: RbacCacheService,
+        permissionAuthorizationService: PermissionAuthorizationService,
+        syncIamGroupMemberService: PermissionResourceGroupSyncService,
+        authAuthorizationDao: AuthAuthorizationDao
     ) = RbacPermissionResourceGroupAndMemberFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
@@ -217,7 +221,10 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         iamV2ManagerService = iamV2ManagerService,
-        rbacCacheService = rbacCacheService
+        rbacCacheService = rbacCacheService,
+        permissionAuthorizationService = permissionAuthorizationService,
+        syncIamGroupMemberService = syncIamGroupMemberService,
+        authAuthorizationDao = authAuthorizationDao
     )
 
     @Bean
@@ -259,18 +266,14 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         dslContext: DSLContext,
         deptService: DeptService,
-        rbacCacheService: RbacCacheService,
-        permissionAuthorizationService: PermissionAuthorizationService,
-        syncIamGroupMemberService: PermissionResourceGroupSyncService
+        rbacCacheService: RbacCacheService
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         dslContext = dslContext,
-        deptService = deptService,
-        permissionAuthorizationService = permissionAuthorizationService,
-        syncIamGroupMemberService = syncIamGroupMemberService
+        deptService = deptService
     )
 
     @Bean
