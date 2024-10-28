@@ -37,15 +37,15 @@
         get languageCode (): string {
             const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
             if (languageCodeMatch) {
-                return languageCodeMatch[0].toUpperCase();
+                return languageCodeMatch[0].toUpperCase()
             }
             return 'ZH'
         }
 
         get bkCiVersion (): string {
-            const versionMatch = BK_CI_VERSION.match(/^(\d+)\.(\d+)/);
+            const versionMatch = BK_CI_VERSION.match(/^(\d+)\.(\d+)/)
             if (versionMatch) {
-                return `${versionMatch[1]}.${versionMatch[2]}`;
+                return `${versionMatch[1]}.${versionMatch[2]}`
             }
             return ''
         }

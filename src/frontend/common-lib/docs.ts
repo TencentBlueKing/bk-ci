@@ -1,8 +1,8 @@
 // const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/持续集成平台/产品白皮书`
 function getVersion (version) {
-    const versionMatch = version?.match(/^(\d+)\.(\d+)/);
+    const versionMatch = version?.match(/^(\d+)\.(\d+)/)
     if (versionMatch) {
-        return `${versionMatch[1]}.${versionMatch[2]}`;
+        return `${versionMatch[1]}.${versionMatch[2]}`
     }
     return ''
 }
