@@ -15,7 +15,7 @@ import store from '@/store'
 import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
-import { BkciDocs } from '../../common-lib/docs'
+import createDocs from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
@@ -61,7 +61,8 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 Vue.component('undeploy', Undeploy)
 
-const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { BkciDocs } = createDocs(lang, window.BK_CI_VERSION)
 
 // @ts-ignore
 Vue.use(VeeValidate, {
