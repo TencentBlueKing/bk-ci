@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -1042,7 +1044,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getEnvs4PublicWorkspace(userId: String): List<WorkspaceEnv> {
-        val data = getUserEnv4Use(userId)
+        /*提供给查询接口的走缓存*/
+        val data = userEnvCache.get(userId) ?: return emptyList()
         val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
 
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
@@ -1068,6 +1071,10 @@ class WorkspaceService @Autowired constructor(
             )
         }
     }
+
+    private val userEnvCache: LoadingCache<String, List<EnvWithNodeCount>> = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofMinutes(1))
+        .build { key -> getUserEnv4Use(key) }
 
     private fun getUserEnv4Use(userId: String): List<EnvWithNodeCount> {
         /*
