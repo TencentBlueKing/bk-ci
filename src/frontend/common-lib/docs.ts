@@ -7,7 +7,7 @@ function getVersion (version) {
     return ''
 }
 
-const createDocs = (lang, version) => {
+export default const createDocs = (lang, version) => {
     const commonPrefix = `${DOCS_URL_PREFIX}/markdown/${lang}/Devops/${getVersion(version)}/UserGuide`
     const BkciDocs = {
         BKCI_DOC: `${commonPrefix}/intro/README.md`, // 首页跳转文档
