@@ -611,7 +611,6 @@ class WorkspaceService @Autowired constructor(
         val hostIps = result.mapNotNull { it.hostIp }.filter { it.isNotEmpty() }
         val cdsInfo = startCloudInterfaceService.getCgsData(hostIps, null).associateBy { it.cgsId }
 
-
         val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
