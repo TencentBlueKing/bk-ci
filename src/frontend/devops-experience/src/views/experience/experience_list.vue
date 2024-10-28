@@ -48,7 +48,7 @@
                         v-model="searchValue"
                         clearable
                         filter
-                        class="search-input"
+                        class="experience-search-input"
                         :data="searchList"
                         :show-condition="false"
                         placeholder="文件名 / 版本号 / 版本标题 / 版本描述 / 分组标识 / 应用名称 / 平台 / 发布人"
@@ -614,12 +614,18 @@
             flex-shrink: 0;
             max-width: 290px;
         }
-        .search-input {
-            width: 420px;
-            background-color: #fff;
-            ::placeholder {
-                color: #c4c6cc;
-            }
+    }
+</style>
+
+<style lang="scss">
+    .experience-search-input {
+        width: 420px;
+        background-color: #fff;
+        ::placeholder {
+            color: #c4c6cc;
+        }
+        .input-box {
+            overflow: hidden;
         }
     }
 </style>
