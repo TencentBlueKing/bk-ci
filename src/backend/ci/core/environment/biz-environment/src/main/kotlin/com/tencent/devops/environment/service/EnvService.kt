@@ -775,6 +775,7 @@ class EnvService @Autowired constructor(
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
         val serverNodeTypes = listOf(NodeType.CMDB.name)
+        val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
 
         toAddNodeIds.forEach {
             if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
@@ -783,7 +784,7 @@ class EnvService @Autowired constructor(
                     params = arrayOf(HashUtil.encodeLongId(it))
                 )
             }
-            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType !in serverNodeTypes) {
+            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType in buildNodeType) {
                 throw ErrorCodeException(
                     errorCode = ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT,
                     params = arrayOf(HashUtil.encodeLongId(it))
