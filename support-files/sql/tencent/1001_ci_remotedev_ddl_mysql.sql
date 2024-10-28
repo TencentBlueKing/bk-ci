@@ -52,11 +52,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
     `REGION_ID` int(11) NULL COMMENT '云区域ID',
     `ENABLE_RECORD_USER` varchar(1024) NULL COMMENT '开启云桌面录屏的人，有值等同于开启云桌面',
-    `NODE_ID` bigint(20) NULL COMMENT '环境管理node id',
+    `NODE_HASH_ID`       varchar(64) NULL COMMENT '环境管理节点哈希ID',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
-    KEY `imageKey`(`IMAGE_ID`)
+    KEY `ipKey`(`HOST_IP`),
+    KEY `nodeKey`(`NODE_HASH_ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 -- ----------------------------

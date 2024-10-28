@@ -161,5 +161,5 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "云区域Id")
     val regionId: Int?,
     @get:Schema(title = "节点id")
-    val nodeId: Long?
+    val nodeHashId: String?
 ) : WorkspaceRecordInf

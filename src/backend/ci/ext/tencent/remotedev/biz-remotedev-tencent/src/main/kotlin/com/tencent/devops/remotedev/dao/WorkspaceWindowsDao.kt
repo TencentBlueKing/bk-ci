@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -26,10 +27,13 @@ class WorkspaceWindowsDao {
 
     fun batchFetchWorkspaceWindowsInfoWithNodeIds(
         dslContext: DSLContext,
-        nodeIds: Set<Long>
-    ): Result<TWorkspaceWindowsRecord> {
+        nodeHashIds: Set<String>
+    ): Result<Record3<String, String, String>> {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            return dslContext.selectFrom(this).where(NODE_ID.`in`(nodeIds)).fetch()
+            return dslContext.select(WORKSPACE_NAME, HOST_IP, NODE_HASH_ID)
+                .from(this)
+                .where(NODE_HASH_ID.`in`(nodeHashIds))
+                .fetch()
         }
     }
 
@@ -72,14 +76,14 @@ class WorkspaceWindowsDao {
         }
     }
 
-    fun updateNodeId(
+    fun updateNodeHashId(
         dslContext: DSLContext,
-        nodeId: Long?,
+        nodeHashId: String?,
         workspaceName: String
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
-                .set(NODE_ID, nodeId)
+                .set(NODE_HASH_ID, nodeHashId)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }

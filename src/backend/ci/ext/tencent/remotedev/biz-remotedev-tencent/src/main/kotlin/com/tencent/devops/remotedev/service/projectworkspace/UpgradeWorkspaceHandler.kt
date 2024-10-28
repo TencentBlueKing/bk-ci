@@ -21,7 +21,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -39,12 +38,12 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class UpgradeWorkspaceHandler @Autowired constructor(
@@ -217,8 +216,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     old.displayName, old.remark, old.labels
                 )
             )
-            if (old.nodeId != null) {
-                workspaceWindowsDao.updateNodeId(dslContext, old.nodeId, workspaceName)
+            if (old.nodeHashId != null) {
+                workspaceWindowsDao.updateNodeHashId(dslContext, old.nodeHashId, workspaceName)
             }
 
             // 删除旧云桌面
@@ -259,10 +258,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         }
 
         if (old.ownerType.projectUse() && old.winConfigId != windowsConfig.id?.toInt()) {
-            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+            val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
                 dslContext = dslContext,
-                projectId = old.projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                projectId = old.projectId
             )
             windowsResourceConfigService.createCheckSpecLimit(
                 windowsType = machineType,

@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -49,6 +48,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -77,6 +77,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -113,6 +114,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -980,7 +982,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            val nodeIds = find.nodeHashIds?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: run {
+            val nodeHashIds = find.nodeHashIds?.toSet() ?: run {
                 logger.warn("env for $envId has empty public node")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
@@ -988,34 +990,36 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            val public = workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeIds)
-            val loginUserMap = startWorkspaceService.loginUsers(public.map { it.hostIp ?: "" }.toSet())
-            val oneReady = public.find { loginUserMap[it.hostIp].isNullOrEmpty() } ?: run {
-                logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap")
+            val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
+                workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
+            val loginUserMap = startWorkspaceService.loginUsers(public.map { it.value2() ?: "" }.toSet())
+            val workspaceStatus = workspaceJoinDao.fetchWindowsWorkspaces(
+                dslContext = dslContext,
+                workspaceNames = public.map { it.value1() }.toSet(),
+                checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.STATUS)
+            ).associateBy({ it.workspaceName }, { it.status })
+            val oneReady = public.find {
+                loginUserMap[it.value2()].isNullOrEmpty() && workspaceStatus[it.value1()] == WorkspaceStatus.RUNNING
+            } ?: run {
+                logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
                     params = arrayOf(I18nUtil.getCodeLanMessage(NOT_FIND_NODE_FOR_ENV_ID))
                 )
             }
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
-                dslContext = dslContext, workspaceName = oneReady.workspaceName
+                dslContext = dslContext, workspaceName = oneReady.value1()
             ) ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(oneReady.workspaceName)
+                params = arrayOf(oneReady.value1())
             )
-            if (!workspace.status.checkRunning()) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                    params = arrayOf(oneReady.workspaceName)
-                )
-            }
             /*注册检查*/
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
                 workspaceName = workspace.workspaceName,
                 sharedUsers = listOf(userId)
             ).firstOrNull()?.resourceId ?: run {
-                logger.info("start register collaborator user to workspace|$userId|${oneReady.workspaceName}")
+                logger.info("start register collaborator user to workspace|$userId|${oneReady.value1()}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspace.workspaceName,
                     projectId = workspace.projectId,
@@ -1037,7 +1041,35 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun getUserEnv4Use(userId: String): List<EnvWithNodeCount> {
+    fun getEnvs4PublicWorkspace(userId: String): List<WorkspaceEnv> {
+        val data = getUserEnv4Use(userId)
+        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
+
+        val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
+            workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
+        val host2NodeMap = public.associateBy { it.value2() }
+        val loginUserMap = startWorkspaceService.loginUsers(public.map { it.value2() ?: "" }.toSet())
+        val nodeLoginMap = loginUserMap.mapKeys { host2NodeMap[it.key]?.value3() }
+        val workspaceStatus = workspaceJoinDao.fetchWindowsWorkspaces(
+            dslContext = dslContext,
+            workspaceNames = public.map { it.value1() }.toSet(),
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
+        ).associateBy({ it.nodeHashId }, { it.status })
+        return data.map { it ->
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
+            val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
+            WorkspaceEnv(
+                envHashId = it.envHashId,
+                name = it.name,
+                normalNodeCount = normalNodeCount,
+                abnormalNodeCount = max(abnormalNodeCount, 0),
+                inUseNodeCount = it.nodeHashIds?.count { !nodeLoginMap[it].isNullOrEmpty() } ?: 0,
+                nodeHashIds = it.nodeHashIds
+            )
+        }
+    }
+
+    private fun getUserEnv4Use(userId: String): List<EnvWithNodeCount> {
         /*
         * 现有：user   ->      project     ->      env
         * 无法直接做到: user    ->    env

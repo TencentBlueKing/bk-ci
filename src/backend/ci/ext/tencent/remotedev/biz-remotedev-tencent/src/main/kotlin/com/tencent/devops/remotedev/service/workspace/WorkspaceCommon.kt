@@ -78,6 +78,8 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -86,8 +88,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -310,7 +310,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                        "$workspaceName|${workspaceInfo.status}"
+                    "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -322,13 +322,13 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).seconds < DEFAULT_WAIT_TIME
-                ) ||
-                workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-                workspace.status.checkInProcess() || workspace.status.checkUnused()
+            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds < DEFAULT_WAIT_TIME
+            ) ||
+            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+            workspace.status.checkInProcess() || workspace.status.checkUnused()
     }
 
     fun updateStatusAndCreateHistory(
@@ -351,7 +351,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                    "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -761,7 +761,7 @@ class WorkspaceCommon @Autowired constructor(
         val nodeId = client.get(ServiceDEVXResource::class).createNode(
             userId = userId, projectId = projectId, workspaceName = workspaceName, ip = ip, size = size
         ).data ?: return false
-        workspaceWindowsDao.updateNodeId(dslContext, nodeId, workspaceName)
+        workspaceWindowsDao.updateNodeHashId(dslContext, HashUtil.encodeLongId(nodeId), workspaceName)
         return true
     }
 
@@ -774,17 +774,17 @@ class WorkspaceCommon @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        if (workspace.nodeId == null) {
+        if (workspace.nodeHashId == null) {
             logger.info("ignore del devx env node|$workspaceName")
             return true
         }
         val ok = client.get(ServiceNodeResource::class).deleteNodes(
             userId = workspace.createUserId,
             projectId = workspace.projectId,
-            nodeHashIds = listOf(HashUtil.encodeLongId(checkNotNull(workspace.nodeId)))
+            nodeHashIds = listOf(checkNotNull(workspace.nodeHashId))
         ).data ?: return false
         if (ok) {
-            workspaceWindowsDao.updateNodeId(dslContext, null, workspaceName)
+            workspaceWindowsDao.updateNodeHashId(dslContext, null, workspaceName)
         }
         return true
     }

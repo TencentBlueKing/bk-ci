@@ -689,7 +689,7 @@ class WorkspaceDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<String>
                 },
                 bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
-                nodeId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_ID) as Long?
+                nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
             )
         }
 

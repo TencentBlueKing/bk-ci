@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -140,8 +140,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
-    override fun getEnvs4PublicWorkspace(userId: String): Result<List<EnvWithNodeCount>> {
-        return Result(workspaceService.getUserEnv4Use(userId))
+    override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {
+        return Result(workspaceService.getEnvs4PublicWorkspace(userId))
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
