@@ -43,7 +43,7 @@
         }
 
         get bkCiVersion (): string {
-            let version = window.BK_CI_VERSION 
+            let version = window.BK_CI_VERSION
             if (version.startsWith('v')) {
                 version = version.substring(1)
             }
