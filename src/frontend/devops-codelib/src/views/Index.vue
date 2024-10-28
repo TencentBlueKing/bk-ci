@@ -320,8 +320,8 @@
             },
             getDocUrl (url) {
                 const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
-                const lang = languageCodeMatch && languageCodeMatch[0].toUpperCase() || ''
-                const versionMatch = Window.BK_CI_VERSION?.match(/^(\d+)\.(\d+)/);
+                const lang = (languageCodeMatch && languageCodeMatch[0].toUpperCase()) || ''
+                const versionMatch = Window.BK_CI_VERSION?.match(/^(\d+)\.(\d+)/)
                 const version = `${versionMatch[1]}.${versionMatch[2]}`
                 return `/markdown/${lang}/Devops/${version}${url}`
             },
