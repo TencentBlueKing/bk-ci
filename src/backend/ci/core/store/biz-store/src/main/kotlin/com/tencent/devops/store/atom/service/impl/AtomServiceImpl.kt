@@ -1056,12 +1056,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
+        val defaultAtomCodes =
+            redisOperation.getSetMembers(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name))?.toList()
+        val defaultAtomIds = defaultAtomCodes?.let { atomDao.getLatestAtomIdsByCodes(dslContext, it) }
         val count = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
-            queryDefaultFlag = true
+            defaultAtomIds = defaultAtomIds
         )
         if (count == 0) {
             return Page(page, pageSize, 0, result)
@@ -1073,7 +1076,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             name = name,
             page = page,
             pageSize = pageSize,
-            queryDefaultFlag = true
+            defaultAtomIds = defaultAtomIds
         )
         val atomCodeList = mutableListOf<String>()
         records?.forEach {
