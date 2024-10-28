@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -58,6 +60,7 @@ import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
@@ -75,7 +78,6 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.webhook.PipelineBuildPermissionService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
@@ -98,8 +100,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: SampleEventDispatcher,
-    private val pipelineBuildPermissionService: PipelineBuildPermissionService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -619,7 +621,16 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
     }
 
     private fun uploadProjectUserMetrics(
