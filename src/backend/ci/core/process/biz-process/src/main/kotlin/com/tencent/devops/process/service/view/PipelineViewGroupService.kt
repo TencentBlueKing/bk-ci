@@ -830,9 +830,14 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
-        val authPipelines = pipelinePermissionService.getResourceByPermission(
-            userId = userId, projectId = projectId, permission = AuthPermission.LIST
-        )
+        val isControlPipelineListPermission = pipelinePermissionService.isControlPipelineListPermission(projectId)
+        val authPipelines = if (isControlPipelineListPermission) {
+            pipelinePermissionService.getResourceByPermission(
+                userId = userId, projectId = projectId, permission = AuthPermission.LIST
+            )
+        } else {
+            null
+        }
         val countByViewId = pipelineViewGroupDao.countByViewId(
             dslContext = dslContext,
             projectId = projectId,

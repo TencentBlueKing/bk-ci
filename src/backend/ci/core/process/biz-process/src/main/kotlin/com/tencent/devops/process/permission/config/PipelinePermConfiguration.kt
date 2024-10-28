@@ -108,7 +108,8 @@ class PipelinePermConfiguration {
         dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
         pipelineViewGroupCommonService: PipelineViewGroupCommonService,
-        authResourceApi: AuthResourceApi
+        authResourceApi: AuthResourceApi,
+        client: Client
     ): PipelinePermissionService = RbacPipelinePermissionService(
         authPermissionApi = authPermissionApi,
         authProjectApi = authProjectApi,
@@ -116,6 +117,7 @@ class PipelinePermConfiguration {
         dslContext = dslContext,
         pipelineInfoDao = pipelineInfoDao,
         pipelineViewGroupCommonService = pipelineViewGroupCommonService,
-        authResourceApi = authResourceApi
+        authResourceApi = authResourceApi,
+        client = client
     )
 }

@@ -37,10 +37,13 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.service.view.PipelineViewGroupCommonService
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelinePermissionService(
@@ -50,7 +53,8 @@ class RbacPipelinePermissionService(
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
     val pipelineViewGroupCommonService: PipelineViewGroupCommonService,
-    val authResourceApi: AuthResourceApi
+    val authResourceApi: AuthResourceApi,
+    val client: Client
 ) : PipelinePermissionService {
 
     override fun checkPipelinePermission(
@@ -294,6 +298,12 @@ class RbacPipelinePermissionService(
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
         return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
+    }
+
+    override fun isControlPipelineListPermission(projectId: String): Boolean {
+        val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectId).data
+            ?: throw NotFoundException("Fail to find the project info of project($projectId)")
+        return projectInfo.properties?.pipelineListPermissionControl == true
     }
 
     companion object {
