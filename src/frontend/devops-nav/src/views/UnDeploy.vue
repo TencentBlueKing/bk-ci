@@ -43,7 +43,7 @@
         }
 
         get bkCiVersion (): string {
-            const versionMatch = BK_CI_VERSION?.match(/^(\d+)\.(\d+)/);
+            const versionMatch = BK_CI_VERSION.match(/^(\d+)\.(\d+)/);
             if (versionMatch) {
                 return `${versionMatch[1]}.${versionMatch[2]}`;
             }
