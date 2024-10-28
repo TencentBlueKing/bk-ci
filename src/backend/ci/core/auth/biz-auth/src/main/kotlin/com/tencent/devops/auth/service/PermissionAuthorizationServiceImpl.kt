@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class PermissionAuthorizationServiceImpl constructor(
+class PermissionAuthorizationServiceImpl(
     private val dslContext: DSLContext,
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val client: Client,
@@ -352,6 +352,7 @@ class PermissionAuthorizationServiceImpl constructor(
                     resourceAuthorizationHandoverDTOs = resourceAuthorizationHandoverDTOs
                 ).data
             }
+
             AuthResourceType.CODE_REPERTORY.value -> {
                 client.get(ServiceRepositoryAuthorizationResource::class).resetRepositoryAuthorization(
                     projectId = projectId,
@@ -359,6 +360,7 @@ class PermissionAuthorizationServiceImpl constructor(
                     resourceAuthorizationHandoverDTOs = resourceAuthorizationHandoverDTOs
                 ).data
             }
+
             AuthResourceType.ENVIRONMENT_ENV_NODE.value -> {
                 client.get(ServiceEnvNodeAuthorizationResource::class).resetEnvNodeAuthorization(
                     projectId = projectId,
@@ -366,6 +368,7 @@ class PermissionAuthorizationServiceImpl constructor(
                     resourceAuthorizationHandoverDTOs = resourceAuthorizationHandoverDTOs
                 ).data
             }
+
             else -> {
                 null
             }

@@ -295,6 +295,21 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
+    override fun isGroupsHasProjectLevelPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        action: String
+    ): Boolean {
+        val actionRelatedResourceType = rbacCacheService.getActionInfo(action).relatedResourceType
+        return resourceGroupPermissionDao.isGroupsHasProjectLevelPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            actionRelatedResourceType = actionRelatedResourceType,
+            action = action
+        )
+    }
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,

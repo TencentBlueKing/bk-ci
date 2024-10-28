@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -150,6 +151,40 @@ class RbacPermissionResourceValidateService(
             }
         }
         return true
+    }
+
+    override fun validateUserProjectPermissionByChannel(
+        userId: String,
+        projectCode: String,
+        operateChannel: OperateChannel
+    ) {
+        if (operateChannel == OperateChannel.PERSONAL) {
+            // 个人视角校验
+            val hasVisitPermission = permissionService.validateUserResourcePermission(
+                userId = userId,
+                resourceType = AuthResourceType.PROJECT.value,
+                action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
+                projectCode = projectCode
+            )
+            if (!hasVisitPermission) {
+                throw PermissionForbiddenException(
+                    message = "The user does not have permission to visit the project!"
+                )
+            }
+        } else {
+            // 管理员视角校验
+            val hasProjectManagePermission = permissionService.validateUserResourcePermission(
+                userId = userId,
+                resourceType = AuthResourceType.PROJECT.value,
+                action = RbacAuthUtils.buildAction(AuthPermission.MANAGE, AuthResourceType.PROJECT),
+                projectCode = projectCode
+            )
+            if (!hasProjectManagePermission) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                )
+            }
+        }
     }
 
     private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {

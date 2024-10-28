@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
@@ -96,8 +97,8 @@ interface UserAuthResourceMemberResource {
 
     @PUT
     @Path("/batch/renewal")
-    @Operation(summary = "批量续期组成员权限--无需进行审批")
-    fun batchRenewalGroupMembers(
+    @Operation(summary = "批量续期组成员权限--管理员视角")
+    fun batchRenewalGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -110,8 +111,8 @@ interface UserAuthResourceMemberResource {
 
     @DELETE
     @Path("/batch/remove")
-    @Operation(summary = "批量移除用户组成员")
-    fun batchRemoveGroupMembers(
+    @Operation(summary = "批量移除用户组成员--管理员视角")
+    fun batchRemoveGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -124,8 +125,8 @@ interface UserAuthResourceMemberResource {
 
     @PUT
     @Path("/batch/handover")
-    @Operation(summary = "批量交接用户组成员")
-    fun batchHandoverGroupMembers(
+    @Operation(summary = "批量交接用户组成员--管理员视角")
+    fun batchHandoverGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -211,6 +212,9 @@ interface UserAuthResourceMemberResource {
         relatedResourceCode: String?,
         @QueryParam("action")
         @Parameter(description = "操作")
-        action: String?
+        action: String?,
+        @QueryParam("operateChannel")
+        @Parameter(description = "操作渠道")
+        operateChannel: OperateChannel?
     ): Result<List<MemberGroupCountWithPermissionsVo>>
 }

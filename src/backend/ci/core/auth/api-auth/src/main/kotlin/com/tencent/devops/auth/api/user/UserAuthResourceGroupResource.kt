@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
@@ -110,6 +111,9 @@ interface UserAuthResourceGroupResource {
         @QueryParam("action")
         @Parameter(description = "操作")
         action: String?,
+        @QueryParam("operateChannel")
+        @Parameter(description = "操作渠道")
+        operateChannel: OperateChannel?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,

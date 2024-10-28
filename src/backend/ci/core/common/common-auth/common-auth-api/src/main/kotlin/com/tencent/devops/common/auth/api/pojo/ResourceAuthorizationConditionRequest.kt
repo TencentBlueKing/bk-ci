@@ -12,6 +12,10 @@ open class ResourceAuthorizationConditionRequest(
     open val resourceType: String? = null,
     @get:Schema(title = "资源名称")
     open val resourceName: String? = null,
+    @get:Schema(title = "过滤资源ID列表")
+    open val filterResourceCodes: List<String>? = null,
+    @get:Schema(title = "排除资源ID列表")
+    open val excludeResourceCodes: List<String>? = null,
     @get:Schema(title = "授予人")
     open val handoverFrom: String? = null,
     @get:Schema(title = "greaterThanHandoverTime")
