@@ -1427,8 +1427,8 @@ importers:
         specifier: 2.5.9-beta.6
         version: 2.5.9-beta.6(vue@2.7.16)
       '@tencent/gongfeng-copilot-monaco':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.3.5
+        version: 2.3.5
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -1454,14 +1454,14 @@ importers:
         specifier: ^2.29.2
         version: 2.30.1
       monaco-editor:
-        specifier: ^0.40.0
-        version: 0.40.0
+        specifier: ^0.51.0
+        version: 0.51.0
       monaco-editor-webpack-plugin:
         specifier: ^7.1.0
-        version: 7.1.0(monaco-editor@0.40.0)(webpack@5.76.1(webpack-cli@4.10.0))
+        version: 7.1.0(monaco-editor@0.51.0)(webpack@5.76.1(webpack-cli@4.10.0))
       monaco-yaml:
         specifier: ^5.1.0
-        version: 5.1.1(monaco-editor@0.40.0)
+        version: 5.1.1(monaco-editor@0.51.0)
       portal-vue:
         specifier: ^1.5.1
         version: 1.5.1
@@ -4740,8 +4740,8 @@ packages:
     peerDependencies:
       vue: ^2.6.0
 
-  '@tencent/gongfeng-copilot-monaco@2.1.0':
-    resolution: {integrity: sha512-BKj29k3NR2bIAETxtdkfAE8VRTJqzyAa0kObaAEMgPZHOGL/skbTXMCBWv4oEIK1C7av+QTcAabmWA8JqWsSFQ==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.1.0.tgz}
+  '@tencent/gongfeng-copilot-monaco@2.3.5':
+    resolution: {integrity: sha512-lWoj+0SZDl3iOwOk7ApzUMHWJpTkS5Kk/gYeqf2Yi+3eRT0VBxEk4Fl4csdB8R67ncIuANzRSwzF3fne44x5Nw==, tarball: https://mirrors.tencent.com/npm/@tencent/gongfeng-copilot-monaco/-/@tencent/gongfeng-copilot-monaco-2.3.5.tgz}
 
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
@@ -11247,9 +11247,6 @@ packages:
     peerDependencies:
       monaco-editor: '>= 0.31.0'
       webpack: ^4.5.0 || 5.x
-
-  monaco-editor@0.40.0:
-    resolution: {integrity: sha512-1wymccLEuFSMBvCk/jT1YDW/GuxMLYwnFwF9CDyYCxoTw2Pt379J3FUhwy9c43j51JdcxVPjwk0jm0EVDsBS2g==}
 
   monaco-editor@0.51.0:
     resolution: {integrity: sha512-xaGwVV1fq343cM7aOYB6lVE4Ugf0UyimdD/x5PWcWBMKENwectaEu77FAN7c5sFiyumqeJdX1RPTh1ocioyDjw==}
@@ -19420,7 +19417,7 @@ snapshots:
   '@soda/get-current-script@1.0.2':
     optional: true
 
-  '@stylelint/postcss-css-in-js@0.37.3(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)':
+  '@stylelint/postcss-css-in-js@0.37.3(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)':
     dependencies:
       '@babel/core': 7.24.6
       postcss: 7.0.39
@@ -19428,7 +19425,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@stylelint/postcss-markdown@0.36.2(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)':
+  '@stylelint/postcss-markdown@0.36.2(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)':
     dependencies:
       postcss: 7.0.39
       postcss-syntax: 0.36.2(postcss-html@0.36.0)(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39)
@@ -19461,7 +19458,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.4.31(typescript@3.4.5)
 
-  '@tencent/gongfeng-copilot-monaco@2.1.0':
+  '@tencent/gongfeng-copilot-monaco@2.3.5':
     optionalDependencies:
       monaco-editor: 0.51.0
 
@@ -28305,16 +28302,13 @@ snapshots:
 
   moment@2.30.1: {}
 
-  monaco-editor-webpack-plugin@7.1.0(monaco-editor@0.40.0)(webpack@5.76.1(webpack-cli@4.10.0)):
+  monaco-editor-webpack-plugin@7.1.0(monaco-editor@0.51.0)(webpack@5.76.1(webpack-cli@4.10.0)):
     dependencies:
       loader-utils: 2.0.4
-      monaco-editor: 0.40.0
+      monaco-editor: 0.51.0
       webpack: 5.76.1(webpack-cli@4.10.0)
 
-  monaco-editor@0.40.0: {}
-
-  monaco-editor@0.51.0:
-    optional: true
+  monaco-editor@0.51.0: {}
 
   monaco-languageserver-types@0.3.3:
     dependencies:
@@ -28328,19 +28322,19 @@ snapshots:
 
   monaco-types@0.1.0: {}
 
-  monaco-worker-manager@2.0.1(monaco-editor@0.40.0):
+  monaco-worker-manager@2.0.1(monaco-editor@0.51.0):
     dependencies:
-      monaco-editor: 0.40.0
+      monaco-editor: 0.51.0
 
-  monaco-yaml@5.1.1(monaco-editor@0.40.0):
+  monaco-yaml@5.1.1(monaco-editor@0.51.0):
     dependencies:
       '@types/json-schema': 7.0.15
       jsonc-parser: 3.2.1
-      monaco-editor: 0.40.0
+      monaco-editor: 0.51.0
       monaco-languageserver-types: 0.3.3
       monaco-marker-data-provider: 1.2.2
       monaco-types: 0.1.0
-      monaco-worker-manager: 2.0.1(monaco-editor@0.40.0)
+      monaco-worker-manager: 2.0.1(monaco-editor@0.51.0)
       path-browserify: 1.0.1
       prettier: 2.8.8
       vscode-languageserver-textdocument: 1.0.11
@@ -32362,8 +32356,8 @@ snapshots:
 
   stylelint@13.13.1:
     dependencies:
-      '@stylelint/postcss-css-in-js': 0.37.3(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)
-      '@stylelint/postcss-markdown': 0.36.2(postcss-syntax@0.36.2(postcss-html@0.36.0(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39))(postcss-less@3.1.4)(postcss-scss@2.1.1)(postcss@7.0.39))(postcss@7.0.39)
+      '@stylelint/postcss-css-in-js': 0.37.3(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)
+      '@stylelint/postcss-markdown': 0.36.2(postcss-syntax@0.36.2(postcss@7.0.39))(postcss@7.0.39)
       autoprefixer: 9.8.8
       balanced-match: 2.0.0
       chalk: 4.1.2

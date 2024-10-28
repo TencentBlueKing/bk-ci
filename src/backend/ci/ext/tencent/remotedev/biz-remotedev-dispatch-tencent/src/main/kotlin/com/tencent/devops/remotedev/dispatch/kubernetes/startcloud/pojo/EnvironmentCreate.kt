@@ -33,5 +33,14 @@ data class EnvironmentCreateBasicBody(
     @JsonProperty("internal")
     val internal: Boolean = false,
     @JsonProperty("pvcs")
-    val pvcs: List<Pvc> = emptyList()
-)
+    val pvcs: List<Pvc> = emptyList(),
+    val tolerations: List<Toleration>? = null,
+    val nodeSelector: Map<String, String>? = null
+) {
+    data class Toleration(
+        val key: String = "bkbcs.tencent.com/node-group",
+        val operator: String = "Equal",
+        val value: String,
+        val effect: String = "NoSchedule"
+    )
+}
