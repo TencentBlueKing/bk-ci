@@ -60,6 +60,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service.StartCloudInterfaceService
+
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -99,7 +101,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
-import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
@@ -123,7 +124,6 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val workspaceResourceTypeDao: WindowsResourceTypeDao,
     private val workspaceResourceZoneDao: WindowsResourceZoneDao,
     private val permissionService: PermissionService,
@@ -139,7 +139,8 @@ class WorkspaceService @Autowired constructor(
     private val apiGwService: ApiGwService,
     private val startWorkspaceService: StartWorkspaceService,
     private val taiClient: TaiClient,
-    private val taiService: TaiService
+    private val taiService: TaiService,
+    private val startCloudInterfaceService: StartCloudInterfaceService
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -606,6 +607,10 @@ class WorkspaceService @Autowired constructor(
             null
         }
 
+        // 获取CDS对应的母机ip信息
+        val hostIps = result.mapNotNull { it.hostIp }.filter { it.isNotEmpty() }
+        val cdsInfo = startCloudInterfaceService.getCgsData(hostIps, null).associateBy { it.cgsId }
+
         val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
@@ -653,7 +658,8 @@ class WorkspaceService @Autowired constructor(
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
                 zoneType = specZoneConfig[res.zoneId]?.type ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type,
-                viewers = viewers[name]
+                viewers = viewers[name],
+                nodeIp = cdsInfo[res.hostIp]?.node
             )
         }
 
