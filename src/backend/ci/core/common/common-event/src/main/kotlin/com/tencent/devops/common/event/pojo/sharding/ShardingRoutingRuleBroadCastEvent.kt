@@ -29,11 +29,12 @@ package com.tencent.devops.common.event.pojo.sharding
 
 import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_SHARDING_ROUTING_RULE_FANOUT)
+@Event(StreamBinding.SHARDING_ROUTING_RULE_FANOUT)
 data class ShardingRoutingRuleBroadCastEvent(
     val routingName: String,
     val routingRule: String? = null,
     val actionType: CrudEnum
-)
+) : IEvent()

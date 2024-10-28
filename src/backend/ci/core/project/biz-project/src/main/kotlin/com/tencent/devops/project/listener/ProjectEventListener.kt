@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.listener
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -36,7 +36,7 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 /**
  * 项目事件监听器
  */
-interface ProjectEventListener : Listener<ProjectBroadCastEvent> {
+interface ProjectEventListener : EventListener<ProjectBroadCastEvent> {
 
     /**
      * 默认实现了Listener的消息处理方法做转换处理

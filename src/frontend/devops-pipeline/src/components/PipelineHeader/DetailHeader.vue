@@ -25,7 +25,7 @@
             </bk-button>
             <template v-else-if="!isDebugExec">
                 <bk-button
-                    :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                    :disabled="loading || isCurPipelineLocked"
                     :icon="loading ? 'loading' : ''"
                     outline
                     v-perm="{
@@ -60,22 +60,30 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <bk-button
-                :loading="executeStatus"
-                v-perm="{
-                    hasPermission: canExecute,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
+            <span
+                v-bk-tooltips="{
+                    disabled: canManualStartup,
+                    content: $t('pipelineManualDisable')
                 }"
-                @click="goExecPreview"
             >
-                {{ $t(isDebugExec ? "debug" : "exec") }}
-            </bk-button>
+                <bk-button
+                    :loading="executeStatus"
+                    :disabled="!canManualStartup"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="goExecPreview"
+                >
+                    {{ $t(isDebugExec ? "debug" : "exec") }}
+                </bk-button>
+            </span>
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"

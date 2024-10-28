@@ -28,6 +28,7 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.auth.api.AuthUserAndDeptApi
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -48,7 +49,8 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectBuildSummaryDao: ProjectBuildSummaryDao,
     private val redisOperation: RedisOperation,
-    private val cacheProjectInfoService: CacheProjectInfoService
+    private val cacheProjectInfoService: CacheProjectInfoService,
+    private val authUserAndDeptApi: AuthUserAndDeptApi
 ) : ProjectBuildSummaryService {
 
     companion object {
@@ -92,6 +94,10 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
             val projectVO = cacheProjectInfoService.getProject(projectId)
             if (projectVO?.enabled == false) {
                 logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
+                return
+            }
+            if (authUserAndDeptApi.checkUserDeparted(userId)) {
+                logger.debug("This user does not need to be save, because he has departed|$userId")
                 return
             }
             dslContext.transaction { configuration ->

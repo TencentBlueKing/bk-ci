@@ -31,11 +31,11 @@ package com.tencent.devops.auth.service.iam
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
-import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 interface PermissionResourceGroupService {
     /**
@@ -56,15 +56,10 @@ interface PermissionResourceGroupService {
         resourceCode: String
     ): List<IamGroupMemberInfoVo>
 
-    /**
-     * 获取组策略
-     */
-    fun getGroupPolicies(
-        userId: String,
+    fun listIamGroupIdsByGroupName(
         projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo>
+        groupName: String
+    ): List<Int>
 
     fun deleteGroup(
         userId: String?,
@@ -86,10 +81,41 @@ interface PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean
 
-    fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>>
-
-    fun createProjectGroupByGroupCode(
+    fun createGroupAndPermissionsByGroupCode(
         projectId: String,
-        groupCode: String
+        resourceType: String = AuthResourceType.PROJECT.value,
+        resourceCode: String,
+        groupCode: String,
+        groupName: String? = null,
+        groupDesc: String? = null
+    ): Int
+
+    fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
     ): Boolean
+
+    fun deleteManagerDefaultGroup(
+        userId: String,
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Int
 }

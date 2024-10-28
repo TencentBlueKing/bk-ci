@@ -92,7 +92,7 @@ class AuthResourceGroupDao {
     ) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.batch(authResourceGroups.map {
+            authResourceGroups.forEach {
                 dslContext.insertInto(
                     this,
                     PROJECT_CODE,
@@ -125,7 +125,8 @@ class AuthResourceGroupDao {
                 ).onDuplicateKeyUpdate()
                     .set(GROUP_NAME, it.groupName)
                     .set(UPDATE_TIME, now)
-            }).execute()
+                    .execute()
+            }
         }
     }
 
@@ -160,7 +161,7 @@ class AuthResourceGroupDao {
     ) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.batch(authResourceGroups.map {
+            authResourceGroups.forEach {
                 dslContext.update(this)
                     .set(GROUP_NAME, it.groupName)
                     .set(DESCRIPTION, it.description)
@@ -168,7 +169,8 @@ class AuthResourceGroupDao {
                     .set(UPDATE_TIME, now)
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(ID.eq(it.id!!))
-            }).execute()
+                    .execute()
+            }
         }
     }
 
@@ -177,13 +179,15 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        groupCode: String?
+        groupCode: String? = null,
+        groupName: String? = null
     ): TAuthResourceGroupRecord? {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (groupCode == null) it else it.and(GROUP_CODE.eq(groupCode)) }
+                .let { if (groupName == null) it else it.and(GROUP_NAME.eq(groupName)) }
                 .fetchOne()
         }
     }
@@ -278,7 +282,9 @@ class AuthResourceGroupDao {
                     } else
                         it
                 }
-                .fetch().map { it.value1().toInt() }
+                // 同步iam时，可能会同步到极少数组ID值为null，为了防止转化报错，过滤掉该类数据。
+                .fetch().filterNot { it.value1() == NULL_PLACEHOLDER }
+                .map { it.value1().toInt() }
         }
     }
 
@@ -412,5 +418,6 @@ class AuthResourceGroupDao {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthResourceGroupDao::class.java)
+        private const val NULL_PLACEHOLDER = "null"
     }
 }
