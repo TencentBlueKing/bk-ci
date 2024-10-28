@@ -61,7 +61,7 @@ class GithubWebHookStartParam : ScmWebhookStartParams<CodeGithubWebHookTriggerEl
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
-        startParams.putAll(matcher.retrieveParams())
+        startParams.putAll(matcher.retrieveParams(projectId = projectId, repository = repo))
         return startParams
     }
 }

@@ -46,6 +46,7 @@
 - [修复] 流水线变量版本仓库过滤器，最多仅支持1w个文件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8675)
 - [修复] 创建自定义指标报错英文名已存在 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8605)
 - [修复] 流水线中配有两个相同的codecc任务时，保存指标数据偶现死锁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8008)
+
 # v1.10.0-rc.13
 ## Changelog since v1.10.0-rc.6
 #### 新增
@@ -73,6 +74,7 @@
 - [修复] agent和引擎并发执行task任务时可能造成task状态出错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8465)
 - [修复] 动态变量未更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8585)
 - [修复] 新版构建详情页因排序问题导致数据合并异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8558)
+
 # v1.10.0-rc.6
 ## Changelog since v1.10.0-rc.3
 #### 新增
