@@ -1149,7 +1149,8 @@
     "singleNodeConcurrencyPlaceholder": "Default is the maximum concurrency set on the node",
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
-    "minutes": "Minutes"
+    "minutes": "Minutes",
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
