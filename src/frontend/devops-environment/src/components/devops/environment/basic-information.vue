@@ -67,16 +67,27 @@
             <div class="item-content">
                 <div class="item-label">{{ $t('environment.nodeInfo.dockerMaxConcurrency') }}</div>
                 <div class="item-value">
-                    <div class="display-item" v-if="isEditDockerCount">
-                        <input type="number" class="bk-form-input parallelTaskCount-input"
+                    <div
+                        class="display-item"
+                        v-if="isEditDockerCount"
+                    >
+                        <input
+                            type="number"
+                            class="bk-form-input parallelTaskCount-input"
                             ref="dockerParallelTaskCount"
                             name="dockerParallelTaskCount"
                             :placeholder="$t('environment.nodeInfo.parallelTaskCountTips')"
                             v-validate.initial="`required|between:0,100|decimal:0`"
                             v-model="dockerParallelTaskCount"
-                            :class="{ 'is-danger': errors.has('dockerParallelTaskCount') }">
+                            :class="{ 'is-danger': errors.has('dockerParallelTaskCount') }"
+                        >
                     </div>
-                    <div class="editing-item" v-else>{{ nodeDetails.dockerParallelTaskCount || '--' }}</div>
+                    <div
+                        class="editing-item"
+                        v-else
+                    >
+                        {{ nodeDetails.dockerParallelTaskCount || '--' }}
+                    </div>
                 </div>
                 <div class="handle-btn">
                     <div v-if="isEditDockerCount">
