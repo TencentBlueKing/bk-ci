@@ -1000,9 +1000,9 @@ class WorkspaceService @Autowired constructor(
                 workspaceNames = public.map { it.value1() }.toSet(),
                 checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.STATUS)
             ).associateBy({ it.workspaceName }, { it.status })
-            val oneReady = public.find {
+            val oneReady = public.filter {
                 loginUserMap[it.value2()].isNullOrEmpty() && workspaceStatus[it.value1()] == WorkspaceStatus.RUNNING
-            } ?: run {
+            }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
