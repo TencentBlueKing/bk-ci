@@ -138,15 +138,24 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     pkgLocalPath = disposition.fileName
                 }
                 val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                val packageFileName = packageFile.name
                 val packageFileInfo = PackageFileInfo(
-                    packageFileName = packageFile.name,
+                    packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
                     shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
-                storePkgEnvInfo.pkgRepoPath = "$storeCode/$version/$pkgLocalPath"
+                val pkgRepoPathSb = StringBuilder("$storeCode/$version/")
+                if (!storePkgEnvInfo.osName.isNullOrBlank()) {
+                    pkgRepoPathSb.append(storePkgEnvInfo.osName).append("/")
+                }
+                if (!storePkgEnvInfo.osArch.isNullOrBlank()) {
+                    pkgRepoPathSb.append(storePkgEnvInfo.osArch).append("/")
+                }
+                pkgRepoPathSb.append(packageFileName)
+                storePkgEnvInfo.pkgRepoPath = pkgRepoPathSb.toString()
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
-                storePkgEnvInfo.pkgName = packageFileInfo.packageFileName
+                storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
         } finally {
