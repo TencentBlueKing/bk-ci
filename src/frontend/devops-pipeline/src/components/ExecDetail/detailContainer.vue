@@ -121,6 +121,7 @@
                 justify-content: space-between;
                 color: #d4d4d4;
                 position: relative;
+                flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
                     position: absolute;
                     left: 50%;
