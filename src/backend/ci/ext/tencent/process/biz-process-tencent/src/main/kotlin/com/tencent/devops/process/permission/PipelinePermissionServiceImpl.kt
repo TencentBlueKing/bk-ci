@@ -280,6 +280,8 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
     }
 
+    override fun isControlPipelineListPermission(projectId: String): Boolean = false
+
     companion object {
         val logger = LoggerFactory.getLogger(PipelinePermissionServiceImpl::class.java)
     }
