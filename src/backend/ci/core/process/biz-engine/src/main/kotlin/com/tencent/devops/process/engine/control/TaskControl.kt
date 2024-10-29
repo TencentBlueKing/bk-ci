@@ -30,17 +30,16 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
-import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
@@ -85,6 +84,7 @@ class TaskControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 execute()
+                watcher.start("finish")
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()
@@ -96,7 +96,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[PipelineBuildAtomTaskEvent]事件，开始执行/结束插件任务
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -158,7 +158,14 @@ class TaskControl @Autowired constructor(
         } else {
             buildTask.starter = userId
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
-                buildTask.taskParams.putAll(taskParam)
+                // #9910 针对第三方构建机关键字参数以数据库版本为准不使用 event
+                if (buildTask.taskParams["RETRY_THIRD_AGENT_ENV"] != null) {
+                    val m = buildTask.taskParams["RETRY_THIRD_AGENT_ENV"]
+                    buildTask.taskParams.putAll(taskParam)
+                    buildTask.taskParams["RETRY_THIRD_AGENT_ENV"] = m!!
+                } else {
+                    buildTask.taskParams.putAll(taskParam)
+                }
             }
             LOG.info(
                 "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +
@@ -220,10 +227,6 @@ class TaskControl @Autowired constructor(
         taskParam.putAll(buildTask.taskParams)
         delayMills = loopDelayMills
         actionType = ActionType.REFRESH // 尝试刷新任务状态
-        // 特定消费者
-        if (buildTask.taskParams[BS_TASK_HOST] != null) {
-            routeKeySuffix = buildTask.taskParams[BS_TASK_HOST].toString()
-        }
         pipelineEventDispatcher.dispatch(this)
     }
 

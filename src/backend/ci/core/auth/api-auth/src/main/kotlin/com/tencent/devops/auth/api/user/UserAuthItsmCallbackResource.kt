@@ -30,9 +30,9 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -40,7 +40,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_AUTH_ITSM_CALLBACK"], description = "权限-itsm-回调")
+@Tag(name = "USER_AUTH_ITSM_CALLBACK", description = "权限-itsm-回调")
 @Path("/user/auth/itsm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,9 +48,9 @@ interface UserAuthItsmCallbackResource {
 
     @GET
     @Path("/{projectId}")
-    @ApiOperation("获取项目审批信息")
+    @Operation(summary = "获取项目审批信息")
     fun get(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<AuthItsmCallbackInfo?>

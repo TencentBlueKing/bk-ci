@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthAction
 import com.tencent.devops.model.auth.tables.records.TAuthActionRecord
 import java.time.LocalDateTime
@@ -38,6 +39,7 @@ class AuthActionDao {
             dslContext.selectFrom(this)
                 .orderBy(CREATE_TIME.desc(), ACTION)
                 .limit(pageSize).offset((page - 1) * pageSize)
+                .skipCheck()
                 .fetch()
         }
     }
@@ -46,15 +48,14 @@ class AuthActionDao {
         dslContext: DSLContext,
         authActionI18nMap: Map<String, String>
     ) {
-        dslContext.batch(
-            authActionI18nMap.map {
-                with(TAuthAction.T_AUTH_ACTION) {
-                    dslContext.update(this)
-                        .set(ACTION_NAME, it.value)
-                        .set(UPDATE_TIME, LocalDateTime.now())
-                        .where(ACTION.eq(it.key))
-                }
+        authActionI18nMap.forEach {
+            with(TAuthAction.T_AUTH_ACTION) {
+                dslContext.update(this)
+                    .set(ACTION_NAME, it.value)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ACTION.eq(it.key))
+                    .execute()
             }
-        ).execute()
+        }
     }
 }

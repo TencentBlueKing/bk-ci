@@ -5,7 +5,10 @@
         }"
         :id="container.id"
     >
-        <h3 :class="jobTitleCls" @click.stop="showContainerPanel">
+        <h3
+            :class="jobTitleCls"
+            @click.stop="showContainerPanel"
+        >
             <status-icon
                 type="container"
                 :editable="reactiveData.editable"
@@ -16,7 +19,10 @@
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span :class="displayNameCls" :title="displayName">
+                <span
+                    :class="displayNameCls"
+                    :title="displayName"
+                >
                     {{ displayName }}
                 </span>
             </p>
@@ -33,8 +39,15 @@
                 name="clipboard"
                 size="16"
             />
-            <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
-            <span @click.stop v-if="reactiveData.canSkipElement">
+            <i
+                v-if="showCopyJob"
+                @click.stop="deleteJob"
+                class="add-plus-icon close"
+            />
+            <span
+                @click.stop
+                v-if="reactiveData.canSkipElement"
+            >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
                     v-model="container.runContainer"
@@ -42,8 +55,7 @@
                 ></bk-checkbox>
             </span>
             <Logo
-                v-if="
-                    (reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
+                v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
                 "
                 name="matrix"
                 size="16"
@@ -51,7 +63,6 @@
             >
             </Logo>
             <Logo
-                v-if="showMatrixFold"
                 name="angle-circle-down"
                 size="18"
                 @click.stop="toggleShowAtom()"
@@ -74,7 +85,7 @@
             />
         </h3>
         <atom-list
-            v-if="showAtomList || !showMatrixFold"
+            v-if="showAtomList"
             ref="atomList"
             :stage="stage"
             :container="container"
@@ -145,13 +156,13 @@
             stageLength: Number,
             updateCruveConnectHeight: Function
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         emits: [DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {
                 showContainerName: false,
                 showAtomName: false,
-                showAtomList: false,
+                showAtomList: true,
                 cruveHeight: 0
             }
         },
@@ -236,6 +247,7 @@
                     container: { baseOS, status }
                 } = this
                 const isshowDebugType = [
+                    DOCKER_BUILD_TYPE,
                     PUBLIC_DEVCLOUD_BUILD_TYPE,
                     PUBLIC_BCS_BUILD_TYPE
                 ].includes(this.buildResourceType)
@@ -267,11 +279,11 @@
             'container.locateActive' (val) {
                 if (val) {
                     const ele = document.getElementById(this.container.id)
-                    ele?.scrollIntoView?.({
-                        block: 'center',
-                        inline: 'center',
-                        behavior: 'smooth'
-                    })
+                ele?.scrollIntoView?.({
+                    block: 'center',
+                    inline: 'center',
+                    behavior: 'smooth'
+                })
                 }
             }
         },
@@ -344,98 +356,110 @@
 <style lang="scss">
 @use "sass:math";
 @import "./conf";
+
 .devops-stage-container {
-  .container-title {
-    display: flex;
-    height: $itemHeight;
-    background: #33333f;
-    cursor: pointer;
-    color: white;
-    font-size: 14px;
-    align-items: center;
-    position: relative;
-    margin: 0 0 16px 0;
-    z-index: 3;
-    > .container-name {
-      @include ellipsis();
-      flex: 1;
-      padding: 0 6px;
-    }
+    .container-title {
+        display: flex;
+        height: $itemHeight;
+        background: #33333f;
+        cursor: pointer;
+        color: white;
+        font-size: 14px;
+        align-items: center;
+        position: relative;
+        margin: 0 0 16px 0;
+        z-index: 3;
 
-    .atom-canskip-checkbox {
-      margin-right: 6px;
-      &.is-disabled .bk-checkbox {
-        background-color: transparent;
-        border-color: #979ba4;
-      }
-    }
-    input[type="checkbox"] {
-      border-radius: 3px;
-    }
-    .matrix-flag-icon {
-      position: absolute;
-      top: 0px;
-      font-size: 16px;
-    }
-    .fold-atom-icon {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      bottom: -10px;
-      left: 44%;
-      transition: all 0.3s ease;
-      &.open {
-        transform: rotate(-180deg);
-      }
-      &.readonly {
-        color: $fontWeightColor;
-      }
-    }
-    .copyJob {
-      display: none;
-      margin-right: 10px;
-      color: $fontLighterColor;
-      cursor: pointer;
-      &:hover {
-        color: $primaryColor;
-      }
-    }
-    .close {
-      @include add-plus-icon(#2e2e3a, #2e2e3a, #c4c6cd, 16px, true);
-      @include add-plus-icon-hover($dangerColor, $dangerColor, white);
-      border: none;
-      display: none;
-      margin-right: 10px;
-      transform: rotate(45deg);
-      cursor: pointer;
-      &:before,
-      &:after {
-        left: 7px;
-        top: 4px;
-      }
-    }
-    .debug-btn {
-      position: absolute;
-      height: 100%;
-      right: 0;
-    }
+        >.container-name {
+            @include ellipsis();
+            flex: 1;
+            padding: 0 6px;
+        }
 
-    .container-locate-icon {
-        position: absolute;
-        left: -30px;
-        top: 13px;
-        color: $primaryColor;
-    }
+        .atom-canskip-checkbox {
+            margin-right: 6px;
 
-    &:hover {
-      .copyJob,
-      .close {
-        display: block;
-      }
-      .hover-hide {
-        display: none;
-      }
+            &.is-disabled .bk-checkbox {
+                background-color: transparent;
+                border-color: #979ba4;
+            }
+        }
+
+        input[type="checkbox"] {
+            border-radius: 3px;
+        }
+
+        .matrix-flag-icon {
+            position: absolute;
+            top: 0px;
+            font-size: 16px;
+        }
+
+        .fold-atom-icon {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            bottom: -10px;
+            left: calc(50% - 9px);
+            color: #c4cdd6;
+            transition: all 0.3s ease;
+
+            &.open {
+                transform: rotate(-180deg);
+            }
+        }
+
+        .copyJob {
+            display: none;
+            margin-right: 10px;
+            color: $fontLighterColor;
+            cursor: pointer;
+
+            &:hover {
+                color: $primaryColor;
+            }
+        }
+
+        .close {
+            @include add-plus-icon(#2e2e3a, #2e2e3a, #c4c6cd, 16px, true);
+            @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+            border: none;
+            display: none;
+            margin-right: 10px;
+            transform: rotate(45deg);
+            cursor: pointer;
+
+            &:before,
+            &:after {
+                left: 7px;
+                top: 4px;
+            }
+        }
+
+        .debug-btn {
+            position: absolute;
+            height: 100%;
+            right: 0;
+        }
+
+        .container-locate-icon {
+            position: absolute;
+            left: -30px;
+            top: 13px;
+            color: $primaryColor;
+        }
+
+        &:hover {
+
+            .copyJob,
+            .close {
+                display: block;
+            }
+
+            .hover-hide {
+                display: none;
+            }
+        }
     }
-  }
 }
 </style>

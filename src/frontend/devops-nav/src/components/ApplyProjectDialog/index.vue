@@ -26,10 +26,12 @@
                     @scroll-end="getProjectList"
                     :remote-method="handleSearchProject"
                 >
-                    <bk-option v-for="option in projectList"
+                    <bk-option
+                        v-for="option in projectList"
                         :key="option.englishName"
                         :id="option.englishName"
-                        :name="option.project_name">
+                        :name="option.project_name"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
@@ -47,7 +49,8 @@
                         :class="{
                             'is-selected': currentActive === Number(key),
                             'deadline-btn': true
-                        }">
+                        }"
+                    >
                         {{ item }}
                     </bk-button>
                     <bk-button
@@ -75,7 +78,6 @@
                         </template>
                     </bk-input>
                 </div>
-                
             </bk-form-item>
             <bk-form-item
                 :label="$t('reason')"

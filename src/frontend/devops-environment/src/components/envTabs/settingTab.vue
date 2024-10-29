@@ -11,17 +11,34 @@
                     action: ENV_RESOURCE_ACTION.EDIT
                 }
             }"
-            class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
+            class="setting-header"
+            theme="primary"
+            @click="toggleShareProject"
+        >
+            {{ $t('environment.addProject') }}
+        </bk-button>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
         >
-            <bk-table-column :label="$t('environment.project')" prop="name"></bk-table-column>
-            <bk-table-column :label="$t('environment.operateUser')" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
-            <bk-table-column :label="$t('environment.operation')" width="150">
+            <bk-table-column
+                :label="$t('environment.project')"
+                prop="name"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('environment.operateUser')"
+                prop="creator"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('environment.operateTime')"
+                prop="updateTime"
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('environment.operation')"
+                width="150"
+            >
                 <template slot-scope="props">
                     <bk-button
                         v-perm="{
@@ -32,7 +49,12 @@
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         }"
-                        class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
+                        class="mr10"
+                        text
+                        @click="remove(props.row)"
+                    >
+                        {{ $t('environment.remove') }}
+                    </bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -47,10 +69,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
-    import selectEnvShareDialog from './select-env-share-dialog'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
+    import { mapActions } from 'vuex'
+    import selectEnvShareDialog from './select-env-share-dialog'
     export default {
         name: 'setting-tab',
         components: {
@@ -143,10 +165,13 @@
             },
             actionWrapper (action, message) {
                 return async (...args) => {
-                    const theme = 'success'
                     try {
                         await action(...args)
                         this.fetchEnvProjects()
+                        this.$bkMessage({
+                            message: message,
+                            theme: 'success'
+                        })
                     } catch (e) {
                         this.handleError(
                             e,
@@ -157,11 +182,6 @@
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         )
-                    } finally {
-                        this.$bkMessage({
-                            message: message,
-                            theme
-                        })
                     }
                 }
             },

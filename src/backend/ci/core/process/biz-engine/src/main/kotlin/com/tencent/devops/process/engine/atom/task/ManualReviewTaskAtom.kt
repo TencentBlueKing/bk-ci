@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -66,6 +67,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -86,7 +88,8 @@ class ManualReviewTaskAtom(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineVariableService: BuildVariableService
+    private val pipelineVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
     @Value("\${esb.appSecret:#{null}}")
@@ -106,10 +109,18 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val projectCode = task.projectId
         val pipelineId = task.pipelineId
-
-        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
-        val reviewDesc = parseVariable(param.desc, runVariables)
-        val notifyTitle = parseVariable(param.notifyTitle, runVariables)
+        val variables = runVariables.toMutableMap()
+        val contextMap = variables.plus(
+            pipelineContextService.buildContext(
+                projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = task.stageId, containerId = task.containerId, taskId = task.taskId,
+                variables = variables, model = null, executeCount = task.executeCount
+            )
+        )
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), contextMap)
+        val reviewDesc = parseVariable(param.desc, contextMap)
+        val notifyTitle = parseVariable(param.notifyTitle, contextMap)
+        val notifyGroup = parseVariable(param.notifyGroup, contextMap)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
@@ -138,21 +149,25 @@ class ManualReviewTaskAtom(
         buildLogPrinter.addYellowLine(
             buildId = task.buildId,
             message = "============${getI18nByLocal(BK_PENDING_APPROVAL)}============",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：$reviewUsers",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_DESCRIPTION)}：$reviewDesc",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = buildId,
             message = getI18nByLocal(BK_PARAMS) +
                 "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
 
         val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
@@ -185,7 +200,7 @@ class ManualReviewTaskAtom(
                     "manualReviewParam" to JsonUtil.toJson(param.params),
                     "checkParams" to param.params.isNotEmpty().toString(),
                     // 企业微信组
-                    NotifyUtils.WEWORK_GROUP_KEY to (param.notifyGroup?.joinToString(separator = ",") ?: "")
+                    NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
                 position = null,
                 stageId = null,
@@ -215,7 +230,7 @@ class ManualReviewTaskAtom(
                         )
                     },
                     notifyBody = reviewDesc,
-                    weworkGroup = param.notifyGroup?.toSet() ?: emptySet(),
+                    weworkGroup = notifyGroup.toSet(),
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = task.executeCount ?: 1
@@ -253,11 +268,13 @@ class ManualReviewTaskAtom(
             ManualReviewAction.PROCESS -> {
                 buildLogPrinter.addLine(
                     buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_APPROVE),
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId, message = "${getI18nByLocal(BK_PARAMS)}：${getParamList(taskParam)}",
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -273,7 +290,9 @@ class ManualReviewTaskAtom(
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
                     buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_REJECT),
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -349,16 +368,26 @@ class ManualReviewTaskAtom(
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewResultParamKey=$manualAction",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewerParamKey=$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $suggestParamKey=$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
+    }
+
+    private fun parseVariable(value: List<String>?, runVariables: Map<String, String>): List<String> {
+        if (value.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return value.map { EnvUtils.parseEnv(it, runVariables) }
     }
 
     private fun beforePrint(
@@ -369,15 +398,18 @@ class ManualReviewTaskAtom(
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "============${getI18nByLocal(BK_FINAL_APPROVAL)}============",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWER)}：$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEW_COMMENTS)}：$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         return suggestContent
     }

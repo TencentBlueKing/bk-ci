@@ -28,45 +28,54 @@
 package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_METRICS_DATAS"], description = "METRICS-数据上报")
+@Tag(name = "SERVICE_METRICS_DATAS", description = "METRICS-数据上报")
 @Path("/service/metrics/datas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMetricsDataReportResource {
 
-    @ApiOperation("质量红线数据上报")
+    @Operation(summary = "质量红线数据上报")
     @Path("/quality/data/report")
     @POST
     fun metricsQualityDataReport(
-        @ApiParam(value = "质量红线数据上报传输对象", required = true)
+        @Parameter(description = "质量红线数据上报传输对象", required = true)
         qualityDataReportDTO: QualityDataReportDTO
     ): Result<Boolean>
 
-    @ApiOperation("codecc数据上报")
+    @Operation(summary = "codecc数据上报")
     @Path("/codecc/data/report")
     @POST
     fun metricsCodeccDataReport(
-        @ApiParam(value = "codecc数据上报传输对象", required = true)
+        @Parameter(description = "codecc数据上报传输对象", required = true)
         codeccDataReportDTO: CodeccDataReportDTO
     ): Result<Boolean>
 
-    @ApiOperation("编译加速数据上报")
+    @Operation(summary = "编译加速数据上报")
     @Path("/turbo/data/report")
     @POST
     fun metricsTurboDataReport(
-        @ApiParam(value = "编译加速数据上报传输对象", required = true)
+        @Parameter(description = "编译加速数据上报传输对象", required = true)
         turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
+
+    @Operation(summary = "Job并发数据上报")
+    @Path("/jobdispatch/data/report")
+    @POST
+    fun metricsJobDispatchDataReport(
+        @Parameter(description = "Job并发数据上报传输对象", required = true)
+        dispatchJobMetricsData: DispatchJobMetricsData
     ): Result<Boolean>
 }

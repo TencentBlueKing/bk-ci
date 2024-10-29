@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
@@ -43,18 +44,43 @@ class UserCacheService @Autowired constructor(
      */
     fun getDetailFromCache(userId: String): UserDeptDetail {
         val userRecord = userDao.get(dslContext, userId)
+        return getUserDeptDetail(userRecord, userId)
+    }
+
+    fun listDetailFromCache(userIds: List<String>): List<UserDeptDetail> {
+        return userDao.list(dslContext, userIds).map { getUserDeptDetail(it) }
+    }
+
+    fun usernamesByParentIds(parentId: Int): List<String> {
+        return userDao.usernamesByParentId(dslContext, parentId)
+    }
+
+    fun getUserDeptDetail(userRecord: TUserRecord?, userId: String? = null): UserDeptDetail {
         return if (userRecord == null) {
-            UserDeptDetail("", "0", "", "0", "", "0", "0", "")
+            UserDeptDetail(
+                userId = userId,
+                bgName = "",
+                bgId = "0",
+                centerName = "",
+                centerId = "0",
+                deptName = "",
+                deptId = "0",
+                groupName = "",
+                groupId = "0"
+            )
         } else {
             UserDeptDetail(
-                userRecord["BG_NAME"] as String,
-                (userRecord["BG_ID"] as Int).toString(),
-                userRecord["DEPT_NAME"] as String,
-                (userRecord["DEPT_ID"] as Int).toString(),
-                userRecord["CENTER_NAME"] as String,
-                (userRecord["CENTER_ID"] as Int).toString(),
-                (userRecord["GROYP_ID"] as Int).toString(),
-                userRecord["GROUP_NAME"] as String
+                userId = userRecord["USER_ID"] as String,
+                bgName = userRecord["BG_NAME"] as String,
+                bgId = (userRecord["BG_ID"] as Int).toString(),
+                deptName = userRecord["DEPT_NAME"] as String,
+                deptId = (userRecord["DEPT_ID"] as Int).toString(),
+                centerName = userRecord["CENTER_NAME"] as String,
+                centerId = (userRecord["CENTER_ID"] as Int).toString(),
+                groupId = (userRecord["GROYP_ID"] as Int).toString(),
+                groupName = userRecord["GROUP_NAME"] as String,
+                businessLineId = (userRecord["BUSINESS_LINE_ID"] as? Int)?.toString(),
+                businessLineName = userRecord["BUSINESS_LINE_NAME"] as? String
             )
         }
     }

@@ -173,13 +173,16 @@ elasticsearch:
       size: 10Gi
 rabbitmq:
   enabled: true
+  image: 
+    registry: docker.io/bkci
+    repository: rabbitmq-with-delay
+    tag: 0.0.1
   persistence:
     size: 10Gi
   auth:
     username: admin
     password: blueking
     erlangCookie: blueking # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
-  communityPlugins: "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
     # ipv6 , 需要开启这些选项
@@ -390,7 +393,7 @@ kubernetes-manager:
       targetCPU: 80
       targetMemory: 80
     # 使用的镜像
-    image: bkci/bkci-kubernetes-manager:0.0.31
+    image: bkci/bkci-kubernetes-manager:0.0.33
     # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
     builderNamespace:
     redis:
@@ -409,11 +412,13 @@ kubernetes-manager:
         apiToken:
           key: Devops-Token
           value: landun
-        rsaPrivateKey: |
+        rsaPrivateKey: ""
     volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点
       dataPath: /data/devops/workspace
       logPath: /data/devops/logs
+    docker:
+      enable: true
   dockerInit:
     # 是否使用当前chart的 dockerinit.sh
     useDockerInit: true
@@ -634,131 +639,8 @@ dispatch:
     targetCPU: 80
     targetMemory: 80
 
-# dispatchDocker Deployment
-dispatchDocker:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# dispatchKubernetes Deployment
-dispatchKubernetes:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
 # environment Deployment
 environment:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# image Deployment
-image:
   enabled: true
   replicas: 1
   podLabels: {}
@@ -880,47 +762,6 @@ metrics:
     targetCPU: 80
     targetMemory: 80
 
-# monitoring Deployment
-monitoring:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
 # notify Deployment
 notify:
   enabled: true
@@ -968,47 +809,6 @@ openapi:
   secret:
     enabled: false
     content: ""
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# plugin Deployment
-plugin:
-  enabled: true
   replicas: 1
   podLabels: {}
   resources:

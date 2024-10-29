@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.PackageFileInfo
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -53,6 +54,8 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
+import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -134,14 +137,22 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
             atomEnvRequests.forEach { atomEnvRequest ->
-                if (atomEnvRequest.pkgLocalPath.isNullOrBlank()) {
+                val pkgLocalPath = atomEnvRequest.pkgLocalPath
+                if (atomEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
+                    // 上传的是内置插件的zip包，无需处理执行包相关逻辑
                     return@forEach
                 }
+                if (pkgLocalPath.isNullOrBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                        params = arrayOf("[$TASK_JSON_NAME]:$KEY_PACKAGE_PATH")
+                    )
+                }
                 val packageFilePathPrefix = buildAtomArchivePath(projectCode, atomCode, version)
-                val packageFile = File("$packageFilePathPrefix/${atomEnvRequest.pkgLocalPath}")
+                val packageFile = File("$packageFilePathPrefix/$pkgLocalPath")
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFile.name,
-                    packageFilePath = "$BK_CI_ATOM_DIR/${atomEnvRequest.pkgLocalPath}",
+                    packageFilePath = "$BK_CI_ATOM_DIR/$pkgLocalPath",
                     packageFileSize = packageFile.length(),
                     shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
@@ -204,7 +215,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf("shaContent" to packageFileInfo.shaContent)
+                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.shaContent)
                 )
             }
         }

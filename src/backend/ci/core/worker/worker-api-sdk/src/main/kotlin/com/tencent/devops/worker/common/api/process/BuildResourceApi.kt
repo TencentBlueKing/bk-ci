@@ -144,10 +144,11 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        buildId: String
     ): Result<BuildHistory?> {
-        val sb = StringBuilder("/ms/process/api/build/builds/$projectId/$pipelineId/$buildNum/history")
-        if (channelCode != null) sb.append("?channelCode=${channelCode.name}")
+        val sb = StringBuilder("/ms/process/api/build/builds/$projectId/$pipelineId/$buildNum/history?buildId=$buildId")
+        if (channelCode != null) sb.append("&channelCode=${channelCode.name}")
         val path = sb.toString()
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(

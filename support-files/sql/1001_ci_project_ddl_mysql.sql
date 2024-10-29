@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS `T_USER` (
   `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   `USER_TYPE` bit(1) NOT NULL DEFAULT b'0' COMMENT '用户类型0普通用户 1公共账号',
+  `BUSINESS_LINE_ID` bigint(20) DEFAULT NULL COMMENT '业务线ID',
+  `BUSINESS_LINE_NAME` varchar(255) DEFAULT NULL COMMENT '业务线名称',
   PRIMARY KEY (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户表';
 
@@ -121,6 +123,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `deploy_type` text COMMENT '部署类型',
   `bg_id` bigint(20) DEFAULT NULL COMMENT '事业群ID',
   `bg_name` varchar(255) DEFAULT NULL COMMENT '事业群名称',
+  `business_line_id` bigint(20) DEFAULT NULL COMMENT '业务线ID',
+  `business_line_name` varchar(255) DEFAULT NULL COMMENT '业务线名称',
   `dept_id` bigint(20) DEFAULT NULL COMMENT '项目所属二级机构ID',
   `dept_name` varchar(255) DEFAULT NULL COMMENT '项目所属二级机构名称',
   `center_id` bigint(20) DEFAULT NULL COMMENT '中心ID',
@@ -148,6 +152,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `properties` text NULL COMMENT '项目其他配置',
   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
+  `product_id` int(10) DEFAULT NULL comment '运营产品ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -185,6 +190,8 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `gray_iframe_url` varchar(255) DEFAULT NULL COMMENT '灰度iframe Url地址',
   `new_window` bit(1) DEFAULT b'0' COMMENT '是否打开新标签页',
   `new_windowUrl` varchar(200) DEFAULT '' COMMENT '新标签页地址',
+  `cluster_type` VARCHAR(32) NOT NULL DEFAULT '' comment '集群类型',
+  `DOC_URL` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '文档链接',
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`name`),
   UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
@@ -286,10 +293,11 @@ CREATE TABLE IF NOT EXISTS `T_DATA_SOURCE` (
   `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
   `DS_URL` varchar(1024) NULL COMMENT '数据源URL地址',
   `TAG` varchar(128) DEFAULT NULL COMMENT '数据源标签',
+  `TYPE` varchar(32) NOT NULL DEFAULT 'DB' COMMENT '数据库类型，DB:普通数据库，ARCHIVE_DB:归档数据库',
   `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
   `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   PRIMARY KEY (`ID`),
-  UNIQUE KEY  `uni_inx_tds_module_name` (`CLUSTER_NAME`, `MODULE_CODE`,`DATA_SOURCE_NAME`)
+  UNIQUE KEY `UNI_INX_TDS_CLUSTER_MODULE_TYPE_NAME` (`CLUSTER_NAME`,`MODULE_CODE`,`TYPE`, `DATA_SOURCE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模块数据源配置';
 
 CREATE TABLE IF NOT EXISTS `T_LEAF_ALLOC` (
@@ -349,6 +357,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
    `UPDATOR` varchar(32) DEFAULT NULL COMMENT '更新人',
    `BG_ID` bigint(20) DEFAULT NULL COMMENT '事业群ID',
    `BG_NAME` varchar(255) DEFAULT NULL COMMENT '事业群名称',
+   `BUSINESS_LINE_ID` bigint(20) DEFAULT NULL COMMENT '业务线ID',
+   `BUSINESS_LINE_NAME` varchar(255) DEFAULT NULL COMMENT '业务线名称',
    `DEPT_ID` bigint(20) DEFAULT NULL COMMENT '项目所属二级机构ID',
    `DEPT_NAME` varchar(255) DEFAULT NULL COMMENT '项目所属二级机构名称',
    `CENTER_ID` bigint(20) DEFAULT NULL COMMENT '中心ID',
@@ -361,10 +371,74 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
    `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
    `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开,1-保密,2-机密',
    `TIPS_STATUS` int(10) DEFAULT b'0' COMMENT '提示状态,0-不展示,1-展示创建成功,2-展示更新成功',
-   `PROJECT_TYPE` int(10) DEFAULT NULL comment '项目类型',
+   `PROJECT_TYPE` int(10) DEFAULT NULL COMMENT '项目类型',
+   `PRODUCT_ID` int(10) DEFAULT NULL COMMENT '运营产品ID',
+   `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称',
    PRIMARY KEY (`ID`) USING BTREE,
    UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
    UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目审批表';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_DATA_MIGRATE_HISTORY` (
+    `ID` varchar(32) NOT NULL DEFAULT '' COMMENT '主键ID',
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+    `MODULE_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '模块标识',
+    `SOURCE_CLUSTER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '被迁移集群名称',
+    `SOURCE_DATA_SOURCE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '被迁移数据源名称',
+    `TARGET_CLUSTER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '迁移集群名称',
+    `TARGET_DATA_SOURCE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '迁移数据源名称',
+    `TARGET_DATA_TAG` varchar(128) DEFAULT NULL COMMENT '迁移数据源标签',
+    `PIPELINE_ID` varchar(34) DEFAULT NULL COMMENT '流水线ID',
+    `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+    `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+    `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
+    `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `INX_TPDMH_MODULE_PROJECT_PIPELINE_NAME` (`MODULE_CODE`,`PROJECT_ID`,`PIPELINE_ID`, `TARGET_CLUSTER_NAME`, `TARGET_DATA_SOURCE_NAME`),
+    KEY `INX_TPDMH_TAG` (`TARGET_DATA_TAG`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目数据迁移历史表';
+
+CREATE TABLE IF NOT EXISTS `T_SENIOR_USER` (
+    `USER_ID` varchar(64) NOT NULL,
+    `NAME` varchar(64) NOT NULL,
+    `BG_NAME` varchar(64) NOT NULL,
+    `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`USER_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='高级用户表';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_UPDATE_HISTORY`
+(
+    `ID`                    bigint(20)  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `ENGLISH_NAME`          varchar(64) NOT NULL COMMENT '英文名称',
+    `BEFORE_PROJECT_NAME`   varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '变更前项目名称',
+    `AFTER_PROJECT_NAME`    varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '变更后项目名称',
+    `BEFORE_PRODUCT_ID`     int(10)          DEFAULT NULL COMMENT '变更前运营产品ID',
+    `AFTER_PRODUCT_ID`      int(10)          DEFAULT NULL COMMENT '变更后运营产品ID',
+    `BEFORE_ORGANIZATION`   varchar(255)     DEFAULT NULL COMMENT '变更前组织架构',
+    `AFTER_ORGANIZATION`    varchar(255)     DEFAULT NULL COMMENT '变更后组织架构',
+    `BEFORE_SUBJECT_SCOPES` text             DEFAULT NULL COMMENT '变更前最大可授权人员范围',
+    `AFTER_SUBJECT_SCOPES`  text             DEFAULT NULL COMMENT '变更后最大可授权人员范围',
+    `OPERATOR`              varchar(32)      DEFAULT NULL COMMENT '操作人',
+    `APPROVAL_STATUS`       int(10)          DEFAULT '1',
+    `CREATED_AT`            timestamp   NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATED_AT`            timestamp   NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `IDX_ENGLISH_NAME_UPDATED_AT` (`ENGLISH_NAME`,`UPDATED_AT`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='项目更新历史表';
+
+CREATE TABLE IF NOT EXISTS `T_OPERATIONAL_PRODUCT`
+(
+    `PRODUCT_ID`            int(10)     NOT NULL COMMENT '运营产品ID',
+    `PRODUCT_NAME`          varchar(64) NOT NULL COMMENT '运营产品名称',
+    `PLAN_PRODUCT_NAME`     varchar(64) NOT NULL COMMENT '规划产品名称',
+    `DEPT_NAME`             varchar(64) NOT NULL COMMENT '部门名称',
+    `BG_NAME`               varchar(64) NOT NULL COMMENT 'BG名称',
+    `CREATED_AT`            timestamp   NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`PRODUCT_ID`) USING BTREE,
+    KEY `IDX_PRODUCT_NAME` (`PRODUCT_NAME`),
+    KEY `IDX_BG_NAME` (`BG_NAME`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='运营产品信息表';
 
 SET FOREIGN_KEY_CHECKS = 1;

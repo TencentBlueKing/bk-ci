@@ -1,52 +1,72 @@
 <template>
-    <div style="text-align: left">
-        <form class="bk-form" action="http://localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
-            <form-field v-for="param in paramList"
-                :key="param.id" :required="param.required"
-                :is-error="errors.has('devops' + param.name)"
-                :error-msg="errors.first('devops' + param.name)"
-                :label="param.label || param.id"
-                :style="{ width: param.width }"
+    <bk-form
+        form-type="vertical"
+        class="pipeline-execute-params-form"
+    >
+        <form-field
+            v-for="param in paramList"
+            :key="param.id"
+            :required="param.required"
+            :is-error="errors.has('devops' + param.name)"
+            :error-msg="errors.first('devops' + param.name)"
+            :label="param.label || param.id"
+        >
+            <section class="component-row">
+                <component
+                    :is="param.component"
+                    v-validate="{ required: param.required }"
+                    :click-unfold="true"
+                    :show-select-all="true"
+                    :handle-change="handleParamUpdate"
+                    flex
+                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                    :class="{
+                        'is-diff-param': highlightChangedParam && param.isChanged
+                    }"
+                    :disabled="disabled"
+                    :placeholder="param.placeholder"
+                    :is-diff-param="highlightChangedParam && param.isChanged"
+                />
+            </section>
+            <span
+                v-if="!errors.has('devops' + param.name)"
+                :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
+                :title="param.desc"
             >
-                <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :show-select-all="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
-                    <div class="file-upload" v-if="showFileUploader(param.type)">
-                        <file-param-input :file-path="param.value"></file-param-input>
-                    </div>
-                </section>
-                <span v-if="!errors.has('devops' + param.name)" :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']" :title="param.desc">{{ param.desc }}</span>
-            </form-field>
-        </form>
-        <iframe v-show="false" name="previewHiddenIframe"></iframe>
-    </div>
+                {{ param.desc }}
+            </span>
+        </form-field>
+    </bk-form>
 </template>
 
 <script>
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/FileParamInput'
     import {
-        BOOLEAN_LIST,
-        isMultipleParam,
-        isEnumParam,
-        isSvnParam,
-        isGitParam,
-        isCodelibParam,
-        isFileParam,
-        ParamComponentMap,
-        STRING,
         BOOLEAN,
-        MULTIPLE,
-        ENUM,
-        SVN_TAG,
-        GIT_REF,
+        BOOLEAN_LIST,
         CODE_LIB,
         CONTAINER_TYPE,
+        ENUM,
+        GIT_REF,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isRemoteType,
+        isSvnParam,
+        MULTIPLE,
+        ParamComponentMap,
+        STRING,
         SUB_PIPELINE,
+        SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
 
@@ -54,6 +74,7 @@
 
         components: {
             Selector,
+            RequestSelector,
             EnumInput,
             VuexInput,
             VuexTextarea,
@@ -77,18 +98,28 @@
             handleParamChange: {
                 type: Function,
                 default: () => () => {}
-            }
+            },
+            highlightChangedParam: Boolean
         },
         computed: {
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
-                        restParam = {
-                            ...restParam,
-                            displayKey: 'value',
-                            settingKey: 'key',
-                            list: this.getParamOpt(param)
+                        if (isRemoteType(param)) {
+                            restParam = {
+                                ...restParam,
+                                ...param.payload,
+                                multiSelect: param.type === 'MULTIPLE',
+                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
+                            }
+                        } else {
+                            restParam = {
+                                ...restParam,
+                                displayKey: 'value',
+                                settingKey: 'key',
+                                list: this.getParamOpt(param)
+                            }
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
@@ -104,7 +135,7 @@
                         }
                     }
 
-                    if (!param.searchUrl) {
+                    if (!param.searchUrl && !isRemoteType(param)) {
                         if (isMultipleParam(param.type)) { // 去除不在选项里面的值
                             const mdv = this.getMultiSelectorValue(this.paramValues[param.id], param.options.map(v => v.key))
                             const mdvStr = mdv.join(',')
@@ -128,9 +159,9 @@
                     }
                     return {
                         ...param,
-                        component: ParamComponentMap[param.type],
+                        component: this.getParamComponentType(param),
                         name: param.id,
-                        required: param.type === SVN_TAG || param.type === GIT_REF,
+                        required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
                         ...restParam
                     }
@@ -138,6 +169,13 @@
             }
         },
         methods: {
+            getParamComponentType (param) {
+                if (isRemoteType(param)) {
+                    return 'request-selector'
+                } else {
+                    return ParamComponentMap[param.type]
+                }
+            },
             getParamOpt (param) {
                 switch (true) {
                     case param.type === BOOLEAN:
@@ -153,10 +191,6 @@
                     default:
                         return []
                 }
-            },
-            submitForm () {
-                // 触发表单默认提交事件，保存用户输入
-                this.$refs.previewParamsForm && this.$refs.previewParamsForm.submit()
             },
             getMultiSelectorValue (value = '', options) {
                 if (typeof value === 'string' && value) { // remove invalid option
@@ -186,52 +220,39 @@
 <style lang="scss" scoped>
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
+    .pipeline-execute-params-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
+        grid-gap: 0 24px;
+        &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
+            margin-top: 0 !important;
+        }
 
-    .component-row {
-        display: flex;
-        .metadata-box {
-            position: relative;
-            display: none;
-        }
-        .meta-data {
-            align-self: center;
-            margin-left: 10px;
-            font-size: 12px;
-            color: $primaryColor;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        .meta-data:hover {
-            .metadata-box {
-                display: block;
-            }
-        }
-        .file-upload {
+        .component-row {
             display: flex;
-            margin-left: 10px;
-            ::v-deep .bk-upload.button {
-                position: static;
-                display: flex;
-                .file-wrapper {
-                    margin-bottom: 0;
-                    height: 32px;
+            position: relative;
+            .metadata-box {
+                position: relative;
+                display: none;
+            }
+
+            .bk-select {
+                &:not(.is-disabled) {
+                    background: white;
                 }
-                p.tip {
-                    white-space: nowrap;
-                    position: static;
-                    margin-left: 8px;
-                }
-                .all-file {
-                    width: 100%;
-                    position: absolute;
-                    right: 0;
-                    top: 0;
-                    .file-item {
-                        margin-bottom: 0;
-                    }
-                    .error-msg {
-                        margin: 0
-                    }
+                width: 100%;
+            }
+            .meta-data {
+                align-self: center;
+                margin-left: 10px;
+                font-size: 12px;
+                color: $primaryColor;
+                white-space: nowrap;
+                cursor: pointer;
+            }
+            .meta-data:hover {
+                .metadata-box {
+                    display: block;
                 }
             }
         }
@@ -244,5 +265,8 @@
     }
     .params-desc-styles {
         margin-top: 32px;
+    }
+    .is-diff-param {
+        border-color: #FF9C01 !important;
     }
 </style>

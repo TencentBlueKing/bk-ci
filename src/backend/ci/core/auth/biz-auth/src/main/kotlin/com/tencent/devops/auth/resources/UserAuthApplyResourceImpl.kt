@@ -9,6 +9,7 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
@@ -16,7 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthApplyResourceImpl @Autowired constructor(
-    val permissionApplyService: PermissionApplyService
+    val permissionApplyService: PermissionApplyService,
+    val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
         return Result(
@@ -40,7 +42,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         searchGroupInfo: SearchGroupInfo
     ): Result<ManagerRoleGroupVO> {
         return Result(
-            permissionApplyService.listGroups(
+            permissionApplyService.listGroupsForApply(
                 userId = userId,
                 projectId = projectId,
                 searchGroupInfo = searchGroupInfo
@@ -57,11 +59,13 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
+    override fun getGroupPermissionDetail(
+        userId: String,
+        groupId: Int
+    ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
-            permissionApplyService.getGroupPermissionDetail(
-                userId = userId,
-                groupId = groupId
+            resourceGroupPermissionService.getGroupPermissionDetail(
+                iamGroupId = groupId
             )
         )
     }

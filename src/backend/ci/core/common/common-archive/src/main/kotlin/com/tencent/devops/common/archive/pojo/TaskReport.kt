@@ -27,24 +27,23 @@
 
 package com.tencent.devops.common.archive.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("自定义报告-报告信息")
+@Schema(title = "自定义报告-报告信息")
 data class TaskReport(
-    @ApiModelProperty("名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @ApiModelProperty("首页地址", required = true)
+    @get:Schema(title = "首页地址", required = true)
     val indexFileUrl: String,
-    @ApiModelProperty("报告类型", required = true)
+    @get:Schema(title = "报告类型", required = true)
     val type: String,
-    @ApiModelProperty("插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @ApiModelProperty("插件Id", required = true)
+    @get:Schema(title = "插件Id", required = true)
     val taskId: String,
-    @ApiModelProperty("插件code", required = true)
+    @get:Schema(title = "插件code", required = true)
     val atomCode: String,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: LocalDateTime
 )

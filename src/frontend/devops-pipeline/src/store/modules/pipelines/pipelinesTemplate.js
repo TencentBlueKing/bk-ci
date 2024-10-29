@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
@@ -38,13 +38,12 @@ const mutations = {
 }
 
 const actions = {
-    requestInstallTemplate (_, params) {
+    installPipelineTemplate (_, params) {
         return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
-            return response.data
         })
     },
-    requestTemplatePermission: async (_, projectId) => {
-        return ajax.get(`${prefix}/templates/projects/${projectId}/templates/hasManagerPermission`).then(response => {
+    requestInstallTemplate (_, params) {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/new`, params).then(response => {
             return response.data
         })
     },
@@ -83,8 +82,8 @@ const actions = {
             return response.data
         })
     },
-    requestTemplateList (_, { projectId, pageIndex, pageSize }) {
-        return ajax.get(`${prefix}/templates/projects/${projectId}/templates?page=${pageIndex}&pageSize=${pageSize}`).then(response => {
+    requestTemplateList (_, { projectId, pageIndex, pageSize, params }) {
+        return ajax.get(`${prefix}/templates/projects/${projectId}/templates?page=${pageIndex}&pageSize=${pageSize}`, { params }).then(response => {
             return response.data
         })
     },
@@ -117,6 +116,27 @@ const actions = {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/deletetemplate?versionName=${versionName}`).then(response => {
             return response.data
         })
+    },
+    createPipelineWithTemplate (_, { projectId, ...params }) {
+        return ajax.post(`${prefix}/version/projects/${projectId}/createPipelineWithTemplate`, params).then(response => {
+            return response.data
+        })
+    },
+    requestTemplatePreview (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${prefix}/templates/projects/${projectId}/templates/${templateId}/preview`, {
+            params
+        }).then(response => {
+            return response.data
+        })
+    },
+    enableTemplatePermissionManage (_, projectId) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/enableTemplatePermissionManage`)
+    },
+    getTemplateHasViewPermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=VIEW`)
+    },
+    getTemplateHasCreatePermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=CREATE`)
     }
 }
 

@@ -48,7 +48,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_CLIENT_IP
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.jooq.DSLContext
@@ -61,7 +61,6 @@ import org.springframework.stereotype.Service
 class PipelineRemoteAuthService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineRemoteAuthDao: PipelineRemoteAuthDao,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineReportService: PipelineRepositoryService,
     private val redisOperation: RedisOperation,
     private val client: Client,
@@ -109,7 +108,14 @@ class PipelineRemoteAuthService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
             )
         }
-        var userId = pipelineReportService.getPipelineInfo(pipeline.projectId, pipeline.pipelineId)?.lastModifyUser
+        // 获取授权人
+        var userId = pipelineReportService.getPipelineOauthUser(
+            pipelineId = pipeline.pipelineId,
+            projectId = pipeline.projectId
+        ) ?: pipelineReportService.getPipelineInfo(
+            projectId = pipeline.projectId,
+            pipelineId = pipeline.pipelineId
+        )?.lastModifyUser
 
         if (userId.isNullOrBlank()) {
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")
@@ -119,14 +125,17 @@ class PipelineRemoteAuthService @Autowired constructor(
         if (!startUser.isNullOrBlank()) {
             vals[PIPELINE_START_REMOTE_USER_ID] = startUser
         }
-
+        if (!sourceIp.isNullOrBlank()) {
+            vals[PIPELINE_START_REMOTE_CLIENT_IP] = sourceIp
+        }
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
         /* #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router
                  不使用client.get直接调用，因client内不支持同服务间的feign调用。故只能通过网关代理下 */
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, pipeline.projectId)
         return bkTag.invokeByTag(projectConsulTag) {
-            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, $projectConsulTag ${bkTag.getFinalTag()}")
+            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, " +
+                    "$projectConsulTag ${bkTag.getFinalTag()}")
             val buildId = client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
@@ -152,14 +161,17 @@ class PipelineRemoteAuthService @Autowired constructor(
                         arrayOf("$sourceIp")
                     ),
                     tag = taskId,
-                    executeCount = 1
+                    executeCount = 1,
+                    jobId = null,
+                    stepId = taskId
                 )
             }
             BuildId(
                 id = buildId.id,
                 executeCount = 1,
                 pipelineId = pipeline.pipelineId,
-                projectId = pipeline.projectId
+                projectId = pipeline.projectId,
+                num = buildId.num
             )
         }
     }

@@ -44,6 +44,11 @@ spring:
         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
         password: __BK_CI_MYSQL_PASSWORD__
+    archiveDataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -317,6 +322,13 @@ store:
   imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
   templateApproveSwitch: close
   imageApproveSwitch: close
+  defaultStaticFileFormat: jpg,png,svg,gif,jpeg
+  atom:
+    maxTimeout: 10080   # 最大插件超时时间
+    defaultTimeout: 900  # 默认插件超时时间
+    minTimeout: 1  # 最小插件超时时间
+    maxRetryNum: 5  # 最大插件自动重试次数
+    minRetryNum: 1
 
 logo:
   allowUploadLogoTypes: jpg,png,svg
@@ -412,7 +424,7 @@ wework:
   enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
   duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
   enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
-  
+
 # 分布式ID配置
 leaf:
   segment:
@@ -426,4 +438,11 @@ leaf:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm"
+    defaultShardingNum: 1
+    shardingField: PROJECT_ID
+  archiveFlag: Y
+  defaultFlag: N

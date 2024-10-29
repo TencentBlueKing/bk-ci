@@ -28,26 +28,33 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.util.YamlUtil
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.util.regex.Pattern
 
-@ApiModel("matrix流水线编辑校验yaml模型")
+@Schema(title = "matrix流水线编辑校验yaml模型")
 data class MatrixPipelineInfo(
-    @ApiModelProperty("作为输入值时:额外的参数组合(String)/作为输出值时:校验结果", required = false)
+    @get:Schema(title = "作为输入值时:额外的参数组合(String)/作为输出值时:校验结果", required = false)
     val include: String?,
-    @ApiModelProperty("作为输入值时:排除的参数组合(String)/作为输出值时:校验结果", required = false)
+    @get:Schema(title = "作为输入值时:排除的参数组合(String)/作为输出值时:校验结果", required = false)
     val exclude: String?,
-    @ApiModelProperty("作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
+    @get:Schema(title = "作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
     var strategy: String?
 ) {
     fun toMatrixConvert(): Any {
         return mapOf(
             "include" to if (!this.include.isNullOrBlank()) {
-                YamlUtil.to<Any>(this.include)
+                val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")
+                val matcher = pattern.matcher(this.include)
+                if (!matcher.find()) {
+                    YamlUtil.to<Any>(this.include)
+                } else null
             } else null,
             "exclude" to if (!this.exclude.isNullOrBlank()) {
-                YamlUtil.to<Any>(this.exclude)
+                val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")
+                val matcher = pattern.matcher(this.exclude)
+                if (!matcher.find()) {
+                    YamlUtil.to<Any>(this.exclude)
+                } else null
             } else null,
             "strategy" to if (!this.strategy.isNullOrBlank()) {
                 val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")

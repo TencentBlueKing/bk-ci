@@ -55,7 +55,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -75,7 +75,7 @@ class PipelineGroupService @Autowired constructor(
     private val pipelineFavorDao: PipelineFavorDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val client: Client,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) {
 
     fun getGroups(userId: String, projectId: String): List<PipelineGroup> {
@@ -131,7 +131,8 @@ class PipelineGroupService @Autowired constructor(
         return groups.map {
             PipelineGroupWithLabels(
                 id = it.id,
-                labels = it.labels.map { label -> label.id }
+                labels = it.labels.map { label -> label.id },
+                labelNames = it.labels.map { label -> label.name }
             )
         }
     }
@@ -460,13 +461,21 @@ class PipelineGroupService @Autowired constructor(
         return pairs
     }
 
-    fun getViewLabelToPipelinesMap(projectId: String, labels: List<String>): Map<String, List<String>> {
+    fun getViewLabelToPipelinesMap(
+        projectId: String,
+        labels: List<String>,
+        queryDSLContext: DSLContext? = null
+    ): Map<String, List<String>> {
         val labelIds = labels.map { decode(it) }.toSet()
         if (labelIds.isEmpty()) {
             return emptyMap()
         }
 
-        val pipelines = pipelineLabelPipelineDao.listPipelines(dslContext, projectId, labelIds)
+        val pipelines = pipelineLabelPipelineDao.listPipelines(
+            dslContext = queryDSLContext ?: dslContext,
+            projectId = projectId,
+            labelId = labelIds
+        )
 
         val labelToPipelineMap = mutableMapOf<String, MutableList<String>>()
         pipelines.forEach {

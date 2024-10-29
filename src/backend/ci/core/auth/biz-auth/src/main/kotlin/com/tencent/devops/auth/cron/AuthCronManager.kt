@@ -75,9 +75,7 @@ class AuthCronManager @Autowired constructor(
 
     @PostConstruct
     fun init() {
-        logger.info("start init system authToken")
-        clientTokenService.setSystemToken(null)
-        logger.info("init system authToken success ${clientTokenService.getSystemToken(null)}")
+        logger.info("init system authToken success ${clientTokenService.getSystemToken()}")
         updateAuthActionI18n()
         updateAuthResourceTypeI18n()
         updateAuthResourceGroupConfigI18n()
@@ -108,18 +106,6 @@ class AuthCronManager @Autowired constructor(
         }
     }
 
-    /**
-     * 每天凌晨1点刷新默认系统的token
-     */
-    @Scheduled(cron = "0 0 1 * * ?")
-    fun refreshToken() {
-        clientTokenService.setSystemToken(null)
-    }
-
-    /**
-     * 每天凌晨1点检查即将失效的管理员权限
-     */
-    @Scheduled(cron = "0 0 1 * * ?")
     fun checkExpiringManager() {
         RedisLock(redisOperation, AUTH_EXPIRING_MANAGAER_APPROVAL, expiredTimeInSeconds).use { redisLock ->
             try {
@@ -166,7 +152,7 @@ class AuthCronManager @Autowired constructor(
                                 authActionI18nMap = authActionI18nMap
                             )
                         }
-                        page ++
+                        page++
                     } while (actionRecordResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth Action I18n end")
                 } finally {
@@ -242,12 +228,12 @@ class AuthCronManager @Autowired constructor(
                         resourceGroupConfigResult.forEach {
                             val groupName = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
-                                        AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                                    AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             val description = MessageUtil.getMessageByLocale(
                                 messageCode = "${it.resourceType}.${it.groupCode}" +
-                                        AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
+                                    AUTH_RESOURCE_GROUP_CONFIG_DESCRIPTION_SUFFIX,
                                 language = commonConfig.devopsDefaultLocaleLanguage
                             )
                             if (groupName.isNotBlank()) {
@@ -274,6 +260,7 @@ class AuthCronManager @Autowired constructor(
             }
         }
     }
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
         private const val AUTH_EXPIRING_MANAGAER_APPROVAL = "auth:expiring:manager:approval"

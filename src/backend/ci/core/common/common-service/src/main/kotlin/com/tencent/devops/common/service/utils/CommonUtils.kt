@@ -29,28 +29,28 @@ package com.tencent.devops.common.service.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
 import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
-import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -66,26 +66,32 @@ object CommonUtils {
 
     private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
 
+    private var innerIp: String? = null
+
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
     fun getInnerIP(): String {
+        if (!innerIp.isNullOrBlank()) {
+            // 从本地缓存中取到的服务器IP不为空则直接返回
+            return innerIp.toString()
+        }
         val ipMap = getMachineIP()
-        var innerIp = ipMap["eth1"]
-        if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
+        innerIp = ipMap["eth1"]
+        if (innerIp.isNullOrBlank()) {
+            logger.info("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
-        if (StringUtils.isBlank(innerIp)) {
+        if (innerIp.isNullOrBlank()) {
             val ipSet = ipMap.entries
             for ((_, value) in ipSet) {
                 innerIp = value
-                if (!StringUtils.isBlank(innerIp)) {
+                if (!innerIp.isNullOrBlank()) {
                     break
                 }
             }
         }
-
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp
+        innerIp = if (!innerIp.isNullOrBlank()) innerIp else ""
+        return innerIp.toString()
     }
 
     private fun getMachineIP(): Map<String, String> {
@@ -137,12 +143,16 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false,
-        language: String
+        staticFlag: Boolean = false,
+        language: String,
+        fileRepoPath: String? = null
     ): Result<String?> {
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
-                "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
-        logger.info("the serviceUrl is:$serviceUrl")
+        var serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
+            "?userId=$userId&fileChannelType=$fileChannelType&staticFlag=$staticFlag"
+        fileRepoPath?.let {
+            serviceUrl += "&filePath=$fileRepoPath"
+        }
+        logger.info("serviceUploadFile serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
@@ -223,17 +233,7 @@ object CommonUtils {
                 PROFILE_TEST
             }
             profile.isProd() -> {
-                when {
-                    profile.isAuto() -> {
-                        PROFILE_AUTO
-                    }
-                    profile.isStream() -> {
-                        PROFILE_STREAM
-                    }
-                    else -> {
-                        PROFILE_PRODUCTION
-                    }
-                }
+                getProdDbClusterName(profile)
             }
             profile.isLocal() -> {
                 PROFILE_DEFAULT
@@ -241,6 +241,53 @@ object CommonUtils {
             else -> {
                 PROFILE_PRODUCTION
             }
+        }
+    }
+
+    private fun getProdDbClusterName(profile: Profile): String {
+        // 从配置文件获取db集群名称列表
+        val dbClusterNames = (SpringContextUtil.getValue("bk.db.clusterNames") ?: PROFILE_PRODUCTION).split(",")
+        val activeProfiles = profile.getActiveProfiles()
+        var finalDbClusterName = PROFILE_PRODUCTION
+        run breaking@{
+            // 获取当前服务器集群对应的db集群名称
+            activeProfiles.forEach { activeProfile ->
+                val dbClusterName = getDbClusterNameByProfile(dbClusterNames, activeProfile)
+                dbClusterName?.let {
+                    finalDbClusterName = dbClusterName
+                    return@breaking
+                }
+            }
+        }
+        return finalDbClusterName
+    }
+
+    private fun getDbClusterNameByProfile(
+        dbClusterNames: List<String>,
+        activeProfile: String
+    ): String? {
+        dbClusterNames.forEach { dbClusterName ->
+            if (activeProfile.contains(dbClusterName)) {
+                return dbClusterName
+            }
+        }
+        return null
+    }
+
+    /**
+     * 获取jooq上下文对象
+     * @param archiveFlag 归档标识
+     * @param archiveDslContextName 归档jooq上下文名称
+     * @return jooq上下文对象
+     */
+    fun getJooqDslContext(archiveFlag: Boolean? = null, archiveDslContextName: String? = null): DSLContext {
+        return if (archiveFlag == true) {
+            if (archiveDslContextName.isNullOrBlank()) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+            }
+            SpringContextUtil.getBean(DSLContext::class.java, archiveDslContextName)
+        } else {
+            SpringContextUtil.getBean(DSLContext::class.java)
         }
     }
 }

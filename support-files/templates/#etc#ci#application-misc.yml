@@ -29,12 +29,21 @@ spring:
          url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
          username: __BK_CI_MYSQL_USER__
          password: __BK_CI_MYSQL_PASSWORD__
+      image:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_image?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
       misc:
-         pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+         pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|image|gpt)"
       # 数据源配置（勿随便变更配置项的顺序）
       dataSourceConfigs:
          - index: 0
            url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+           username: __BK_CI_MYSQL_USER__
+           password: __BK_CI_MYSQL_PASSWORD__
+      archiveDataSourceConfigs:
+         - index: 0
+           url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
            username: __BK_CI_MYSQL_USER__
            password: __BK_CI_MYSQL_PASSWORD__
 
@@ -50,7 +59,7 @@ server:
 build:
   data:
     clear:
-      switch: false
+      switch: __BK_CI_BUILD_DATA_CLEAR_SWITCH__
       maxEveryProjectHandleNum: 5
       monthRange: -1
       maxKeepNum: 10000  
@@ -64,4 +73,35 @@ build:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm"
+    archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveTableShardingAlgorithm"
+    shardingField: PROJECT_ID
+  archiveFlag: Y
+  defaultFlag: N
+
+image:
+  dockerCli:
+    dockerHost: unix:///var/run/docker.sock
+    dockerConfig: /root/.docker
+    apiVersion: 1.23
+    registryUrl: __BK_CI_DOCKER_REGISTRY_URL__  # 什么类型的url?
+    registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+    registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+    imagePrefix: __BK_CI_DOCKER_IMAGE_PREFIX__
+
+influxdb:
+  server: __BK_CI_INFLUXDB_ADDR__
+  userName: __BK_CI_INFLUXDB_USER__
+  password: __BK_CI_INFLUXDB_PASSWORD__
+
+plugin:
+  codecc:
+    path: __BK_CODECC_DATA_DIR__/tools
+    covFile: build_dev.py
+    toolFile: build_tool_dev.py
+
+gpt:
+  gateway: __BK_CI_GPT_GATEWAY__
+  headers: __BK_CI_GPT_HEADERS__

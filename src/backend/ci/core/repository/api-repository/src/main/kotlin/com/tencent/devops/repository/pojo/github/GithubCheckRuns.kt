@@ -28,30 +28,33 @@
 package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("check run 模型")
+@Schema(title = "check run 模型")
 data class GithubCheckRuns(
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
     @JsonProperty("head_sha")
-    @ApiModelProperty("head sha值", name = "head_sha")
+    @get:Schema(title = "head sha值", description = "head_sha")
     val headSha: String,
     @JsonProperty("details_url")
-    @ApiModelProperty("详情链接", name = "details_url")
+    @get:Schema(title = "详情链接", description = "details_url")
     val detailsUrl: String,
     @JsonProperty("external_id")
-    @ApiModelProperty("拓展ID", name = "external_id")
+    @get:Schema(title = "拓展ID", description = "external_id")
     val externalId: String,
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val status: String,
     @JsonProperty("started_at")
-    @ApiModelProperty("开始于", name = "started_at")
+    @get:Schema(title = "开始于", description = "started_at")
     val startedAt: String?,
-    @ApiModelProperty("结论")
+    @get:Schema(title = "结论")
     val conclusion: String?,
     @JsonProperty("completed_at")
-    @ApiModelProperty("完成于", name = "completed_at")
-    val completedAt: String?
+    @get:Schema(title = "完成于", description = "completed_at")
+    val completedAt: String?,
+    @Parameter(description = "output", required = true)
+    val output: CheckRunOutput? = null
 )

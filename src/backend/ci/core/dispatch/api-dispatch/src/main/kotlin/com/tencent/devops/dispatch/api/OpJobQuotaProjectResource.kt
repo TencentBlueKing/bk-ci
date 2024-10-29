@@ -28,11 +28,12 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.JobQuotaProject
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -44,79 +45,91 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
+@Tag(name = "OP_JOBS_PROJECT_QUOTA", description = "Job配额管理")
 @Path("/op/jobs/quota")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpJobQuotaProjectResource {
 
-    @ApiOperation("获取全部的JOB配额信息")
+    @Operation(summary = "获取全部的JOB配额信息")
     @GET
     @Path("/list/project/quota")
     fun list(
-        @ApiParam(value = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam(value = "projectId")
         projectId: String?
     ): Result<List<JobQuotaProject>>
 
-    @ApiOperation("获取项目的JOB配额信息")
+    @Operation(summary = "获取项目的JOB配额信息")
     @GET
     @Path("/{projectId}/{vmType}")
     fun get(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @Parameter(description = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<JobQuotaProject>
 
-    @ApiOperation("添加项目的JOB配额信息")
+    @Operation(summary = "添加项目的JOB配额信息")
     @PUT
     @Path("/{projectId}")
     fun add(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaProject
     ): Result<Boolean>
 
-    @ApiOperation("删除项目的JOB配额信息")
+    @Operation(summary = "删除项目的JOB配额信息")
     @DELETE
     @Path("/{projectId}/{vmType}")
     fun delete(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @Parameter(description = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>
 
-    @ApiOperation("更新项目的JOB配额信息")
+    @Operation(summary = "更新项目的JOB配额信息")
     @POST
     @Path("/{projectId}/{vmType}")
     fun update(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @ApiParam(value = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaProject
     ): Result<Boolean>
 
-    @ApiOperation("清零项目的当月已运行时间")
+    @Operation(summary = "清零异常的构建配额记录")
     @POST
     @Path("/project/{projectId}/vm/{vmType}")
-    fun restore(
-        @ApiParam(value = "项目ID", required = true)
+    fun restoreProjectRunningJobs(
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @Parameter(description = "构建时间", required = true)
+        @QueryParam("createTime")
+        createTime: String,
+        @Parameter(description = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>
 }

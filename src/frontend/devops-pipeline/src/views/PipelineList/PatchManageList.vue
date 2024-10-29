@@ -1,22 +1,29 @@
 <template>
     <main class="pipeline-list-main">
-        <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
+        <h5 class="current-pipeline-group-name">{{ currentViewName }}</h5>
         <header class="pipeline-list-main-header">
-            <div>
+            <div class="pipeline-list-main-header-left-area">
                 <bk-button
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"
                 >
-                    {{$t('patchAddTo')}}
+                    {{ $t('patchAddTo') }}
                 </bk-button>
+                <span v-bk-tooltips="notAllowPatchDeleteTips">
+                    <bk-button
+                        :disabled="!isSelected || isPacGroup"
+                        @click="toggleDeleteConfirm"
+                    >
+                        {{ $t('patchDelete') }}
+                    </bk-button>
+                </span>
                 <bk-button
-                    :disabled="!isSelected"
-                    @click="toggleDeleteConfirm"
+                    class="exit-patch-text-btn"
+                    text
+                    @click="exitPatch"
                 >
-                    {{$t('patchDelete')}}
+                    {{ $t('exitPatch') }}
                 </bk-button>
-                <bk-button class="exit-patch-text-btn" text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
-
             </div>
             <div class="pipeline-list-main-header-right-area">
                 <pipeline-searcher
@@ -24,13 +31,19 @@
                 />
             </div>
         </header>
-        <pipeline-table-view
-            ref="pipelineTable"
-            :fetch-pipelines="getPipelines"
-            :filter-params="filters"
-            @selection-change="handleSelectChange"
-            is-patch-view
-        ></pipeline-table-view>
+        <div
+            class="pipeline-list-box"
+            ref="tableBox"
+        >
+            <pipeline-table-view
+                ref="pipelineTable"
+                :fetch-pipelines="getPipelines"
+                :filter-params="filters"
+                :max-height="tableHeight"
+                @selection-change="handleSelectChange"
+                is-patch-view
+            />
+        </div>
         <add-to-group-dialog
             is-patch
             :add-to-dialog-show="addToDialogShow"
@@ -49,11 +62,11 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
-    import moment from 'moment'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import moment from 'moment'
+    import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     export default {
         name: 'patch-manage-list',
@@ -69,7 +82,8 @@
                 selected: [],
                 addToDialogShow: false,
                 filters: restQuery,
-                isConfirmShow: false
+                isConfirmShow: false,
+                tableHeight: null
             }
         },
         computed: {
@@ -79,17 +93,38 @@
             currentViewName () {
                 return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
             },
+            isPacGroup () {
+                return this.groupMap?.[this.$route.params.viewId]?.pac
+            },
             isSelected () {
                 return this.selected.length > 0
+            },
+            notAllowPatchDeleteTips () {
+                return {
+                    content: this.$t('notAllowPatchDeletePacPipelineTips'),
+                    maxWidth: 360,
+                    disabled: !this.isPacGroup,
+                    delay: [300, 0]
+                }
             }
         },
         created () {
             moment.locale(this.$i18n.locale)
         },
+        mounted () {
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateTableHeight)
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestAllPipelinesListByFilter'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             exitPatch () {
                 this.$router.push({
                     name: 'PipelineManageList',

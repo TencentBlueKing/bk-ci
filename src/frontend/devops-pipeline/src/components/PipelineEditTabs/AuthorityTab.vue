@@ -1,5 +1,6 @@
 <template>
     <bk-permission
+        :key="resourceCode"
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"
@@ -10,6 +11,7 @@
 
 <script>
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { mapState } from 'vuex'
 
     export default {
         name: 'auth-tab',
@@ -20,6 +22,7 @@
             }
         },
         computed: {
+            ...mapState('atom', ['pipelineInfo']),
             projectCode () {
                 return this.$route.params.projectId
             },
@@ -27,7 +30,7 @@
                 return this.$route.params.pipelineId
             },
             pipelineName () {
-                return this.curPipeline.pipelineName
+                return this.pipelineInfo?.pipelineName ?? ''
             }
         }
     }

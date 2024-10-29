@@ -1,23 +1,46 @@
 <template>
-    <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
-        <header class="var-header" slot="header">
+    <accordion
+        v-if="outputProps && Object.keys(outputProps).length > 0"
+        show-checkbox
+        show-content
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.atomOutput') }}</span>
-            <i class="devops-icon icon-angle-down" style="display: block"></i>
+            <i
+                class="devops-icon icon-angle-down"
+                style="display: block"
+            ></i>
         </header>
         <div slot="content">
             <div :class="{ 'output-namespace': true, 'form-field': true, 'is-danger': errors.has('namespace') }">
-                <label class="bk-label" style="line-height: 32px;">
+                <label
+                    class="bk-label"
+                    style="line-height: 32px;"
+                >
                     {{ $t('editPage.outputNamespace') }}：
                     <bk-popover placement="top">
                         <i class="bk-icon icon-info-circle"></i>
-                        <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
+                        <div
+                            slot="content"
+                            style="white-space: pre-wrap; font-size: 12px; max-width: 500px;"
+                        >
                             <div>{{ outputNamespaceDesc }}</div>
                         </div>
                     </bk-popover>
-                    <i class="bk-icon icon-edit edit-namespace" @click="editNamespace"></i>
+                    <i
+                        class="bk-icon icon-edit edit-namespace"
+                        @click="editNamespace"
+                    ></i>
                 </label>
                 <div class="bk-form-content output-namespace-tips">
-                    <bk-alert type="warning" :closable="true" style="margin-bottom: 8px;">
+                    <bk-alert
+                        type="warning"
+                        :closable="true"
+                        style="margin-bottom: 8px;"
+                    >
                         <template slot="title">
                             {{ namespaceTips }}
                             <a
@@ -29,13 +52,27 @@
                             </a>
                         </template>
                     </bk-alert>
-                    <vuex-input v-if="showEditNamespace" name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" />
-                    <p v-if="errors.has('namespace')" class="bk-form-help is-danger">{{errors.first('namespace')}}</p>
+                    <vuex-input
+                        v-if="showEditNamespace"
+                        name="namespace"
+                        v-validate.initial="{ varRule: true }"
+                        :handle-change="handleUpdateAtomOutputNameSpace"
+                        :value="namespace"
+                    />
+                    <p
+                        v-if="errors.has('namespace')"
+                        class="bk-form-help is-danger"
+                    >
+                        {{ errors.first('namespace') }}
+                    </p>
                 </div>
             </div>
             <div class="atom-output-var-list">
                 <h4>{{ $t('editPage.outputItemList') }}</h4>
-                <p v-for="(output, key) in outputProps" :key="key">
+                <p
+                    v-for="(output, key) in outputProps"
+                    :key="key"
+                >
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
                         <i class="bk-icon icon-info-circle" />
@@ -86,9 +123,6 @@
                     return ''
                 }
             }
-        },
-        created () {
-            console.log('create output', this.atomPropsModel.output, this.element)
         },
         methods: {
             editNamespace () {

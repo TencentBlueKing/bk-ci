@@ -55,7 +55,7 @@ class NodeWebsocketService @Autowired constructor(
                 executeCount = null
             )
         )
-        logger.info("nodeList websocket: page[$page],project:[$projectId]")
+        logger.debug("nodeList websocket: page[$page],project:[$projectId]")
         return NodeWebsocketPush(
                 projectId = projectId,
                 userId = userId,

@@ -1,38 +1,80 @@
 <template>
     <span class="log-status readonly">
-        <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'" class="devops-icon icon-circle-2-1 executing" />
-        <svg aria-hidden="true" v-if="status === 'WAITING'">
-            <use xlink:href="#icon-build-waiting"></use>
-        </svg>
-        <svg fill="#fff" aria-hidden="true" v-if="['SKIP', 'CANCELED', 'TERMINATE'].includes(status) || !status">
-            <use xlink:href="#icon-build-canceled"></use>
-        </svg>
-        <svg aria-hidden="true" v-if="['REVIEW_ABORT', 'REVIEWING'].includes(status)">
-            <use xlink:href="#icon-build-warning"></use>
-        </svg>
-        <svg aria-hidden="true" v-if="['FAILED', 'HEARTBEAT_TIMEOUT', 'QUEUE_TIMEOUT', 'EXEC_TIMEOUT'].includes(status)" class="danger">
-            <use xlink:href="#icon-build-hooks" v-if="isHook"></use>
-            <use xlink:href="#icon-build-failed" v-else></use>
-        </svg>
-        <svg aria-hidden="true" v-if="status === 'SUCCEED'" class="success">
-            <use xlink:href="#icon-build-hooks" v-if="isHook"></use>
-            <use xlink:href="#icon-build-sucess" v-else></use>
-        </svg>
-        <svg aria-hidden="true" v-if="status === 'PAUSE'" class="pause">
-            <use xlink:href="#icon-build-pause"></use>
-        </svg>
+        <i
+            v-if="isRunning"
+            class="devops-icon icon-circle-2-1 executing"
+        />
+        <logo
+            v-else
+            v-bind="statusIconAttrs"
+        />
     </span>
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     export default {
         name: 'log-status',
+        components: {
+            Logo
+        },
         props: {
             status: {
                 type: String,
                 default: 'CANCELED'
             },
             isHook: Boolean
+        },
+        computed: {
+            isRunning () {
+                return [
+                    'RUNNING',
+                    'PREPARE_ENV',
+                    'QUEUE',
+                    'LOOP_WAITING',
+                    'CALL_WAITING'
+                ].includes(this.status)
+            },
+            statusIconAttrs () {
+                switch (this.status) {
+                    case 'WAITING':
+                        return {
+                            name: 'build-waiting'
+                        }
+                    case 'REVIEW_ABORT':
+                    case 'REVIEWING':
+                        return {
+                            name: 'build-warning'
+                        }
+                    case 'FAILED':
+                    case 'HEARTBEAT_TIMEOUT':
+                    case 'QUEUE_TIMEOUT':
+                    case 'EXEC_TIMEOUT':
+                        return {
+                            name: `build-${this.isHook ? 'hooks' : 'failed'}`,
+                            class: 'danger'
+                        }
+                    case 'SUCCEED':
+                        return {
+                            name: `build-${this.isHook ? 'hooks' : 'sucess'}`,
+                            class: 'success'
+                        }
+                    case 'PAUSE':
+                        return {
+                            name: 'build-pause',
+                            class: 'pause'
+                        }
+                    case 'SKIP':
+                    case 'CANCELED':
+                    case 'TERMINATE':
+                    default:
+                        return {
+                            fill: '#fff',
+                            name: 'build-canceled'
+                        }
+                }
+            }
+
         }
     }
 </script>

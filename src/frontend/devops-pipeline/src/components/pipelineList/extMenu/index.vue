@@ -14,7 +14,11 @@
         <div :class="`dot-menu-trigger ${extCls}`">
             <i class="devops-icon icon-more"></i>
         </div>
-        <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
+        <ul
+            v-if="config.length > 0"
+            class="dot-menu-list"
+            slot="content"
+        >
             <li
                 v-perm="item.permissionData ? {
                     hasPermission: item.hasPermission,
@@ -25,12 +29,12 @@
                 v-for="(item, index) of config"
                 v-bk-tooltips="getTooltips(item)"
                 :key="index"
-                @click.stop="clickMenuItem(item)">
+                @click.stop="clickMenuItem(item)"
+            >
                 {{ item.text }}
             </li>
         </ul>
     </bk-popover>
-
 </template>
 
 <script>
@@ -59,12 +63,6 @@
             },
             clickMenuItem (item) {
                 if (item.disable) return
-
-                if (item.isJumpToTem) {
-                    this.$refs.dotMenuRef.hideHandler()
-                    item.handler(this.config.templateId)
-                    return
-                }
 
                 this.$refs.dotMenuRef.hideHandler()
                 console.log(this.data)
@@ -119,7 +117,7 @@
     }
 
     .tippy-tooltip.dot-menu-theme {
-        padding: 0;
+        padding: 0 !important;
     }
     .dot-menu-trigger {
         display: flex;

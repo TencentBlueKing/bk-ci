@@ -1,9 +1,15 @@
 <template>
     <section class="honer-img">
         <section class="img-wrapper">
-            <img class="img-self" :src="detail.logoUrl">
+            <img
+                class="img-self"
+                :src="detail.logoUrl"
+            >
             <template v-if="recentHoner">
-                <img class="honer-self" src="../../images/honer.png">
+                <img
+                    class="honer-self"
+                    src="../../images/honer.png"
+                >
                 <span
                     v-bk-tooltips="honorTips"
                     :class="{
@@ -74,9 +80,8 @@
             position: absolute;
             bottom: -3px;
             color: #FFFFFF;
-            font-size: 12px;
-            scale: 83%;
-            line-height: 12px;
+            font-size: 9px;
+            line-height: 1;
             width: 69%;
             text-align: center;
         }

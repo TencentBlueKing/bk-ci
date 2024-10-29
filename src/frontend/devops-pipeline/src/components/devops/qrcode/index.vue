@@ -1,6 +1,9 @@
 
 <template>
-    <div class="qrcode-content" ref="qrcode"></div>
+    <div
+        class="qrcode-content"
+        ref="qrcode"
+    ></div>
 </template>
 
 <script>

@@ -367,7 +367,7 @@ class GitRequestEventDao {
      */
     fun getRequestsById(
         dslContext: DSLContext,
-        requestIds: Set<Int>,
+        requestIds: Set<Long>,
         hasEvent: Boolean
     ): List<GitRequestEvent> {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {

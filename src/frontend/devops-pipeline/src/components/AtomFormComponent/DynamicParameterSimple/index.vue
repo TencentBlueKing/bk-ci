@@ -1,17 +1,32 @@
 <template>
-    <ul class="param-main" v-bkloading="{ isLoading }">
-        <li class="param-label" style="display: flex; padding-right:30px;">
+    <ul
+        class="param-main"
+        v-bkloading="{ isLoading }"
+    >
+        <li
+            class="param-label"
+            style="display: flex; padding-right:30px;"
+        >
             <span
                 v-for="(item, index) in curParameters[0].rowAttributes"
                 :key="index"
                 class="input-label"
-                :title="item.label">
+                :title="item.label"
+            >
                 {{ item.label }}：
-                <i class="bk-icon icon-info-circle label-desc" v-bk-tooltips.top="{ content: item.desc, allowHTML: false }" />
+                <i
+                    class="bk-icon icon-info-circle label-desc"
+                    v-bk-tooltips.top="{ content: item.desc, allowHTML: false }"
+                />
             </span>
         </li>
-        <li class="param-com" v-for="(parameter, paramIndex) in curParameters" :key="paramIndex">
-            <parameter-com v-for="(model, index) in parameter.rowAttributes"
+        <li
+            class="param-com"
+            v-for="(parameter, paramIndex) in curParameters"
+            :key="paramIndex"
+        >
+            <parameter-com
+                v-for="(model, index) in parameter.rowAttributes"
                 :class="[{ 'last-child': index === parameter.rowAttributes.length - 1 }, 'input-com']"
                 :style="{ maxWidth: `calc(${100 / parameter.rowAttributes.length}% - ${58 / parameter.rowAttributes.length}px)` }"
                 v-bind="model"
@@ -20,8 +35,15 @@
                 @update-value="(newValue) => updateValue(model, newValue)"
                 :param-values="paramValues"
             ></parameter-com>
-            <i class="bk-icon icon-plus-circle" @click="plusParam(parameter, paramIndex)"></i>
-            <i class="bk-icon icon-minus-circle" v-if="curParameters.length > 1" @click="minusParam(paramIndex)"></i>
+            <i
+                class="bk-icon icon-plus-circle"
+                @click="plusParam(parameter, paramIndex)"
+            ></i>
+            <i
+                class="bk-icon icon-minus-circle"
+                v-if="curParameters.length > 1"
+                @click="minusParam(paramIndex)"
+            ></i>
         </li>
     </ul>
 </template>
@@ -36,7 +58,7 @@
         components: {
             parameterCom
         },
-        
+
         mixins: [mixins],
 
         props: {

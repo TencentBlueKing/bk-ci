@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -47,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -70,11 +72,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -243,7 +245,7 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun cleanContainersInMatrixGroup(
+    private fun cleanContainersInMatrixGroup(
         transactionContext: DSLContext?,
         projectId: String,
         pipelineId: String,
@@ -291,10 +293,12 @@ class PipelineContainerService @Autowired constructor(
         matrixGroupId: String,
         jobControlOption: JobControlOption,
         postParentIdMap: Map<String, String>,
-        mutexGroup: MutexGroup?
+        mutexGroup: MutexGroup?,
+        agentReuseMutex: AgentReuseMutex?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
+        var needStartVM = false // 是否需要启动构建
         val parentElements = container.elements
 
         parentElements.forEach nextElement@{ atomElement ->
@@ -322,48 +326,64 @@ class PipelineContainerService @Autowired constructor(
             )
             buildTaskList.add(buildTask)
             resourceVersion?.let {
-                recordTaskList.add(
-                    BuildRecordTask(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
-                        taskSeq = taskSeq,
-                        taskId = atomElement.id!!,
-                        classType = MatrixStatusElement.classType,
-                        atomCode = atomElement.getAtomCode(),
-                        executeCount = context.executeCount,
-                        originClassType = atomElement.getClassType(),
-                        resourceVersion = resourceVersion,
-                        timestamps = mapOf(),
-                        elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
-                        // 对矩阵产生的插件特殊表示类型
-                        taskVar = mutableMapOf(
-                            "@type" to MatrixStatusElement.classType,
-                            MatrixStatusElement::originClassType.name to atomElement.getClassType(),
-                            MatrixStatusElement::originAtomCode.name to atomElement.getAtomCode(),
-                            MatrixStatusElement::originTaskAtom.name to atomElement.getTaskAtom()
+                if (ElementUtils.getTaskAddFlag(
+                        element = atomElement,
+                        stageEnableFlag = stage.stageEnabled(),
+                        containerEnableFlag = container.containerEnabled(),
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
+                    )
+                ) {
+                    val taskVar = atomElement.initTaskVar()
+                    taskVar["@type"] = MatrixStatusElement.classType
+                    taskVar[MatrixStatusElement::originClassType.name] = atomElement.getClassType()
+                    taskVar[MatrixStatusElement::originAtomCode.name] = atomElement.getAtomCode()
+                    taskVar[MatrixStatusElement::originTaskAtom.name] = atomElement.getTaskAtom()
+                    recordTaskList.add(
+                        BuildRecordTask(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            stageId = stage.id!!,
+                            containerId = container.id!!,
+                            taskSeq = taskSeq,
+                            taskId = atomElement.id!!,
+                            classType = MatrixStatusElement.classType,
+                            atomCode = atomElement.getAtomCode(),
+                            executeCount = context.executeCount,
+                            originClassType = atomElement.getClassType(),
+                            resourceVersion = resourceVersion,
+                            timestamps = mapOf(),
+                            elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
+                            // 对矩阵产生的插件特殊表示类型
+                            taskVar = taskVar
                         )
                     )
-                )
+                }
+            }
+            // 确认是否要启动构建机/无编译环境
+            if (!needStartVM && startVMTaskSeq > 0) {
+                needStartVM = true
             }
         }
+        container.startVMTaskSeq = startVMTaskSeq
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
-        supplyVMTask(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            userId = context.userId,
-            stage = stage,
-            container = container,
-            containerSeq = context.containerSeq,
-            startVMTaskSeq = startVMTaskSeq,
-            lastTimeBuildTasks = listOf(),
-            updateExistsTask = mutableListOf(),
-            buildTaskList = buildTaskList,
-            executeCount = context.executeCount
-        )
+        // 判断是否为无编译环境的写法保持和 prepareBuildContainerTasks() 一致
+        if (needStartVM) {
+            supplyVMTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = context.userId,
+                stage = stage,
+                container = container,
+                containerSeq = context.containerSeq,
+                startVMTaskSeq = startVMTaskSeq,
+                lastTimeBuildTasks = listOf(),
+                updateExistsTask = mutableListOf(),
+                buildTaskList = buildTaskList,
+                executeCount = context.executeCount
+            )
+        }
 
         return PipelineBuildContainer(
             projectId = projectId,
@@ -372,6 +392,7 @@ class PipelineContainerService @Autowired constructor(
             stageId = stage.id!!,
             containerId = container.id!!,
             containerHashId = container.containerHashId ?: "",
+            jobId = container.jobId,
             containerType = container.getClassType(),
             seq = context.containerSeq,
             status = BuildStatus.QUEUE,
@@ -380,7 +401,8 @@ class PipelineContainerService @Autowired constructor(
                 jobControlOption = jobControlOption,
                 inFinallyStage = stage.finally,
                 mutexGroup = mutexGroup,
-                containPostTaskFlag = container.containPostTaskFlag
+                containPostTaskFlag = container.containPostTaskFlag,
+                agentReuseMutex = agentReuseMutex
             ),
             matrixGroupFlag = false,
             matrixGroupId = matrixGroupId
@@ -405,7 +427,18 @@ class PipelineContainerService @Autowired constructor(
         var needUpdateContainer = false
         var taskSeq = 0
         val containerElements = container.elements
-        val retryFlag = lastTimeBuildTasks.isEmpty()
+        val newBuildFlag = lastTimeBuildTasks.isEmpty()
+
+        // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+        // #10751 如果不存在需要运行的插件，则直接将container设为不启用
+        var containerEnable = false
+        containerElements.forEach { atomElement ->
+            atomElement.disableBySkipVar(variables = context.variables)
+            if (atomElement.additionalOptions?.enable != false) {
+                containerEnable = true
+            }
+        }
+        if (!containerEnable) container.setContainerEnable(false)
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -418,33 +451,38 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
 
-            // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
-            atomElement.disableBySkipVar(variables = context.variables)
-
             val status = atomElement.initStatus(
                 rerun = context.needRerunTask(stage = stage, container = container)
             )
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
-                if (retryFlag) taskBuildRecords.add(
-                    BuildRecordTask(
-                        projectId = context.projectId, pipelineId = context.pipelineId,
-                        buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = atomElement.id!!, classType = atomElement.getClassType(),
-                        atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
-                        resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
-                        taskVar = mutableMapOf(), timestamps = mapOf(),
-                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
-                            info.parentElementId != atomElement.id
-                        }
+                if (newBuildFlag && ElementUtils.getTaskAddFlag(
+                        element = atomElement,
+                        stageEnableFlag = stage.stageEnabled(),
+                        containerEnableFlag = container.containerEnabled(),
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
-                )
+                ) {
+                    taskBuildRecords.add(
+                        BuildRecordTask(
+                            projectId = context.projectId, pipelineId = context.pipelineId,
+                            buildId = context.buildId, stageId = stage.id!!, containerId = container.id!!,
+                            taskId = atomElement.id!!, classType = atomElement.getClassType(),
+                            atomCode = atomElement.getAtomCode(), executeCount = context.executeCount,
+                            resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
+                            taskVar = atomElement.initTaskVar(), timestamps = mapOf(),
+                            elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
+                                info.parentElementId != atomElement.id
+                            }
+                        )
+                    )
+                }
                 return@nextElement
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (retryFlag) {
+            if (newBuildFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     val buildTask = genBuildTaskToList(
@@ -464,7 +502,7 @@ class PipelineContainerService @Autowired constructor(
                 }
                 needUpdateContainer = true
             } else {
-                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
+                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过（取消状态除外）
                 if (context.needSkipTaskWhenRetry(stage, container, atomElement.id)) {
                     val target = findLastTimeBuildTask(
                         lastTimeBuildTasks = lastTimeBuildTasks,
@@ -473,8 +511,9 @@ class PipelineContainerService @Autowired constructor(
                     )
                     // 插件任务在历史中找不到，则跳过当前插件
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
+                    // 如果是取消状态的，则不能跳过，取消状态属于要重试再次执行的状态（比如重试的是checkout插件，其post-action如是取消)
                     try {
-                        if (target == null || target.status.isFinish()) {
+                        if (target == null || (target.status.isSuccess() || target.status.isFailure())) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -486,7 +525,7 @@ class PipelineContainerService @Autowired constructor(
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
                 val skipWhenFailed = context.inSkipStage(stage, atomElement)
                 val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
-                val recordStatus = if (skipWhenFailed) BuildStatus.FAILED.name else null
+                val recordStatus = if (skipWhenFailed) BuildStatus.SKIP.name else null
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
@@ -521,16 +560,13 @@ class PipelineContainerService @Autowired constructor(
                             containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
                             taskId = taskRecord.taskId, classType = taskRecord.taskType,
                             atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
-                            executeCount = taskRecord.executeCount ?: 1, taskVar = mutableMapOf(),
+                            executeCount = taskRecord.executeCount ?: 1, taskVar = atomElement.initTaskVar(),
                             status = recordStatus, resourceVersion = context.resourceVersion,
                             elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
                                 info.parentElementId != taskRecord.taskId
                             }
                         )
                     )
-                    needUpdateContainer = true
-                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
-                    // 构建矩阵没有对应的重试插件，单独进行重试判断
                     needUpdateContainer = true
                 }
             }
@@ -540,6 +576,24 @@ class PipelineContainerService @Autowired constructor(
                 needStartVM = true
             }
         }
+        container.startVMTaskSeq = startVMTaskSeq
+
+        // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+            container.retryFreshMatrixOption()
+            cleanContainersInMatrixGroup(
+                transactionContext = dslContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                matrixGroupId = container.id!!
+            )
+            // 去掉要重试的矩阵内部数据
+            updateExistsTask.removeIf { it.containerId == container.id }
+            updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
+            needUpdateContainer = true
+        }
+
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
@@ -557,6 +611,11 @@ class PipelineContainerService @Autowired constructor(
                 executeCount = context.executeCount
             )
         }
+        logger.info(
+            "prepareBuildContainerTasks|buildId=${context.buildId}|containerId=${container.id}|" +
+                "matrixGroupFlag=${container.matrixGroupFlag}|needUpdateContainer=$needUpdateContainer|" +
+                "needStartVM=$needStartVM|startVMTaskSeq=$startVMTaskSeq|"
+        )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
             if (lastTimeBuildContainers.isNotEmpty()) {
@@ -612,6 +671,7 @@ class PipelineContainerService @Autowired constructor(
                             stageId = stage.id!!,
                             containerId = container.id!!,
                             containerHashId = container.containerHashId ?: "",
+                            jobId = container.jobId,
                             containerType = container.getClassType(),
                             seq = context.containerSeq,
                             status = BuildStatus.QUEUE,
@@ -630,7 +690,7 @@ class PipelineContainerService @Autowired constructor(
                 BuildRecordContainer(
                     projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
-                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    containerId = container.id!!, containerType = container.getClassType(),
                     executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
                     matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()
@@ -889,7 +949,8 @@ class PipelineContainerService @Autowired constructor(
         subProjectId = null,
         subBuildId = null,
         atomCode = atomElement.getAtomCode(),
-        stepId = atomElement.stepId
+        stepId = atomElement.stepId,
+        jobId = container.jobId
     )
 
     fun setUpTriggerContainer(
@@ -925,15 +986,17 @@ class PipelineContainerService @Autowired constructor(
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
                         context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(
-                            dslContext = dslContext, projectId = context.projectId, pipelineId = context.pipelineId
-                        )
-                            ?: let {
-                                if (needAddCurrentBuildNo) {
-                                    0
-                                } else {
-                                    buildNoObj.buildNo
-                                }
+                            dslContext = dslContext,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            debug = context.debug
+                        ) ?: let {
+                            if (needAddCurrentBuildNo) {
+                                0
+                            } else {
+                                buildNoObj.buildNo
                             }
+                        }
                     }
 
                     if (needAddCurrentBuildNo) { // buildNo根据数据库的记录值每次新增1
@@ -945,7 +1008,8 @@ class PipelineContainerService @Autowired constructor(
                             dslContext = dslContext,
                             projectId = context.projectId,
                             pipelineId = context.pipelineId,
-                            buildNo = context.currentBuildNo!!
+                            buildNo = context.currentBuildNo!!,
+                            debug = context.debug
                         )
                     }
                 }
@@ -984,7 +1048,7 @@ class PipelineContainerService @Autowired constructor(
 //            )
 //        )
         container.elements.forEachIndexed { index, atomElement ->
-            if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
+            if (context.firstTaskId.isBlank() && atomElement.elementEnabled()) {
                 context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
             }
 
@@ -1007,8 +1071,10 @@ class PipelineContainerService @Autowired constructor(
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
                             " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
-                    jobId = container.id,
-                    executeCount = context.executeCount
+                    containerHashId = container.id,
+                    executeCount = context.executeCount,
+                    jobId = container.jobId,
+                    stepId = atomElement.stepId
                 )
                 return
             }

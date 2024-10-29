@@ -27,15 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件趋势信息")
+@Schema(title = "插件趋势信息")
 data class AtomTrendInfoDO(
-    @ApiModelProperty("插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @ApiModelProperty("趋势信息列表")
+    @get:Schema(title = "趋势信息列表")
     var atomTrendInfos: MutableList<AtomBaseTrendInfoDO>?
 )

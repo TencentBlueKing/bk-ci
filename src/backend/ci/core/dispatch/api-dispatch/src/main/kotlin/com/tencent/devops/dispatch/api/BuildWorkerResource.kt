@@ -27,11 +27,11 @@
 
 package com.tencent.devops.dispatch.api
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import io.swagger.annotations.ApiResponse
-import io.swagger.annotations.ApiResponses
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -40,21 +40,21 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["BUILD_WORKER"], description = "构建-构建执行器资源")
+@Tag(name = "BUILD_WORKER", description = "构建-构建执行器资源")
 @Path("/build/workers")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildWorkerResource {
 
-    @ApiOperation("下载构建执行器")
+    @Operation(summary = "下载构建执行器")
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "本地的构建执行器已是最新，无需下载")
+        ApiResponse(responseCode = "304", description = "本地的构建执行器已是最新，无需下载")
     )
     fun download(
-        @ApiParam("本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

@@ -1,19 +1,59 @@
 <template>
-    <div class="biz-container pipeline-subpages instance-manage-wrapper"
+    <div
+        class="biz-container pipeline-subpages instance-manage-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <inner-header>
-            <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left">{{ $t('template.instanceManage') }}</span>
+            <div
+                class="instance-header"
+                slot="left"
+            >
+                <span
+                    class="inner-header-title"
+                    slot="left"
+                >{{ $t('template.instanceManage') }}</span>
             </div>
         </inner-header>
-        <div class="sub-view-port" v-if="showContent && showInstanceList">
+        <div
+            class="sub-view-port"
+            v-if="showContent && showInstanceList"
+        >
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
-                    <bk-button theme="primary" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
+                    <bk-button
+                        class="batch-update"
+                        :disabled="!selectItemList.length"
+                        @click="handleBatch()"
+                    >
+                        <span>{{ $t('template.batchUpdate') }}</span>
+                    </bk-button>
+                    <bk-button
+                        v-if="isEnabledPermission"
+                        theme="primary"
+                        @click="createInstance()"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                    >
+                        {{ $t('template.addInstance') }}
+                    </bk-button>
+                    <bk-button
+                        v-else
+                        theme="primary"
+                        @click="createInstance()"
+                    >
+                        <span>{{ $t('template.addInstance') }}</span>
+                    </bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
@@ -22,58 +62,157 @@
                     right-icon="icon-search"
                     v-model="searchKey"
                     @enter="query"
-                    @clear="query">
+                    @clear="query"
+                >
                 </bk-input>
             </section>
             <section class="instance-table">
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    ref="instanceList"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
                     @select="selectItem"
                     @select-all="selectItem"
                 >
-                    <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
-                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
+                    <bk-table-column
+                        type="selection"
+                        width="60"
+                        align="center"
+                        :selectable="isUpdating"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('pipelineName')"
+                        prop="pipelineName"
+                    >
                         <template slot-scope="props">
-                            <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
+                            <span
+                                class="pipeline-name"
+                                :title="props.row.pipelineName"
+                                @click="toPipelineHistory(props.row.pipelineId)"
+                            >{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('version')" prop="versionName"></bk-table-column>
-                    <bk-table-column :label="$t('template.newestVersion')" :formatter="currentVersionFormatter">
+                    <bk-table-column
+                        :label="$t('version')"
+                        prop="versionName"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('template.newestVersion')"
+                        :formatter="currentVersionFormatter"
+                    >
                         <template>
                             <span>{{ currentVersionName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('status')" :render-header="statusHeader" prop="status">
+                    <bk-table-column
+                        :label="$t('status')"
+                        :render-header="statusHeader"
+                        prop="status"
+                    >
                         <template slot-scope="props">
-                            <div v-bk-overflow-tips class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
+                            <div
+                                class="status-card"
+                                @click="handleStatusClick(props.row)"
+                                :class="statusMap[props.row.status] && statusMap[props.row.status].className"
+                            >
                                 {{ statusMap[props.row.status] && statusMap[props.row.status].label }}
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
+                    <bk-table-column
+                        :label="$t('lastUpdateTime')"
+                        prop="updateTime"
+                    >
                         <template slot-scope="props">
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('operate')" width="150">
+                    <bk-table-column
+                        :label="$t('operate')"
+                        width="250"
+                    >
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
-                            <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
+                            <bk-button
+                                v-if="isEnabledPermission"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="updateInstance(props.row)"
+                                v-perm="{
+                                    hasPermission: props.row.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                theme="primary"
+                                text
+                                :disabled="!props.row.hasPermission"
+                                @click="updateInstance(props.row)"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                v-if="isEnabledPermission"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                v-perm="{
+                                    hasPermission: props.row.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                :disabled="!props.row.hasPermission"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
+                            <bk-button
+                                theme="primary"
+                                text
+                                @click="toCompared(props.row)"
+                            >
+                                {{ $t('template.diff') }}
+                            </bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </section>
         </div>
-        <empty-tips v-if="showContent && !showInstanceList"
+        <empty-tips
+            v-if="showContent && !showInstanceList"
             :title="emptyTipsConfig.title"
             :desc="emptyTipsConfig.desc"
-            :btns="emptyTipsConfig.btns">
+            :btns="emptyTipsConfig.btns"
+        >
         </empty-tips>
-        <instance-compared :show-compared-instance="showComparedInstance"
+        <instance-compared
+            :show-compared-instance="showComparedInstance"
             :loading="dialogLoading"
             :instance-version="instanceVersion"
             :cur-version="currentVersion"
@@ -84,9 +223,16 @@
             :target-tpl-params-list="targetTplParamsList"
             :cur-stages="curStages"
             :target-stages="targetStages"
-            @comfire="comfireHandler"
             @cancel="cancelHandler"
-            :selected-version="selectedVersion"></instance-compared>
+            :selected-version="selectedVersion"
+        />
+        <instance-message
+            :show-instance-message="showFailedMessageDialog"
+            :show-title="false"
+            :fail-list="activeFailInstances"
+            :fail-message="activeFailMessages"
+            @cancel="hideFailedMessageDialog"
+        />
     </div>
 </template>
 
@@ -94,13 +240,22 @@
     import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
+    import instanceMessage from '@/components/template/instance-message.vue'
+    import {
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
 
     export default {
         components: {
-            'inner-header': innerHeader,
-            'empty-tips': emptyTips,
-            'instance-compared': instanceCompared
+            innerHeader,
+            emptyTips,
+            instanceCompared,
+            instanceMessage
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {
@@ -124,6 +279,9 @@
                 curTplParamsList: [],
                 targetStages: [],
                 targetTplParamsList: [],
+                showFailedMessageDialog: false,
+                activeFailMessages: [],
+                activeFailInstances: [],
                 loading: {
                     isLoading: false,
                     title: ''
@@ -151,6 +309,10 @@
                         label: this.$t('template.noNeedToUpdate'),
                         className: ''
                     },
+                    FAILED: {
+                        label: this.$t('template.updateFailed'),
+                        className: 'update-failed cursor-pointer'
+                    },
                     PENDING_UPDATE: {
                         label: this.$t('template.needToUpdate'),
                         className: 'need-update'
@@ -159,7 +321,8 @@
                         label: this.$t('template.updating'),
                         className: 'updating'
                     }
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -174,6 +337,12 @@
             },
             showInstanceList () {
                 return this.showContent && (this.instanceList.length || this.searchable)
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
         watch: {
@@ -187,7 +356,7 @@
             // 初始化url中携带的分页信息
             this.$route.query.limit > 0 && (this.pagination.limit = parseInt(this.$route.query.limit))
             this.$route.query.page > 0 && (this.pagination.current = parseInt(this.$route.query.page))
-        
+
             this.renderData()
         },
         methods: {
@@ -232,6 +401,7 @@
                     this.currentVersionName = res.latestVersion.versionName
                     this.instanceList = res.instances
                     this.pagination.count = res.count
+                    this.hasCreatePermission = res.hasCreateTemplateInstancePerm
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -264,7 +434,8 @@
                 this.$router.push(route)
             },
             selectItem (items) {
-                this.selectItemList = items
+                this.selectItemList = items.filter(i => i.hasPermission)
+                return items.filter(i => i.hasPermission)
             },
             async handlePageChange (page) {
                 if (page !== this.pagination.current) {
@@ -323,10 +494,10 @@
                     })
 
                     this.versionList = res.versions
-                    const curVersion = this.versionList.filter(val => {
+                    const curVersion = this.versionList.find(val => {
                         return val.version === parseInt(versionId)
                     })
-                    this.instanceVersion = curVersion[0].version
+                    this.instanceVersion = curVersion?.version
 
                     const curData = res.origin
                     const targetData = res.target
@@ -382,10 +553,7 @@
                 }
             },
             isUpdating (row) {
-                return row.status !== 'UPDATING'
-            },
-            comfireHandler () {
-
+                return row.status !== 'UPDATING' && row.hasPermission
             },
             cancelHandler () {
                 this.showComparedInstance = false
@@ -397,6 +565,33 @@
             toPipelineHistory (pipelineId) {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/history`
                 window.open(url, '_blank')
+            },
+            copyAsTemplateInstance (row) {
+                const route = {
+                    name: 'createInstance',
+                    params: {
+                        curVersionId: this.currentVersionId,
+                        pipelineName: (row.pipelineName + '_copy').substring(0, 128)
+                    },
+                    query: {
+                        pipelineId: row.pipelineId
+                    }
+                }
+                this.$router.push(route)
+            },
+            handleStatusClick (row) {
+                if (row.status === 'FAILED') {
+                    this.showFailedMessageDialog = true
+                    this.activeFailInstances = [
+                        row.pipelineName
+                    ]
+                    this.activeFailMessages = {
+                        [row.pipelineName]: row.instanceErrorInfo
+                    }
+                }
+            },
+            hideFailedMessageDialog () {
+                this.showFailedMessageDialog = false
             }
         }
     }
@@ -407,9 +602,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .instance-manage-wrapper {
         flex-direction: column;
@@ -452,6 +644,11 @@
                 color: $primaryColor;
                 cursor: pointer;
             }
+            .disabled-checkbox {
+                position: absolute;
+                left: -60px;
+                top:  0;
+            }
             .status-card {
                 max-width: 120px;
                 font-size: 12px;
@@ -462,6 +659,9 @@
             .need-update {
                 background-color: #F6B026;
             }
+            .update-failed {
+                background-color: $dangerColor;
+            }
             .updating {
                 background-color: $primaryColor;
             }
@@ -470,10 +670,6 @@
                 display: inline-block;
                 margin-right: 20px;
                 cursor: pointer;
-            }
-            .is-disabled {
-                color: #ccc;
-                cursor: not-allowed;
             }
         }
         .batch-update {

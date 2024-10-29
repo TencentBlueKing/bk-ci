@@ -29,11 +29,11 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,32 +43,32 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_ATOM_COMMENT_REPLY"], description = "插件-插件评论回复")
+@Tag(name = "USER_MARKET_ATOM_COMMENT_REPLY", description = "插件-插件评论回复")
 @Path("/user/market/atom/comment/reply")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAtomCommentReplyResource {
 
-    @ApiOperation("获取插件相应评论的回复列表")
+    @Operation(summary = "获取插件相应评论的回复列表")
     @GET
     @Path("/comments/{commentId}/replys")
     fun getStoreCommentReplysByCommentId(
-        @ApiParam("评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<List<StoreCommentReplyInfo>?>
 
-    @ApiOperation("插件评论回复")
+    @Operation(summary = "插件评论回复")
     @POST
     @Path("/comments/{commentId}/reply")
     fun addStoreCommentReply(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @ApiParam("评论回复信息请求报文体", required = true)
+        @Parameter(description = "评论回复信息请求报文体", required = true)
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?>
 }

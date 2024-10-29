@@ -130,6 +130,7 @@ class PipelineBuildMaintainFacadeService(
                 userId = userId,
                 projectId = projectId,
                 actionType = ActionType.REFRESH,
+                executeCount = executeCount,
                 containerType = containerType
             )
         )

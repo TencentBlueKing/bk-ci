@@ -1,7 +1,17 @@
 <template>
     <section class="devops-empty-tips">
-        <img v-if="imgType !== 'noCollect'" :src="noDataSrc" alt="" class="no-data-pic">
-        <img v-if="imgType === 'noCollect'" :src="noCollect" alt="" class="no-collect-pic">
+        <img
+            v-if="imgType !== 'noCollect'"
+            :src="noDataSrc"
+            alt=""
+            class="no-data-pic"
+        >
+        <img
+            v-if="imgType === 'noCollect'"
+            :src="noCollect"
+            alt=""
+            class="no-collect-pic"
+        >
         <p class="title">{{ title }}</p>
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
@@ -92,15 +102,15 @@
 
     .devops-empty-tips {
         text-align: center;
+        margin: 6% auto !important;
         .title {
             color: #333C48;
             font-size: 18px;
             line-height: 26px;
+            margin: 10px 0 20px;
             // font-weight: bold;
         }
         .desc {
-            margin-top: 10px;
-            margin-bottom: 20px;
             color: $fontWeightColor;
             font-size: 14px;
         }

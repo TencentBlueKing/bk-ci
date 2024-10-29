@@ -1,42 +1,69 @@
 <template>
     <transition name="selector-slide">
-        <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
+        <section
+            class="selector-popup"
+            v-bk-clickoutside="closeImageSelect"
+            v-show="isShow"
+        >
             <main class="selector-main">
                 <header class="selector-header">
-                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']" /></h3>
-                    <bk-input class="search-input"
+                    <h3>
+                        {{ $t('editPage.selectImage') }}<i
+                            @click="freshList(searchKey)"
+                            :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']"
+                        />
+                    </h3>
+                    <bk-input
+                        class="search-input"
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
                         right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
-                        @enter="handleSearch">
+                        @enter="handleSearch"
+                    >
                     </bk-input>
                 </header>
-                <bk-tab v-if="!searchKey" size="small" ref="imageTab" :active.sync="currentTab" type="unborder-card" class="select-tab">
+                <bk-tab
+                    v-if="!searchKey"
+                    size="small"
+                    ref="imageTab"
+                    :active.sync="currentTab"
+                    type="unborder-card"
+                    class="select-tab"
+                >
                     <bk-tab-panel
                         v-for="tab in tabList"
                         :key="tab.classifyCode"
                         :name="tab.classifyCode"
                         v-bkloading="{ isLoading }"
                     >
-                        <span slot="label" @click="getInstallImageList(tab)" class="tab-label">{{ tab.classifyName }}</span>
+                        <span
+                            slot="label"
+                            @click="getInstallImageList(tab)"
+                            class="tab-label"
+                        >{{ tab.classifyName }}</span>
                         <template v-if="!isLoading">
                             <ul v-if="tab.recommendData.length">
-                                <card :current-item.sync="currentItem"
+                                <card
+                                    :current-item.sync="currentItem"
                                     :card="card"
                                     v-for="card in tab.recommendData"
                                     :key="card"
                                     :type="tab.classifyCode"
                                     :code="code"
-                                    @choose="choose">
+                                    @choose="choose"
+                                >
                                 </card>
                             </ul>
 
                             <section v-if="tab.unRecommendData.length">
-                                <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
-                                    {{ $t('editPage.unRecommend') }}（{{tab.unRecommendData.length}}）
+                                <h3
+                                    :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']"
+                                    @click="tab.expandObtained = !tab.expandObtained"
+                                >
+                                    {{ $t('editPage.unRecommend') }}（{{ tab.unRecommendData.length }}）
                                     <bk-popover placement="top">
                                         <i class="bk-icon icon-info-circle "></i>
                                         <div slot="content">
@@ -45,50 +72,66 @@
                                     </bk-popover>
                                 </h3>
                                 <ul v-if="tab.expandObtained">
-                                    <card :current-item.sync="currentItem"
+                                    <card
+                                        :current-item.sync="currentItem"
                                         :card="card"
                                         v-for="card in tab.unRecommendData"
                                         :key="card"
                                         :type="tab.classifyCode"
                                         :code="code"
-                                        @choose="choose">
+                                        @choose="choose"
+                                    >
                                     </card>
                                 </ul>
                             </section>
 
-                            <p v-if="!tab.unRecommendData.length && !tab.recommendData.length" class="list-empty"></p>
+                            <p
+                                v-if="!tab.unRecommendData.length && !tab.recommendData.length"
+                                class="list-empty"
+                            ></p>
                         </template>
                     </bk-tab-panel>
                 </bk-tab>
 
-                <section v-else class="search-result" v-bkloading="{ isLoading }">
+                <section
+                    v-else
+                    class="search-result"
+                    v-bkloading="{ isLoading }"
+                >
                     <template v-if="!isLoading">
                         <template v-if="searchInstallList.length">
                             <h3 class="search-title">{{ $t('editPage.installed') }}</h3>
-                            <card :current-item.sync="currentItem"
+                            <card
+                                :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchInstallList"
                                 type="store"
                                 :key="card"
                                 :code="code"
-                                @choose="choose">
+                                @choose="choose"
+                            >
                             </card>
                         </template>
                         
                         <template v-if="searchUninstallList.length">
                             <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
-                            <card :current-item.sync="currentItem"
+                            <card
+                                :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchUninstallList"
                                 type="store"
                                 :key="card"
                                 :code="code"
-                                @choose="choose">
+                                @choose="choose"
+                            >
                             </card>
                         </template>
                         
                         <section v-if="searchUnrecomandList.length">
-                            <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
+                            <h3
+                                :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']"
+                                @click="searchExpandObtained = !searchExpandObtained"
+                            >
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
                                     <i class="bk-icon icon-info-circle "></i>
@@ -98,18 +141,23 @@
                                 </bk-popover>
                             </h3>
                             <ul v-if="searchExpandObtained">
-                                <card :current-item.sync="currentItem"
+                                <card
+                                    :current-item.sync="currentItem"
                                     :card="card"
                                     v-for="card in searchUnrecomandList"
                                     :key="card"
                                     type="store"
                                     :code="code"
-                                    @choose="choose">
+                                    @choose="choose"
+                                >
                                 </card>
                             </ul>
                         </section>
 
-                        <p v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" class="list-empty"></p>
+                        <p
+                            v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length"
+                            class="list-empty"
+                        ></p>
                     </template>
                 </section>
             </main>
@@ -160,7 +208,7 @@
 
         watch: {
             buildResourceType (val) {
-                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(val)) {
+                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD', 'THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)) {
                     this.isLoading = true
                     this.searchKey = ''
                     this.clearData()
@@ -171,6 +219,7 @@
             isShow (val) {
                 const ele = this.$refs.imageTab.$el.querySelector('.bk-tab-section')
                 const method = val ? 'addEventListener' : 'removeEventListener'
+                this.setShowVariable(false)
                 ele[method]('scroll', this.scrollLoadMore, { passive: true })
             }
         },
@@ -185,6 +234,9 @@
                 'requestInstallImageList',
                 'requestStoreImageList',
                 'requestMarketImage'
+            ]),
+            ...mapActions('atom', [
+                'setShowVariable'
             ]),
 
             initData () {
@@ -217,12 +269,15 @@
                 this.isLoading = true
                 Promise.all([this.getApiData(tab, false), this.getApiData(tab, true)]).finally(() => (this.isLoading = false))
             },
-
+            getBuildResourceType () {
+                if (['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(this.buildResourceType)) return 'PUBLIC_DEVCLOUD'
+                return this.buildResourceType
+            },
             getApiData (tab, recommendFlag) {
                 this.isLoadingMore = true
                 const postData = Object.assign({
                     projectCode: this.$route.params.projectId,
-                    agentType: this.buildResourceType,
+                    agentType: this.getBuildResourceType(),
                     recommendFlag
                 }, tab)
 
@@ -369,12 +424,12 @@
         position: fixed;
         right: 660px;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 2000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
+        top: 64px;
         margin: 10px 0;
         &:before {
             content: '';

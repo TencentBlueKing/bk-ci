@@ -27,117 +27,54 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
+import com.tencent.devops.metrics.listener.DispatchJobMetricsListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.metrics.listener.ProjectUserDailyMetricsListener
+import com.tencent.devops.metrics.listener.ProjectUserOperateMetricsListener
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class MetricsListenerConfiguration {
+    @EventConsumer
+    fun buildEndDataReportConsumer(
+        @Autowired listener: BuildEndMetricsDataReportListener
+    ) = ScsConsumerBuilder.build<BuildEndMetricsBroadCastEvent> { listener.execute(it) }
 
-    @Bean
-    fun buildEndMetricsDataReportQueue() = Queue(QUEUE_BUILD_END_METRICS_DATA_REPORT)
+    @EventConsumer
+    fun labelChangeDataSyncConsumer(
+        @Autowired listener: LabelChangeMetricsDataSyncListener
+    ) = ScsConsumerBuilder.build<LabelChangeMetricsBroadCastEvent> { listener.execute(it) }
 
-    /**
-     * 插件监控数据上报广播交换机
-     */
-    @Bean
-    fun buildEndMetricsDataReportFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+    @EventConsumer
+    fun metricsQualityDailyReportConsumer(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = ScsConsumerBuilder.build<QualityReportEvent> {
+        thirdPlatformDataReportFacadeService.metricsQualityDataReport(it)
     }
 
-    @Bean
-    fun buildEndMetricsDataReportQueueBind(
-        @Autowired buildEndMetricsDataReportQueue: Queue,
-        @Autowired buildEndMetricsDataReportFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(buildEndMetricsDataReportQueue)
-            .to(buildEndMetricsDataReportFanoutExchange)
-    }
+    @EventConsumer
+    fun metricsDispatchJobReportConsumer(
+        @Autowired dispatchJobMetricsListener: DispatchJobMetricsListener
+    ) = ScsConsumerBuilder.build<DispatchJobMetricsEvent> { dispatchJobMetricsListener.execute(it) }
 
-    @Bean
-    fun buildEndMetricsDataReportListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildEndMetricsDataReportQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: BuildEndMetricsDataReportListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = buildEndMetricsDataReportQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 5,
-            maxConcurrency = 50
-        )
-    }
+    @EventConsumer
+    fun metricsProjectUserDailyConsumer(
+        @Autowired projectUserDailyMetricsListener: ProjectUserDailyMetricsListener
+    ) = ScsConsumerBuilder.build<ProjectUserDailyEvent> { projectUserDailyMetricsListener.execute(it) }
 
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncQueue() = Queue(QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC)
-
-    /**
-     * 流水线标签变化数据同步广播交换机
-     */
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncQueueBind(
-        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
-        @Autowired pipelineLabelChangeMetricsDataSyncFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineLabelChangeMetricsDataSyncQueue)
-            .to(pipelineLabelChangeMetricsDataSyncFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: LabelChangeMetricsDataSyncListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineLabelChangeMetricsDataSyncQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
-    }
-
-    companion object {
-        private const val QUEUE_BUILD_END_METRICS_DATA_REPORT = "q.build.end.metrics.data.report.queue"
-        private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC =
-            "q.pipeline.label.change.metrics.data.sync.queue"
-    }
+    @EventConsumer
+    fun metricsProjectUserOperateMetricsConsumer(
+        @Autowired projectUserOperateMetricsListener: ProjectUserOperateMetricsListener
+    ) = ScsConsumerBuilder.build<ProjectUserOperateMetricsEvent> { projectUserOperateMetricsListener.execute(it) }
 }

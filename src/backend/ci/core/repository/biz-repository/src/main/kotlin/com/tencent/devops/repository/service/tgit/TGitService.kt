@@ -50,15 +50,19 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.net.URLEncoder
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import javax.ws.rs.core.Response
+import org.springframework.util.FileCopyUtils
 
 @Service
 @Suppress("ALL")
@@ -75,7 +79,7 @@ class TGitService @Autowired constructor(
                 "${gitConfig.tGitUrl}/oauth/token?client_id=${gitConfig.tGitClientId}" +
                     "&client_secret=${gitConfig.tGitClientSecret}&code=$code" +
                     "&grant_type=authorization_code&" +
-                    "redirect_uri=${URLEncoder.encode(gitConfig.tGitWebhookUrl, "utf-8")}"
+                    "redirect_uri=${urlEncode(gitConfig.tGitWebhookUrl)}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
@@ -148,7 +152,7 @@ class TGitService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get the $userId's $repository branch by accessToken")
-        val repoId = URLEncoder.encode(repository, "utf-8")
+        val repoId = urlEncode(repository)
         val url = "${gitConfig.tGitApiUrl}/projects/$repoId/repository/branches" +
             "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
             if (search != null) {
@@ -211,7 +215,7 @@ class TGitService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
-        val repoId = URLEncoder.encode(repository, "utf-8")
+        val repoId = urlEncode(repository)
         val url = "${gitConfig.tGitApiUrl}/projects/$repoId/repository/tags" +
             "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitTag>()
@@ -272,8 +276,8 @@ class TGitService @Autowired constructor(
     ): String {
         val startEpoch = System.currentTimeMillis()
         try {
-            var url = "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
-                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
+            var url = "${gitConfig.tGitApiUrl}/projects/${urlEncode(repoName)}/repository/blobs/" +
+                "${urlEncode(ref)}?filepath=${urlEncode(filePath)}"
 
             logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $url")
             val request = if (authType == RepoAuthType.OAUTH) {
@@ -305,6 +309,38 @@ class TGitService @Autowired constructor(
         }
     }
 
+    override fun downloadGitFile(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String,
+        response: HttpServletResponse
+    ) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitApiUrl}/projects/${urlEncode(repoName)}/repository/" +
+                    "blobs/${urlEncode(ref)}?" +
+                    "filepath=${urlEncode(filePath)}&access_token=$token"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "fail to get git file with: ${it.code}): ${it.message}"
+                    )
+                }
+                FileCopyUtils.copy(it.body!!.byteStream(), response.outputStream)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file")
+        }
+    }
+
     @BkTimed(extraTags = ["operation", "get_file_tree"], value = "bk_tgit_api_time")
     override fun getFileTree(
         gitProjectId: String,
@@ -319,16 +355,16 @@ class TGitService @Autowired constructor(
         try {
             val url = StringBuilder(
                 "${gitConfig.tGitApiUrl}/projects/" +
-                    "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree"
+                    "${urlEncode(gitProjectId)}/repository/tree"
             )
             setToken(tokenType, url, token)
             with(url) {
                 append(
-                    "&path=${URLEncoder.encode(path, "UTF-8")}"
+                    "&path=${urlEncode(path)}"
                 )
                 append(
                     if (!ref.isNullOrBlank()) {
-                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                        "&ref_name=${urlEncode(ref)}"
                     } else {
                         ""
                     }
@@ -422,6 +458,55 @@ class TGitService @Autowired constructor(
         }
         return sb.toString()
     }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int,
+        url: String
+    ): List<ChangeFileInfo> {
+        val host = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
+        val apiUrl = StringBuilder("$host/projects/${urlEncode(gitProjectId)}/" +
+                    "repository/compare/changed_files/list")
+        setToken(tokenType, apiUrl, token)
+        val requestUrl = apiUrl.toString().addParams(
+            mapOf(
+                "from" to from,
+                "to" to to,
+                "straight" to straight,
+                "page" to page,
+                "pageSize" to pageSize
+            )
+        )
+        val res = mutableListOf<ChangeFileInfo>()
+        val request = Request.Builder()
+            .url(requestUrl)
+            .get()
+            .build()
+        var result = res.toList()
+        logger.info("getChangeFileList: $requestUrl")
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            val data = response.body?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                result = JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+            }
+        }
+        return result
+    }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitService::class.java)

@@ -28,13 +28,12 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
@@ -46,49 +45,57 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 /**
  * 注意，此类用了MULTIPART_FORM_DATA，导致Feign会有问题，不要直接用Feign去调用。
  * 需要扩展请自行创建新的Service接口
  */
-@Api(tags = ["SERVICE_ARTIFACTORY_FILE"], description = "仓库-文件管理")
+@Tag(name = "SERVICE_ARTIFACTORY_FILE", description = "仓库-文件管理")
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceFileResource {
 
-    @ApiOperation("上传文件")
+    @Operation(summary = "上传文件")
     @POST
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadFile(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @ApiParam("项目代码", required = false)
+        @Parameter(description = "项目代码", required = false)
         @QueryParam("projectCode")
         projectCode: String? = null,
-        @ApiParam("渠道类型", required = true)
+        @Parameter(description = "渠道类型", required = true)
         @QueryParam("fileChannelType")
         fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
-        @ApiParam("是否为插件logo", required = false)
-        @QueryParam("logo")
-        logo: Boolean? = false
+        @Parameter(description = "是否静态文件", required = false)
+        @QueryParam("staticFlag")
+        staticFlag: Boolean? = false,
+        @Parameter(description = "文件类型", required = false)
+        @QueryParam("fileType")
+        fileType: FileTypeEnum? = null,
+        @Parameter(description = "文件路径", required = false)
+        @QueryParam("filePath")
+        filePath: String? = null
     ): Result<String?>
 
-    @ApiOperation("下载文件")
+    @Operation(summary = "下载文件")
     @GET
     @Path("/file/download")
     fun downloadFile(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context

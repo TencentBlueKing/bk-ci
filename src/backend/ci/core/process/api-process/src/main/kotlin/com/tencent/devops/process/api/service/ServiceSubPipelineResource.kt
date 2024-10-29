@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,56 +45,59 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SUBPIPELINE"], description = "服务-流水线调用")
+@Tag(name = "SERVICE_SUBPIPELINE", description = "服务-流水线调用")
 @Path("/service/subpipeline")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceSubPipelineResource {
 
-    @ApiOperation("获取子流水线启动参数")
+    @Operation(summary = "获取子流水线启动参数")
     @GET
     @Path("/pipelines/{pipelineId}/manualStartupInfo")
     fun subpipManualStartupInfo(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = false, defaultValue = "")
+        @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
 
-    @ApiOperation("从构建机启动指定项目的子流水线")
+    @Operation(summary = "从构建机启动指定项目的子流水线")
     @POST
     @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
-        @ApiParam("要启动的流水线ID", required = true)
+        @Parameter(description = "要启动的流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         callProjectId: String,
-        @ApiParam("要启动的流水线ID", required = true)
+        @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
-        @ApiParam("插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam(value = "父项目ID", required = true)
+        @Parameter(description = "父项目ID", required = true)
         @QueryParam("parentProjectId")
         parentProjectId: String,
-        @ApiParam("父流水线ID", required = true)
+        @Parameter(description = "父流水线ID", required = true)
         @QueryParam("parentPipelineId")
         parentPipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("插件ID", required = true)
+        @Parameter(description = "当前流水线执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @Parameter(description = "插件ID", required = true)
         @QueryParam("taskId")
         taskId: String,
-        @ApiParam("运行方式", required = true)
+        @Parameter(description = "运行方式", required = true)
         @QueryParam("runMode")
         runMode: String,
-        @ApiParam("启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
 }

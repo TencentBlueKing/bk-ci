@@ -8,15 +8,32 @@
         :close-icon="false"
         :draggable="false"
     >
-        <section v-if="group" class="pipeline-group-edit-dialog-main">
-            <aside class="pipeline-group-edit-source">
+        <section
+            v-if="group"
+            class="pipeline-group-edit-dialog-main"
+        >
+            <aside
+                class="pipeline-group-edit-source"
+                v-bkloading="{ isLoading }"
+            >
                 <header class="pipeline-group-edit-header">{{ title }}</header>
                 <div class="group-form-item">
-                    <label class="group-form-label">{{$t('groupStrategy')}}</label>
-                    <bk-radio-group class="group-form-radio-group" v-model="model.viewType" @change="handleViewTypeChange">
-                        <bk-radio v-for="strategy in groupStrategy" :value="strategy.value" :key="strategy.value">
-                            <span v-bk-tooltips="strategy.tooltips" class="group-strategy-radio">
-                                {{strategy.label}}
+                    <label class="group-form-label">{{ $t('groupStrategy') }}</label>
+                    <bk-radio-group
+                        class="group-form-radio-group"
+                        v-model="model.viewType"
+                        @change="handleViewTypeChange"
+                    >
+                        <bk-radio
+                            v-for="strategy in groupStrategy"
+                            :value="strategy.value"
+                            :key="strategy.value"
+                        >
+                            <span
+                                v-bk-tooltips="strategy.tooltips"
+                                class="group-strategy-radio"
+                            >
+                                {{ strategy.label }}
                             </span>
                         </bk-radio>
                     </bk-radio-group>
@@ -25,40 +42,80 @@
                     <template v-if="isDynamicGroup">
                         <div class="group-form-item">
                             <label class="group-form-label">
-                                {{$t('groupLogicLabel')}}
+                                {{ $t('groupLogicLabel') }}
                             </label>
-                            <bk-radio-group class="group-form-radio-group" v-model="model.logic" @change="changeFilterChangeFlag">
-                                <bk-radio value="AND">{{$t('view.and')}}</bk-radio>
-                                <bk-radio value="OR">{{$t('view.or')}}</bk-radio>
+                            <bk-radio-group
+                                class="group-form-radio-group"
+                                v-model="model.logic"
+                                @change="changeFilterChangeFlag"
+                            >
+                                <bk-radio value="AND">{{ $t('view.and') }}</bk-radio>
+                                <bk-radio value="OR">{{ $t('view.or') }}</bk-radio>
                             </bk-radio-group>
                         </div>
-                        <bk-table class="group-filters-table" height="100%" :data="formatFilters">
-                            <bk-table-column width="152" :label="$t('view.key')">
+                        <bk-table
+                            class="group-filters-table"
+                            height="100%"
+                            :data="formatFilters"
+                        >
+                            <bk-table-column
+                                width="152"
+                                :label="$t('view.key')"
+                            >
                                 <template slot-scope="props">
                                     <bk-select
                                         :key="props.key"
                                         :clearable="false"
                                         v-model="props.row.id"
-                                        @change="handleFilterTypeChange(props.row)"
+                                        @change="handleFilterTypeChange(props.row.id, props.row.key)"
                                     >
-                                        <bk-option
+                                        <template
                                             v-for="item in filterTypes"
-                                            :id="item.id"
-                                            :key="item.id"
-                                            :name="item.name"
-                                        />
+                                        >
+                                            <bk-option-group
+                                                v-if="Array.isArray(item.children) && item.children.length > 0"
+                                                :name="item.name"
+                                                :key="item.id"
+                                            >
+                                                <bk-option
+                                                    v-for="option in item.children"
+                                                    :key="option.id"
+                                                    :id="option.id"
+                                                    :name="option.name"
+                                                    :disabled="option.disabled"
+                                                />
+                                            </bk-option-group>
+                                            <bk-option
+                                                v-else
+                                                :key="item.id"
+                                                :id="item.id"
+                                                :name="item.name"
+                                                :disabled="item.disabled"
+                                            />
+                                        </template>
                                     </bk-select>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('view.value')" prop="value">
-                                <div :title="props.row.key" :key="props.row.key" class="group-filter-value-cell" slot-scope="props">
+                            <bk-table-column
+                                :label="$t('view.value')"
+                                prop="value"
+                            >
+                                <div
+                                    :title="props.row.key"
+                                    :key="props.row.key"
+                                    class="group-filter-value-cell"
+                                    slot-scope="props"
+                                >
                                     <bk-form
                                         :label-width="0"
                                         :ref="`dynamicForms_${props.row.key}`"
                                         :model="props.row"
                                         class="group-filter-value-input"
                                     >
-                                        <bk-form-item v-if="props.row.id === NAME_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id, props.row)">
+                                        <bk-form-item
+                                            v-if="props.row.id === NAME_FILTER_TYPE"
+                                            v-bind="getDynamicFilterConf(props.row.id, props.row)"
+                                        >
                                             <bk-input
                                                 :placeholder="$t('view.nameTips')"
                                                 maxlength="40"
@@ -66,15 +123,55 @@
                                                 v-model="props.row.pipelineName"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item v-else-if="props.row.id === CREATOR_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id)">
+                                        <bk-form-item
+                                            v-else-if="props.row.id === CREATOR_FILTER_TYPE"
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
                                             <bk-tag-input
                                                 allow-create
                                                 allow-auto-match
                                                 v-model="props.row.userIds"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item v-else v-bind="getDynamicFilterConf(props.row.id)">
+
+                                        <bk-form-item
+                                            v-else-if="props.row.id === FILTER_BY_PAC_REPO"
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
+                                            <div class="pac-repo-filter-value-area">
+                                                <bk-select
+                                                    enable-scroll-load
+                                                    :scroll-loading="pacScrollLoadOptions"
+                                                    @scroll-end="handleLoadPacRepos"
+                                                    v-model="props.row.repoHashId"
+                                                    @change="handleLoadPacDirectories"
+                                                >
+                                                    <bk-option
+                                                        v-for="item in repoHashIdList"
+                                                        :key="item.id"
+                                                        :name="item.name"
+                                                        :id="item.id"
+                                                    />
+                                                </bk-select>
+                                                <bk-select
+                                                    :loading="pacRepoDirLoading"
+                                                    v-model="props.row.directory"
+                                                >
+                                                    <bk-option
+                                                        v-for="item in pacRepoCiDirList"
+                                                        :key="item.id"
+                                                        :name="item.name"
+                                                        :id="item.id"
+                                                    />
+                                                </bk-select>
+                                            </div>
+                                        </bk-form-item>
+                                        <bk-form-item
+                                            v-else
+                                            v-bind="getDynamicFilterConf(props.row.id)"
+                                        >
                                             <bk-select
+
                                                 v-model="props.row.labelIds"
                                                 :multiple="true"
                                             >
@@ -88,17 +185,31 @@
                                         </bk-form-item>
                                     </bk-form>
                                     <span class="filter-operations-span">
-                                        <bk-button theme="normal" text @click="removeFilter(props)">
+                                        <bk-button
+                                            theme="normal"
+                                            text
+                                            @click="removeFilter(props)"
+                                        >
                                             <i class="devops-icon icon-minus-circle" />
                                         </bk-button>
-                                        <bk-button theme="normal" text @click="addFilters(props.$index)">
+                                        <bk-button
+                                            theme="normal"
+                                            text
+                                            @click="addFilters(props.$index)"
+                                        >
                                             <i class="devops-icon icon-plus-circle" />
                                         </bk-button>
                                     </span>
                                 </div>
                             </bk-table-column>
                         </bk-table>
-                        <bk-button outline theme="primary" @click="updatePreview">{{$t('pipelinesPreview')}}</bk-button>
+                        <bk-button
+                            outline
+                            theme="primary"
+                            @click="updatePreview"
+                        >
+                            {{ $t('pipelinesPreview') }}
+                        </bk-button>
                     </template>
                     <template v-else>
                         <bk-input
@@ -115,9 +226,13 @@
                                 :default-expanded-nodes="defaultExpandedNodes"
                                 :show-icon="false"
                             >
-                                <div @click.stop :class="['pipeline-group-tree-node', {
-                                    'is-delete': data.deleted
-                                }]" slot-scope="{ node, data }">
+                                <div
+                                    @click.stop
+                                    :class="['pipeline-group-tree-node', {
+                                        'is-delete': data.deleted
+                                    }]"
+                                    slot-scope="{ node, data }"
+                                >
                                     <bk-checkbox
                                         v-bind="isChecked(data.id)"
                                         :disabled="!data.checkable"
@@ -127,9 +242,12 @@
                                         }"
                                         @change="(checked) => data.hasChild ? handleRootCheck(checked, data) : handleCheck(checked, data)"
                                     >
-                                        {{data.name}}
+                                        {{ data.name }}
                                     </bk-checkbox>
-                                    <span class="pipeline-group-tree-node-desc" v-if="data.deleted">{{ $t('deleted') }}</span>
+                                    <span
+                                        class="pipeline-group-tree-node-desc"
+                                        v-if="data.deleted"
+                                    >{{ $t('deleted') }}</span>
                                     <span v-if="data.hasChild">（{{ data.children.length }}）</span>
                                 </div>
                             </bk-big-tree>
@@ -139,34 +257,40 @@
             </aside>
             <aside class="pipeline-group-edit-preview">
                 <header>
-                    {{$t('resultPreview')}}
-                    <span class="pipeline-preview-time" v-if="previewTime">{{$t('previewTime', [previewTime])}}</span>
+                    {{ $t('resultPreview') }}
+                    <span
+                        class="pipeline-preview-time"
+                        v-if="previewTime"
+                    >{{ $t('previewTime', [previewTime]) }}</span>
                 </header>
                 <article v-bkloading="{ isLoading: loading }">
                     <header class="preview-pipeline-title">
                         <p>
-                            {{$t('total')}}
+                            {{ $t('total') }}
                             <span class="pipeline-total-count">
                                 {{ totalPreviewCount }}
                             </span>
-                            {{$t('strip')}}，
+                            {{ $t('strip') }}，
                         </p>
                         <p>
-                            {{$t('new')}}
+                            {{ $t('new') }}
                             <span class="pipeline-add-count">
                                 {{ preview.addedPipelineInfos.length }}
                             </span>
-                            {{$t('strip')}}，
+                            {{ $t('strip') }}，
                         </p>
                         <p>
-                            {{$t('removeFrom')}}
+                            {{ $t('removeFrom') }}
                             <span class="pipeline-removed-count">
                                 {{ preview.removedPipelineInfos.length }}
                             </span>
-                            {{$t('strip')}}
+                            {{ $t('strip') }}
                         </p>
                     </header>
-                    <ul v-if="preAddedPipelineList.length > 0" class="preview-pipeline-ul">
+                    <ul
+                        v-if="preAddedPipelineList.length > 0"
+                        class="preview-pipeline-ul"
+                    >
                         <li
                             v-for="(pipeline, index) in preAddedPipelineList"
                             :key="pipeline.pipelineId"
@@ -184,13 +308,13 @@
                                         {{ pipeline.pipelineName }}
                                     </p>
                                     <footer>
-                                        {{pipeline.groups}}
+                                        {{ pipeline.groups }}
                                     </footer>
                                 </main>
                                 <div slot="content">
-                                    <p>{{pipeline.pipelineName}}</p>
+                                    <p>{{ pipeline.pipelineName }}</p>
                                     <p>
-                                        {{pipeline.groups}}
+                                        {{ pipeline.groups }}
                                     </p>
                                 </div>
                             </bk-popover>
@@ -218,30 +342,31 @@
                     @click="handleSubmit"
                     :disabled="isFilterChange"
                 >
-                    {{$t('save')}}
+                    {{ $t('save') }}
                 </bk-button>
             </bk-popover>
             <bk-button @click="handleClose">
-                {{$t('cancel')}}
+                {{ $t('cancel') }}
             </bk-button>
         </footer>
     </bk-dialog>
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import moment from 'moment'
+
     import Logo from '@/components/Logo'
     import {
-        NAME_FILTER_TYPE,
         CREATOR_FILTER_TYPE,
         FILTER_BY_LABEL,
+        FILTER_BY_PAC_REPO,
+        NAME_FILTER_TYPE,
         VIEW_CONDITION
     } from '@/utils/pipelineConst'
     import {
         hashID
     } from '@/utils/util'
-
+    import moment from 'moment'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     const defaultFilter = {
         '@type': NAME_FILTER_TYPE,
         id: NAME_FILTER_TYPE,
@@ -262,6 +387,8 @@
             return {
                 NAME_FILTER_TYPE,
                 CREATOR_FILTER_TYPE,
+                FILTER_BY_LABEL,
+                FILTER_BY_PAC_REPO,
                 loading: false,
                 pipleinGroupTree: [],
                 searchKeyWord: '',
@@ -279,6 +406,14 @@
                 preTypePreview: {},
                 inited: false,
                 previewTime: null,
+                pacScrollLoadOptions: {
+                    size: 'mini',
+                    isLoading: false,
+                    page: 1,
+                    pageSize: 20,
+                    total: 0,
+                    hasNext: true
+                },
                 model: {
                     viewType: this.group?.viewType ?? 2,
                     pipelineIds: new Set(this.group?.pipelineIds ?? []),
@@ -286,7 +421,10 @@
                         ...defaultFilter
                     }],
                     logic: 'AND'
-                }
+                },
+                pacRepoDirLoading: false,
+                repoHashIdList: [],
+                pacRepoCiDirList: []
             }
         },
         computed: {
@@ -320,18 +458,31 @@
                         name: this.$t('creator'),
                         '@type': CREATOR_FILTER_TYPE
                     },
-                    ...this.tagGroupList.map(item => ({
-                        '@type': FILTER_BY_LABEL,
-                        ...item
-                    }))
+                    {
+                        id: FILTER_BY_LABEL,
+                        name: this.$t('label'),
+                        children: this.tagGroupList.map(item => ({
+                            '@type': FILTER_BY_LABEL,
+                            ...item
+                        }))
+                    },
+                    {
+                        '@type': FILTER_BY_PAC_REPO,
+                        id: FILTER_BY_PAC_REPO,
+                        // disabled: this.formatFilters.some(item => item['@type'] === FILTER_BY_PAC_REPO),
+                        name: this.$t(FILTER_BY_PAC_REPO)
+                    }
                 ]
             },
             formatFilters () { // TODO: ugly
+                console.log('formatFilters', this.model.filters)
                 return this.model.filters.map(item => {
                     let id
+                    console.log(item)
                     switch (item['@type']) {
                         case NAME_FILTER_TYPE:
                         case CREATOR_FILTER_TYPE:
+                        case FILTER_BY_PAC_REPO:
                             id = item['@type']
                             break
                         default:
@@ -419,9 +570,66 @@
                 'previewGroupResult',
                 'requestGetGroupLists'
             ]),
+            ...mapActions('common', [
+                'getPACRepoList',
+                'getPACRepoCiDirList'
+            ]),
             isChecked (id) {
                 return this.parentCheckStatusMap[id] ?? {
                     checked: this.model.pipelineIds.has(id)
+                }
+            },
+            async handleLoadPacRepos (page) {
+                if (!this.pacScrollLoadOptions.hasNext) return
+                try {
+                    this.pacScrollLoadOptions.isLoading = true
+                    const { data } = await this.getPACRepoList({
+                        projectId: this.$route.params.projectId,
+                        repositoryType: 'CODE_GIT',
+                        enablePac: true,
+                        permission: 'USE',
+                        page: page || this.pacScrollLoadOptions.page + 1,
+                        pageSize: 20
+                    })
+                    console.log(data)
+                    const list = data.records.map(item => ({
+                        id: item.repositoryHashId,
+                        name: item.aliasName
+                    }))
+                    if (data.page === 1) {
+                        this.repoHashIdList = list
+                    } else {
+                        this.repoHashIdList = [
+                            ...this.repoHashIdList,
+                            ...list
+                        ]
+                    }
+                    Object.assign(this.pacScrollLoadOptions, {
+                        page: data.page,
+                        total: data.total,
+                        hasNext: data.total > data.page * data.pageSize
+                    })
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    this.pacScrollLoadOptions.isLoading = false
+                }
+            },
+            async handleLoadPacDirectories (repoHashId) {
+                try {
+                    this.pacRepoDirLoading = true
+                    const { data } = await this.getPACRepoCiDirList({
+                        projectId: this.$route.params.projectId,
+                        repoHashId
+                    })
+                    this.pacRepoCiDirList = data.map(item => ({
+                        id: item,
+                        name: item
+                    }))
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    this.pacRepoDirLoading = false
                 }
             },
             getDynamicFilterConf (id, row) {
@@ -437,8 +645,11 @@
                         property = 'userIds'
                         message = 'view.creatorTips'
                         break
+                    case FILTER_BY_PAC_REPO:
+                        property = 'repoHashId'
+                        message = ''
+                        break
                 }
-
                 return {
                     property,
                     rules: [
@@ -486,11 +697,19 @@
                     projectId: this.$route.params.projectId,
                     id: group.id
                 }
+
                 const [groupDetail, { dict, pipelineGroupMap }] = await Promise.all([
                     this.requestPipelineGroup(params),
                     this.requestGroupListsDict(params),
                     this.requestTagList(params)
                 ])
+                const pacRepoFilter = groupDetail.filters.find(item => item['@type'] === FILTER_BY_PAC_REPO)
+                if (pacRepoFilter) {
+                    await Promise.all([
+                        this.handleLoadPacRepos(1),
+                        this.handleLoadPacDirectories(pacRepoFilter.repoHashId)
+                    ])
+                }
                 this.savedPipelineInfos = new Set(groupDetail.pipelineIds)
                 this.model = {
                     viewType: groupDetail.viewType ?? group.viewType,
@@ -521,6 +740,7 @@
                         children
                     }
                 }, [])
+
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
                     pipelineId
@@ -652,27 +872,37 @@
                     this.loading = false
                 }
             },
-            handleFilterTypeChange (filter) {
-                this.$refs[`dynamicForms_${filter.key}`]?.clearError?.()
-                switch (filter.id) {
+            handleFilterTypeChange (filterId, filterKey) {
+                const filterIndex = this.model.filters.findIndex(item => item.key === filterKey)
+                if (filterIndex === -1) return
+                this.$refs[`dynamicForms_${filterKey}`]?.clearError?.()
+                const filter = {
+                    '@type': filterId,
+                    id: filterId,
+                    key: filterKey
+                }
+
+                switch (filterId) {
                     case NAME_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.LIKE
-                        filter['@type'] = NAME_FILTER_TYPE
-                        filter.userIds = []
-                        filter.labelIds = []
                         break
                     case CREATOR_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.INCLUDE
-                        filter['@type'] = CREATOR_FILTER_TYPE
-                        filter.pipelineName = ''
-                        filter.labelIds = []
+                        break
+                    case FILTER_BY_PAC_REPO:
+                        // TODO: pac repo
+                        filter.condition = VIEW_CONDITION.LIKE
+                        filter.repoHashId = ''
+                        filter.directory = ''
+                        this.handleLoadPacRepos(1)
                         break
                     default:
                         filter['@type'] = FILTER_BY_LABEL
-                        filter.groupId = filter.id
-                        filter.pipelineName = ''
-                        filter.userIds = []
+                        filter.condition = VIEW_CONDITION.LIKE
+                        filter.groupId = filterId
+                        filter.labelIds = []
                 }
+                this.model.filters.splice(filterIndex, 1, filter)
             },
             addFilters (index) {
                 this.model.filters.splice(index + 1, 0, {
@@ -861,15 +1091,27 @@
                         .group-filter-value-cell {
                             display: flex;
                             align-items: center;
+
                             .group-filter-value-input {
                                 flex: 1;
                                 margin-right: 8px;
+                                overflow: hidden;
+                                .pac-repo-filter-value-area {
+                                    display: grid;
+                                    grid-gap: 8px;
+                                    grid-template-columns: repeat(2, 1fr);
+                                    grid-auto-flow: column;
+                                    .bk-select {
+                                        min-width: 0;
+                                    }
+                                }
                             }
                             .filter-operations-span {
                                 width: 40px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: space-between;
+                                flex-shrink: 0;
                             }
                         }
                     }

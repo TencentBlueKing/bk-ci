@@ -44,6 +44,18 @@ export const handleProjectNoPermission = (query) => {
     )
 }
 
+// 处理流水线模板无权限的情况
+export const handleTemplateNoPermission = (query) => {
+    return handleNoPermission(
+        BKUI,
+        {
+            resourceType: 'pipeline_template',
+            ...query
+        },
+        global.pipelineVue.$createElement
+    )
+}
+
 // 流水线权限动作
 export const RESOURCE_ACTION = {
     CREATE: 'pipeline_create',
@@ -52,7 +64,8 @@ export const RESOURCE_ACTION = {
     VIEW: 'pipeline_view',
     EDIT: 'pipeline_edit',
     DOWNLOAD: 'pipeline_download',
-    DELETE: 'pipeline_delete'
+    DELETE: 'pipeline_delete',
+    MANAGE: 'pipeline_manage'
 }
 
 export const PROJECT_RESOURCE_ACTION = {
@@ -63,4 +76,12 @@ export const PROJECT_RESOURCE_ACTION = {
     CREATE: 'project_create',
     EDIT: 'project_edit',
     ENABLE: 'project_enable'
+}
+
+export const TEMPLATE_RESOURCE_ACTION = {
+    MANAGE: 'pipeline_template_manage',
+    VIEW: 'pipeline_template_view',
+    CREATE: 'pipeline_template_create',
+    EDIT: 'pipeline_template_edit',
+    ENABLE: 'pipeline_template_enable'
 }

@@ -28,23 +28,20 @@
 package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
-import com.tencent.devops.common.service.config.CommonConfig
 
-@Configuration
 class SDKConfiguration {
     @Value("\${gateway.url:#{null}}")
     private val gateway: String? = ""
@@ -52,7 +49,7 @@ class SDKConfiguration {
     @Bean
     fun dispatchService(
         @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired pipelineEventDispatcher: SampleEventDispatcher,
         @Autowired objectMapper: ObjectMapper,
         @Autowired client: Client,
         @Autowired channelUtils: ChannelUtils,
@@ -80,11 +77,10 @@ class SDKConfiguration {
     @Bean
     fun dockerRoutingSdkService(
         @Autowired redisOperation: RedisOperation
-    ) =
-        DockerRoutingSdkService(redisOperation)
+    ) = DockerRoutingSdkService(redisOperation)
 
     @Bean
-    fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
-        return MQEventDispatcher(rabbitTemplate)
-    }
+    fun channelUtils(
+        @Autowired bkTag: BkTag
+    ) = ChannelUtils(bkTag)
 }

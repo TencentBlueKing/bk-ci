@@ -15,14 +15,17 @@
           @click="handleChooseGroup(group)"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
+          <div class="num-box" v-for="item in groupCountField" :key="item">
+            <i
+              :class="['group-icon', 'manage-icon', {
+                'manage-icon-user-shape': item === 'userCount',
+                'manage-icon-user-template': item === 'templateCount',
+                'manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }]"
+            />
+            <div class="group-num">{{ group[item] }}</div>
+          </div>
           <bk-popover
             v-if="resourceType === 'project'"
             class="group-more-option"
@@ -31,7 +34,7 @@
             :arrow="false"
             offset="15"
             :distance="0">
-            <img src="../../../svg/more.svg?inline" class="more-icon">
+            <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
               <bk-button
                 class="btn"
@@ -72,21 +75,40 @@
         <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
         <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
-      <div class="close-tips">
-        <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
-        <p>
-          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('将编辑者、执行者、查看者中的用户移除') }}
-        </p>
-        <p>
-          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('删除对应组内用户继承该组的权限') }}
-        </p>
-        <p>
-          <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('删除对应组信息和组权限') }}
-        </p>
-      </div>
+      <template v-if="resourceType === 'pipeline_template'">
+        <div class="close-tips">
+          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [t('流水线模板')]) }}</p>
+          <p>
+            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('将编辑者中的用户移除') }}
+          </p>
+          <p>
+            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('删除对应组内用户继承该组的权限') }}
+          </p>
+          <p>
+            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('删除对应组信息和组权限') }}
+          </p>
+        </div>
+      </template>
+      <template v-else>
+        <div class="close-tips">
+          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
+          <p>
+            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('将编辑者、执行者、查看者中的用户移除') }}
+          </p>
+          <p>
+            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('删除对应组内用户继承该组的权限') }}
+          </p>
+          <p>
+            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
+            {{ t('删除对应组信息和组权限') }}
+          </p>
+        </div>
+      </template>
       <div class="confirm-close">
         <span style="color: #737987; font-size: 14px;">
           {{ t('提交后，再次开启权限管理时对应组内用户将不能恢复,请谨慎操作!') }}
@@ -170,6 +192,14 @@ export default {
       isClosing: false,
       curGroupIndex: -1,
     };
+  },
+  computed: {
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
   },
   watch: {
     activeIndex(newVal) {
@@ -273,16 +303,55 @@ export default {
           case 'add_user_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm':
+          case 'remove_user_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
+            break;
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_add_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_delete_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
         }
+      }
+    },
+    async syncGroupPermissions(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupPermissions`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
       }
     },
   },
@@ -298,7 +367,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -344,8 +413,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -385,9 +461,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;
@@ -411,9 +487,6 @@ export default {
 .close-btn {
   margin-bottom: 20px;
   text-align: center;
-}
-.small-size {
-  scale: 0.9;
 }
 
 .close-manage-dialog {

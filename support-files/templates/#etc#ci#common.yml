@@ -14,8 +14,8 @@ spring:
 # spring cloud stream 配置，common-stream
     stream:
       binders:
-        extend-rabbit:
-          type: rabbit
+        rabbit:
+          type: core-rabbit
           environment:
             spring:
               rabbitmq:
@@ -23,7 +23,24 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-      default-binder: extend-rabbit
+          type: extend-rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+        pulsar:
+          type: pulsar
+          environment:
+            spring:
+              pulsar:
+                serviceUrl: __BK_CI_PULSAR_URL__
+                tokenAuthValue: __BK_CI_PULSAR_AUTH_TOKEN__
+                tenant: __BK_CI_PULSAR_TENANT__
+                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: __BK_CI_MQ_DEFAULT_BINDER__
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
@@ -40,24 +57,10 @@ spring:
     pool:
       max-active: 16
       max-wait:  2000
-# rabbitmq config
-  rabbitmq:
-    # 引擎核心业务MQ
-    core:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
-    # 拓展功能模块MQ -- 如果主rabbitmq出现性能瓶颈, 可以考虑使用额外的实例
-    extend:
-      virtual-host: __BK_CI_RABBITMQ_VHOST__
-      username: __BK_CI_RABBITMQ_USER__
-      password: __BK_CI_RABBITMQ_PASSWORD__
-      addresses: __BK_CI_RABBITMQ_ADDR__
   metrics:
     servo:
       enabled: false
-  datasource:    
+  datasource:
     # 数据库表规则配置
     tableRuleConfigs:
       - index: 0
@@ -132,9 +135,6 @@ spring:
       - index: 23
         name: T_PIPELINE_VIEW_USER_SETTINGS
         databaseShardingStrategy: SHARDING
-      - index: 24
-        name: T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL
-        databaseShardingStrategy: SHARDING
       - index: 25
         name: T_PIPELINE_WEBHOOK_QUEUE
         databaseShardingStrategy: SHARDING
@@ -155,9 +155,6 @@ spring:
         databaseShardingStrategy: SHARDING
       - index: 31
         name: T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO
-        databaseShardingStrategy: SHARDING
-      - index: 32
-        name: T_PIPELINE_BUILD_COMMITS
         databaseShardingStrategy: SHARDING
       - index: 33
         name: T_PIPELINE_RULE
@@ -188,14 +185,76 @@ spring:
         broadcastFlag: true
       - index: 42
         name: T_PIPELINE_ATOM_REPLACE_BASE
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 43
         name: T_PIPELINE_ATOM_REPLACE_ITEM
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 44
         name: T_PIPELINE_ATOM_REPLACE_HISTORY
-        databaseShardingStrategy: SPECIFY          
-      
+        broadcastFlag: true
+      - index: 45
+        name: T_PIPELINE_WEBHOOK_BUILD_PARAMETER
+        databaseShardingStrategy: SHARDING
+      - index: 46
+        name: T_PIPELINE_VIEW_GROUP
+        databaseShardingStrategy: SHARDING
+      - index: 47
+        name: T_PIPELINE_VIEW_TOP
+        databaseShardingStrategy: SHARDING
+      - index: 48
+        name: T_PIPELINE_RECENT_USE
+        databaseShardingStrategy: SHARDING
+      - index: 49
+        name: T_PIPELINE_BUILD_RECORD_CONTAINER
+        databaseShardingStrategy: SHARDING
+      - index: 50
+        name: T_PIPELINE_BUILD_RECORD_MODEL
+        databaseShardingStrategy: SHARDING
+      - index: 51
+        name: T_PIPELINE_BUILD_RECORD_STAGE
+        databaseShardingStrategy: SHARDING
+      - index: 52
+        name: T_PIPELINE_BUILD_RECORD_TASK
+        databaseShardingStrategy: SHARDING
+      - index: 53
+        name: T_PIPELINE_TRIGGER_EVENT
+        databaseShardingStrategy: SHARDING
+      - index: 54
+        name: T_PIPELINE_TRIGGER_DETAIL
+        databaseShardingStrategy: SHARDING
+      - index: 55
+        name: T_PIPELINE_TRIGGER_REVIEW
+        databaseShardingStrategy: SHARDING
+      - index: 56
+        name: T_PIPELINE_DATA_CLEAR
+        databaseShardingStrategy: SHARDING
+      - index: 57
+        name: T_PIPELINE_OPERATION_LOG
+        databaseShardingStrategy: SHARDING
+      - index: 58
+        name: T_PIPELINE_YAML_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 59
+        name: T_PIPELINE_YAML_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 60
+        name: T_PIPELINE_YAML_SYNC
+        databaseShardingStrategy: SHARDING
+      - index: 61
+        name: T_PIPELINE_YAML_BRANCH_FILE
+        databaseShardingStrategy: SHARDING
+      - index: 62
+        name: T_PIPELINE_YAML_VIEW
+        databaseShardingStrategy: SHARDING
+      - index: 63
+        name: T_PIPELINE_WEBHOOK_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 64
+        name: T_PIPELINE_TIMER_BRANCH
+        databaseShardingStrategy: SHARDING
+      - index: 65
+        name: T_PIPELINE_BUILD_HISTORY_DEBUG
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -226,9 +285,10 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  
+  fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  whiteProxy: __BK_CI_PRIVATE_URL__
+
 # certificate server 配置
 certificate:
   server: __BK_LICENSE_PRIVATE_URL__/certificate
@@ -302,10 +362,11 @@ bkci:
     enable: false
   defaultLocale: __BK_CI_DEFAULT_LOCALE__
   supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
-    
+
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672
   deletedPipelineStoreDays: 30 # 回收站已删除流水线保存天数
+  archivePipelineStoreDays: 735 # 归档流水线保存天数
 
 net:
   proxy:
@@ -325,17 +386,24 @@ net:
 sharding:
   routing:
     cacheSize: 100000  # 缓存分片规则最大数量
+  migration:
+    timeout: 2 # 迁移项目超时时间，单位：小时
+    maxProjectCount: 5 # 同时迁移项目最大数量
+    processDbMicroServices: "process,engine,misc,lambda" #使用process数据库的微服务
+    sourceDbDataDeleteFlag: false # 迁移成功后是否删除原库数据
+  tableShardingStrategy:
+    defaultShardingNum: 1 # 默认分表数量
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__
 
-# bkrepo仓库配置  
+# bkrepo仓库配置
 bkrepo:
   bkrepoApiUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/api/generic
   staticRepoPrefixUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/generic/{0}/{1}
   staticUserName: __BK_REPO_USERNAME__
-  staticPassword: __BK_REPO_PASSWORD__  
-  
+  staticPassword: __BK_REPO_PASSWORD__
+
 # 企业微信api配置
 wechatWork:
   corpId: __BK_CI_WECHATWORK_CORPID__
@@ -344,3 +412,11 @@ wechatWork:
   token: __BK_CI_WECHATWORK_TOKEN__
   aesKey: __BK_CI_WECHATWORK_AESKEY__
   url: __BK_CI_WECHATWORK_URL__
+
+# 是否开启国密sm4算法
+sm4:
+  enabled: __BK_CI_SM4_ENABLED__
+  key: "__BK_CI_SM4_KEY__"
+# 是否开启审计
+audit:
+  enabled: __BK_CI_AUDIT_ENABLED__

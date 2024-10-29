@@ -27,13 +27,12 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件错误码统计信息")
+@Schema(title = "插件错误码统计信息")
 data class AtomErrorCodeStatisticsInfoDO(
-    @ApiModelProperty("错误码信息")
+    @get:Schema(title = "错误码信息")
     val errorCodeInfo: ErrorCodeInfoDO,
-    @ApiModelProperty("错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Long
 )

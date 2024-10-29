@@ -1,13 +1,47 @@
 <template>
-    <accordion show-checkbox :show-content="enableMatrix" key="otherChoice" is-version="true">
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        :show-content="enableMatrix"
+        key="otherChoice"
+        is-version="true"
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.enableMatrix') }}</span>
-            <input class="accordion-checkbox" :disabled="disabled" :checked="enableMatrix" type="checkbox" @click.stop @change="toggleMatrix" />
+            <input
+                class="accordion-checkbox"
+                :disabled="disabled"
+                :checked="enableMatrix"
+                type="checkbox"
+                @click.stop
+                @change="toggleMatrix"
+            />
         </header>
-        <div slot="content" class="bk-form bk-form-vertical" v-if="enableMatrix">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+            v-if="enableMatrix"
+        >
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobMatrix" :value="matrixControlOption[key]" :disabled="disabled" v-bind="obj"></component>
+                <form-field
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleUpdateJobMatrix"
+                        :value="matrixControlOption[key]"
+                        :disabled="disabled"
+                        v-bind="obj"
+                    />
                 </form-field>
             </template>
         </div>
@@ -15,10 +49,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'job-mutual',
@@ -57,8 +91,9 @@
             ]),
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
-                this.updateContainerParams('matrixControlOption',
-                                           Object.assign(this.matrixControlOption || {}, { [name]: value })
+                this.updateContainerParams(
+                    'matrixControlOption',
+                    Object.assign(this.matrixControlOption || {}, { [name]: value })
                 )
                 if (name === 'strategyStr') {
                     this.$validator.validateAll()
@@ -70,9 +105,7 @@
                 this.updateContainerParams('matrixGroupFlag', enable)
             },
             initOptionConfig () {
-                if (this.matrixControlOption === undefined || JSON.stringify(this.matrixControlOption) === '{}') {
-                    this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX))
-                }
+                this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX, this.matrixControlOption))
             }
         }
     }

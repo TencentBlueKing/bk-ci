@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.util
 
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -69,6 +70,10 @@ object DateTimeUtil {
 
     const val YYYYMMDD = "yyyyMMdd"
 
+    const val YYYYMMDDHHMMSS = "yyyyMMddHHmmss"
+
+    const val ONE_THOUSAND_MS = 1000L
+
     /**
      * 单位转换，分钟转换秒
      */
@@ -108,6 +113,10 @@ object DateTimeUtil {
         return cd.time
     }
 
+    fun getFutureTimestamp(seconds: Long): Long {
+        return System.currentTimeMillis() / 1000 + seconds
+    }
+
     /**
      * 按指定日期时间格式格式化日期时间
      * @param date 日期时间
@@ -126,6 +135,13 @@ object DateTimeUtil {
 
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
+    }
+
+    /*
+    * 用于转化秒级时间戳，非毫秒级
+    * */
+    fun convertTimestampToLocalDateTime(timestamp: Long): LocalDateTime {
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
     }
 
     fun convertLocalDateTimeToDate(localDateTime: LocalDateTime): Date {
@@ -232,7 +248,7 @@ object DateTimeUtil {
      */
     fun formatDay(mss: Long): String {
         if (mss == 0L) return "0"
-        return (mss / (1000 * 60 * 60 * 24)).toString()
+        return ((mss / (1000 * 60 * 60 * 24)) + 1).toString()
     }
 
     /**

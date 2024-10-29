@@ -32,6 +32,9 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryPermissions
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 
 interface IGithubService {
 
@@ -61,4 +64,17 @@ interface IGithubService {
     fun listBranches(token: String, projectName: String): List<String>
 
     fun listTags(token: String, projectName: String): List<String>
+
+    fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult
+
+    fun getAccessToken(userId: String): GithubToken?
+
+    fun getUser(token: String): GetUserResponse?
+
+    fun getRepositoryPermissions(projectName: String, userId: String, token: String): RepositoryPermissions?
 }

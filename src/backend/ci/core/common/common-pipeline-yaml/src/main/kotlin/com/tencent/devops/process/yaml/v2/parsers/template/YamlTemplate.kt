@@ -50,10 +50,10 @@ import com.tencent.devops.process.yaml.v2.parameter.PreParametersTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.process.yaml.v2.stageCheck.Gate
-import com.tencent.devops.process.yaml.v2.stageCheck.GateTemplate
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.PreTemplateStageCheck
+import com.tencent.devops.process.yaml.v2.check.Gate
+import com.tencent.devops.process.yaml.v2.check.GateTemplate
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.PreTemplateStageCheck
 
 @Suppress("ALL")
 class YamlTemplate<T>(
@@ -236,6 +236,9 @@ class YamlTemplate<T>(
         // 用户没写就用模板的名字
         if (preYamlObject.name.isNullOrBlank()) {
             preYamlObject.name = newYaml.name
+        }
+        if (preYamlObject.concurrency == null && newYaml.concurrency != null) {
+            preYamlObject.concurrency = newYaml.concurrency
         }
     }
 

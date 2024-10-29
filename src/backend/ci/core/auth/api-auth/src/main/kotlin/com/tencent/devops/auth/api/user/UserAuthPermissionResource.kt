@@ -32,17 +32,19 @@ import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PERMISSION"], description = "用户-权限-校验")
+@Tag(name = "USER_PERMISSION", description = "用户-权限-校验")
 @Path("/user/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,15 +52,27 @@ interface UserAuthPermissionResource {
 
     @POST
     @Path("/batch/validate")
-    @ApiOperation("批量校验用户是否拥有某个资源实例的操作")
+    @Operation(summary = "批量校验用户是否拥有某个资源实例的操作")
     fun batchValidateUserResourcePermission(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @ApiParam("权限批量校验实体", required = true)
+        @Parameter(description = "权限批量校验实体", required = true)
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>>
+
+    @GET
+    @Path("/{projectId}/users/{userId}/checkUserInProjectLevelGroup")
+    @Operation(summary = "是否该用户在项目级别的组中")
+    fun checkUserInProjectLevelGroup(
+        @PathParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String
+    ): Result<Boolean>
 }
