@@ -304,7 +304,8 @@ const jobOptionConfigMixin = {
                     label: this.$t('storeMap.customConditionExp'),
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
-                    }
+                    },
+                    placeholder: this.$t('storeMap.customConditionExpPlaceholder')
                 }
             }
         },
