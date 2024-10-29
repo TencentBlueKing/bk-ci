@@ -99,6 +99,7 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -827,7 +828,7 @@ class AtomDao : AtomBaseDao() {
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record1<Int>> {
-        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE)).from(ta)
+        return dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
             .leftJoin(tsst)
@@ -1124,7 +1125,7 @@ class AtomDao : AtomBaseDao() {
             dslContext = dslContext
         )
 
-        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
+        return dslContext.select(countDistinct(ta.ATOM_CODE))
             .from(ta)
             .join(tspr)
             .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
@@ -1499,7 +1500,7 @@ class AtomDao : AtomBaseDao() {
             name = name,
             dslContext = dslContext
         )
-        return dslContext.selectCount().from(ta)
+        return dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
             .where(conditions)
             .fetchOne(0, Int::class.java)!!
     }
