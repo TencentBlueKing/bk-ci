@@ -27,13 +27,10 @@
 
 package com.tencent.devops.auth.refresh.event
 
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.stream.constants.StreamBinding
 import org.slf4j.MDC
 
-@Event(StreamBinding.AUTH_REFRESH_FANOUT)
 open class RefreshBroadCastEvent(
     open val refreshType: String,
     open var retryCount: Int,

@@ -113,4 +113,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun fixResourceGroups(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.fixResourceGroups(projectCodes))
     }
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.enablePipelineListPermissionControl(projectCodes))
+    }
 }

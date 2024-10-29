@@ -283,7 +283,8 @@ class TGitPushTriggerHandler(
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr()
             )
             return listOf(
                 userFilter, branchFilter, skipCiFilter,

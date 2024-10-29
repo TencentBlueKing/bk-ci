@@ -52,7 +52,7 @@ const jobOptionConfigMixin = {
                     }
                 },
                 queue: {
-                    rule: { numeric: true, max_value: 10, min_value: 1 },
+                    rule: { numeric: true, max_value: 50, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.queueLabel'),
                     placeholder: this.$t('storeMap.queuePlaceholder'),
@@ -304,7 +304,8 @@ const jobOptionConfigMixin = {
                     label: this.$t('storeMap.customConditionExp'),
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
-                    }
+                    },
+                    placeholder: this.$t('storeMap.customConditionExpPlaceholder')
                 }
             }
         },

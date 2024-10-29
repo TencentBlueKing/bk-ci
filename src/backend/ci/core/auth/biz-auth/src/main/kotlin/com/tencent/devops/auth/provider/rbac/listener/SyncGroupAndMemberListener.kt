@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.provider.rbac.listener
 
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
@@ -35,13 +36,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class SyncGroupAndMemberListener @Autowired constructor(
-    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : EventListener<ProjectEnableStatusBroadCastEvent> {
 
     override fun execute(event: ProjectEnableStatusBroadCastEvent) {
-        logger.info("sync group and member when enabled project $event")
+        logger.info("sync group,group member and group permissions when enabled project $event")
         if (event.enabled) {
-            permissionResourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId)
+            // 项目启用时，同步用户组/用户组成员/用户组权限
+            resourceGroupSyncService.syncProjectGroup(projectCode = event.projectId)
+            resourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId)
+            resourceGroupPermissionService.syncProjectPermissions(projectCode = event.projectId)
         }
     }
 

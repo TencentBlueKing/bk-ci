@@ -25,16 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.refresh.event
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.auth.api.sync.OpAuthResourceGroupPermSyncResource
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Event(destination = StreamBinding.AUTH_REFRESH_FANOUT)
-data class IamCacheRefreshEvent(
-    override val refreshType: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val userId: String,
-    val resourceType: String
-) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+@RestResource
+class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+) : OpAuthResourceGroupPermSyncResource {
+    override fun syncProject(projectIds: List<String>): Result<Boolean> {
+        projectIds.forEach {
+            permissionResourceGroupPermissionService.syncProjectPermissions(it)
+        }
+        return Result(true)
+    }
+
+    override fun syncGroup(projectId: String, groupId: Int): Result<Boolean> {
+        return Result(
+            permissionResourceGroupPermissionService.syncGroupPermissions(
+                projectCode = projectId,
+                iamGroupId = groupId
+            )
+        )
+    }
+
+    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionResourceGroupPermissionService.syncPermissionsByCondition(projectConditionDTO)
+        return Result(true)
+    }
+}

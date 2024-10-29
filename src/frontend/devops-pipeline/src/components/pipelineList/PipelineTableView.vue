@@ -178,6 +178,69 @@
                 </template>
             </div>
         </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.label"
+            :label="$t('label')"
+            :width="tableWidthMap.groupLabel"
+            min-width="200"
+            prop="groupLabel"
+        >
+            <div
+                :ref="`belongsLabelBox_${props.$index}`"
+                slot-scope="props"
+                class="group-label-warpper"
+            >
+                <template v-if="labelGroups[props.$index].visibleLabels">
+                    <span
+                        class="group-tag"
+                        v-for="(item, index) in labelGroups[props.$index].visibleLabels"
+                        :key="index"
+                        :ref="`labelName_${props.$index}`"
+                    >
+                        <span class="key">
+                            {{ item.groupName }}
+                        </span>
+                        <span
+                            class="value"
+                            v-bk-overflow-tips
+                        >
+                            {{ item.labelName.join(',') }}
+                        </span>
+                    </span>
+
+                    <bk-popover
+                        placement="top"
+                        theme="light"
+                        ext-cls="group-tag-popover"
+                        v-if="labelGroups[props.$index].showMore"
+                    >
+                        <bk-tag
+                            :ref="`labelMore_${props.$index}`"
+                        >
+                            +{{ labelGroups[props.$index].showMore }}
+                        </bk-tag>
+                        <div slot="content">
+                            <div
+                                v-for="(item, index) in labelGroups[props.$index].hiddenLabels"
+                                class="group-tag"
+                                :key="index"
+                                v-bk-overflow-tips
+                            >
+                                <span class="key">
+                                    {{ item.groupName }}
+                                </span>
+                                <span
+                                    class="value"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ item.labelName.join(',') }}
+                                </span>
+                            </div>
+                        </div>
+                    </bk-popover>
+                </template>
+            </div>
+        </bk-table-column>
         <template v-if="isPatchView">
             <bk-table-column
                 :width="tableWidthMap.latestBuildNum"
@@ -551,7 +614,8 @@
                 tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
-                showCollectIndex: -1
+                showCollectIndex: -1,
+                visibleLabelCountList: {}
             }
         },
         computed: {
@@ -587,6 +651,26 @@
                         visibleGroups: viewNames,
                         hiddenGroups: [],
                         showMore: viewNames?.length ?? 0
+                    }
+                })
+                return res
+            },
+            labelGroups () {
+                const res = this.pipelineList.map((pipeline, index) => {
+                    const { groupLabel = [] } = pipeline
+                    const visibleCount = this.visibleLabelCountList[index]
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: groupLabel.slice(0, visibleCount),
+                            hiddenLabels: groupLabel.slice(visibleCount),
+                            showMore: groupLabel.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: groupLabel,
+                        hiddenLabels: [],
+                        showMore: groupLabel?.length ?? 0
                     }
                 })
                 return res
@@ -658,6 +742,10 @@
                     label: this.$t('ownGroupName')
                 },
                 {
+                    id: 'label',
+                    label: this.$t('label')
+                },
+                {
                     id: 'latestExec',
                     label: this.$t('latestExec')
                 },
@@ -714,7 +802,8 @@
                 updateTime: 154,
                 lastModifyUser: '',
                 latestExec: 484,
-                pipelineId: 120
+                pipelineId: 120,
+                groupLabel: 200
             }
             this.requestList()
         },
@@ -806,11 +895,12 @@
                         current: page
                     })
                     this.pipelineList = records
-                    console.log(this.pipelineList, 111)
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
-                        setTimeout(this.calcOverPos, 100)
+                        setTimeout(this.calcOverPosGroup, 100)
                     }
+                    this.visibleLabelCountList = {}
+                    setTimeout(this.calcOverPosTable, 100)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -829,7 +919,7 @@
                     this.refresh()
                 }
             },
-            calcOverPos () {
+            calcOverPosGroup () {
                 const tagMargin = 6
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
@@ -844,13 +934,36 @@
 
                         this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
-
                             const isOverSize = sumTagWidth > viewPortWidth
                             !isOverSize && tagVisbleCount++
                             return !isOverSize
                         })
 
                         acc[index] = tagVisbleCount
+                    }
+                    return acc
+                }, {})
+            },
+            calcOverPosTable () {
+                const tagMargin = 6
+
+                this.visibleLabelCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                    if (Array.isArray(pipeline?.groupLabel)) {
+                        const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
+                        const labelLength = pipeline?.groupLabel.length
+                        const moreTag = this.$refs?.[`labelMore_${index}`]?.$el
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = labelBoxWidth - (labelLength > 1 ? moreTagWidth : 0)
+                        let sumTagWidth = 0
+                        let tagVisibleCount = 0
+                        this.$refs[`labelName_${index}`]?.every((label) => {
+                            sumTagWidth += label?.offsetWidth + tagMargin
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisibleCount++
+                            return !isOverSize
+                        })
+
+                        acc[index] = tagVisibleCount
                     }
                     return acc
                 }, {})
@@ -1038,6 +1151,76 @@
                     padding: 0 6px;
                 }
             }
+        }
+        .group-label-warpper {
+            display: flex;
+            width: 100%;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+        .group-tag {
+            display: inline-flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            max-width: 95%;
+            .key {
+                flex-shrink: 0;
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #f0f1f5;
+            }
+            .value {
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #fff;
+                border-left: none;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+            }
+           
+        }
+    }
+    .hidden-count {
+        display: inline-block;
+        background-color: #f0f1f5;
+        padding: 4px 8px;
+    }
+    .group-tag-popover {
+        .group-tag {
+            max-width: 300px;
+            width: min-content;
+            display: flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            &:last-child {
+                margin-bottom: 0px;
+            }
+        }
+        .key {
+            flex-shrink: 0;
+            display: inline-block;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #f0f1f5;
+        }
+        .value {
+            display: inline-block;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #fff;
+            border-left: none;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
     }
 </style>

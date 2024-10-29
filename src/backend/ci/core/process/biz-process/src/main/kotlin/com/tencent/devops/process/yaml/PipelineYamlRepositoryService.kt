@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
@@ -703,9 +704,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
             return emptyList()
         }
         val triggerContainer = model.getTriggerContainer()
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }.toMutableMap()
+        val variables = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        ).toMutableMap()
         // 补充yaml流水线代码库信息
         variables[PIPELINE_PAC_REPO_HASH_ID] = repoHashId
 

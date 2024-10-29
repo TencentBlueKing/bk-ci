@@ -98,6 +98,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
@@ -167,6 +168,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH) {
@@ -264,7 +266,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
+                message = "${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -1598,6 +1600,33 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         deptId: Long?,
         deptName: String?
     )
+
+    override fun updatePluginDetailsDisplay(
+        englishName: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Boolean {
+        logger.info("update plugin details display|$englishName|$pluginDetailsDisplayOrder")
+        val projectInfo = getByEnglishName(englishName)
+            ?: throw NotFoundException("project - $englishName is not exist!")
+
+        val validDisplayOrder = setOf(
+            PluginDetailsDisplayOrder.LOG,
+            PluginDetailsDisplayOrder.ARTIFACT,
+            PluginDetailsDisplayOrder.CONFIG
+        )
+
+        val isParamsLegal = pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
+
+        if (isParamsLegal) {
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
+            updateProjectProperties(null, englishName, properties)
+        } else {
+            throw IllegalArgumentException("The parameter is invalid. It must contain LOG, ARTIFACT, CONFIG in any order.")
+        }
+
+        return true
+    }
 
     override fun getPipelineDialect(projectId: String): String {
         return getByEnglishName(englishName = projectId)?.pipelineDialect ?: PipelineDialectType.CLASSIC.name

@@ -315,7 +315,33 @@ export default {
           }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
+            break;
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_add_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_delete_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
         }
+      }
+    },
+    async syncGroupPermissions(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupPermissions`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
       }
     },
     async syncGroupIAM(groupId){

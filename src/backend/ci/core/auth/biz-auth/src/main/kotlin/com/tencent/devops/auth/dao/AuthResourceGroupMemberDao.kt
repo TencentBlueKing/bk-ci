@@ -117,7 +117,7 @@ class AuthResourceGroupMemberDao {
     fun batchCreate(dslContext: DSLContext, groupMembers: List<AuthResourceGroupMember>) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            dslContext.batch(groupMembers.map {
+            groupMembers.forEach {
                 dslContext.insertInto(
                     this,
                     PROJECT_CODE,
@@ -146,13 +146,14 @@ class AuthResourceGroupMemberDao {
                 ).onDuplicateKeyUpdate()
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
-            }).execute()
+                    .execute()
+            }
         }
     }
 
     fun batchUpdate(dslContext: DSLContext, groupMembers: List<AuthResourceGroupMember>) {
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            dslContext.batch(groupMembers.map {
+            groupMembers.forEach {
                 dslContext.update(this)
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
@@ -160,7 +161,8 @@ class AuthResourceGroupMemberDao {
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(IAM_GROUP_ID.eq(it.iamGroupId))
                     .and(MEMBER_ID.eq(it.memberId))
-            }).execute()
+                    .execute()
+            }
         }
     }
 
@@ -551,6 +553,24 @@ class AuthResourceGroupMemberDao {
                 .where(conditions)
             select.groupBy(RESOURCE_TYPE)
             select.fetch().map { Pair(it.value1(), it.value2().toLong()) }.toMap()
+        }
+    }
+
+    fun listMemberGroupIdsInProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberId: String,
+        iamTemplateIds: List<String>
+    ): List<Int> {
+        val conditions = buildMemberGroupCondition(
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds
+        )
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(IAM_GROUP_ID).from(this)
+                .where(conditions)
+                .fetch().map { it.value1() }
         }
     }
 

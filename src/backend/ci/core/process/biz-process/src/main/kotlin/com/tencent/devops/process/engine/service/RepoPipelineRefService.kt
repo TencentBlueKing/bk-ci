@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
@@ -201,7 +202,7 @@ class RepoPipelineRefService @Autowired constructor(
         channel: String
     ) {
         val repoPipelineRefInfos = mutableListOf<RepoPipelineRefInfo>()
-        val variables = mutableMapOf<String, String>()
+        var variables = mutableMapOf<String, String>()
         model?.stages?.forEachIndexed { index, stage ->
             if (index == 0) {
                 val container = stage.containers[0] as TriggerContainer
@@ -209,6 +210,8 @@ class RepoPipelineRefService @Autowired constructor(
                 container.params.forEach { param ->
                     variables[param.id] = param.defaultValue.toString()
                 }
+                // 填充[variables.]前缀
+                variables = PipelineVarUtil.fillVariableMap(variables).toMutableMap()
                 analysisTriggerContainer(
                     projectId = projectId,
                     pipelineId = pipelineId,

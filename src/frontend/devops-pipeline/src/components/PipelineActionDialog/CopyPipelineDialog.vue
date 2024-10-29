@@ -13,33 +13,34 @@
         @confirm="submit"
         @cancel="cancel"
     >
-        <bk-form
-            :model="model"
-            form-type="vertical"
-            v-bkloading="{ isLoading: isSubmiting }"
-            ref="copyForm"
-        >
-            <bk-form-item
-                v-for="item in formModel"
-                :key="item.name"
-                :label="$t(item.name)"
-                :rules="item.rules"
-                :property="item.name"
+        <div v-bkloading="{ isLoading: isSubmiting }">
+            <bk-form
+                :model="model"
+                form-type="vertical"
+                ref="copyForm"
             >
-                <bk-input
-                    :placeholder="$t(item.placeholder)"
-                    :value="item.value"
-                    @input="item.handleInput"
-                />
-            </bk-form-item>
-        </bk-form>
-        <PipelineGroupSelector
-            class="pipeline-group-selector-form"
-            ref="pipelineGroupSelector"
-            v-model="groupValue"
-            :has-manage-permission="isManage"
-            :pipeline-name="model.name"
-        />
+                <bk-form-item
+                    v-for="item in formModel"
+                    :key="item.name"
+                    :label="$t(item.name)"
+                    :rules="item.rules"
+                    :property="item.name"
+                >
+                    <bk-input
+                        :placeholder="$t(item.placeholder)"
+                        :value="item.value"
+                        @input="item.handleInput"
+                    />
+                </bk-form-item>
+            </bk-form>
+            <PipelineGroupSelector
+                class="pipeline-group-selector-form"
+                ref="pipelineGroupSelector"
+                v-model="groupValue"
+                :has-manage-permission="isManage"
+                :pipeline-name="model.name"
+            />
+        </div>
     </bk-dialog>
 </template>
 
