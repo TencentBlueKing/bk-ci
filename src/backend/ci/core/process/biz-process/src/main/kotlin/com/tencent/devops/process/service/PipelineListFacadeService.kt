@@ -957,6 +957,7 @@ class PipelineListFacadeService @Autowired constructor(
             userId = userId, projectId = projectId, permission = AuthPermission.LIST
         )
         val isControlPipelineListPermission = pipelinePermissionService.isControlPipelineListPermission(projectId)
+        val permissionFlag = if (isControlPipelineListPermission) true else null
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
         val recentUsePipelines = pipelineRecentUseService.listPipelineIds(userId, projectId)
         val totalCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
@@ -968,7 +969,7 @@ class PipelineListFacadeService @Autowired constructor(
             viewId = PIPELINE_VIEW_ALL_PIPELINES,
             includeDelete = false,
             userId = userId,
-            permissionFlag = true
+            permissionFlag = permissionFlag
         ).toInt()
         val myFavoriteCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
@@ -979,7 +980,7 @@ class PipelineListFacadeService @Autowired constructor(
             viewId = PIPELINE_VIEW_FAVORITE_PIPELINES,
             includeDelete = false,
             userId = userId,
-            permissionFlag = isControlPipelineListPermission
+            permissionFlag = permissionFlag
         ).toInt()
         val myPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
@@ -990,7 +991,7 @@ class PipelineListFacadeService @Autowired constructor(
             viewId = PIPELINE_VIEW_MY_PIPELINES,
             includeDelete = false,
             userId = userId,
-            permissionFlag = isControlPipelineListPermission
+            permissionFlag = permissionFlag
         ).toInt()
         val recentUseCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
@@ -1002,7 +1003,7 @@ class PipelineListFacadeService @Autowired constructor(
             includeDelete = false,
             userId = userId,
             pipelineIds = recentUsePipelines,
-            permissionFlag = isControlPipelineListPermission
+            permissionFlag = permissionFlag
         ).toInt()
         val recycleCount = pipelineInfoDao.countPipeline(
             dslContext = dslContext,
