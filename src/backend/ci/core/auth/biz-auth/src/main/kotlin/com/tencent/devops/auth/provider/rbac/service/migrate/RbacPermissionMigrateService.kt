@@ -698,4 +698,15 @@ class RbacPermissionMigrateService constructor(
         }
         return true
     }
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            val projectInfo = client.get(ServiceProjectResource::class).get(it).data!!
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pipelineListPermissionControl = true
+            logger.info("update project($it) properties|$properties")
+            client.get(ServiceProjectResource::class).updateProjectProperties(it, properties)
+        }
+        return true
+    }
 }

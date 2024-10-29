@@ -56,6 +56,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val clientTokenService: ClientTokenService = mockk()
     private val pipelineYamlViewDao: PipelineYamlViewDao = mockk()
     private val operationLogService: PipelineOperationLogService = mockk()
+    private val pipelineViewGroupCommonService: PipelineViewGroupCommonService = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -70,7 +71,17 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             client = client,
             clientTokenService = clientTokenService,
             operationLogService = operationLogService,
-            pipelineYamlViewDao = pipelineYamlViewDao
+            pipelineYamlViewDao = pipelineYamlViewDao,
+            pipelinePermissionService = pipelinePermissionService,
+            pipelineViewGroupCommonService = pipelineViewGroupCommonService
+        ),
+        recordPrivateCalls = true
+    )
+
+    private val self1: PipelineViewGroupCommonService = spyk(
+        PipelineViewGroupCommonService(
+            pipelineViewGroupDao = pipelineViewGroupDao,
+            dslContext = dslContext
         ),
         recordPrivateCalls = true
     )
@@ -393,7 +404,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("当ViewGroup为空列表时")
         fun test_1() {
             every { pipelineViewGroupDao.listByViewIds(anyDslContext(), any(), any()) } returns emptyList()
-            self.listPipelineIdsByViewIds("test", listOf("test")).let {
+            self1.listPipelineIdsByViewIds("test", listOf("test")).let {
                 Assertions.assertTrue(it.size == 1)
                 Assertions.assertEquals(it[0], "##NONE##")
             }
@@ -403,7 +414,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("当ViewGroup不为空列表时")
         fun test_2() {
             every { pipelineViewGroupDao.listByViewIds(anyDslContext(), any(), any()) } returns listOf(pvg)
-            self.listPipelineIdsByViewIds("test", listOf("test")).let {
+            self1.listPipelineIdsByViewIds("test", listOf("test")).let {
                 Assertions.assertTrue(it.size == 1)
                 Assertions.assertEquals(it[0], pvg.pipelineId)
             }
@@ -904,8 +915,11 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("是项目流水线组")
         fun test_1() {
             every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
-            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any(), any()) } returns emptyMap()
             every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
+            every { pipelinePermissionService.getResourceByPermission(any(), any(), any()) } returns emptyList()
+            every { pipelinePermissionService.isControlPipelineListPermission(any()) } returns true
+
             every {
                 self["sortViews2Summary"](
                     any() as String,
@@ -924,8 +938,10 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("不是项目流水线组")
         fun test_2() {
             every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
-            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any(), any()) } returns emptyMap()
             every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
+            every { pipelinePermissionService.getResourceByPermission(any(), any(), any()) } returns emptyList()
+            every { pipelinePermissionService.isControlPipelineListPermission(any()) } returns true
             every {
                 self["sortViews2Summary"](
                     any() as String,
@@ -936,7 +952,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
             every { self["getClassifiedPipelineIds"](any() as String) } returns emptyList<String>()
-            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any(), any()) } returns 0
+            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any(), any(), any(), any()) } returns 0
             self.listView("test", "test", true, PipelineViewType.DYNAMIC).let {
                 Assertions.assertEquals(it.size, 1)
                 Assertions.assertEquals(it[0].id, PIPELINE_VIEW_UNCLASSIFIED)
