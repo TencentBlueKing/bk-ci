@@ -1142,11 +1142,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ) {
         records.forEach {
             val atomCode = it[KEY_ATOM_CODE] as String
-            val installer = it[KEY_INSTALLER] as String
-            val installType = it[KEY_INSTALL_TYPE] as Byte
+            val installer = it[KEY_INSTALLER] as? String
+            val installType = it[KEY_INSTALL_TYPE] as? Byte
+            val default = it[KEY_DEFAULT_FLAG] as Boolean
             // 判断项目是否是初始化项目或者调试项目
-            val isInitTest = installType == StoreProjectTypeEnum.INIT.type.toByte() ||
-                    installType == StoreProjectTypeEnum.TEST.type.toByte()
+            val isInitTest = if (default) false else {
+                installType == StoreProjectTypeEnum.INIT.type.toByte() ||
+                        installType == StoreProjectTypeEnum.TEST.type.toByte()
+            }
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1154,7 +1157,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 defaultMessage = classifyName
             )
             val logoUrl = it[KEY_LOGO_URL] as? String
-            val default = it[KEY_DEFAULT_FLAG] as Boolean
+            logger.info("convertInstalledAtom records:$it")
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
@@ -1169,7 +1172,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
                     summary = it[KEY_SUMMARY] as? String,
                     publisher = it[KEY_PUBLISHER] as? String,
-                    installer = if (default) SYSTEM else installer,
+                    installer = if (default) SYSTEM else installer!!,
                     installTime = if (default) {
                         DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
                     } else {
