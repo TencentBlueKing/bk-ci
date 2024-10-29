@@ -45,6 +45,7 @@
             :data="tableData"
             :columns="columns"
             height="100%"
+            max-height="100%"
             show-overflow-tooltip
             :key="resourceType"
             :pagination="pagination"

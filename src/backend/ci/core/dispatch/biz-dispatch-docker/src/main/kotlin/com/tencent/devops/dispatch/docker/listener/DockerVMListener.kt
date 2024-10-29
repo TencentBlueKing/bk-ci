@@ -34,10 +34,11 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
@@ -81,7 +82,7 @@ class DockerVMListener @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val extDockerResourceService: ExtDockerResourceService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: SampleEventDispatcher
 ) : BuildListener {
 
     companion object {
@@ -123,9 +124,18 @@ class DockerVMListener @Autowired constructor(
         } else {
             pipelineEventDispatcher.dispatch(event.copy(
                 routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix,
-                dockerRoutingType = dockerRoutingType.name
+                dockerRoutingType = dockerRoutingType.name,
+                dispatchType = KubernetesDispatchType(
+                    kubernetesBuildVersion = "",
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = 0
+                )
             ))
         }
+    }
+
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is DockerDispatchType
     }
 
     private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {

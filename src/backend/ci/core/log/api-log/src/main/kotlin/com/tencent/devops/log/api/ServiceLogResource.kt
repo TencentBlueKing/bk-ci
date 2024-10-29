@@ -100,7 +100,10 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false
     ): Result<QueryLogs>
 
     @Operation(summary = "获取更多日志")
