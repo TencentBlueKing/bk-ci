@@ -1086,7 +1086,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
         // 查询完项目下安装插件则开始查询默认插件
         var defaultAtoms: org.jooq.Result<out Record>? = null
-        if ((page -1) * pageSize + 1 > projectCount) {
+        if (records.isNullOrEmpty() || records.size < pageSize) {
             var limit = pageSize
             var offset = 0
             if ((page -1) * pageSize - projectCount > 0) {
