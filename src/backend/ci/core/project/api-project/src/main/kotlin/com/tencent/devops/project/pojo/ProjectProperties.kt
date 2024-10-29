@@ -51,6 +51,8 @@ data class ProjectProperties(
     var disableWhenInactive: Boolean? = null,
     @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
     val buildMetrics: Boolean? = null,
+    @get:Schema(title = "是否控制流水线列表权限", required = false)
+    var pipelineListPermissionControl: Boolean? = null,
     @get:Schema(title = "插件详情展示顺序", required = false)
     var pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>? = listOf(
         PluginDetailsDisplayOrder.LOG,
