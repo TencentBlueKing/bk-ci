@@ -43,6 +43,6 @@ package com.tencent.devops.remotedev.common.exception
  *
  */
 object ErrorCode {
-    const val NOT_FIND_USER_ENV_FOR_ENV_ID = "NOT_FIND_USER_ENV_FOR_ENV_ID" /*没有找到对应的env环境 {0}*/
-    const val NOT_FIND_NODE_FOR_ENV_ID = "NOT_FIND_NODE_FOR_ENV_ID" /* 当前环境没有空闲的公共云桌面节点 */
+    const val NOT_FIND_USER_ENV_FOR_ENV_ID = "notFindUserEnvForEnvId" /*没有找到对应的env环境 {0}*/
+    const val NOT_FIND_NODE_FOR_ENV_ID = "notFindNodeFoEnvId" /* 当前环境没有空闲的公共云桌面节点 */
 }
