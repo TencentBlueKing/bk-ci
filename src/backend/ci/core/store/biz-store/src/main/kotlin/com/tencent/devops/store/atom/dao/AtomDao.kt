@@ -1474,6 +1474,7 @@ class AtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val conditions = mutableListOf<Condition>()
         conditions.add(ta.DEFAULT_FLAG.eq(true))
+        conditions.add(ta.LATEST_FLAG.eq(true))
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
@@ -1487,5 +1488,20 @@ class AtomDao : AtomBaseDao() {
             conditions.add(ta.NAME.contains(name))
         }
         return Pair(ta, conditions)
+    }
+
+    fun countDefaultAtomCode(
+        dslContext: DSLContext,
+        classifyCode: String?,
+        name: String?
+    ): Int {
+        val (ta, conditions) = getDefaultAtomsConditions(
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext
+        )
+        return dslContext.selectCount().from(ta)
+            .where(conditions)
+            .fetchOne(0, Int::class.java)!!
     }
 }

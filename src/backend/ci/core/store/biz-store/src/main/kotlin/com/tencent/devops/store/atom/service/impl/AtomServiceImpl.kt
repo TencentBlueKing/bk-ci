@@ -1057,14 +1057,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val defaultAtomCodes = atomDao.batchGetDefaultAtomCode(dslContext)
+        val defaultAtomCount = atomDao.countDefaultAtomCode(dslContext, classifyCode, name)
         val projectCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name
         )
-        val count = projectCount + defaultAtomCodes.size
+        val count = projectCount + defaultAtomCount
         if (count == 0) {
             return Page(page, pageSize, 0, result)
         }
