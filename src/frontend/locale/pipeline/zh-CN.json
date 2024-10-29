@@ -1154,7 +1154,8 @@
     "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
-    "minutes": "分钟"
+    "minutes": "分钟",
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",

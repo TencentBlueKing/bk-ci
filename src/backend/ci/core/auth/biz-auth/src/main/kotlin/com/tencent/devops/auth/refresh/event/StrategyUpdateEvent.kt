@@ -31,7 +31,7 @@ import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(destination = StreamBinding.AUTH_REFRESH_FANOUT)
+@Event(destination = StreamBinding.AUTH_STRATEGY_UPDATE_FANOUT)
 data class StrategyUpdateEvent(
     override val refreshType: String,
     override var retryCount: Int = 0,

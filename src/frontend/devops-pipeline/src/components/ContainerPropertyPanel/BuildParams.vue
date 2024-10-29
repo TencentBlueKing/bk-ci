@@ -581,7 +581,7 @@
                         id: item.id,
                         name: this.$t(`storeMap.${item.name}`)
                     }
-                })
+                }).filter(item => item.id !== 'CHECKBOX')
             },
             boolList () {
                 return BOOLEAN
