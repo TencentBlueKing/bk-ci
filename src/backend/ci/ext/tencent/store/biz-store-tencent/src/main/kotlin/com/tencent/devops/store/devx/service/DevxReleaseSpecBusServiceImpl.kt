@@ -29,7 +29,6 @@ package com.tencent.devops.store.devx.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
-import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.APPROVE
@@ -547,10 +546,18 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
         val pkgLocalPath = osConfigInfo.packagePath
         val pkgName = File(pkgLocalPath).name
+        val pkgRepoPathSb = StringBuilder("$storeCode/$version/")
+        if (configOsName.isNotBlank()) {
+            pkgRepoPathSb.append(configOsName).append("/")
+        }
+        if (configOsArch.isNotBlank()) {
+            pkgRepoPathSb.append(configOsArch).append("/")
+        }
+        pkgRepoPathSb.append(pkgName)
         return StorePkgEnvInfo(
             pkgName = pkgName,
             pkgLocalPath = pkgLocalPath,
-            pkgRepoPath = "$storeCode/$version/$pkgName",
+            pkgRepoPath = pkgRepoPathSb.toString(),
             osName = configOsName,
             osArch = configOsArch,
             defaultFlag = osConfigInfo.defaultFlag,
