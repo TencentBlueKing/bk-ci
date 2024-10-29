@@ -952,7 +952,16 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
             every { self["getClassifiedPipelineIds"](any() as String) } returns emptyList<String>()
-            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any(), any(), any(), any()) } returns 0
+            every {
+                pipelineInfoDao.countExcludePipelineIds(
+                    dslContext = anyDslContext(),
+                    projectId = any(),
+                    excludePipelineIds = any(),
+                    channelCode = any(),
+                    includeDelete = any(),
+                    filterPipelineIds = any()
+                )
+            } returns 0
             self.listView("test", "test", true, PipelineViewType.DYNAMIC).let {
                 Assertions.assertEquals(it.size, 1)
                 Assertions.assertEquals(it[0].id, PIPELINE_VIEW_UNCLASSIFIED)
