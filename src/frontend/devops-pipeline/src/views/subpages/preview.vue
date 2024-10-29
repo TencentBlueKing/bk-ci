@@ -211,8 +211,9 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getParamsValuesMap, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
+
     export default {
         components: {
             PipelineVersionsForm,
@@ -316,16 +317,6 @@
                 }
                 this.activeName = new Set(this.activeName)
             },
-            diffObjectValues (defaultValue, value) {
-                for (const key in defaultValue) {
-                    if (Object.prototype.hasOwnProperty.call(defaultValue, key) && Object.prototype.hasOwnProperty.call(value, key)) {
-                        if (defaultValue[key] !== value[key]) {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
                     const values = this.getExecuteParams(this.pipelineId)
@@ -337,7 +328,7 @@
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: Object.prototype.toString.call(p.defaultValue) === '[object Object]'
-                            ? this.diffObjectValues(p.defaultValue, p.value)
+                            ? !this.isShallowEqual(p.defaultValue, p.value)
                             : p.defaultValue !== p.value,
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
