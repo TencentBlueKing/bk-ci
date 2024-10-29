@@ -1089,7 +1089,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         if (page * pageSize in (projectCount + 1) until count) {
             var limit = pageSize
             var offset = 0
-            if ((page -1 * pageSize) - projectCount > 0) {
+            if ((page -1) * pageSize - projectCount > 0) {
                 offset = (page - 1 * pageSize) - projectCount
             } else {
                 limit = page * pageSize - projectCount
