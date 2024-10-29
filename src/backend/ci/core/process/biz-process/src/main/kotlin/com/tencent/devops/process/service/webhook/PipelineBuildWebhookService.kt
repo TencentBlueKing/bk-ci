@@ -493,7 +493,7 @@ class PipelineBuildWebhookService @Autowired constructor(
      * @param webhookCommit webhook事件信息
      *
      */
-        fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): BuildId? {
+    fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): BuildId? {
         val userId = webhookCommit.userId
         val pipelineId = webhookCommit.pipelineId
         val startParams = webhookCommit.params
