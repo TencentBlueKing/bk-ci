@@ -918,6 +918,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any(), any()) } returns emptyMap()
             every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
             every { pipelinePermissionService.getResourceByPermission(any(), any(), any()) } returns emptyList()
+            every { pipelinePermissionService.isControlPipelineListPermission(any()) } returns true
+
             every {
                 self["sortViews2Summary"](
                     any() as String,
@@ -939,6 +941,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any(), any()) } returns emptyMap()
             every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
             every { pipelinePermissionService.getResourceByPermission(any(), any(), any()) } returns emptyList()
+            every { pipelinePermissionService.isControlPipelineListPermission(any()) } returns true
             every {
                 self["sortViews2Summary"](
                     any() as String,
