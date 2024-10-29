@@ -345,6 +345,43 @@
                 ></selector>
             </form-field>
         </template>
+
+        <template v-if="isArtifactoryParam(param.type)">
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.filterRule')"
+                :is-error="errors.has(`pipelineParam.glob`)"
+                :error-msg="errors.first(`pipelineParam.glob`)"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="handleChange"
+                    name="glob"
+                    :data-vv-scope="'pipelineParam'"
+                    :placeholder="$t('editPage.filterRuleTips')"
+                    :value="param.glob"
+                ></vuex-input>
+            </form-field>
+
+            <form-field
+                :hide-colon="true"
+                :label="$t('metaData')"
+                :is-error="errors.has(`pipelineParam.properties`)"
+                :error-msg="errors.first(`pipelineParam.properties`)"
+            >
+                <key-value-normal
+                    :disabled="disabled"
+                    name="properties"
+                    :data-vv-scope="'pipelineParam'"
+                    :is-metadata-var="true"
+                    :add-btn-text="$t('editPage.addMetaData')"
+                    :value="getProperties(param)"
+                    :handle-change="
+                        (name, value) => handleProperties(name, value)
+                    "
+                ></key-value-normal>
+            </form-field>
+        </template>
     </section>
 </template>
 
@@ -352,6 +389,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -403,7 +441,8 @@
             Selector,
             VuexTextarea,
             RequestSelector,
-            FileParamInput
+            FileParamInput,
+            KeyValueNormal
         },
         mixins: [validMixins],
         props: {
@@ -593,6 +632,18 @@
                     value = value.join(',')
                 }
                 this.handleChange(key, value)
+            },
+            getProperties (param) {
+                try {
+                    return Object.keys(param.properties).map((item) => {
+                        return {
+                            key: item,
+                            value: param.properties[item]
+                        }
+                    })
+                } catch (e) {
+                    return []
+                }
             },
             handleChangeCodeRepo (key, value) {
                 this.handleChange(key, {
