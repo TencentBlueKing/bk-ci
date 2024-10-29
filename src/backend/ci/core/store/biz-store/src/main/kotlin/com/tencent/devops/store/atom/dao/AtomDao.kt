@@ -1474,7 +1474,6 @@ class AtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val conditions = mutableListOf<Condition>()
         conditions.add(ta.DEFAULT_FLAG.eq(true))
-        conditions.add(ta.LATEST_FLAG.eq(true))
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
