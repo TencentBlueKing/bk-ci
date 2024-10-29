@@ -1174,8 +1174,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = if (default) SYSTEM else installer!!,
                     installTime = if (default) {
-                        val installTime = it[KEY_INSTALL_TIME] ?: it[KEY_UPDATE_TIME]
-                        DateTimeUtil.toDateTime( installTime as LocalDateTime)
+                        DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
                     } else {
                         DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
                     },
