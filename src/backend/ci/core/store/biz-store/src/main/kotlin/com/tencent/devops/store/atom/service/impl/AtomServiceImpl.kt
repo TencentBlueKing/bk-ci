@@ -1094,6 +1094,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             } else {
                 limit = page * pageSize - projectCount
             }
+            logger.info("getDefaultAtoms offset:$offset|limit:$limit")
             defaultAtoms = atomDao.getDefaultAtoms(
                 dslContext = dslContext,
                 classifyCode = classifyCode,
@@ -1164,7 +1165,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 defaultMessage = classifyName
             )
             val logoUrl = it[KEY_LOGO_URL] as? String
-            logger.info("convertInstalledAtom records:$it")
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
