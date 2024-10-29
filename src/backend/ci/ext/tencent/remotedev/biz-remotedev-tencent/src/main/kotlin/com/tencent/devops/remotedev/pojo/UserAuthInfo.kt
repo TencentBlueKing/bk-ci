@@ -1,8 +1,7 @@
 package com.tencent.devops.remotedev.pojo
 
 data class UserAuthInfo(
-    val groups: List<String>,
-    val itsmSN: String
+    val groupIds: Set<Int>
 )
 
 enum class UserAuthRecordStatus(val value: Int) {

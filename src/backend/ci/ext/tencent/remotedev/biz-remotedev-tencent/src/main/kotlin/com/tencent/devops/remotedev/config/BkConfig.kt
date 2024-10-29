@@ -43,6 +43,8 @@ class BkConfig {
     val tgitLinkServiceId: Int? = null
     @Value("\${bkitsm.recordViewServiceId:#{null}}")
     val recordViewServiceId: Int? = null
+    @Value("\${bkitsm.userAuthCheckServiceId:#{null}}")
+    val userAuthCheckServiceId: Int? = null
 
     // bkvision配置
     @Value("\${bkvision.url:}")
