@@ -60,7 +60,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Tag(name = "OPENAPI_PIPELINE_VERSION_V4", description = "OPENAPI-流水线版本管理资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
