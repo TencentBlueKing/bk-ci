@@ -180,12 +180,14 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ManagerScopesEnum.DEPARTMENT -> {
                 val deptInfos = getDeptInfo(deptSearch)
                 deptInfos.results.forEach {
                     it.toUserAndDeptInfoVo()
                 }
             }
+
             ManagerScopesEnum.ALL -> {
                 val userInfos = getUserInfo(userSearch)
                 userInfos.results.forEach {
@@ -280,12 +282,15 @@ class AuthDeptServiceImpl @Autowired constructor(
 
         if (membersNotInCache.isNotEmpty()) {
             val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
-            fetchedMembers.forEach { memberInfoCache.put(it.name, it) }
-
-            if (memberType == ManagerScopesEnum.USER) {
-                val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
-                if (departedMembers.isNotEmpty()) {
-                    departedMembersCache.addAll(departedMembers)
+            fetchedMembers.forEach {
+                if (it.type == ManagerScopesEnum.USER) {
+                    memberInfoCache.put(it.name, it)
+                    val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
+                    if (departedMembers.isNotEmpty()) {
+                        departedMembersCache.addAll(departedMembers)
+                    }
+                } else {
+                    memberInfoCache.put(it.id.toString(), it)
                 }
             }
         }
@@ -327,6 +332,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 )
                 getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
             }
+
             ManagerScopesEnum.DEPARTMENT -> {
                 val deptSearch = SearchUserAndDeptEntity(
                     bk_app_code = appCode!!,
@@ -338,6 +344,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 )
                 getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
             }
+
             else -> emptyList()
         }
         return memberInfos
