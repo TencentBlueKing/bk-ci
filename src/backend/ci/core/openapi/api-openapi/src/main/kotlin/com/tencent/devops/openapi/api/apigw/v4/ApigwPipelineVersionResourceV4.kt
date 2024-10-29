@@ -68,7 +68,7 @@ interface ApigwPipelineVersionResourceV4 {
 
     @Operation(summary = "获取流水线信息（含草稿）", tags = ["v4_app_pipeline_detail", "v4_user_pipeline_detail"])
     @GET
-    @Path("/pipelines/{pipelineId}/pipeline_detail")
+    @Path("/pipeline_detail")
     fun getPipelineVersionDetail(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -83,7 +83,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String
     ): Result<PipelineDetail>
 
@@ -92,7 +92,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_release_prefetch", "v4_user_pipeline_release_prefetch"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/release_prefetch")
+    @Path("/release_prefetch")
     fun preFetchDraftVersion(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -107,7 +107,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @QueryParam("version")
@@ -116,7 +116,7 @@ interface ApigwPipelineVersionResourceV4 {
 
     @Operation(summary = "将当前模板发布为正式版本", tags = ["v4_app_pipeline_release", "v4_user_pipeline_release"])
     @POST
-    @Path("/pipelines/{pipelineId}/release_version")
+    @Path("/release_version")
     fun releaseDraftVersion(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -131,7 +131,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @QueryParam("version")
@@ -168,7 +168,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_get_version", "v4_user_pipeline_get_version"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/get_version")
+    @Path("/get_version")
     fun getVersion(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -183,7 +183,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @QueryParam("version")
@@ -192,7 +192,7 @@ interface ApigwPipelineVersionResourceV4 {
 
     @Operation(summary = "触发前配置", tags = ["v4_app_pipeline_preview_code", "v4_user_pipeline_preview_code"])
     @GET
-    @Path("/pipelines/{pipelineId}/preview_code")
+    @Path("/preview_code")
     fun previewCode(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -207,7 +207,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线id", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线版本号", required = false)
         @QueryParam("version")
@@ -243,7 +243,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_creator_list", "v4_user_pipeline_creator_list"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/creator_list")
+    @Path("/creator_list")
     fun versionCreatorList(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -258,7 +258,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
@@ -273,7 +273,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_version_list", "v4_user_pipeline_version_list"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/version_list")
+    @Path("/version_list")
     fun versionList(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -288,7 +288,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "跳转定位的版本号", required = false)
         @QueryParam("fromVersion")
@@ -315,7 +315,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_operation_log", "v4_user_pipeline_operation_log"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/operation_log")
+    @Path("/operation_log")
     fun getPipelineOperationLogs(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -330,7 +330,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "搜索字段：创建人", required = false)
         @QueryParam("creator")
@@ -348,7 +348,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_operator_list", "v4_user_pipeline_operator_list"]
     )
     @GET
-    @Path("/pipelines/{pipelineId}/operator_list")
+    @Path("/operator_list")
     fun operatorList(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -363,7 +363,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String
     ): Result<List<String>>
 
@@ -372,7 +372,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_rollback_draft", "v4_user_pipeline_rollback_draft"]
     )
     @POST
-    @Path("/pipelines/{pipelineId}/rollback_draft")
+    @Path("/rollback_draft")
     fun rollbackDraftFromVersion(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -387,7 +387,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "回回滚目标版本", required = true)
         @QueryParam("version")
@@ -396,7 +396,7 @@ interface ApigwPipelineVersionResourceV4 {
 
     @Operation(summary = "导出流水线模板", tags = ["v4_app_pipeline_export", "v4_user_pipeline_export"])
     @GET
-    @Path("/pipelines/{pipelineId}/export")
+    @Path("/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipeline(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -412,7 +412,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线Id", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "导出的目标版本", required = false)
         @QueryParam("version")
@@ -427,7 +427,7 @@ interface ApigwPipelineVersionResourceV4 {
         tags = ["v4_app_pipeline_update_build_no", "v4_user_pipeline_update_build_no"]
     )
     @POST
-    @Path("/pipelines/{pipelineId}/update_build_no")
+    @Path("/update_build_no")
     fun updateBuildNo(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -442,7 +442,7 @@ interface ApigwPipelineVersionResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "流水线构建推荐版本号更新", required = true)
         buildNo: BuildNoUpdateReq
