@@ -757,7 +757,11 @@
     "directoryName": "Folder Name",
     "directoryPath": "Folder Path",
     "include": "Include",
-    "fileAndFolder": "{0} files, {1} folders"
+    "fileAndFolder": "{0} files, {1} folders",
+    "triggerResult": "Trigger Result",
+    "triggerSuc": "Trigger successful",
+    "triggerFail": "Trigger failed",
+    "triggerMismatch": "Trigger mismatch"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",

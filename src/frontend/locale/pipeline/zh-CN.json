@@ -756,7 +756,11 @@
     "directoryName": "目录名称",
     "directoryPath": "目录路径",
     "include": "包含",
-    "fileAndFolder": "{0} 个文件，{1} 个目录"
+    "fileAndFolder": "{0} 个文件，{1} 个目录",
+    "triggerResult": "触发结果",
+    "triggerSuc": "触发成功",
+    "triggerFail": "触发失败",
+    "triggerMismatch": "触发器不匹配"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
