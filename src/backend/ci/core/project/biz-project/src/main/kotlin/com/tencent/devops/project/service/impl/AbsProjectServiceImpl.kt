@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -132,6 +134,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NAME_EXIST)
                 }
             }
+
             ProjectValidateType.english_name -> {
                 // 2 ~ 64 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
@@ -422,7 +425,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
-                    subjectScopesStr = subjectScopesStr,
+                    afterSubjectScopes = subjectScopes,
                     projectUpdateInfo = projectUpdateInfo
                 )
                 val projectId = projectInfo.projectId
@@ -438,7 +441,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (needModifyAuthResource(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
-                        finalNeedApproval = finalNeedApproval
+                        finalNeedApproval = finalNeedApproval,
+                        beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                        afterSubjectScopes = subjectScopes
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
@@ -504,29 +509,44 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return success
     }
 
+    /**
+     * 修改蓝盾项目需要修改权限中心的场景。
+     * 1.若需要审批则必然需要修改到权限中心资源
+     * 2.修改到名称需要同步修改权限中心资源
+     * 3.通过service接口时，不需要审批，但是修改到可授权范围也需要修改权限中心资源
+     * */
     private fun needModifyAuthResource(
         originalProjectName: String,
         modifiedProjectName: String,
-        finalNeedApproval: Boolean
+        finalNeedApproval: Boolean,
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
     ): Boolean {
-        return originalProjectName != modifiedProjectName || finalNeedApproval
+        val isSubjectScopesChange = isSubjectScopesChange(
+            beforeSubjectScopes = beforeSubjectScopes,
+            afterSubjectScopes = afterSubjectScopes
+        )
+        return originalProjectName != modifiedProjectName || finalNeedApproval ||
+            isSubjectScopesChange
     }
 
     private fun getUpdateApprovalStatus(
         needApproval: Boolean?,
         projectInfo: TProjectRecord,
-        subjectScopesStr: String,
+        afterSubjectScopes: List<SubjectScopeInfo>,
         projectUpdateInfo: ProjectUpdateInfo
     ): Pair<Boolean, Int> {
         val authNeedApproval = projectPermissionService.needApproval(needApproval)
         val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
+            val isSubjectScopesChange = isSubjectScopesChange(
+                beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                afterSubjectScopes = afterSubjectScopes
+            )
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
             val finalNeedApproval = authNeedApproval &&
-                (projectInfo.subjectScopes != subjectScopesStr ||
-                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
-                    )
+                (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
@@ -537,6 +557,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 当创建驳回时，需要再审批,状态又为重新创建
             Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)
         }
+    }
+
+    private fun isSubjectScopesChange(
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
+    ): Boolean {
+        val beforeIds = beforeSubjectScopes.map { it.id }.toSet()
+        val afterIds = afterSubjectScopes.map { it.id }.toSet()
+        return beforeIds != afterIds
     }
 
     private fun updateApprovalInfo(
