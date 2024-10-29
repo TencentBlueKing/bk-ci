@@ -28,7 +28,6 @@
 package com.tencent.devops.store.devx.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.APPROVE
@@ -110,7 +109,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.io.File
-import java.net.URLEncoder
 
 @Primary
 @Service("DEVX_RELEASE_SPEC_BUS_SERVICE")
@@ -322,7 +320,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
             val osArch = baseEnvRecord.osArch ?: " "
-            val pkgPath = baseEnvRecord.pkgPath
+            val pkgRepoPath = baseEnvRecord.pkgPath
             val signatureFileKey = getSignatureFileKey()
             val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
@@ -340,26 +338,26 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 // 用户没有配置脚本，则需查出平台默认的打包脚本
                 queryDefaultScriptFlag = true
             }
-            val packagePath =
+            val pkgLocalPath =
                 extEnvs?.filter { it.fieldName == OsConfigInfo::packagePath.name }?.getOrNull(0)?.fieldValue ?: " "
-            val fileType = pkgPath.substringAfterLast(".")
+            val fileType = pkgRepoPath.substringAfterLast(".")
             // 暂时只支持windows操作系统的exe软件包签名
             if (osName.contains("win")) {
                 val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
                 if (windowsRunInfos == null) {
                     windowsRunInfos = mutableSetOf()
                 }
-                windowsRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:$signFlag:$packScriptPath:$packagePath")
+                windowsRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:$signFlag:$packScriptPath:$pkgLocalPath")
             } else if (osName.contains("darwin")) {
                 if (darwinRunInfos == null) {
                     darwinRunInfos = mutableSetOf()
                 }
-                darwinRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:false:$packScriptPath:$packagePath")
+                darwinRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:false:$packScriptPath:$pkgLocalPath")
             } else {
                 if (linuxRunInfos == null) {
                     linuxRunInfos = mutableSetOf()
                 }
-                linuxRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:false:$packScriptPath:$packagePath")
+                linuxRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:false:$packScriptPath:$pkgLocalPath")
             }
         }
         val storeCode = baseRecord.storeCode
