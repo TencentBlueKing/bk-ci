@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目其他配置")
@@ -51,5 +52,11 @@ data class ProjectProperties(
     @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
     val buildMetrics: Boolean? = null,
     @get:Schema(title = "是否控制流水线列表权限", required = false)
-    var pipelineListPermissionControl: Boolean? = null
+    var pipelineListPermissionControl: Boolean? = null,
+    @get:Schema(title = "插件详情展示顺序", required = false)
+    var pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>? = listOf(
+        PluginDetailsDisplayOrder.LOG,
+        PluginDetailsDisplayOrder.ARTIFACT,
+        PluginDetailsDisplayOrder.CONFIG
+    )
 )
