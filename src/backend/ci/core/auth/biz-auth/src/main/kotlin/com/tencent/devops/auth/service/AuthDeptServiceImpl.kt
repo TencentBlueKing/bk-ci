@@ -273,6 +273,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     override fun listMemberInfos(
         memberIds: List<String>,
         memberType: ManagerScopesEnum
