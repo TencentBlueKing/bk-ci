@@ -1170,8 +1170,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     summary = it[KEY_SUMMARY] as? String,
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = if (default) SYSTEM else installer,
-                    installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
-                    installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
+                    installTime = if (default) {
+                        DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
+                    } else {
+                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                    },
+                    installType = if (default) {
+                        StoreProjectTypeEnum.COMMON.name
+                    } else { StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()) },
                     pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
                     hasPermission = if (default) {
                         false
