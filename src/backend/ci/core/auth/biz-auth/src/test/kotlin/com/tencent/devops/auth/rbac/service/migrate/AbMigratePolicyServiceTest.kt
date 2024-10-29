@@ -37,12 +37,12 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.provider.rbac.service.migrate.AbMigratePolicyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -67,7 +67,7 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
     val migrateResourceCodeConverter: MigrateResourceCodeConverter = mockk()
     val authResourceCodeConverter: AuthResourceCodeConverter = mockk()
     val deptService: DeptService = mockk()
-    val permissionGroupPoliciesService: PermissionGroupPoliciesService = mockk()
+    val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService = mockk()
     val groupService: PermissionResourceGroupService = mockk()
     val permissionResourceMemberService: PermissionResourceMemberService = mockk()
 

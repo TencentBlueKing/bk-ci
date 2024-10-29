@@ -69,7 +69,6 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService,
-    private val whiteListService: WhiteListService,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {

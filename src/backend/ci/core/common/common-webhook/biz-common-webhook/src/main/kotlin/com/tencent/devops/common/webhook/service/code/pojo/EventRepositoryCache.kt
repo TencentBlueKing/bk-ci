@@ -1,5 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.pojo
 
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
@@ -24,5 +25,6 @@ data class EventRepositoryCache(
     var p4ShelveChangeFiles: P4ChangeList? = null,
     var serverInfo: P4ServerInfo? = null,
     var githubPrInfo: PullRequestResponse? = null,
-    var webhookCommitList: List<WebhookCommit>? = null
+    var webhookCommitList: List<WebhookCommit>? = null,
+    var githubCommitInfo: CommitResponse? = null
 )
