@@ -24,7 +24,6 @@
                 <slot></slot>
             </div>
         </bk-select>
-        <!-- <div>{{ value[parentKey] }}</div>  -->
         <RequestSelector
             :class="{
                 'is-diff-param': isDiffParam

@@ -178,9 +178,6 @@
                         )
                     }
                 })
-            },
-            repoRefBranchProp () {
-                return this.param?.cascadeProps?.children[0]
             }
         },
         methods: {
@@ -227,13 +224,6 @@
             getParamByName (name) {
                 return this.paramList.find(param => `devops${param.name}` === name)
             },
-            handleUpdateRepoBranch (name, value) {
-                const param = this.getParamByName(name)
-                this.handleParamChange(param.name, {
-                    'repo-name': param.value,
-                    branch: value
-                })
-            },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
@@ -243,9 +233,6 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
-            },
-            getBranchSearchUrl (param) {
-                return param?.cascadeProps?.children?.searchUrl?.replace('{parentValue}', param.value)
             }
         }
     }
