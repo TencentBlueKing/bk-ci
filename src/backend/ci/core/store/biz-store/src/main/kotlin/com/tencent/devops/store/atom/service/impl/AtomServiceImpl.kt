@@ -134,6 +134,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -1056,30 +1057,52 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val defaultAtomCodes =
-            redisOperation.getSetMembers(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name))?.toList()
-        val defaultAtomIds = defaultAtomCodes?.let { atomDao.getLatestAtomIdsByCodes(dslContext, it) }
-        val count = atomDao.countInstalledAtoms(
+        val defaultAtomCodes = atomDao.batchGetDefaultAtomCode(dslContext)
+        val projectCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
-            name = name,
-            defaultAtomIds = defaultAtomIds
+            name = name
         )
+        val count = projectCount + defaultAtomCodes.size
         if (count == 0) {
             return Page(page, pageSize, 0, result)
         }
-        val records = atomDao.getInstalledAtoms(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            classifyCode = classifyCode,
-            name = name,
-            page = page,
-            pageSize = pageSize,
-            defaultAtomIds = defaultAtomIds
-        )
+        var records: org.jooq.Result<out Record>? = null
         val atomCodeList = mutableListOf<String>()
+        if (projectCount > (page -1) * pageSize) {
+            records = atomDao.getInstalledAtoms(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         records?.forEach {
+            atomCodeList.add(it[KEY_ATOM_CODE] as String)
+        }
+
+        // 查询完项目下安装插件则开始查询默认插件
+        var defaultAtoms: org.jooq.Result<out Record>? = null
+        if (page * pageSize in (projectCount + 1) until count) {
+            var limit = pageSize
+            var offset = 0
+            if ((page -1 * pageSize) - projectCount > 0) {
+                offset = (page - 1 * pageSize) - projectCount
+            } else {
+                limit = page * pageSize - projectCount
+            }
+            defaultAtoms = atomDao.getDefaultAtoms(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                name = name,
+                offset = offset,
+                limit = limit
+            )
+        }
+        defaultAtoms?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
         }
 
@@ -1089,13 +1112,41 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode
         ).data
         val hasManagerPermission = hasManagerPermission(projectCode, userId)
-        records?.forEach {
+        records?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        defaultAtoms?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        return Page(page, pageSize, count.toLong(), result)
+    }
+
+    private fun convertInstalledAtom(
+        userId: String,
+        records: org.jooq.Result<out Record>,
+        pipelineStat: Map<String, Int>?,
+        hasManagerPermission: Boolean,
+        result: MutableList<InstalledAtom>
+    ) {
+        records.forEach {
             val atomCode = it[KEY_ATOM_CODE] as String
             val installer = it[KEY_INSTALLER] as String
             val installType = it[KEY_INSTALL_TYPE] as Byte
             // 判断项目是否是初始化项目或者调试项目
             val isInitTest = installType == StoreProjectTypeEnum.INIT.type.toByte() ||
-                installType == StoreProjectTypeEnum.TEST.type.toByte()
+                    installType == StoreProjectTypeEnum.TEST.type.toByte()
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1130,7 +1181,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
             )
         }
-        return Page(page, pageSize, count.toLong(), result)
     }
 
     /**
