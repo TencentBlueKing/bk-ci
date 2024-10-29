@@ -21,7 +21,9 @@ data class Devfile(
     @get:Schema(title = "离岸专区 or dev cloud 专区？")
     val quotaType: QuotaType? = null,
     @get:Schema(title = "指定数据盘大小")
-    val pvcs: List<Pvc> = emptyList()
+    val pvcs: List<Pvc> = emptyList(),
+    @get:Schema(title = "创建时指定污点")
+    val specifyTaints: String? = null
 ) {
     fun checkWorkspaceAutomaticCorrection() = uid != null && environmentUid != null
 }

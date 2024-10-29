@@ -48,5 +48,11 @@ data class PipelineBuildMaterial(
     @get:Schema(title = "当前提交备注信息", required = false)
     val newCommitComment: String?,
     @get:Schema(title = "提交次数", required = false)
-    val commitTimes: Int?
+    val commitTimes: Int?,
+    @get:Schema(title = "是否为源材料主仓库", required = false)
+    val mainRepo: Boolean? = false,
+    @get:Schema(title = "提交时间", required = false)
+    val createTime: Long? = System.currentTimeMillis() / 1000,
+    @get:Schema(title = "插件ID", required = false)
+    val taskId: String? = null
 )

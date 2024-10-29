@@ -55,6 +55,8 @@ class UserPipelineTemplateResourceImpl @Autowired constructor(
                 userId = userId,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = null,
+                sort = null,
                 page = page,
                 pageSize = pageSize,
                 keywords = keywords

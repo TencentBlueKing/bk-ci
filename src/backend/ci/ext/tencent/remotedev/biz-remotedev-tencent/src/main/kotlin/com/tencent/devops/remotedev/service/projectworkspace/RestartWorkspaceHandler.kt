@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -75,7 +75,7 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl,
@@ -236,7 +236,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
             }
             // 重装成功后做异步设置(L盘挂载)
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             ip?.let {
                 workspaceCommon.makeDiskMount(it, event.userId)
             }

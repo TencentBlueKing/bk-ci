@@ -39,7 +39,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -101,7 +101,7 @@ class CreateControl @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val client: Client,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
@@ -407,7 +407,8 @@ class CreateControl @Autowired constructor(
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
                     quotaType = quotaType,
-                    pvcs = workspaceCreate.pvcs
+                    pvcs = workspaceCreate.pvcs,
+                    specifyTaints = workspaceCreate.specifyTaints
                 ),
                 projectId = projectId,
                 mountType = mountType,
@@ -478,11 +479,16 @@ class CreateControl @Autowired constructor(
             }.getOrElse { emptyArray() }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceIp(
+                    dslContext = transactionContext,
+                    workspaceName = event.workspaceName,
+                    hostName = event.environmentHost,
+                    ip = event.environmentIp
+                )
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
-                    hostName = event.environmentHost
+                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType)
                 )
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
@@ -511,7 +517,7 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp,
+                    event.environmentHost,
                     event.macAddress
                 )
             }
@@ -521,7 +527,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 workspaceCommon.updateHostMonitor(
                     workspaceName = ws.workspaceName,

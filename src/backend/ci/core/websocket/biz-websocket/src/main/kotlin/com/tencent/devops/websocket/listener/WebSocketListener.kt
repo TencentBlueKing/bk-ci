@@ -29,7 +29,6 @@ package com.tencent.devops.websocket.listener
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
@@ -43,13 +42,13 @@ import org.springframework.stereotype.Component
 class WebSocketListener @Autowired constructor(
     val messagingTemplate: SimpMessagingTemplate,
     val websocketService: WebsocketService
-) : Listener<SendMessage> {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebSocketListener::class.java)
     }
 
-    override fun execute(event: SendMessage) {
+    fun handleWebsocketEvent(event: SendMessage) {
         if (logger.isDebugEnabled) {
             logger.debug("WebSocket| user:${event.userId},page:${event.page},size:${event.sessionList?.size}")
         }

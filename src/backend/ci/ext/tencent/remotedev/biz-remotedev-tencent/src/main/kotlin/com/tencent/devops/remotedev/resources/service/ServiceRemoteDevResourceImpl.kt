@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -66,7 +67,7 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 @Suppress("ALL")
@@ -83,7 +84,7 @@ class ServiceRemoteDevResourceImpl(
     private val redisOperation: RedisOperation,
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val expertSupportService: ExpertSupportService,
     private val devcloudService: DevcloudService,
     private val deliverControl: DeliverControl,
@@ -263,12 +264,12 @@ class ServiceRemoteDevResourceImpl(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
-                userId = info.userId ?: operator,
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                values = newParam
-            )
+                streamBridge, AsyncPipelineEvent(
+                    userId = info.userId ?: operator,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -279,10 +280,10 @@ class ServiceRemoteDevResourceImpl(
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
         AsyncExecute.dispatch(
-            rabbitTemplate, AsyncNotify(
-            operator = operator,
-            notifyData = notifyData
-        )
+            streamBridge, AsyncNotify(
+                operator = operator,
+                notifyData = notifyData
+            )
         )
         return Result(true)
     }
@@ -659,5 +660,20 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
+    }
+
+    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+        val data = expertSupportService.expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size
+        ) ?: return Result(null)
+
+        return Result(
+            ExpandDiskValidateResp(
+                valid = data.valid,
+                message = data.message
+            )
+        )
     }
 }

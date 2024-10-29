@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -67,6 +67,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,7 +89,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineAsCodeService: PipelineAsCodeService,
@@ -123,7 +124,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     errorMsg = "check job start fail"
                 )
             } else {
-                execute(task, fixParam, null)
+                execute(task, fixParam, null, runVariables[BK_CI_AUTHORIZER])
             }
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
@@ -171,7 +172,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         return atomResponse
     }
 
-    fun execute(task: PipelineBuildTask, param: VMBuildContainer, ignoreEnvAgentIds: Set<String>?): AtomResponse {
+    fun execute(
+        task: PipelineBuildTask,
+        param: VMBuildContainer,
+        ignoreEnvAgentIds: Set<String>?,
+        pipelineAuthorizer: String? = ""
+    ): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -222,7 +228,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         containerBuildRecordService.containerPreparing(
             projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
         )
-        dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds)
+        dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds, pipelineAuthorizer)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
     }
@@ -233,7 +239,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         vmNames: String,
         container: Container,
-        ignoreEnvAgentIds: Set<String>?
+        ignoreEnvAgentIds: Set<String>?,
+        pipelineAuthorizer: String? = ""
     ) {
 
         // 读取插件市场中的插件信息，写入待构建处理
@@ -255,7 +262,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 pipelineName = pipelineInfo.pipelineName,
-                userId = task.starter,
+                userId = pipelineAuthorizer?.takeIf { it.isNotEmpty() } ?: task.starter,
                 buildId = task.buildId,
                 buildNo = pipelineRuntimeService.getBuildInfo(task.projectId, task.buildId)!!.buildNum,
                 vmSeqId = task.containerId,
@@ -359,6 +366,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,

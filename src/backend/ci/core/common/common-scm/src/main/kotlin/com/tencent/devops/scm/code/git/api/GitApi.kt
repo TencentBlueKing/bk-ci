@@ -72,6 +72,8 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
+        // 接口分页最大行数
+        const val MAX_PAGE_SIZE = 500
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
@@ -339,9 +341,16 @@ open class GitApi {
         }
     }
 
-    fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(
+        host: String,
+        token: String,
+        projectName: String,
+        page: Int = 1,
+        pageSize: Int = MAX_PAGE_SIZE
+    ): List<GitHook> {
         try {
-            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
+            val pageQueryStr = "page=$page&per_page=$pageSize"
+            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", pageQueryStr)
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
                 getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_WEBHOOK), request)
             )

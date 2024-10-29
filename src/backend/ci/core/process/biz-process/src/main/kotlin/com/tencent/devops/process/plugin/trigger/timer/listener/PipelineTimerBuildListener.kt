@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -75,7 +75,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService
-) : BaseListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
         val pipelineTimer =
