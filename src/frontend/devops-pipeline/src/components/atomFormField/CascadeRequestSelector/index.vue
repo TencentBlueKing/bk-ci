@@ -1,31 +1,65 @@
 <template>
-    <bk-select
-        @toggle="toggleVisible"
-        @selected="onChange"
-        v-bind="selectProps"
-    >
-        <bk-option
-            v-for="(item, index) in listData"
-            :key="index"
-            :id="item[settingKey]"
-            :name="item[displayKey]"
-            :disabled="item.disabled"
+    <div class="cascade-request-selector">
+        <bk-select
+            :class="{
+                'is-diff-param': isDiffParam
+            }"
+            @toggle="toggleVisible"
+            @selected="onChange"
+            v-bind="selectProps"
         >
-            <slot
-                name="option-item"
-                v-bind="item"
-            ></slot>
-        </bk-option>
-        <div slot="extension">
-            <slot></slot>
-        </div>
-    </bk-select>
+            <bk-option
+                v-for="item in listData"
+                :key="item[settingKey]"
+                :id="item[settingKey]"
+                :name="item[displayKey]"
+                :disabled="item.disabled"
+            >
+                <slot
+                    name="option-item"
+                    v-bind="item"
+                ></slot>
+            </bk-option>
+            <div slot="extension">
+                <slot></slot>
+            </div>
+        </bk-select>
+        <!-- <div>{{ value[parentKey] }}</div>  -->
+        <RequestSelector
+            :class="{
+                'is-diff-param': isDiffParam
+            }"
+            v-bind="Object.assign(
+                {},
+                {
+                    ...childrenOptions,
+                    id: undefined,
+                    key: value[parentKey],
+                    paramId: 'key',
+                    paramValue: 'value',
+                    initRequest: initRequest,
+                    options: cascadeProps.children.options,
+                    name: childrenKey,
+                    value: value[childrenKey],
+                    searchUrl: childrenSearchUrl,
+                    replaceKey: cascadeProps.children.replaceKey,
+                    disabled: disabled,
+                    placeholder: placeholder,
+                    handleChange: (name, value) => handleUpdateChildrenValue(name, value)
+                }
+            )"
+        />
+    </div>
 </template>
 
 <script>
     import atomFieldMixin from '../atomFieldMixin'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
     export default {
         name: 'selector',
+        components: {
+            RequestSelector
+        },
         mixins: [atomFieldMixin],
         props: {
             value: [String, Number, Array, Boolean],
@@ -42,10 +76,6 @@
                 default: 2500
             },
             isLoading: {
-                type: Boolean,
-                default: false
-            },
-            hasCreateItem: {
                 type: Boolean,
                 default: false
             },
@@ -73,14 +103,32 @@
             searchUrl: String,
             replaceKey: String,
             dataPath: String,
-            cascadeProps: Object
+            cascadeProps: {
+                required: true,
+                type: Object
+            },
+            childrenOptions: {
+                type: Object,
+                default: () => {}
+            },
+            isDiffParam: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {
-                listData: []
+                listData: [],
+                initRequest: false
             }
         },
         computed: {
+            parentKey () {
+                return this.cascadeProps.id || ''
+            },
+            childrenKey () {
+                return this.cascadeProps.children.id || ''
+            },
             popoverOptions () {
                 return {
                     popperOptions: {
@@ -95,7 +143,7 @@
 
             selectProps () {
                 const props = {
-                    value: this.value,
+                    value: this.value[this.parentKey],
                     loading: this.isLoading,
                     disabled: this.disabled || this.readOnly,
                     searchable: this.searchable,
@@ -113,6 +161,10 @@
                 }
                 if (this.cascadeProps.searchUrl) props['remote-method'] = this.remoteMethod
                 return props
+            },
+
+            childrenSearchUrl () {
+                return this.cascadeProps?.children?.searchUrl?.replace('{parentValue}', this.value[this.parentKey])
             }
         },
         watch: {
@@ -122,12 +174,20 @@
                 },
                 immediate: true,
                 deep: true
+            },
+            isDiffParam (val) {
+                this.toggleVisible(val)
+                this.initRequest = true
             }
         },
         methods: {
             onChange (val, oldVal) {
                 if (val !== oldVal) {
-                    this.handleChange(this.name, val)
+                    this.initRequest = true
+                    this.handleChange(this.name, {
+                        [this.parentKey]: val,
+                        [this.childrenKey]: ''
+                    })
                 }
             },
             editItem (index) {
@@ -157,6 +217,13 @@
                 const url = this.cascadeProps.searchUrl.replace(regExp, '')
                 const data = await this.$ajax.get(url)
                 this.listData = this.getResponseData(data)
+            },
+            
+            handleUpdateChildrenValue (name, value) {
+                this.handleChange(this.name, {
+                    ...this.value,
+                    [this.childrenKey]: value
+                })
             }
         }
     }
@@ -164,6 +231,16 @@
 
 <style lang="scss">
     @import "../../../scss/conf";
+    .cascade-request-selector {
+        display: flex;
+        width: 100%;
+        :first-child {
+            border-right: none;
+        }
+        .bk-select {
+            flex: 1;
+        }
+    }
     .bkdevops-option-name {
         width: 100%;
         text-overflow: ellipsis;
@@ -185,5 +262,7 @@
             }
         }
     }
-
+    .is-diff-param {
+        border-color: #FF9C01 !important;
+    }
 </style>

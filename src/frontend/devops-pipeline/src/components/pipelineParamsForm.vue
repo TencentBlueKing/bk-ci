@@ -27,31 +27,6 @@
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
                 />
-                <RequestSelector
-                    v-if="param.type === 'REPO_REF'"
-                    :class="{
-                        'is-diff-param': highlightChangedParam && param.isChanged
-                    }"
-                    v-validate="{ required: param.required }"
-                    param-id="key"
-                    param-value="value"
-                    v-bind="Object.assign(
-                        {},
-                        getBranchOption(param.value),
-                        {
-                            id: undefined,
-                            name: 'devops' + param.name,
-                            value: param.branchValue,
-                            searchUrl: getBranchSearchUrl(param),
-                            replaceKey: param.cascadeProps.children.replaceKey,
-                            disabled: disabled,
-                            placeholder: param.placeholder,
-                            isDiffParam: highlightChangedParam && param.isChanged,
-                            handleChange: (name, value) => handleUpdateRepoBranch(name, value)
-                        }
-                    )"
-                    :key="param.value"
-                />
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -73,7 +48,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import CodeRepoSelector from '@/components/atomFormField/CodeRepoSelector'
+    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
@@ -110,7 +85,7 @@
             FormField,
             metadataList,
             FileParamInput,
-            CodeRepoSelector
+            CascadeRequestSelector
         },
         props: {
             disabled: {
@@ -192,9 +167,15 @@
                         component: this.getParamComponentType(param),
                         name: param.id,
                         required: param.valueNotEmpty,
-                        value: isRepoParam(param.type) ? this.paramValues?.[param.id]?.['repo-name'] : this.paramValues[param.id],
-                        branchValue: isRepoParam(param.type) ? this.paramValues?.[param.id]?.branch : '',
-                        ...restParam
+                        value: this.paramValues[param.id],
+                        ...restParam,
+                        ...(
+                            isRepoParam(param.type)
+                                ? {
+                                    childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
+                                }
+                                : {}
+                        )
                     }
                 })
             },
@@ -257,16 +238,8 @@
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
-                    this.handleParamChange(param.name, value)
                 }
-                if (isRepoParam(param.type)) {
-                    this.handleParamChange(param.name, {
-                        'repo-name': value,
-                        branch: ''
-                    })
-                } else {
-                    this.handleParamChange(param.name, value)
-                }
+                this.handleParamChange(param.name, value)
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1

@@ -68,7 +68,7 @@
             :required="true"
             :is-error="errors.has(`pipelineParam.defaultValue`)"
             :error-msg="errors.first(`pipelineParam.defaultValue`)"
-            :key="param.defaultValue"
+            :key="param.defaultValue['repo-name']"
         >
             <request-selector
                 v-bind="getBranchOption(param.defaultValue['repo-name'])"

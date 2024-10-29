@@ -289,7 +289,7 @@ export const ParamComponentMap = {
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'FileParamInput',
-    [REPO_REF]: 'CodeRepoSelector'
+    [REPO_REF]: 'CascadeRequestSelector'
 }
 
 export const BOOLEAN_LIST = [

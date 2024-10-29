@@ -94,6 +94,14 @@
             settingKey: {
                 type: String,
                 default: 'id'
+            },
+            initRequest: {
+                type: Boolean,
+                default: true
+            },
+            options: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -109,7 +117,11 @@
             }
         },
         created () {
-            this.url && this.freshList()
+            if (this.initRequest) {
+                this.url && this.freshList()
+            } else {
+                this.list = this.options
+            }
         },
         methods: {
             edit (index) {
