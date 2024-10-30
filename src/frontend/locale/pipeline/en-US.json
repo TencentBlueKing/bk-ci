@@ -293,7 +293,8 @@
     "noRelatedPipeline": "No linked pipeline yet",
     "all": "All",
     "installedAt": "Installed at",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "systemPlugin": "system plugin"
   },
   "settings": {
     "baseInfo": "Basic Information",
