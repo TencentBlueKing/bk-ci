@@ -1,7 +1,7 @@
 #!/bin/bash
 function checkFiles()
 {
-  if [ "$enable_check_files" == "true" ]; then
+  if [[ "$enable_check_files" == "true" ]]; then
     # 检查当前目录是否有文件
     if [ "$(find . -maxdepth 1 -type f | wc -l)" -gt 0 ]; then
       echo "fatal: current directory is not empty, please install in an empty directory"
