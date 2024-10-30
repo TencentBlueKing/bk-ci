@@ -108,7 +108,7 @@ class DownloadAgentInstallService @Autowired constructor(
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")
             throw FileNotFoundException("The install script file is not exist")
         }
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, true)
         var result = scriptFile.readText(Charset.forName("UTF-8"))
 
         map.forEach { (t, u) ->
@@ -232,10 +232,10 @@ class DownloadAgentInstallService @Autowired constructor(
         return daemonFile
     }
 
-    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
-        val file = File(agentPackage, "script/${agentRecord.os.toLowerCase()}")
+    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+        val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, false)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -245,7 +245,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val file = File(agentPackage, "config").listFiles()
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, false)
         return file?.filter { it.isFile }?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -278,7 +278,10 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentRecord
     }
 
-    private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+    private fun getAgentReplaceProperties(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        enableCheckFiles: Boolean
+    ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
         val agentUrl = agentUrlService.genAgentUrl(agentRecord)
         val gateWay = agentUrlService.genGateway(agentRecord)
@@ -292,7 +295,8 @@ class DownloadAgentInstallService @Autowired constructor(
             "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn,
-            "language" to commonConfig.devopsDefaultLocaleLanguage
+            "language" to commonConfig.devopsDefaultLocaleLanguage,
+            "enableCheckFiles" to enableCheckFiles.toString()
         )
     }
 
