@@ -41,7 +41,7 @@ const fetchProjectData = async () => {
     englishName: projectCode,
   }).then((res) => {
     projectData.value = res;
-    currentDialect.value = res.pipelineDialect;
+    currentDialect.value = res.properties.pipelineDialect;
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
   }).catch((err) => {
@@ -148,7 +148,7 @@ const showNeedApprovedTips = () => {
  * 更新项目
  */
 const handleUpdate = () => {
-  if(currentDialect.value === 'CLASSIC' && projectData.value.pipelineDialect === 'CONSTRAINED'){
+  if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
     isDialectDialog.value = true;
     return
   }

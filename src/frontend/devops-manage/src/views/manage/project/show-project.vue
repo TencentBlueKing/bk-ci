@@ -418,7 +418,7 @@ onMounted(async () => {
                     <dialect-popover-table />
                   </template>
                   <div>
-                    <span>{{ t(projectData.pipelineDialect) }}</span>
+                    <span>{{ t(projectData.properties.pipelineDialect) }}</span>
                     <div class="diff-content" v-if="projectData.afterPipelineDialect">
                       <p class="update-title">
                         {{ t('本次更新：') }}
