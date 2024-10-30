@@ -1129,7 +1129,10 @@ class AtomDao : AtomBaseDao() {
         if (!projectCode.isNullOrBlank()) {
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        return step.where(conditions).fetchOne(0, Int::class.java)!!
+        val tc = TClassify.T_CLASSIFY
+        return step.join(tc)
+            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
