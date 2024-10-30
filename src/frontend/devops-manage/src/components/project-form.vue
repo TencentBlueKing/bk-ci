@@ -586,7 +586,7 @@ onBeforeUnmount(() => {
           <dialect-popover-table />
         </template>
         <bk-radio-group
-          v-model="projectData.pipelineDialect"
+          v-model="projectData.properties.pipelineDialect"
           @change="handleChangeForm"
         >
           <bk-radio label="CLASSIC">
