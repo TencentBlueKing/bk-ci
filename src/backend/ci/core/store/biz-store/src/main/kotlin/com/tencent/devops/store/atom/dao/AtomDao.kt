@@ -1114,7 +1114,7 @@ class AtomDao : AtomBaseDao() {
      */
     fun countInstalledAtoms(
         dslContext: DSLContext,
-        projectCode: String,
+        projectCode: String? = null,
         classifyCode: String? = null,
         name: String? = null
     ): Int {
@@ -1125,12 +1125,11 @@ class AtomDao : AtomBaseDao() {
             dslContext = dslContext
         )
 
-        return dslContext.select(countDistinct(ta.ATOM_CODE))
-            .from(ta)
-            .join(tspr)
-            .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-            .where(conditions)
-            .fetchOne(0, Int::class.java)!!
+        val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
+        if (!projectCode.isNullOrBlank()) {
+            step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+        }
+        return step.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -1191,7 +1190,7 @@ class AtomDao : AtomBaseDao() {
     }
 
     private fun getInstalledConditions(
-        projectCode: String,
+        projectCode: String? = null,
         classifyCode: String?,
         name: String?,
         dslContext: DSLContext
@@ -1199,8 +1198,13 @@ class AtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
-        conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
-        conditions.add(ta.DEFAULT_FLAG.eq(false))
+        if (projectCode.isNullOrBlank()) {
+            conditions.add(ta.DEFAULT_FLAG.eq(true))
+        } else {
+            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
+            conditions.add(ta.DEFAULT_FLAG.eq(false))
+        }
+
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
@@ -1427,7 +1431,7 @@ class AtomDao : AtomBaseDao() {
         limit: Int? = null
     ): Result<out Record>? {
 
-        val (ta, conditions) = getDefaultAtomsConditions(
+        val (ta, _, conditions) = getInstalledConditions(
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
@@ -1465,43 +1469,5 @@ class AtomDao : AtomBaseDao() {
             .orderBy(ta.CREATE_TIME, ta.ID)
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
         return sql.fetch()
-    }
-
-    private fun getDefaultAtomsConditions(
-        classifyCode: String?,
-        name: String?,
-        dslContext: DSLContext
-    ): Pair<TAtom, MutableList<Condition>> {
-        val ta = TAtom.T_ATOM
-        val conditions = mutableListOf<Condition>()
-        conditions.add(ta.DEFAULT_FLAG.eq(true))
-        if (!classifyCode.isNullOrEmpty()) {
-            val tClassify = TClassify.T_CLASSIFY
-            val classifyId = dslContext.select(tClassify.ID)
-                .from(tClassify)
-                .where(tClassify.CLASSIFY_CODE.eq(classifyCode))
-                .and(tClassify.TYPE.eq(0))
-                .fetchOne(0, String::class.java)
-            conditions.add(ta.CLASSIFY_ID.eq(classifyId))
-        }
-        if (!name.isNullOrBlank()) {
-            conditions.add(ta.NAME.contains(name))
-        }
-        return Pair(ta, conditions)
-    }
-
-    fun countDefaultAtomCode(
-        dslContext: DSLContext,
-        classifyCode: String?,
-        name: String?
-    ): Int {
-        val (ta, conditions) = getDefaultAtomsConditions(
-            classifyCode = classifyCode,
-            name = name,
-            dslContext = dslContext
-        )
-        return dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
-            .where(conditions)
-            .fetchOne(0, Int::class.java)!!
     }
 }

@@ -1057,20 +1057,24 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val defaultAtomCount = atomDao.countDefaultAtomCode(dslContext, classifyCode, name)
-        val projectCount = atomDao.countInstalledAtoms(
+        val defaultAtomCount = atomDao.countInstalledAtoms(
+            dslContext = dslContext,
+            classifyCode = classifyCode,
+            name = name
+        )
+        val projectAtomCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name
         )
-        val count = projectCount + defaultAtomCount
+        val count = projectAtomCount + defaultAtomCount
         if (count == 0) {
             return Page(page, pageSize, 0, result)
         }
         var records: org.jooq.Result<out Record>? = null
         val atomCodeList = mutableListOf<String>()
-        if (projectCount > (page -1) * pageSize) {
+        if (projectAtomCount > (page -1) * pageSize) {
             records = atomDao.getInstalledAtoms(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -1089,10 +1093,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         if (records.isNullOrEmpty() || records.size < pageSize) {
             var limit = pageSize
             var offset = 0
-            if ((page -1) * pageSize - projectCount > 0) {
-                offset = (page - 1)  * pageSize- projectCount
+            // 通过计算已分页总量与项目下已安装插件的差值确定查询默认插件的起始值
+            val thresholdNum = (page - 1) * pageSize - projectAtomCount
+            if (thresholdNum > 0) {
+                offset = thresholdNum
             } else {
-                limit = page * pageSize - projectCount
+                limit = page * pageSize - projectAtomCount
             }
             logger.info("getDefaultAtoms offset:$offset|limit:$limit")
             defaultAtoms = atomDao.getDefaultAtoms(
@@ -1155,9 +1161,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installType == StoreProjectTypeEnum.INIT.type.toByte() ||
                         installType == StoreProjectTypeEnum.TEST.type.toByte()
             }
-            if (default) {
-
-            }
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1181,7 +1184,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = installer,
                     installTime = if (default) {
-                        DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
+                        ""
                     } else {
                         DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
                     },
