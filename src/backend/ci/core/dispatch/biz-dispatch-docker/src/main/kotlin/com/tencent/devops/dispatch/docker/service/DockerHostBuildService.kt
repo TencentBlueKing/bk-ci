@@ -121,7 +121,6 @@ class DockerHostBuildService @Autowired constructor(
         val dockerIpList = pipelineDockerIPInfoDao.getDockerIpList(
             dslContext = dslContext,
             enable = true,
-            grayEnv = false,
             clusterName = clusterType
         )
 
@@ -135,7 +134,6 @@ class DockerHostBuildService @Autowired constructor(
                 enableNode = dockerIpList.size,
                 totalNode = pipelineDockerIPInfoDao.getAllDockerIpCount(
                     dslContext = dslContext,
-                    grayEnv = false,
                     clusterName = clusterType
                 )?.toInt() ?: 0
             )
@@ -163,7 +161,6 @@ class DockerHostBuildService @Autowired constructor(
             enableNode = dockerIpList.size,
             totalNode = pipelineDockerIPInfoDao.getAllDockerIpCount(
                 dslContext = dslContext,
-                grayEnv = false,
                 clusterName = clusterType
             )?.toInt() ?: 0
         )
