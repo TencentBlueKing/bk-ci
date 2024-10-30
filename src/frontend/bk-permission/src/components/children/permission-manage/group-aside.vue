@@ -72,39 +72,22 @@
       @cancel="handleHiddenCloseManage"
     >
       <template #header>
-        <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
+        <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 42px;">
         <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
-      <template v-if="resourceType === 'pipeline_template'">
+      <template>
         <div class="close-tips">
-          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [t('流水线模板')]) }}</p>
+          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceTypeName]) }}</p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('将编辑者中的用户移除') }}
+            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
+            {{ closeManageTips || t('将编辑者、执行者、查看者中的用户移除') }}
           </p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
             {{ t('删除对应组内用户继承该组的权限') }}
           </p>
           <p>
-            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('删除对应组信息和组权限') }}
-          </p>
-        </div>
-      </template>
-      <template v-else>
-        <div class="close-tips">
-          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
-          <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('将编辑者、执行者、查看者中的用户移除') }}
-          </p>
-          <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('删除对应组内用户继承该组的权限') }}
-          </p>
-          <p>
-            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
+            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
             {{ t('删除对应组信息和组权限') }}
           </p>
         </div>
@@ -200,6 +183,24 @@ export default {
       }
       return ['userCount', 'departmentCount']
     },
+    resourceTypeName () {
+      const nameMap = {
+        'pipeline': this.t('流水线'),
+        'pipeline_group': this.t('流水线组'),
+        'pipeline_template': this.t('流水线模板'),
+        'environment': this.t('环境')
+      };
+      return nameMap[this.resourceType] || this.resourceType;
+    },
+    closeManageTips () {
+      const tipsMap = {
+        'pipeline': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_group': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_template': this.t('将编辑者中的用户移除'),
+        'environment': this.t('将拥有者、使用者组中的用户移除')
+      }
+      return tipsMap[this.resourceType];
+    }
   },
   watch: {
     activeIndex(newVal) {

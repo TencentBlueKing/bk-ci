@@ -22,7 +22,6 @@
         },
         computed: {
             projectCode () {
-                console.log(this.$route.params, 1111)
                 return this.$route.params.projectId
             },
             resourceCode () {
