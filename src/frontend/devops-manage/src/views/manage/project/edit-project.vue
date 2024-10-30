@@ -42,9 +42,14 @@ const fetchProjectData = async () => {
   await http.requestProjectData({
     englishName: projectCode,
   }).then((res) => {
-    projectData.value = res;
-    currentDialect.value = res.properties.pipelineDialect;
-    (!res.properties || !res.properties.pipelineDialect) && (projectData.value.properties.pipelineDialect = 'CLASSIC');
+    projectData.value = {
+      ...res,
+      properties: {
+        pipelineDialect: 'CLASSIC',
+        ...res.properties,
+      },
+    };
+    currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
   }).catch((err) => {
@@ -200,6 +205,7 @@ const handleConfirm = () => {
 
 const handleClosed = () => {
   isDialectDialog.value = false;
+  projectData.value.properties.pipelineDialect = 'CLASSIC'
 }
 
 const initProjectForm = (value) => {

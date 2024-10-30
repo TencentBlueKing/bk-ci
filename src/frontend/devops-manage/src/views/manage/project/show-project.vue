@@ -53,6 +53,10 @@ const fetchProjectData = async () => {
       projectData.value = {
         ...res,
         deptInfo: generateDeptName(res, false),
+        properties: {
+          pipelineDialect: 'CLASSIC',
+          ...res.properties,
+        },
       };
       (!res.properties || !res.properties.pipelineDialect) && (projectData.value.properties.pipelineDialect = 'CLASSIC');
 
