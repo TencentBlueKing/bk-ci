@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.op
 
 import com.tencent.devops.auth.api.op.OpPermissionFacadeResource
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq

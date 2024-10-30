@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.op
 
 import com.tencent.devops.auth.api.sync.OpAuthResourceGroupSyncResource
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService

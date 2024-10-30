@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserAuthResourceMemberResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
