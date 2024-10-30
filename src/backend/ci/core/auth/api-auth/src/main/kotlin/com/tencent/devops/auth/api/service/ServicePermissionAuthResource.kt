@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
-··import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
