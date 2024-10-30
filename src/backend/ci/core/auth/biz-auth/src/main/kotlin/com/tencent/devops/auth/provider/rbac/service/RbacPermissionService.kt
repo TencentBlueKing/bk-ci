@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
-class RbacPermissionService constructor(
+class RbacPermissionService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamConfiguration: IamConfiguration,
@@ -214,7 +214,11 @@ class RbacPermissionService constructor(
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
             if (result) {
-                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = useAction
+                )
             }
             return result
         } finally {
@@ -300,8 +304,12 @@ class RbacPermissionService constructor(
                 actionList,
                 listOf(resourceDTO)
             )
-            if (result.values.any { it }) {
-                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+            result.filter { it.value }.keys.forEach { action ->
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = action
+                )
             }
             return result
         } finally {
@@ -545,6 +553,7 @@ class RbacPermissionService constructor(
                     parents = parents
                 )
             }
+
             else -> {
                 AuthResourceInstance(
                     resourceType = resourceType,

@@ -48,7 +48,8 @@ interface ServiceWorkspaceDispatchInterface {
 
     fun deleteWorkspace(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        bakWorkspaceName: String?
     ): Result<Boolean>
 
     fun expandDisk(

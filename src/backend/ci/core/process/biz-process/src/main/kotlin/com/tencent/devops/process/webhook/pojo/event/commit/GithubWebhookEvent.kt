@@ -28,15 +28,16 @@
 package com.tencent.devops.process.webhook.pojo.event.commit
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import org.slf4j.MDC
 
-@Event(MQ.EXCHANGE_GITHUB_BUILD_REQUEST_EVENT, MQ.ROUTE_GITHUB_BUILD_REQUEST_EVENT)
+@Event(StreamBinding.GITHUB_BUILD_REQUEST_EVENT)
 data class GithubWebhookEvent(
     val githubWebhook: GithubWebhook,
-    var retryTime: Int = 3,
-    var delayMills: Int = 0,
+    override var retryTime: Int = 3,
+    override var delayMills: Int = 0,
     var traceId: String? = MDC.get(TraceTag.BIZID)
-)
+) : IEvent()

@@ -4,6 +4,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 
 interface AsyncExecuteEventData {
     fun toType(): AsyncExecuteEventType
@@ -29,14 +30,16 @@ data class AsyncJobEndEvent(
 
 data class AsyncTGitAclIp(
     val projectId: String,
-    val ip: String,
-    val remove: Boolean
+    val ips: Set<String>,
+    val remove: Boolean,
+    val tgitId: Long?
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TGIT_ACL_IP
 }
 
 data class AsyncTGitAclUser(
-    val projectId: String
+    val projectId: String,
+    val tgitId: Long?
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TGIT_ACL_USER
 }
@@ -57,4 +60,11 @@ data class AsyncJobPipeline(
     val param: PipelineParam
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_JOB_PIPELINE
+}
+
+data class AsyncNotify(
+    val operator: String,
+    val notifyData: WorkspaceNotifyData
+) : AsyncExecuteEventData {
+    override fun toType() = AsyncExecuteEventType.ASYNC_NOTIFY
 }

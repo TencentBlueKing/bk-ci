@@ -30,10 +30,10 @@ package com.tencent.devops.auth.provider.rbac.pojo.event
 
 import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_ITSM_CALLBACK)
+@Event(StreamBinding.AUTH_ITSM_CALLBACK)
 data class AuthItsmCallbackEvent(
     val approveType: String,
     val itsmCallBackInfo: ItsmCallBackInfo

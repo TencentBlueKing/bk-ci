@@ -10,7 +10,10 @@
         @after-resize="afterResize"
     >
         <pipeline-group-aside slot="aside" />
-        <Component :is="ListRightComponent" slot="main" />
+        <Component
+            :is="ListRightComponent"
+            slot="main"
+        />
     </bk-resize-layout>
 </template>
 

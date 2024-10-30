@@ -76,6 +76,7 @@ class BKUserServiceImpl constructor(
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder()
             .url(url)
+            .header("X-Bkapi-Authorization", json)
             .post(requestBody)
             .build()
 

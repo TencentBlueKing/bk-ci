@@ -23,7 +23,11 @@
             read-only
             :highlight-ranges="highlightMarkList"
         />
-        <bk-tab v-else :active.sync="activePanel" type="unborder-card">
+        <bk-tab
+            v-else
+            :active.sync="activePanel"
+            type="unborder-card"
+        >
             <bk-tab-panel
                 v-for="panel in panels"
                 :key="panel.name"
@@ -167,7 +171,7 @@
                 try {
                     this.isLoading = true
                     const res = await this.requestTemplatePreview({
-                        projectId: this.templatePipeline.projectId,
+                        projectId: this.$route.params.projectId,
                         templateId: this.templatePipeline.templateId,
                         highlightType: this.highlightType
                     })

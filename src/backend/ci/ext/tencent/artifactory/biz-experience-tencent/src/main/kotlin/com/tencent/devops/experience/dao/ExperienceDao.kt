@@ -29,7 +29,12 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
+import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -37,10 +42,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import javax.ws.rs.NotFoundException
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod")
@@ -78,11 +79,49 @@ class ExperienceDao {
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        createDateBegin: LocalDateTime?,
+        createDateEnd: LocalDateTime?,
+        endDateBegin: LocalDateTime?,
+        endDateEnd: LocalDateTime?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        versionTitle: String?,
+        creator: String?,
+        online: Boolean?,
+        classify: String?,
+        experienceName: String?,
+        platform: String?
+    ): Result<TExperienceRecord> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .let { if (createDateBegin != null) it.and(CREATE_TIME.gt(createDateBegin)) else it }
+                .let { if (createDateEnd != null) it.and(CREATE_TIME.lt(createDateEnd)) else it }
+                .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
+                .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
+                .let { if (name != null) it.and(NAME.like("%$name%")) else it }
+                .let { if (version != null) it.and(VERSION.like("%$version%")) else it }
+                .let { if (remark != null) it.and(REMARK.like("%$remark%")) else it }
+                .let { if (versionTitle != null) it.and(VERSION_TITLE.like("%$versionTitle%")) else it }
+                .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
+                .let { if (online != null) it.and(ONLINE.eq(online)) else it }
+                .let { if (classify != null) it.and(CLASSIFY.like("%$classify%")) else it }
+                .let { if (experienceName != null) it.and(EXPERIENCE_NAME.like("%$experienceName%")) else it }
+                .let { if (platform != null) it.and(PLATFORM.eq(platform)) else it }
+                .orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
     fun listByBundleIdentifier(
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        classify: String?,
         recordIds: Set<Long>? = null,
         offset: Int,
         limit: Int
@@ -91,6 +130,9 @@ class ExperienceDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .let {
+                    if (null == classify) it else it.and(CLASSIFY.eq(classify))
+                }
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
@@ -148,7 +190,8 @@ class ExperienceDao {
         size: Long,
         scheme: String,
         buildId: String,
-        pipelineId: String
+        pipelineId: String,
+        classify: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -184,7 +227,8 @@ class ExperienceDao {
                 SIZE,
                 SCHEME,
                 BUILD_ID,
-                PIPELINE_ID
+                PIPELINE_ID,
+                CLASSIFY
             ).values(
                 projectId,
                 name,
@@ -216,7 +260,8 @@ class ExperienceDao {
                 size,
                 scheme,
                 buildId,
-                pipelineId
+                pipelineId,
+                classify
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -252,7 +297,8 @@ class ExperienceDao {
         experienceName: String,
         versionTitle: String,
         category: Int,
-        productOwner: String
+        productOwner: String,
+        classify: String
     ) {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -272,6 +318,7 @@ class ExperienceDao {
                 .set(VERSION_TITLE, versionTitle)
                 .set(CATEGORY, category)
                 .set(PRODUCT_OWNER, productOwner)
+                .set(CLASSIFY, classify)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -310,13 +357,15 @@ class ExperienceDao {
         dslContext: DSLContext,
         projectId: String?,
         bundleIdentifier: String?,
-        platform: String?
+        platform: String?,
+        classify: String?
     ): Int {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(PROJECT_ID))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
-                .and(PLATFORM.eq(platform))
+                .let { if (platform == null) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (classify == null) it else it.and(CLASSIFY.eq(classify)) }
                 .fetchOne()!!.value1()
         }
     }
@@ -356,7 +405,7 @@ class ExperienceDao {
                 .where(ID.`in`(ids))
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
-                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
+                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM, CLASSIFY)
                 .fetch()
         }
     }
@@ -515,5 +564,44 @@ class ExperienceDao {
                 .and(ONLINE.eq(true))
                 .fetch(ID)
         }
+    }
+
+    fun delete(dslContext: DSLContext, experienceId: Long): Int {
+        val now = LocalDateTime.now()
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.deleteFrom(this)
+                .where(END_DATE.lt(now).or(ONLINE.eq(false)))
+                .and(ID.eq(experienceId))
+                .execute()
+        }
+    }
+
+    /**
+     * 列出需要清理的体验ID
+     */
+    fun listCleanIds(dslContext: DSLContext): List<Long> {
+        val e = TExperience.T_EXPERIENCE
+        val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL
+        val sixMonthAgo = LocalDateTime.now().minusMonths(6)
+        val fieldName = "lastDownloadTime"
+
+        // 构建子查询
+        val subQuery = dslContext.select(e.ID, DSL.max(d.CREATE_TIME).`as`(fieldName))
+            .from(e)
+            .leftJoin(d)
+            .on(e.ID.eq(d.RECORD_ID))
+            .where(e.END_DATE.lt(sixMonthAgo))
+            .groupBy(e.ID)
+
+        // 从子查询结果中选择 ID 字段
+        val result = dslContext.select(subQuery.field(e.ID))
+            .from(subQuery)
+            .where(
+                subQuery.field(fieldName)!!.isNull()
+                    .or(subQuery.field(fieldName, LocalDateTime::class.java)!!.lt(sixMonthAgo))
+            )
+            .fetch(0, Long::class.java)
+
+        return result
     }
 }

@@ -3,9 +3,15 @@
         <!-- <span @click="closeLog" class="log-home-close-bar">
             <i class="devops-icon icon-angle-right"></i>
         </span> -->
-        <section v-bk-clickoutside="closeLog" :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
+        <section
+            v-bk-clickoutside="closeLog"
+            :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']"
+        >
             <header class="log-head">
-                <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
+                <span class="log-title"><status-icon
+                    :status="status"
+                    :is-hook="isHook"
+                ></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -115,6 +121,7 @@
                 justify-content: space-between;
                 color: #d4d4d4;
                 position: relative;
+                flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
                     position: absolute;
                     left: 50%;

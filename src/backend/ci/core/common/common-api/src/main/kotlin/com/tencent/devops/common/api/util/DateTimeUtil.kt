@@ -75,6 +75,32 @@ object DateTimeUtil {
     const val ONE_THOUSAND_MS = 1000L
 
     /**
+     * 获取时间列表里面的最小值
+     */
+    fun min(vararg localDateTimes: LocalDateTime): LocalDateTime {
+        var result = localDateTimes[0]
+        for (i in 1 until localDateTimes.size) {
+            if (localDateTimes[i].isBefore(result)) {
+                result = localDateTimes[i]
+            }
+        }
+        return result
+    }
+
+    /**
+     * 获取时间列表里面的最大值
+     */
+    fun max(vararg localDateTimes: LocalDateTime): LocalDateTime {
+        var result = localDateTimes[0]
+        for (i in 1 until localDateTimes.size) {
+            if (localDateTimes[i].isAfter(result)) {
+                result = localDateTimes[i]
+            }
+        }
+        return result
+    }
+
+    /**
      * 单位转换，分钟转换秒
      */
     fun minuteToSecond(minutes: Int): Int {
@@ -137,6 +163,9 @@ object DateTimeUtil {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
     }
 
+    /*
+    * 用于转化秒级时间戳，非毫秒级
+    * */
     fun convertTimestampToLocalDateTime(timestamp: Long): LocalDateTime {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
     }
@@ -194,8 +223,8 @@ object DateTimeUtil {
         val minute = (time - hour * timeGap * timeGap * million) / (timeGap * million)
         val second = (time - hour * timeGap * timeGap * million - minute * timeGap * million) / million
         return (if (hour == zero) "00" else if (hour >= ten) hour.toString() else "0$hour").toString() + "时" +
-            (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
-            (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
+                (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
+                (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
     }
 
     fun formatMilliTime(time: Long): String {
@@ -213,8 +242,8 @@ object DateTimeUtil {
         val minute = (time - hour * 60 * 60 * 1000) / (60 * 1000)
         val second = (time - hour * 60 * 60 * 1000 - minute * 60 * 1000) / 1000
         return (if (hour == 0L) "00" else if (hour >= 10) hour.toString() else "0$hour").toString() + "时" +
-            (if (minute == 0L) "00" else if (minute >= 10) minute else "0$minute") + "分" +
-            (if (second == 0L) "00" else if (second >= 10) second.toShort() else "0$second") + "秒"
+                (if (minute == 0L) "00" else if (minute >= 10) minute else "0$minute") + "分" +
+                (if (second == 0L) "00" else if (second >= 10) second.toShort() else "0$second") + "秒"
     }
 
     fun formatMillSecond(mss: Long): String {
@@ -245,7 +274,7 @@ object DateTimeUtil {
      */
     fun formatDay(mss: Long): String {
         if (mss == 0L) return "0"
-        return (mss / (1000 * 60 * 60 * 24)).toString()
+        return ((mss / (1000 * 60 * 60 * 24)) + 1).toString()
     }
 
     /**

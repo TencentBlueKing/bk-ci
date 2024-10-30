@@ -213,7 +213,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                     },
                     "additionalItems" : false
                   },
@@ -255,6 +255,9 @@
                         "type" : "string"
                       }
                     }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
                   }
                 }
               } ]
@@ -293,6 +296,9 @@
                           "type" : "array"
                         }
                       }
+                    },
+                    "repo-type" : {
+                      "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                     },
                     "repo-id" : {
                       "type" : "string"
@@ -346,6 +352,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                   },
                   "repo-id" : {
                     "type" : "string"
@@ -895,7 +904,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
                   },
                   "additionalItems" : false
                 },
@@ -937,6 +946,9 @@
                       "type" : "string"
                     }
                   }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
                 }
               }
             } ]
@@ -975,6 +987,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                   },
                   "repo-id" : {
                     "type" : "string"
@@ -1028,6 +1043,9 @@
                       "type" : "array"
                     }
                   }
+                },
+                "repo-type" : {
+                  "enum" : [ "ID", "NAME", "SELF", "NONE" ]
                 },
                 "repo-id" : {
                   "type" : "string"
@@ -1514,10 +1532,10 @@
                       }
                     }
                   },
-                  "glob" : {
+                  "filter-rule" : {
                     "type" : "string"
                   },
-                  "properties" : {
+                  "metadata" : {
                     "type" : "object"
                   },
                   "payload" : {
@@ -1673,10 +1691,10 @@
                     }
                   }
                 },
-                "glob" : {
+                "filter-rule" : {
                   "type" : "string"
                 },
-                "properties" : {
+                "metadata" : {
                   "type" : "object"
                 },
                 "payload" : {
@@ -1719,6 +1737,9 @@
           "additionalProperties" : false,
           "required" : [ "jobs" ],
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -1738,7 +1759,20 @@
               } ]
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "check-in" : {
               "$ref" : "#/definitions/check-in"
@@ -1857,6 +1891,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -1872,6 +1909,15 @@
                   },
                   "pool-name" : {
                     "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
                   },
                   "hw-spec" : {
                     "type" : "string"
@@ -2083,6 +2129,11 @@
           "type" : "integer",
           "minimum" : 1,
           "maximum" : 1440
+        },
+        "max-parallel" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 200
         }
       }
     },
@@ -2125,6 +2176,9 @@
     },
     "custom-build-num" : {
       "type" : "string"
+    },
+    "syntax-dialect" : {
+      "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
     }
   },
   "definitions" : {
@@ -2143,7 +2197,7 @@
               "items" : {
                 "type" : "object",
                 "additionalProperties" : false,
-                "required" : [ "name", "reviewers" ],
+                "required" : [ "name" ],
                 "properties" : {
                   "name" : {
                     "type" : "string"
@@ -2157,8 +2211,41 @@
                         "type" : "string"
                       }
                     } ]
+                  },
+                  "groups" : {
+                    "anyOf" : [ {
+                      "type" : "string"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
                   }
-                }
+                },
+                "allOf" : [ {
+                  "if" : {
+                    "required" : [ "reviewers" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "groups" ]
+                      }
+                    } ]
+                  }
+                }, {
+                  "if" : {
+                    "required" : [ "groups" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "reviewers" ]
+                      }
+                    } ]
+                  }
+                } ]
               }
             },
             "variables" : {
@@ -2171,7 +2258,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL" ]
+                    "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL", "CHECKBOX" ]
                   },
                   "default" : {
                     "anyOf" : [ {
@@ -2196,6 +2283,9 @@
                       } ]
                     }
                   },
+                  "required" : {
+                    "type" : "boolean"
+                  },
                   "description" : {
                     "type" : "string"
                   }
@@ -2205,10 +2295,16 @@
             "description" : {
               "type" : "string"
             },
-            "send-markdown" : {
-              "type" : "boolean"
+            "content-format" : {
+              "enum" : [ "markdown", "text" ]
             },
             "notify-type" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "chat-id" : {
               "type" : "array",
               "items" : {
                 "type" : "string"
@@ -2285,6 +2381,9 @@
           "required" : [ "steps" ],
           "additionalProperties" : false,
           "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
             "name" : {
               "type" : "string"
             },
@@ -2300,6 +2399,15 @@
                   },
                   "pool-name" : {
                     "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
                   },
                   "hw-spec" : {
                     "type" : "string"
@@ -2409,7 +2517,20 @@
               }
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "steps" : {
               "$ref" : "#/definitions/steps"
@@ -2529,7 +2650,20 @@
               "maxLength" : 64
             },
             "if" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
             },
             "with" : {
               "type" : "object"

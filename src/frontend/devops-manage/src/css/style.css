@@ -63,5 +63,53 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 	content: "\e118";
 }
 .manage-icon-unknown:before {
-	content: "\e11c";
+	content: "\e121";
+}
+.manage-icon-angle-right:before {
+	content: "\e122";
+}
+.manage-icon-close:before {
+	content: "\e123";
+}
+.manage-icon-refresh:before {
+	content: "\e129";
+}
+.manage-icon-down-shape:before {
+	content: "\e12a";
+}
+.manage-icon-color-logo-pipeline:before {
+	content: "\e12b";
+}
+.manage-icon-color-logo-ticket:before {
+	content: "\e12d";
+}
+.manage-icon-color-logo-quality:before {
+	content: "\e131";
+}
+.manage-icon-color-logo-environment:before {
+	content: "\e12e";
+}
+.manage-icon-color-logo-experience:before {
+	content: "\e130";
+}
+.manage-icon-color-logo-codelib:before {
+	content: "\e12f";
+}
+.manage-icon-right-shape:before {
+	content: "\e138";
+}
+.manage-icon-arrows-right:before {
+	content: "\e139";
+}
+.manage-icon-jump:before {
+	content: "\e13a";
+}
+.manage-icon-info-line:before {
+	content: "\e13b";
+}
+.manage-icon-tishi:before {
+	content: "\e13c";
+}
+.manage-icon-user-template:before {
+	content: "\e13d";
 }

@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -62,7 +62,7 @@ import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
@@ -394,30 +394,24 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         if (baseRecord.status in inValidStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
-        if (projectCode.isNotBlank()) {
-            val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-            if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
-                // 如果从缓存中查出该组件是公共组件则无需权限校验
-                return Result(true)
-            }
-            val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-            val checkFlag = publicFlag == true ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
-            if (!checkFlag) {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            return Result(true)
+        }
+        val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+        val checkFlag = publicFlag == true || storeMemberDao.isStoreMember(
+            dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
+        ) || storeProjectService.isInstalledByProject(
+            projectCode = projectCode, storeCode = storeCode, storeType = storeType.type.toByte()
+        )
+        if (!checkFlag) {
+            if (projectCode.isNotBlank()) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
                     params = arrayOf(projectCode, storeCode)
                 )
-            }
-        } else {
-            val checkFlag = storeMemberDao.isStoreMember(
-                dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
-            )
-            if (!checkFlag) {
+            } else {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
                     params = arrayOf(storeCode)
@@ -432,7 +426,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean> {
         val storeId = storeBaseQueryDao.getComponentId(
             dslContext = dslContext,
@@ -443,15 +437,15 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
             dslContext = dslContext,
             storeId = storeId,
-            osName = installedPkgShaContentRequest.osName,
-            osArch = installedPkgShaContentRequest.osArch
+            osName = installedPkgFileShaContentRequest.osName,
+            osArch = installedPkgFileShaContentRequest.osArch
         )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         val storeBaseEnvExtDataPO = StoreBaseEnvExtDataPO(
             id = UUIDUtil.generate(),
             envId = baseEnvRecord.id,
             storeId = storeId,
-            fieldName = KEY_INSTALLED_PKG_SHA_CONTENT,
-            fieldValue = installedPkgShaContentRequest.installedPkgShaContent,
+            fieldName = "${KEY_FILE_SHA_CONTENT}_${installedPkgFileShaContentRequest.signFileName}",
+            fieldValue = installedPkgFileShaContentRequest.fileShaContent,
             creator = userId,
             modifier = userId
         )

@@ -1,7 +1,15 @@
 <template>
-    <section class="pipeline-edit-wrapper template-edit" v-bkloading="{ isLoading }">
+    <section
+        class="pipeline-edit-wrapper template-edit"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="template">
-            <pipeline :pipeline="pipeline" :template-type="template.templateType" :is-saving="isSaving" :is-editing="isEditing">
+            <pipeline
+                :pipeline="pipeline"
+                :template-type="template.templateType"
+                :is-saving="isSaving"
+                :is-editing="isEditing"
+            >
                 <div slot="pipeline-bar">
                     <span
                         v-if="template.templateType === 'CONSTRAINT' && isEnabledPermission"
@@ -44,21 +52,39 @@
                     <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
             </pipeline>
-            <bk-sideslider :title="$t('template.versionList')" class="bkci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
+            <bk-sideslider
+                :title="$t('template.versionList')"
+                class="bkci-property-panel"
+                width="640"
+                :is-show.sync="showVersionSideBar"
+                :quick-close="true"
+            >
                 <template slot="content">
                     <section class="version-list-wrapper">
                         <bk-table
                             :data="versionList"
                             size="small"
                         >
-                            <bk-table-column :label="$t('version')" prop="name"></bk-table-column>
-                            <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
+                            <bk-table-column
+                                :label="$t('version')"
+                                prop="name"
+                            ></bk-table-column>
+                            <bk-table-column
+                                :label="$t('lastUpdateTime')"
+                                prop="updateTime"
+                            >
                                 <template slot-scope="props">
                                     <span>{{ localConvertMStoString(props.row.updateTime) }}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('lastUpdater')" prop="creator"></bk-table-column>
-                            <bk-table-column :label="$t('operate')" width="150">
+                            <bk-table-column
+                                :label="$t('lastUpdater')"
+                                prop="creator"
+                            ></bk-table-column>
+                            <bk-table-column
+                                :label="$t('operate')"
+                                width="150"
+                            >
                                 <template slot-scope="props">
                                     <bk-button
                                         theme="primary"
@@ -99,7 +125,11 @@
                     </section>
                 </template>
             </bk-sideslider>
-            <mini-map :stages="pipeline.stages" scroll-class=".scroll-container" v-if="!isLoading"></mini-map>
+            <mini-map
+                :stages="pipeline.stages"
+                scroll-class=".scroll-container"
+                v-if="!isLoading"
+            ></mini-map>
         </template>
 
         <bk-dialog
@@ -240,6 +270,8 @@
         },
         beforeDestroy () {
             this.setPipeline(null)
+            this.setPipelineEditing(false)
+            this.setAtomEditing(false)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -254,6 +286,7 @@
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
+                'setAtomEditing',
                 'requestTemplate',
                 'updateContainer'
             ]),
@@ -335,7 +368,7 @@
                             theme: 'error'
                         })
                     }
-                   
+
                     result = false
                 } finally {
                     this.isSaving = false
@@ -400,13 +433,13 @@
                 })
             },
             leaveConfirm (to, from, next) {
-                if (this.template.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
+                if (this.template?.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
                     next(true)
                     return
                 }
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)

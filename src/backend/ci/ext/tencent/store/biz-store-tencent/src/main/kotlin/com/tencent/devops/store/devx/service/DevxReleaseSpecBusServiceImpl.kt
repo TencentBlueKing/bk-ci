@@ -51,6 +51,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
@@ -58,8 +59,10 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -67,6 +70,9 @@ import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.store.pojo.devx.BkConfigInfo
+import com.tencent.devops.store.pojo.devx.OsConfigInfo
+import com.tencent.devops.store.pojo.devx.SignatureConfigInfo
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
@@ -193,11 +199,18 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 if (osRunInfos == null) {
                     osRunInfos = mutableSetOf()
                 }
-                // 暂时只支持签windows操作系统的exe软件包
+                // 暂时只支持windows操作系统的exe软件包签名
+                val osArch = baseEnvRecord.osArch ?: ""
                 val pkgPath = baseEnvRecord.pkgPath
+                val signatureFileKey = getSignatureFileKey()
+                val signFilePaths = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
+                    dslContext = dslContext,
+                    envId = baseEnvRecord.id,
+                    fieldName = signatureFileKey
+                )?.getOrNull(0)?.fieldValue ?: "[]"
                 val fileType = pkgPath.substringAfterLast(".")
                 val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
-                osRunInfos?.add("$osName:$pkgPath:$signFlag")
+                osRunInfos?.add("$osName:$osArch:$pkgPath:$signFilePaths:$signFlag")
             }
         }
         return mutableMapOf(
@@ -225,54 +238,111 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         osName: String?,
         osArch: String?
     ): List<StorePkgEnvInfo> {
-        val baseRecord = storeBaseQueryDao.getComponent(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            version = version,
-            storeType = storeType
-        )
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
+        )
         val baseEnvRecords = if (baseRecord != null) {
             storeBaseEnvQueryDao.getBaseEnvsByStoreId(
-                dslContext = dslContext,
-                storeId = baseRecord.id,
-                osName = osName,
-                osArch = osArch
+                dslContext = dslContext, storeId = baseRecord.id, osName = osName, osArch = osArch
             )
         } else {
             null
         }
         if (!baseEnvRecords.isNullOrEmpty()) {
             baseEnvRecords.forEach { baseEnvRecord ->
-                val baseEnvExtRecords = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(dslContext, baseEnvRecord.id)
-                val extEnvInfo: MutableMap<String, Any>? = if (baseEnvExtRecords.isNullOrEmpty()) {
-                    null
-                } else {
-                    mutableMapOf()
-                }
-                baseEnvExtRecords?.forEach { baseEnvExtRecord ->
-                    extEnvInfo?.set(baseEnvExtRecord.fieldName, baseEnvExtRecord.fieldValue)
-                }
-                val storePkgEnvInfo = StorePkgEnvInfo(
-                    pkgName = baseEnvRecord.pkgName,
-                    pkgRepoPath = baseEnvRecord.pkgPath,
-                    language = baseEnvRecord.language,
-                    minVersion = baseEnvRecord.minVersion,
-                    target = baseEnvRecord.target,
-                    preCmd = baseEnvRecord.preCmd,
-                    osName = baseEnvRecord.osName,
-                    osArch = baseEnvRecord.osArch,
-                    runtimeVersion = baseEnvRecord.runtimeVersion,
-                    defaultFlag = baseEnvRecord.defaultFlag,
-                    extEnvInfo = extEnvInfo
-                )
-                storePkgEnvInfos.add(storePkgEnvInfo)
+                storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
             }
         } else {
-            // 云研发软件暂只支持windows
             storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
         }
         return storePkgEnvInfos
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): List<StorePkgEnvInfo> {
+        val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val configFileContent = queryComponentPkgEnvInfoParam.configFileContent
+        if (configFileContent.isBlank()) {
+            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+            return storePkgEnvInfos
+        }
+        val bkConfigInfo = JsonUtil.to(configFileContent, BkConfigInfo::class.java)
+        val osDefaultEnvNumMap = mutableMapOf<String, Int>()
+        bkConfigInfo.os.forEach { osConfigInfo ->
+            storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
+            // 统计每种操作系统默认环境配置数量
+            val defaultFlag = osConfigInfo.defaultFlag
+            val configOsName = osConfigInfo.osName
+            val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
+            if (osDefaultEnvNumMap.containsKey(configOsName)) {
+                osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
+            } else {
+                osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
+            }
+        }
+        osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
+            // 判断每种操作系统默认环境配置是否有且只有1个
+            if (defaultEnvNum != 1) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
+                    params = arrayOf(CONFIG_JSON_NAME, osName, defaultEnvNum.toString())
+                )
+            }
+        }
+        return storePkgEnvInfos
+    }
+
+    private fun createStorePkgEnvInfo(baseEnvRecord: TStoreBaseEnvRecord): StorePkgEnvInfo {
+        val baseEnvExtRecords = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(dslContext, baseEnvRecord.id)
+        val extEnvInfo = if (baseEnvExtRecords.isNullOrEmpty()) {
+            null
+        } else {
+            mutableMapOf<String, Any>().apply {
+                baseEnvExtRecords.forEach { baseEnvExtRecord ->
+                    set(baseEnvExtRecord.fieldName, baseEnvExtRecord.fieldValue)
+                }
+            }
+        }
+        return StorePkgEnvInfo(
+            pkgName = baseEnvRecord.pkgName,
+            pkgRepoPath = baseEnvRecord.pkgPath,
+            language = baseEnvRecord.language,
+            minVersion = baseEnvRecord.minVersion,
+            target = baseEnvRecord.target,
+            preCmd = baseEnvRecord.preCmd,
+            osName = baseEnvRecord.osName,
+            osArch = baseEnvRecord.osArch,
+            runtimeVersion = baseEnvRecord.runtimeVersion,
+            defaultFlag = baseEnvRecord.defaultFlag,
+            extEnvInfo = extEnvInfo
+        )
+    }
+
+    private fun createStorePkgEnvInfoFromConfig(osConfigInfo: OsConfigInfo): StorePkgEnvInfo {
+        val configOsName = osConfigInfo.osName
+        val configOsArch = osConfigInfo.osArch ?: ""
+        var extEnvInfo: Map<String, Any>? = null
+        osConfigInfo.signature?.originFilePaths?.let {
+            val signatureFileKey = getSignatureFileKey()
+            extEnvInfo = mapOf(signatureFileKey to JsonUtil.toJson(it))
+        }
+        return StorePkgEnvInfo(
+            pkgLocalPath = osConfigInfo.packagePath,
+            osName = configOsName,
+            osArch = configOsArch,
+            defaultFlag = osConfigInfo.defaultFlag,
+            extEnvInfo = extEnvInfo
+        )
+    }
+
+    private fun getSignatureFileKey(): String {
+        return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::originFilePaths.name}"
     }
 
     override fun getReleaseProcessItems(

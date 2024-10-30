@@ -1,10 +1,15 @@
 <template>
     <div v-if="artifactoryType !== 'IMAGE'">
         <bk-popover
-            :disabled="!hasPermission || !disabled"
+            :disabled="!btnDisabled || isLoading"
         >
             <i
-                v-if="downloadIcon"
+                v-if="isLoading"
+                class="devops-icon icon-circle-2-1 spin-icon"
+                @click.stop=""
+            />
+            <i
+                v-else-if="downloadIcon"
                 :class="['devops-icon icon-download', {
                     'artifactory-download-icon-disabled': btnDisabled
                 }]"
@@ -19,9 +24,7 @@
                 {{ $t("download") }}
             </bk-button>
             <template slot="content">
-                <template v-if="disabled">
-                    <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
-                </template>
+                <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
             </template>
         </bk-popover>
         <bk-dialog
@@ -76,7 +79,8 @@
         data () {
             return {
                 visible: false,
-                signingMap: new Map()
+                signingMap: new Map(),
+                isLoading: false
             }
         },
         computed: {
@@ -89,7 +93,7 @@
                 return false
             },
             btnDisabled () {
-                return !this.hasPermission || this.disabled
+                return !this.hasPermission || this.disabled || this.isLoading
             }
         },
         beforeDestroy () {
@@ -108,7 +112,7 @@
                         this.setVisible(true)
                         return
                     }
-                    
+                    this.isLoading = true
                     const [isDevnet, res] = await Promise.all([
                         this.$store.dispatch('common/requestDevnetGateway'),
                         this.$store.dispatch('common/requestDownloadUrl', {
@@ -132,13 +136,15 @@
                                 theme: 'success',
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
-                            
+
                             window.location.href = url
                         }
                         this.signingMap.delete(this.path)
                     }
                 } catch (err) {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
+                } finally {
+                    this.isLoading = false
                 }
             },
             pollingCheckSignedApk (url) {

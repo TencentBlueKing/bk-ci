@@ -3,7 +3,6 @@
         class="pipeline-detail-wrapper tapd-content"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
-        
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"

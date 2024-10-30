@@ -114,6 +114,8 @@ class SignServiceImpl
                 SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
                 signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo, taskExecuteCount)
 
+                // 检查info.plist
+                signInfoService.checkInfoPlist(resignId, ipaUnzipDir)
                 // 签名操作
                 val signFinished = if (ipaSignInfo.wildcard) {
                     // 下载描述文件

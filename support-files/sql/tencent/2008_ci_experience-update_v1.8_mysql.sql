@@ -49,7 +49,15 @@ BEGIN
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_EXPERIENCE_PUBLIC'
                         AND COLUMN_NAME = 'VERSION') THEN
-      ALTER TABLE `T_EXPERIENCE_PUBLIC` ADD COLUMN `VERSION` VARCHAR(20) DEFAULT '' COMMENT '体验版本号';
+      ALTER TABLE `T_EXPERIENCE_PUBLIC` ADD COLUMN `VERSION` VARCHAR(100) DEFAULT '' COMMENT '体验版本号';
+  END IF;
+
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_EXPERIENCE'
+                        AND COLUMN_NAME = 'CLASSIFY') THEN
+      ALTER TABLE `T_EXPERIENCE` ADD COLUMN `CLASSIFY` varchar(20) DEFAULT '' COMMENT '分类标识';
   END IF;
 
     COMMIT;

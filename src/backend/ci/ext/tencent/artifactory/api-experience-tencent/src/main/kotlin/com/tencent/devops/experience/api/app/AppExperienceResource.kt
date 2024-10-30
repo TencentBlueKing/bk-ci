@@ -43,11 +43,13 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ExperienceList
+import com.tencent.devops.experience.pojo.P2PConnectEvent
+import com.tencent.devops.experience.pojo.P2PUserPoolVO
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -270,4 +272,33 @@ interface AppExperienceResource {
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Pagination<AppExperienceInstallPackage>>
+
+    @Operation(summary = "P2P下载的用户池")
+    @Path("/p2p/userPools")
+    @GET
+    fun p2pUserPools(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "体验ID", required = true)
+        @QueryParam("experienceHashId")
+        experienceHashId: String,
+        @Parameter(description = "组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null
+    ): Result<P2PUserPoolVO>
+
+    @Operation(summary = "P2P连接事件上报")
+    @Path("/p2p/connectEvent")
+    @POST
+    fun p2pConnectEvent(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "连接事件", required = true)
+        connectEvent: P2PConnectEvent,
+        @Parameter(description = "组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null
+    ): Result<Boolean>
 }

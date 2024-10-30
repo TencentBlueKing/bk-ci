@@ -159,11 +159,11 @@ object ControlUtils {
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+                additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+                additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     /**
      * 对构建[buildId]的任务的流程控制条件[additionalOptions]进行排查，结合当前容器状态[containerFinalStatus]
@@ -255,9 +255,7 @@ object ControlUtils {
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
             // TODO 强行兼容stream渠道的构建未开启PAC开关的情况，优先使用evalExpressionAsCode
-            val channel = SpringContextUtil.getBean(BuildVariableService::class.java).getVariable(
-                projectId, pipelineId, buildId, PIPELINE_START_CHANNEL
-            )?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+            val channel = channelCode(projectId, pipelineId, buildId)
             return if (channel == ChannelCode.GIT && !asCodeEnabled) {
                 !evalExpression(additionalOptions.customCondition, buildId, variables, message)
             } else {
@@ -296,9 +294,7 @@ object ControlUtils {
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 // TODO 强行兼容stream渠道的构建未开启PAC开关的情况，优先使用evalExpressionAsCode
-                val channel = SpringContextUtil.getBean(BuildVariableService::class.java).getVariable(
-                    projectId, pipelineId, buildId, PIPELINE_START_CHANNEL
-                )?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+                val channel = channelCode(projectId, pipelineId, buildId)
                 return if (channel == ChannelCode.GIT && !asCodeEnabled) {
                     !evalExpression(customCondition, buildId, variables, message)
                 } else {
@@ -342,9 +338,7 @@ object ControlUtils {
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 // TODO 强行兼容stream渠道的构建未开启PAC开关的情况，优先使用evalExpressionAsCode
-                val channel = SpringContextUtil.getBean(BuildVariableService::class.java).getVariable(
-                    projectId, pipelineId, buildId, PIPELINE_START_CHANNEL
-                )?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+                val channel = channelCode(projectId, pipelineId, buildId)
                 return if (channel == ChannelCode.GIT && !asCodeEnabled) {
                     !evalExpression(customCondition, buildId, variables, message)
                 } else {
@@ -377,22 +371,22 @@ object ControlUtils {
                 val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
                 logger.info(
                     "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
+                            "|result=$expressionResult"
                 )
                 message.append(
                     "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
+                            if (!expressionResult) {
+                                " will be skipped! "
+                            } else {
+                                ""
+                            }
                 )
                 expressionResult
             } catch (ignore: Exception) {
                 // 异常，则任务表达式为false
                 logger.info(
                     "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
+                            "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
@@ -425,7 +419,7 @@ object ControlUtils {
                 )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
+                            "|result=$expressionResult"
                 )
                 val resultIsTrue = if (expressionResult is EvaluationResult) {
                     expressionResult.equalsTrue
@@ -451,7 +445,7 @@ object ControlUtils {
                 // 异常，则任务表达式为false
                 logger.warn(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
+                            "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
@@ -476,4 +470,14 @@ object ControlUtils {
 
     fun checkContainerFailure(c: PipelineBuildContainer) =
         c.status.isFailure() && c.controlOption.jobControlOption.continueWhenFailed != true
+
+    private fun channelCode(projectId: String, pipelineId: String, buildId: String): ChannelCode {
+        return try {
+            SpringContextUtil.getBean(BuildVariableService::class.java).getVariable(
+                projectId, pipelineId, buildId, PIPELINE_START_CHANNEL
+            )
+        } catch (ignore: Throwable) {
+            null
+        }?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
+    }
 }

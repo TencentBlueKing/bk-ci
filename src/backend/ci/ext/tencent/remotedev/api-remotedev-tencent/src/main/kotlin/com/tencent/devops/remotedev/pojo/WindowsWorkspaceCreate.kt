@@ -41,10 +41,18 @@ data class WindowsWorkspaceCreate(
     val count: Int = 1,
     @get:Schema(title = "自定义镜像路径")
     val imageCosFile: String = "",
-    @get:Schema(title = "镜像id")
-    val imageId: String = "",
     @get:Schema(title = "指定工作空间，优先级比count高。")
     val assignNames: List<String> = emptyList(),
     @get:Schema(title = "如需指定工作空间owner，需要和assignNames/count对应。且值不为空")
-    val assignOwners: List<String> = emptyList()
+    val assignOwners: List<String> = emptyList(),
+    @get:Schema(title = "指定数据盘大小")
+    val pvcs: List<Pvc> = emptyList(),
+    @get:Schema(title = "创建时指定污点")
+    val specifyTaints: String? = null
+)
+
+@Schema(title = "自定义数据盘信息")
+data class Pvc(
+    val pvcClass: String? = null,
+    val pvcSize: String? = null
 )

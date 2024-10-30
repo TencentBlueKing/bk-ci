@@ -6,11 +6,11 @@
                 :key="index"
                 :value="col.value"
                 :disabled="disabled"
-                style="margin-right: 20px;">
+                style="margin-right: 20px;"
+            >
                 {{ col.name }}
             </bk-checkbox>
         </bk-checkbox-group>
-        
     </div>
 </template>
 

@@ -33,17 +33,21 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.BK_CI_APP_LOGIN_TOPIC
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.pojo.UserCountLogin
+import com.tencent.devops.project.pojo.enums.OS
 import com.tencent.devops.support.api.app.AppAppVersionResource
 import com.tencent.devops.support.model.app.pojo.AppVersion
 import com.tencent.devops.support.services.AppVersionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class AppAppVersionResourceImpl @Autowired constructor(
     private val appVersionService: AppVersionService,
     private val kafkaClient: KafkaClient,
-    private val profile: Profile
+    private val profile: Profile,
+    private val streamBridge: StreamBridge
 ) :
     AppAppVersionResource {
     override fun getAllAppVersion(channelType: Byte): Result<List<AppVersion>> {
@@ -56,6 +60,7 @@ class AppAppVersionResourceImpl @Autowired constructor(
         organization: String?,
         channelType: Byte
     ): Result<AppVersion?> {
+        // APP 登录记录
         try {
             val logData = mapOf(
                 "version" to (appVersion ?: "1.0.0"),
@@ -69,6 +74,9 @@ class AppAppVersionResourceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("kafka $BK_CI_APP_LOGIN_TOPIC error", e)
         }
+        // APP 登录刷新用户信息
+        val os = if (channelType.toInt() == 1) OS.ANDROID else OS.IOS
+        UserCountLogin(userId, os, "").sendTo(streamBridge)
         return Result(data = appVersionService.getLastAppVersion(channelType, appVersion ?: "1.0.0"))
     }
 

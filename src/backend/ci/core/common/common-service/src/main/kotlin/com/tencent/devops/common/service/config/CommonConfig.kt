@@ -150,4 +150,10 @@ class CommonConfig {
      */
     @Value("\${bkci.supportLanguages:$DEFAULT_LOCALE_LANGUAGE}")
     val devopsSupportLanguages: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * codecc 访问地址
+     */
+    @Value("\${devopsGateway.codeccHostGateway:#{null}}")
+    val codeccHostGateway: String? = null
 }

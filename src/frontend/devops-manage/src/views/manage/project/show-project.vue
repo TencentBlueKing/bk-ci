@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import http from '@/http/api';
 import {
+handleProjectManageNoPermission,
 RESOURCE_ACTION,
 RESOURCE_TYPE,
-handleProjectManageNoPermission,
 } from '@/utils/permission.js';
-import {
-onMounted,
-} from '@vue/runtime-core';
 import {
 InfoBox,
 Message,
-Popover,
+Popover
 } from 'bkui-vue';
 import {
+onMounted,
 ref,
 watch
 } from 'vue';
@@ -24,8 +22,8 @@ useRouter,
 } from 'vue-router';
 
 const { t } = useI18n();
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const { projectCode } = route.params;
 const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
@@ -136,6 +134,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
+  {
+    current: 'productName',
+    after: 'afterProductName'
+  }
 
 ];
 const fetchDiffProjectData = () => {
@@ -144,6 +146,7 @@ const fetchDiffProjectData = () => {
   }).then((res) => {
     projectDiffData.value = res;
     projectDiffData.value.afterDeptInfo = generateDeptName(res, true);
+    fetchOperationalList(projectDiffData.value.afterBgName);
 
     fieldMap.forEach((field) => {
       if (projectData.value[field.current] !== projectDiffData.value[field.after]) {
@@ -416,12 +419,12 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属运营产品')" property="bg">
-                  <span>{{ getOperational(projectData.productId)?.ProductName || projectData.productId }}</span>
+                  <span>{{ projectData.productName || projectData.productId }}</span>
                   <div class="diff-content" v-if="projectData.afterProductId">
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || projectData.productId }}</span>
+                    <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
@@ -456,7 +459,7 @@ onMounted(async () => {
                       v-for="(subjectScope, index) in projectData.subjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
                   </span>
                   <div class="diff-content scopes-diff" v-if="projectData.afterSubjectScopes">
@@ -468,7 +471,7 @@ onMounted(async () => {
                       v-for="(subjectScope, index) in projectData.afterSubjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
                   </div>
                 </bk-form-item>
@@ -570,26 +573,26 @@ onMounted(async () => {
         :width="600"
         header-position="left"
         ext-cls="enable-project-dialog"
-        :title="$t('启用项目失败')"
-        :confirm-text="$t('去关联运营产品')"
+        :title="t('启用项目失败')"
+        :confirm-text="t('去关联运营产品')"
         @confirm="() => handleEdit()"
         @closed="() => showFailedEnableDialog = false">
-        {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
+        {{ t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
     </bk-dialog>
     <bk-dialog
         :is-show="showDisableProjectDialog"
         :width="600"
         ext-cls="disable-project-dialog"
         header-position="left"
-        :title="$t('确定停用项目吗？')"
+        :title="t('确定停用项目吗？')"
         @confirm="() => toggleEnable()"
         @closed="() => showDisableProjectDialog = false">
         <i18n-t
             tag="div"
             keypath="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
             class="empty-tips">
-            <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
-            <span style="color: red">{{$t('备份需要的')}}</span>
+            <span style="color: red">{{t('流水线产生的构建日志、制品、报告。')}}</span>
+            <span style="color: red">{{t('备份需要的')}}</span>
         </i18n-t>
     </bk-dialog>
   </section>

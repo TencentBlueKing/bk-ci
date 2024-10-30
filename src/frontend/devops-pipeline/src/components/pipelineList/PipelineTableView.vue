@@ -19,15 +19,36 @@
         v-on="$listeners"
         :key="viewId"
     >
-        <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
-        <div v-if="selectionLength > 0" slot="prepend" class="selected-all-indicator">
+        <PipelineListEmpty
+            slot="empty"
+            :is-patch="isPatchView"
+        ></PipelineListEmpty>
+        <div
+            v-if="selectionLength > 0"
+            slot="prepend"
+            class="selected-all-indicator"
+        >
             <span v-html="$t('selectedCount', [selectionLength])"></span>
-            <bk-button theme="primary" text @click="clearSelection">
-                {{$t('clearSelection')}}
+            <bk-button
+                theme="primary"
+                text
+                @click="clearSelection"
+            >
+                {{ $t('clearSelection') }}
             </bk-button>
         </div>
-        <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
+        <bk-table-column
+            v-if="isPatchView"
+            type="selection"
+            width="60"
+            fixed="left"
+            :selectable="checkSelecteable"
+        ></bk-table-column>
+        <bk-table-column
+            v-if="!isPatchView && !isDeleteView"
+            width="30"
+            fixed="left"
+        >
             <template slot-scope="{ row }">
                 <bk-button
                     text
@@ -36,35 +57,53 @@
                         'is-collect': row.hasCollect
                     }"
                     :theme="row.hasCollect ? 'warning' : ''"
-                    @click="collectHandler(row)">
-                    <i :class="{
-                        'devops-icon': true,
-                        'icon-star': !row.hasCollect,
-                        'icon-star-shape': row.hasCollect
-                    }" />
+                    @click="collectHandler(row)"
+                >
+                    <i
+                        :class="{
+                            'devops-icon': true,
+                            'icon-star': !row.hasCollect,
+                            'icon-star-shape': row.hasCollect
+                        }"
+                    />
                 </bk-button>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column
+            v-if="allRenderColumnMap.pipelineName"
+            :width="tableWidthMap.pipelineName"
+            min-width="250"
+            fixed="left"
+            sortable="custom"
+            :label="$t('pipelineName')"
+            prop="pipelineName"
+        >
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <div class="pipeline-name-wrapper" :key="props.row.pipelineName">
-                    <div class="pipeline-name" v-bk-overflow-tips>
+                <div
+                    class="pipeline-name-wrapper"
+                    :key="props.row.pipelineName"
+                >
+                    <div
+                        class="pipeline-name"
+                        v-bk-overflow-tips
+                    >
                         <span
                             v-if="props.row.permissions && !props.row.permissions.canView"
                             class="pointer"
                             @click="applyPermission(props.row)"
                         >
-                            {{props.row.pipelineName}}
+                            {{ props.row.pipelineName }}
                         </span>
                         <router-link
                             v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                             class="pipeline-cell-link"
                             :disabled="props.row.permissions && !props.row.permissions.canView"
-                            :to="props.row.historyRoute">
-                            {{props.row.pipelineName}}
+                            :to="props.row.historyRoute"
+                        >
+                            {{ props.row.pipelineName }}
                         </router-link>
-                        <span v-else>{{props.row.pipelineName}}</span>
+                        <span v-else>{{ props.row.pipelineName }}</span>
                     </div>
                     <logo
                         v-if="props.row.templateId"
@@ -73,13 +112,35 @@
                         size="12"
                         v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
                     />
-                    <bk-tag v-if="props.row.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
-                    <bk-tag v-else-if="props.row.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('history.branch') }}</bk-tag>
+                    <bk-tag
+                        v-if="props.row.onlyDraftVersion"
+                        theme="success"
+                        class="draft-tag"
+                    >
+                        {{ $t('draft') }}
+                    </bk-tag>
+                    <bk-tag
+                        v-else-if="props.row.onlyBranchVersion"
+                        theme="warning"
+                        class="draft-tag"
+                    >
+                        {{ $t('history.branch') }}
+                    </bk-tag>
                 </div>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
-            <div :ref="`belongsGroupBox_${props.$index}`" class="pipeline-group-box-cell" slot-scope="props">
+        <bk-table-column
+            v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)"
+            :width="tableWidthMap.viewNames"
+            min-width="300"
+            :label="$t('ownGroupName')"
+            prop="viewNames"
+        >
+            <div
+                :ref="`belongsGroupBox_${props.$index}`"
+                class="pipeline-group-box-cell"
+                slot-scope="props"
+            >
                 <template v-if="pipelineGroups[props.$index].visibleGroups">
                     <bk-tag
                         ext-cls="pipeline-group-name-tag"
@@ -89,7 +150,7 @@
                         v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                         @click="goGroup(viewName)"
                     >
-                        {{viewName}}
+                        {{ viewName }}
                     </bk-tag>
                     <bk-popover
                         theme="light"
@@ -110,32 +171,147 @@
                                 v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                                 @click="goGroup(hiddenGroup)"
                             >
-                                {{hiddenGroup}}
+                                {{ hiddenGroup }}
                             </bk-tag>
                         </div>
                     </bk-popover>
                 </template>
             </div>
         </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.label"
+            :label="$t('label')"
+            :width="tableWidthMap.groupLabel"
+            min-width="200"
+            prop="groupLabel"
+        >
+            <div
+                :ref="`belongsLabelBox_${props.$index}`"
+                slot-scope="props"
+                class="group-label-warpper"
+            >
+                <template v-if="labelGroups[props.$index].visibleLabels">
+                    <span
+                        class="group-tag"
+                        v-for="(item, index) in labelGroups[props.$index].visibleLabels"
+                        :key="index"
+                        :ref="`labelName_${props.$index}`"
+                    >
+                        <span class="key">
+                            {{ item.groupName }}
+                        </span>
+                        <span
+                            class="value"
+                            v-bk-overflow-tips
+                        >
+                            {{ item.labelName.join(',') }}
+                        </span>
+                    </span>
+
+                    <bk-popover
+                        placement="top"
+                        theme="light"
+                        ext-cls="group-tag-popover"
+                        v-if="labelGroups[props.$index].showMore"
+                    >
+                        <bk-tag
+                            :ref="`labelMore_${props.$index}`"
+                        >
+                            +{{ labelGroups[props.$index].showMore }}
+                        </bk-tag>
+                        <div slot="content">
+                            <div
+                                v-for="(item, index) in labelGroups[props.$index].hiddenLabels"
+                                class="group-tag"
+                                :key="index"
+                                v-bk-overflow-tips
+                            >
+                                <span class="key">
+                                    {{ item.groupName }}
+                                </span>
+                                <span
+                                    class="value"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ item.labelName.join(',') }}
+                                </span>
+                            </div>
+                        </div>
+                    </bk-popover>
+                </template>
+            </div>
+        </bk-table-column>
         <template v-if="isPatchView">
-            <bk-table-column :width="tableWidthMap.latestBuildNum" :label="$t('latestExec')" prop="latestBuildNum">
+            <bk-table-column
+                :width="tableWidthMap.latestBuildNum"
+                :label="$t('latestExec')"
+                prop="latestBuildNum"
+            >
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
-            <bk-table-column :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('createTime')" prop="createTime" :formatter="formatTime" />
-            <bk-table-column :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
+            <bk-table-column
+                :width="tableWidthMap.latestBuildStartDate"
+                sortable="custom"
+                :label="$t('lastExecTime')"
+                prop="latestBuildStartDate"
+            />
+            <bk-table-column
+                :width="tableWidthMap.createTime"
+                sortable="custom"
+                :label="$t('createTime')"
+                prop="createTime"
+                :formatter="formatTime"
+            />
+            <bk-table-column
+                :width="tableWidthMap.creator"
+                :label="$t('creator')"
+                prop="creator"
+            />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
-            <bk-table-column :width="tableWidthMap.deleteTime" key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
-            <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
+            <bk-table-column
+                :width="tableWidthMap.createTime"
+                key="createTime"
+                :label="$t('createTime')"
+                sortable="custom"
+                prop="createTime"
+                sort
+                :formatter="formatTime"
+            />
+            <bk-table-column
+                :width="tableWidthMap.deleteTime"
+                key="updateTime"
+                :label="$t('restore.deleteTime')"
+                sortable="custom"
+                prop="updateTime"
+                :formatter="formatTime"
+            />
+            <bk-table-column
+                :width="tableWidthMap.lastModifyUser"
+                key="lastModifyUser"
+                :label="$t('restore.deleter')"
+                prop="lastModifyUser"
+            ></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column v-if="allRenderColumnMap.latestExec" :width="tableWidthMap.latestExec" min-width="180" :label="$t('latestExec')" prop="latestExec">
-                <span v-if="props.row.delete" slot-scope="props">
-                    {{$t('deleteAlready')}}
+            <bk-table-column
+                v-if="allRenderColumnMap.latestExec"
+                :width="tableWidthMap.latestExec"
+                min-width="180"
+                :label="$t('latestExec')"
+                prop="latestExec"
+            >
+                <span
+                    v-if="props.row.delete"
+                    slot-scope="props"
+                >
+                    {{ $t('deleteAlready') }}
                 </span>
-                <div v-else slot-scope="props" class="pipeline-latest-exec-cell">
+                <div
+                    v-else
+                    slot-scope="props"
+                    class="pipeline-latest-exec-cell"
+                >
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
@@ -161,44 +337,112 @@
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
-                                    <logo :name="props.row.startType" size="16" />
+                                    <logo
+                                        :name="props.row.startType"
+                                        size="16"
+                                    />
                                     <span>{{ props.row.latestBuildUserId }}</span>
                                 </span>
-                                <span v-if="props.row.webhookAliasName" class="desc">
-                                    <logo name="branch" size="16" />
+                                <span
+                                    v-if="props.row.webhookAliasName"
+                                    class="desc"
+                                >
+                                    <logo
+                                        name="branch"
+                                        size="16"
+                                    />
                                     <span>{{ props.row.webhookAliasName }}</span>
                                 </span>
-                                <span v-if="props.row.webhookMessage" class="desc">
+                                <span
+                                    v-if="props.row.webhookMessage"
+                                    class="desc"
+                                >
                                     <span>{{ props.row.webhookMessage }}</span>
                                 </span>
                             </p>
                         </template>
-                        <p v-else class="desc">{{$t('unexecute')}}</p>
+                        <p
+                            v-else
+                            class="desc"
+                        >
+                            {{ $t('unexecute') }}
+                        </p>
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column v-if="allRenderColumnMap.lastExecTime" :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate">
-                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
+            <bk-table-column
+                v-if="allRenderColumnMap.lastExecTime"
+                :width="tableWidthMap.latestBuildStartDate"
+                sortable="custom"
+                :label="$t('lastExecTime')"
+                prop="latestBuildStartDate"
+            >
+                <div
+                    class="latest-build-multiple-row"
+                    v-if="!props.row.delete"
+                    slot-scope="props"
+                >
                     <p>{{ props.row.latestBuildStartDate }}</p>
-                    <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
-                    <p v-else class="desc">{{props.row.duration}}</p>
+                    <p
+                        v-if="props.row.progress"
+                        class="primary"
+                    >
+                        {{ props.row.progress }}
+                    </p>
+                    <p
+                        v-else
+                        class="desc"
+                    >
+                        {{ props.row.duration }}
+                    </p>
                 </div>
             </bk-table-column>
-            <bk-table-column v-if="allRenderColumnMap.lastModify" :width="tableWidthMap.updateTime" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
-                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
+            <bk-table-column
+                v-if="allRenderColumnMap.lastModify"
+                :width="tableWidthMap.updateTime"
+                :label="$t('lastModify')"
+                sortable="custom"
+                prop="updateTime"
+                sort
+            >
+                <div
+                    class="latest-build-multiple-row"
+                    v-if="!props.row.delete"
+                    slot-scope="props"
+                >
                     <p>{{ props.row.updater }}</p>
-                    <p class="desc">{{props.row.updateDate}}</p>
+                    <p class="desc">{{ props.row.updateDate }}</p>
                 </div>
             </bk-table-column>
-            <bk-table-column v-if="allRenderColumnMap.creator" :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
-            <bk-table-column v-if="allRenderColumnMap.createTime" :width="tableWidthMap.createTime" :label="$t('created')" sortable="custom" prop="createTime">
+            <bk-table-column
+                v-if="allRenderColumnMap.creator"
+                :width="tableWidthMap.creator"
+                :label="$t('creator')"
+                prop="creator"
+            />
+            <bk-table-column
+                v-if="allRenderColumnMap.createTime"
+                :width="tableWidthMap.createTime"
+                :label="$t('created')"
+                sortable="custom"
+                prop="createTime"
+            >
                 <template slot-scope="props">
                     {{ prettyDateTimeFormat(props.row.createTime) }}
                 </template>
             </bk-table-column>
         </template>
-        <bk-table-column v-if="!isPatchView" :width="tableWidthMap.pipelineId" fixed="right" :label="$t('operate')" prop="pipelineId">
-            <div class="pipeline-operation-cell" slot-scope="props">
+        <bk-table-column
+            v-if="!isPatchView"
+            :width="tableWidthMap.pipelineId"
+            fixed="right"
+            :label="$t('operate')"
+            prop="pipelineId"
+        >
+            <div
+                class="pipeline-operation-cell"
+                slot-scope="props"
+            >
                 <bk-button
                     v-if="isDeleteView"
                     text
@@ -213,7 +457,8 @@
                             action: PROJECT_RESOURCE_ACTION.MANAGE
                         }
                     }"
-                    @click="handleRestore(props.row)">
+                    @click="handleRestore(props.row)"
+                >
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
@@ -239,7 +484,8 @@
                     v-else-if="props.row.permissions && !props.row.permissions.canView && !props.row.delete"
                     outline
                     theme="primary"
-                    @click="applyPermission(props.row)">
+                    @click="applyPermission(props.row)"
+                >
                     {{ $t('apply') }}
                 </bk-button>
                 <template
@@ -264,7 +510,10 @@
                             {{ $t('edit') }}
                         </bk-button>
                     </span>
-                    <span v-else v-bk-tooltips="props.row.tooltips">
+                    <span
+                        v-else
+                        v-bk-tooltips="props.row.tooltips"
+                    >
                         <bk-button
                             text
                             theme="primary"
@@ -285,13 +534,17 @@
                             {{ props.row.lock ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
                         </bk-button>
                     </span>
-                    <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
+                    <ext-menu
+                        :data="props.row"
+                        :config="props.row.pipelineActions"
+                    ></ext-menu>
                 </template>
             </div>
         </bk-table-column>
         <bk-table-column
             v-if="!isPatchView && !isDeleteView"
-            type="setting">
+            type="setting"
+        >
             <bk-table-setting-content
                 :fields="tableColumn"
                 :selected="selectedTableColumn"
@@ -361,7 +614,8 @@
                 tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
-                showCollectIndex: -1
+                showCollectIndex: -1,
+                visibleLabelCountList: {}
             }
         },
         computed: {
@@ -397,6 +651,26 @@
                         visibleGroups: viewNames,
                         hiddenGroups: [],
                         showMore: viewNames?.length ?? 0
+                    }
+                })
+                return res
+            },
+            labelGroups () {
+                const res = this.pipelineList.map((pipeline, index) => {
+                    const { groupLabel = [] } = pipeline
+                    const visibleCount = this.visibleLabelCountList[index]
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: groupLabel.slice(0, visibleCount),
+                            hiddenLabels: groupLabel.slice(visibleCount),
+                            showMore: groupLabel.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: groupLabel,
+                        hiddenLabels: [],
+                        showMore: groupLabel?.length ?? 0
                     }
                 })
                 return res
@@ -468,6 +742,10 @@
                     label: this.$t('ownGroupName')
                 },
                 {
+                    id: 'label',
+                    label: this.$t('label')
+                },
+                {
                     id: 'latestExec',
                     label: this.$t('latestExec')
                 },
@@ -524,7 +802,8 @@
                 updateTime: 154,
                 lastModifyUser: '',
                 latestExec: 484,
-                pipelineId: 120
+                pipelineId: 120,
+                groupLabel: 200
             }
             this.requestList()
         },
@@ -616,11 +895,12 @@
                         current: page
                     })
                     this.pipelineList = records
-                    console.log(this.pipelineList, 111)
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
-                        setTimeout(this.calcOverPos, 100)
+                        setTimeout(this.calcOverPosGroup, 100)
                     }
+                    this.visibleLabelCountList = {}
+                    setTimeout(this.calcOverPosTable, 100)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -639,7 +919,7 @@
                     this.refresh()
                 }
             },
-            calcOverPos () {
+            calcOverPosGroup () {
                 const tagMargin = 6
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
@@ -654,13 +934,36 @@
 
                         this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
-
                             const isOverSize = sumTagWidth > viewPortWidth
                             !isOverSize && tagVisbleCount++
                             return !isOverSize
                         })
 
                         acc[index] = tagVisbleCount
+                    }
+                    return acc
+                }, {})
+            },
+            calcOverPosTable () {
+                const tagMargin = 6
+
+                this.visibleLabelCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                    if (Array.isArray(pipeline?.groupLabel)) {
+                        const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
+                        const labelLength = pipeline?.groupLabel.length
+                        const moreTag = this.$refs?.[`labelMore_${index}`]?.$el
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = labelBoxWidth - (labelLength > 1 ? moreTagWidth : 0)
+                        let sumTagWidth = 0
+                        let tagVisibleCount = 0
+                        this.$refs[`labelName_${index}`]?.every((label) => {
+                            sumTagWidth += label?.offsetWidth + tagMargin
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisibleCount++
+                            return !isOverSize
+                        })
+
+                        acc[index] = tagVisibleCount
                     }
                     return acc
                 }, {})
@@ -848,6 +1151,76 @@
                     padding: 0 6px;
                 }
             }
+        }
+        .group-label-warpper {
+            display: flex;
+            width: 100%;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+        .group-tag {
+            display: inline-flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            max-width: 95%;
+            .key {
+                flex-shrink: 0;
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #f0f1f5;
+            }
+            .value {
+                display: inline-block;
+                padding: 4px 8px;
+                border: 1px solid #dfe0e6;
+                background-color: #fff;
+                border-left: none;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+            }
+           
+        }
+    }
+    .hidden-count {
+        display: inline-block;
+        background-color: #f0f1f5;
+        padding: 4px 8px;
+    }
+    .group-tag-popover {
+        .group-tag {
+            max-width: 300px;
+            width: min-content;
+            display: flex;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            &:last-child {
+                margin-bottom: 0px;
+            }
+        }
+        .key {
+            flex-shrink: 0;
+            display: inline-block;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #f0f1f5;
+        }
+        .value {
+            display: inline-block;
+            padding: 4px 8px;
+            border: 1px solid #dfe0e6;
+            background-color: #fff;
+            border-left: none;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
     }
 </style>

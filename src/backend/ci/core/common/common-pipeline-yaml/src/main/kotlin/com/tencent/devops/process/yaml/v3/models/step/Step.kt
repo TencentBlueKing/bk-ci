@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v3.models.step
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.v3.models.IfField
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class Step(
@@ -36,7 +37,7 @@ data class Step(
     val name: String?,
     val id: String?,
     @JsonProperty("if")
-    val ifFiled: String?,
+    val ifField: IfField?,
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,

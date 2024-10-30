@@ -33,17 +33,21 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.api.scm.ServiceTGitResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -212,16 +216,30 @@ class GitScmService @Autowired constructor(
             )
             for (i in 1..10) {
                 // 反向进行三点比较可以比较出rebase的真实提交
-                val result = client.get(ServiceGitResource::class).getChangeFileList(
-                    token = token,
-                    tokenType = tokenType,
-                    gitProjectId = repo.projectName,
-                    from = from,
-                    to = to,
-                    straight = false,
-                    page = i,
-                    pageSize = 100
-                ).data ?: emptyList()
+                val result = if (repo.getScmType() == ScmType.CODE_TGIT) {
+                    client.get(ServiceTGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100,
+                        url = repo.url
+                    ).data
+                } else {
+                    client.get(ServiceGitResource::class).getChangeFileList(
+                        token = token,
+                        tokenType = tokenType,
+                        gitProjectId = repo.projectName,
+                        from = from,
+                        to = to,
+                        straight = false,
+                        page = i,
+                        pageSize = 100
+                    ).data
+                } ?: emptyList()
                 changeSet.addAll(
                     result.map {
                         if (it.deletedFile) {
@@ -500,5 +518,32 @@ class GitScmService @Autowired constructor(
                 url = url
             )
         ).data
+    }
+
+    /**
+     * 获取github commit 详情
+     */
+    fun getGithubCommitInfo(
+        githubRepoName: String,
+        commitId: String,
+        repo: Repository
+    ): CommitResponse? {
+        return try {
+            logger.info("get github commit info|repoName[$githubRepoName]|commit[$commitId]")
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val commitInfo = client.get(ServiceGithubCommitsResource::class).getCommit(
+                request = GetCommitRequest(
+                    repoName = githubRepoName,
+                    ref = commitId
+                ),
+                token = accessToken
+            ).data
+            commitInfo
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github commit request", ignored)
+            null
+        }
     }
 }

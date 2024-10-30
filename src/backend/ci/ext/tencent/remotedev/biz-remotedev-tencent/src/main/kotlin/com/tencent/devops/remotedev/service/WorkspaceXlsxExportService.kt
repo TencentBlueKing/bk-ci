@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.display
@@ -51,13 +52,15 @@ class WorkspaceXlsxExportService @Autowired constructor(
     ): Response {
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
+        val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null
 
         val search = with(data) {
             WorkspaceSearch(
                 projectId = projectId?.let { listOf(it) },
                 workspaceName = workspaceName?.let { listOf(it) },
                 workspaceSystemType = systemType?.let { listOf(it) },
-                ips = ips,
+                ips = if (!fastSelect) ips else null,
+                sips = if (fastSelect) ips?.map { it.removeSuffix("$") } else null,
                 owner = owner?.let { listOf(it) },
                 status = status?.let { listOf(it) },
                 zoneShortName = zoneId?.let { listOf(it) },
@@ -100,10 +103,19 @@ class WorkspaceXlsxExportService @Autowired constructor(
             row.createCell(3).setCellValue(ip)
             row.createCell(4).setCellValue(record.workspaceSystemType.name)
             row.createCell(5).setCellValue(record.winConfig?.size)
-            row.createCell(6).setCellValue(record.zoneConfig?.zone)
-            row.createCell(7).setCellValue(record.createUserId)
-            row.createCell(8).setCellValue(record.owner)
-            row.createCell(9).setCellValue(record.viewers?.joinToString(","))
+            row.createCell(6).setCellValue(record.zoneConfig?.type.let { type ->
+                when (type) {
+                    WindowsResourceZoneConfigType.DEVCLOUD -> "DevCloud"
+                    WindowsResourceZoneConfigType.CSIG_USE -> "CSIG离岸专区"
+                    WindowsResourceZoneConfigType.DEFAULT, WindowsResourceZoneConfigType.INTERNAL_USE -> "IEG离岸专区"
+                    else -> ""
+                }
+            })
+
+            row.createCell(7).setCellValue(record.zoneConfig?.zone)
+            row.createCell(8).setCellValue(record.createUserId)
+            row.createCell(9).setCellValue(record.owner)
+            row.createCell(10).setCellValue(record.viewers?.joinToString(","))
             offset++
         }
         // 调整宽度
@@ -162,10 +174,18 @@ class WorkspaceXlsxExportService @Autowired constructor(
             row.createCell(2).setCellValue(record.hostName)
             row.createCell(3).setCellValue(record.status?.display())
             row.createCell(4).setCellValue(record.winConfig?.size)
-            row.createCell(5).setCellValue(record.zoneConfig?.zone)
-            row.createCell(6).setCellValue(record.macAddress)
-            row.createCell(7).setCellValue(record.owner)
-            row.createCell(8).setCellValue(record.viewers?.joinToString(";"))
+            row.createCell(5).setCellValue(record.zoneConfig?.type.let { type ->
+                when (type) {
+                    WindowsResourceZoneConfigType.DEVCLOUD -> "DevCloud"
+                    WindowsResourceZoneConfigType.CSIG_USE -> "CSIG离岸专区"
+                    WindowsResourceZoneConfigType.DEFAULT, WindowsResourceZoneConfigType.INTERNAL_USE -> "IEG离岸专区"
+                    else -> ""
+                }
+            })
+            row.createCell(6).setCellValue(record.zoneConfig?.zone)
+            row.createCell(7).setCellValue(record.macAddress)
+            row.createCell(8).setCellValue(record.owner)
+            row.createCell(9).setCellValue(record.viewers?.joinToString(";"))
             offset++
         }
         // 调整宽度
@@ -183,11 +203,10 @@ class WorkspaceXlsxExportService @Autowired constructor(
         ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
     }
-
     companion object {
         private val titleList =
-            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "城市", "创建人", "拥有者", "共享人")
+            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "逻辑区域", "城市", "创建人", "拥有者", "共享人")
         private val webTitleList =
-            listOf("实例 ID", "别名", "内网 IP", "状态", "机型", "地域", "MAC地址", "拥有者", "共享人")
+            listOf("实例 ID", "别名", "内网 IP", "状态", "机型", "逻辑区域", "地域", "MAC地址", "拥有者", "共享人")
     }
 }

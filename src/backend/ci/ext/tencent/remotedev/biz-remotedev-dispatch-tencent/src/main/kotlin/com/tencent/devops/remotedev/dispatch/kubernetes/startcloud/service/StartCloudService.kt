@@ -30,10 +30,7 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
@@ -46,16 +43,15 @@ import org.springframework.stereotype.Service
 @Service
 class StartCloudService @Autowired constructor(
     private val startCloudInterfaceService: StartCloudInterfaceService,
-    private val workspaceBcsClient: WorkspaceBcsClient,
-    private val workspaceStartCloudClient: WorkspaceStartCloudClient
+    private val workspaceBcsClient: WorkspaceBcsClient
 ) : ServiceStartCloudInterface {
 
     override fun createStartCloudUser(user: String, gameId: String?): Result<Boolean> {
         return Result(startCloudInterfaceService.createStartCloudUser(user, gameId))
     }
 
-    override fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>> {
-        return Result(startCloudInterfaceService.syncStartCloudResourceList())
+    override fun realtimeStartCloudResourceList(): Result<List<EnvironmentResourceData>> {
+        return Result(startCloudInterfaceService.realtimeStartCloudResourceList())
     }
 
     override fun getCgsData(data: FetchWinPoolData): Result<List<EnvironmentResourceData>> {
@@ -63,14 +59,6 @@ class StartCloudService @Autowired constructor(
             return Result(listOf())
         }
         return Result(startCloudInterfaceService.getCgsData(data.cgsIds, data.ips))
-    }
-
-    override fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Result<Boolean> {
-        return Result(startCloudInterfaceService.checkCgsRunning(cgsId, status))
-    }
-
-    override fun getCgsConfig(): Result<CgsResourceConfig> {
-        return Result(startCloudInterfaceService.getCgsConfig())
     }
 
     override fun shareWorkspace(

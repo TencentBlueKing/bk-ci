@@ -44,6 +44,7 @@
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
     var ENTERPRISE_VERSION = false
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
+    var BK_SHARED_RES_URL = '__BK_SHARED_RES_URL__' 
   </script>
   <script>
 
@@ -68,6 +69,15 @@
       oStyle.setAttribute('type', 'text/css')
       oStyle.setAttribute('href', href)
       oHead.appendChild(oStyle)
+    }
+
+    function loadJsAssets(isVendors) {
+      for (var i = 0; i < window.jsAssets.length; i++) {
+        var js = window.jsAssets[i]
+        if (isVendors === true ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
+          importScript(js, document.body)
+        }
+      }
     }
 
     function getCookie(cname) {
@@ -224,12 +234,7 @@
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
   <script>
-    for (var i = 0; i < window.jsAssets.length; i++) {
-      var js = window.jsAssets[i]
-      if (js.indexOf('vendors') > -1) {
-        importScript(js, document.body)
-      }
-    }
+    loadJsAssets(true)
   </script>
   <script>
     var pathPid = getCookie(X_DEVOPS_PROJECT_ID)
@@ -519,15 +524,6 @@
       )
     }
 
-    function loadJsAssets() {
-      for (var i = 0; i < window.jsAssets.length; i++) {
-        var js = window.jsAssets[i]
-        if (js.indexOf('vendors') === -1) {
-          importScript(js, document.body)
-        }
-      }
-    }
-
     // 接入mta统计
     var _mtac = {}
       ; (function () {
@@ -578,30 +574,30 @@
       )
     }
 
-    function detectNewVersion() {
-      var xhr = new XMLHttpRequest()
-      xhr.open('GET', '/console/', true)
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
-          var version = versions && versions[1]
-          console.log(version)
-          if (version !== '__BK_CI_VERSION__') {
-            console.log('has new Version', version)
-            const locale = getCookie('blueking_language')
+    // function detectNewVersion() {
+    //   var xhr = new XMLHttpRequest()
+    //   xhr.open('GET', '/console/', true)
+    //   xhr.onreadystatechange = function () {
+    //     if (xhr.readyState === 4 && xhr.status === 200) {
+    //       var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
+    //       var version = versions && versions[1]
+    //       console.log(version)
+    //       if (version !== '__BK_CI_VERSION__') {
+    //         console.log('has new Version', version)
+    //         const locale = getCookie('blueking_language')
 
-            const tips = locale === 'en' ? `There is a version update of the Blue Shield platform [${version}]. Click OK to refresh the page.` : `检测到蓝盾平台有版本更新【${version}】点击确定刷新页面`
-            window.confirm(tips) && window.location.reload()
-          } else {
-            setTimeout(() => {
-              window.requestIdleCallback(detectNewVersion)
-            }, 1000 * 60 * 5)
-          }
-        }
-      }
-      xhr.send()
-    }
-    window.requestIdleCallback(detectNewVersion)
+    //         const tips = locale === 'en' ? `There is a version update of the Blue Shield platform [${version}]. Click OK to refresh the page.` : `检测到蓝盾平台有版本更新【${version}】点击确定刷新页面`
+    //         window.confirm(tips) && window.location.reload()
+    //       } else {
+    //         setTimeout(() => {
+    //           window.requestIdleCallback(detectNewVersion)
+    //         }, 1000 * 60 * 5)
+    //       }
+    //     }
+    //   }
+    //   xhr.send()
+    // }
+    // window.requestIdleCallback(detectNewVersion)
   </script>
 </body>
 

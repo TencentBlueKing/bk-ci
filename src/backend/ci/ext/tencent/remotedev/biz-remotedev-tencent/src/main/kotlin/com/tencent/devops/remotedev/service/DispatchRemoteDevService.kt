@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.interfaces.ServiceRemoteDevInterface
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class DispatchRemoteDevService(
     private val createControl: CreateControl,
-    private val expertSupportService: ExpertSupportService
+    private val expertSupportService: ExpertSupportService,
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
 ) : ServiceRemoteDevInterface {
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchRemoteDevService::class.java)
@@ -37,5 +39,19 @@ class DispatchRemoteDevService(
             uid = uid
         )
         return Result(res)
+    }
+
+    override fun makeImageCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String,
+        imageId: String
+    ) {
+        makeWorkspaceImageHandler.makeWorkspaceImageCallback(
+            taskId = taskId,
+            userId = operator,
+            workspaceName = workspaceName,
+            imageId = imageId
+        )
     }
 }

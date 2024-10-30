@@ -28,11 +28,17 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatusEnum
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
@@ -40,12 +46,7 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.WorkspaceResponse
-import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
-import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -57,7 +58,8 @@ class RemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
-    private val remoteDevServiceFactory: RemoteDevServiceFactory
+    private val remoteDevServiceFactory: RemoteDevServiceFactory,
+    private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
 
     companion object {
@@ -84,7 +86,7 @@ class RemoteDevService @Autowired constructor(
                 errorMessage = "Repeated creation for ${workspace.workspaceName}"
             )
         }
-        val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
+        val mountType = event.mountType
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
 
@@ -125,54 +127,25 @@ class RemoteDevService @Autowired constructor(
                     dslContext, result.taskId, EnvironmentActionStatus.SUCCEEDED
                 )
             }
-            if (mountType == WorkspaceMountType.START) {
-                val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
-                dslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    dispatchWorkspaceDao.updateWorkspace(
-                        workspaceName = event.workspaceName,
-                        status = EnvStatusEnum.running,
-                        envId = vmCreateResp?.envId ?: "",
-                        regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
-                        dslContext = context
-                    )
-                }
-
-                return WorkspaceResponse(
-                    environmentUid = vmCreateResp?.envId ?: "",
-                    environmentHost = vmCreateResp?.cgsIp ?: "",
-                    environmentIp = vmCreateResp?.cgsIp ?: "",
-                    resourceId = vmCreateResp?.resourceId,
-                    macAddress = vmCreateResp?.macAddress ?: ""
-                )
-            } else {
-                dslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    dispatchWorkspaceDao.updateWorkspaceStatus(
-                        workspaceName = event.workspaceName,
-                        status = EnvStatusEnum.running,
-                        dslContext = context
-                    )
-                }
-
-                // 检验workspace状态
-                val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
-                    .getWorkspaceInfo(userId, event.workspaceName)
-
-                if (workspaceInfo.status != EnvStatusEnum.running) {
-                    throw WorkspaceDispatchException(
-                        envId = result.enviromentUid,
-                        errorMessage = "workspace not running"
-                    )
-                }
-
-                return WorkspaceResponse(
-                    environmentUid = result.enviromentUid,
-                    environmentHost = workspaceInfo.environmentHost,
-                    environmentIp = workspaceInfo.environmentIP,
-                    resourceId = result.resourceId
+            val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                dispatchWorkspaceDao.updateWorkspace(
+                    workspaceName = event.workspaceName,
+                    status = EnvStatusEnum.running,
+                    envId = vmCreateResp?.envId ?: "",
+                    regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
+                    dslContext = context
                 )
             }
+
+            return WorkspaceResponse(
+                environmentUid = vmCreateResp?.envId ?: "",
+                environmentHost = vmCreateResp?.cgsIp ?: "",
+                environmentIp = vmCreateResp?.cgsIp?.substringAfter(".") ?: "",
+                resourceId = vmCreateResp?.resourceId,
+                macAddress = vmCreateResp?.macAddress ?: ""
+            )
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -198,44 +171,6 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun makeWorkspaceImageWithBackEvent(event: WorkspaceOperateEvent, backEvent: RemoteDevUpdateEvent) {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event)
-        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId, event.type)
-
-        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
-            )
-            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
-            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
-                status = EnvStatusEnum.stopped,
-                dslContext = dslContext
-            )
-
-            backEvent.status = true
-            backEvent.workspaceImageInfo = WorkspaceImageInfo(
-                imageId = event.imageId ?: "",
-                imageCosFile = image?.cosFile ?: "",
-                size = image?.size ?: "",
-                sourceCgsId = image?.sourceCgsId ?: "",
-                sourceCgsType = image?.sourceType ?: "",
-                sourceCgsZone = image?.zoneId ?: ""
-            )
-        } else {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskId, EnvironmentActionStatus.FAILED
-            )
-            throw WorkspaceDispatchException(
-                "errorMessage:$taskMessage"
-            )
-        }
-    }
-
     fun getWorkspaceUrl(
         userId: String,
         workspaceName: String,
@@ -253,16 +188,25 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun deleteWorkspace(
-        userId: String,
-        workspaceName: String
+        workspaceName: String,
+        bakWorkspaceName: String?
     ) {
-        dispatchWorkspaceDao.deleteWorkspace(workspaceName, dslContext)
+        if (bakWorkspaceName != null) {
+            /*临时逻辑待后期下掉，不在我们这维护order*/
+            workspaceRedisUtils.setStartCloudOrder(
+                "SYSTEM",
+                bakWorkspaceName,
+                workspaceRedisUtils.getStartCloudOrder(workspaceName) ?: ""
+            )
+        }
+        dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
     fun workspaceTaskCallback(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 
@@ -364,8 +308,12 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun rebuildWorkspace(event: WorkspaceOperateEvent): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .rebuildWorkspace(event.userId, event.workspaceName, event.imageCosFile ?: "")
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            imageCosFile = event.imageCosFile ?: "",
+            formatDataDisk = event.formatDataDisk
+        )
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 
@@ -426,5 +374,28 @@ class RemoteDevService @Autowired constructor(
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+    }
+
+    fun getLastExpandDiskStatusAndTime(
+        workspaceName: String
+    ): Pair<EnvironmentActionStatus?, LocalDateTime?> {
+        val record = dispatchWorkspaceOpHisDao.fetchLastTaskByWorkspaceName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = EnvironmentAction.EXPAND_DISK
+        ) ?: return Pair(null, null)
+
+        return Pair(EnvironmentActionStatus.parse(record.status), record.updateTime)
+    }
+
+    fun upgradeWorkspace(event: WorkspaceOperateEvent) {
+        // 需要生成一个新的 pipelineId 进行操作
+        val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+        remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            machineType = event.machineType!!,
+            pipelineId = orderId
+        )
     }
 }

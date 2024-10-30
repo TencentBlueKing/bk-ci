@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
@@ -139,9 +140,18 @@ interface AppPipelineResource {
         @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
-        @QueryParam("version")
-        customVersion: Int?
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>?,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>?,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")
@@ -162,7 +172,13 @@ interface AppPipelineResource {
         alias: List<String>?,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        debugVersion: Int?,
+        @Parameter(description = "搜索分支关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "搜索类型,触发/源材料", required = false)
+        @QueryParam("type")
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "获取流水线构建中的查询条件-状态")
@@ -195,7 +211,13 @@ interface AppPipelineResource {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        debugVersion: Int?,
+        @Parameter(description = "搜索分支关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "搜索类型, 触发/源材料", required = false)
+        @QueryParam("type")
+        type: HistorySearchType?
     ): Result<List<String>>
 
     @Operation(summary = "列出用户某项目下的流水线的所有收藏")

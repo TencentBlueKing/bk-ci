@@ -27,7 +27,10 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -50,7 +53,9 @@ import org.springframework.stereotype.Service
 @Service
 class CheckPauseReviewStageCmd(
     private val buildVariableService: BuildVariableService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -64,7 +69,9 @@ class CheckPauseReviewStageCmd(
         val event = commandContext.event
 
         // 处于等待中，遇到停止/取消等行为直接结束，因为本Stage还未进入
-        if (event.actionType.isEnd() && commandContext.buildStatus.isPause()) {
+        if (event.actionType.isEnd() &&
+            (commandContext.buildStatus.isPause() || commandContext.buildStatus.isReadyToRun())
+        ) {
             commandContext.buildStatus = BuildStatus.CANCELED
             commandContext.cmdFlowState = CmdFlowState.FINALLY
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}")
@@ -90,12 +97,16 @@ class CheckPauseReviewStageCmd(
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
 
                 stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.pipelineAsCodeEnabled)
+                if (stage.checkIn != null) {
+                    checkReviewGroup(event.projectId, stage.checkIn!!)
+                }
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
                     triggerUserId = commandContext.variables[PIPELINE_START_USER_NAME] ?: event.userId,
                     stage = stage,
                     pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId,
-                    buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
+                    buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1",
+                    debug = commandContext.debug
                 )
                 commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
@@ -108,6 +119,30 @@ class CheckPauseReviewStageCmd(
             if (stage.checkIn?.manualTrigger == true) {
                 saveStageReviewParams(stage = stage)
             }
+        }
+    }
+
+    private fun checkReviewGroup(projectId: String, check: StagePauseCheck) {
+        val projectRoleUsers = lazy {
+            authProjectApi.getProjectGroupAndUserList(
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId
+            ).associateBy { it.roleName }
+        }
+        check.reviewGroups?.forEach { review ->
+            if (review.status != null || review.groups.isEmpty()) {
+                return@forEach
+            }
+            if (review.groups.find { it in projectRoleUsers.value.keys } == null) {
+                return@forEach
+            }
+            val realReviewer = review.reviewers.toMutableSet()
+            review.groups.forEach { group ->
+                if (projectRoleUsers.value[group] != null) {
+                    realReviewer.addAll(projectRoleUsers.value[group]!!.userIdList)
+                }
+            }
+            review.reviewers = realReviewer.toList()
         }
     }
 
@@ -129,10 +164,12 @@ class CheckPauseReviewStageCmd(
             event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckInPass(commandContext)
             }
+
             event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckInFailed(commandContext)
                 needBreak = true
             }
+
             else -> {
                 val checkStatus = pipelineStageService.checkStageQuality(
                     event = event,
@@ -144,11 +181,13 @@ class CheckPauseReviewStageCmd(
                     BuildStatus.QUALITY_CHECK_PASS -> {
                         qualityCheckInPass(commandContext)
                     }
+
                     BuildStatus.QUALITY_CHECK_WAIT -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
                         qualityCheckInNeedReview(commandContext)
                         needBreak = true
                     }
+
                     else -> {
                         // #4732 优先判断是否能通过质量红线检查
                         qualityCheckInFailed(commandContext)

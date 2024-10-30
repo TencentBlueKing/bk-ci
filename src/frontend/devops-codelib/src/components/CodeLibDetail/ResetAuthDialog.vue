@@ -45,7 +45,10 @@
                     </bk-radio>
                 </bk-radio-group>
 
-                <div class="codelib-oauth" v-if="isOAUTH">
+                <div
+                    class="codelib-oauth"
+                    v-if="isOAUTH"
+                >
                     <bk-button
                         theme="primary"
                         :loading="isSaveLoading"
@@ -104,7 +107,10 @@
                     </template>
                 </bk-radio-group>
 
-                <div class="codelib-oauth" v-if="isOAUTH">
+                <div
+                    class="codelib-oauth"
+                    v-if="isOAUTH"
+                >
                     <bk-button
                         theme="primary"
                         :loading="isSaveLoading"
@@ -172,7 +178,8 @@
                 </bk-radio-group>
             </bk-form-item>
             <template
-                v-if="!isOAUTH">
+                v-if="!isOAUTH"
+            >
                 <bk-form-item
                     :label="addressTitle"
                     :required="true"
@@ -206,9 +213,13 @@
                             v-for="(option, index) in tickets"
                             :key="option.credentialId"
                             :id="option.credentialId"
-                            :name="option.credentialId">
-                            <span class="name" :title="option.credentialId">
-                                {{option.credentialId}}
+                            :name="option.credentialId"
+                        >
+                            <span
+                                class="name"
+                                :title="option.credentialId"
+                            >
+                                {{ option.credentialId }}
                             </span>
                             <i
                                 class="devops-icon icon-edit2 cre-icon"

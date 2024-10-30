@@ -1,39 +1,37 @@
 package com.tencent.devops.remotedev.dao
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
+import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.TWorkspace
-import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.dao.WorkspaceDao.Companion.workspaceWithWindowsMapper
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
-import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
+import org.jooq.ExecuteContext
+import org.jooq.Field
 import org.jooq.Record1
-import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
 import org.jooq.Table
 import org.jooq.impl.DSL
+import org.jooq.impl.DefaultExecuteListener
+import org.jooq.impl.DefaultExecuteListenerProvider
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 /**
@@ -52,7 +50,8 @@ class WorkspaceJoinDao {
             genFetchProjectWorkspaceCond(
                 dslContext = dslContext,
                 queryType = queryType,
-                search = search
+                search = search,
+                checkField = windowsFullFields
             ).skipCheck()
         ).toLong()
     }
@@ -67,55 +66,127 @@ class WorkspaceJoinDao {
         search: WorkspaceSearch
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
-            // 没有包含其他表的条件
-            if (search.onlyNeedCheckWorkspace()) {
-                val dsl = (
-                    genFetchProjectWorkspaceCond(
-                        dslContext = dslContext,
-                        queryType = queryType,
-                        search = search
-                    ) as SelectConditionStep<TWorkspaceRecord>
-                    ).orderBy(CREATE_TIME.desc(), ID.desc())
-                if (limit != null) {
-                    dsl.limit(limit.limit).offset(limit.offset)
-                }
-                return dsl.skipCheck()
-                    .fetch(WorkspaceDao.workspaceMapper)
-            }
-
-            // 包含 detail 表的条件
-            if (search.needCheckDetail()) {
-                val dsl = genFetchProjectWorkspaceCond(
-                    dslContext = dslContext,
-                    queryType = queryType,
-                    search = search
-                ).orderBy(CREATE_TIME.desc(), ID.desc())
-                if (limit != null) {
-                    dsl.limit(limit.limit).offset(limit.offset)
-                }
-                return dsl.skipCheck()
-                    .fetch(workspaceWithDetailMapper)
-            }
-
-            // 剩下的只剩 workspace 表的
+            // 目前只有windows，如果后期增加横向扩展即可
             val dsl = genFetchProjectWorkspaceCond(
                 dslContext = dslContext,
                 queryType = queryType,
-                search = search
+                search = search,
+                checkField = windowsFullFields
             ).orderBy(CREATE_TIME.desc(), ID.desc())
             if (limit != null) {
                 dsl.limit(limit.limit).offset(limit.offset)
             }
             return dsl.skipCheck()
-                .fetch(workspaceFieldMapper)
+                .fetch(workspaceWithWindowsMapper)
+        }
+    }
+
+    fun fetchAnyWindowsWorkspace(
+        dslContext: DSLContext,
+        workspaceName: String,
+        status: WorkspaceStatus? = null
+    ): WorkspaceRecordWithWindows? {
+        // 目前只有windows，如果后期增加横向扩展即可
+        val dsl = genFetchProjectWorkspaceCond(
+            dslContext = dslContext,
+            queryType = QueryType.SERVICE,
+            search = WorkspaceSearch(
+                onFuzzyMatch = false,
+                status = status?.let { listOf(status) },
+                workspaceName = listOf(workspaceName),
+                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+            ),
+            checkField = windowsFullFields
+        )
+        return dsl.skipCheck()
+            .fetchAny(workspaceWithWindowsMapper)
+    }
+
+    /**
+     * @param sip 不带区域的ip，比如1.23.45.234
+     * @param checkField 注意注意！！如果查询比较频繁，必须指定该参数，减少返回内容
+     */
+    fun fetchWindowsWorkspacesSimple(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        ownerType: WorkspaceOwnerType? = null,
+        projectId: String? = null,
+        sip: String? = null,
+        businessLineName: String? = null,
+        owner: String? = null,
+        workspaceName: String? = null,
+        notStatus: List<WorkspaceStatus>? = null,
+        checkField: List<Field<*>>? = null
+    ): List<WorkspaceRecordWithWindows> {
+        with(TWorkspace.T_WORKSPACE) {
+            // 目前只有windows，如果后期增加横向扩展即可
+            val dsl = genFetchProjectWorkspaceCond(
+                dslContext = dslContext,
+                queryType = QueryType.SERVICE,
+                search = WorkspaceSearch(
+                    onFuzzyMatch = false,
+                    status = status?.let { listOf(status) },
+                    workspaceOwnerType = ownerType?.let { listOf(ownerType) },
+                    projectId = projectId?.let { listOf(projectId) },
+                    sips = sip?.let { listOf(sip) },
+                    businessLineNames = businessLineName?.let { listOf(businessLineName) },
+                    owner = owner?.let { listOf(owner) },
+                    workspaceName = workspaceName?.let { listOf(workspaceName) },
+                    notStatus = notStatus,
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+                ),
+                checkField = checkField ?: windowsFullFields
+            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            return dsl.skipCheck()
+                .fetch(workspaceWithWindowsMapper)
+        }
+    }
+
+    fun fetchWindowsWorkspaces(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>? = null,
+        size: Set<String>? = null,
+        projectIds: Set<String>? = null,
+        sips: Set<String>? = null,
+        owners: Set<String>? = null,
+        notStatus: Set<WorkspaceStatus>? = null,
+        checkField: List<Field<*>>? = null
+    ): List<WorkspaceRecordWithWindows> {
+        with(TWorkspace.T_WORKSPACE) {
+            // 目前只有windows，如果后期增加横向扩展即可
+            val dsl = genFetchProjectWorkspaceCond(
+                dslContext = dslContext,
+                queryType = QueryType.SERVICE,
+                search = WorkspaceSearch(
+                    onFuzzyMatch = false,
+                    workspaceName = workspaceNames?.toList(),
+                    size = size?.toList(),
+                    sips = sips?.toList(),
+                    owner = owners?.toList(),
+                    notStatus = notStatus?.toList(),
+                    projectId = projectIds?.toList(),
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+                ),
+                checkField = checkField ?: windowsFullFields
+            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            return dsl.skipCheck()
+                .fetch(workspaceWithWindowsMapper)
         }
     }
 
     private fun genFetchProjectWorkspaceCond(
         dslContext: DSLContext,
         queryType: QueryType = QueryType.WEB,
-        search: WorkspaceSearch
+        search: WorkspaceSearch,
+        checkField: List<Field<*>>
     ): SelectConditionStep<*> {
+        dslContext.configuration().set(DefaultExecuteListenerProvider(object : DefaultExecuteListener() {
+            override fun resultEnd(ctx: ExecuteContext) {
+                val sql = DSL.using(ctx.configuration()).renderInlined(ctx.query())
+                logger.info("genFetchProjectWorkspaceCond Executed SQL|$sql|${ctx.result()?.size}")
+                super.executeEnd(ctx)
+            }
+        }))
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             search.projectId?.ifEmpty { null }?.let { projects ->
@@ -146,7 +217,18 @@ class WorkspaceJoinDao {
             search.status?.ifEmpty { null }?.let { status ->
                 conditions.add(STATUS.`in`(status.map { it.ordinal }))
             } ?: kotlin.run {
-                conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                if (queryType != QueryType.SERVICE) {
+                    conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    conditions.add(STATUS.notEqual(WorkspaceStatus.UNUSED.ordinal))
+                }
+            }
+
+            search.notStatus?.ifEmpty { null }?.let { status ->
+                conditions.add(STATUS.notIn(status.map { it.ordinal }))
+            }
+
+            search.businessLineNames?.ifEmpty { null }?.let { name ->
+                conditions.add(CREATOR_DEPT_NAME.`in`(name))
             }
 
             search.workspaceSystemType?.ifEmpty { null }?.let { types ->
@@ -170,35 +252,27 @@ class WorkspaceJoinDao {
             }
         }
 
-        // 没有连表查询的条件
-        if (search.onlyNeedCheckWorkspace()) {
-            return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
-        }
-
         if (!search.ips.isNullOrEmpty()) {
-            val j = JooqUtils.jsonExtract(
-                t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-                t2 = "\$.hostIP",
-                lower = false,
-                removeDoubleQuotes = true
-            )
-            val condition = if (search.onFuzzyMatch) {
-                j.likeRegex(search.ips?.joinToString("|"))
+            if (search.onFuzzyMatch) {
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(search.ips?.joinToString("|")))
             } else {
-                j.`in`(search.ips)
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.`in`(search.ips))
             }
-            conditions.add(condition)
         }
 
-        if (!search.zoneShortName.isNullOrEmpty()) {
-            val j = JooqUtils.jsonExtract(
-                t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-                t2 = "\$.hostIP",
-                lower = false,
-                removeDoubleQuotes = true
+        if (!search.sips.isNullOrEmpty()) {
+            conditions.add(
+                TWorkspace.T_WORKSPACE.IP.`in`(search.sips)
             )
-            val condition = j.likeRegex(search.zoneShortName?.joinToString("|"))
-            conditions.add(condition)
+        }
+
+        // TODO windows表已经存在Zone id字段，但是数据没有补齐，后续可以切换过来就不使用HOST_IP进行模糊查询了
+        if (!search.zoneShortName.isNullOrEmpty()) {
+            conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(search.zoneShortName?.joinToString("|")))
+        }
+
+        if (!search.logicalArea.isNullOrEmpty()) {
+            conditions.add(logicalAreaGetZone(dslContext, search.logicalArea!!))
         }
 
         // owner 条件查询
@@ -281,39 +355,25 @@ class WorkspaceJoinDao {
             conditions.add(sql)
         }
 
-        val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
-
-        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
-            fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
-        }
-
-        return dslContext.selectDistinct(fields)
+        return dslContext.selectDistinct(checkField)
             .from(TWorkspace.T_WORKSPACE)
             .joinTable(search)
             .where(conditions)
     }
 
     private fun SelectJoinStep<*>.joinTable(search: WorkspaceSearch): SelectJoinStep<*> {
-        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
+        this.innerJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
+            TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
+        )
+        if (search.needCheckShared()) {
             this.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
                 .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
         }
-        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
-            this.leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-        }
-        if (!search.macAddress.isNullOrEmpty() || !search.size.isNullOrEmpty()) {
-            this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
-                TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
-            )
-        }
-
         if (search.needCheckLabels()) {
             val label = labelsTable(search.labels!!)
             this.rightJoin(label)
                 .on(TWorkspace.T_WORKSPACE.NAME.eq(label.field(TWorkspaceLabels.T_WORKSPACE_LABELS.WORKSPACE_NAME)))
         }
-
         if (!search.size.isNullOrEmpty()) {
             this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
@@ -327,6 +387,36 @@ class WorkspaceJoinDao {
             )
         }
         return this
+    }
+
+    private fun logicalAreaGetZone(dslContext: DSLContext, areas: List<WindowsResourceZoneConfigType>): Condition {
+        /*考虑到查询此频率不会太高，不做缓存。后续视情况可做缓存*/
+        val stMap = with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
+            dslContext.select(SHORT_NAME, TYPE).from(this)
+                .where(AVAILABLED.eq(1))
+                .skipCheck()
+                .fetch().groupBy({ it.value2() }) { it.value1() }
+        }
+        return if (WindowsResourceZoneConfigType.DEFAULT in areas) {
+            /*如果DEFAULT在查询中，则利用反查*/
+            val zoneIds = stMap.filter { WindowsResourceZoneConfigType.parse(it.key) !in areas }.flatMap { it.value }
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.notLikeRegex(
+                zoneIds.joinToString(
+                    separator = "$|^",
+                    prefix = "^",
+                    postfix = "$"
+                )
+            )
+        } else {
+            val zoneIds = stMap.filter { WindowsResourceZoneConfigType.parse(it.key) in areas }.flatMap { it.value }
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID.likeRegex(
+                zoneIds.joinToString(
+                    separator = "$|^",
+                    prefix = "^",
+                    postfix = "$"
+                )
+            )
+        }
     }
 
     /**
@@ -404,102 +494,6 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
-    class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
-        override fun map(record: Record?): WorkspaceRecord? {
-            if (record == null) {
-                return null
-            }
-            return WorkspaceRecord(
-                workspaceId = record["ID"] as Long,
-                projectId = record["PROJECT_ID"] as String,
-                workspaceName = record["NAME"] as String,
-                displayName = record["DISPLAY_NAME"] as String,
-                templateId = record["TEMPLATE_ID"] as Int?,
-                repositoryUrl = record["URL"] as String?,
-                branch = record["BRANCH"] as String?,
-                yaml = record["YAML"] as String?,
-                devFilePath = record["YAML_PATH"] as String?,
-                dockerFile = record["DOCKERFILE"] as String,
-                imagePath = record["IMAGE_PATH"] as String,
-                workPath = record["WORK_PATH"] as String?,
-                workspaceFolder = record["WORKSPACE_FOLDER"] as String?,
-                hostName = record["HOST_NAME"] as String,
-                gpu = record["GPU"] as Int,
-                cpu = record["CPU"] as Int,
-                memory = record["MEMORY"] as Int,
-                usageTime = record["USAGE_TIME"] as Int,
-                sleepingTime = record["SLEEPING_TIME"] as Int,
-                disk = record["DISK"] as Int,
-                createUserId = record["CREATOR"] as String,
-                creatorBgName = record["CREATOR_BG_NAME"] as String,
-                creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
-                creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
-                creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
-                status = WorkspaceStatus.load(record["STATUS"] as Int),
-                createTime = record["CREATE_TIME"] as LocalDateTime,
-                updateTime = record["UPDATE_TIME"] as LocalDateTime,
-                lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
-                preciAgentId = record["PRECI_AGENT_ID"] as String?,
-                workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
-                workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
-                ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
-                remark = record["REMARK"] as String?,
-                labels = (record["LABELS"] as String?)?.let { self ->
-                    JsonUtil.getObjectMapper().readValue(self) as List<String>
-                }
-            )
-        }
-    }
-
-    class TWorkspaceRecordWithDetailJooqMapper : RecordMapper<Record, WorkspaceRecordWithDetail> {
-        override fun map(record: Record?): WorkspaceRecordWithDetail? {
-
-            if (record == null) {
-                return null
-            }
-            return WorkspaceRecordWithDetail(
-                workspaceId = record["ID"] as Long,
-                projectId = record["PROJECT_ID"] as String,
-                workspaceName = record["NAME"] as String,
-                displayName = record["DISPLAY_NAME"] as String,
-                templateId = record["TEMPLATE_ID"] as Int?,
-                repositoryUrl = record["URL"] as String?,
-                branch = record["BRANCH"] as String?,
-                yaml = record["YAML"] as String?,
-                devFilePath = record["YAML_PATH"] as String?,
-                dockerFile = record["DOCKERFILE"] as String,
-                imagePath = record["IMAGE_PATH"] as String,
-                workPath = record["WORK_PATH"] as String?,
-                workspaceFolder = record["WORKSPACE_FOLDER"] as String?,
-                hostName = record["HOST_NAME"] as String,
-                gpu = record["GPU"] as Int,
-                cpu = record["CPU"] as Int,
-                memory = record["MEMORY"] as Int,
-                usageTime = record["USAGE_TIME"] as Int,
-                sleepingTime = record["SLEEPING_TIME"] as Int,
-                disk = record["DISK"] as Int,
-                createUserId = record["CREATOR"] as String,
-                creatorBgName = record["CREATOR_BG_NAME"] as String,
-                creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
-                creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
-                creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
-                status = WorkspaceStatus.load(record["STATUS"] as Int),
-                createTime = record["CREATE_TIME"] as LocalDateTime,
-                updateTime = record["UPDATE_TIME"] as LocalDateTime,
-                lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
-                preciAgentId = record["PRECI_AGENT_ID"] as String?,
-                workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
-                workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
-                ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
-                workSpaceDetail = record["DETAIL"] as String,
-                remark = record["REMARK"] as String?,
-                labels = (record["LABELS"] as String?)?.let { self ->
-                    JsonUtil.getObjectMapper().readValue(self) as List<String>
-                }
-            )
-        }
-    }
-
     fun fetchProjectMachineType(
         dslContext: DSLContext,
         projectId: String
@@ -575,7 +569,9 @@ class WorkspaceJoinDao {
     }
 
     companion object {
-        val workspaceFieldMapper = TWorkspaceFieldJooqMapper()
-        val workspaceWithDetailMapper = TWorkspaceRecordWithDetailJooqMapper()
+        private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
+        val windowsFullFields = TWorkspace.T_WORKSPACE.fields()
+            .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
+            .toList()
     }
 }

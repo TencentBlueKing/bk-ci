@@ -89,12 +89,27 @@ class ProjectTGitLinkDao {
         }
     }
 
+    fun deleteIds(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitIds: Set<Long>
+    ) {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(TGIT_ID.`in`(tgitIds)).execute()
+        }
+    }
+
     fun fetch(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        tgitId: Long?
     ): List<TProjectTgitIdLinkRecord> {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+            val dsl = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+            if (tgitId != null) {
+                dsl.and(TGIT_ID.eq(tgitId))
+            }
+            return dsl.fetch()
         }
     }
 

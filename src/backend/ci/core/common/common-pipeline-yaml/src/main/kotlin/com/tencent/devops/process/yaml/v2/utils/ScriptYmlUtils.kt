@@ -50,7 +50,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
@@ -117,9 +116,9 @@ object ScriptYmlUtils {
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-//        val yamlNormal = formatYamlCustom(yamlStr)
+        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        return TransferMapper.formatYaml(yamlStr)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
 
     fun parseVersion(yamlStr: String?): YmlVersion? {
@@ -224,8 +223,8 @@ object ScriptYmlUtils {
             val startString = line.trim().replace("\\s".toRegex(), "")
             if (startString.startsWith("if:") || startString.startsWith("-if:")) {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
-                val condition = line.removePrefix(ifPrefix).trim()
-                    .removeSurrounding("\"")
+                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
+                    .removeSuffix("\"")
 
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
@@ -517,7 +516,8 @@ object ScriptYmlUtils {
                         )
                     },
                     variables = preCheck.reviews.variables,
-                    description = preCheck.reviews.description
+                    description = preCheck.reviews.description,
+                    notifyGroups = preCheck.reviews.notifyGroups
                 )
             } else {
                 null

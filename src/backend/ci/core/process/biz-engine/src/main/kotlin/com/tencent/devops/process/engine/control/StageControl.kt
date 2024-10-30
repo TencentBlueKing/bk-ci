@@ -130,10 +130,6 @@ class StageControl @Autowired constructor(
                         return // 不再往下运行
                     }
                 }
-            if (actionType.isEnd()) {
-                LOG.warn("ENGINE|$buildId|$source|END_STAGE|$stageId|${buildInfo.status}")
-                return
-            }
         }
 
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)

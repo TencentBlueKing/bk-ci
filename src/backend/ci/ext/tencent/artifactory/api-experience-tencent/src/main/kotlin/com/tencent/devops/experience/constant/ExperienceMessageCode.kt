@@ -84,6 +84,7 @@ object ExperienceMessageCode {
     const val USER_NEED_DELETE_EXP_GROUP_PERMISSION = "2106034" // 体验: 用户在项目({0})没有删除体验用户组{1}的权限
     const val USER_NEED_TAI_ACCOUNT = "2106035" // 内部用户不能通过太湖账号登录
     const val OUTER_LOGIN_WRONG_PASSWORD = "2106036" // 密码错误
+    const val EXCLUSIVE_EXPERIENCE = "2106037" // 专属体验
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" // 更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" // 更新成功

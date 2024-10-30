@@ -10,9 +10,9 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import * as Img503 from '../assets/static/503.png'
+    import Img503 from '../assets/static/503.png'
     
-    @Component
+    @Component()
     export default class Exception503 extends Vue {
         get Img503 (): string {
             return Img503

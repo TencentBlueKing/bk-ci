@@ -28,13 +28,16 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.image.UpdateImageNameInfo
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,15 +45,22 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
-    private val projectImageManageService: ImageManageService
+    private val projectImageManageService: ImageManageService,
+    private val permissionService: PermissionService
 ) : UserProjectWorkspaceImageResource {
     companion object {
         val logger = LoggerFactory.getLogger(UserProjectWorkspaceImageResourceImpl::class.java)!!
     }
 
     override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
         logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
-        return Result(projectImageManageService.getProjectImageList(projectId))
+        return Result(projectImageManageService.getProjectImageList(projectId, null))
     }
 
     @AuditEntry(actionId = ActionId.IMAGE_DELETE)
@@ -59,11 +69,18 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     }
 
     override fun getVmStandardImages(userId: String, projectId: String): Result<List<StandardVmImage>> {
-        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
+        logger.info("UserImageManageResourceImpl|getVmStandardImages|userId|$userId|projectId|$projectId")
         return Result(projectImageManageService.getVmStandardImages())
     }
 
     override fun updateImageName(userId: String, projectId: String, data: UpdateImageNameInfo): Result<Boolean> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
+            )
+        }
+        logger.info("UserImageManageResourceImpl|updateImageName|userId|$userId|projectId|$projectId|data|$data")
         projectImageManageService.updateImageName(data.id, data.imageName)
         return Result(true)
     }

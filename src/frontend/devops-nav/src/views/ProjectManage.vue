@@ -27,8 +27,14 @@
                 </div>
 
                 <div class="filter-operation">
-                    <span :class="{ 'is-selected': isEnabled }" @click="isEnabled = true">{{ $t('启用中') }}</span>
-                    <span :class="{ 'is-selected': !isEnabled }" @click="isEnabled = false">{{ $t('已停用') }}</span>
+                    <span
+                        :class="{ 'is-selected': isEnabled }"
+                        @click="isEnabled = true"
+                    >{{ $t('启用中') }}</span>
+                    <span
+                        :class="{ 'is-selected': !isEnabled }"
+                        @click="isEnabled = false"
+                    >{{ $t('已停用') }}</span>
                 </div>
                 <bk-table
                     class="biz-table"
@@ -106,7 +112,8 @@
                     >
                         <template slot-scope="{ row, $index }">
                             <span class="project-status">
-                                <div class="enable-switcher"
+                                <div
+                                    class="enable-switcher"
                                     v-perm="{
                                         hasPermission: row.managePermission,
                                         disablePermissionApi: true,
@@ -135,14 +142,20 @@
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
                                 >
-                                    <img src="../assets/scss/logo/warning-circle-small.svg" alt="">
+                                    <img
+                                        src="../assets/scss/logo/warning-circle-small.svg"
+                                        alt=""
+                                    >
                                 </div>
                                 <div
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
                                 >
-                                    <img src="../assets/scss/logo/wait-small.svg" alt="">
+                                    <img
+                                        src="../assets/scss/logo/wait-small.svg"
+                                        alt=""
+                                    >
                                 </div>
                             </span>
                         </template>
@@ -207,11 +220,18 @@
             v-model="showFailedEnableDialog"
             :width="600"
             header-position="left"
-            :title="$t('启用项目失败')">
+            :title="$t('启用项目失败')"
+        >
             {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
 
             <div slot="footer">
-                <bk-button class="mr10" theme="primary" @click="handleToProjectManage">{{ $t('去关联运营产品') }}</bk-button>
+                <bk-button
+                    class="mr10"
+                    theme="primary"
+                    @click="handleToProjectManage"
+                >
+                    {{ $t('去关联运营产品') }}
+                </bk-button>
                 <bk-button @click="showFailedEnableDialog = false">{{ $t('cancel') }}</bk-button>
             </div>
         </bk-dialog>
@@ -219,16 +239,24 @@
             v-model="showDisableProjectDialog"
             :width="600"
             header-position="left"
-            :title="$t('确定停用项目吗？')">
+            :title="$t('确定停用项目吗？')"
+        >
             <i18n
                 tag="div"
                 path="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
-                class="empty-tips">
-                <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
-                <span style="color: red">{{$t('备份需要的')}}</span>
+                class="empty-tips"
+            >
+                <span style="color: red">{{ $t('流水线产生的构建日志、制品、报告。') }}</span>
+                <span style="color: red">{{ $t('备份需要的') }}</span>
             </i18n>
             <div slot="footer">
-                <bk-button class="mr10" theme="primary" @click="toggleEnable">{{ $t('confirm') }}</bk-button>
+                <bk-button
+                    class="mr10"
+                    theme="primary"
+                    @click="toggleEnable"
+                >
+                    {{ $t('confirm') }}
+                </bk-button>
                 <bk-button @click="showDisableProjectDialog = false">{{ $t('cancel') }}</bk-button>
             </div>
         </bk-dialog>
@@ -242,7 +270,6 @@
     } from '@/utils/permission'
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
         englishName: 'ENGLISH_NAME'

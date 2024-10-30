@@ -105,17 +105,6 @@ interface OpProjectWorkspaceResource {
         data: OpUpdateCCHostData
     ): Result<Boolean>
 
-    @Operation(summary = "刷新 codeproxy 数据")
-    @POST
-    @Path("/refreshCodeProxy")
-    fun refreshCodeProxy(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("projectId")
-        projectId: String
-    )
-
     @Operation(summary = "导出实例页面查询结果")
     @POST
     @Path("/list/export")
@@ -151,4 +140,19 @@ interface OpProjectWorkspaceResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<WorkspaceNotifyListData>>
+
+    @Operation(summary = "用户申请查看工作空间录像权限回调")
+    @POST
+    @Path("/apply_view_record_callback")
+    fun applyViewRecordCallback(
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    )
 }

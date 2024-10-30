@@ -30,11 +30,16 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -83,21 +88,6 @@ interface UserRemoteDevResource {
         userId: String,
         data: Watermark
     ): Result<Any>
-
-    @Operation(summary = "上报preci agent id")
-    @POST
-    @Path("/preci_agent")
-    fun preCiAgent(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "agentId", required = true)
-        @QueryParam("agentId")
-        agentId: String
-    ): Result<Boolean>
 
     @Operation(summary = "根据bi_ticket或bk_token获取用户名称")
     @GET
@@ -191,4 +181,34 @@ interface UserRemoteDevResource {
         @QueryParam("cgsId")
         cgsId: String
     ): Result<Boolean>
+
+    @Operation(summary = "客户端查询是否可以升级")
+    @POST
+    @Path("/client/upgrade")
+    fun clientUpgrade(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ClientUpgradeData
+    ): Result<ClientUpgradeResp>
+
+    @Operation(summary = "根据CDS TOKEN获取云桌面信息")
+    @GET
+    @Path("/workspace_detail")
+    fun getProjectWorkspace(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "IP", required = false)
+        @HeaderParam(DEVX_HEADER_CDS_TOKEN)
+        cdsToken: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
+    @GET
+    @Path("/client/tips")
+    fun clientTips(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<List<ClientTips>>
 }

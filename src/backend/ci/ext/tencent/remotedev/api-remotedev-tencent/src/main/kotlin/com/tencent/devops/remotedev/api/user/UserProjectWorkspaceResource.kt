@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -37,9 +36,11 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -69,9 +70,6 @@ interface UserProjectWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "bkTicket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkTicket: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -294,7 +292,7 @@ interface UserProjectWorkspaceResource {
         userId: String,
         @Parameter(description = "项目ID", required = false)
         @PathParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "机型", required = false)
         @QueryParam("machineType")
         machineType: String?,
@@ -305,4 +303,63 @@ interface UserProjectWorkspaceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
+
+    @Operation(summary = "云桌面调整配置")
+    @POST
+    @Path("/workspace/{workspaceName}/upgrade")
+    fun upgradeWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean>
+
+    @Operation(summary = "申请查看当前工作空间录屏")
+    @POST
+    @Path("/workspace/{workspaceName}/apply_view_record")
+    fun applyViewRecord(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "查看当前工作空间录屏元数据")
+    @GET
+    @Path("/workspace/{workspaceName}/meta_data")
+    fun getViewRecordMetadata(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "第几页, 默认1", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数据条数，默认20", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "开始搜索视频时间", required = true)
+        @QueryParam("startTime")
+        startTime: Long,
+        @Parameter(description = "结束搜索视频时间", required = true)
+        @QueryParam("stopTime")
+        stopTime: Long
+    ): Result<Page<WorkspaceRecordMetadata>>
 }

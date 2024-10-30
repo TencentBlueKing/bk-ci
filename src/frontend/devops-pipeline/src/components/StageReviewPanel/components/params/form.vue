@@ -8,27 +8,63 @@
         :title="computedTitle"
         :auto-close="false"
         @confirm="confirm"
-        @cancel="cancel">
-        <bk-form form-type="vertical" :model="copyForm" ref="paramForm">
-            <bk-form-item :label="$t('stageReview.name')" :rules="[requireRule($t('stageReview.name'))]" property="key" :required="true" error-display-type="normal">
+        @cancel="cancel"
+    >
+        <bk-form
+            form-type="vertical"
+            :model="copyForm"
+            ref="paramForm"
+        >
+            <bk-form-item
+                :label="$t('stageReview.name')"
+                :rules="[requireRule($t('stageReview.name'))]"
+                property="key"
+                :required="true"
+                error-display-type="normal"
+            >
                 <bk-input v-model="copyForm.key"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('stageReview.alias')">
                 <bk-input v-model="copyForm.chineseName"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('stageReview.type')" :rules="[requireRule($t('stageReview.type'))]" property="valueType" :required="true" error-display-type="normal">
-                <bk-select v-model="copyForm.valueType" @selected="changeValueType" searchable>
-                    <bk-option v-for="option in paramTypeList"
+            <bk-form-item
+                :label="$t('stageReview.type')"
+                :rules="[requireRule($t('stageReview.type'))]"
+                property="valueType"
+                :required="true"
+                error-display-type="normal"
+            >
+                <bk-select
+                    v-model="copyForm.valueType"
+                    @selected="changeValueType"
+                    searchable
+                >
+                    <bk-option
+                        v-for="option in paramTypeList"
                         :key="option.id"
                         :id="option.id"
-                        :name="option.name">
+                        :name="option.name"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('stageReview.listOptions')" v-if="isSelectorParam(copyForm.valueType)" :desc="$t('editPage.optionsDesc')">
-                <bk-input type="textarea" :value="getTextAreaValue()" @blur="changeOption" :placeholder="$t('editPage.optionTips')"></bk-input>
+            <bk-form-item
+                :label="$t('stageReview.listOptions')"
+                v-if="isSelectorParam(copyForm.valueType)"
+                :desc="$t('editPage.optionsDesc')"
+            >
+                <bk-input
+                    type="textarea"
+                    :value="getTextAreaValue()"
+                    @blur="changeOption"
+                    :placeholder="$t('editPage.optionTips')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('stageReview.defaultValue')" v-if="copyForm.valueType" :key="copyForm.valueType">
+            <bk-form-item
+                :label="$t('stageReview.defaultValue')"
+                v-if="copyForm.valueType && !isCheakboxParam(copyForm.valueType)"
+                :key="copyForm.valueType"
+            >
                 <param-value :form="copyForm"></param-value>
             </bk-form-item>
             <bk-form-item :label="$t('stageReview.required')">
@@ -36,13 +72,19 @@
                     <bk-radio :value="true">
                         {{ $t('true') }}
                     </bk-radio>
-                    <bk-radio :value="false" style="marginLeft:55px">
+                    <bk-radio
+                        :value="false"
+                        style="marginLeft:55px"
+                    >
                         {{ $t('false') }}
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item :label="$t('desc')">
-                <bk-input type="textarea" v-model="copyForm.desc"></bk-input>
+                <bk-input
+                    type="textarea"
+                    v-model="copyForm.desc"
+                ></bk-input>
             </bk-form-item>
         </bk-form>
     </bk-dialog>
@@ -54,7 +96,8 @@
         CHECK_PARAM_LIST,
         isEnumParam,
         isMultipleParam,
-        isBooleanParam
+        isBooleanParam,
+        isCheakboxParam
     } from '@/store/modules/atom/paramsConfig'
 
     const paramTypeList = CHECK_PARAM_LIST.map((item) => ({
@@ -104,6 +147,7 @@
         methods: {
             isBooleanParam,
             isMultipleParam,
+            isCheakboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
@@ -127,9 +171,13 @@
                 this.copyForm.value = ''
                 this.copyForm.options = []
 
-                if (isMultipleParam(type)) this.copyForm.value = []
-
-                if (isBooleanParam(type)) this.copyForm.value = false
+                if (isMultipleParam(type)) {
+                    this.copyForm.value = []
+                } else if (isBooleanParam(type)) {
+                    this.copyForm.value = ''
+                } else if (isCheakboxParam(type)) {
+                    this.copyForm.value = false
+                }
             },
 
             changeOption (val) {

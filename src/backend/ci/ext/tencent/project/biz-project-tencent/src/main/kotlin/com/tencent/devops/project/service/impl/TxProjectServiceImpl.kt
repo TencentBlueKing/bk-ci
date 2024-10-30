@@ -47,6 +47,7 @@ import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
@@ -56,7 +57,6 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -99,7 +99,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val config: CommonConfig,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
     private val bkAccessTokenApi: BkAccessTokenApi,
@@ -492,6 +492,10 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
         return projectOperationalProductService.listAllProducts()
+    }
+
+    override fun getProductByProductId(productId: Int): OperationalProductVO? {
+        return projectOperationalProductService.getProductByProductId(productId)
     }
 
     override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {

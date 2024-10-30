@@ -28,7 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.RemoteDevService
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component
 @Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
     private val remoteDevService: RemoteDevService,
-    private val remoteDevDispatcher: RemoteDevDispatcher
+    private val remoteDevDispatcher: SampleEventDispatcher
 ) {
 
     @BkTimed
@@ -55,9 +55,8 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
-            mountType = event.mountType ?: event.devFile.checkWorkspaceMountType(),
+            mountType = event.mountType,
             type = UpdateEventType.CREATE,
-            bkTicket = event.bkTicket,
             status = false
         )
         try {
@@ -104,7 +103,6 @@ class WorkspaceListener @Autowired constructor(
             workspaceName = event.workspaceName,
             mountType = event.mountType,
             type = event.type,
-            bkTicket = event.bkTicket,
             status = false,
             environmentUid = "",
             workspaceImageInfo = WorkspaceImageInfo(imageId = event.imageId ?: "")
@@ -116,7 +114,7 @@ class WorkspaceListener @Autowired constructor(
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event)
                     backEvent.status = true
-                    backEvent.environmentHost = workspaceResponse.environmentHost
+                    backEvent.environmentIp = workspaceResponse.environmentIp
                 }
 
                 UpdateEventType.STOP -> {
@@ -131,12 +129,12 @@ class WorkspaceListener @Autowired constructor(
                     backEvent.status = remoteDevService.restartWorkspace(event)
                 }
 
-                UpdateEventType.MAKE_IMAGE -> {
-                    remoteDevService.makeWorkspaceImageWithBackEvent(event, backEvent)
-                }
-
                 UpdateEventType.REBUILD -> {
                     backEvent.status = remoteDevService.rebuildWorkspace(event)
+                }
+
+                UpdateEventType.UPGRADE -> {
+                    remoteDevService.upgradeWorkspace(event)
                 }
 
                 else -> {
@@ -147,6 +145,10 @@ class WorkspaceListener @Autowired constructor(
             backEvent.errorMsg = e.message
             logger.error("Fail to handle workspace operate ($event)", e)
         } finally {
+            if (event.type == UpdateEventType.UPGRADE) {
+                // 不进行等待回写操作
+                return
+            }
             if (!backEvent.status) {
                 logger.warn("WORKSPACE_CHANGE_FAILED|${event.type}|event=$event")
             }

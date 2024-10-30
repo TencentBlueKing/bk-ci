@@ -158,13 +158,10 @@ class PipelineSettingDao {
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-            }
-            // maxConRunningQueueSize 默认传空不更新
-            if (setting.maxConRunningQueueSize != null) {
-                insert.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             }
             return insert.execute()
         }
@@ -354,9 +351,16 @@ class PipelineSettingDao {
         override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
             return record?.let { t ->
                 val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                // 老数据兼容,老数据的启用企业微信群通知,转换成微信组通知类型
+                if (t.successWechatGroupFlag == true) {
+                    successType.add(PipelineSubscriptionType.WEWORK_GROUP)
+                }
                 val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
+                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toMutableSet() ?: mutableSetOf()
+                if (t.failWechatGroupFlag == true) {
+                    failType.add(PipelineSubscriptionType.WEWORK_GROUP)
+                }
                 var oldSuccessSubscription = Subscription(
                     types = successType,
                     groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
@@ -382,14 +386,14 @@ class PipelineSettingDao {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     if (list.isNotEmpty()) {
                         oldSuccessSubscription = list.first()
-                        list
+                        list.map { s -> s.fixWeworkGroupType() }
                     } else null
                 } ?: oldSuccessSubscription?.let { listOf(it) }
                 val failSubscriptionList = t.failureSubscription?.let {
                     val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     if (list.isNotEmpty()) {
                         oldFailSubscription = list.first()
-                        list
+                        list.map { s -> s.fixWeworkGroupType() }
                     } else null
                 } ?: oldFailSubscription?.let { listOf(it) }
                 PipelineSetting(
@@ -413,7 +417,8 @@ class PipelineSettingDao {
                     cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                    }
+                    },
+                    version = t.version ?: 1
                 )
             }
         }

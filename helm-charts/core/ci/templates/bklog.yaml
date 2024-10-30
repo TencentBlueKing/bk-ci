@@ -17,7 +17,7 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/managed-by: Helm
   path:
-    - /data/logs/*-.log
+    - /data/workspace/*/logs/service.log
   encoding: 'utf-8'
   multiline:
     pattern: '^[0-2][0-9][0-9][0-9].[0-1][0-9].[0-3][0-9]'

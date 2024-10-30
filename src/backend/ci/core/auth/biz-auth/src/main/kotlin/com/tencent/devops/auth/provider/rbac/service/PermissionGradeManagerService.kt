@@ -31,11 +31,9 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT_APPLICATION
@@ -44,14 +42,13 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -82,12 +79,12 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
-    private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val itsmService: ItsmService,
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService
 ) {
 
     companion object {
@@ -409,7 +406,14 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
-        syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode, projectName = projectName)
+        permissionResourceGroupService.syncManagerGroup(
+            projectCode = projectCode,
+            managerId = gradeManagerId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName,
+            iamResourceCode = projectCode
+        )
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -417,11 +421,15 @@ class PermissionGradeManagerService @Autowired constructor(
             groupType = GroupType.DEFAULT.value
         )
         defaultGroupConfigs.forEach { groupConfig ->
-            permissionResourceGroupService.createProjectGroupByGroupCode(
+            permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
                 projectId = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
                 groupCode = groupConfig.groupCode
             )
         }
+        // 分级管理员创建后,需要同步下组、成员和分级管理员
+        resourceGroupSyncService.syncGroupAndMember(projectCode = projectCode)
     }
 
     fun modifyGradeDefaultGroup(
@@ -429,65 +437,12 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
-        val defaultGroupConfigs = authResourceGroupConfigDao.get(
-            dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
-            groupType = GroupType.DEFAULT.value
-        )
-        defaultGroupConfigs.forEach { groupConfig ->
-            authResourceGroupDao.update(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName,
-                groupCode = groupConfig.groupCode,
-                groupName = groupConfig.groupName
-            )
-        }
-    }
-
-    /**
-     * 同步创建分级管理员时自动创建的组
-     */
-    private fun syncGradeManagerGroup(
-        gradeManagerId: Int,
-        projectCode: String,
-        projectName: String
-    ) {
-        val resourceManageGroupInfo = authResourceGroupDao.get(
-            dslContext = dslContext,
+        permissionResourceGroupService.modifyManagerDefaultGroup(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
-            groupCode = DefaultGroupType.MANAGER.value
+            resourceName = projectName
         )
-        if (resourceManageGroupInfo != null) {
-            return
-        }
-        val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
-        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-        val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId.toString(),
-            searchGroupDTO,
-            pageInfoDTO
-        )
-        iamGroupInfoList.results.forEach { iamGroupInfo ->
-            authResourceGroupDao.create(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName,
-                iamResourceCode = projectCode,
-                groupCode = DefaultGroupType.MANAGER.value,
-                groupName = iamGroupInfo.name,
-                defaultGroup = true,
-                relationId = iamGroupInfo.id.toString()
-            )
-        }
     }
 
     fun deleteGradeManager(gradeManagerId: String) {

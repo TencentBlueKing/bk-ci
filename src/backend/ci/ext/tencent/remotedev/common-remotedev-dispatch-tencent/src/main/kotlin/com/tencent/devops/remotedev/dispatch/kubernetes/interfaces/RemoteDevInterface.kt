@@ -66,7 +66,7 @@ interface RemoteDevInterface {
     /**
      * 重装工作空间系统
      */
-    fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String
+    fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String, formatDataDisk: Boolean?): String
 
     /**
      * 删除远程工作空间
@@ -74,9 +74,20 @@ interface RemoteDevInterface {
     fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String
 
     /**
-     * 删除远程工作空间
+     * 制作工作空间镜像
      */
-    fun makeWorkspaceImage(userId: String, event: WorkspaceOperateEvent): String
+    fun makeWorkspaceImage(
+        userId: String,
+        workspaceName: String,
+        gameId: String,
+        cgsId: String,
+        imageId: String
+    ): String
+
+    /**
+     * 工作空间机型转换
+     */
+    fun upgradeWorkspaceVm(userId: String, workspaceName: String, machineType: String, pipelineId: String): String
 
     /**
      * 获取工作空间web端链接

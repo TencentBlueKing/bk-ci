@@ -27,64 +27,17 @@
 
 package com.tencent.devops.plugin.init
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.plugin.listener.git.GitWebhookUnlockListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class GitWebhookUnlockConfiguration {
-
-    @Bean
-    fun gitWebhookUnlockQueue() = Queue(MQ.QUEUE_GIT_WEBHOOK_UNLOCK_EVENT)
-
-    @Bean
-    fun gitWebhookUnlockExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun gitWebhookUnlockBind(
-        @Autowired gitWebhookUnlockQueue: Queue,
-        @Autowired gitWebhookUnlockExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(gitWebhookUnlockQueue).to(gitWebhookUnlockExchange)
-            .with(MQ.ROUTE_GIT_WEBHOOK_UNLOCK_EVENT)
-    }
-
-    @Bean
-    fun gitWebhookUnlockQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired gitWebhookUnlockQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: GitWebhookUnlockListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = gitWebhookUnlockQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 5,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
+    @EventConsumer
+    fun gitWebhookUnlockConsumer(
+        @Autowired listener: GitWebhookUnlockListener
+    ) = ScsConsumerBuilder.build<GitWebhookUnlockEvent> { listener.execute(it) }
 }

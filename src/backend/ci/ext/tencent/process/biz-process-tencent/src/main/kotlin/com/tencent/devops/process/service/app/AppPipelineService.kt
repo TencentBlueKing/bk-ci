@@ -165,7 +165,10 @@ class AppPipelineService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         checkPermission: Boolean = true,
         materialBranch: List<String>?,
-        customVersion: Int?
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Page<AppPipelineHistory> {
 
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -192,7 +195,10 @@ class AppPipelineService @Autowired constructor(
             remark = null,
             buildNoStart = null,
             buildNoEnd = null,
-            customVersion = customVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         val histories = result.records.map { h ->
             val packageVersion = StringBuilder()

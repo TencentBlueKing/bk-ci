@@ -159,7 +159,7 @@ const actions = {
      * CMDB节点列表
      */
     requestCmdbNode ({ commit }, { params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?projectId=${params.projectId}&page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
+        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesWithScrollId`, params).then(response => {
             return response
         })
     },
@@ -317,8 +317,8 @@ const actions = {
     /**
     * 设置agent构建并发数
     */
-    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, parallelTaskCount }) {
-        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${parallelTaskCount}`).then(response => {
+    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${count}`).then(response => {
             return response
         })
     },
@@ -459,9 +459,22 @@ const actions = {
     getAgentTaskLog (_, { projectId, jobId, instanceId }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
     },
+    // 手动安装Agent,获取安装命令
+    fetchInstallCommand (_, { projectId, jobId, hostId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/obtain_manual_installation_command?hostId=${hostId}`)
+    },
     enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
         return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
+    },
+    /**
+    * 设置docker构建并发数
+    */
+    saveDockerParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
+            return response
+        })
     }
+
 }
 
 export default actions

@@ -36,11 +36,11 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
@@ -145,7 +146,7 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
-
+        // 如果调试出现了没有关联setting的老版本，则使用当前的配置
         val setting = if (debug == true) {
             pipelineRepositoryService.getDraftVersionResource(
                 pipeline.projectId, pipeline.pipelineId
@@ -157,7 +158,7 @@ class PipelineBuildService(
                     detailInfo = null,
                     version = it
                 )
-            }
+            } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         } else {
             pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         }
@@ -203,7 +204,15 @@ class PipelineBuildService(
                 pipeline = pipeline,
                 projectVO = projectVO,
                 channelCode = channelCode,
-                isMobile = isMobile
+                isMobile = isMobile,
+                pipelineAuthorizer = if (pipeline.channelCode == ChannelCode.BS) {
+                    pipelineRepositoryService.getPipelineOauthUser(
+                        projectId = pipeline.projectId,
+                        pipelineId = pipeline.pipelineId
+                    )
+                } else {
+                    null
+                }
             )
 
             val context = StartBuildContext.init(
@@ -218,7 +227,7 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
+                realStartParamKeys = model.getTriggerContainer().params.map { it.id },
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
@@ -235,7 +244,7 @@ class PipelineBuildService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize,
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
                     retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null
                 )
             )
@@ -265,7 +274,8 @@ class PipelineBuildService(
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
         isMobile: Boolean,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        pipelineAuthorizer: String? = null
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -291,7 +301,7 @@ class PipelineBuildService(
         )
 
         // 解析出定义的流水线变量
-//        val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+//        val realStartParamKeys = (model.getTriggerContainer()).params.map { it.id }
 //        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
 
         // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
@@ -378,6 +388,15 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
+        // 流水线权限代持人
+        pipelineAuthorizer?.let {
+            pipelineParamMap[BK_CI_AUTHORIZER] = BuildParameters(
+                key = BK_CI_AUTHORIZER,
+                value = it,
+                readOnly = true
+            )
+        }
+
         // 链路
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrBlank()) { // 保存链路信息

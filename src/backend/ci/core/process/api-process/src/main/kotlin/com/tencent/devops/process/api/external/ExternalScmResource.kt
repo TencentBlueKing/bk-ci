@@ -59,6 +59,9 @@ interface ExternalScmResource {
         @Parameter(description = "X-Token")
         @HeaderParam("X-Token")
         secret: String? = null,
+        @Parameter(description = "来源类型,是否是测试请求")
+        @HeaderParam("X-Source-Type")
+        sourceType: String? = null,
         @Parameter(description = "X-TRACE-ID")
         @HeaderParam("X-TRACE-ID")
         traceId: String,

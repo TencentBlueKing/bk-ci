@@ -51,8 +51,10 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.utils.RetryUtils
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.net.URLEncoder
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
@@ -440,6 +442,55 @@ class TGitService @Autowired constructor(
         }
         return sb.toString()
     }
+
+    fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int,
+        url: String
+    ): List<ChangeFileInfo> {
+        val host = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
+        val apiUrl = StringBuilder("$host/projects/${urlEncode(gitProjectId)}/" +
+                "repository/compare/changed_files/list")
+        setToken(tokenType, apiUrl, token)
+        val requestUrl = apiUrl.toString().addParams(
+            mapOf(
+                "from" to from,
+                "to" to to,
+                "straight" to straight,
+                "page" to page,
+                "pageSize" to pageSize
+            )
+        )
+        val res = mutableListOf<ChangeFileInfo>()
+        val request = Request.Builder()
+            .url(requestUrl)
+            .get()
+            .build()
+        var result = res.toList()
+        logger.info("getChangeFileList: $requestUrl")
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            val data = response.body?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                result = JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+            }
+        }
+        return result
+    }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitService::class.java)

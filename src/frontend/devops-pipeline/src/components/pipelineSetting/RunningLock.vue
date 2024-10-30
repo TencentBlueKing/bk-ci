@@ -1,6 +1,9 @@
 <template>
-    <div v-if="pipelineSetting" class="bkdevops-running-lock-setting-tab">
-        <div class="pipeline-setting-title">{{$t('settings.runLock')}}</div>
+    <div
+        v-if="pipelineSetting"
+        class="bkdevops-running-lock-setting-tab"
+    >
+        <div class="pipeline-setting-title">{{ $t('settings.runLock') }}</div>
         <bk-form
             :model="pipelineSetting"
             :rules="formRule"
@@ -8,12 +11,18 @@
             form-type="vertical"
             class="new-ui-form"
         >
-            <bk-form-item :is-error="errors.has('buildNumRule')" :error-msg="errors.first('buildNumRule')">
+            <bk-form-item
+                :is-error="errors.has('buildNumRule')"
+                :error-msg="errors.first('buildNumRule')"
+            >
                 <div class="layout-label">
                     <label class="ui-inner-label">
                         <span class="bk-label-text">{{ $t('settings.buildNumberFormat') }}</span>
                         <span @click="handleGoDocumentInfo">
-                            <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                            <i
+                                class="bk-icon icon-question-circle-shape"
+                                v-bk-tooltips="$t('buildNumRuleWarn')"
+                            />
                         </span>
                     </label>
                 </div>
@@ -26,32 +35,84 @@
                     v-validate.initial="{ buildNumRule: true }"
                     :handle-change="handleBaseInfoChange"
                 />
-                <p class="error-tips"
-                    v-if="errors.has('buildNumRule')">
+                <p
+                    class="error-tips"
+                    v-if="errors.has('buildNumRule')"
+                >
                     {{ $t('settings.validatebuildNum') }}
                 </p>
             </bk-form-item>
             <bk-form-item :label="$t('template.parallelSetting')">
-                <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
+                <bk-radio-group
+                    :value="pipelineSetting.runLockType"
+                    @change="handleLockTypeChange"
+                >
                     <div class="run-lock-radio-item">
                         <bk-radio
                             :disabled="!editable"
                             :value="runTypeMap.MULTIPLE"
                         >
-                            {{$t('settings.runningOption.multiple')}}
+                            {{ $t('settings.runningOption.multiple') }}
                         </bk-radio>
                     </div>
+                </bk-radio-group>
+                <div
+                    v-if="isMultipleLock"
+                    class="single-lock-sub-form"
+                    :key="pipelineSetting.runLockType"
+                >
+                    <bk-form-item
+                        :label="$t('settings.concurrentMaxConcurrency')"
+                        error-display-type="normal"
+                        property="maxConRunningQueueSize"
+                    >
+                        <bk-input
+                            type="number"
+                            :disabled="!editable"
+                            :placeholder="$t('settings.maxConcurrencyPlaceholder')"
+                            v-model="pipelineSetting.maxConRunningQueueSize"
+                            @change="val => handleBaseInfoChange('maxConRunningQueueSize', val ? Number(val) : null)"
+                        />
+                    </bk-form-item>
+
+                    <bk-form-item
+                        :required="isMultipleLock"
+                        :label="$t('settings.concurrentTimeout')"
+                        error-display-type="normal"
+                        property="waitQueueTimeMinute"
+                    >
+                        <bk-input
+                            type="number"
+                            :disabled="!editable"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="pipelineSetting.waitQueueTimeMinute"
+                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val ? Number(val) : null)"
+                        >
+                            <template slot="append">
+                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
+                            </template>
+                        </bk-input>
+                    </bk-form-item>
+                </div>
+                <bk-radio-group
+                    :value="pipelineSetting.runLockType"
+                    @change="handleLockTypeChange"
+                >
                     <div class="run-lock-radio-item">
                         <bk-radio
                             :disabled="!editable"
                             :value="runTypeMap.GROUP"
                         >
-                            {{$t('settings.runningOption.single')}}
+                            {{ $t('settings.runningOption.single') }}
                         </bk-radio>
                     </div>
                 </bk-radio-group>
             </bk-form-item>
-            <div class="single-lock-sub-form" v-if="isSingleLock">
+
+            <div
+                v-if="isSingleLock"
+                class="single-lock-sub-form"
+            >
                 <bk-form-item
                     :required="isSingleLock"
                     property="concurrencyGroup"
@@ -76,7 +137,7 @@
                         :checked="pipelineSetting.concurrencyCancelInProgress"
                         @change="handleConCurrencyCancel"
                     >
-                        {{$t('settings.stopWhenNewCome')}}
+                        {{ $t('settings.stopWhenNewCome') }}
                     </bk-checkbox>
                 </bk-form-item>
                 <template v-if="!pipelineSetting.concurrencyCancelInProgress">
@@ -93,7 +154,7 @@
                             @change="val => handleBaseInfoChange('maxQueueSize', val)"
                         >
                             <template slot="append">
-                                <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
+                                <span class="pipeline-setting-unit">{{ $t('settings.item') }}</span>
                             </template>
                         </bk-input>
                     </bk-form-item>
@@ -110,7 +171,7 @@
                             @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
                         >
                             <template slot="append">
-                                <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
                             </template>
                         </bk-input>
                     </bk-form-item>
@@ -159,6 +220,9 @@
             isSingleLock () {
                 return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting?.runLockType)
             },
+            isMultipleLock () {
+                return [this.runTypeMap.MULTIPLE].includes(this.pipelineSetting?.runLockType)
+            },
             formRule () {
                 const requiredRule = {
                     required: this.isSingleLock,
@@ -185,9 +249,26 @@
                         {
                             validator: (val) => {
                                 const intVal = parseInt(val, 10)
-                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                                if (this.isSingleLock || this.isMultipleLock) {
+                                    return intVal <= 1440 && intVal >= 1
+                                }
+                                return true
                             },
-                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            message: `${this.isSingleLock
+                                ? this.$t('settings.lagestTime')
+                                : this.$t('settings.concurrentTimeout')
+                            }${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'blur'
+                        }
+                    ],
+                    maxConRunningQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                if (!val && val !== 0) return true
+                                return /^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/.test(val)
+                            },
+                            message: this.$t('settings.maxConRunningQueueSizeTips'),
                             trigger: 'blur'
                         }
                     ]

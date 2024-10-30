@@ -75,4 +75,6 @@ interface ExperiencePermissionService {
         projectId: String,
         groupRecordIds: List<Long>
     ): List<Long>
+
+    fun deleteExperienceResource(projectId: String, experienceId: Long)
 }

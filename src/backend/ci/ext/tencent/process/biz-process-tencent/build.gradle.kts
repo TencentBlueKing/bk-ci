@@ -35,7 +35,6 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:common:common-codecc"))
-    api(project(":ext:tencent:common:common-job"))
     api(project(":core:process:model-process"))
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:process:biz-base-tencent"))

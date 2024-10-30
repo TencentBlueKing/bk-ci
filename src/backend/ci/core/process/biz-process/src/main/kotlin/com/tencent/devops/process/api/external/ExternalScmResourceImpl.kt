@@ -38,41 +38,49 @@ import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : ExternalScmResource {
 
     @Value("\${scm.external.tGit.hookSecret:}")
     private val tGitWebhookSecret: String = ""
+
     @Value("\${scm.external.tGit.enableHookSecret}")
     private val enableTGitWebhookSecret: Boolean = false
 
     override fun webHookCodeSvnCommit(event: String) =
-            Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, SvnWebhookEvent(requestContent = event)))
+        Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, SvnWebhookEvent(requestContent = event)))
 
     override fun webHookCodeGitCommit(
         event: String,
         secret: String?,
+        sourceType: String?,
         traceId: String,
         body: String
-    ): Result<Boolean> = Result(
-        CodeWebhookEventDispatcher.dispatchEvent(
-            rabbitTemplate = rabbitTemplate,
-            event = GitWebhookEvent(
-                requestContent = body,
-                event = event,
-                secret = secret
+    ): Result<Boolean> {
+        // 工蜂的测试请求,应该忽略
+        if (sourceType == "Test") {
+            return Result(true)
+        }
+        return Result(
+            CodeWebhookEventDispatcher.dispatchEvent(
+                streamBridge = streamBridge,
+                event = GitWebhookEvent(
+                    requestContent = body,
+                    event = event,
+                    secret = secret
+                )
             )
         )
-    )
+    }
 
     override fun webHookGitlabCommit(event: String) =
-        Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))
+        Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, GitlabWebhookEvent(requestContent = event)))
 
     override fun webHookCodeTGitCommit(
         event: String,
@@ -93,7 +101,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         }
         return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
+                streamBridge = streamBridge,
                 event = TGitWebhookEvent(
                     requestContent = body,
                     event = event,
@@ -107,7 +115,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         logger.info("p4 webhook|$body")
         return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
+                streamBridge = streamBridge,
                 event = P4WebhookEvent(
                     requestContent = body
                 )

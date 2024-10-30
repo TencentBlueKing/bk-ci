@@ -8,12 +8,15 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -21,6 +24,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -47,6 +51,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             isOffshore = isOffshore,
             ticket = ticket
+        )
+    }
+
+    override fun desktopTokenCheck(
+        appCode: String?,
+        apigwType: String?,
+        token: String,
+        dToken: String
+    ): Result<UserOnePassword> {
+        logger.info("Get  projects info by group ,userId:$dToken")
+        return client.get(ServiceRemoteDevResource::class).desktopTokenCheck(
+            token = token,
+            dToken = dToken
         )
     }
 
@@ -116,6 +133,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    @Suppress("ComplexCondition")
     override fun notifyWorkspaceInfo(
         appCode: String?,
         apigwType: String?,
@@ -123,7 +141,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
-        if (notifyData.projectId.isNullOrEmpty() && notifyData.ip.isNullOrEmpty() && notifyData.owner.isNullOrEmpty()) {
+        if ((notifyData.projectId.isNullOrEmpty() || notifyData.projectId?.all { it.isBlank() } == true) &&
+            (notifyData.ip.isNullOrEmpty() || notifyData.ip?.all { it.isBlank() } == true) &&
+            (notifyData.owner.isNullOrEmpty() || notifyData.owner?.all { it.isBlank() } == true)
+        ) {
             return Result(false)
         }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
@@ -289,11 +310,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun queryWorkspaceImageList(
         appCode: String?,
         apigwType: String?,
-        projectId: String?
+        projectId: String?,
+        imageId: String?
     ): Result<Map<String, Any>> {
         logger.info("queryWorkspaceImageList |$projectId|")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
-            projectId = projectId
+            projectId = projectId,
+            imageId = imageId
         )
     }
 
@@ -361,5 +384,55 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             imageId = imageId
         )
+    }
+
+    override fun operateCvmCallback(appCode: String?, apigwType: String?, data: OperateCvmData): Result<Boolean> {
+        logger.info("operateCvmCallback $data")
+        return client.get(ServiceRemoteDevResource::class).opCvm(data)
+    }
+
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("enableWorkspaceRecord |$userId|$projectId|$workspaceName|$enable")
+        return client.get(ServiceRemoteDevResource::class).enableWorkspaceRecord(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            enable = enable
+        )
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip")
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
+            userId = userId,
+            appId = appId,
+            ip = ip
+        )
+    }
+
+    override fun checkUserViewWorkspacePermission(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkUserViewWorkspacePermission |$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).checkUserViewWorkspacePermission(userId, workspaceName)
+    }
+
+    override fun expandWorkspaceDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<ExpandDiskValidateResp?> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
     }
 }

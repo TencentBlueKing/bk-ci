@@ -28,9 +28,10 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT)
+@Event(destination = StreamBinding.BUILD_END_METRICS_DATA_REPORT_FANOUT, binder = StreamBinder.EXTEND_RABBIT)
 data class BuildEndMetricsBroadCastEvent(
     override val projectId: String,
     override val pipelineId: String,

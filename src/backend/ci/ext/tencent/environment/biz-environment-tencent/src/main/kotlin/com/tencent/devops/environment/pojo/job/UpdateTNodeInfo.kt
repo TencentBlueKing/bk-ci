@@ -46,6 +46,10 @@ data class UpdateTNodeInfo(
     val hostId: Long?,
     @get:Schema(title = "节点CC 云区域id")
     val cloudAreaId: Long?,
+    @get:Schema(title = "主机id")
+    val serverId: Long?,
+    @get:Schema(title = "操作系统类型")
+    val osType: String?,
     @get:Schema(title = "最后修改时间")
     val lastModifyTime: LocalDateTime?
 ) {
@@ -61,24 +65,11 @@ data class UpdateTNodeInfo(
         agentStatus = agentStatus,
         agentVersion = agentVersion,
         lastModifyTime = lastModifyTime,
+        serverId = null,
         hostId = null,
         cloudAreaId = null,
+        osType = null,
         displayName = null
-    )
-
-    constructor(
-        nodeId: Long,
-        displayName: String?,
-        lastModifyTime: LocalDateTime
-    ) : this(
-        nodeId = nodeId,
-        displayName = displayName,
-        lastModifyTime = lastModifyTime,
-        nodeStatus = null,
-        agentStatus = null,
-        agentVersion = null,
-        hostId = null,
-        cloudAreaId = null
     )
 
     constructor(
@@ -86,6 +77,8 @@ data class UpdateTNodeInfo(
         nodeStatus: String?,
         hostId: Long?,
         cloudAreaId: Long?,
+        serverId: Long?,
+        osType: String?,
         agentVersion: String?,
         lastModifyTime: LocalDateTime
     ) : this(
@@ -93,6 +86,8 @@ data class UpdateTNodeInfo(
         nodeStatus = nodeStatus,
         hostId = hostId,
         cloudAreaId = cloudAreaId,
+        serverId = serverId,
+        osType = osType,
         agentVersion = agentVersion,
         agentStatus = null,
         displayName = null,

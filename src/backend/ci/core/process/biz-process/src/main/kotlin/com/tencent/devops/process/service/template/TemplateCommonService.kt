@@ -1,10 +1,15 @@
 package com.tencent.devops.process.service.template
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Service
 @RefreshScope
 class TemplateCommonService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineInfoExtService: PipelineInfoExtService,
     private val pipelineSettingDao: PipelineSettingDao,
     private val templateDao: TemplateDao
 ) {
@@ -68,6 +74,26 @@ class TemplateCommonService @Autowired constructor(
                 params = arrayOf(maxSaveVersionNum.toString())
             )
         }
+    }
+
+    fun getDefaultSetting(
+        projectId: String,
+        templateId: String,
+        templateName: String
+    ): PipelineSetting {
+        val failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+        val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failSubscription = Subscription(
+            types = failType,
+            groups = emptySet(),
+            users = "\${{ci.actor}}",
+            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+        )
+        return PipelineSetting.defaultSetting(
+            projectId = projectId, pipelineId = templateId, pipelineName = templateName,
+            maxPipelineResNum = null, failSubscription = failSubscription
+        )
     }
 
     companion object {

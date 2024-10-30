@@ -10,7 +10,13 @@
         v-bind="options"
     >
         <div v-bkloading="{ isLoading: !loaded }">
-            <iframe v-if="show" @load="onload" ref="extensionIframe" class="extention-dialog-content-iframe" :src="src" />
+            <iframe
+                v-if="show"
+                @load="onload"
+                ref="extensionIframe"
+                class="extention-dialog-content-iframe"
+                :src="src"
+            />
         </div>
     </bk-dialog>
 </template>

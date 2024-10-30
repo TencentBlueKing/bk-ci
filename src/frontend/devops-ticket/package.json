@@ -9,24 +9,12 @@
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.8",
-    "@babel/eslint-parser": "^7.15.8",
-    "@babel/plugin-proposal-class-properties": "^7.14.5",
-    "@babel/plugin-proposal-decorators": "^7.15.8",
-    "@babel/plugin-proposal-export-namespace-from": "^7.14.5",
-    "@babel/plugin-proposal-function-sent": "^7.14.5",
-    "@babel/plugin-proposal-json-strings": "^7.14.5",
-    "@babel/plugin-proposal-numeric-separator": "^7.14.5",
-    "@babel/plugin-proposal-throw-expressions": "^7.14.5",
-    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
-    "@babel/plugin-syntax-import-meta": "^7.10.4",
-    "@babel/plugin-syntax-jsx": "^7.14.5",
-    "@babel/plugin-transform-object-assign": "^7.14.5",
-    "@babel/plugin-transform-runtime": "^7.15.8",
-    "@babel/preset-env": "^7.15.8",
-    "babel-helper-vue-jsx-merge-props": "^2.0.3",
+    "@babel/plugin-syntax-jsx": "^7.16.0",
+    "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
+    "@vue/babel-preset-jsx": "^1.2.4",
     "babel-loader": "^8.2.2",
-    "babel-plugin-transform-vue-jsx": "^4.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
@@ -44,11 +32,11 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "^15.10.0",
-    "webpack": "^5.58.1"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",
@@ -60,5 +48,17 @@
   },
   "author": "",
   "license": "ISC",
-  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
+  "nx": {
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/ticket/*.json",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/ticket"
+        ]
+      }
+    }
+  }
 }

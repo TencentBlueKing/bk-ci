@@ -110,7 +110,9 @@ object ProjectUtils {
                 pipelineLimit = pipelineLimit,
                 routerTag = routerTag,
                 relationId = relationId,
-                properties = properties.takeIf { !it.isNullOrBlank() }?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                properties = properties.takeIf { !it.isNullOrBlank() }
+                    ?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                    ?: ProjectProperties(),
                 subjectScopes = subjectScopes.takeIf { !it.isNullOrBlank() }?.let {
                     JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
                 },
@@ -128,7 +130,8 @@ object ProjectUtils {
     fun packagingBean(
         tProjectRecord: TProjectRecord,
         projectApprovalInfo: ProjectApprovalInfo?,
-        projectOrganizationInfo: ProjectOrganizationInfo? = null
+        projectOrganizationInfo: ProjectOrganizationInfo? = null,
+        beforeProductName: String? = null
     ): ProjectDiffVO {
         val isUseFixedOrganization = projectOrganizationInfo != null
         val subjectScopes = tProjectRecord.subjectScopes?.let {
@@ -187,7 +190,9 @@ object ProjectUtils {
                 projectType = projectType,
                 afterProjectType = projectApprovalInfo?.projectType,
                 productId = productId,
-                afterProductId = projectApprovalInfo?.productId
+                afterProductId = projectApprovalInfo?.productId,
+                productName = beforeProductName,
+                afterProductName = projectApprovalInfo?.productName
             )
         }
     }

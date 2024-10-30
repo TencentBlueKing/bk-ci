@@ -34,12 +34,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -55,7 +53,6 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -76,10 +73,7 @@ class StartWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
-    private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
@@ -170,15 +164,7 @@ class StartWorkspaceHandler @Autowired constructor(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
                     type = UpdateEventType.START,
-                    sshKeys = sshService.getSshPublicKeys4Ws(
-                        workspaceDao.fetchWorkspaceUser(
-                            dslContext,
-                            workspaceName
-                        ).toSet()
-                    ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                    bkTicket = "",
                     mountType = WorkspaceMountType.START,
                     gameId = gameId.first
                 )
@@ -224,7 +210,6 @@ class StartWorkspaceHandler @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
-                remoteDevBillingDao.newBilling(transactionContext, workspace.workspaceName, event.userId)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,
@@ -232,14 +217,10 @@ class StartWorkspaceHandler @Autowired constructor(
                 )
 
                 val lastSleepTimeCost = if (lastHistory?.endTime != null) {
-                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt().also {
-                        workspaceDao.updateWorkspaceSleepingTime(
-                            workspaceName = event.workspaceName,
-                            sleepTime = it,
-                            dslContext = transactionContext
-                        )
-                    }
-                } else 0
+                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
+                } else {
+                    0
+                }
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,

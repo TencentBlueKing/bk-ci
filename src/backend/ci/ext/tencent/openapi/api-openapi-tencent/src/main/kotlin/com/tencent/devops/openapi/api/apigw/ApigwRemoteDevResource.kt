@@ -2,18 +2,22 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -21,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -64,6 +69,24 @@ interface ApigwRemoteDevResource {
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
+
+    @Operation(summary = "校验token", tags = ["v4_app_ticket_check"])
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace"])
     @GET
@@ -405,10 +428,16 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "项目镜像id", required = true)
+        @QueryParam("imageId")
+        imageId: String?
     ): Result<Map<String, Any>>
 
-    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @Operation(
+        summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁",
+        tags = ["v4_app_modify_workspace_display_name"]
+    )
     @POST
     @Path("/modify/display_name")
     fun modifyWorkspaceDisplayName(
@@ -518,4 +547,80 @@ interface ApigwRemoteDevResource {
         @QueryParam("imageId")
         imageId: String
     ): Result<Boolean>
+
+    @Operation(summary = "增删CVM机器回调", tags = ["v4_app_remotedev_operate_cvm_callback"])
+    @POST
+    @Path("/operate_cvm_callback")
+    fun operateCvmCallback(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        data: OperateCvmData
+    ): Result<Boolean>
+
+    @Operation(summary = "开启或关闭工作空间录屏", tags = ["v4_app_enable_workspace_record"])
+    @PUT
+    @Path("/enable_workspace_record")
+    fun enableWorkspaceRecord(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "开启或关闭录屏", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "检查是否开启录屏并获取推流地址", tags = ["v4_app_check_workspace_record_enable_address"])
+    @GET
+    @Path("/check_workspace_record_enable_address")
+    fun checkWorkspaceEnableAddress(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "appId", required = true)
+        @QueryParam("appId")
+        appId: Long,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<CheckWorkspaceRecordData>
+
+    @Operation(
+        summary = "检查用户是否有查看当前工作空间录像的权限",
+        tags = ["v4_app_check_user_view_workspace_record_permission"]
+    )
+    @GET
+    @Path("/check_user_view_workspace_record_permission")
+    fun checkUserViewWorkspacePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "磁盘扩容", tags = ["v4_app_remotedev_workspace_expand_disk"])
+    @POST
+    @Path("/workspace_expand_disk")
+    fun expandWorkspaceDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        @QueryParam("size")
+        size: String
+    ): Result<ExpandDiskValidateResp?>
 }

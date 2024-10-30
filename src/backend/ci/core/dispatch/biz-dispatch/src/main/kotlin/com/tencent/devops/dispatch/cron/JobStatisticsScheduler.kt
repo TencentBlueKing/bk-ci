@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.cron
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsEvent
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -51,7 +51,7 @@ class JobStatisticsScheduler @Autowired constructor(
     private val dslContext: DSLContext,
     private val runningJobsDao: RunningJobsDao,
     private val jobQuotaRedisUtils: JobQuotaRedisUtils,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) {
     /**
      * 每天定时刷新流水线Job运行数据

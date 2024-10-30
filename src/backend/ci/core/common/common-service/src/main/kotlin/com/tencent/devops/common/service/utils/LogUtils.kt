@@ -64,4 +64,33 @@ object LogUtils {
             }
         }
     }
+
+    /**
+     * 获取有限长度的日志内容，默认最大长度为16K
+     * @param logStr 原始日志内容
+     * @return 截取后的日志
+     */
+    fun getLogWithLengthLimit(logStr: String?): String? {
+        val defaultMaxLength = 16384
+        return getLogWithLengthLimit(logStr, defaultMaxLength)
+    }
+
+    /**
+     * 获取有限长度的日志内容
+     * @param logStr 原始日志内容
+     * @param maxLength 最大长度，若小于0则不生效，返回原始日志
+     * @return 截取后的日志
+     */
+    fun getLogWithLengthLimit(logStr: String?, maxLength: Int): String? {
+        if (logStr == null) {
+            return null
+        }
+        if (maxLength < 0) {
+            return logStr
+        }
+        return if (logStr.length > maxLength)
+            logStr.substring(0, maxLength)
+        else
+            logStr
+    }
 }

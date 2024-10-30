@@ -1,5 +1,7 @@
 version: v2.0
 
+on: delete
+
 stages:
 - name: stage-1
   check-in:

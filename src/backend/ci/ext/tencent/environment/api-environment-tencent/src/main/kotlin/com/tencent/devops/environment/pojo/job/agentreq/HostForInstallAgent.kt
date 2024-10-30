@@ -35,12 +35,20 @@ data class HostForInstallAgent(
     val bkHostId: Int?,
     @get:Schema(title = "管控区域ID")
     val bkCloudId: Int?,
+    @get:Schema(title = "寻址方式，1: 0，静态 2: 1，动态")
+    val bkAddressing: String?,
     @get:Schema(title = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)
     val isAutoChooseInstallChannelId: Boolean = true,
+    @get:Schema(title = "接入点ID")
+    val apId: Int? = null,
     @get:Schema(title = "安装通道ID")
     val installChannelId: Int?,
     @get:Schema(title = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
     val innerIp: String?,
+    @get:Schema(title = "登录IP")
+    val loginIp: String?,
+    @get:Schema(title = "内网IPv6")
+    val innerIpv6: String? = "",
     @get:Schema(title = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     val osType: String?,
     @get:Schema(title = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
@@ -52,5 +60,11 @@ data class HostForInstallAgent(
     @get:Schema(title = "密钥")
     val key: String?,
     @get:Schema(title = "端口")
-    val port: String?
+    val port: String?,
+    @get:Schema(title = "是否手动模式")
+    val isManual: Boolean?,
+    @get:Schema(title = "加速设置，默认为0")
+    val peerExchangeSwitchForAgent: Int? = null,
+    @get:Schema(title = "数据压缩开关，默认是关闭")
+    val enableCompression: Boolean? = null
 )

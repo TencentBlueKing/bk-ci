@@ -59,9 +59,6 @@ class DispatchWorkspaceDao {
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
-                GIT_URL,
-                BRANCH,
-                IMAGE,
                 STATUS,
                 REGION_ID,
                 TASK_ID
@@ -71,9 +68,6 @@ class DispatchWorkspaceDao {
                     event.projectId,
                     event.workspaceName,
                     environmentUid,
-                    event.repositoryUrl,
-                    event.branch,
-                    event.devFile.runsOn?.container?.image ?: "",
                     status.ordinal,
                     regionId,
                     taskId
@@ -116,12 +110,13 @@ class DispatchWorkspaceDao {
     }
 
     fun deleteWorkspace(
+        dslContext: DSLContext,
         workspaceName: String,
-        dslContext: DSLContext
+        bakWorkspaceName: String?
     ): Int {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             return dslContext.update(this)
-                .set(WORKSPACE_NAME, "$workspaceName [deleted]")
+                .set(WORKSPACE_NAME, bakWorkspaceName ?: "$workspaceName [deleted]")
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .execute()
         }

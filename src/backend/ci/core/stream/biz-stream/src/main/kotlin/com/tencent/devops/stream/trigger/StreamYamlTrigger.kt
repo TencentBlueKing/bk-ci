@@ -111,9 +111,9 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         trigger: String?
     ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val buildPipeline = action.data.context.pipeline!!
-
+        action.data.watcherStart("|${buildPipeline.pipelineId}|streamYamlTrigger.checkAndTrigger")
+        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
@@ -177,6 +177,7 @@ class StreamYamlTrigger @Autowired constructor(
         yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
 
         // 进入触发流程
+        action.data.watcherStart("streamYamlTrigger.trigger")
         trigger(action, triggerEvent)
     }
 
@@ -193,11 +194,30 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         triggerEvent: Pair<List<Any>?, TriggerResult>?
     ): Boolean {
+        action.data.watcherStart("streamYamlTrigger.triggerBuild.start")
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
                 "|${action.data.context.requestEventId}|action|${action.format()}"
         )
         var pipeline = action.data.context.pipeline!!
+
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
+        action.data.context.pipelineAsCodeSettings = try {
+            if (pipeline.pipelineId.isNotBlank()) {
+                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    channelCode = ChannelCode.GIT
+                ).data?.pipelineAsCodeSettings
+            } else {
+                client.get(ServiceProjectResource::class).get(projectCode)
+                    .data?.properties?.pipelineAsCodeSettings
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
+            null
+        }
 
         // 提前创建新流水线，保证git提交后 stream上能看到
         if (pipeline.pipelineId.isBlank()) {
@@ -225,24 +245,6 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
 
-        // 获取蓝盾流水线的pipelineAsCodeSetting
-        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
-        action.data.context.pipelineAsCodeSettings = try {
-            if (pipeline.pipelineId.isNotBlank()) {
-                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-                    projectId = projectCode,
-                    pipelineId = pipeline.pipelineId,
-                    channelCode = ChannelCode.GIT
-                ).data?.pipelineAsCodeSettings
-            } else {
-                client.get(ServiceProjectResource::class).get(projectCode)
-                    .data?.properties?.pipelineAsCodeSettings
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
-            null
-        }
-
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
@@ -251,6 +253,7 @@ class StreamYamlTrigger @Autowired constructor(
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
+        action.data.watcherStart("streamYamlTrigger.triggerBuild.isMatch")
         // 前面使用缓存触发器判断过得就不用再判断了
         // 同时使用缓存触发成功的肯定不用在重复注册各类事件了
         val tr = if (triggerEvent?.second != null) {
@@ -425,6 +428,7 @@ class StreamYamlTrigger @Autowired constructor(
     fun prepareCIBuildYaml(
         action: BaseAction
     ): YamlReplaceResult? {
+        action.data.watcherStart("streamYamlTrigger.prepareCIBuildYaml")
         logger.info(
             "StreamYamlTrigger|prepareCIBuildYaml" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -491,6 +495,7 @@ class StreamYamlTrigger @Autowired constructor(
                     concurrency = concurrency
                 )
             }
+            action.data.watcherStart("streamYamlTrigger.prepareCIBuildYaml.end")
             return YamlReplaceResult(
                 preYaml = newPreYamlObject,
                 normalYaml = normalYaml,

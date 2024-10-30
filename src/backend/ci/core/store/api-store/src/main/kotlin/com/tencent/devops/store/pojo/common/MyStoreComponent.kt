@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店-我的组件信息")
@@ -38,6 +40,7 @@ data class MyStoreComponent(
     @get:Schema(title = "store组件类型", required = true)
     val storeType: String,
     @get:Schema(title = "store组件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @get:Schema(title = "开发语言", required = false)
     val language: String? = null,

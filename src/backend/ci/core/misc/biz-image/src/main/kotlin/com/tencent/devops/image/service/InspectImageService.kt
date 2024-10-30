@@ -30,17 +30,13 @@ package com.tencent.devops.image.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.dockerjava.api.model.PullResponseItem
-import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.command.PullImageResultCallback
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.image.config.DockerConfig
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceDockerImageResource
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
-import com.tencent.devops.image.utils.CommonUtils
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -49,22 +45,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service
 class InspectImageService @Autowired constructor(
-    dockerConfig: DockerConfig
+    private val client: Client
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(InspectImageService::class.java)
     }
-
-    private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-        .withDockerConfig(dockerConfig.dockerConfig)
-        .withApiVersion(dockerConfig.apiVersion)
-        .build()
-
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
 
     @Value("\${image.checkImageUrl:}")
     var checkImageUrl: String? = null
@@ -77,75 +67,9 @@ class InspectImageService @Autowired constructor(
 
         if (!checkImageUrl.isNullOrBlank()) {
             return checkRemoteDockerImage(userId, checkDockerImageRequestList)
+        } else {
+            return checkKubernetesDockerImage(userId, checkDockerImageRequestList)
         }
-
-        val imageInspectList = mutableListOf<CheckDockerImageResponse>()
-        checkDockerImageRequestList.parallelStream().forEach {
-            // 判断用户录入的镜像信息是否能正常拉取到镜像
-            val imageName = it.imageName
-            try {
-                val authConfig = CommonUtils.getAuthConfig(
-                    imageName = imageName,
-                    registryHost = it.registryHost,
-                    registryUser = it.registryUser,
-                    registryPwd = it.registryPwd
-                )
-                logger.info("Start pulling the image, image name：$imageName")
-                dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
-                    .exec(MyPullImageResultCallback(userId)).awaitCompletion()
-                logger.info("The image was pulled successfully. Image name：$imageName")
-            } catch (t: Throwable) {
-                logger.warn("Fail to pull the image $imageName of userId $userId", t)
-                imageInspectList.add(
-                    CheckDockerImageResponse(
-                        errorCode = -1,
-                        errorMessage = t.message,
-                        arch = "",
-                        author = "",
-                        comment = "",
-                        created = "",
-                        dockerVersion = "",
-                        id = "",
-                        os = "",
-                        osVersion = "",
-                        parent = "",
-                        size = 0,
-                        repoTags = null,
-                        repoDigests = null,
-                        virtualSize = 0
-                    )
-                )
-                return@forEach
-            }
-
-            // 查询镜像详细信息
-            val imageInfo = dockerCli.inspectImageCmd(imageName).exec()
-            logger.info("imageInfo: $imageInfo")
-            imageInspectList.add(
-                CheckDockerImageResponse(
-                    errorCode = 0,
-                    errorMessage = "",
-                    arch = imageInfo.arch,
-                    author = imageInfo.author,
-                    comment = imageInfo.comment,
-                    created = imageInfo.created,
-                    dockerVersion = imageInfo.dockerVersion,
-                    id = imageInfo.id,
-                    os = imageInfo.os,
-                    osVersion = imageInfo.osVersion,
-                    parent = imageInfo.parent,
-                    size = imageInfo.size,
-                    repoTags = imageInfo.repoTags,
-                    repoDigests = imageInfo.repoDigests,
-                    virtualSize = imageInfo.virtualSize
-                )
-            )
-            logger.info("==========================")
-        }
-
-        logger.info("imageInspectList: $imageInspectList")
-
-        return imageInspectList
     }
 
     fun checkRemoteDockerImage(
@@ -164,7 +88,7 @@ class InspectImageService @Autowired constructor(
                 )
                 .build()
 
-            OkhttpUtils.doHttp(request).use { response ->
+            OkhttpUtils.doLongHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 logger.info("$userId check remoteImage: $responseContent")
                 if (!response.isSuccessful) {
@@ -182,36 +106,47 @@ class InspectImageService @Autowired constructor(
         }
     }
 
-    inner class MyPullImageResultCallback internal constructor(
-        private val userId: String
-    ) : PullImageResultCallback() {
-        private val totalList = mutableListOf<Long>()
-        private val step = mutableMapOf<Int, Long>()
-        override fun onNext(item: PullResponseItem?) {
-            val text = item?.progressDetail
-            if (null != text && text.current != null && text.total != 0L) {
-                val lays = if (!totalList.contains(text.total!!)) {
-                    totalList.add(text.total!!)
-                    totalList.size + 1
-                } else {
-                    totalList.indexOf(text.total!!) + 1
-                }
-                var currentProgress = text.current!! * 100 / text.total!!
-                if (currentProgress > 100) {
-                    currentProgress = 100
-                }
+    fun checkKubernetesDockerImage(
+        userId: String,
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): List<CheckDockerImageResponse> {
+        try {
+            val dispatchCheckDockerImageRequestList =
+                checkDockerImageRequestList.stream().map { checkDockerImageRequest ->
+                    com.tencent.devops.dispatch.kubernetes.pojo.CheckDockerImageRequest(
+                        imageName = checkDockerImageRequest.imageName,
+                        registryHost = checkDockerImageRequest.registryHost,
+                        registryUser = checkDockerImageRequest.registryUser,
+                        registryPwd = checkDockerImageRequest.registryPwd
+                    )
+                }.collect(Collectors.toList())
 
-                if (currentProgress >= step[lays]?.plus(25) ?: 5) {
-                    logger.info("$userId pulling images, $lays layer, progress: $currentProgress%")
-                    step[lays] = currentProgress
-                }
-            }
-            super.onNext(item)
+            val response = client.getWithoutRetry(ServiceDockerImageResource::class).checkDockerImage(
+                userId = userId,
+                checkDockerImageRequestList = dispatchCheckDockerImageRequestList
+            ).data
+
+            return response?.stream()?.map {
+                CheckDockerImageResponse(
+                errorCode = it.errorCode,
+                errorMessage = it.errorMessage,
+                arch = it.arch,
+                author = it.author,
+                comment = it.comment,
+                created = it.created,
+                dockerVersion = it.dockerVersion,
+                id = it.id,
+                os = it.os,
+                osVersion = it.osVersion,
+                parent = it.parent,
+                size = it.size,
+                repoTags = it.repoTags,
+                repoDigests = it.repoDigests,
+                virtualSize = it.virtualSize
+            ) }?.collect(Collectors.toList()) ?: emptyList()
+        } catch (e: Exception) {
+            logger.error("Check dispatch image error: ${e.message}")
+            return emptyList()
         }
     }
 }
-
-// fun main(args: Array<String>) {
-//    println(SecurityUtil.decrypt("7Rq3q4+3wRSkYX78nrcWNw=="))
-//    println(SecurityUtil.encrypt("!@#098Bcs"))
-// }

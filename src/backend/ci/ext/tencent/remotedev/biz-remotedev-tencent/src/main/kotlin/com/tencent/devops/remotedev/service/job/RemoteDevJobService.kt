@@ -19,7 +19,6 @@ import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
@@ -37,12 +36,13 @@ import com.tencent.devops.remotedev.pojo.job.KeyMapDataType
 import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
-import org.jooq.DSLContext
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.remotedev.service.PermissionService
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -56,18 +56,18 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevActionService: RemoteDevJobActionService,
     private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge,
+    private val permissionService: PermissionService
 ) {
     fun getMachineTypes(projectId: String): Set<String> {
         return workspaceJoinDao.fetchProjectMachineType(dslContext, projectId)
     }
 
     fun getOwners(projectId: String): Set<String> {
-        return workspaceDao.fetchWorkspaceWithOwner(
+        return workspaceDao.fetchWorkspaceOwnerInProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
-            projectIds = setOf(projectId)
-        )?.map { it["SHARED_USER"] as? String ?: "" }?.filter { it.isNotBlank() }?.toSet() ?: return emptySet()
+            projectId = projectId
+        ).filter { it.isNotBlank() }.toSet()
     }
 
     fun createJob(
@@ -261,12 +261,20 @@ class RemoteDevJobService @Autowired constructor(
     }
 
     fun recordRerun(
+        userId: String,
         id: Long
     ) {
         val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
             params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
         )
+
+        if (!permissionService.checkUserVisitPermission(userId, record.projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project ${record.projectId}")
+            )
+        }
         remoteDevJobExecRecordDao.updateStatus(dslContext, id, JobRecordStatus.RUNNING, null, null)
         when (val param = objectMapper.readValue<JobSchemaParam>(record.jobSchemaParam.data())) {
             is NotifyRemoteDevDesktopParam -> {
@@ -288,7 +296,7 @@ class RemoteDevJobService @Autowired constructor(
     fun pipelineJobEnd(
         id: Long
     ) {
-        AsyncExecute.dispatch(rabbitTemplate, AsyncJobEndEvent(id))
+        AsyncExecute.dispatch(streamBridge, AsyncJobEndEvent(id))
     }
 
     fun doPipelineJobEnd(

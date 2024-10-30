@@ -101,8 +101,6 @@ object CommonMessageCode {
     const val USERS_EXCEEDS_THE_LIMIT = "2100048" // 授权用户数越界:{0}
     const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100049" // 查询 Gse Agent 状态失败
     const val FAILED_TO_GET_AGENT_STATUS = "2100050" // 获取agent状态失败
-    const val FAILED_TO_GET_CMDB_NODE = "2100051" // 获取 CMDB 节点失败
-    const val FAILED_TO_GET_CMDB_LIST = "2100052" // 获取CMDB列表失败
     const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100053" // stages和steps不能并列存在!
 
     const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线{3}
@@ -265,4 +263,6 @@ object CommonMessageCode {
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
+    const val TRANSFER_ERROR_CHECK_AGENT_ID_FAILED = "transferErrorCheckAgentIdFailed" // 当前私有构建机数据有误或不存在
+    const val TRANSFER_ERROR_CHECK_ENV_ID_FAILED = "transferErrorCheckEnvIdFailed" // 当前私有构建机集群数据有误或不存在
 }
