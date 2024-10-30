@@ -27,7 +27,6 @@ import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.GroupUserService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
