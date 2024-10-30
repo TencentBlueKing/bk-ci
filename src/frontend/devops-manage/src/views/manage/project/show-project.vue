@@ -54,6 +54,7 @@ const fetchProjectData = async () => {
         ...res,
         deptInfo: generateDeptName(res, false),
       };
+      (!res.properties || !res.properties.pipelineDialect) && (projectData.value.properties.pipelineDialect = 'CLASSIC');
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
