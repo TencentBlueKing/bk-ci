@@ -100,11 +100,14 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
 @Repository
 class AtomDao : AtomBaseDao() {
+
+    private val logger = LoggerFactory.getLogger(AtomDao::class.java)
 
     fun addAtomFromOp(
         dslContext: DSLContext,
@@ -1472,6 +1475,7 @@ class AtomDao : AtomBaseDao() {
             .groupBy(ta.ATOM_CODE)
             .orderBy(ta.CREATE_TIME, ta.ID)
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
+        logger.info("getDefaultAtoms sql:${sql.sql}")
         return sql.fetch()
     }
 }
