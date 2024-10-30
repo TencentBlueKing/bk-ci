@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
