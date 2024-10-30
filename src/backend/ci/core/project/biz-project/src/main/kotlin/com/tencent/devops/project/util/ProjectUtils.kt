@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
@@ -123,8 +122,7 @@ object ProjectUtils {
                 channelCode = channel,
                 productId = productId,
                 canView = viewPermission,
-                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm,
-                pipelineDialect = pipelineDialect ?: PipelineDialectType.CLASSIC.name
+                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
             )
         }
     }
@@ -140,6 +138,8 @@ object ProjectUtils {
             JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
         }
         return with(tProjectRecord) {
+            val projectProperties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+            val projectApprovalProperties = projectApprovalInfo?.properties
             ProjectDiffVO(
                 id = id,
                 projectId = projectId,
@@ -194,7 +194,9 @@ object ProjectUtils {
                 productId = productId,
                 afterProductId = projectApprovalInfo?.productId,
                 productName = beforeProductName,
-                afterProductName = projectApprovalInfo?.productName
+                afterProductName = projectApprovalInfo?.productName,
+                pipelineDialect = projectProperties?.pipelineDialect,
+                afterPipelineDialect = projectApprovalProperties?.pipelineDialect
             )
         }
     }

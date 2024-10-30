@@ -406,8 +406,7 @@ class ProjectDao {
                 PROPERTIES,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                PRODUCT_ID,
-                PIPELINE_DIALECT
+                PRODUCT_ID
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -438,8 +437,7 @@ class ProjectDao {
                 },
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                projectCreateInfo.productId,
-                projectCreateInfo.pipelineDialect
+                projectCreateInfo.productId
             ).execute()
         }
     }
@@ -473,7 +471,6 @@ class ProjectDao {
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
-                .set(PIPELINE_DIALECT, projectUpdateInfo.pipelineDialect)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }

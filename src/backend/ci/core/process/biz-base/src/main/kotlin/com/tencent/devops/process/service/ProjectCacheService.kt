@@ -69,7 +69,7 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
     }
 
     fun getProjectDialect(projectId: String): String? {
-        return getProject(projectId = projectId)?.pipelineDialect
+        return getProject(projectId = projectId)?.properties?.pipelineDialect
     }
 
     private fun getProjectInner(projectId: String): ProjectVO {

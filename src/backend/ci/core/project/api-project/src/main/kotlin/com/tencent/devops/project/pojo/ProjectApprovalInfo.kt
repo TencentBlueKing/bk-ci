@@ -82,6 +82,6 @@ data class ProjectApprovalInfo(
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
     val productName: String? = null,
-    @get:Schema(title = "流水线方言")
-    val pipelineDialect: String? = null
+    @get:Schema(title = "项目相关配置")
+    val properties: ProjectProperties? = null
 )
