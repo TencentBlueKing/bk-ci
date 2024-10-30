@@ -335,7 +335,7 @@ open class BkRepoDownloadService @Autowired constructor(
                       "tablet",
                       "phone"
                     ],
-                    "packageUrl": "$hapExternalDownloadUrl",
+                    "packageUrl": "${hapExternalDownloadUrl.url}",
                     "packageHash": "$sha256"
                   }
                 ]
