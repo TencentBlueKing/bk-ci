@@ -500,7 +500,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         val windowsWorkspaces = result.filterIsInstance<WorkspaceRecordWithWindows>().associateBy { it.workspaceName }
-        val loginUserMap = startWorkspaceService.loginUsers(windowsWorkspaces.map { it.value.hostIp ?: "" }.toSet())
+        val loginUserMap = startWorkspaceService.cachingLoginUsers(windowsWorkspaces.map { it.value.hostIp ?: "" }.toSet())
 
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
@@ -612,7 +612,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         val loginUserMap = if (hasCurrentUser == true) {
-            startWorkspaceService.loginUsers(result.map { it.hostIp ?: "" }.toSet())
+            startWorkspaceService.cachingLoginUsers(result.map { it.hostIp ?: "" }.toSet())
         } else {
             null
         }
@@ -751,7 +751,7 @@ class WorkspaceService @Autowired constructor(
 
         val windowsWorkspace = result.filterIsInstance<WorkspaceRecordWithWindows>().associateBy { it.workspaceName }
 
-        val loginUserMap = startWorkspaceService.loginUsers(windowsWorkspace.map { it.value.hostIp ?: "" }.toSet())
+        val loginUserMap = startWorkspaceService.cachingLoginUsers(windowsWorkspace.map { it.value.hostIp ?: "" }.toSet())
 
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
@@ -926,7 +926,7 @@ class WorkspaceService @Autowired constructor(
         val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
 
         val currentLoginUser = if (winInfo != null) {
-            startWorkspaceService.loginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
+            startWorkspaceService.cachingLoginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
         } else {
             null
         }
@@ -1051,7 +1051,7 @@ class WorkspaceService @Autowired constructor(
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
         val host2NodeMap = public.associateBy { it.value2() }
-        val loginUserMap = startWorkspaceService.loginUsers(public.map { it.value2() ?: "" }.toSet())
+        val loginUserMap = startWorkspaceService.cachingLoginUsers(public.map { it.value2() ?: "" }.toSet())
         val nodeLoginMap = loginUserMap.mapKeys { host2NodeMap[it.key]?.value3() }
         val workspaceStatus = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
