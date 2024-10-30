@@ -145,6 +145,7 @@ data class CodeGitWebHookTriggerElement(
             CodeEventType.MERGE_REQUEST -> {
                 listOf(
                     vuexInput(name = "action", value = joinToString(includeMrAction)),
+                    selector(name = "skip-wip", value = listOf((skipWip ?: false).toString())),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),

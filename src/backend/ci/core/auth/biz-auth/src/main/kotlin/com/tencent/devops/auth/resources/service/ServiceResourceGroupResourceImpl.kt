@@ -2,23 +2,26 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class ServiceResourceGroupResourceImpl constructor(
-    val permissionResourceGroupService: PermissionResourceGroupService
+class ServiceResourceGroupResourceImpl(
+    val permissionResourceGroupService: PermissionResourceGroupService,
+    val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : ServiceResourceGroupResource {
     override fun getGroupPermissionDetail(
         projectCode: String,
         groupId: Int
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
-            permissionResourceGroupService.getGroupPermissionDetail(
-                groupId = groupId
+            resourceGroupPermissionService.getGroupPermissionDetail(
+                iamGroupId = groupId
             )
         )
     }
@@ -26,12 +29,30 @@ class ServiceResourceGroupResourceImpl constructor(
     override fun createGroupByGroupCode(
         projectCode: String,
         resourceType: String,
-        groupCode: BkAuthGroup
-    ): Result<Boolean> {
+        groupCode: BkAuthGroup,
+        groupName: String?,
+        groupDesc: String?
+    ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createProjectGroupByGroupCode(
+            data = permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
                 projectId = projectCode,
-                groupCode = groupCode.value
+                resourceType = resourceType,
+                resourceCode = projectCode,
+                groupCode = groupCode.value,
+                groupName = groupName,
+                groupDesc = groupDesc
+            )
+        )
+    }
+
+    override fun createCustomGroupAndPermissions(
+        projectCode: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Result<Int> {
+        return Result(
+            data = permissionResourceGroupService.createCustomGroupAndPermissions(
+                projectId = projectCode,
+                customGroupCreateReq = customGroupCreateReq
             )
         )
     }

@@ -30,6 +30,7 @@ const fetchGroupPermissionDetailMap = async () => {
           return {
               ...i,
               expand: false,
+              showExpandBtn: i.relatedResourceInfos.reduce((data: any, item :any) => data + item.instance.length, 0) >= 3
           }
         });
       }
@@ -89,53 +90,57 @@ const handleHidden = () => {
                 </header>
                 <div class="content" v-show="showPermFlagMap[index]">
                   <bk-table
-                      v-bkloading="{ isLoading: !showPermFlagMap[index] }"
-                      class="resources-table"
-                      :data="item"
-                      :border="['row', 'outer']">
-                      <bk-table-column :label="t('操作')" width="250" show-overflow-tooltip>
-                          <template #default="{ data }">
-                          {{ data?.name }}
-                          </template>
-                      </bk-table-column>
-                      <bk-table-column :label="t('操作对象')" width="430">
-                          <template #default="{ data }">
-                          <div v-if="data?.relatedResourceInfo" :class="{
-                              'resources-info': true,
-                              'show': data.expand
-                          }">
-                              <div class="resources-content">
-                                  <span v-if="data.relatedResourceInfo?.instances.type.includes('pipeline')">
-                                      {{ t('共N条XX', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.instances.name]) }}
-                                  </span>
-                                  <span v-else-if="data.relatedResourceInfo?.instances.type.includes('project')">
-                                      {{ t('共N个XX', [1, data.relatedResourceInfo?.instances.name]) }}
-                                  </span>
-                                  <span v-else-if="data.relatedResourceInfo?.instances.type.includes('space')">
-                                    {{ t('共N个监控平台空间', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.instances.name]) }}
-                                  </span>
-                                  <span v-else>
-                                      {{ t('共N个XX', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.name]) }}
-                                  </span>
+                    v-bkloading="{ isLoading: !showPermFlagMap[index] }"
+                    class="resources-table"
+                    :data="item"
+                    :border="['row', 'outer']">
+                    <bk-table-column :label="t('操作')" width="250" show-overflow-tooltip>
+                      <template #default="{ data }">
+                        {{ data?.name }}
+                      </template>
+                    </bk-table-column>
+                    <bk-table-column :label="t('操作对象')" width="430">
+                      <template #default="{ data }">
+                      <div v-if="data?.relatedResourceInfos.length" :class="{
+                        'resources-info': true,
+                        'show': data.expand
+                      }">
+                        <section>
+                          <div v-for="(item, index) in data.relatedResourceInfos" :key="index">
+                            <div class="resources-content">
+                              <span v-if="item?.type.includes('pipeline')">
+                                {{ t('共N条XX', [item?.instance.length, item?.name]) }}
+                              </span>
+                              <span v-else-if="item?.type.includes('project')">
+                                {{ t('共N个XX', [1, item?.name]) }}
+                              </span>
+                              <span v-else-if="item?.type.includes('space')">
+                                {{ t('共N个监控平台空间', [item?.instance.length, item?.name]) }}
+                              </span>
+                              <span v-else>
+                                {{ t('共N个XX', [item?.instance.length, item?.name]) }}
+                              </span>
+                            </div>
+                            <div v-if="item?.type.includes('project')" class="resources-content" >
+                              <div>
+                                {{ item?.instance[0][0].name }}
                               </div>
-                              <div v-if="data.relatedResourceInfo?.instances.type.includes('project')" class="resources-content" >
-                                  <div>
-                                        {{ data.relatedResourceInfo?.instances?.path[0][0].name }}
-                                  </div>
+                            </div>
+                            <div v-else class="resources-content" v-for="(path, pathIndex) in item?.instance" :key="pathIndex">
+                              <div class="item">
+                                <span v-for="(item, index) in path" :key="item.id">
+                                  {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
+                                </span>
                               </div>
-                              <div v-else class="resources-content" v-for="(path, pathIndex) in data.relatedResourceInfo?.instances?.path" :key="pathIndex">
-                                  <div class="item">
-                                      <span v-for="(item, index) in path" :key="item.id">
-                                        {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
-                                      </span>
-                                      <bk-button class="expand-btn" v-if="!data.expand && data.relatedResourceInfo?.instances?.path.length > 3 && pathIndex === 2" text @click="data.expand = true">{{ t('展开') }}</bk-button>
-                                  </div>
-                              </div>
-                              <bk-button class="expand-btn" v-if="data.expand && data.relatedResourceInfo?.instances?.path.length > 3" text @click="data.expand = false">{{ t('收起') }}</bk-button>
+                            </div>
                           </div>
-                          <span v-else>--</span>
-                          </template>
-                      </bk-table-column>
+                        </section>
+                        <bk-button class="expand-btn" v-if="data.showExpandBtn && !data.expand" text @click="data.expand = true">{{ t('展开') }}</bk-button>
+                        <bk-button class="expand-btn" v-if="data.showExpandBtn && data.expand" text @click="data.expand = false">{{ t('收起') }}</bk-button>
+                      </div>
+                      <span v-else>--</span>
+                      </template>
+                    </bk-table-column>
                   </bk-table>
                 </div>
               </div>
@@ -187,15 +192,14 @@ const handleHidden = () => {
     }
   }
   .resources-info {
-    display: -webkit-box;
+    display: flex;
     overflow: hidden;
     white-space: normal !important;
     text-overflow: ellipsis;
     word-wrap: break-word;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
+    max-height: 90px;
     &.show {
-      -webkit-line-clamp: 1000;
+      max-height: 900px !important;
     }
   }
   .resources-content {
@@ -203,6 +207,7 @@ const handleHidden = () => {
           position: relative;
           display: inline-block;
           max-width: 380px;
+          line-height: 15px;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -215,6 +220,7 @@ const handleHidden = () => {
   }
   .expand-btn {
       color: #3c96ff;
+      margin-left: 20px;
   }
   .resources-tips {
     padding: 10px;

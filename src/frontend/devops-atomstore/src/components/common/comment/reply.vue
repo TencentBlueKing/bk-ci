@@ -1,17 +1,39 @@
 <template>
-    <h3 class="comment-main" :class="{ 'comment-reply': isReply }">
-        <img :src="comment.profileUrl" class="comment-photo">
+    <h3
+        class="comment-main"
+        :class="{ 'comment-reply': isReply }"
+    >
+        <img
+            :src="comment.profileUrl"
+            class="comment-photo"
+        >
         <h5 class="commenter-info">
-            <span>{{comment.commenter}}</span><span>{{comment.commenterDept}}</span>
+            <span>{{ comment.commenter }}</span><span>{{ comment.commenterDept }}</span>
         </h5>
-        <p class="comment-content">{{comment.commentContent}}</p>
+        <p class="comment-content">{{ comment.commentContent }}</p>
         <h5 class="comment-static">
-            <comment-rate :rate="comment.score" :width="11" :height="12" class="commet-rate" v-if="!isReply"></comment-rate>
-            <span>{{comment.updateTime|timeFilter}}</span>
-            <span class="comment-replay" @click="clickReply"> {{ $t('store.回复') }} <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
+            <comment-rate
+                :rate="comment.score"
+                :width="11"
+                :height="12"
+                class="commet-rate"
+                v-if="!isReply"
+            ></comment-rate>
+            <span>{{ comment.updateTime|timeFilter }}</span>
+            <span
+                class="comment-replay"
+                @click="clickReply"
+            > {{ $t('store.回复') }} <span v-if="+comment.replyCount">({{ comment.replyCount }})</span>
             </span>
-            <icon class="comment-praise" :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }" name="praise" size="14" @click.native="priase" v-if="!isReply" />
-            <span v-if="!isReply">{{comment.praiseCount}}</span>
+            <icon
+                class="comment-praise"
+                :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }"
+                name="praise"
+                size="14"
+                @click.native="priase"
+                v-if="!isReply"
+            />
+            <span v-if="!isReply">{{ comment.praiseCount }}</span>
         </h5>
     </h3>
 </template>

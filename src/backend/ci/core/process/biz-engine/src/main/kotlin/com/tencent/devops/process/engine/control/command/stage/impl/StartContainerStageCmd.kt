@@ -249,6 +249,8 @@ class StartContainerStageCmd(
                 expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
             )
             lock.unlock()
+            // 解锁的同时兜底删除 linkTip
+            redisOperation.delete(AgentReuseMutex.genAgentReuseMutexLinkTipKey(stage.buildId))
         }
     }
 }

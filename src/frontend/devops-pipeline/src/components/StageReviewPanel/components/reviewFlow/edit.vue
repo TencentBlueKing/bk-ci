@@ -1,25 +1,81 @@
 <template>
     <section>
         <bk-form>
-            <bk-form-item v-for="(reviewGroup, index) in copyReviewGroups" :key="index"
-                :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }">
+            <bk-form-item
+                v-for="(reviewGroup, index) in copyReviewGroups"
+                :key="index"
+                :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }"
+            >
                 <section class="review-group">
-                    <bk-input class="review-name" :placeholder="'Flow ' + (index + 1)" :disabled="disabled"
-                        :value="reviewGroup.name" @change="modifyReviewName(reviewGroup, ...arguments)"></bk-input>
+                    <bk-input
+                        class="review-name"
+                        :placeholder="'Flow ' + (index + 1)"
+                        :disabled="disabled"
+                        :value="reviewGroup.name"
+                        @change="modifyReviewName(reviewGroup, ...arguments)"
+                    ></bk-input>
+                    <div
+                        class="review-warpper"
+                    >
+                        <bk-select
+                            v-model="reviewGroup.reviewType"
+                            :disabled="disabled"
+                            class="review-type-select"
+                            @change="() => handleChangeReviewType(index)"
+                        >
+                            <bk-option
+                                v-for="option in reviewTypeList"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name"
+                            >
+                            </bk-option>
+                        </bk-select>
+                        <user-group-input
+                            v-if="reviewGroup.reviewType === 'group'"
+                            clearable
+                            class="review-user"
+                            :placeholder="reviewGroup.reviewType ? $t('stageReview.userGroupInputTips') : ''"
+                            :value="reviewGroup.groups"
+                            :disabled="disabled || !reviewGroup.reviewType"
+                            :handle-change="(name, value) => addReviewGroup(reviewGroup, name, value)"
+                        >
+                        </user-group-input>
+                        <user-input
+                            v-else
+                            clearable
+                            class="review-user"
+                            :placeholder="reviewGroup.reviewType ? $t('stageReview.userInputTips') : ''"
+                            :value="reviewGroup.reviewers"
+                            :disabled="disabled || !reviewGroup.reviewType"
+                            :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
+                        ></user-input>
+                    </div>
 
-                    <user-input clearable class="review-user" :placeholder="$t('stageReview.userInputTips')"
-                        :value="reviewGroup.reviewers" :disabled="disabled"
-                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"></user-input>
-
-                    <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled"
-                        class="review-opt">{{ $t('delete') }}</bk-button>
+                    <bk-button
+                        text
+                        title="primary"
+                        @click="deleteReviewGroup(index)"
+                        :disabled="disabled"
+                        class="review-opt"
+                    >
+                        {{ $t('delete') }}
+                    </bk-button>
                 </section>
-                <span v-if="errorIndexs.includes(index)" class="bk-form-tip is-danger">{{
+                <span
+                    v-if="errorIndexs.includes(index)"
+                    class="bk-form-tip is-danger"
+                >{{
                     $t('stageReview.reviewRequire') }}</span>
             </bk-form-item>
         </bk-form>
-        <bk-button text title="primary" @click="addReviewGroup" :disabled="disabled || reviewGroups.length >= 5"
-            class="review-opt mt3">
+        <bk-button
+            text
+            title="primary"
+            @click="addReviewItem"
+            :disabled="disabled || reviewGroups.length >= 5"
+            class="review-opt mt3"
+        >
             <i class="bk-icon icon-plus-circle"></i>{{ $t('stageReview.addFlow') }}
         </bk-button>
     </section>
@@ -27,10 +83,12 @@
 
 <script>
     import UserInput from '@/components/atomFormField/UserInput'
+    import UserGroupInput from '@/components/atomFormField/UserGroupInput'
 
     export default {
         components: {
-            UserInput
+            UserInput,
+            UserGroupInput
         },
 
         props: {
@@ -40,14 +98,26 @@
 
         data () {
             return {
-                copyReviewGroups: JSON.parse(JSON.stringify(this.reviewGroups))
+                copyReviewGroups: JSON.parse(JSON.stringify(this.reviewGroups)),
+                reviewTypeList: [
+                    {
+                        id: 'user',
+                        name: this.$t('stageReview.reviewer')
+                    },
+                    {
+                        id: 'group',
+                        name: this.$t('stageReview.groups')
+                    }
+                ],
+                reviewType: 'user'
             }
         },
 
         computed: {
             errorIndexs () {
                 return this.copyReviewGroups.map((reviewGroup, index) => {
-                    if (reviewGroup.name === '' || !reviewGroup.reviewers || reviewGroup.reviewers.length <= 0) {
+                    if (!reviewGroup.name) return index
+                    if (reviewGroup.reviewers.length <= 0 && reviewGroup.groups.length <= 0) {
                         return index
                     }
                     return -1
@@ -78,14 +148,25 @@
                 this.triggleChange()
             },
 
-            addReviewGroup () {
-                const newItem = { name: '', reviewers: [] }
+            addReviewItem () {
+                const newItem = { name: '', reviewers: [], groups: [], reviewType: 'user' }
                 this.copyReviewGroups.push(newItem)
                 this.triggleChange()
             },
 
             triggleChange () {
                 this.$emit('change', 'reviewGroups', this.copyReviewGroups)
+            },
+
+            handleChangeReviewType (index) {
+                this.copyReviewGroups[index].reviewers = []
+                this.copyReviewGroups[index].groups = []
+                this.$emit('change', 'reviewGroups', this.copyReviewGroups)
+            },
+
+            addReviewGroup (reviewGroup, name, value) {
+                reviewGroup.groups = value
+                this.triggleChange()
             }
         }
     }
@@ -97,12 +178,21 @@
     align-items: center;
 
     .review-name {
-        width: 270px;
+        width: 240px;
     }
 
-    .review-user {
-        width: 487px;
-        margin: 0 8px 0 10px;
+    .review-warpper {
+        width: 520px;
+        margin-left: 10px;
+        display: flex;
+        .review-type-select {
+            width: 120px;
+            border-right: none;
+        }
+        .review-user {
+            flex: 1;
+            margin-right: 5px;
+        }
     }
 }
 

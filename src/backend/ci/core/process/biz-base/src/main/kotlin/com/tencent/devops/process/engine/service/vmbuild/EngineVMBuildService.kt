@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.vmbuild
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -52,14 +53,16 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -85,6 +88,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -92,7 +96,6 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -100,12 +103,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.NotFoundException
 
 @Suppress(
     "LongMethod",
@@ -129,7 +132,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
@@ -195,7 +197,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             projectId, buildInfo.pipelineId, buildId, buildInfo
         )
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
-        var vmId = 1
 
         model!!.stages.forEachIndexed { index, s ->
             if (index == 0) {
@@ -214,11 +215,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     if (container.status.isFinish()) {
                         throw OperationException("vmName($vmName) has been shutdown")
                     }
+                    val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
-                        condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
-                        exception = OperationException(
-                            I18nUtil.getCodeLanMessage(messageCode = BK_VM_START_ALREADY) + " ${c.startVMStatus}"
+                        condition = startUpVMTask?.status?.isFinish() != true || retryCount > 0,
+                        exception = ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
+                            params = arrayOf(c.startVMStatus ?: "")
                         )
                     )
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
@@ -316,7 +319,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         pipelineAsCodeSettings = asCodeSettings
                     )
                 }
-                vmId++
             }
         }
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
@@ -355,23 +357,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ): Boolean {
-        // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
-        // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
-        var startUpVMTask = pipelineTaskService.getBuildTask(projectId, buildId, VMUtils.genStartVMTaskId(vmSeqId))
-
-        if (startUpVMTask == null) {
-            val buildTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
-            if (buildTasks.isNotEmpty()) {
-                startUpVMTask = buildTasks[0]
-            }
-        }
-
+        val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
         LOG.info("ENGINE|$buildId|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
         if (startUpVMTask == null) {
             return false
         }
         val finalBuildStatus = getFinalBuildStatus(buildStatus, buildId, vmSeqId, startUpVMTask)
-
         // 如果是完成状态，则更新构建机启动插件的状态
         if (finalBuildStatus.isFinish()) {
             pipelineTaskService.updateTaskStatus(
@@ -451,6 +442,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
         return true
+    }
+
+    private fun getStartUpVMTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String
+    ): PipelineBuildTask? {
+        // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
+        // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
+        var startUpVMTask = pipelineTaskService.getBuildTask(projectId, buildId, VMUtils.genStartVMTaskId(vmSeqId))
+
+        if (startUpVMTask == null) {
+            val buildTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
+            if (buildTasks.isNotEmpty()) {
+                startUpVMTask = buildTasks[0]
+            }
+        }
+        return startUpVMTask
     }
 
     private fun getFinalBuildStatus(
@@ -929,7 +938,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机结束当前Job
      */
-    fun buildEndTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Boolean {
+    fun buildEndTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        buildJobResult: BuildJobResult? = null
+    ): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             containerIdLock.lock()
@@ -948,7 +963,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter,
                         buildStatus = BuildStatus.SUCCEED
                     ),
-                    endBuild = true
+                    endBuild = true,
+                    endBuildMsg = buildJobResult?.message
                 )
                 LOG.info("ENGINE|$buildId|BE_DONE|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 buildExtService.endBuild(task)
@@ -1041,18 +1057,35 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."
                     }
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = errMsg,
-                    tag = taskId,
-                    containerHashId = containerHashId,
-                    executeCount = executeCount ?: 1,
-                    jobId = null,
-                    stepId = stepId
-                )
+                if (showAI(task)) {
+                    buildLogPrinter.addAIErrorLine(
+                        buildId = buildId,
+                        message = errMsg,
+                        tag = taskId,
+                        containerHashId = containerHashId,
+                        executeCount = executeCount ?: 1,
+                        jobId = null,
+                        stepId = stepId
+                    )
+                } else {
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = errMsg,
+                        tag = taskId,
+                        containerHashId = containerHashId,
+                        executeCount = executeCount ?: 1,
+                        jobId = null,
+                        stepId = stepId
+                    )
+                }
             }
         }
     }
+
+    private fun showAI(task: PipelineBuildTask): Boolean =
+        task.atomCode == "run" ||
+            task.atomCode == LinuxScriptElement.classType ||
+            task.atomCode == WindowsScriptElement.classType
 
     /**
      * #5046 提交构建机出错失败信息，并结束构建

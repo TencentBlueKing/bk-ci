@@ -2,6 +2,11 @@
   "name": "devops-codelib",
   "version": "1.0.0",
   "description": "",
+  "dependencies": {
+    "lodash-es": "^4.17.21",
+    "vue": "~2.7.16",
+    "vuex-class": "^0.3.0"
+  },
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.15.8",
@@ -19,9 +24,12 @@
     "@babel/plugin-transform-object-assign": "^7.14.5",
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
+    "@babel/runtime": "^7.15.4",
+    "@blueking/search-select": "0.0.1-beta.2",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
@@ -40,13 +48,12 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^0.23.0",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "^15.10.0",
+    "vue-loader": "~15.10.0",
     "vue-style-loader": "^3.0.3",
-    "webpack": "^5.58.1",
-    "@blueking/search-select": "0.0.1-beta.2"
+    "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",
@@ -55,5 +62,18 @@
   "repository": {
     "type": "git",
     "url": ""
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/codelib/*.json",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/codelib"
+        ]
+      }
+    }
   }
 }

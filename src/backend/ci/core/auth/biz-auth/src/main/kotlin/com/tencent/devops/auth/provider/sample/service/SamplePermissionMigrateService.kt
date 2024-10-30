@@ -85,7 +85,10 @@ class SamplePermissionMigrateService(
         return true
     }
 
-    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Boolean {
+    override fun autoRenewal(
+        validExpiredDay: Int,
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean {
         return true
     }
 
@@ -100,4 +103,6 @@ class SamplePermissionMigrateService(
     }
 
     override fun fixResourceGroups(projectCodes: List<String>): Boolean = true
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>) = true
 }

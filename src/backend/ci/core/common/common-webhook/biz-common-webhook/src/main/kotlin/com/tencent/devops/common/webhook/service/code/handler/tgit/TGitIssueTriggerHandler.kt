@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
@@ -188,6 +189,8 @@ class TGitIssueTriggerHandler(
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_URL] = url ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ACTION] = action ?: ""
+            // ci.commit_msg 取标题，跟stream同步
+            startParams[PIPELINE_GIT_COMMIT_MESSAGE] = title
         }
 
         // 兼容stream变量

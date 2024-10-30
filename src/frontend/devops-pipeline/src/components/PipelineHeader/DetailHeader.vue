@@ -1,9 +1,18 @@
 <template>
-    <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="pipelineInfo?.pipelineName" />
-        <aside :class="['pipeline-detail-right-aside', {
-            'is-debug-exec-detail': isDebugExec
-        }]">
+    <div
+        v-if="execDetail"
+        class="pipeline-detail-header"
+    >
+        <pipeline-bread-crumb
+            :show-record-entry="isDebugExec"
+            show-build-num-switch
+            :pipeline-name="pipelineInfo?.pipelineName"
+        />
+        <aside
+            :class="['pipeline-detail-right-aside', {
+                'is-debug-exec-detail': isDebugExec
+            }]"
+        >
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -16,7 +25,7 @@
             </bk-button>
             <template v-else-if="!isDebugExec">
                 <bk-button
-                    :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                    :disabled="loading || isCurPipelineLocked"
                     :icon="loading ? 'loading' : ''"
                     outline
                     v-perm="{
@@ -51,22 +60,30 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <bk-button
-                :loading="executeStatus"
-                v-perm="{
-                    hasPermission: canExecute,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
+            <span
+                v-bk-tooltips="{
+                    disabled: canManualStartup,
+                    content: $t('pipelineManualDisable')
                 }"
-                @click="goExecPreview"
             >
-                {{ $t(isDebugExec ? "debug" : "exec") }}
-            </bk-button>
+                <bk-button
+                    :loading="executeStatus"
+                    :disabled="!canManualStartup"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="goExecPreview"
+                >
+                    {{ $t(isDebugExec ? "debug" : "exec") }}
+                </bk-button>
+            </span>
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
@@ -75,7 +92,11 @@
             />
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;"></i>
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    ></i>
 </template>
 
 <script>

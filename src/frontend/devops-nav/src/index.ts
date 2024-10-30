@@ -1,7 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import Vue from 'vue'
-
 import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
@@ -15,6 +13,7 @@ import store from '@/store'
 import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
+import Vue from 'vue'
 import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
@@ -36,7 +35,8 @@ import validDictionary from './utils/validDictionary'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+// @ts-ignore
+import('bk-magic-vue/dist/bk-magic-vue.min.css')
 
 declare module 'vue/types/vue' {
     interface Vue {

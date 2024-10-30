@@ -1,56 +1,101 @@
 <template>
-    <div class="release-progress-wrapper"
+    <div
+        class="release-progress-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
-        <bread-crumbs :bread-crumbs="navList" type="atom">
-            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
+        }"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            type="atom"
+        >
+            <a
+                class="g-title-work"
+                target="_blank"
+                :href="docsLink"
+            > {{ $t('store.插件指引') }} </a>
         </bread-crumbs>
 
-        <div class="release-progress-content" v-show="showContent">
+        <div
+            class="release-progress-content"
+            v-show="showContent"
+        >
             <div class="atom-release-msg">
                 <div class="detail-title release-progress-title">
-                    <p class="form-title"> {{ $t('store.发布进度') }} <span :class="[{ disable: !permission }, 'cancel-release-btn']" v-if="!isOver" @click="handlerCancel" :title="permissionMsg"> {{ $t('store.取消发布') }} </span>
+                    <p class="form-title">
+                        {{ $t('store.发布进度') }} <span
+                            :class="[{ disable: !permission }, 'cancel-release-btn']"
+                            v-if="!isOver"
+                            @click="handlerCancel"
+                            :title="permissionMsg"
+                        > {{ $t('store.取消发布') }} </span>
                     </p>
                     <hr class="cut-line">
                     <div class="progress-step">
                         <div class="step-line-box">
-                            <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
+                            <div
+                                class="step-card"
+                                v-for="(entry, index) in progressStatus"
+                                :key="index"
                                 :class="{ 'processing-status': entry.status === 'doing',
                                           'fail-status': entry.status === 'fail',
-                                          'success-status': entry.code === 'end' && entry.status === 'success' }">
+                                          'success-status': entry.code === 'end' && entry.status === 'success' }"
+                            >
                                 <div class="card-item">
-                                    <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
+                                    <i
+                                        class="devops-icon icon-check-1"
+                                        v-if="entry.status === 'success'"
+                                    ></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
                                 <div class="retry-bth">
-                                    <span class="test-btn"
-                                        v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver">
+                                    <span
+                                        class="test-btn"
+                                        v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver"
+                                    >
                                         <span @click="$refs.upload[0].click()">{{ $t('store.重新传包') }}</span>
                                         <span class="retry-pkgName">{{ versionDetail.pkgName }}</span>
-                                        <input ref="upload" type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
+                                        <input
+                                            ref="upload"
+                                            type="file"
+                                            title=""
+                                            class="upload-input"
+                                            @change="selectFile"
+                                            accept="application/zip"
+                                        >
                                     </span>
                                 </div>
                                 <div class="retry-bth">
-                                    <span class="test-btn"
-                                        v-if="entry.code === 'test' && entry.status === 'doing'">
-                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}`"> {{ $t('store.测试') }} </a>
+                                    <span
+                                        class="test-btn"
+                                        v-if="entry.code === 'test' && entry.status === 'doing'"
+                                    >
+                                        <a
+                                            target="_blank"
+                                            :href="`/console/pipeline/${versionDetail.projectCode}`"
+                                        > {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
-                                <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
+                                <bk-button
+                                    :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
                                     theme="primary"
                                     size="small"
                                     v-if="entry.code === 'test'"
                                     :disabled="entry.status !== 'doing' || !permission"
                                     @click.stop="passTest"
                                     :title="permissionMsg"
-                                > {{ $t('store.继续') }} </bk-button>
+                                >
+                                    {{ $t('store.继续') }}
+                                </bk-button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="detail-title version-detail-title" v-if="!isOver">
+                <div
+                    class="detail-title version-detail-title"
+                    v-if="!isOver"
+                >
                     <p class="form-title"> {{ $t('store.版本详情') }} </p>
                     <hr class="cut-line">
                     <div class="atom-version-detail">
@@ -77,11 +122,23 @@
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
                                 <div class="info-label"> {{ $t('store.操作系统：') }} </div>
-                                <div class="info-value" v-if="versionDetail.os">
+                                <div
+                                    class="info-value"
+                                    v-if="versionDetail.os"
+                                >
                                     <span v-if="versionDetail.jobType === 'AGENT'">
-                                        <i class="devops-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
-                                        <i class="devops-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="devops-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
+                                        <i
+                                            class="devops-icon icon-linux-view"
+                                            v-if="versionDetail.os.indexOf('LINUX') !== -1"
+                                        ></i>
+                                        <i
+                                            class="devops-icon icon-windows"
+                                            v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
+                                        ></i>
+                                        <i
+                                            class="devops-icon icon-macos"
+                                            v-if="versionDetail.os.indexOf('MACOS') !== -1"
+                                        ></i>
                                     </span>
                                 </div>
                             </div>
@@ -89,7 +146,13 @@
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.功能标签：') }} </div>
                             <div class="info-value feature-label">
-                                <div class="label-card" v-for="(label, index) in versionDetail.labels" :key="index">{{ label }}</div>
+                                <div
+                                    class="label-card"
+                                    v-for="(label, index) in versionDetail.labels"
+                                    :key="index"
+                                >
+                                    {{ label }}
+                                </div>
                             </div>
                         </div>
                         <div class="detail-form-item">
@@ -98,7 +161,11 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.详细描述：') }} </div>
-                            <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
+                            <div
+                                class="info-value markdown-editor-show"
+                                ref="editor"
+                                :class="{ 'overflow': !isDropdownShow }"
+                            >
                                 <mavon-editor
                                     :editable="false"
                                     default-open="preview"
@@ -113,7 +180,12 @@
                                 </mavon-editor>
                             </div>
                         </div>
-                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
+                        <div
+                            class="toggle-btn"
+                            v-if="isOverflow"
+                            @click="toggleShow()"
+                        >
+                            {{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
                             <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                         <div class="detail-form-item">
@@ -151,16 +223,37 @@
                         </div>
                     </div>
                     <div class="atom-logo-box">
-                        <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
-                        <i class="devops-icon icon-placeholder atom-logo" v-else></i>
+                        <img
+                            :src="versionDetail.logoUrl"
+                            v-if="versionDetail.logoUrl"
+                        >
+                        <i
+                            class="devops-icon icon-placeholder atom-logo"
+                            v-else
+                        ></i>
                     </div>
                 </div>
             </div>
-            <div class="released-tips" v-if="isOver">
+            <div
+                class="released-tips"
+                v-if="isOver"
+            >
                 <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
                 <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click="toAtomList"> {{ $t('store.工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
+                    <bk-button
+                        class="bk-button bk-primary"
+                        size="small"
+                        @click="toAtomList"
+                    >
+                        {{ $t('store.工作台') }}
+                    </bk-button>
+                    <bk-button
+                        class="bk-button bk-default"
+                        size="small"
+                        @click="toAtomStore"
+                    >
+                        {{ $t('store.研发商店') }}
+                    </bk-button>
                 </div>
             </div>
         </div>
@@ -603,6 +696,9 @@
             }
             .card-item {
                 text-align: center;
+                word-wrap: break-word;
+                word-break: break-all;
+                padding: 5px;
                 i {
                     font-size: 12px;
                     font-weight: bold;

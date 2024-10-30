@@ -61,6 +61,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -76,7 +77,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
@@ -97,6 +97,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
@@ -132,7 +133,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
     val client: Client,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -166,6 +167,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH) {
@@ -263,7 +265,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
+                message = "${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -1597,6 +1599,33 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         deptId: Long?,
         deptName: String?
     )
+
+    override fun updatePluginDetailsDisplay(
+        englishName: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Boolean {
+        logger.info("update plugin details display|$englishName|$pluginDetailsDisplayOrder")
+        val projectInfo = getByEnglishName(englishName)
+            ?: throw NotFoundException("project - $englishName is not exist!")
+
+        val validDisplayOrder = setOf(
+            PluginDetailsDisplayOrder.LOG,
+            PluginDetailsDisplayOrder.ARTIFACT,
+            PluginDetailsDisplayOrder.CONFIG
+        )
+
+        val isParamsLegal = pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
+
+        if (isParamsLegal) {
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
+            updateProjectProperties(null, englishName, properties)
+        } else {
+            throw IllegalArgumentException("The parameter is invalid. It must contain LOG, ARTIFACT, CONFIG in any order.")
+        }
+
+        return true
+    }
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

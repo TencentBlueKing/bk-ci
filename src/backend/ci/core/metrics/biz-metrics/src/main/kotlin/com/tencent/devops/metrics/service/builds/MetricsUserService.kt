@@ -32,6 +32,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.collect.MapMaker
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsLocalPO
@@ -103,7 +104,7 @@ class MetricsUserService @Autowired constructor(
      */
     @Scheduled(cron = "0 0/10 * * * ?")
     fun checkBuildStatusJob() {
-        logger.info("=========>> check build status job start <<=========")
+        logger.info("=========>> check build status job start|${local.size}|${uncheckArray.size}<<=========")
         // 生成快照
         val unchecks = uncheckArray.toList()
         val ready2delete = mutableListOf<String>()
@@ -113,17 +114,21 @@ class MetricsUserService @Autowired constructor(
                     buildIds = chunk.toSet()
                 ).data
             }.getOrNull() ?: return@forEach
+            logger.info("checkBuildStatusJob|check|$chunk|${res.mapValues { it.value.status }}")
             ready2delete.addAll(res.filter { it.value.status?.isFinish() == true }.map { it.key })
         }
-
         // 生成local快照
         val keys = local.keys.toList()
         keys.forEach { key ->
             val value = local[key] ?: return@forEach
             if (value.data.buildId !in ready2delete) return@forEach
+            logger.info(
+                "checkBuildStatusJob|ready to remove|" +
+                    "$key|${local[key]?.data?.buildId}|${local[key]?.data?.eventType}"
+            )
             metricsCacheService.removeCache(key)
-            uncheckArray.remove(value.data.buildId)
         }
+        uncheckArray.clear()
     }
 
     companion object {
@@ -145,6 +150,7 @@ class MetricsUserService @Autowired constructor(
         override fun run() {
             while (true) {
                 kotlin.runCatching { execute() }
+                    .onFailure { logger.error("DeleteDelayProcess error ${it.message}", it) }
                 Thread.sleep(SLEEP)
             }
         }
@@ -161,11 +167,16 @@ class MetricsUserService @Autowired constructor(
         private fun execute() {
             delayArray.addFirst(mutableListOf())
             val ready = delayArray.removeLast()
-            ready.forEach { (key, metrics) ->
-                metrics.meters.forEach { meter ->
-                    registry.remove(meter)
+            logger.info("DeleteDelayProcess|ready to delete|${ready.size}")
+            ready.forEachIndexed { index, data ->
+                kotlin.runCatching {
+                    data.second.meters.forEach { meter ->
+                        registry.remove(meter)
+                    }
+                    local.remove(data.first)
+                }.onFailure {
+                    logger.error("DeleteDelayProcess error in $index|$data|${it.message}", it)
                 }
-                local.remove(key)
             }
         }
     }
@@ -195,7 +206,7 @@ class MetricsUserService @Autowired constructor(
             }
 
             CallBackEvent.BUILD_JOB_START -> {
-                if (event.jobId == null) {
+                if (event.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
                 }
@@ -210,7 +221,7 @@ class MetricsUserService @Autowired constructor(
 
             CallBackEvent.BUILD_TASK_START -> {
                 date.startTime = checkNotNull(event.eventTime)
-                if (event.stepId == null) {
+                if (event.stepId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }
@@ -228,8 +239,12 @@ class MetricsUserService @Autowired constructor(
             }
 
             CallBackEvent.BUILD_JOB_END -> {
-                if (event.jobId == null) {
+                if (event.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
+                    return
+                }
+                /*job skip时没start事件，所以在end时直接去掉*/
+                if (event.buildStatus == BuildStatus.SKIP.name) {
                     return
                 }
                 date.endTime = checkNotNull(event.eventTime)
@@ -243,7 +258,7 @@ class MetricsUserService @Autowired constructor(
 
             CallBackEvent.BUILD_TASK_END -> {
                 date.endTime = checkNotNull(event.eventTime)
-                if (event.stepId == null) {
+                if (event.stepId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }

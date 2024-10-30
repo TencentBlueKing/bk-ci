@@ -42,12 +42,12 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_WEB_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.USER_CUSTOM_POLICY
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -77,7 +77,7 @@ abstract class AbMigratePolicyService(
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) {
 
@@ -597,7 +597,7 @@ abstract class AbMigratePolicyService(
             defaultGroup = false,
             relationId = iamGroupId.toString()
         )
-        permissionGroupPoliciesService.grantGroupPermission(
+        permissionResourceGroupPermissionService.grantGroupPermission(
             authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
