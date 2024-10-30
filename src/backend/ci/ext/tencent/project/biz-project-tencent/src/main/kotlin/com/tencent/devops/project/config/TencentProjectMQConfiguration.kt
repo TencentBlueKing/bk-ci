@@ -53,7 +53,7 @@ class TencentProjectMQConfiguration {
         @Autowired bkAccessTokenApi: BkAccessTokenApi
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
-        bkAccessTokenApi = bkAccessTokenApi,
+        bkAccessTokenApi = bkAccessTokenApi
     )
 
     @EventConsumer
