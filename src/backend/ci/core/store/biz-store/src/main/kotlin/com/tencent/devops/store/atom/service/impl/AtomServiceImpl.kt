@@ -1074,7 +1074,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         var records: org.jooq.Result<out Record>? = null
         val atomCodeList = mutableListOf<String>()
-        if (projectAtomCount > (page -1) * pageSize) {
+        if (projectAtomCount > (page - 1) * pageSize) {
             records = atomDao.getInstalledAtoms(
                 dslContext = dslContext,
                 projectCode = projectCode,
