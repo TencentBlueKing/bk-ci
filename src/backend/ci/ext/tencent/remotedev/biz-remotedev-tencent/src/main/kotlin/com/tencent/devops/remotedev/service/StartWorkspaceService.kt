@@ -115,7 +115,10 @@ class StartWorkspaceService @Autowired constructor(
         }
         val load = loginUsers(diff)
         userEnvCache.putAll(load)
-        return res.plus(load)
+        res.putAll(load)
+        val invalid = diff - load.keys
+        userEnvCache.putAll(invalid.associateWith { emptyList() })
+        return res
     }
 
     fun loginUsers(
