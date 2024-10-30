@@ -211,7 +211,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -327,8 +327,8 @@
                     }
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        isChanged: Object.prototype.toString.call(p.defaultValue) === '[object Object]'
-                            ? !this.isShallowEqual(p.defaultValue, p.value)
+                        isChanged: isObject(p.defaultValue)
+                            ? !isShallowEqual(p.defaultValue, p.value)
                             : p.defaultValue !== p.value,
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
@@ -481,7 +481,7 @@
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId)
                 Object.keys(params).forEach(key => {
-                    if (Object.prototype.toString.call(params[key]) === '[object Object]') {
+                    if (isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])
                     }
                 })
