@@ -1081,7 +1081,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             masterVersion = startInfo.masterVersion
         )
         if (updateCount != 1) {
-            logger.warn("Fail to update the agent info($updateCount)")
+            logger.warn("Fail to update the agent($id) info($updateCount)")
         }
 
         if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status ||
@@ -1090,32 +1090,28 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartAgentService.addAgentAction(projectId, id, AgentAction.ONLINE)
         }
 
-        dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            if (agentRecord.nodeId != null) {
-                val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
-                if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
-                ) {
-                    nodeRecord.nodeStatus = NodeStatus.NORMAL.name
-                    nodeRecord.nodeIp = startInfo.hostIp
-                    nodeRecord.agentVersion = startInfo.masterVersion
-                    nodeDao.saveNode(context, nodeRecord)
-                    webSocketDispatcher.dispatch(
-                        websocketService.buildDetailMessage(projectId, "")
-                    )
-                } else {
-                    // 在IP没变的情况下版本可能变化，这里单独更新下版本
-                    if (!startInfo.masterVersion.isNullOrBlank() &&
-                        agentRecord.masterVersion != startInfo.masterVersion
-                    ) {
-                        nodeDao.updateDevopsAgentVersionByNodeId(
-                            dslContext = dslContext,
-                            nodeId = agentRecord.nodeId,
-                            agentVersion = startInfo.masterVersion!!
-                        )
-                    }
-                }
+        if (agentRecord.nodeId == null) {
+            return status
+        }
+
+        // 更新node表信息
+        val nodeRecord = nodeDao.get(dslContext, projectId, agentRecord.nodeId) ?: return status
+        if (nodeRecord.nodeIp != startInfo.hostIp || nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
+            nodeRecord.nodeStatus = NodeStatus.NORMAL.name
+            nodeRecord.nodeIp = startInfo.hostIp
+            nodeRecord.agentVersion = startInfo.masterVersion
+            nodeDao.saveNode(dslContext, nodeRecord)
+            webSocketDispatcher.dispatch(
+                websocketService.buildDetailMessage(projectId, "")
+            )
+        } else {
+            // 在IP没变的情况下版本可能变化，这里单独更新下版本
+            if (!startInfo.masterVersion.isNullOrBlank() && nodeRecord.agentVersion != startInfo.masterVersion) {
+                nodeDao.updateDevopsAgentVersionByNodeId(
+                    dslContext = dslContext,
+                    nodeId = agentRecord.nodeId,
+                    agentVersion = startInfo.masterVersion!!
+                )
             }
         }
 
