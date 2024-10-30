@@ -294,7 +294,7 @@
     "all": "All",
     "installedAt": "Installed at",
     "createdAt": "Created at",
-    "systemPlugin": "system plugin"
+    "systemPlugin": "System plugin"
   },
   "settings": {
     "baseInfo": "Basic Information",

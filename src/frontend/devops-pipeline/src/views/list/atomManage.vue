@@ -390,8 +390,7 @@
                 let des = this.$t('atomManage.installedAt')
                 if (row.default) des = this.$t('atomManage.createdAt')
                 if (row.installer === 'system') {
-                    const info = this.$t('atomManage.systemPlugin')
-                    return info
+                    return this.$t('atomManage.systemPlugin')
                 }
                 return `${row.installer} ${des} ${row.installTime}`
             },
