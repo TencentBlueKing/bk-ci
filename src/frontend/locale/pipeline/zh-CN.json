@@ -458,7 +458,9 @@
       "desc": "你没有该模板查看权限，请申请权限",
       "apply": "申请加入"
     },
-    "editStoreTemplateTips": "研发商店模板不支持编辑"
+    "editStoreTemplateTips": "研发商店模板不支持编辑",
+    "lastModifiedDate": "更新时间",
+    "lastModifiedBy": "更新人"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -1058,6 +1060,7 @@
     "bool": "布尔值",
     "enum": "单选框",
     "multiple": "复选框",
+    "checkbox": "Checkbox确认框",
     "svntag": "SVN分支或TAG",
     "gitref": "GIT分支或TAG",
     "codelib": "代码库",
@@ -1134,7 +1137,7 @@
     "mutualTimeout": "最长等待时间（单位分钟）",
     "mutualTimeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "queueLabel": "队列最大任务数",
-    "queuePlaceholder": "请填写1-10之间的整数",
+    "queuePlaceholder": "请填写1-50之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",
@@ -1147,7 +1150,8 @@
     "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
-    "minutes": "分钟"
+    "minutes": "分钟",
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",

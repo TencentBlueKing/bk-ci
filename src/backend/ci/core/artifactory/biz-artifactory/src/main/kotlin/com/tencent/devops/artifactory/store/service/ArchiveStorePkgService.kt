@@ -47,7 +47,7 @@ interface ArchiveStorePkgService {
     /**
      * 获取组件相关文件内容
      */
-    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String
+    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): String
 
     /**
      * 删除组件包

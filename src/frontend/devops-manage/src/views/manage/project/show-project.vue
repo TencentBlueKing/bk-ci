@@ -397,7 +397,7 @@ onMounted(async () => {
                       v-for="(subjectScope, index) in projectData.subjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
                   </span>
                   <div class="diff-content scopes-diff" v-if="projectData.afterSubjectScopes">
@@ -409,7 +409,7 @@ onMounted(async () => {
                       v-for="(subjectScope, index) in projectData.afterSubjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
                   </div>
                 </bk-form-item>

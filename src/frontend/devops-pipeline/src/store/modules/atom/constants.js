@@ -102,6 +102,8 @@ export const SET_COMMEND_ATOM_PAGE_OVER = 'SET_COMMEND_ATOM_PAGE_OVER'
 export const SET_PIPELINE_INFO = 'SET_PIPELINE_INFO'
 export const UPDATE_PIPELINE_INFO = 'UPDATE_PIPELINE_INFO'
 
+export const SET_PLUGIN_HEAD_TAB = 'SET_PLUGIN_HEAD_TAB'
+
 export const buildNoRules = [
     {
         value: 'CONSISTENT',

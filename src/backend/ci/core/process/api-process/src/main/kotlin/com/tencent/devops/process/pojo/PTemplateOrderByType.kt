@@ -25,16 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.refresh.event
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinding
-
-@Event(destination = StreamBinding.AUTH_REFRESH_FANOUT)
-data class IamCacheRefreshEvent(
-    override val refreshType: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val userId: String,
-    val resourceType: String
-) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+/**
+ * 模版order_by 排序顺序
+ */
+enum class PTemplateOrderByType {
+    NAME,
+    CREATOR,
+    CREATE_TIME,
+}

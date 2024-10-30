@@ -2,7 +2,7 @@
 - [v2.1.4](#v2142024-10-16)
     - [Changelog since v2.1.3](#changelog-since-v213)
 
--[v2.1.3](#v2132024-05-28)
+- [v2.1.3](#v2132024-05-28)
    - [Changelog since v2.1.2](#changelog-since-v212)
 
 - [v2.1.2](#v2122024-05-20)
