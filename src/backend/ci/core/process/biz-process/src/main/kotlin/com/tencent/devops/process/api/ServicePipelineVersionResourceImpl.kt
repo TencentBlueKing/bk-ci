@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -449,6 +450,21 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             version = version,
             storageType = PipelineStorageType.getActionType(storageType)
         )
+    }
+
+    override fun updateBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNo: BuildNoUpdateReq
+    ): Result<Boolean> {
+        pipelineInfoFacadeService.updateBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo
+        )
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String) {

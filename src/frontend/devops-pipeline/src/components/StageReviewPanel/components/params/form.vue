@@ -62,7 +62,7 @@
             </bk-form-item>
             <bk-form-item
                 :label="$t('stageReview.defaultValue')"
-                v-if="copyForm.valueType"
+                v-if="copyForm.valueType && !isCheakboxParam(copyForm.valueType)"
                 :key="copyForm.valueType"
             >
                 <param-value :form="copyForm"></param-value>
@@ -96,7 +96,8 @@
         CHECK_PARAM_LIST,
         isEnumParam,
         isMultipleParam,
-        isBooleanParam
+        isBooleanParam,
+        isCheakboxParam
     } from '@/store/modules/atom/paramsConfig'
 
     const paramTypeList = CHECK_PARAM_LIST.map((item) => ({
@@ -146,6 +147,7 @@
         methods: {
             isBooleanParam,
             isMultipleParam,
+            isCheakboxParam,
 
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
@@ -169,9 +171,13 @@
                 this.copyForm.value = ''
                 this.copyForm.options = []
 
-                if (isMultipleParam(type)) this.copyForm.value = []
-
-                if (isBooleanParam(type)) this.copyForm.value = false
+                if (isMultipleParam(type)) {
+                    this.copyForm.value = []
+                } else if (isBooleanParam(type)) {
+                    this.copyForm.value = ''
+                } else if (isCheakboxParam(type)) {
+                    this.copyForm.value = false
+                }
             },
 
             changeOption (val) {

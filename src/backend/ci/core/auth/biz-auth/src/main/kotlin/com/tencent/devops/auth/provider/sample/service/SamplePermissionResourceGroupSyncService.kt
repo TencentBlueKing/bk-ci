@@ -39,6 +39,8 @@ class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncServ
 
     override fun syncGroupAndMember(projectCode: String) = Unit
 
+    override fun syncProjectGroup(projectCode: String) = Unit
+
     override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
 
     override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit

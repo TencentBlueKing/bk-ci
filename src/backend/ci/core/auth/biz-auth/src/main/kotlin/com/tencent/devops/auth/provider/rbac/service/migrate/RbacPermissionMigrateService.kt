@@ -351,14 +351,9 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        val resourceTypeList = cacheService.listResourceTypes()
-            .filterNot { it.resourceType == AuthResourceType.PROJECT.value }
-        resourceTypeList.forEach {
-            handoverPermissions(
-                permissionHandoverDTO.copy(
-                    resourceType = it.resourceType
-                )
-            )
+        logger.info("handover all permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverAllPermissions(permissionHandoverDTO = permissionHandoverDTO)
         }
         return true
     }
@@ -700,6 +695,17 @@ class RbacPermissionMigrateService constructor(
             migrateResourceGroupService.fixResourceGroups(
                 projectCode = it
             )
+        }
+        return true
+    }
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            val projectInfo = client.get(ServiceProjectResource::class).get(it).data!!
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pipelineListPermissionControl = true
+            logger.info("update project($it) properties|$properties")
+            client.get(ServiceProjectResource::class).updateProjectProperties(it, properties)
         }
         return true
     }

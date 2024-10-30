@@ -158,7 +158,7 @@ class WindowsResourceConfigService @Autowired constructor(
         val spec = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
         if (searchCustom != true) {
             workspaceCommon.realtimeStartCloudResourceList().forEach {
-                if (it.zoneId in spec) return@forEach
+                if (quotaType == QuotaType.OFFSHORE && it.zoneId in spec) return@forEach
                 val key = it.zoneId.replace(Regex("\\d+"), "")
                 val map = res.getOrPut(key) { mutableMapOf() }
                 if (it.status == 11 && it.locked != true && it.internal == quotaType.getInternal()) {
@@ -170,7 +170,7 @@ class WindowsResourceConfigService @Autowired constructor(
         SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
-            if (resource.zoneId in spec) return@forEach
+            if (quotaType == QuotaType.OFFSHORE && resource.zoneId in spec) return@forEach
             val key = resource.zoneId.replace(Regex("\\d+"), "")
             val map = res.getOrPut(key) { mutableMapOf() }
             resource.machineResources?.forEach { mas ->

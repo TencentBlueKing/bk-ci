@@ -574,7 +574,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.sortedBy { it.aliasName },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
@@ -616,7 +616,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIdsOnly(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result

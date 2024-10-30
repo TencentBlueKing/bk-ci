@@ -198,7 +198,8 @@
                         name: this.$t(`storeMap.${item.name}`)
                     }
                 })
-                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : list
+                const variableList = list.filter(item => item.id !== 'CHECKBOX')
+                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : variableList
             }
         },
         created () {

@@ -407,7 +407,8 @@ class CreateControl @Autowired constructor(
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
                     quotaType = quotaType,
-                    pvcs = workspaceCreate.pvcs
+                    pvcs = workspaceCreate.pvcs,
+                    specifyTaints = workspaceCreate.specifyTaints
                 ),
                 projectId = projectId,
                 mountType = mountType,

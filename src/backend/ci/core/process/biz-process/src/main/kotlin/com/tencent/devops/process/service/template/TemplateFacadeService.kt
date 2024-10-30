@@ -92,6 +92,8 @@ import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -689,6 +691,8 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int? = null,
         pageSize: Int? = null,
         keywords: String? = null
@@ -702,6 +706,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
+            orderBy = orderBy,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             templateIds = null
@@ -745,6 +751,8 @@ class TemplateFacadeService @Autowired constructor(
         storeFlag: Boolean?,
         hasManagerPermission: Boolean?,
         checkPermission: Boolean = true,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int?,
         pageSize: Int?,
         includePublicFlag: Boolean? = null,
@@ -759,6 +767,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 hasManagerPermission = hasManagerPermission,
@@ -781,6 +791,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 templatesByPermissionMap = templatesByPermissionMap
@@ -793,6 +805,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         hasManagerPermission: Boolean?,
@@ -806,6 +820,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templateIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -837,6 +853,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         templatesByPermissionMap: Map<AuthPermission, List<String>>
@@ -868,6 +886,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templatesWithListPermIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -989,7 +1009,9 @@ class TemplateFacadeService @Autowired constructor(
                         hasPermission = hasManagerPermission,
                         canView = templateWithPermission.templatesWithViewPermIds?.contains(templateId),
                         canDelete = templateWithPermission.templatesWithDeletePermIds?.contains(templateId),
-                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId)
+                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId),
+                        creator = record[tTemplate.CREATOR],
+                        updateTime = record[tTemplate.UPDATE_TIME].timestampmilli()
                     )
                 )
             }
