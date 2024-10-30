@@ -69,16 +69,26 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //                param.defaultValue
 //            }
                 param.type == BuildFormPropertyType.REPO_REF -> {
+                    val paramValue = paramValues[key] ?: paramValues[param.id] ?: ""
                     // 新的变量类型，需手动插入值
                     val value = try {
                         JsonUtil.to(
-                            json = paramValues[key] ?: paramValues[param.id] ?: "",
+                            json = paramValue,
                             typeReference = object : TypeReference<Map<String, String>>() {}
                         )
                     } catch (ignored: Exception) {
                         logger.warn("parse repo ref error, key: $key, value: ${paramValues[key]}")
                         return@forEach
                     }
+                    // 保存基础值，xxx = {"repo-name": "xxx/xxx","branch": "master"}
+                    paramsMap[key] = BuildParameters(
+                        key = key,
+                        value = paramValue,
+                        valueType = param.type,
+                        readOnly = param.readOnly,
+                        desc = param.desc,
+                        defaultValue = param.defaultValue
+                    )
                     val variableInfo = CascadePropertyUtils.getCascadeVariableKeyMap(key, param.type)
                     variableInfo.forEach { (subKey, paramKey) ->
                         paramsMap[paramKey] = BuildParameters(
@@ -87,8 +97,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                             valueType = param.type,
                             readOnly = param.readOnly,
                             desc = param.desc,
-                            defaultValue = (param.defaultValue as Map<String, String>)[subKey],
-                            relKey = key
+                            defaultValue = (param.defaultValue as Map<String, String>)[subKey]
                         )
                     }
                     return@forEach

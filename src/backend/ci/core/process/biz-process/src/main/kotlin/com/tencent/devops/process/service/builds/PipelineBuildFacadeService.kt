@@ -270,14 +270,6 @@ class PipelineBuildFacadeService(
                         realValue?.toString()?.toBoolean()
                     }
 
-                    CascadePropertyUtils.supportCascadeParam(param.type) -> {
-                        CascadePropertyUtils.getLatestCascadeParamsValue(
-                            param = latestParamsMap,
-                            type = param.type,
-                            relKey = param.id
-                        )
-                    }
-
                     else -> {
                         realValue
                     }
@@ -374,8 +366,7 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
-        val parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
-        return CascadePropertyUtils.mergeCascadeParams(parameters)
+        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
     }
 
     fun retry(
