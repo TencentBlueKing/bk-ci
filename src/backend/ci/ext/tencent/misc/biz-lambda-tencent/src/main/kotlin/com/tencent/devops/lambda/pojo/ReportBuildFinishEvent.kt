@@ -30,7 +30,6 @@ package com.tencent.devops.lambda.pojo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 上报构建结束大数据平台，延迟20秒上报
