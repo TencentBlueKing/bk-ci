@@ -25,56 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.api.sync.OpAuthResourceGroupSyncResource
+import com.tencent.devops.auth.api.user.UserAuthResourceGroupSyncResource
+import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpAuthResourceGroupSyncResourceImpl @Autowired constructor(
-    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
-) : OpAuthResourceGroupSyncResource {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
-        permissionResourceGroupSyncService.syncByCondition(projectConditionDTO)
+class UserAuthResourceGroupSyncResourceImpl @Autowired constructor(
+    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+) : UserAuthResourceGroupSyncResource {
+    override fun syncGroupAndMember(userId: String, projectId: String): Result<Boolean> {
+        permissionResourceGroupSyncService.syncGroupAndMember(projectId)
         return Result(true)
     }
 
-    override fun batchSyncGroupAndMember(projectIds: List<String>): Result<Boolean> {
-        permissionResourceGroupSyncService.batchSyncGroupAndMember(projectIds)
+    override fun syncGroupMember(userId: String, projectId: String, groupId: Int): Result<Boolean> {
+        permissionResourceGroupSyncService.syncIamGroupMember(projectCode = projectId, iamGroupId = groupId)
         return Result(true)
     }
 
-    override fun batchSyncProjectGroup(projectIds: List<String>): Result<Boolean> {
-        permissionResourceGroupSyncService.batchSyncProjectGroup(projectIds)
-        return Result(true)
-    }
-
-    override fun batchSyncAllMember(projectIds: List<String>): Result<Boolean> {
-        permissionResourceGroupSyncService.batchSyncAllMember(projectIds)
-        return Result(true)
-    }
-
-    override fun syncResourceMember(projectId: String, resourceType: String, resourceCode: String): Result<Boolean> {
-        permissionResourceGroupSyncService.syncResourceMember(
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
+    override fun getStatusOfSync(userId: String, projectId: String): Result<AuthMigrateStatus> {
+        return Result(
+            permissionResourceGroupSyncService.getStatusOfSync(projectCode = projectId)
         )
-        return Result(true)
     }
 
-    override fun fixResourceGroupMember(projectId: String): Result<Boolean> {
-        permissionResourceGroupSyncService.fixResourceGroupMember(projectId)
-        return Result(true)
+    override fun syncGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
+        return Result(
+            permissionResourceGroupPermissionService.syncGroupPermissions(projectCode = projectId, iamGroupId = groupId)
+        )
     }
 
-    override fun syncIamGroupMembersOfApply(): Result<Boolean> {
-        permissionResourceGroupSyncService.syncIamGroupMembersOfApply()
-        return Result(true)
+    override fun deleteGroupPermissions(userId: String, projectId: String, groupId: Int): Result<Boolean> {
+        return Result(
+            permissionResourceGroupPermissionService.deleteByGroupIds(
+                projectCode = projectId,
+                iamGroupIds = listOf(groupId)
+            )
+        )
     }
 }
