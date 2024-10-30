@@ -42,6 +42,7 @@ const fetchProjectData = async () => {
   }).then((res) => {
     projectData.value = res;
     currentDialect.value = res.properties.pipelineDialect;
+    (!res.properties || !res.properties.pipelineDialect) && (projectData.value.properties.pipelineDialect = 'CLASSIC');
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
   }).catch((err) => {
