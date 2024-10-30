@@ -107,8 +107,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class AtomDao : AtomBaseDao() {
 
-    private val logger = LoggerFactory.getLogger(AtomDao::class.java)
-
     fun addAtomFromOp(
         dslContext: DSLContext,
         userId: String,
@@ -1447,7 +1445,9 @@ class AtomDao : AtomBaseDao() {
         val tc = TClassify.T_CLASSIFY
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta).groupBy(ta.ATOM_CODE)
+            .from(ta)
+            .where(ta.DEFAULT_FLAG.eq(true).and(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
+            .groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
@@ -1475,7 +1475,6 @@ class AtomDao : AtomBaseDao() {
             .groupBy(ta.ATOM_CODE)
             .orderBy(ta.CREATE_TIME, ta.ID)
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
-        logger.info("getDefaultAtoms sql:${sql.sql}")
         return sql.fetch()
     }
 }
