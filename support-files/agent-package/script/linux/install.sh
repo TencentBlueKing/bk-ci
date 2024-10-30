@@ -1,4 +1,15 @@
 #!/bin/bash
+function checkFiles()
+{
+  if [ "$enable_check_files" == "true" ]; then
+    # 检查当前目录是否有文件
+    if [ "$(find . -maxdepth 1 -type f | wc -l)" -gt 0 ]; then
+      echo "fatal: current directory is not empty, please install in an empty directory"
+      exit 1
+    fi
+  fi
+}
+
 function exists()
 {
   command -v "$1" >/dev/null 2>&1
@@ -176,8 +187,12 @@ user=$USER
 echo "install User: $user"
 agent_id='##agentId##'
 echo "AgentId: $agent_id"
+enable_check_files='##enableCheckFiles##'
+echo "EnableCheckFiles: $enable_check_files"
 
 cd $workspace
+
+checkFiles
 
 echo "check if the install package(agent.zip) exists"
 if [[ ! -f "agent.zip" ]]; then
@@ -187,6 +202,8 @@ if [[ ! -f "agent.zip" ]]; then
   download_agent
   echo "unzip install package(agent.zip)"
   unzip -o agent.zip
+else
+  echo "agent.zip exist. reinstall, do nothing"
 fi
 
 unzip_jdk

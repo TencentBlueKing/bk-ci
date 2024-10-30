@@ -1,5 +1,17 @@
 #!/bin/bash
-function initArch() {
+function checkFiles()
+{
+  if [ "$enable_check_files" == "true" ]; then
+    # 检查当前目录是否有文件
+    if [ "$(find . -maxdepth 1 -type f | wc -l)" -gt 0 ]; then
+      echo "fatal: current directory is not empty, please install in an empty directory"
+      exit 1
+    fi
+  fi
+}
+
+function initArch()
+{
   ARCH=$(uname -m)
   case $ARCH in
     aarch64) ARCH="arm64";;
@@ -90,7 +102,6 @@ function uninstallAgentService()
     echo "remove run at load"
     rm -f ~/Library/LaunchAgents/$(getServiceName).plist
   fi
-
   cd $workspace
   chmod +x *.sh
   ${workspace}/stop.sh
@@ -104,7 +115,6 @@ function installAgentService()
     echo "add run at load with user $user"
     addRunAtLoad
   fi
-
   cd $workspace
   chmod +x *.sh
   ${workspace}/start.sh
@@ -125,8 +135,12 @@ user=$USER
 echo "install User: $user"
 agent_id='##agentId##'
 echo "AgentId: $agent_id"
+enable_check_files='##enableCheckFiles##'
+echo "EnableCheckFiles: $enable_check_files"
 
 cd $workspace
+
+checkFiles
 
 initArch
 download_agent
