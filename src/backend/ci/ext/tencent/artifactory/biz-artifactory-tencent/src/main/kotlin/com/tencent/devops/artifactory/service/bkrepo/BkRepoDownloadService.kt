@@ -53,8 +53,11 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MIN_API_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_TARGET_API_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION_CODE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -309,15 +312,17 @@ open class BkRepoDownloadService @Autowired constructor(
         val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
         val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
         val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appVersionCode = fileProperties[ARCHIVE_PROPS_APP_VERSION_CODE]?.toInt() ?: 0
+        val appMinApiVersion = fileProperties[ARCHIVE_PROPS_APP_MIN_API_VERSION] ?: ""
+        val appTargetApiVersion = fileProperties[ARCHIVE_PROPS_APP_TARGET_API_VERSION] ?: ""
         val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
         val sha256 = fileDetail!!.sha256
-        // TODO HAP versionCode? APIVersion?
         return """
             {
               "app": {
                 "bundleName": "$bundleIdentifier",
                 "bundleType": "app",
-                "versionCode": 1000000,
+                "versionCode": $appVersionCode,
                 "versionName": "$appVersion",
                 "label": "$appTitle",
                 "deployDomain": "${HomeHostUtil.outerServerHost()}",
@@ -325,8 +330,8 @@ open class BkRepoDownloadService @Autowired constructor(
                   "normal": "$appIcon",
                   "large": "$appIcon"
                 },
-                "minAPIVersion": "4.1.0(11)",
-                "targetAPIVersion": "4.1.0(11)",
+                "minAPIVersion": "$appMinApiVersion",
+                "targetAPIVersion": "$appTargetApiVersion",
                 "modules": [
                   {
                     "name": "$appTitle",
