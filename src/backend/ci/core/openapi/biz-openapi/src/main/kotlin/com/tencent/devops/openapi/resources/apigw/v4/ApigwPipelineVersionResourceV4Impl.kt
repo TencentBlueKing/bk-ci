@@ -292,20 +292,18 @@ class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun updateBuildNo(
+    override fun resetBuildNo(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String,
-        buildNo: BuildNoUpdateReq
+        pipelineId: String
     ): Result<Boolean> {
-        logger.info("OPENAPI_PIPELINE_V4|$userId|updateBuildNo|$projectId|$pipelineId")
-        return client.get(ServicePipelineVersionResource::class).updateBuildNo(
+        logger.info("OPENAPI_PIPELINE_V4|$userId|resetBuildNo|$projectId|$pipelineId")
+        return client.get(ServicePipelineVersionResource::class).resetBuildNo(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildNo = buildNo
+            pipelineId = pipelineId
         )
     }
 }

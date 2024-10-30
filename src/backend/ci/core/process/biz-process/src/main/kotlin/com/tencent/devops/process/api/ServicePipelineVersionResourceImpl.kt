@@ -452,20 +452,17 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateBuildNo(
+    override fun resetBuildNo(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        buildNo: BuildNoUpdateReq
-    ): Result<Boolean> {
-        pipelineInfoFacadeService.updateBuildNo(
+        pipelineId: String
+    ) = Result(
+        pipelineInfoFacadeService.resetBuildNo(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildNo = buildNo
+            pipelineId = pipelineId
         )
-        return Result(true)
-    }
+    )
 
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {

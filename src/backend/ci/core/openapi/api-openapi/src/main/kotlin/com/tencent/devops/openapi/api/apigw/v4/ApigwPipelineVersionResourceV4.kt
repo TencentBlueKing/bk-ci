@@ -423,12 +423,12 @@ interface ApigwPipelineVersionResourceV4 {
     ): Response
 
     @Operation(
-        summary = "重置流水线推荐版本号",
+        summary = "重置流水线推荐版本号（未启用推荐版本号则返回false）",
         tags = ["v4_app_pipeline_update_build_no", "v4_user_pipeline_update_build_no"]
     )
     @POST
-    @Path("/update_build_no")
-    fun updateBuildNo(
+    @Path("/reset_build_no")
+    fun resetBuildNo(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -443,8 +443,6 @@ interface ApigwPipelineVersionResourceV4 {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "流水线构建推荐版本号更新", required = true)
-        buildNo: BuildNoUpdateReq
+        pipelineId: String
     ): Result<Boolean>
 }
