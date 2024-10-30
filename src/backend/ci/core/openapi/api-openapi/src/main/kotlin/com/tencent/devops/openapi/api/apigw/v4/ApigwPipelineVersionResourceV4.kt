@@ -423,7 +423,7 @@ interface ApigwPipelineVersionResourceV4 {
 
     @Operation(
         summary = "重置流水线推荐版本号（未启用推荐版本号则返回false）",
-        tags = ["v4_app_pipeline_update_build_no", "v4_user_pipeline_update_build_no"]
+        tags = ["v4_app_pipeline_reset_build_no", "v4_user_pipeline_reset_build_no"]
     )
     @POST
     @Path("/reset_build_no")
