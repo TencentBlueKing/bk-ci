@@ -36,7 +36,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
  * 上报构建结束大数据平台，延迟20秒上报
  * @version 1.0
  */
-@Event(destination = StreamBinding.PIPELINE_BUILD_FINISH_FANOUT)
+@Event(destination = "misc.build.finish.report")
 data class ReportBuildFinishEvent(
     override val source: String,
     override val projectId: String,
