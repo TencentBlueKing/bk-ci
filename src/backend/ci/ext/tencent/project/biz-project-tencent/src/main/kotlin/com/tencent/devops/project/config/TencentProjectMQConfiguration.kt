@@ -50,7 +50,7 @@ class TencentProjectMQConfiguration {
     @Bean
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
-        @Autowired bkAccessTokenApi: BkAccessTokenApi,
+        @Autowired bkAccessTokenApi: BkAccessTokenApi
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
         bkAccessTokenApi = bkAccessTokenApi,

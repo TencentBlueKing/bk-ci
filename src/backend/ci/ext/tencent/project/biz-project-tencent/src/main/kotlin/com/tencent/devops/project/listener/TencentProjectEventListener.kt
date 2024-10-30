@@ -53,9 +53,11 @@ class TencentProjectEventListener @Autowired constructor(
                 is ProjectCreateBroadCastEvent -> {
                     onReceiveProjectCreate(event)
                 }
+
                 is ProjectUpdateBroadCastEvent -> {
                     onReceiveProjectUpdate(event)
                 }
+
                 is ProjectUpdateLogoBroadCastEvent -> {
                     onReceiveProjectUpdateLogo(event)
                 }
@@ -67,7 +69,6 @@ class TencentProjectEventListener @Autowired constructor(
 
     // 已改成同步，无需重复添加
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
-
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
