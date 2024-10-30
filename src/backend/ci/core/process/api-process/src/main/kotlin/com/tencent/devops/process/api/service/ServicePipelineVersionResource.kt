@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -314,4 +315,21 @@ interface ServicePipelineVersionResource {
         @QueryParam("storageType")
         storageType: String?
     ): Response
+
+    @Operation(summary = "重置流水线推荐版本号")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/updateBuildNo")
+    fun updateBuildNo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线构建推荐版本号更新", required = true)
+        buildNo: BuildNoUpdateReq
+    ): Result<Boolean>
 }

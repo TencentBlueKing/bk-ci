@@ -82,6 +82,7 @@
                         v-validate.initial="showCondition ? 'required' : ''"
                         name="customCondition"
                         :handle-change="handleUpdateStageControl"
+                        :placeholder="$t('storeMap.customConditionExpPlaceholder')"
                     >
                     </vuex-input>
                 </form-field>

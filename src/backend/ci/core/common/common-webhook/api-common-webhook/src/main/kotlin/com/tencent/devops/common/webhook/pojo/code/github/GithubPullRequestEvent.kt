@@ -118,7 +118,7 @@ data class GithubPullRequest(
     @JsonProperty("html_url")
     val htmlUrl: String, // https://github.com/yongyiduan/webhook-test/pull/1
     @JsonProperty("id")
-    val id: Int, // 973279061
+    val id: Long, // 973279061
     @JsonProperty("issue_url")
     val issueUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/issues/1
     @JsonProperty("labels")
@@ -189,7 +189,7 @@ data class GithubMilestone(
     @JsonProperty("html_url")
     val htmlUrl: String, // https://github.com/octocat/Hello-World/milestones/v1.0
     @JsonProperty("id")
-    val id: Int, // 1002604
+    val id: Long, // 1002604
 //    @JsonProperty("labels_url")
 //    val labelsUrl: String, // https://api.github.com/repos/octocat/Hello-World/milestones/1/labels
     @JsonProperty("node_id")

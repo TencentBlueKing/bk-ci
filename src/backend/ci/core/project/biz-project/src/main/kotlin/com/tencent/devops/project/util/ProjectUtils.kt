@@ -110,7 +110,9 @@ object ProjectUtils {
                 pipelineLimit = pipelineLimit,
                 routerTag = routerTag,
                 relationId = relationId,
-                properties = properties.takeIf { !it.isNullOrBlank() }?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                properties = properties.takeIf { !it.isNullOrBlank() }
+                    ?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                    ?: ProjectProperties(),
                 subjectScopes = subjectScopes.takeIf { !it.isNullOrBlank() }?.let {
                     JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
                 },

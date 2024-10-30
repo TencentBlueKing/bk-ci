@@ -27,12 +27,12 @@
 
 package com.tencent.devops.openapi.es.config
 
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
 import com.tencent.devops.openapi.es.mq.MQListenerService
-import java.util.function.Consumer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -41,7 +41,6 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import org.springframework.messaging.Message
 
 @Configuration
 @ConditionalOnWebApplication
@@ -54,14 +53,10 @@ class MQConfiguration @Autowired constructor() {
         @Autowired streamBridge: StreamBridge
     ) = MQDispatcher(streamBridge)
 
-    @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT_IN)
-    fun openapiLogEventIn(
+    @EventConsumer
+    fun openapiLogEventConsumer(
         @Autowired listenerService: MQListenerService
-    ): Consumer<Message<ESEvent>> {
-        return Consumer { event: Message<ESEvent> ->
-            listenerService.handleEvent(event.payload)
-        }
-    }
+    ) = ScsConsumerBuilder.build<ESEvent> { listenerService.handleEvent(it) }
 
     @Bean
     fun mqListenerService(

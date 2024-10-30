@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
-class RbacPermissionService constructor(
+class RbacPermissionService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamConfiguration: IamConfiguration,
@@ -553,6 +553,7 @@ class RbacPermissionService constructor(
                     parents = parents
                 )
             }
+
             else -> {
                 AuthResourceInstance(
                     resourceType = resourceType,
