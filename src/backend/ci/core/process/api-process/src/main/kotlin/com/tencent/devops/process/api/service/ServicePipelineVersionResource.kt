@@ -318,8 +318,8 @@ interface ServicePipelineVersionResource {
 
     @Operation(summary = "重置流水线推荐版本号")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/updateBuildNo")
-    fun updateBuildNo(
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/resetBuildNo")
+    fun resetBuildNo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -328,8 +328,6 @@ interface ServicePipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "流水线构建推荐版本号更新", required = true)
-        buildNo: BuildNoUpdateReq
+        pipelineId: String
     ): Result<Boolean>
 }
