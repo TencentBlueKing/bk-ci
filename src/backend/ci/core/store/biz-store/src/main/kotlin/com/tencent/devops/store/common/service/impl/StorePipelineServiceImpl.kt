@@ -498,7 +498,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                 "$storeType-PIPELINE-BUILD:$storeCode"
             )
             val model = JsonUtil.to(pipelineModel, Model::class.java)
-             pipelineId = client.get(ServicePipelineResource::class).create(
+             val pipelineId = client.get(ServicePipelineResource::class).create(
                 userId = storeInnerPipelineConfig.innerPipelineUser,
                 projectId = storeInnerPipelineConfig.innerPipelineProject,
                 pipeline = model,
