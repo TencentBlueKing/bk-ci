@@ -34,6 +34,12 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 import com.tencent.process.ProcessTreeRemoting.IOSProcess;
 import com.tencent.process.ProcessTreeRemoting.IProcessTree;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.jvnet.winp.WinProcess;
+import org.jvnet.winp.WinpException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -59,16 +65,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.Map.Entry;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.jvnet.winp.WinProcess;
-import org.jvnet.winp.WinpException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.sun.jna.Pointer.NULL;
 import static com.tencent.process.jna.GNUCLibrary.LIBC;
@@ -467,15 +466,12 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 if (this.arguments == null) {
                     this.arguments = new ArrayList<>(this.argc);
 
-                    try {
-
-                        try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            BkProcessTree.log("Reading " + this.getFile("as"));
-                            for (int n = 0; n < this.argc; ++n) {
-                                as.seek(Solaris.to64(this.argp + n * 4));
-                                int p = Solaris.adjust(as.readInt());
-                                this.arguments.add(this.readLine(as, p, "argv[" + n + "]"));
-                            }
+                    try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
+                        BkProcessTree.log("Reading " + this.getFile("as"));
+                        for (int n = 0; n < this.argc; ++n) {
+                            as.seek(Solaris.to64(this.argp + n * 4));
+                            int p = Solaris.adjust(as.readInt());
+                            this.arguments.add(this.readLine(as, p, "argv[" + n + "]"));
                         }
                     } catch (IOException var8) {
                         log(var8.getMessage());
