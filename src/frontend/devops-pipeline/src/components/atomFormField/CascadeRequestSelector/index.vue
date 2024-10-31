@@ -33,7 +33,7 @@
                 {
                     ...childrenOptions,
                     id: undefined,
-                    key: value[parentKey],
+                    key: value[parentKey] + isDiffParam,
                     paramId: 'key',
                     paramValue: 'value',
                     initRequest: initRequest,
