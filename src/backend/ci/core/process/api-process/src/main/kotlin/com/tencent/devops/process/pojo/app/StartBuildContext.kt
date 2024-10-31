@@ -445,7 +445,7 @@ data class StartBuildContext(
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
-                        fillCascadeParam(param, originStartContexts, originStartParams)
+                        originStartParams.addAll(fillCascadeParam(param, originStartContexts))
                     } else {
                         originStartParams.add(param)
                         fillContextPrefix(param, originStartContexts)
@@ -484,8 +484,8 @@ data class StartBuildContext(
         private fun fillCascadeParam(
             param: BuildParameters,
             originStartContexts: HashMap<String, BuildParameters>,
-            originStartParams: ArrayList<BuildParameters>
-        ) {
+        ):List<BuildParameters> {
+            val originStartParams = mutableListOf<BuildParameters>()
             val key = param.key
             val paramValue = try {
                 if (param.value is String) {
@@ -498,7 +498,7 @@ data class StartBuildContext(
                 }
             } catch (ignored: Exception) {
                 logger.warn("parse repo ref error, key: $key, param: $param")
-                return
+                return originStartParams
             }
             originStartParams.add(param.copy(value = paramValue))
             CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
@@ -512,6 +512,7 @@ data class StartBuildContext(
                     // 填充下级参数的[variables.]
                     fillContextPrefix(subParam, originStartContexts)
                 }
+            return originStartParams
         }
     }
 }
