@@ -247,7 +247,8 @@ object CommonUtils {
     private fun getProdDbClusterName(profile: Profile): String {
         // 从配置文件获取db集群名称列表
         val dbClusterNames = (SpringContextUtil.getValue("bk.db.clusterNames") ?: PROFILE_PRODUCTION).split(",")
-        val activeProfiles = profile.getActiveProfiles()
+        val activeProfiles = profile.getActiveProfiles().toMutableList()
+        activeProfiles.remove(PROFILE_PRODUCTION)
         var finalDbClusterName = PROFILE_PRODUCTION
         run breaking@{
             // 获取当前服务器集群对应的db集群名称
