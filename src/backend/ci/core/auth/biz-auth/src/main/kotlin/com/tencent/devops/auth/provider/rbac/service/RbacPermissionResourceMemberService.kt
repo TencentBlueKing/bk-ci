@@ -683,7 +683,7 @@ class RbacPermissionResourceMemberService(
             dslContext = dslContext,
             projectCode = projectCode,
             iamGroupId = groupId,
-            expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt),
+            expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt),
             memberId = targetMember.id
         )
     }
