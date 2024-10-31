@@ -95,8 +95,10 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Result
+import org.jooq.SelectHavingStep
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
@@ -1118,20 +1120,24 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null
     ): Int {
-        val (ta, tspr, conditions) = getInstalledConditions(
+        val (ta, t, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
         )
 
-        val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
+        val step = dslContext.select(ta.ATOM_CODE, ta.CLASSIFY_ID, ta.CREATE_TIME).from(ta)
         if (!projectCode.isNullOrBlank()) {
+            val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        val tc = TClassify.T_CLASSIFY
-        return step.join(tc)
-            .on(ta.CLASSIFY_ID.eq(tc.ID))
+        dslContext.selectCount()
+        return step.join(t)
+            .on(
+                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
+                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+            )
             .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
@@ -1147,16 +1153,14 @@ class AtomDao : AtomBaseDao() {
         pageSize: Int? = null
     ): Result<out Record>? {
 
-        val (ta, tspr, conditions) = getInstalledConditions(
+        val (ta, t, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
         )
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val tc = TClassify.T_CLASSIFY
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta).groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
@@ -1197,16 +1201,18 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String?,
         name: String?,
         dslContext: DSLContext
-    ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
+    ): Triple<TAtom, SelectHavingStep<Record2<String, LocalDateTime>>, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
+        // 查找每组atomCode最新的记录
+        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
+            .from(ta).groupBy(ta.ATOM_CODE)
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             conditions.add(ta.DEFAULT_FLAG.eq(true))
             conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
         } else {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
-            conditions.add(tspr.TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
 
@@ -1221,7 +1227,7 @@ class AtomDao : AtomBaseDao() {
         if (!name.isNullOrBlank()) {
             conditions.add(ta.NAME.contains(name))
         }
-        return Triple(ta, tspr, conditions)
+        return Triple(ta, t, conditions)
     }
 
     fun updateAtomBaseInfo(
@@ -1436,17 +1442,12 @@ class AtomDao : AtomBaseDao() {
         limit: Int? = null
     ): Result<out Record>? {
 
-        val (ta, _, conditions) = getInstalledConditions(
+        val (ta, t, conditions) = getInstalledConditions(
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
         )
         val tc = TClassify.T_CLASSIFY
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta)
-            .where(ta.DEFAULT_FLAG.eq(true).and(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
-            .groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
