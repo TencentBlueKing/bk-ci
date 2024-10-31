@@ -423,7 +423,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
             projectId = projectCode,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.AM
         ).data != null
         // 公共项目直接更新
         if (flag && storeCode == null) {
@@ -479,6 +479,10 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: String
     ): String {
+        var pipelineId = redisOperation.get("$storeType-PIPELINE-BUILD:$storeCode")
+        pipelineId?.let {
+            return it
+        }
         val lock = RedisLock(redisOperation, "creatStorePipeline-$storeType-$storeCode", 60L)
         try {
             lock.lock()
@@ -493,7 +497,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                 "$storeType-PIPELINE-BUILD:$storeCode"
             )
             val model = JsonUtil.to(pipelineModel, Model::class.java)
-            val pipelineId = client.get(ServicePipelineResource::class).create(
+             pipelineId = client.get(ServicePipelineResource::class).create(
                 userId = storeInnerPipelineConfig.innerPipelineUser,
                 projectId = storeInnerPipelineConfig.innerPipelineProject,
                 pipeline = model,
