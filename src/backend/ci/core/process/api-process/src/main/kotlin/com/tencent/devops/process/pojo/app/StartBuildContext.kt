@@ -500,10 +500,10 @@ data class StartBuildContext(
             CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
                 .forEach { (subKey, paramKey) ->
                     val subParam = param.copy(
-                        key = subKey,
-                        value = paramValue[paramKey] ?: ""
+                        key = paramKey,
+                        value = paramValue[subKey] ?: ""
                     )
-                    originStartContexts[subKey] = subParam
+                    originStartContexts[paramKey] = subParam
                     // 填充下级参数的[variables.]
                     fillContextPrefix(subParam, originStartContexts)
                 }
