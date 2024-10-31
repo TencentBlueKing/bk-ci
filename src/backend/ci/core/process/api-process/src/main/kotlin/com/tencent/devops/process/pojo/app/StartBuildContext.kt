@@ -444,9 +444,12 @@ data class StartBuildContext(
             val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, /* loadFactor */ 1F)
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
-                    originStartParams.add(param)
-                    fillContextPrefix(param, originStartContexts)
-                    fillCascadeParam(param, originStartContexts)
+                    if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
+                        fillCascadeParam(param, originStartContexts, originStartParams)
+                    } else {
+                        originStartParams.add(param)
+                        fillContextPrefix(param, originStartContexts)
+                    }
                 }
             }
             pipelineParamMap.putAll(originStartContexts)
@@ -480,7 +483,8 @@ data class StartBuildContext(
          */
         private fun fillCascadeParam(
             param: BuildParameters,
-            originStartContexts: HashMap<String, BuildParameters>
+            originStartContexts: HashMap<String, BuildParameters>,
+            originStartParams: ArrayList<BuildParameters>
         ) {
             if (!CascadePropertyUtils.supportCascadeParam(param.valueType)) return
             val key = param.key
@@ -497,13 +501,15 @@ data class StartBuildContext(
                 logger.warn("parse repo ref error, key: $key, param: $param")
                 return
             }
+            originStartParams.add(param.copy(value = paramValue))
             CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
                 .forEach { (subKey, paramKey) ->
                     val subParam = param.copy(
                         key = paramKey,
                         value = paramValue[subKey] ?: ""
                     )
-                    originStartContexts[paramKey] = subParam
+                    // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
+                    originStartParams.add(subParam)
                     // 填充下级参数的[variables.]
                     fillContextPrefix(subParam, originStartContexts)
                 }
