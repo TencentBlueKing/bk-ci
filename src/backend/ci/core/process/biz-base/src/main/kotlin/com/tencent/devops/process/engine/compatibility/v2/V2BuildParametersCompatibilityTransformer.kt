@@ -27,13 +27,9 @@
 
 package com.tencent.devops.process.engine.compatibility.v2
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -68,41 +64,6 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //                TODO #8161 没有作为前端可填入参的变量，直接取默认值，不可被覆盖（实施前仅打印日志）
 //                param.defaultValue
 //            }
-                param.type == BuildFormPropertyType.REPO_REF -> {
-                    val paramValue = paramValues[key] ?: paramValues[param.id] ?: ""
-                    // 新的变量类型，需手动插入值
-                    val value = try {
-                        JsonUtil.to(
-                            json = paramValue,
-                            typeReference = object : TypeReference<Map<String, String>>() {}
-                        )
-                    } catch (ignored: Exception) {
-                        logger.warn("parse repo ref error, key: $key, value: ${paramValues[key]}")
-                        return@forEach
-                    }
-                    // 保存基础值，xxx = {"repo-name": "xxx/xxx","branch": "master"}
-                    paramsMap[key] = BuildParameters(
-                        key = key,
-                        value = paramValue,
-                        valueType = param.type,
-                        readOnly = param.readOnly,
-                        desc = param.desc,
-                        defaultValue = param.defaultValue
-                    )
-                    val variableInfo = CascadePropertyUtils.getCascadeVariableKeyMap(key, param.type)
-                    variableInfo.forEach { (subKey, paramKey) ->
-                        paramsMap[paramKey] = BuildParameters(
-                            key = paramKey,
-                            value = value[subKey] ?: "",
-                            valueType = param.type,
-                            readOnly = param.readOnly,
-                            desc = param.desc,
-                            defaultValue = (param.defaultValue as Map<String, String>)[subKey]
-                        )
-                    }
-                    return@forEach
-                }
-
                 else -> {
                     val overrideValue = paramValues[key] ?: paramValues[param.id]
                     if (!param.required && overrideValue != null) {

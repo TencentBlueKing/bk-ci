@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.pojo.app
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
@@ -444,16 +446,7 @@ data class StartBuildContext(
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
                     fillContextPrefix(param, originStartContexts)
-                    // 填充级联参数
-                    // xxx.repo-name,xxx.branch -> variables.xxx.repo-name,variables.xxx.branch
-                    if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
-                        CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!).values.forEach {
-                            pipelineParamMap[it]?.let { cascadeParam ->
-                                originStartParams.add(cascadeParam)
-                                fillContextPrefix(cascadeParam, originStartContexts)
-                            }
-                        }
-                    }
+                    fillCascadeParam(param, originStartContexts)
                 }
             }
             pipelineParamMap.putAll(originStartContexts)
@@ -477,6 +470,43 @@ data class StartBuildContext(
                     originStartContexts[ctxKey] = param.copy(key = ctxKey)
                 }
             }
+        }
+
+        /**
+         * 根据原始值，填充级联参数
+         * xxx = {"repo-name": "xxx/xxx","branch":"master"}
+         * xxx.repo-name = xxx/xxx
+         * xxx.branch = master
+         */
+        private fun fillCascadeParam(
+            param: BuildParameters,
+            originStartContexts: HashMap<String, BuildParameters>
+        ) {
+            if (!CascadePropertyUtils.supportCascadeParam(param.valueType)) return
+            val key = param.key
+            val paramValue = try {
+                if (param.value is String) {
+                    JsonUtil.to(
+                        json = param.value as String,
+                        typeReference = object : TypeReference<Map<String, String>>() {}
+                    )
+                } else {
+                    param.value as Map<String, String>
+                }
+            } catch (ignored: Exception) {
+                logger.warn("parse repo ref error, key: $key, param: $param")
+                return
+            }
+            CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
+                .forEach { (subKey, paramKey) ->
+                    val subParam = param.copy(
+                        key = subKey,
+                        value = paramValue[paramKey] ?: ""
+                    )
+                    originStartContexts[subKey] = subParam
+                    // 填充下级参数的[variables.]
+                    fillContextPrefix(subParam, originStartContexts)
+                }
         }
     }
 }
