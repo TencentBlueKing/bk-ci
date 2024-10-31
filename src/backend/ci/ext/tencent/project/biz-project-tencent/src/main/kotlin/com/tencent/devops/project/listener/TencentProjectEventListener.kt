@@ -69,6 +69,7 @@ class TencentProjectEventListener @Autowired constructor(
 
     // 已改成同步，无需重复添加
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
+        logger.info("receive project create event:$event")
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
