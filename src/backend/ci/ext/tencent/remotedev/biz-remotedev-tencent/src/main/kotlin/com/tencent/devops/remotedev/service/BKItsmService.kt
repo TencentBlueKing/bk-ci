@@ -98,7 +98,7 @@ class BKItsmService @Autowired constructor(
         val fields = listOf(
             mapOf(
                 "key" to "title",
-                "value" to "检测到云控制台有${urls.size}个工蜂仓库绑定状态异常，请及时处理！"
+                "value" to "${urls.size}个离岸工蜂代码库绑定状态异常，请及时处理！"
             ),
             mapOf(
                 "key" to "projectId",
