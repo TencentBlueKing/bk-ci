@@ -138,19 +138,6 @@ class ProjectTGitLinkDao {
         }
     }
 
-    fun fetchAll(
-        dslContext: DSLContext,
-        sqlLimit: SQLLimit?
-    ): List<TProjectTgitIdLinkRecord> {
-        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
-            val dsl = dslContext.selectFrom(this)
-            if (sqlLimit != null) {
-                dsl.offset(sqlLimit.offset).limit(sqlLimit.limit)
-            }
-            return dsl.skipCheck().fetch()
-        }
-    }
-
     fun updateUrl(
         dslContext: DSLContext,
         projectId: String,
