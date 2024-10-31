@@ -79,7 +79,12 @@ init:
   iam: true
   turbo: false
   bkrepo: true
-  defaultImage: true
+  defaultImage:
+    enabled: true
+    image:
+      registry: registry-1.docker.io/bkci
+      repository: ci
+      tag: latest
   plugin:
     enabled: false
     atoms:
