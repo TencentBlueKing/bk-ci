@@ -2,6 +2,7 @@ package com.tencent.devops.common.stream.config
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.stream.config.interceptor.BkChannelInterceptor
+import com.tencent.devops.common.stream.customizer.BkProducerMessageHandlerCustomizer
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,4 +16,7 @@ class CommonEventConfiguration {
     @Bean
     @GlobalChannelInterceptor
     fun bkChannelInterceptor() = BkChannelInterceptor()
+
+    @Bean
+    fun bkProducerMessageHandlerCustomizer() = BkProducerMessageHandlerCustomizer()
 }
