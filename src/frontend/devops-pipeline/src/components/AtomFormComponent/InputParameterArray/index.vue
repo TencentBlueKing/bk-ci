@@ -54,7 +54,7 @@
         methods: {
             handleChangeInput (val, index) {
                 this.parameters[index] = val
-                this.handleChange(this.name, this.parameters)
+                this.handleChange(this.name, this.parameters.filter(i => !!i))
             },
             plusParam () {
                 this.parameters.push('')

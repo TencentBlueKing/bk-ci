@@ -668,6 +668,9 @@
         .template-name {
             max-width: 192px;
             padding: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             span {
                 cursor: pointer;
                 margin: 8px 13px;
