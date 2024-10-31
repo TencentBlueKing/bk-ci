@@ -134,6 +134,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -1056,27 +1057,59 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val count = atomDao.countInstalledAtoms(
+        val defaultAtomCount = atomDao.countInstalledAtoms(
+            dslContext = dslContext,
+            classifyCode = classifyCode,
+            name = name
+        )
+        val projectAtomCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
-            name = name,
-            queryDefaultFlag = true
+            name = name
         )
+        val count = projectAtomCount + defaultAtomCount
         if (count == 0) {
             return Page(page, pageSize, 0, result)
         }
-        val records = atomDao.getInstalledAtoms(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            classifyCode = classifyCode,
-            name = name,
-            page = page,
-            pageSize = pageSize,
-            queryDefaultFlag = true
-        )
+        var records: org.jooq.Result<out Record>? = null
         val atomCodeList = mutableListOf<String>()
+        if (projectAtomCount > (page - 1) * pageSize) {
+            records = atomDao.getInstalledAtoms(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         records?.forEach {
+            atomCodeList.add(it[KEY_ATOM_CODE] as String)
+        }
+
+        // 查询完项目下安装插件则开始查询默认插件
+        var defaultAtoms: org.jooq.Result<out Record>? = null
+        if (records.isNullOrEmpty() || records.size < pageSize) {
+            var limit = pageSize
+            var offset = 0
+            // 通过计算已分页总量与项目下已安装插件的差值确定查询默认插件的起始值
+            val thresholdNum = (page - 1) * pageSize - projectAtomCount
+            if (thresholdNum > 0) {
+                offset = thresholdNum
+            } else {
+                limit = page * pageSize - projectAtomCount
+            }
+            logger.info("getDefaultAtoms projectCode:$projectCode |page:$page|pageSize:$pageSize offset:$offset|limit:$limit")
+            defaultAtoms = atomDao.getDefaultAtoms(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                name = name,
+                offset = offset,
+                limit = limit
+            )
+        }
+        defaultAtoms?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
         }
 
@@ -1086,13 +1119,48 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode
         ).data
         val hasManagerPermission = hasManagerPermission(projectCode, userId)
-        records?.forEach {
+        records?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        defaultAtoms?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        return Page(page, pageSize, count.toLong(), result)
+    }
+
+    private fun convertInstalledAtom(
+        userId: String,
+        records: org.jooq.Result<out Record>,
+        pipelineStat: Map<String, Int>?,
+        hasManagerPermission: Boolean,
+        result: MutableList<InstalledAtom>
+    ) {
+        records.forEach {
             val atomCode = it[KEY_ATOM_CODE] as String
-            val installer = it[KEY_INSTALLER] as String
-            val installType = it[KEY_INSTALL_TYPE] as Byte
+            val default = it[KEY_DEFAULT_FLAG] as Boolean
+            val installer = if (default) {
+                SYSTEM
+            } else {
+                it[KEY_INSTALLER] as String
+            }
             // 判断项目是否是初始化项目或者调试项目
-            val isInitTest = installType == StoreProjectTypeEnum.INIT.type.toByte() ||
-                installType == StoreProjectTypeEnum.TEST.type.toByte()
+            val isInitTest = if (default) false else {
+                val installType = it[KEY_INSTALL_TYPE] as? Byte
+                installType == StoreProjectTypeEnum.INIT.type.toByte() ||
+                        installType == StoreProjectTypeEnum.TEST.type.toByte()
+            }
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1100,7 +1168,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 defaultMessage = classifyName
             )
             val logoUrl = it[KEY_LOGO_URL] as? String
-            val default = it[KEY_DEFAULT_FLAG] as Boolean
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
@@ -1115,9 +1182,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
                     summary = it[KEY_SUMMARY] as? String,
                     publisher = it[KEY_PUBLISHER] as? String,
-                    installer = if (default) SYSTEM else installer,
-                    installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
-                    installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
+                    installer = installer,
+                    installTime = if (default) {
+                        ""
+                    } else {
+                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                    },
+                    installType = if (default) {
+                        StoreProjectTypeEnum.COMMON.name
+                    } else { StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()) },
                     pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
                     hasPermission = if (default) {
                         false
@@ -1127,7 +1200,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
             )
         }
-        return Page(page, pageSize, count.toLong(), result)
     }
 
     /**
