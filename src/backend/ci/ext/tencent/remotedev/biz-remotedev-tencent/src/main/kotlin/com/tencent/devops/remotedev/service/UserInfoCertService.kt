@@ -7,7 +7,6 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -106,12 +105,13 @@ class UserInfoCertService @Autowired constructor(
                     return
                 }
             }
+            val expiredTime = LocalDateTime.now().plusDays(30).timestampmilli()
             val groupList = client.get(ServiceResourceGroupResource::class).getMemberGroupsDetails(
                 userId = data.userId,
                 projectCode = data.projectId,
                 resourceType = AuthResourceType.PROJECT.value,
                 memberId = data.userId,
-                maxExpiredAt = LocalDateTime.now().plusDays(30).timestampmilli(),
+                maxExpiredAt = expiredTime,
                 groupName = null,
                 minExpiredAt = null,
                 relatedResourceType = null,
@@ -119,7 +119,8 @@ class UserInfoCertService @Autowired constructor(
                 action = null,
                 start = null,
                 limit = null
-            ).data?.records?.filter { it.joinedType == JoinedType.DIRECT }?.ifEmpty { null } ?: return
+            ).data?.records?.filter { it.joinedType == JoinedType.DIRECT && it.expiredAt < expiredTime }
+                ?.ifEmpty { null } ?: return
 
             val admins = client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
                 FetchRemoteDevData(
