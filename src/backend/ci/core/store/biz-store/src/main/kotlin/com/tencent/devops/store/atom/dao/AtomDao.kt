@@ -100,7 +100,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
