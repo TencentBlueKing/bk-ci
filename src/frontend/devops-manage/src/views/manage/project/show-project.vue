@@ -126,7 +126,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
-  
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
