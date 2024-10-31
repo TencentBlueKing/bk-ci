@@ -111,7 +111,6 @@
             :handle-update-payload="handleUpdatePayload"
             :reset-default-val="handleResetDefaultVal"
         />
-
         <form-field
             v-if="!isRepoParam(param.type)"
             :hide-colon="true"
@@ -233,28 +232,6 @@
             >
             </request-selector>
         </form-field>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isSvnParam(param.type)"
-            :label="$t('editPage.svnParams')"
-            :is-error="errors.has(`repoHashId`)"
-            :error-msg="errors.first(`pipelineParam.repoHashId`)"
-        >
-            <request-selector
-                v-bind="getRepoOption('CODE_SVN')"
-                :disabled="disabled"
-                name="repoHashId"
-                :value="param.repoHashId"
-                :handle-change="handleChange"
-                v-validate="'required'"
-                :data-vv-scope="'pipelineParam'"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
-            >
-            </request-selector>
-        </form-field>
-
         <form-field
             :hide-colon="true"
             v-if="isSvnParam(param.type)"
@@ -269,44 +246,6 @@
                 :placeholder="$t('editPage.relativePathTips')"
                 :value="param.relativePath"
             ></vuex-input>
-        </form-field>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isGitParam(param.type)"
-            :label="$t('editPage.gitRepo')"
-            :is-error="errors.has(`repoHashId`)"
-            :error-msg="errors.first(`pipelineParam.repoHashId`)"
-        >
-            <request-selector
-                v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
-                :disabled="disabled"
-                name="repoHashId"
-                :value="param.repoHashId"
-                :handle-change="handleChange"
-                v-validate="'required'"
-                :data-vv-scope="'pipelineParam'"
-                replace-key="{keyword}"
-                :search-url="getSearchUrl()"
-            >
-            </request-selector>
-        </form-field>
-
-        <form-field
-            :hide-colon="true"
-            v-if="isCodelibParam(param.type)"
-            :label="$t('editPage.codelibParams')"
-            :is-error="errors.has(`scmType`)"
-            :error-msg="errors.first(`pipelineParam.scmType`)"
-        >
-            <selector
-                :disabled="disabled"
-                :list="codeTypeList"
-                :handle-change="(name, value) => handleCodeTypeChange(name, value)"
-                name="scmType"
-                placeholder=""
-                :value="param.scmType"
-            ></selector>
         </form-field>
 
         <template v-if="isBuildResourceParam(param.type)">
