@@ -159,7 +159,10 @@ kubernetesManager:
   # manager使用docker相关配置，会启用特权模式容器
   docker:
     enable: false
-    image: docker:24.0.1-dind
+    image: 
+      registry: registry-1.docker.io
+      repository: docker
+      tag: 24.0.1-dind
     resources:
       requests:
         cpu: 50m

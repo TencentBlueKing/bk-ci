@@ -109,7 +109,7 @@ spec:
           {{- end}}
         {{- if .Values.kubernetesManager.docker.enable }}
         - name: kuberentes-manager-docker
-          image: {{ .Values.kubernetesManager.docker.image }}
+          image: "{{ .Values.kubernetesManager.docker.image.registry }}/{{ .Values.kubernetesManager.docker.image.repository }}:{{ .Values.kubernetesManager.docker.image.tag }}"
           command: ["dockerd", "--host", "tcp://localhost:2375"]
           {{- if .Values.kubernetesManager.docker.resources }}
           resources: {{- toYaml .Values.kubernetesManager.docker.resources | nindent 12 }}
