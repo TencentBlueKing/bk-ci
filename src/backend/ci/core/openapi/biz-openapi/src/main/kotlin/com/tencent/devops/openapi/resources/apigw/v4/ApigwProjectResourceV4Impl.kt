@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -183,6 +184,20 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         logger.info("getProjectListByProductId v4 |$appCode|$userId|$productId")
         return client.get(ServiceProjectResource::class).getProjectListByProductId(
             productId = productId
+        )
+    }
+
+    override fun updatePluginDetailsDisplay(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean> {
+        logger.info("updateProjectProductId v4 |$appCode|$userId|$projectId|$pluginDetailsDisplayOrder")
+        return client.get(ServiceProjectResource::class).updatePluginDetailsDisplay(
+            projectId = projectId,
+            pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
         )
     }
 }

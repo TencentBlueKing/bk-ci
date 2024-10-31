@@ -29,6 +29,8 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -87,6 +89,8 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         projectId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         page: Int?,
         pageSize: Int?
     ): Result<TemplateListModel> {
@@ -96,6 +100,8 @@ class ServicePTemplateResourceImpl @Autowired constructor(
                 userId = userId,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 page = page ?: 1,
                 pageSize = pageSize ?: 1000
             )

@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -336,9 +337,11 @@ class PipelineWebhookUpgradeService(
             return
         }
         val triggerContainer = model.getTriggerContainer()
-        val params = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }
+        val params = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        )
         val elementMap =
             triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
         val pipelineWebhooks = pipelineWebhookDao.listWebhook(

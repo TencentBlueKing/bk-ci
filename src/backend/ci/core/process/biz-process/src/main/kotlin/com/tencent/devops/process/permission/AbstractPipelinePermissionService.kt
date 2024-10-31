@@ -240,4 +240,8 @@ abstract class AbstractPipelinePermissionService constructor(
             serviceCode = pipelineAuthServiceCode
         )
     }
+
+    override fun isControlPipelineListPermission(projectId: String): Boolean {
+        return true
+    }
 }

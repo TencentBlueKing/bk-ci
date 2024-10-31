@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -316,7 +317,8 @@ class TGitMrTriggerHandler(
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr()
             )
             return listOf(
                 wipFilter, userFilter, targetBranchFilter,
@@ -343,6 +345,7 @@ class TGitMrTriggerHandler(
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit.message
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE] = event.object_attributes.mergeType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] = event.object_attributes.mergeCommitSha ?: ""
 

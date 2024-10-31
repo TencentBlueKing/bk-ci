@@ -34,6 +34,8 @@ import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateResourceV3
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.api.template.UserPTemplateResource
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -52,6 +54,8 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         page: Int,
         pageSize: Int
     ): Result<TemplateListModel> {
@@ -61,6 +65,8 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             templateType = templateType,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             page = page,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )

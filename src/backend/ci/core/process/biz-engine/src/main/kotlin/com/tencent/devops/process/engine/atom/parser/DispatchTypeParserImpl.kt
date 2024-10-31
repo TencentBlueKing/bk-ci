@@ -33,6 +33,8 @@ import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.Credential
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -41,6 +43,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -64,6 +67,37 @@ class DispatchTypeParserImpl @Autowired constructor(
         buildId: String,
         dispatchType: DispatchType
     ) {
+        // 针对第三方构建机docker场景处理
+        if (dispatchType is ThirdPartyAgentDispatch && dispatchType.dockerInfo?.storeImage != null) {
+            val dockerInfo = dispatchType.dockerInfo!!
+            // 从商店获取镜像真实信息
+            val imageRepoInfo = storeImageHelper.getImageRepoInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                imageCode = dockerInfo.storeImage!!.imageCode,
+                imageVersion = dockerInfo.storeImage!!.imageVersion,
+                defaultPrefix = ""
+            )
+            val completeImageName = getCompleteImageName(imageRepoInfo)
+            // 镜像来源替换为原始来源
+            dockerInfo.image = completeImageName
+            if (dockerInfo.credential == null) {
+                Credential(
+                    credentialId = imageRepoInfo.ticketId,
+                    credentialProjectId = imageRepoInfo.ticketProject,
+                    jobId = null,
+                    acrossTemplateId = null,
+                    user = null,
+                    password = null
+                ).also { dockerInfo.credential = it }
+            } else {
+                dockerInfo.credential!!.credentialId = imageRepoInfo.ticketId
+                dockerInfo.credential!!.credentialProjectId = imageRepoInfo.ticketProject
+            }
+        }
+
         if (dispatchType !is StoreDispatchType) {
             return
         }
@@ -81,18 +115,7 @@ class DispatchTypeParserImpl @Autowired constructor(
                 defaultPrefix = ""
             )
 
-            val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
-                // 蓝盾项目源镜像
-                imageRepoInfo.repoName
-            } else {
-                // 第三方源镜像
-                // dockerhub镜像名称不带斜杠前缀
-                if (imageRepoInfo.repoUrl.isBlank()) {
-                    imageRepoInfo.repoName
-                } else {
-                    "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
-                }
-            } + ":" + imageRepoInfo.repoTag
+            val completeImageName = getCompleteImageName(imageRepoInfo)
             // 镜像来源替换为原始来源
             dispatchType.imageType = imageRepoInfo.sourceType
             dispatchType.value = completeImageName
@@ -109,6 +132,20 @@ class DispatchTypeParserImpl @Autowired constructor(
             }
         }
     }
+
+    private fun getCompleteImageName(imageRepoInfo: ImageRepoInfo) =
+        if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
+            // 蓝盾项目源镜像
+            imageRepoInfo.repoName
+        } else {
+            // 第三方源镜像
+            // dockerhub镜像名称不带斜杠前缀
+            if (imageRepoInfo.repoUrl.isBlank()) {
+                imageRepoInfo.repoName
+            } else {
+                "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+            }
+        } + ":" + imageRepoInfo.repoTag
 
     override fun parseInfo(
         projectId: String,

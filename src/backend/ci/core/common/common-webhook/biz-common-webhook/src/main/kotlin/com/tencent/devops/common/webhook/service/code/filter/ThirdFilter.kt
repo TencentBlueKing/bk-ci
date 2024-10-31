@@ -24,7 +24,8 @@ class ThirdFilter(
     private val thirdUrl: String?,
     private val thirdSecretToken: String? = null,
     private val gitScmService: GitScmService,
-    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -38,7 +39,7 @@ class ThirdFilter(
             return true
         }
         logger.info("$pipelineId|thirdUrl:$thirdUrl|third filter")
-        return try {
+        val filterResult = try {
             callbackCircuitBreakerRegistry?.let {
                 // 熔断处理
                 val breaker = callbackCircuitBreakerRegistry.circuitBreaker(thirdUrl)
@@ -50,6 +51,10 @@ class ThirdFilter(
             logger.warn("$pipelineId|Failed to call third filter", ignore)
             false
         }
+        if (!filterResult && failedReason.isNotBlank()) {
+            response.failedReason = failedReason
+        }
+        return filterResult
     }
 
     private fun send(): Boolean {

@@ -12,6 +12,8 @@ import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtServic
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionGradeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupSyncService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceMemberService
@@ -35,6 +37,8 @@ import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -110,6 +114,14 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupService::class)
     fun samplePermissionResourceGroupService() = SamplePermissionResourceGroupService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionResourceGroupAndMemberFacadeService::class)
+    fun samplePermissionResourceGroupAndMemberFacadeService() = SamplePermissionResourceGroupAndMemberFacadeService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionResourceGroupPermissionService::class)
+    fun samplePermissionResourceGroupPermissionService() = SamplePermissionResourceGroupPermissionService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionResourceMemberService::class)
