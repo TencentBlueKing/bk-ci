@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TProjectTgitIdLink
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
