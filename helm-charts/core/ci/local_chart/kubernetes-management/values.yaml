@@ -139,12 +139,23 @@ kubernetesManager:
     prometheusUrl: 
   # 构建并推送镜像相关
   buildAndPushImage:
-    image: gcr.io/kaniko-project/executor:v1.9.0
+    # gcr.io/kaniko-project/executor:v1.9.0
+    image: 
+      registry: gcr.io
+      repository: kaniko-project/executor
+      tag: v1.9.0
     # 拉取kaniko需要的凭据，如果不填视为没有
     pullImageRegistry:
       server:
       username:
       password:
+  # 无编译构建机
+  buildlessDeployment:
+    # bkci/ci:latest
+    image: 
+      registry: registry-1.docker.io/bkci
+      repository: ci
+      tag: latest
   apiserver:
     auth:
       # 针对蓝盾流水线访问的超级权限token

@@ -37,6 +37,6 @@ spec:
               done
 
               echo "{{ include "bkci.names.fullname" . }}-store is available";
-              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST -d '{"imageRepoName":"{{ .Values.defaultImage.image.registry }}/{{ .Values.defaultImage.image.repository }}" , "imageTag":"{{ .Values.defaultImage.image.tag }}"}'
+              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST -d '{"imageRepoName":"{{ .Values.init.defaultImage.image.registry }}/{{ .Values.init.defaultImage.image.repository }}" , "imageTag":"{{ .Values.init.defaultImage.image.tag }}"}'
       restartPolicy: OnFailure
 {{- end -}}
