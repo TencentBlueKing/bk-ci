@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -43,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -444,18 +444,18 @@ data class StartBuildContext(
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
                     fillContextPrefix(param, originStartContexts)
+                    // 填充级联参数
+                    // xxx.repo-name,xxx.branch -> variables.xxx.repo-name,variables.xxx.branch
+                    if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
+                        CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!).values.forEach {
+                            pipelineParamMap[it]?.let { cascadeParam ->
+                                originStartParams.add(cascadeParam)
+                                fillContextPrefix(cascadeParam, originStartContexts)
+                            }
+                        }
+                    }
                 }
             }
-            pipelineParamMap.filter { it.value.valueType == BuildFormPropertyType.REPO_REF }
-                .map { it.value }
-                .groupBy { it.relKey }
-                .forEach {
-                    if (realStartParamKeys.contains(it.key)) {
-                        originStartParams.addAll(it.value)
-                    }
-                    // 补充【variables.】前缀
-                    it.value.forEach { repoRefParam -> fillContextPrefix(repoRefParam, originStartContexts) }
-                }
             pipelineParamMap.putAll(originStartContexts)
 
             pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
