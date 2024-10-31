@@ -100,6 +100,10 @@ class BKItsmService @Autowired constructor(
             creator = userId,
             fields = listOf(
                 mapOf(
+                    "key" to "title",
+                    "value" to "云桌面项目权限续期申请"
+                ),
+                mapOf(
                     "key" to "projectId",
                     "value" to projectId
                 ),
