@@ -60,5 +60,5 @@ data class ProjectProperties(
         PluginDetailsDisplayOrder.CONFIG
     ),
     @get:Schema(title = "流水线语法风格")
-    var pipelineDialect: String? = null
+    var pipelineDialect: String? = "CLASSIC"
 )
