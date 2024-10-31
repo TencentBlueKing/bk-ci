@@ -511,14 +511,13 @@ export default {
         margin: 15px 0 30px;
     }
     .close-tips {
-        padding: 20px;
-        background: #f5f6fa;
-            p {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-        }
+      padding: 20px;
+      background: #f5f6fa;
+          p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
     }
     .warning-icon {
       color: #ff9c01;
