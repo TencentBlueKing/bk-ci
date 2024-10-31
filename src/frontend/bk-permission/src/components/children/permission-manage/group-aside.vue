@@ -72,22 +72,22 @@
       @cancel="handleHiddenCloseManage"
     >
       <template #header>
-        <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 42px;">
+        <i class="warning-icon header-warning-icon manage-icon manage-icon-more-fill"></i>
         <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
       <template>
         <div class="close-tips">
           <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceTypeName]) }}</p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
             {{ closeManageTips || t('将编辑者、执行者、查看者中的用户移除') }}
           </p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
             {{ t('删除对应组内用户继承该组的权限') }}
           </p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg?inline" style="width: 14px;">
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
             {{ t('删除对应组信息和组权限') }}
           </p>
         </div>
@@ -513,6 +513,22 @@ export default {
     .close-tips {
         padding: 20px;
         background: #f5f6fa;
+            p {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+        }
+    }
+    .warning-icon {
+      color: #ff9c01;
+      font-size: 14px;
+      position: relative;
+      top: -1px;
+      margin-right: 4px;
+    }
+    .header-warning-icon {
+      font-size: 42px;
     }
     .option-btns {
         text-align: center;
