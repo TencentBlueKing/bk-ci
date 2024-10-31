@@ -1127,12 +1127,11 @@ class AtomDao : AtomBaseDao() {
             dslContext = dslContext
         )
 
-        val step = dslContext.select(ta.ATOM_CODE, ta.CLASSIFY_ID, ta.CREATE_TIME).from(ta)
+        val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
         if (!projectCode.isNullOrBlank()) {
             val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        dslContext.selectCount()
         return step.join(t)
             .on(
                 ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
