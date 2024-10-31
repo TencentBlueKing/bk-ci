@@ -484,7 +484,7 @@ data class StartBuildContext(
         private fun fillCascadeParam(
             param: BuildParameters,
             originStartContexts: HashMap<String, BuildParameters>,
-        ):List<BuildParameters> {
+        ): List<BuildParameters> {
             val originStartParams = mutableListOf<BuildParameters>()
             val key = param.key
             val paramValue = try {
@@ -500,7 +500,10 @@ data class StartBuildContext(
                 logger.warn("parse repo ref error, key: $key, param: $param")
                 return originStartParams
             }
-            originStartParams.add(param.copy(value = paramValue))
+            val cascadeParam = param.copy(value = paramValue)
+            originStartParams.add(cascadeParam)
+            // 填充下级参数的[variables.]
+            fillContextPrefix(cascadeParam, originStartContexts)
             CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
                 .forEach { (subKey, paramKey) ->
                     val subParam = param.copy(
@@ -508,7 +511,7 @@ data class StartBuildContext(
                         value = paramValue[subKey] ?: ""
                     )
                     // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
-                    originStartParams.add(subParam)
+                    originStartContexts[paramKey] = subParam
                     // 填充下级参数的[variables.]
                     fillContextPrefix(subParam, originStartContexts)
                 }
