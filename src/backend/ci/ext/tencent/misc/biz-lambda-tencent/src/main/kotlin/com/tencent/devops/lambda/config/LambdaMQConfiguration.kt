@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.lambda.pojo.ReportBuildFinishEvent
 import com.tencent.devops.lambda.service.process.LambdaDataService
 import com.tencent.devops.lambda.service.process.LambdaPipelineModelService
 import com.tencent.devops.lambda.service.project.LambdaProjectService
@@ -45,6 +46,11 @@ class LambdaMQConfiguration {
     fun pipelineBuildFinishConsumer(
         @Autowired lambdaDataService: LambdaDataService
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { lambdaDataService.onBuildFinish(it) }
+
+    @EventConsumer
+    fun delayPipelineBuildFinishConsumer(
+        @Autowired lambdaDataService: LambdaDataService
+    ) = ScsConsumerBuilder.build<ReportBuildFinishEvent> { lambdaDataService.onBuildFinishDelay(it) }
 
     @EventConsumer
     fun pipelineBuildElementFinishConsumer(
