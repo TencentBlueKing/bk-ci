@@ -33,7 +33,7 @@
                 {
                     ...childrenOptions,
                     id: undefined,
-                    key: value[parentKey] + isDiffParam,
+                    key: value[parentKey],
                     paramId: 'key',
                     paramValue: 'value',
                     initRequest: initRequest,
@@ -174,9 +174,15 @@
                 immediate: true,
                 deep: true
             },
-            isDiffParam (val) {
-                this.toggleVisible(val)
-                this.initRequest = true
+            isDiffParam () {
+                this.listData.push({
+                    key: this.value[this.parentKey],
+                    value: this.value[this.parentKey]
+                })
+                this.cascadeProps.children.options.push({
+                    key: this.value[this.childrenKey],
+                    value: this.value[this.childrenKey]
+                })
             }
         },
         methods: {
