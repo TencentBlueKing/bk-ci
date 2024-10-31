@@ -423,7 +423,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
             projectId = projectCode,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.AM
+            channelCode = ChannelCode.BS
         ).data != null
         // 公共项目直接更新
         if (flag && storeCode == null) {
