@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -77,8 +76,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     protected final Map<Integer, BkProcessTree.OSProcess> processes;
     private transient volatile List<ProcessKiller> killers;
     private static final boolean IS_LITTLE_ENDIAN = "little".equals(System.getProperty("sun.cpu.endian"));
-    public static boolean enabled = !Boolean.getBoolean(BkProcessTree.class.getName() + ".disable");
-    private static Logger logger = LoggerFactory.getLogger(BkProcessTree.class);
+    private static final Logger logger = LoggerFactory.getLogger(BkProcessTree.class);
 
     private BkProcessTree() {
         this.processes = new HashMap<>();
@@ -132,17 +130,15 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
             }
 
             String os = Util.fixNull(System.getProperty("os.name"));
-            if (os.equals("Linux")) {
-                return new BkProcessTree.Linux();
+            switch (os) {
+                case "Linux":
+                    return new Linux();
+                case "SunOS":
+                    return new Solaris();
+                case "Mac OS X":
+                    return new Darwin();
             }
 
-            if (os.equals("SunOS")) {
-                return new BkProcessTree.Solaris();
-            }
-
-            if (os.equals("Mac OS X")) {
-                return new BkProcessTree.Darwin();
-            }
         } catch (Exception var1) {
             log("Failed to load winp. Reverting to the default", var1);
         }
@@ -169,7 +165,6 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
                 public void kill0(boolean forceFlag) throws InterruptedException {
                     proc.destroy();
-                    this.killByKiller();
                 }
 
                 public List<String> getArguments() {
@@ -189,6 +184,10 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     private static class Darwin extends Unix {
         Darwin() {
             String arch = System.getProperty("sun.arch.data.model");
+            // local constants
+            int sizeOf_kinfo_proc;
+            int kinfo_proc_pid_offset;
+            int kinfo_proc_ppid_offset;
             if ("64".equals(arch)) {
                 sizeOf_kinfo_proc = sizeOf_kinfo_proc_64;
                 kinfo_proc_pid_offset = kinfo_proc_pid_offset_64;
@@ -218,7 +217,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 }
 
                 int count = size.getValue().intValue() / sizeOf_kinfo_proc;
-                logger.info("Found " + count + " processes");
+                logger.info("Found {} processes", count);
 
                 for (int base = 0; base < size.getValue().intValue(); base += sizeOf_kinfo_proc) {
                     int pid = m.getInt(base + kinfo_proc_pid_offset);
@@ -281,7 +280,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
                     class StringArrayMemory extends Memory {
                         private long offset = 0;
-                        private long length = 0;
+                        private long length;
 
                         StringArrayMemory(long l) {
                             super(l);
@@ -393,14 +392,10 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
             }
         }
 
-        // local constants
-        private final int sizeOf_kinfo_proc;
         private static final int sizeOf_kinfo_proc_32 = 492; // on 32bit Mac OS X.
         private static final int sizeOf_kinfo_proc_64 = 648; // on 64bit Mac OS X.
-        private final int kinfo_proc_pid_offset;
         private static final int kinfo_proc_pid_offset_32 = 24;
         private static final int kinfo_proc_pid_offset_64 = 40;
-        private final int kinfo_proc_ppid_offset;
         private static final int kinfo_proc_ppid_offset_32 = 416;
         private static final int kinfo_proc_ppid_offset_64 = 560;
         private static final int sizeOfInt = Native.getNativeSize(int.class);
@@ -408,7 +403,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         private static final int KERN_PROC = 14;
         private static final int KERN_PROC_ALL = 0;
         private static final int ENOMEM = 12;
-        private static int[] MIB_PROC_ALL = {CTL_KERN, KERN_PROC, KERN_PROC_ALL};
+        private static final int[] MIB_PROC_ALL = {CTL_KERN, KERN_PROC, KERN_PROC_ALL};
         private static final int KERN_ARGMAX = 8;
         private static final int KERN_PROCARGS2 = 49;
     }
@@ -486,22 +481,19 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 if (this.envVars == null) {
                     this.envVars = new EnvVars();
 
-                    try {
+                    try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
+                        BkProcessTree.log("Reading " + this.getFile("as"));
+                        int n = 0;
 
-                        try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            BkProcessTree.log("Reading " + this.getFile("as"));
-                            int n = 0;
-
-                            while (true) {
-                                as.seek(Solaris.to64(this.envp + n * 4));
-                                int p = Solaris.adjust(as.readInt());
-                                if (p == 0) {
-                                    break;
-                                }
-
-                                this.envVars.addLine(this.readLine(as, p, "env[" + n + "]"));
-                                ++n;
+                        while (true) {
+                            as.seek(Solaris.to64(this.envp + n * 4));
+                            int p = Solaris.adjust(as.readInt());
+                            if (p == 0) {
+                                break;
                             }
+
+                            this.envVars.addLine(this.readLine(as, p, "env[" + n + "]"));
+                            ++n;
                         }
                     } catch (IOException var8) {
                         log(var8.getMessage());
@@ -520,7 +512,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 for (int i = 0; (ch = as.read()) > 0; buf.write(ch)) {
                     ++i;
                     if (i % 100 == 0) {
-                        BkProcessTree.log(prefix + " is so far " + buf.toString());
+                        BkProcessTree.log(prefix + " is so far " + buf);
                     }
                 }
 
@@ -696,8 +688,6 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
                 BkProcessTree.log("Failed to terminate pid=" + this.getPid(), var4);
             }
-
-            this.killByKiller();
         }
 
         public void killRecursively(boolean forceFlag) throws InterruptedException {
@@ -715,11 +705,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
     abstract static class ProcfsUnix extends BkProcessTree.Unix {
         ProcfsUnix() {
-            File[] processes = (new File("/proc")).listFiles(new FileFilter() {
-                public boolean accept(File f) {
-                    return f.isDirectory();
-                }
-            });
+            File[] processes = (new File("/proc")).listFiles(File::isDirectory);
             if (processes == null) {
                 log("No /proc");
             } else {
@@ -786,13 +772,11 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                         public void killRecursively(boolean forceFlag) throws InterruptedException {
                             BkProcessTree.log("Killing recursively " + this.getPid());
                             p.killRecursively();
-                            this.killByKiller();
                         }
 
                         public void kill0(boolean forceFlag) throws InterruptedException {
                             BkProcessTree.log("Killing " + this.getPid());
                             p.kill();
-                            this.killByKiller();
                         }
 
                         public synchronized List<String> getArguments() {
@@ -876,7 +860,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     }
 
     public abstract class OSProcess implements IOSProcess, Serializable {
-        private Set<Integer> keepAlivePids = new HashSet<Integer>(64);
+        private final Set<Integer> keepAlivePids = new HashSet<>(64);
 
         final int pid;
 
@@ -893,10 +877,6 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         }
 
         public abstract BkProcessTree.OSProcess getParent();
-
-        final BkProcessTree getTree() {
-            return BkProcessTree.this;
-        }
 
         public final List<BkProcessTree.OSProcess> getChildren() {
             List<BkProcessTree.OSProcess> r = new ArrayList<>();
@@ -923,20 +903,6 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         }
 
         public abstract void kill0(boolean forceFlag) throws InterruptedException;
-
-        void killByKiller() throws InterruptedException {
-
-            for (ProcessKiller killer : BkProcessTree.this.getKillers()) {
-                try {
-                    if (killer.kill(this)) {
-                        break;
-                    }
-                } catch (IOException var4) {
-                    BkProcessTree.log("Failed to kill pid=" + this.getPid(), var4);
-                }
-            }
-
-        }
 
         public abstract void killRecursively(boolean forceFlag) throws InterruptedException;
 
