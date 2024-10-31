@@ -142,7 +142,7 @@ class UserInfoCertService @Autowired constructor(
 
             val groupNames = groupList.map {
                 "权限组：[${it.groupName}]剩余：${
-                    (it.expiredAt - LocalDateTime.now().timestamp()) / (24.0 * 3600.0)
+                    (it.expiredAt - LocalDateTime.now().timestampmilli()) / (24 * 3600 * 1000)
                 }天"
             }
             val sn = try {
