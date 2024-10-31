@@ -137,6 +137,8 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                     return new Solaris();
                 case "Mac OS X":
                     return new Darwin();
+                default:
+                    return new Default();
             }
 
         } catch (Exception var1) {
