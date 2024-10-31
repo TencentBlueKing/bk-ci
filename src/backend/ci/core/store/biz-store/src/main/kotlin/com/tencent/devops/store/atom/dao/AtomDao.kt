@@ -1474,6 +1474,6 @@ class AtomDao : AtomBaseDao() {
             .groupBy(ta.ATOM_CODE)
             .orderBy(ta.CREATE_TIME, ta.ID)
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
-        return sql.fetch()
+        return sql.skipCheck().fetch()
     }
 }
