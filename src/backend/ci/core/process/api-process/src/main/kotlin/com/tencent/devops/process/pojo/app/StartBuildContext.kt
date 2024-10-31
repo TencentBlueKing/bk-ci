@@ -486,7 +486,6 @@ data class StartBuildContext(
             originStartContexts: HashMap<String, BuildParameters>,
             originStartParams: ArrayList<BuildParameters>
         ) {
-            if (!CascadePropertyUtils.supportCascadeParam(param.valueType)) return
             val key = param.key
             val paramValue = try {
                 if (param.value is String) {
