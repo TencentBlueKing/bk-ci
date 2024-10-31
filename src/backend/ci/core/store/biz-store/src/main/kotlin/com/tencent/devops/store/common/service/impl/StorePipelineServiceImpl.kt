@@ -443,11 +443,16 @@ class StorePipelineServiceImpl @Autowired constructor(
                 )
         } else {
             if (storeCode != null) {
-                val newPipelineId = creatStorePipelineByStoreCode(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType
-                )
+                val newPipelineId = if (flag) {
+                    pipelineId
+                } else {
+                    creatStorePipelineByStoreCode(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = storeType
+                    )
+                }
+
                 val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
                     dslContext = dslContext,
                     storeCode = storeCode,
@@ -479,10 +484,6 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: String
     ): String {
-        var pipelineId = redisOperation.get("$storeType-PIPELINE-BUILD:$storeCode")
-        pipelineId?.let {
-            return it
-        }
         val lock = RedisLock(redisOperation, "creatStorePipeline-$storeType-$storeCode", 60L)
         try {
             lock.lock()
