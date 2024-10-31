@@ -16,6 +16,11 @@ multiCluster:
 # 镜像配置
 backendImage:
   pullPolicy: IfNotPresent
+  registry: registry-1.docker.io/bkci
+  repository: bkci-kubernetes-manager
+  tag: 0.0.32
+  pullPolicy: IfNotPresent 
+  pullSecrets: []
 
 # 内部数据源配置
 mysql:
@@ -120,8 +125,6 @@ kubernetesManager:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
-  # 使用的镜像
-  image: bkci/bkci-kubernetes-manager:0.0.32
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace:
   redis:
