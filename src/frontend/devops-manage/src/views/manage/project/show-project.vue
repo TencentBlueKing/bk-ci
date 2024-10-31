@@ -143,8 +143,11 @@ const fieldMap = [
   {
     current: 'productName',
     after: 'afterProductName'
-  }
-
+  },
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
 ];
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
