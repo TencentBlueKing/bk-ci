@@ -292,7 +292,8 @@
     "noRelatedPipeline": "暂无关联流水线",
     "all": "所有",
     "installedAt": "安装于",
-    "createdAt": "创建于"
+    "createdAt": "创建于",
+    "systemPlugin": "系统插件"
   },
   "settings": {
     "baseInfo": "基本信息",
