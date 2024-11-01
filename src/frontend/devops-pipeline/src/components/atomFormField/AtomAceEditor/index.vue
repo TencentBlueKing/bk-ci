@@ -18,7 +18,7 @@
             class="ace-wrapper"
             :read-only="disabled"
             :value="value"
-            :lang="lang"
+            :lang="dynamicLang"
             :name="name"
             :full-screen="isFullScreen"
             @input="handleScriptInput"
@@ -60,6 +60,11 @@
                 height: 360,
                 isLoading: false,
                 isFullScreen: false
+            }
+        },
+        computed: {
+            dynamicLang () {
+                return this.atomValue?.dynamicAceLang ?? this.lang
             }
         },
         watch: {
