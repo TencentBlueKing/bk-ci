@@ -407,26 +407,57 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeCode: String? = null
     ) {
         val projectCode = storeInnerPipelineConfig.innerPipelineProject
-        val pipelineId = if (storeCode != null) {
+        val publicPipelineId = redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
+        var pipelineId = if (storeCode != null) {
             storePipelineRelDao.getStorePipelineRelByStoreCode(
                 dslContext = dslContext,
                 storeCode = storeCode,
                 storeType = StoreTypeEnum.valueOf(storeType)
             )?.pipelineId
         } else {
-            redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
+            publicPipelineId
         }
         pipelineId ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
             params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
         )
+        if (storeCode != null && pipelineId == publicPipelineId) {
+            pipelineId = creatStorePipelineByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType
+            )
+
+            val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType)
+            )
+            if (pipelineRelRecord == null) {
+                storePipelineRelDao.add(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.valueOf(storeType),
+                    pipelineId = pipelineId,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            } else {
+                storePipelineRelDao.updateStorePipelineProject(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.valueOf(storeType),
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                    pipelineId = pipelineId
+                )
+            }
+        }
         val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
             projectId = projectCode,
             pipelineId = pipelineId,
             channelCode = ChannelCode.AM
         ).data != null
         // 公共项目直接更新
-        if (flag && storeCode == null) {
+        if (flag) {
             client.get(ServicePipelineSettingResource::class)
                 .updatePipelineModel(
                     userId = userId,
@@ -441,41 +472,6 @@ class StorePipelineServiceImpl @Autowired constructor(
                         )
                     )
                 )
-        } else {
-            if (storeCode != null) {
-                val newPipelineId = if (flag) {
-                    pipelineId
-                } else {
-                    creatStorePipelineByStoreCode(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        storeType = storeType
-                    )
-                }
-
-                val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = StoreTypeEnum.valueOf(storeType)
-                )
-                if (pipelineRelRecord == null) {
-                    storePipelineRelDao.add(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        storeType = StoreTypeEnum.valueOf(storeType),
-                        pipelineId = newPipelineId,
-                        projectCode = storeInnerPipelineConfig.innerPipelineProject
-                    )
-                } else {
-                    storePipelineRelDao.updateStorePipelineProject(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        storeType = StoreTypeEnum.valueOf(storeType),
-                        projectCode = storeInnerPipelineConfig.innerPipelineProject,
-                        pipelineId = newPipelineId
-                    )
-                }
-            }
         }
     }
 
