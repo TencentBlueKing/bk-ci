@@ -148,7 +148,6 @@ class WindowsResourceConfigService @Autowired constructor(
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
-        userId: String,
         searchCustom: Boolean?,
         quotaType: QuotaType,
         withProjectLimit: String?
@@ -280,14 +279,14 @@ class WindowsResourceConfigService @Autowired constructor(
             val diff = newNum - res.count()
             if (diff > 0) {
                 res.addAll(Array(minOf(diff, v)) { k })
-            } else return@forEach
+            } else {
+                return@forEach
+            }
         }
         return res
     }
 
-    fun getAllZone(
-        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
-    ): List<WindowsResourceZoneConfig> {
+    fun getAllZone(): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
