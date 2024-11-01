@@ -99,7 +99,7 @@ data:
       deploymentReplicas: 2
       # deployment配置
       buildlessDeployment:
-        image: bkci/ci:latest
+        image: {{ include "common.images.image" ( dict "imageRoot" .Values.kubernetesManager.buildlessDeployment.image "global" .Values.global) }}
         replicas: 2
         volume:
           # 构建机脚本
@@ -119,7 +119,7 @@ data:
           logPath: /data/devops/logs
           builderConfigMapPath: /data/devops/config
     buildAndPushImage:
-      image: {{ .Values.kubernetesManager.buildAndPushImage.image.registry }}/{{ .Values.kubernetesManager.buildAndPushImage.image.repository }}:{{ .Values.kubernetesManager.buildAndPushImage.image.tag }}
+      image: {{ include "common.images.image" ( dict "imageRoot" .Values.kubernetesManager.buildAndPushImage.image "global" .Values.global) }}
       # 拉取kaniko需要的凭据，如果不填视为没有
       pullImageRegistry: 
         server: {{ .Values.kubernetesManager.buildAndPushImage.server }}
