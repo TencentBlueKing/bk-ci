@@ -1,7 +1,6 @@
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.auth.resources.open
 
-import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
-import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.api.open.OpenResourceMemberResource
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -14,9 +13,9 @@ import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import java.util.concurrent.TimeUnit
 
 @RestResource
-class ServiceResourceMemberResourceImpl constructor(
+class OpenResourceMemberResourceImpl(
     private val permissionResourceMemberService: PermissionResourceMemberService
-) : ServiceResourceMemberResource {
+) : OpenResourceMemberResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupMembers(
         token: String,
@@ -97,22 +96,6 @@ class ServiceResourceMemberResourceImpl constructor(
                 )
             )
         }
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun renewalGroupMember(
-        token: String,
-        userId: String,
-        projectCode: String,
-        renewalConditionReq: GroupMemberSingleRenewalReq
-    ): Result<Boolean> {
-        return Result(
-            permissionResourceMemberService.renewalGroupMember(
-                userId = userId,
-                projectCode = projectCode,
-                renewalConditionReq = renewalConditionReq
-            )
-        )
     }
 
     private fun getIamGroupId(

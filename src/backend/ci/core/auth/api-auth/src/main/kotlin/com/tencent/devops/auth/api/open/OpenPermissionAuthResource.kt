@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.auth.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -48,12 +48,12 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "AUTH_SERVICE_PERMISSION", description = "权限--权限校验以及资源操作相关接口")
-@Path("/service/auth/permission")
+@Tag(name = "AUTH_OPEN_PERMISSION", description = "权限--权限校验以及资源操作相关接口")
+@Path("/open/service/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
-interface ServicePermissionAuthResource {
+interface OpenPermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/action/validate")

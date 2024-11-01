@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.auth.resources.open
 
-import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.open.OpenPermissionAuthResource
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
@@ -39,10 +39,10 @@ import com.tencent.devops.common.web.constant.BkApiHandleType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServicePermissionAuthResourceImpl @Autowired constructor(
+class OpenPermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
     val permissionExtService: PermissionExtService
-) : ServicePermissionAuthResource {
+) : OpenPermissionAuthResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserActionPermission(
