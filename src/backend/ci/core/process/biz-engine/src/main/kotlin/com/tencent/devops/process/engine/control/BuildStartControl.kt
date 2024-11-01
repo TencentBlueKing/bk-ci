@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -307,6 +308,8 @@ class BuildStartControl @Autowired constructor(
                     )
                 )
                 broadcastStartEvent(buildInfo)
+            } else {
+                broadcastQueueEvent()
             }
         } finally {
             pipelineBuildLock.unlock()
@@ -515,7 +518,29 @@ class BuildStartControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.START,
                 executeCount = executeCount,
-                buildStatus = BuildStatus.RUNNING.name
+                buildStatus = BuildStatus.RUNNING.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_START
+            )
+        )
+    }
+
+    private fun PipelineBuildStartEvent.broadcastQueueEvent() {
+        /*暂不重复发送排队的PipelineBuildStatusBroadCastEvent，仅首次的时候发送即可。*/
+        if (this.source == BuildMonitorControl.START_EVENT_SOURCE) {
+            return
+        }
+        pipelineEventDispatcher.dispatch(
+            // build 排队
+            PipelineBuildStatusBroadCastEvent(
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = ActionType.START,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.QUEUE.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_QUEUE
             )
         )
     }

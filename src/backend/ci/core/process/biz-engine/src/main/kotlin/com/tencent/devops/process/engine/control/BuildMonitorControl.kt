@@ -89,6 +89,7 @@ class BuildMonitorControl @Autowired constructor(
 ) {
 
     companion object {
+        const val START_EVENT_SOURCE = "start_monitor"
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
         private val LOG = LoggerFactory.getLogger(BuildMonitorControl::class.java)
@@ -493,7 +494,7 @@ class BuildMonitorControl @Autowired constructor(
                 val triggerContainer = model.getTriggerContainer()
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
-                        source = "start_monitor",
+                        source = START_EVENT_SOURCE,
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         userId = buildInfo.startUser,

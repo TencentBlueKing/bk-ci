@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
@@ -573,7 +574,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         atomCode = task.atomCode,
                         executeCount = task.executeCount,
                         actionType = ActionType.REFRESH,
-                        buildStatus = task.status.name
+                        buildStatus = task.status.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_PAUSE
                     )
                 )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END, task.executeCount)
@@ -627,7 +629,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START,
                         containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                         stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                        buildStatus = BuildStatus.RUNNING.name
+                        buildStatus = BuildStatus.RUNNING.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
                     )
                 )
                 val signToken = UUIDUtil.generate()
@@ -822,7 +825,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId, taskId = result.taskId, actionType = ActionType.END,
                     containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                     stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                    buildStatus = task.status.name
+                    buildStatus = task.status.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
                 )
             )
         }
