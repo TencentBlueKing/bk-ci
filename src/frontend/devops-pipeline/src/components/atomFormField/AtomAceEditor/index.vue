@@ -69,7 +69,7 @@
         computed: {
             dynamicLang () {
                 if (this.atomValue?.dynamicAceLang === 'auto') {
-                    return this.container?.baseOS === 'Windows' ? 'cmd' : 'bash'
+                    return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'bash'
                 }
                 return this.atomValue?.dynamicAceLang ?? this.lang
             }
