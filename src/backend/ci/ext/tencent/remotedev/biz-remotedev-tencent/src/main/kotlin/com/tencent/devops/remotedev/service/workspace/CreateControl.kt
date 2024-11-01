@@ -176,7 +176,8 @@ class CreateControl @Autowired constructor(
             projectId = projectInfo.englishName,
             ownerType = WorkspaceOwnerType.PROJECT
         )
-        if (workspaceNames.size + workspaceCreate.count > projectLimit) {
+        val createCount = workspaceCreate.assignNames.ifEmpty { null }?.size ?: workspaceCreate.count
+        if (workspaceNames.size + createCount > projectLimit) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(projectLimit.toString())
@@ -185,9 +186,10 @@ class CreateControl @Autowired constructor(
 
         // 检查是否有特殊机型的配额限制
         windowsResourceConfigService.createCheckSpecLimit(
-            workspaceCreate.windowsType,
-            projectInfo.englishName,
-            workspaceNames
+            windowsType = workspaceCreate.windowsType,
+            projectId = projectInfo.englishName,
+            workspaceNames = workspaceNames,
+            createCount = createCount
         )
 
         prepareWindowsCreate(

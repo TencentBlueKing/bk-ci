@@ -548,7 +548,8 @@ class WindowsResourceConfigService @Autowired constructor(
     fun createCheckSpecLimit(
         windowsType: String,
         projectId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        createCount: Int
     ) {
         val allSpecSize = getAllType(true, true).map { it.size }.toSet()
         if (windowsType.trim() in allSpecSize) {
@@ -563,7 +564,7 @@ class WindowsResourceConfigService @Autowired constructor(
                     workspaceNames = workspaceNames,
                     size = windowsType.trim()
                 )
-                if (count >= specQuota) {
+                if (count + createCount > specQuota) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
                         params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
