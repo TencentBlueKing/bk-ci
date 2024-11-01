@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -55,7 +56,6 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -94,11 +94,11 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import kotlin.math.max
 
 /**
  * 构建控制器
@@ -231,23 +231,51 @@ class BuildStartControl @Autowired constructor(
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
             if (setting?.runLockType == PipelineRunLockType.MULTIPLE) {
-                canStart = checkRunningCountWithLimit(
-                    buildInfo = buildInfo,
-                    setting = setting,
-                    executeCount = executeCount,
-                    limitCount = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-                )
+                if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                    // 并发时不按排队队列领取，直接更改状态为队列待处理
+                    canStart = pipelineRuntimeExtService.changeBuildStatus(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        oldBuildStatus = BuildStatus.QUEUE,
+                        newBuildStatus = BuildStatus.QUEUE_CACHE
+                    )
+                }
+                if (canStart) {
+                    canStart = checkRunningCountWithLimit(
+                        setting = setting,
+                        executeCount = executeCount,
+                        limitCount = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    )
+                } else {
+                    buildLogPrinter.addLine(
+                        message = "Waiting build #${buildInfo.buildNum - 1}",
+                        buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
+                        jobId = null, stepId = TAG
+                    )
+                }
             }
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
             if (setting?.runLockType == PipelineRunLockType.SINGLE ||
                 setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
             ) {
-                canStart = checkRunningCountWithLimit(
-                    buildInfo = buildInfo,
-                    setting = setting,
-                    executeCount = executeCount,
-                    limitCount = 1
-                )
+                if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                    // #4074 锁定当前构建是队列中第一个排队待执行的
+                    canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+                }
+                if (canStart) {
+                    canStart = checkRunningCountWithLimit(
+                        setting = setting,
+                        executeCount = executeCount,
+                        limitCount = 1
+                    )
+                } else {
+                    buildLogPrinter.addLine(
+                        message = "Waiting build #${buildInfo.buildNum - 1}",
+                        buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
+                        jobId = null, stepId = TAG
+                    )
+                }
             }
 
             if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
@@ -385,47 +413,32 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun PipelineBuildStartEvent.checkRunningCountWithLimit(
-        buildInfo: BuildInfo,
         setting: PipelineSetting,
         executeCount: Int,
         limitCount: Int
     ): Boolean {
-        // #4074 锁定当前构建是队列中第一个排队待执行的
-        var checkStart = true
-        if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
-            checkStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
-        }
-        if (checkStart) {
-            val runningCount = pipelineRuntimeService.getRunningBuildCount(projectId, pipelineId)
-
-            if (runningCount >= limitCount) {
-                // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(
-                    projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
-                    showMsg = I18nUtil.getCodeLanMessage(
-                        messageCode = BUILD_QUEUE_FOR_SINGLE,
-                        defaultMessage = "QUEUE: The current build is queued"
-                    )
+        val runningCount = pipelineRuntimeService.getRunningBuildCount(projectId, pipelineId)
+        if (runningCount >= limitCount) {
+            // 需要重新入队等待
+            pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
+                showMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_QUEUE_FOR_SINGLE,
+                    defaultMessage = "QUEUE: The current build is queued"
                 )
+            )
 
-                buildLogPrinter.addLine(
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT,
-                        params = arrayOf(setting.runLockType.name, runningCount.toString())
-                    ),
-                    buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                    jobId = null, stepId = TAG
-                )
-                checkStart = false
-            }
-        } else {
             buildLogPrinter.addLine(
-                message = "Waiting build #${buildInfo.buildNum - 1}",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT,
+                    params = arrayOf(setting.runLockType.name, runningCount.toString())
+                ),
                 buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
                 jobId = null, stepId = TAG
             )
+            return false
         }
-        return checkStart
+        return true
     }
 
     /**
