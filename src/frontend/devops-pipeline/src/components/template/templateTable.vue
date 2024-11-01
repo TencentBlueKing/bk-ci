@@ -148,6 +148,7 @@
             <bk-table-column
                 :label="$t('template.lastModifiedDate')"
                 sortable
+                width="180"
                 prop="updateTime"
             >
             </bk-table-column>
