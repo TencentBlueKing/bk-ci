@@ -153,9 +153,10 @@
             </bk-table-column>
             <bk-table-column
                 :label="$t('operate')"
+                width="180"
                 prop="operate"
             >
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row, $index }">
                     <div
                         :class="[{ 'not-permission': !isManagerUser && !isEnabledPermission }, 'handler-btn']"
                     >
@@ -259,7 +260,7 @@
                             <template v-else>
                                 <ul
                                     v-show="row.showMore"
-                                    class="btn-more"
+                                    :class="[$index < 7 ? 'btn-more-bottom' : 'btn-more-top', 'btn-more']"
                                 >
                                     <li
                                         @click="copyTemplate(row)"
@@ -710,10 +711,16 @@
         .handler-btn {
             overflow: visible;
             position: relative;
-            .btn-more {
-                position: absolute;
+            .btn-more-top {
+                top: -110px;
+                right: -33px;
+            }
+            .btn-more-bottom {
                 top: 50px;
                 right: -33px;
+            }
+            .btn-more {
+                position: absolute;
                 width: 91px;
                 max-height: 250px;
                 background: #fff;
@@ -774,7 +781,9 @@
         ::v-deep .cell {
             height: 60px;
             line-height: 60px;
-            overflow: visible !important;
+        }
+        ::v-deep td:last-child .cell{
+            overflow: visible;
         }
     }
 
