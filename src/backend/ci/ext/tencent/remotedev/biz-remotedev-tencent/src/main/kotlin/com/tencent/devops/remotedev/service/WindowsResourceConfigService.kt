@@ -148,7 +148,6 @@ class WindowsResourceConfigService @Autowired constructor(
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
-        userId: String,
         searchCustom: Boolean?,
         quotaType: QuotaType,
         withProjectLimit: String?
@@ -280,14 +279,14 @@ class WindowsResourceConfigService @Autowired constructor(
             val diff = newNum - res.count()
             if (diff > 0) {
                 res.addAll(Array(minOf(diff, v)) { k })
-            } else return@forEach
+            } else {
+                return@forEach
+            }
         }
         return res
     }
 
-    fun getAllZone(
-        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
-    ): List<WindowsResourceZoneConfig> {
+    fun getAllZone(): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
@@ -548,7 +547,8 @@ class WindowsResourceConfigService @Autowired constructor(
     fun createCheckSpecLimit(
         windowsType: String,
         projectId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        createCount: Int
     ) {
         val allSpecSize = getAllType(true, true).map { it.size }.toSet()
         if (windowsType.trim() in allSpecSize) {
@@ -563,7 +563,7 @@ class WindowsResourceConfigService @Autowired constructor(
                     workspaceNames = workspaceNames,
                     size = windowsType.trim()
                 )
-                if (count >= specQuota) {
+                if (count + createCount > specQuota) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
                         params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
