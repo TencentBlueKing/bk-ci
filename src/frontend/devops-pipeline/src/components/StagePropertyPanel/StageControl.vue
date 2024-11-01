@@ -83,6 +83,7 @@
                         name="customCondition"
                         :max-length="512"
                         :handle-change="handleUpdateStageControl"
+                        :placeholder="$t('storeMap.customConditionExpPlaceholder')"
                     >
                     </vuex-input>
                 </form-field>

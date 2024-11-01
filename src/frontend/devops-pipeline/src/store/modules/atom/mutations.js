@@ -77,6 +77,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -510,5 +511,10 @@ export default {
 
         })
         return state
+    },
+    [SET_PLUGIN_HEAD_TAB]: (state, { isGetPluginHeadTab }) => {
+        return Object.assign(state, {
+            isGetPluginHeadTab
+        })
     }
 }

@@ -25,7 +25,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_RESOURCE", description = "权限--资源相关接口")
-@Path("/open/service/auth/resource/member")
+@Path("/service/auth/resource/member")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceMemberResource {

@@ -14,5 +14,6 @@ data class StandardVmImage(
     val updateAt: String?,
     val cosFile: String?,
     val sourceType: String?,
-    val isStandard: Boolean
+    val isStandard: Boolean,
+    val size: String? = null
 )

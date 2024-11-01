@@ -75,7 +75,9 @@ data class WeSecProjectWorkspace(
     @get:Schema(title = "专区类型")
     val zoneType: WindowsResourceZoneConfigType? = null,
     @get:Schema(title = "共享人")
-    val viewers: List<String>? = emptyList()
+    val viewers: List<String>? = emptyList(),
+    @get:Schema(title = "母机IP")
+    val nodeIp: String? = null
 )
 
 @Schema(title = "组织信息")

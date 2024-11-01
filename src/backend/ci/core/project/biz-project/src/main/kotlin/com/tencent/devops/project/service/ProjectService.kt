@@ -49,6 +49,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -283,5 +284,10 @@ interface ProjectService {
     fun remindUserOfRelatedProduct(
         userId: String,
         englishName: String
+    ): Boolean
+
+    fun updatePluginDetailsDisplay(
+        englishName: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
     ): Boolean
 }

@@ -220,7 +220,7 @@
 
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
-                if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
+                if (isMultipleParam(param.type) || isRemoteType(param)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
                 this.handleParamChange(param.name, value)
