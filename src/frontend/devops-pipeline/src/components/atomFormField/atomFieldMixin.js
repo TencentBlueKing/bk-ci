@@ -41,10 +41,6 @@ const atomFieldMixin = {
             type: Object,
             default: () => ({})
         },
-        atomValue: {
-            type: Object,
-            default: () => ({})
-        },
         container: {
             type: Object,
             default: () => ({})

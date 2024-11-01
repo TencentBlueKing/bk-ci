@@ -50,6 +50,10 @@
                 type: Object,
                 default: () => ({})
             },
+            atomValue: {
+                type: Object,
+                default: () => ({})
+            },
             defaultHeight: {
                 type: Number,
                 default: 360
@@ -64,6 +68,9 @@
         },
         computed: {
             dynamicLang () {
+                if (this.atomValue?.dynamicAceLang === 'auto') {
+                    return this.container?.baseOS === 'Windows' ? 'cmd' : 'bash'
+                }
                 return this.atomValue?.dynamicAceLang ?? this.lang
             }
         },
