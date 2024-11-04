@@ -1100,7 +1100,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             } else {
                 limit = page * pageSize - projectAtomCount
             }
-            logger.info("getDefaultAtoms projectCode:$projectCode |page:$page|pageSize:$pageSize offset:$offset|limit:$limit")
+            logger.info("getDefaultAtoms projectCode:$projectCode |page:$page|pageSize:$pageSize" +
+                    "projectAtomCount:$projectAtomCount|offset:$offset|limit:$limit")
             defaultAtoms = atomDao.getDefaultAtoms(
                 dslContext = dslContext,
                 classifyCode = classifyCode,
