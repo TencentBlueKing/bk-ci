@@ -36,6 +36,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -231,4 +232,27 @@ interface ApigwProjectResourceV4 {
         @QueryParam("productId")
         productId: Int
     ): Result<List<ProjectBaseInfo>>
+
+    @PUT
+    @Path("/{projectId}/update_plugin_details_display")
+    @Operation(
+        summary = "更新插件展示顺序",
+        tags = ["v4_app_update_plugin_details_display"]
+    )
+    fun updatePluginDetailsDisplay(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "插件展示顺序", required = true)
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean>
 }

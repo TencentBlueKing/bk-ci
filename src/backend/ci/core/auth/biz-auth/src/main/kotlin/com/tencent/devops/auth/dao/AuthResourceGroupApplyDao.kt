@@ -61,4 +61,15 @@ class AuthResourceGroupApplyDao {
             }
         }
     }
+
+    fun delete(
+        dslContext: DSLContext,
+        id: Long
+    ) {
+        with(TAuthResourceGroupApply.T_AUTH_RESOURCE_GROUP_APPLY) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

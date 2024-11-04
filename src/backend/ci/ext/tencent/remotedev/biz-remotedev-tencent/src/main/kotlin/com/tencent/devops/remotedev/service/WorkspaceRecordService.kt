@@ -74,7 +74,7 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     private fun genRegion(hostIp: String?): BkRepoRegion {
-        val defaultZoneConfig = windowsResourceConfigService.getAllZone(WindowsResourceZoneConfigType.DEFAULT)
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone()
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
         val zone = if (hostIp != null) {

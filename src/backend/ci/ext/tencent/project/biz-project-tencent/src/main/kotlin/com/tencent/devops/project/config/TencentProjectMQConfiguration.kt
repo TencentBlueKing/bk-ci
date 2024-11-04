@@ -35,7 +35,6 @@ import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.TencentProjectEventListener
 import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.iam.IamV3Service
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -51,12 +50,10 @@ class TencentProjectMQConfiguration {
     @Bean
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
-        @Autowired bkAccessTokenApi: BkAccessTokenApi,
-        @Autowired(required = false) iamV3Service: IamV3Service?
+        @Autowired bkAccessTokenApi: BkAccessTokenApi
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
-        bkAccessTokenApi = bkAccessTokenApi,
-        iamV3Service = iamV3Service
+        bkAccessTokenApi = bkAccessTokenApi
     )
 
     @EventConsumer

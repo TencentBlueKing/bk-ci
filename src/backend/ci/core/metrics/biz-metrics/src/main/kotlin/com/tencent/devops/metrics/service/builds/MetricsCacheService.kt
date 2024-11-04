@@ -113,17 +113,30 @@ class MetricsCacheService @Autowired constructor(
         redisHashOperation.hdelete(metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()), key)
     }
 
-    fun buildCacheStart(
+    fun buildQueue(
         buildId: String,
         executeCount: Int,
         data: MetricsUserPO
     ): String {
+        val key = hash("$buildId-$executeCount-queue")
+        cacheStart(key, data)
+        return key
+    }
+
+    fun buildStart(
+        buildId: String,
+        executeCount: Int,
+        data: MetricsUserPO
+    ): String {
+        val queueKey = hash("$buildId-$executeCount-queue")
+        val queueData = data.copy(endTime = data.startTime)
+        cacheEnd(queueKey, queueData)
         val key = hash("$buildId-$executeCount")
         cacheStart(key, data)
         return key
     }
 
-    fun buildCacheEnd(
+    fun buildEnd(
         buildId: String,
         executeCount: Int,
         data: MetricsUserPO
@@ -133,24 +146,60 @@ class MetricsCacheService @Autowired constructor(
         return key
     }
 
-    fun jobCacheStart(
+    fun jobQueue(
         buildId: String,
         jobId: String,
         executeCount: Int,
         data: MetricsUserPO
     ): String {
+        val key = hash("$buildId-$jobId-$executeCount-queue")
+        cacheStart(key, data)
+        return key
+    }
+
+    fun jobStart(
+        buildId: String,
+        jobId: String,
+        executeCount: Int,
+        data: MetricsUserPO
+    ): String {
+        val queueKey = hash("$buildId-$jobId-$executeCount-queue")
+        val queueData = data.copy(endTime = data.startTime)
+        cacheEnd(queueKey, queueData)
         val key = hash("$buildId-$jobId-$executeCount")
         cacheStart(key, data)
         return key
     }
 
-    fun jobCacheEnd(
+    fun jobEnd(
         buildId: String,
         jobId: String,
         executeCount: Int,
         data: MetricsUserPO
     ): String {
         val key = hash("$buildId-$jobId-$executeCount")
+        cacheEnd(key, data)
+        return key
+    }
+
+    fun agentStart(
+        buildId: String,
+        jobId: String,
+        executeCount: Int,
+        data: MetricsUserPO
+    ): String {
+        val key = hash("$buildId-$jobId-$executeCount-agent")
+        cacheStart(key, data)
+        return key
+    }
+
+    fun agentEnd(
+        buildId: String,
+        jobId: String,
+        executeCount: Int,
+        data: MetricsUserPO
+    ): String {
+        val key = hash("$buildId-$jobId-$executeCount-agent")
         cacheEnd(key, data)
         return key
     }
@@ -207,11 +256,11 @@ class MetricsCacheService @Autowired constructor(
         val cacheKey = cache[key] as MetricsUserPO?
         if (cacheKey != null) {
             cache[key] = data.apply { startTime = cacheKey.startTime }
-            redisHashOperation.hset(
-                key = metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()),
-                hashKey = key,
-                values = data.toString()
-            )
+//            redisHashOperation.hset(
+//                key = metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()),
+//                hashKey = key,
+//                values = data.toString()
+//            )
         } else {
             redisHashOperation.hset(metricsHeartBeatService.updateKey(), key, data.toString())
         }
@@ -302,6 +351,7 @@ class MetricsCacheService @Autowired constructor(
          *
          * @return 无
          */
+        /*TODO 失效检查可以区分build job step 多级细粒度*/
         private fun executeCheck() {
             /* 运行超过一个小时的，加入检查队列 */
             val limit = LocalDateTime.now().plusHours(-1)

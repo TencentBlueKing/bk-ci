@@ -50,6 +50,11 @@ interface PermissionResourceGroupSyncService {
     fun syncGroupAndMember(projectCode: String)
 
     /**
+     * 同步项目下组
+     */
+    fun syncProjectGroup(projectCode: String)
+
+    /**
      * 获取项目的同步状态
      */
     fun getStatusOfSync(projectCode: String): AuthMigrateStatus

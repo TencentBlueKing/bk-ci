@@ -296,7 +296,8 @@
     "noRelatedPipeline": "暂无关联流水线",
     "all": "所有",
     "installedAt": "安装于",
-    "createdAt": "创建于"
+    "createdAt": "创建于",
+    "systemPlugin": "系统插件"
   },
   "settings": {
     "baseInfo": "基本信息",
@@ -762,7 +763,11 @@
     "directoryName": "目录名称",
     "directoryPath": "目录路径",
     "include": "包含",
-    "fileAndFolder": "{0} 个文件，{1} 个目录"
+    "fileAndFolder": "{0} 个文件，{1} 个目录",
+    "triggerResult": "触发结果",
+    "triggerSuc": "触发成功",
+    "triggerFail": "触发失败",
+    "triggerMismatch": "触发器不匹配"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
@@ -1158,7 +1163,8 @@
     "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
-    "minutes": "分钟"
+    "minutes": "分钟",
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
