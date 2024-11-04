@@ -49,9 +49,8 @@ import org.springframework.context.annotation.Primary
 @Configuration
 class TencentServiceConfig {
 
-
     /**
-     * 动态扩展NotifyType中的配置项
+     * 动态扩展EnvType中的配置项
      */
     @PostConstruct
     fun envTypeChange() {

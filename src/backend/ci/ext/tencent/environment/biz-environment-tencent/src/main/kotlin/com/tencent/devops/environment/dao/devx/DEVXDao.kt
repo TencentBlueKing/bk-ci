@@ -29,7 +29,6 @@ package com.tencent.devops.environment.dao.devx
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.TXEnvType
 import com.tencent.devops.environment.pojo.enums.TXNodeType
@@ -106,5 +105,4 @@ class DEVXDao {
                 .fetch()
         }
     }
-
 }

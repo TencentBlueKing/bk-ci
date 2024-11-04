@@ -130,7 +130,7 @@ class DEVXService @Autowired constructor(
                         abnormalNodeCount = abnormalNodeCount,
                         sharedProjectId = null,
                         sharedUserId = null,
-                        nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) },
+                        nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
                     )
                 )
             }
