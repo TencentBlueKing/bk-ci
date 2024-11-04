@@ -1129,7 +1129,9 @@ class AtomDao : AtomBaseDao() {
         if (!projectCode.isNullOrBlank()) {
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        return step.where(conditions).fetchOne(0, Int::class.java)!!
+        val tc = TClassify.T_CLASSIFY
+        return step.join(tc).on(ta.CLASSIFY_ID.eq(tc.ID))
+            .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -1192,18 +1194,18 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             conditions.add(ta.DEFAULT_FLAG.eq(true))
+            conditions.add(ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                )
+            ))
         } else {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
         conditions.add(ta.LATEST_FLAG.eq(true))
-        conditions.add(ta.ATOM_STATUS.`in`(
-            listOf(
-                AtomStatusEnum.TESTING.status.toByte(),
-                AtomStatusEnum.AUDITING.status.toByte(),
-                AtomStatusEnum.RELEASED.status.toByte(),
-            )
-        ))
 
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
