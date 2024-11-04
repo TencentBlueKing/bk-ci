@@ -1,8 +1,8 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
-- [v3.1.0-rc.2](#v310-rc22024-10-26)
+- [v3.1.0-rc.2](#v310-rc2)
    - [Changelog since v3.1.0-rc.1](#changelog-since-v310-rc1)
 
-- [v3.1.0-rc.1](#v310-rc12024-10-15)
+- [v3.1.0-rc.1](#v310-rc1)
    - [Changelog since v3.0.0](#changelog-since-v300)
 
 <!-- END MUNGE: GENERATED_TOC -->
@@ -10,7 +10,8 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
-# v3.1.0-rc.2(2024-10-26)
+# v3.1.0-rc.2
+## 2024-10-26
 ## Changelog since v3.1.0-rc.1
 #### 新增
 ##### 流水线
@@ -68,7 +69,8 @@
 - [修复] 归档报告插件创建token没有实现 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10693)
 
 
-# v3.1.0-rc.1(2024-10-15)
+# v3.1.0-rc.1
+## 2024-10-15
 ## Changelog since v3.0.0
 #### 新增
 ##### 流水线
