@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.LOG_FILE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
+import com.tencent.devops.worker.common.LOG_TASK_LINE_ARCHIVED_LIMIT
 import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -378,7 +379,7 @@ object LoggerService {
             // 将所有日志存储状态为LOCAL的插件进行文件归档
             elementId2LogProperty.forEach { (elementId, property) ->
                 // 如果不是LOCAL状态直接跳过
-                if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
+                if (property.length < LOG_TASK_LINE_ARCHIVED_LIMIT) return@forEach
 
                 if (!property.logFile.exists()) {
                     logger.warn(
@@ -480,6 +481,7 @@ object LoggerService {
             }
             val dateTime = sdf.format(Date(logMessage.timestamp))
             logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")
+            logProperty.length++
         } catch (ignored: Exception) {
             logger.warn("Fail to save the logs($logMessage)", ignored)
         }

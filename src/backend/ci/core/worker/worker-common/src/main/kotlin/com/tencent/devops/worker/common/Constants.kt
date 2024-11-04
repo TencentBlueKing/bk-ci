@@ -67,6 +67,8 @@ const val LOG_MESSAGE_LENGTH_LIMIT = 16 * 1024 // 16KB
 
 const val LOG_TASK_LINE_LIMIT = 1000000
 
+const val LOG_TASK_LINE_ARCHIVED_LIMIT = 100000
+
 const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
 
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")

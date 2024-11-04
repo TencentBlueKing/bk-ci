@@ -41,5 +41,7 @@ data class TaskBuildLogProperty(
     @get:Schema(title = "日志文件句柄", required = true)
     val logFile: File,
     @get:Schema(title = "日志的存储模式", required = false)
-    var logStorageMode: LogStorageMode = LogStorageMode.UPLOAD
+    var logStorageMode: LogStorageMode = LogStorageMode.UPLOAD,
+    @get:Schema(title = "日志行数", required = false)
+    var length: Int = 0
 )
