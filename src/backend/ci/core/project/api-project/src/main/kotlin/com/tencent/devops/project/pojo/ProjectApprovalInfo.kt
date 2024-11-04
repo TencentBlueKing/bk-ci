@@ -81,5 +81,7 @@ data class ProjectApprovalInfo(
     @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
-    val productName: String? = null
+    val productName: String? = null,
+    @get:Schema(title = "项目相关配置")
+    val properties: ProjectProperties? = null
 )

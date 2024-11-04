@@ -293,7 +293,8 @@
     "noRelatedPipeline": "No linked pipeline yet",
     "all": "All",
     "installedAt": "Installed at",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "systemPlugin": "System plugin"
   },
   "settings": {
     "baseInfo": "Basic Information",
@@ -757,7 +758,11 @@
     "directoryName": "Folder Name",
     "directoryPath": "Folder Path",
     "include": "Include",
-    "fileAndFolder": "{0} files, {1} folders"
+    "fileAndFolder": "{0} files, {1} folders",
+    "triggerResult": "Trigger Result",
+    "triggerSuc": "Trigger successful",
+    "triggerFail": "Trigger failed",
+    "triggerMismatch": "Trigger mismatch"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",

@@ -77,6 +77,7 @@
     import Logo from '@/components/Logo'
     import { extForFile } from '@/utils/pipelineConst'
     import { convertFileSize } from '@/utils/util'
+    import { SET_PLUGIN_HEAD_TAB } from '@/store/modules/atom/constants'
 
     export default {
         components: {
@@ -107,6 +108,7 @@
 
         created () {
             this.initData()
+            this.$store.commit(`atom/${SET_PLUGIN_HEAD_TAB}`, { isGetPluginHeadTab: false })
         },
 
         methods: {
@@ -140,6 +142,9 @@
                                 size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
+                        if (res) {
+                            this.$store.commit(`atom/${SET_PLUGIN_HEAD_TAB}`, { isGetPluginHeadTab: true })
+                        }
                         if (this.artifactories.length > 0) {
                             this.$emit('toggle', true)
                         }

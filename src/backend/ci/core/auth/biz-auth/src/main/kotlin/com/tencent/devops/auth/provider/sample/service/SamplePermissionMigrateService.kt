@@ -103,4 +103,6 @@ class SamplePermissionMigrateService(
     }
 
     override fun fixResourceGroups(projectCodes: List<String>): Boolean = true
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>) = true
 }
