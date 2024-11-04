@@ -538,6 +538,7 @@ class WorkspaceService @Autowired constructor(
                         taiUserCN[viewer] ?: viewer
                     },
                     currentLoginUsers = detail?.hostIp?.let { ip -> loginUserMap[ip] } ?: emptyList(),
+                    ownerType = it.ownerType,
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
