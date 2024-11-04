@@ -433,7 +433,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type, null))
+        return Result(windowsResourceConfigService.allWindowsQuota(
+            searchCustom = false,
+            quotaType = type,
+            withProjectLimit = null
+        )
+        )
     }
 
     override fun updateUsageLimit(

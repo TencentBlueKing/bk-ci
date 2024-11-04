@@ -77,7 +77,6 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
-import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -100,7 +99,6 @@ class CreateControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val permissionService: PermissionService,
     private val client: Client,
     private val dispatcher: SampleEventDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -177,7 +175,8 @@ class CreateControl @Autowired constructor(
             dslContext = dslContext,
             projectId = projectInfo.englishName
         )
-        if (workspaceNames.size + workspaceCreate.count > projectLimit) {
+        val createCount = workspaceCreate.assignNames.ifEmpty { null }?.size ?: workspaceCreate.count
+        if (workspaceNames.size + createCount > projectLimit) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(projectLimit.toString())
@@ -186,9 +185,10 @@ class CreateControl @Autowired constructor(
 
         // 检查是否有特殊机型的配额限制
         windowsResourceConfigService.createCheckSpecLimit(
-            workspaceCreate.windowsType,
-            projectInfo.englishName,
-            workspaceNames
+            windowsType = workspaceCreate.windowsType,
+            projectId = projectInfo.englishName,
+            workspaceNames = workspaceNames,
+            createCount = createCount
         )
 
         prepareWindowsCreate(

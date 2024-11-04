@@ -37,6 +37,7 @@ dependencies {
     api(project(":core:common:common-audit"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
     api(project(":ext:tencent:remotedev:common-remotedev-dispatch-tencent"))
+    api(project(":ext:tencent:remotedev:biz-remotedev-dispatch-tencent"))
     api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))

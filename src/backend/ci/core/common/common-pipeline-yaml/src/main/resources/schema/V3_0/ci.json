@@ -1980,6 +1980,9 @@
                           },
                           "gpus" : {
                             "type" : "string"
+                          },
+                          "privileged" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -2469,6 +2472,9 @@
                             }
                           },
                           "gpus" : {
+                            "type" : "string"
+                          },
+                          "privileged" : {
                             "type" : "string"
                           }
                         }

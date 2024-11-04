@@ -89,6 +89,38 @@ class BKItsmService @Autowired constructor(
         )
     }
 
+    fun createCheckTicket(
+        projectId: String,
+        creator: String,
+        operator: String,
+        urls: List<String>
+    ) {
+        val fields = listOf(
+            mapOf(
+                "key" to "title",
+                "value" to "${urls.size}个离岸工蜂代码库绑定状态异常，请及时处理！"
+            ),
+            mapOf(
+                "key" to "projectId",
+                "value" to projectId
+            ),
+            mapOf(
+                "key" to "OPERATOR",
+                "value" to operator
+            ),
+            mapOf(
+                "key" to "YCDXMLB",
+                "value" to urls.joinToString("\n")
+            )
+        )
+        createTicket(
+            creator = creator,
+            fields = fields,
+            serviceId = bkConfig.dailyCheckServiceId!!,
+            errorParam1 = projectId
+        )
+    }
+
     private fun createTicket(
         creator: String,
         fields: List<Map<String, String>>,

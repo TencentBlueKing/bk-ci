@@ -294,7 +294,8 @@
     "noRelatedPipeline": "No linked pipeline yet",
     "all": "All",
     "installedAt": "Installed at",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "systemPlugin": "System plugin"
   },
   "settings": {
     "baseInfo": "Basic Information",
@@ -761,7 +762,11 @@
     "directoryName": "Folder Name",
     "directoryPath": "Folder Path",
     "include": "Include",
-    "fileAndFolder": "{0} files, {1} folders"
+    "fileAndFolder": "{0} files, {1} folders",
+    "triggerResult": "Trigger Result",
+    "triggerSuc": "Trigger successful",
+    "triggerFail": "Trigger failed",
+    "triggerMismatch": "Trigger mismatch"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",
@@ -1157,7 +1162,8 @@
     "singleNodeConcurrencyPlaceholder": "Default is the maximum concurrency set on the node",
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
-    "minutes": "Minutes"
+    "minutes": "Minutes",
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",

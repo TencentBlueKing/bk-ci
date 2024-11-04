@@ -265,7 +265,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             windowsResourceConfigService.createCheckSpecLimit(
                 windowsType = machineType,
                 projectId = old.projectId,
-                workspaceNames = workspaceNames
+                workspaceNames = workspaceNames,
+                createCount = 1
             )
         }
         windowsResourceConfigService.createCheckWhenWinNotAlready(
