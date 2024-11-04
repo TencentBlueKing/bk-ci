@@ -3,11 +3,11 @@
         <div class="batch-add">
             {{ $t('editPage.batchAddTit') }}
             <i
-                v-bk-tooltips="{ content: '#demo-html1', width: 225 }"
+                v-bk-tooltips="htmlConfig"
                 class="bk-icon icon-info-circle"
             >
             </i>
-            <div id="demo-html1">
+            <div id="tooltips-id">
                 <ul id="restore-dots">
                     <li
                         v-for="(item, i) in tooltipsText"
@@ -47,7 +47,12 @@
         },
         data () {
             return {
-                batchInput: ''
+                batchInput: '',
+                htmlConfig: {
+                    allowHTML: true,
+                    width: 225,
+                    content: '#tooltips-id'
+                }
             }
         },
         computed: {
