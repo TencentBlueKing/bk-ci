@@ -1192,7 +1192,6 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             conditions.add(ta.DEFAULT_FLAG.eq(true))
-            conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
         } else {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
