@@ -35,12 +35,12 @@
                     show-overflow-tooltip
                 >
                     <template slot-scope="{ row }">
-                        <bk-button
-                            text
+                        <span
+                            class="display-name"
                             @click="handleToNodeDetailPage(row)"
                         >
                             {{ row.displayName }}
-                        </bk-button>
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -729,5 +729,10 @@
         .useless {
             color: #c3cdd7;
         }
+    }
+
+    .display-name {
+        color: #3a84ff;
+        cursor: pointer;
     }
 </style>
