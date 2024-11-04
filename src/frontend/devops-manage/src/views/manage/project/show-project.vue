@@ -21,6 +21,7 @@ import {
 useRoute,
 useRouter,
 } from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -50,7 +51,13 @@ const fetchProjectData = async () => {
       englishName: projectCode,
     })
     .then((res) => {
-      projectData.value = res;
+      projectData.value =  {
+        ...res,
+        properties: {
+          pipelineDialect: 'CLASSIC',
+          ...res.properties,
+        },
+      };
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
@@ -119,7 +126,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
-  
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
@@ -410,6 +420,20 @@ onMounted(async () => {
                     >
                       {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
+                  </div>
+                </bk-form-item>
+                <bk-form-item property="pipelineDialect" v-if="projectData.properties">
+                  <template #label>
+                    <dialect-popover-table />
+                  </template>
+                  <div>
+                    <span>{{ t(projectData.properties.pipelineDialect) }}</span>
+                    <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                    </div>
                   </div>
                 </bk-form-item>
                 <bk-form-item>
