@@ -1,26 +1,26 @@
 <script setup lang="ts">
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 import http from '@/http/api';
 import {
-handleProjectManageNoPermission,
-RESOURCE_ACTION,
-RESOURCE_TYPE,
+  handleProjectManageNoPermission,
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
 } from '@/utils/permission.js';
 import {
-InfoBox,
-Message,
-Popover
+  InfoBox,
+  Message,
+  Popover
 } from 'bkui-vue';
 import {
-onMounted,
-ref,
-watch
+  onMounted,
+  ref,
+  watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-useRoute,
-useRouter,
+  useRoute,
+  useRouter,
 } from 'vue-router';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const route = useRoute();

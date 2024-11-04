@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 import http from '@/http/api';
 import { Message, Popover } from 'bkui-vue';
 import {
@@ -16,7 +17,6 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 const {
   t,
 } = useI18n();
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
     ref="projectForm"
     :rules="rules"
     :model="projectData"
-    :label-width="160"
+    :label-width="216"
   >
     <div class="project-tab advanced">
       <p class="title">{{t('基础信息')}}</p>
