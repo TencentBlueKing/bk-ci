@@ -1046,7 +1046,11 @@
     "alwaysPull": "每次运行时拉取",
     "ifNotPresent": "当本地不存在时才拉取",
     "enableDockerTips": "使用此功能时，请确保构建机已经安装Docker运行环境，且第三方构建机Agent的启动用户拥有Docker的操作权限",
-    "enabledPrivileged": "是否开启特权模式"
+    "enabledPrivileged": "是否开启特权模式",
+    "batchAddTit": "批量添加",
+    "lineBreak": "多个选项用换行符分隔",
+    "noEnglishCommas": "每个选项不能包含英文逗号",
+    "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式"
   },
   "storeMap": {
     "textarea": "文本框",
