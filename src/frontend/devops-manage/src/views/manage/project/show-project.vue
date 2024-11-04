@@ -20,6 +20,7 @@ import {
 useRoute,
 useRouter,
 } from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -52,7 +53,12 @@ const fetchProjectData = async () => {
       projectData.value = {
         ...res,
         deptInfo: generateDeptName(res, false),
+        properties: {
+          pipelineDialect: 'CLASSIC',
+          ...res.properties,
+        },
       };
+      (!res.properties || !res.properties.pipelineDialect) && (projectData.value.properties.pipelineDialect = 'CLASSIC');
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
@@ -137,8 +143,11 @@ const fieldMap = [
   {
     current: 'productName',
     after: 'afterProductName'
-  }
-
+  },
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
 ];
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
@@ -348,7 +357,7 @@ const projectTypeNameMap = {
   3: t('页游'),
   4: t('平台产品'),
   5: t('支撑产品'),
-};
+}
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -473,6 +482,20 @@ onMounted(async () => {
                     >
                       {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
+                  </div>
+                </bk-form-item>
+                <bk-form-item property="pipelineDialect" v-if="projectData.properties">
+                  <template #label>
+                    <dialect-popover-table />
+                  </template>
+                  <div>
+                    <span>{{ t(projectData.properties.pipelineDialect) }}</span>
+                    <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                    </div>
                   </div>
                 </bk-form-item>
                 <bk-form-item>
