@@ -47,8 +47,7 @@ class CommandPowerShellImpl : ICommand {
         jobId: String?,
         stepId: String?,
         charsetType: String?,
-        taskId: String?,
-        asCodeEnabled: Boolean?
+        taskId: String?
     ) {
         TODO("Not yet implemented")
     }

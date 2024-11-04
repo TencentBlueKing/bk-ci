@@ -272,7 +272,6 @@ class PipelineDockerIPInfoDao {
 
     fun getAvailableDockerIpList(
         dslContext: DSLContext,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType,
         cpuLoad: Int,
         memLoad: Int,
@@ -285,7 +284,6 @@ class PipelineDockerIPInfoDao {
             val conditions =
                 mutableListOf<Condition>(
                     ENABLE.eq(true),
-                    GRAY_ENV.eq(grayEnv),
                     CLUSTER_NAME.eq(clusterName.name)
                 )
 
@@ -316,14 +314,12 @@ class PipelineDockerIPInfoDao {
     fun getDockerIpList(
         dslContext: DSLContext,
         enable: Boolean,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType? = null
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val conditions =
                 mutableListOf<Condition>(
-                    ENABLE.eq(enable),
-                    GRAY_ENV.eq(grayEnv)
+                    ENABLE.eq(enable)
                 )
 
             if (clusterName != null) {
@@ -338,14 +334,12 @@ class PipelineDockerIPInfoDao {
 
     fun getEnableDockerIpCount(
         dslContext: DSLContext,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType
     ): Long {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .where(ENABLE.eq(true))
-                .and(GRAY_ENV.eq(grayEnv))
                 .and(CLUSTER_NAME.eq(clusterName.name))
                 .fetchOne(0, Long::class.java)!!
         }
@@ -353,14 +347,12 @@ class PipelineDockerIPInfoDao {
 
     fun getAllDockerIpCount(
         dslContext: DSLContext,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType
     ): Long? {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
-                .where(GRAY_ENV.eq(grayEnv))
-                .and(CLUSTER_NAME.eq(clusterName.name))
+                .where(CLUSTER_NAME.eq(clusterName.name))
                 .fetchOne(0, Long::class.java)
         }
     }

@@ -37,6 +37,7 @@ import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
@@ -56,28 +57,28 @@ internal class FormatTest {
             ExpressionParser.createTree(
                 "format('{0}-{1}:{3}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+            )!!.evaluate(null, ev, EvaluationOptions(false), null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0}-{1}:3}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+            )!!.evaluate(null, ev, EvaluationOptions(false), null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0}-{1}:{3', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+            )!!.evaluate(null, ev, EvaluationOptions(false), null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0:yyyyMMdd}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+            )!!.evaluate(null, ev, EvaluationOptions(false), null)
         }
     }
 
@@ -92,7 +93,7 @@ internal class FormatTest {
     )
     fun evaluateCoreTest(format: String) {
         val (exp, expect) = format.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
         Assertions.assertEquals(expect, res)
     }
 
@@ -109,7 +110,7 @@ internal class FormatTest {
         val res =
             ExpressionParser
                 .createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, SubNameValueEvaluateInfo())!!
-                .subNameValueEvaluate(null, parametersEv, null, SubNameValueEvaluateInfo(), null).value
+                .subNameValueEvaluate(null, parametersEv, EvaluationOptions(false), SubNameValueEvaluateInfo(), null).value
         Assertions.assertEquals(expect, res)
     }
 

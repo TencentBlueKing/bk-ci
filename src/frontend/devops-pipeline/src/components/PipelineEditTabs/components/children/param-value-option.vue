@@ -158,21 +158,6 @@
             >
             </request-selector>
             <request-selector
-                v-if="isBuildResourceParam(param.type)"
-                :popover-min-width="250"
-                :url="getBuildResourceUrl(param.containerType)"
-                param-id="name"
-                :disabled="disabled"
-                name="defaultValue"
-                v-validate="{ required: valueRequired }"
-                :data-vv-scope="'pipelineParam'"
-                :value="param.defaultValue"
-                :handle-change="handleChange"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
-            >
-            </request-selector>
-            <request-selector
                 v-if="isSubPipelineParam(param.type)"
                 :popover-min-width="250"
                 v-bind="subPipelineOption"
@@ -203,43 +188,6 @@
                 :value="param.relativePath"
             ></vuex-input>
         </form-field>
-
-        <template v-if="isBuildResourceParam(param.type)">
-            <form-field
-                :hide-colon="true"
-                :label="$t('editPage.buildEnv')"
-                :is-error="errors.has(`pipelineParam.os`)"
-                :error-msg="errors.first(`pipelineParam.os`)"
-            >
-                <selector
-                    :popover-min-width="510"
-                    :disabled="disabled"
-                    :list="baseOSList"
-                    :handle-change="(name, value) => handleBuildResourceChange(name, value, param)"
-                    name="os"
-                    placeholder=""
-                    :value="param.containerType.os"
-                ></selector>
-            </form-field>
-
-            <form-field
-                :hide-colon="true"
-                :label="$t('editPage.addMetaData')"
-                :is-error="errors.has(`pipelineParam.buildType`)"
-                :error-msg="errors.first(`pipelineParam.buildType`)"
-            >
-                <selector
-                    :popover-min-width="510"
-                    :disabled="disabled"
-                    :list="getBuildTypeList(param.containerType.os)"
-                    setting-key="type"
-                    :handle-change="(name, value) => handleBuildResourceChange(name, value, param)"
-                    name="buildType"
-                    placeholder=""
-                    :value="param.containerType.buildType"
-                ></selector>
-            </form-field>
-        </template>
 
         <template v-if="isArtifactoryParam(param.type)">
             <form-field
@@ -299,7 +247,6 @@
         getRepoOption,
         isArtifactoryParam,
         isBooleanParam,
-        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
@@ -410,7 +357,6 @@
             isSvnParam,
             isGitParam,
             isCodelibParam,
-            isBuildResourceParam,
             isArtifactoryParam,
             isSubPipelineParam,
             isFileParam,
@@ -434,15 +380,6 @@
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
-            },
-            handleBuildResourceChange (name, value, param) {
-                const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
-
-                this.handleChange('containerType', Object.assign({
-                    ...param.containerType,
-                    [name]: value
-                }, resetBuildType))
-                this.handleChange('defaultValue', '')
             },
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值

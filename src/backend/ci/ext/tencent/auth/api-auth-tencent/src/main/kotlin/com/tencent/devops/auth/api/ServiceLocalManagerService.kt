@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/open/service/auth/local/manager")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+
 interface ServiceLocalManagerService {
     @GET
     @Path("/projects/{projectCode}/")

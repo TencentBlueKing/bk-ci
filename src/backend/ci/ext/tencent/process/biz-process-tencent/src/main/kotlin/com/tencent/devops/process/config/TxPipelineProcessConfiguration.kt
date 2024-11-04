@@ -28,15 +28,10 @@
 package com.tencent.devops.process.config
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
 import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
@@ -63,26 +58,6 @@ class TxPipelineProcessConfiguration {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun pipelinePermissionServiceImpl(
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        managerService: ManagerService,
-        pipelineDao: PipelineInfoDao,
-        dslContext: DSLContext
-    ) = PipelinePermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode,
-        managerService = managerService,
-        pipelineDao = pipelineDao,
-        dslContext = dslContext
-    )
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
