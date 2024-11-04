@@ -56,7 +56,6 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -68,6 +67,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
@@ -379,6 +379,8 @@ object LoggerService {
             // 将所有日志存储状态为LOCAL的插件进行文件归档
             elementId2LogProperty.forEach { (elementId, property) ->
                 // 如果不是LOCAL状态直接跳过
+                if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
+                // 日志行数大于等于10w行才归档
                 if (property.length < LOG_TASK_LINE_ARCHIVED_LIMIT) return@forEach
 
                 if (!property.logFile.exists()) {
@@ -454,6 +456,7 @@ object LoggerService {
                     logger.warn("Log service storage is unable：${result.message}")
                     disableLogUpload()
                 }
+
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }
