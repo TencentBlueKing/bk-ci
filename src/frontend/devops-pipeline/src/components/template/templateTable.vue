@@ -148,16 +148,14 @@
             <bk-table-column
                 :label="$t('template.lastModifiedDate')"
                 sortable
-                width="180"
                 prop="updateTime"
             >
             </bk-table-column>
             <bk-table-column
                 :label="$t('operate')"
-                width="180"
                 prop="operate"
             >
-                <template slot-scope="{ row, $index }">
+                <template slot-scope="{ row }">
                     <div
                         :class="[{ 'not-permission': !isManagerUser && !isEnabledPermission }, 'handler-btn']"
                     >
@@ -261,7 +259,7 @@
                             <template v-else>
                                 <ul
                                     v-show="row.showMore"
-                                    :class="[$index < 7 ? 'btn-more-bottom' : 'btn-more-top', 'btn-more']"
+                                    class="btn-more"
                                 >
                                     <li
                                         @click="copyTemplate(row)"
@@ -712,16 +710,10 @@
         .handler-btn {
             overflow: visible;
             position: relative;
-            .btn-more-top {
-                top: -110px;
-                right: -33px;
-            }
-            .btn-more-bottom {
-                top: 50px;
-                right: -33px;
-            }
             .btn-more {
                 position: absolute;
+                top: 50px;
+                right: -33px;
                 width: 91px;
                 max-height: 250px;
                 background: #fff;
@@ -782,9 +774,7 @@
         ::v-deep .cell {
             height: 60px;
             line-height: 60px;
-        }
-        ::v-deep td:last-child .cell{
-            overflow: visible;
+            overflow: visible !important;
         }
     }
 
