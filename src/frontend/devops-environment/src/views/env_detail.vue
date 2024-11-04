@@ -104,7 +104,8 @@
                     }
                 ]
                 if (this.isBuildEnv) {
-                    tabs.push({
+                    const index = tabs.findIndex(tab => tab.tabName === 'auth')
+                    tabs.splice(index, 0, {
                         cls: 'base-item',
                         tabName: 'setting',
                         label: 'setting',
