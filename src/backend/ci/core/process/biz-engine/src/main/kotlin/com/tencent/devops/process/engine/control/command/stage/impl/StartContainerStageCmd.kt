@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -120,7 +121,8 @@ class StartContainerStageCmd(
                 actionType = ActionType.START,
                 stageId = commandContext.stage.stageId,
                 executeCount = commandContext.executeCount,
-                buildStatus = commandContext.buildStatus.name
+                buildStatus = commandContext.buildStatus.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_START
             )
         )
     }

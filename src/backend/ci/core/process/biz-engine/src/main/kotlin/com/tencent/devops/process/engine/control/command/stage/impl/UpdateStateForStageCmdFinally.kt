@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -116,7 +117,8 @@ class UpdateStateForStageCmdFinally(
             PipelineBuildStatusBroadCastEvent(
                 source = "UpdateStateForStageCmdFinally", projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END,
-                buildStatus = commandContext.buildStatus.name, executeCount = stage.executeCount
+                buildStatus = commandContext.buildStatus.name, executeCount = stage.executeCount,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_END
             )
         )
     }
