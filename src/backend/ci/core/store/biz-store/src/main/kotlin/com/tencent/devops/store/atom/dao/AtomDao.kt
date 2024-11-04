@@ -96,10 +96,8 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Result
-import org.jooq.SelectHavingStep
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
@@ -1121,7 +1119,7 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null
     ): Int {
-        val (ta, t, conditions) = getInstalledConditions(
+        val (ta, tspr, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
@@ -1130,15 +1128,9 @@ class AtomDao : AtomBaseDao() {
 
         val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
         if (!projectCode.isNullOrBlank()) {
-            val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        return step.join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
-            .where(conditions).fetchOne(0, Int::class.java)!!
+        return step.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -1153,13 +1145,12 @@ class AtomDao : AtomBaseDao() {
         pageSize: Int? = null
     ): Result<out Record>? {
 
-        val (ta, t, conditions) = getInstalledConditions(
+        val (ta, tspr, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
         )
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val tc = TClassify.T_CLASSIFY
 
         val sql = dslContext.select(
@@ -1180,11 +1171,6 @@ class AtomDao : AtomBaseDao() {
             tspr.TYPE.`as`(KEY_INSTALL_TYPE)
         )
             .from(ta)
-            .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)
@@ -1201,7 +1187,7 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String?,
         name: String?,
         dslContext: DSLContext
-    ): Triple<TAtom, SelectHavingStep<Record2<String, LocalDateTime>>, MutableList<Condition>> {
+    ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
@@ -1225,7 +1211,7 @@ class AtomDao : AtomBaseDao() {
         if (!name.isNullOrBlank()) {
             conditions.add(ta.NAME.contains(name))
         }
-        return Triple(ta, t, conditions)
+        return Triple(ta, tspr, conditions)
     }
 
     fun updateAtomBaseInfo(
@@ -1440,7 +1426,7 @@ class AtomDao : AtomBaseDao() {
         limit: Int? = null
     ): Result<out Record>? {
 
-        val (ta, t, conditions) = getInstalledConditions(
+        val (ta, _, conditions) = getInstalledConditions(
             classifyCode = classifyCode,
             name = name,
             dslContext = dslContext
@@ -1462,11 +1448,6 @@ class AtomDao : AtomBaseDao() {
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME)
         )
             .from(ta)
-            .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .where(conditions)
