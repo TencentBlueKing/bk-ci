@@ -90,7 +90,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.net.URLDecoder
 import java.time.LocalDateTime
-import org.checkerframework.checker.units.qual.t
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -1199,6 +1198,13 @@ class AtomDao : AtomBaseDao() {
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
         conditions.add(ta.LATEST_FLAG.eq(true))
+        conditions.add(ta.ATOM_STATUS.`in`(
+            listOf(
+                AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.AUDITING.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte(),
+            )
+        ))
 
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
