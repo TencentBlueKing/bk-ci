@@ -90,6 +90,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.net.URLDecoder
 import java.time.LocalDateTime
+import org.checkerframework.checker.units.qual.t
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -1203,9 +1204,6 @@ class AtomDao : AtomBaseDao() {
     ): Triple<TAtom, SelectHavingStep<Record2<String, LocalDateTime>>, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta).groupBy(ta.ATOM_CODE)
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             conditions.add(ta.DEFAULT_FLAG.eq(true))
@@ -1214,6 +1212,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
+        conditions.add(ta.LATEST_FLAG.eq(true))
 
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
