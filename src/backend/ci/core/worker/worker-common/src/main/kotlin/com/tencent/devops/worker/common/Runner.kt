@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -45,6 +46,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
@@ -54,7 +56,6 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UNKNOWN_ERRO
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -66,10 +67,10 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 
 object Runner {
@@ -176,7 +177,7 @@ object Runner {
         if (endBuildFlag) {
             // 启动失败，尝试结束构建
             try {
-                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId(), BuildJobResult(ignored.message))
+                EngineService.endBuild(emptyMap(), "", BuildJobResult(ignored.message))
             } catch (ignored: Exception) {
                 logger.warn("End build catch unknown exceptions", ignored)
             }
@@ -444,6 +445,7 @@ object Runner {
 
         // 填充插件级的ENV参数
         val customEnvStr = buildTask.params?.get(Element::customEnv.name)
+        val dialect = PipelineDialectUtil.getPipelineDialect(jobBuildVariables.variables[PIPELINE_DIALECT])
         if (customEnvStr != null) {
             val customEnv = try {
                 JsonUtil.toOrNull(customEnvStr, object : TypeReference<List<NameAndValue>>() {})
@@ -459,7 +461,7 @@ object Runner {
                     val value = EnvReplacementParser.parse(
                         value = it.value ?: "",
                         contextMap = jobVariables,
-                        onlyExpression = jobBuildVariables.pipelineAsCodeSettings?.enable,
+                        onlyExpression = dialect.supportUseExpression(),
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
                     )

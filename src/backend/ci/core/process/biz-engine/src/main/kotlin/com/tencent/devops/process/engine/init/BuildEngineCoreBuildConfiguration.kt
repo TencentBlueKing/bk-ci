@@ -27,22 +27,38 @@
 
 package com.tencent.devops.process.engine.init
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.engine.control.BuildCancelControl
+import com.tencent.devops.process.engine.control.BuildEndControl
+import com.tencent.devops.process.engine.control.BuildStartControl
+import com.tencent.devops.process.engine.control.ContainerControl
+import com.tencent.devops.process.engine.control.StageControl
+import com.tencent.devops.process.engine.control.TaskControl
+import com.tencent.devops.process.engine.listener.run.PipelineAtomTaskBuildListener
 import com.tencent.devops.process.engine.listener.run.PipelineBuildStartListener
+import com.tencent.devops.process.engine.listener.run.PipelineContainerBuildListener
+import com.tencent.devops.process.engine.listener.run.PipelineStageBuildListener
+import com.tencent.devops.process.engine.listener.run.PipelineTaskPauseListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildFinishListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineTaskPauseService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -50,129 +66,138 @@ import org.springframework.context.annotation.Configuration
  * 流水线构建核心配置
  */
 @Configuration
+@Suppress("LongParameterList", "TooManyFunctions")
 class BuildEngineCoreBuildConfiguration {
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Value("\${queueConcurrency.buildStart:5}")
-    private val buildStartConcurrency: Int? = null
-
     /**
      * 入口：整个构建开始队列---- 并发一般
      */
     @Bean
-    fun pipelineBuildStartQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_START)
+    fun pipelineBuildStartListener(
+        @Autowired buildControl: BuildStartControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildStartListener(
+        buildControl = buildControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
-    @Bean
-    fun pipelineBuildStartQueueBind(
-        @Autowired pipelineBuildStartQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildStartQueue)
-            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_BUILD_START)
-    }
-
-    @Bean
-    fun pipelineBuildStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineBuildStartListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = buildStartConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.buildFinish:5}")
-    private val buildFinishConcurrency: Int? = null
+    @EventConsumer
+    fun buildStartConsumer(
+        @Autowired buildListener: PipelineBuildStartListener
+    ) = ScsConsumerBuilder.build<PipelineBuildStartEvent> { buildListener.run(it) }
 
     /**
      * 构建结束队列--- 并发一般，与Stage一致
      */
     @Bean
-    fun pipelineBuildFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH)
+    fun pipelineBuildFinishListener(
+        @Autowired buildEndControl: BuildEndControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildFinishListener(
+        buildEndControl = buildEndControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
-    @Bean
-    fun pipelineBuildFinishQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue)
-            .to(pipelineCoreExchange)
-            .with(MQ.ROUTE_PIPELINE_BUILD_FINISH)
-    }
-
-    @Bean
-    fun pipelineBuildFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineBuildFinishListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildFinishQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = buildFinishConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.buildCancel:5}")
-    private val buildCancelConcurrency: Int? = null
+    @EventConsumer
+    fun buildFinishConsumer(
+        @Autowired buildListener: PipelineBuildFinishListener
+    ) = ScsConsumerBuilder.build<PipelineBuildFinishEvent> { buildListener.run(it) }
 
     /**
      * 构建取消队列--- 并发一般，与Stage一致
      */
     @Bean
-    fun pipelineBuildCancelQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_CANCEL)
+    fun pipelineBuildCancelListener(
+        @Autowired buildCancelControl: BuildCancelControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildCancelListener(
+        buildCancelControl = buildCancelControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
+    @EventConsumer
+    fun buildCancelConsumer(
+        @Autowired buildListener: PipelineBuildCancelListener
+    ) = ScsConsumerBuilder.build<PipelineBuildCancelEvent> { buildListener.run(it) }
+
+    /**
+     * Stage构建队列---- 并发一般
+     */
     @Bean
-    fun pipelineBuildCancelQueueBind(
-        @Autowired pipelineBuildCancelQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildCancelQueue)
-            .to(pipelineCoreExchange)
-            .with(MQ.ROUTE_PIPELINE_BUILD_CANCEL)
-    }
+    fun pipelineStageBuildListener(
+        @Autowired stageControl: StageControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineStageBuildListener(
+        stageControl = stageControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
+    @EventConsumer
+    fun stageBuildConsumer(
+        @Autowired buildListener: PipelineStageBuildListener
+    ) = ScsConsumerBuilder.build<PipelineBuildStageEvent> { buildListener.run(it) }
+
+    /**
+     * Job构建队列---- 并发一般
+     */
     @Bean
-    fun pipelineBuildCancelListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildCancelQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineBuildCancelListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
+    fun pipelineContainerBuildListener(
+        @Autowired containerControl: ContainerControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineContainerBuildListener(
+        containerControl = containerControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildCancelQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = buildCancelConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
+    @EventConsumer
+    fun containerBuildConsumer(
+        @Autowired buildListener: PipelineContainerBuildListener
+    ) = ScsConsumerBuilder.build<PipelineBuildContainerEvent> { buildListener.run(it) }
+
+    /**
+     * 任务队列---- 并发要大
+     */
+    @Bean
+    fun pipelineAtomTaskBuildListener(
+        @Autowired taskControl: TaskControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineAtomTaskBuildListener(
+        taskControl = taskControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
+    @EventConsumer
+    fun taskBuildConsumer(
+        @Autowired buildListener: PipelineAtomTaskBuildListener
+    ) = ScsConsumerBuilder.build<PipelineBuildAtomTaskEvent> { buildListener.run(it) }
+
+    /**
+     * 流水线暂停操作队列
+     */
+    @Bean
+    fun pipelineTaskPauseListener(
+        @Autowired redisOperation: RedisOperation,
+        @Autowired taskBuildRecordService: TaskBuildRecordService,
+        @Autowired pipelineTaskService: PipelineTaskService,
+        @Autowired pipelineContainerService: PipelineContainerService,
+        @Autowired pipelineTaskPauseService: PipelineTaskPauseService,
+        @Autowired buildVariableService: BuildVariableService,
+        @Autowired dslContext: DSLContext,
+        @Autowired buildLogPrinter: BuildLogPrinter,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineTaskPauseListener(
+        redisOperation = redisOperation,
+        taskBuildRecordService = taskBuildRecordService,
+        pipelineTaskService = pipelineTaskService,
+        pipelineContainerService = pipelineContainerService,
+        pipelineTaskPauseService = pipelineTaskPauseService,
+        buildVariableService = buildVariableService,
+        dslContext = dslContext,
+        buildLogPrinter = buildLogPrinter,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
+    @EventConsumer
+    fun taskPauseConsumer(
+        @Autowired buildListener: PipelineTaskPauseListener
+    ) = ScsConsumerBuilder.build<PipelineTaskPauseEvent> { buildListener.run(it) }
 }

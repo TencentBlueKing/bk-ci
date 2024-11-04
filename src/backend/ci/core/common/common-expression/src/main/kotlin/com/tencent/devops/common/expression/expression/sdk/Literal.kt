@@ -44,6 +44,8 @@ class Literal(v: Any?) : ExpressionNode() {
     // 这样可以避免不必要地复制内存中的值。
     override val traceFullyRealized = false
 
+    override fun format() = ExpressionUtility.formatValue(value, kind)
+
     override fun convertToExpression() = ExpressionUtility.formatValue(value, kind)
 
     override fun convertToRealizedExpression(context: EvaluationContext) = ExpressionUtility.formatValue(value, kind)
