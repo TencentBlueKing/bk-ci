@@ -421,6 +421,7 @@ class StorePipelineServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
             params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
         )
+        logger.info("handleStorePublicPipelineModel pipelineId:$pipelineId|publicPipelineId:$publicPipelineId")
         if (storeCode != null && pipelineId == publicPipelineId) {
             pipelineId = creatStorePipelineByStoreCode(
                 dslContext = dslContext,
