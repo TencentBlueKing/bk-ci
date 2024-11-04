@@ -177,7 +177,7 @@ class ContainerControl @Autowired constructor(
             stageId = stageId,
             onlyMatrixGroup = true
         )
-        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
