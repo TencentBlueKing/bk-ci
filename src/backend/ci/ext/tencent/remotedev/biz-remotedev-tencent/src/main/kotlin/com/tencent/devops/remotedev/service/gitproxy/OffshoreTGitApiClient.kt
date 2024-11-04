@@ -33,18 +33,18 @@ import javax.net.ssl.X509TrustManager
 class OffshoreTGitApiClient @Autowired constructor(
     private val tGitConfig: TGitConfig
 ) {
-
     fun getProjectList(
-        accessToken: String,
+        token: TGitToken,
         page: Int,
         pageSize: Int,
         search: String?,
         minAccessLevel: GitAccessLevelEnum?,
-        type: TGitProjectType
+        type: TGitProjectType,
+        throwE: Boolean
     ): List<TGitProjectInfo> {
         logger.info("get /api/v3/projects|$page|$pageSize|$search|$minAccessLevel|$type")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects".addQuery(
-            "access_token" to accessToken,
+            token.key() to token.token,
             "page" to page,
             "per_page" to pageSize,
             "search" to search,
@@ -59,8 +59,12 @@ class OffshoreTGitApiClient @Autowired constructor(
             doRetryHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("getProjectList fail|{}|{}", response.code, data)
-                    return emptyList()
+                    if (throwE) {
+                        throw RemoteServiceException("${response.code}|$data", response.code)
+                    } else {
+                        logger.error("getProjectList fail|{}|{}", response.code, data)
+                        return emptyList()
+                    }
                 }
                 val repoList = JsonParser.parseString(data).asJsonArray
                 if (!repoList.isJsonNull) {
@@ -69,18 +73,21 @@ class OffshoreTGitApiClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("getProjectList error", e)
+            if (throwE) {
+                throw e
+            }
         }
         return emptyList()
     }
 
     fun getProjectMemberAll(
-        accessToken: String,
+        token: TGitToken,
         projectId: String,
         userId: String
     ): List<TGitProjectMember>? {
         logger.info("get /api/v3/projects/$projectId/members/all|$userId")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/members/all".addQuery(
-            "access_token" to accessToken,
+            token.key() to token.token,
             "query" to userId
         )
         val request = Request.Builder()
@@ -111,12 +118,12 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun getSvnProjectAuth(
-        accessToken: String,
+        token: TGitToken,
         projectId: String
     ): TGitSvnAuth? {
         logger.info("get api/v3/svn/projects/$projectId/authority")
         val url = "${tGitConfig.tGitUrl}/api/v3/svn/projects/$projectId/authority".addQuery(
-            "access_token" to accessToken,
+            token.key() to token.token,
             "dir_path" to "/"
         )
         val request = Request.Builder()
@@ -139,13 +146,13 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun getNamespaces(
-        accessToken: String,
+        token: TGitToken,
         page: Int,
         pageSize: Int
     ): List<TGitNamespace> {
         logger.info("get /api/v3/namespaces|$page|$pageSize")
         val url = "${tGitConfig.tGitUrl}/api/v3/namespaces".addQuery(
-            "access_token" to accessToken,
+            token.key() to token.token,
             "page" to page,
             "per_page" to pageSize,
             "min_access_level" to GitAccessLevelEnum.MASTER.level
@@ -178,7 +185,7 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun createProject(
-        accessToken: String,
+        token: TGitToken,
         name: String,
         namespaceId: Long?,
         svnProject: Boolean
@@ -193,7 +200,7 @@ class OffshoreTGitApiClient @Autowired constructor(
 
         val url = "${tGitConfig.tGitUrl}$uri".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
 
         val body = mutableMapOf(
@@ -231,13 +238,13 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun getProjectAcl(
-        accessToken: String,
+        token: TGitToken,
         projectId: String
     ): TGitAclConfig? {
         logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore/acl/config|$projectId")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
         val request = Request.Builder()
             .url(url)
@@ -259,14 +266,14 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun updateProjectAclIp(
-        accessToken: String,
+        token: TGitToken,
         projectId: String,
         ips: Set<String>
     ): Boolean {
         logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/allow_ips|$projectId|$ips")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
         val body = mapOf(
             "allow_ips" to ips.joinToString(";")
@@ -291,14 +298,14 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun updateProjectAclUser(
-        accessToken: String,
+        token: TGitToken,
         projectId: String,
         users: Set<String>
     ): Boolean {
         logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/allow_users|$projectId|$users")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
         val body = mapOf(
             "allow_users" to users.joinToString(";")
@@ -323,14 +330,14 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun updateProjectAclSpecIps(
-        accessToken: String,
+        token: TGitToken,
         projectId: String,
         ips: Set<String>
     ): Boolean {
         logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/spec_allow_ips|$projectId|$ips")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
         val body = mapOf(
             "spec_allow_ips" to ips.joinToString(";")
@@ -355,14 +362,14 @@ class OffshoreTGitApiClient @Autowired constructor(
     }
 
     fun updateProjectAclSpecUser(
-        accessToken: String,
+        token: TGitToken,
         projectId: String,
         users: Set<String>
     ): Boolean {
         logger.info("$LOG_UPDATE_TGIT_ACL_TAG|offshore|/acl/config/spec_hit_users|$projectId|$users")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users".addQuery(
             "policy" to "offshore",
-            "access_token" to accessToken
+            token.key() to token.token
         )
         val body = mapOf(
             "spec_hit_users" to users.joinToString(";")
@@ -403,13 +410,14 @@ class OffshoreTGitApiClient @Autowired constructor(
         val sb = StringBuilder(this)
         var flag = 0
         pairs.forEach { (name, value) ->
-            if (value != null) {
-                flag += 1
-                if (flag == 1) {
-                    sb.append("?$name=$value")
-                } else {
-                    sb.append("&$name=$value")
-                }
+            if (value == null) {
+                return@forEach
+            }
+            flag += 1
+            if (flag == 1) {
+                sb.append("?$name=$value")
+            } else {
+                sb.append("&$name=$value")
             }
         }
         return sb.toString()
@@ -481,5 +489,16 @@ class TGitDns(
             // 对于其他主机名使用系统默认的DNS解析
             Dns.SYSTEM.lookup(hostname)
         }
+    }
+}
+
+data class TGitToken(
+    val token: String,
+    val private: Boolean
+) {
+    fun key() = if (private) {
+        "private_token"
+    } else {
+        "access_token"
     }
 }

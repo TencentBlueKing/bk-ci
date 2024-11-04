@@ -46,14 +46,14 @@
     "mini-css-extract-plugin": "2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
-    "style-loader": "^0.23.0",
+    "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "~15.10.0",
     "vue-style-loader": "^3.0.3",
     "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",

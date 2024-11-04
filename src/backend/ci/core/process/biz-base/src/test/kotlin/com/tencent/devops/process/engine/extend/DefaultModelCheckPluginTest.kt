@@ -199,7 +199,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun checkTriggerContainer() {
         // trigger
         val triggerStage = genStages(1, 1, 1)
-        checkPlugin.checkTriggerContainer(triggerStage[0])
+        checkPlugin.checkTriggerContainer(triggerStage[0], false)
     }
 
     @Test

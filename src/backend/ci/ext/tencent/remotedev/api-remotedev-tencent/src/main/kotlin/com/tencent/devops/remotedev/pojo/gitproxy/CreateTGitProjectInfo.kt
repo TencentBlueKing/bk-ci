@@ -10,5 +10,7 @@ data class CreateTGitProjectInfo(
     @get:Schema(title = "命名空间ID，非必填")
     val namespaceId: Long?,
     @get:Schema(title = "是否是svn项目")
-    val svnProject: Boolean
+    val svnProject: Boolean,
+    @get:Schema(title = "凭据 ID")
+    val credId: String?
 )

@@ -221,13 +221,15 @@ class PipelineViewGroupDao {
     fun countByViewId(
         dslContext: DSLContext,
         projectId: String,
-        viewIds: Collection<Long>
+        viewIds: Collection<Long>,
+        filterPipelineIds: List<String>? = null
     ): Map<Long, Int> {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             return dslContext.select(VIEW_ID, count())
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VIEW_ID.`in`(viewIds))
+                .let { if (filterPipelineIds != null) it.and(PIPELINE_ID.`in`(filterPipelineIds)) else it }
                 .groupBy(VIEW_ID)
                 .fetch().map { it.value1() to it.value2() }.toMap()
         }

@@ -43,7 +43,8 @@
     "vue-loader": "~15.10.0",
     "vue-property-decorator": "^6.0.0",
     "vue-style-loader": "^3.0.3",
-    "webpack": "~5.76.1"
+    "webpack": "~5.76.1",
+    "@blueking/search-select": "0.0.1-beta.2"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",

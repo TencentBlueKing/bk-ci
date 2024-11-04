@@ -241,7 +241,8 @@
         "usage": "Usage",
         "installMethod": "Installation Method",
         "remoteInstall": "Remote Installation",
-        "manualInstall": "Manual Installation"
+        "manualInstall": "Manual Installation",
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
     },
     "nodeTypeMap": {
         "CC": "CC",

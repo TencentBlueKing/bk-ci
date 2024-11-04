@@ -39,7 +39,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -76,7 +76,6 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
-import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -99,9 +98,8 @@ class CreateControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val permissionService: PermissionService,
     private val client: Client,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
@@ -176,7 +174,8 @@ class CreateControl @Autowired constructor(
             projectId = projectInfo.englishName,
             ownerType = WorkspaceOwnerType.PROJECT
         )
-        if (workspaceNames.size + workspaceCreate.count > projectLimit) {
+        val createCount = workspaceCreate.assignNames.ifEmpty { null }?.size ?: workspaceCreate.count
+        if (workspaceNames.size + createCount > projectLimit) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(projectLimit.toString())
@@ -185,9 +184,10 @@ class CreateControl @Autowired constructor(
 
         // 检查是否有特殊机型的配额限制
         windowsResourceConfigService.createCheckSpecLimit(
-            workspaceCreate.windowsType,
-            projectInfo.englishName,
-            workspaceNames
+            windowsType = workspaceCreate.windowsType,
+            projectId = projectInfo.englishName,
+            workspaceNames = workspaceNames,
+            createCount = createCount
         )
 
         prepareWindowsCreate(
@@ -406,7 +406,9 @@ class CreateControl @Autowired constructor(
                     machineType = windowsConfig.size,
                     cgsId = cgsId,
                     imageCosFile = workspaceCreate.imageCosFile,
-                    quotaType = quotaType
+                    quotaType = quotaType,
+                    pvcs = workspaceCreate.pvcs,
+                    specifyTaints = workspaceCreate.specifyTaints
                 ),
                 projectId = projectId,
                 mountType = mountType,
@@ -477,11 +479,16 @@ class CreateControl @Autowired constructor(
             }.getOrElse { emptyArray() }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceIp(
+                    dslContext = transactionContext,
+                    workspaceName = event.workspaceName,
+                    hostName = event.environmentHost,
+                    ip = event.environmentIp
+                )
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
-                    hostName = event.environmentHost
+                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType)
                 )
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
@@ -510,7 +517,7 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp,
+                    event.environmentHost,
                     event.macAddress
                 )
             }
@@ -520,7 +527,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 workspaceCommon.updateHostMonitor(
                     workspaceName = ws.workspaceName,

@@ -30,7 +30,7 @@ package com.tencent.devops.stream.trigger.timer.listener
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -65,7 +65,7 @@ class StreamTimerBuildListener @Autowired constructor(
     private val streamGitConfig: StreamGitConfig,
     private val tGitApiService: TGitApiService,
     private val githubApiService: GithubApiService
-) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
         with(event) {

@@ -28,10 +28,8 @@
 package com.tencent.devops.common.pipeline.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.common.web.annotation.BkField
@@ -84,10 +82,10 @@ data class PipelineSetting(
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean = false,
+    @get:Schema(title = "并发构建数量限制", required = false)
+    var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
-    @get:Schema(title = "并发构建数量限制", required = false)
-    var maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @get:Schema(title = "重试时清理引擎变量表", required = false)
@@ -103,7 +101,9 @@ data class PipelineSetting(
             pipelineId: String,
             pipelineName: String,
             maxPipelineResNum: Int? = null,
-            failSubscription: Subscription? = null
+            failSubscription: Subscription? = null,
+            inheritedDialectSetting: Boolean? = null,
+            pipelineDialectSetting: String? = null
         ): PipelineSetting {
             return PipelineSetting(
                 projectId = projectId,
@@ -112,16 +112,17 @@ data class PipelineSetting(
                 version = 1,
                 desc = pipelineName,
                 maxPipelineResNum = maxPipelineResNum ?: PIPELINE_RES_NUM_MIN,
-                waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
-                    PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-                ),
+                waitQueueTimeMinute = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
                 maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = null,
                 failSubscription = null,
                 successSubscriptionList = emptyList(),
                 failSubscriptionList = failSubscription?.let { listOf(it) },
-                pipelineAsCodeSettings = PipelineAsCodeSettings()
+                pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
+                    inheritedDialect = inheritedDialectSetting,
+                    pipelineDialect = pipelineDialectSetting
+                )
             )
         }
     }

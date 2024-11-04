@@ -40,6 +40,8 @@ object VMUtils {
 
     fun genStageId(seq: Int) = "stage-$seq"
 
+    fun genStageIdForUser(seq: Int) = "stage_$seq"
+
     fun genStopVMTaskId(seq: Int) = "${getStopVmLabel()}$seq"
 
     fun genEndPointTaskId(seq: Int) = "${getEndLabel()}$seq"

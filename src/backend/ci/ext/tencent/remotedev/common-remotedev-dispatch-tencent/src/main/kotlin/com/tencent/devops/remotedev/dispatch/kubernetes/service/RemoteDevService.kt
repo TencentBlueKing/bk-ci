@@ -127,54 +127,25 @@ class RemoteDevService @Autowired constructor(
                     dslContext, result.taskId, EnvironmentActionStatus.SUCCEEDED
                 )
             }
-            if (mountType == WorkspaceMountType.START) {
-                val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
-                dslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    dispatchWorkspaceDao.updateWorkspace(
-                        workspaceName = event.workspaceName,
-                        status = EnvStatusEnum.running,
-                        envId = vmCreateResp?.envId ?: "",
-                        regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
-                        dslContext = context
-                    )
-                }
-
-                return WorkspaceResponse(
-                    environmentUid = vmCreateResp?.envId ?: "",
-                    environmentHost = vmCreateResp?.cgsIp ?: "",
-                    environmentIp = vmCreateResp?.cgsIp ?: "",
-                    resourceId = vmCreateResp?.resourceId,
-                    macAddress = vmCreateResp?.macAddress ?: ""
-                )
-            } else {
-                dslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    dispatchWorkspaceDao.updateWorkspaceStatus(
-                        workspaceName = event.workspaceName,
-                        status = EnvStatusEnum.running,
-                        dslContext = context
-                    )
-                }
-
-                // 检验workspace状态
-                val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
-                    .getWorkspaceInfo(userId, event.workspaceName)
-
-                if (workspaceInfo.status != EnvStatusEnum.running) {
-                    throw WorkspaceDispatchException(
-                        envId = result.enviromentUid,
-                        errorMessage = "workspace not running"
-                    )
-                }
-
-                return WorkspaceResponse(
-                    environmentUid = result.enviromentUid,
-                    environmentHost = workspaceInfo.environmentHost,
-                    environmentIp = workspaceInfo.environmentIP,
-                    resourceId = result.resourceId
+            val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                dispatchWorkspaceDao.updateWorkspace(
+                    workspaceName = event.workspaceName,
+                    status = EnvStatusEnum.running,
+                    envId = vmCreateResp?.envId ?: "",
+                    regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
+                    dslContext = context
                 )
             }
+
+            return WorkspaceResponse(
+                environmentUid = vmCreateResp?.envId ?: "",
+                environmentHost = vmCreateResp?.cgsIp ?: "",
+                environmentIp = vmCreateResp?.cgsIp?.substringAfter(".") ?: "",
+                resourceId = vmCreateResp?.resourceId,
+                macAddress = vmCreateResp?.macAddress ?: ""
+            )
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -337,8 +308,12 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun rebuildWorkspace(event: WorkspaceOperateEvent): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .rebuildWorkspace(event.userId, event.workspaceName, event.imageCosFile ?: "")
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            imageCosFile = event.imageCosFile ?: "",
+            formatDataDisk = event.formatDataDisk
+        )
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 

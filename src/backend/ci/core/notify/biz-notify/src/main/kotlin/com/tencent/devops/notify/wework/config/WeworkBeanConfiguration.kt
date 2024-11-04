@@ -4,10 +4,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.wework.service.inner.WeworkServiceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -64,8 +64,8 @@ class WeworkBeanConfiguration {
     fun weworkService(
         @Autowired weworkConfiguration: WeworkConfiguration,
         @Autowired weworkNotifyDao: WeworkNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired streamBridge: StreamBridge,
         @Autowired redisOperation: RedisOperation
     ): WeworkService =
-        WeworkServiceImpl(weworkConfiguration, weworkNotifyDao, rabbitTemplate, redisOperation)
+        WeworkServiceImpl(weworkConfiguration, weworkNotifyDao, streamBridge, redisOperation)
 }

@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -43,8 +44,8 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("ALL")
 @RestResource
@@ -55,10 +56,11 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val xlsxExportService: WorkspaceXlsxExportService,
+    private val workspaceRecordService: WorkspaceRecordService,
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -117,7 +119,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                streamBridge, AsyncPipelineEvent(
                     userId = info.userId ?: userId,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
@@ -311,6 +313,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun fetchNotifyList(userId: String, page: Int, pageSize: Int): Result<List<WorkspaceNotifyListData>> {
         return Result(notifyControl.fetchNotifyList(page, pageSize))
+    }
+
+    override fun applyViewRecordCallback(userId: String, projectId: String, workspaceName: String) {
+        workspaceRecordService.approvalRecordViewCallback(
+            projectId = projectId,
+            userId = userId,
+            workspaceName = workspaceName
+        )
     }
 
     companion object {

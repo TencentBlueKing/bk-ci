@@ -88,6 +88,7 @@ import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
@@ -377,7 +378,7 @@ object ScriptYmlUtils {
                     mutex = preJob.mutex,
                     runsOn = formatRunsOn(preJob.runsOn),
                     services = services,
-                    ifField = preJob.ifField,
+                    ifField = formatIfField(preJob.ifField),
                     ifModify = preJob.ifModify,
                     steps = preStepsToSteps(index, preJob.steps, transferData),
                     timeoutMinutes = preJob.timeoutMinutes,
@@ -484,7 +485,7 @@ object ScriptYmlUtils {
             enable = preStep.enable,
             name = preStep.name,
             id = preStep.id,
-            ifFiled = preStep.ifFiled,
+            ifField = formatIfField(preStep.ifField),
             ifModify = preStep.ifModify,
             uses = preStep.uses,
             with = preStep.with,
@@ -525,10 +526,11 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
+                    id = it.id,
                     enable = it.enable,
                     name = it.name,
                     label = formatStageLabel(it.label),
-                    ifField = it.ifField,
+                    ifField = formatIfField(it.ifField),
                     ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
                     jobs = preJobs2Jobs(it.jobs, transferData),
@@ -541,6 +543,21 @@ object ScriptYmlUtils {
         return stageList
     }
 
+    private fun formatIfField(
+        ifField: Any?
+    ): IfField? {
+        return when (ifField) {
+            null -> null
+            is String -> IfField(expression = ifField)
+            is Map<*, *> -> IfField(
+                mode = IfField.Mode.parse(ifField["mode"].toString()),
+                params = JsonUtil.anyTo(ifField["params"], object : TypeReference<Map<String, String>>() {})
+            )
+
+            else -> null
+        }
+    }
+
     private fun formatStageCheck(preCheck: PreStageCheck?): StageCheck? {
         if (preCheck == null) {
             return null
@@ -551,7 +568,8 @@ object ScriptYmlUtils {
                     flows = preCheck.reviews.flows?.map {
                         Flow(
                             name = it.name,
-                            reviewers = anyToListString(it.reviewers)
+                            reviewers = it.reviewers?.let { item -> anyToListString(item) },
+                            groups = it.groups?.let { item -> anyToListString(item) }
                         )
                     },
                     variables = preCheck.reviews.variables,

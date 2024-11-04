@@ -111,7 +111,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.devFile.quotaType?.getInternal() ?: false
+                    internal = event.devFile.quotaType?.getInternal() ?: false,
+                    pvcs = event.devFile.pvcs,
+                    tolerations = if (event.devFile.specifyTaints != null) {
+                        listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(event.devFile.specifyTaints)))
+                    } else null,
+                    nodeSelector = if (event.devFile.specifyTaints != null) {
+                        mapOf("bkbcs.tencent.com/node-group" to checkNotNull(event.devFile.specifyTaints))
+                    } else null
                 )
             )
         )
@@ -161,14 +168,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+    override fun rebuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        imageCosFile: String,
+        formatDataDisk: Boolean?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.REBUILD,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
-                image = imageCosFile
+                image = imageCosFile,
+                formatDataDisk = formatDataDisk
             )
         )
 

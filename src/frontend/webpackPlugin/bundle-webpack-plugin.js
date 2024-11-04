@@ -33,7 +33,7 @@ module.exports = class BundleWebpackPlugin {
             entryFolderName
         )
         if (!this.isDev && !fs.existsSync(this.SERVICE_ASSETS_DIR)) {
-            fs.mkdirSync(this.SERVICE_ASSETS_DIR)
+            fs.mkdirSync(this.SERVICE_ASSETS_DIR, { recursive: true })
         }
     }
 

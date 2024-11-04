@@ -14,6 +14,7 @@ class AuthOauth2AccessTokenDao {
         accessToken: String? = null,
         refreshToken: String? = null,
         userName: String? = null,
+        passWord: String? = null,
         grantType: String? = null
     ): TAuthOauth2AccessTokenRecord? {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
@@ -21,6 +22,7 @@ class AuthOauth2AccessTokenDao {
                 .where(CLIENT_ID.eq(clientId))
                 .apply { accessToken?.let { and(ACCESS_TOKEN.eq(it)) } }
                 .apply { userName?.let { and(USER_NAME.eq(it)) } }
+                .apply { passWord?.let { and(PASS_WORD.eq(it)) } }
                 .apply { grantType?.let { and(GRANT_TYPE.eq(it)) } }
                 .apply { refreshToken?.let { and(REFRESH_TOKEN.eq(it)) } }
                 .fetchOne()
@@ -43,6 +45,7 @@ class AuthOauth2AccessTokenDao {
         dslContext: DSLContext,
         clientId: String,
         userName: String?,
+        passWord: String?,
         grantType: String,
         accessToken: String,
         refreshToken: String? = null,
@@ -54,6 +57,7 @@ class AuthOauth2AccessTokenDao {
                 this,
                 CLIENT_ID,
                 USER_NAME,
+                PASS_WORD,
                 GRANT_TYPE,
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
@@ -62,6 +66,7 @@ class AuthOauth2AccessTokenDao {
             ).values(
                 clientId,
                 userName,
+                passWord,
                 grantType,
                 accessToken,
                 refreshToken,

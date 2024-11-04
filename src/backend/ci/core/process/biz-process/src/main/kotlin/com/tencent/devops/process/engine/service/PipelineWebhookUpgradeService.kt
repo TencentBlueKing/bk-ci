@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -43,6 +42,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -136,7 +136,7 @@ class PipelineWebhookUpgradeService(
             val (elements, params) = if (model == null) {
                 Pair(emptyList(), emptyMap())
             } else {
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val triggerContainer = model.getTriggerContainer()
                 val params = triggerContainer.params.associate { param ->
                     param.id to param.defaultValue.toString()
                 }
@@ -336,10 +336,12 @@ class PipelineWebhookUpgradeService(
             logger.info("$projectId|$pipelineId|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val params = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }
+        val triggerContainer = model.getTriggerContainer()
+        val params = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        )
         val elementMap =
             triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
         val pipelineWebhooks = pipelineWebhookDao.listWebhook(

@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.remotedev
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 open class WorkspaceEvent(
     open val userId: String,
     open val traceId: String,
     open val workspaceName: String,
-    open val delayMills: Int = 0,
-    open val retryTime: Int = 0
-)
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : IEvent(delayMills, retryTime)
