@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
-import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
@@ -79,8 +78,8 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
-import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -100,7 +99,6 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_NAME_WITH_NAMESPACE
-import com.tencent.devops.store.pojo.devx.constants.KEY_STORE_RUN_CUSTOM_VAR
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -133,6 +131,9 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         private const val KEY_WINDOWS_DEFAULT_SCRIPT = "windowsDefaultScript"
         private const val KEY_LINUX_DEFAULT_SCRIPT = "linuxDefaultScript"
         private const val KEY_DARWIN_DEFAULT_SCRIPT = "darwinDefaultScript"
+        private const val KEY_STORE_WINDOWS_RUN_CUSTOM_VAR = "storeWindowsRunCustomVar"
+        private const val KEY_STORE_LINUX_RUN_CUSTOM_VAR = "storeLinuxRunCustomVar"
+        private const val KEY_STORE_DARWIN_RUN_CUSTOM_VAR = "storeDarwinRunCustomVar"
     }
 
     @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
@@ -371,10 +372,10 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val buildDir = extFeatures.filter { it.fieldName == KEY_BUILD_DIR }.getOrNull(0)?.fieldValue ?: ""
         val repositoryNameWithNamespace =
             extFeatures.filter { it.fieldName == KEY_REPOSITORY_NAME_WITH_NAMESPACE }.getOrNull(0)?.fieldValue ?: ""
-        val storeRunCustomVar = if (repositoryNameWithNamespace.isBlank()) {
-            "$KEY_OS_NAME-pkg"
+        val storeRunCustomVarSuffix = if (repositoryNameWithNamespace.isBlank()) {
+            "-pkg"
         } else {
-            "$KEY_OS_NAME-repo"
+            "-repo"
         }
         val startParamMap = mutableMapOf(
             KEY_STORE_CODE to storeCode,
@@ -386,7 +387,9 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_DARWIN_RUN_INFO to if (!darwinRunInfos.isNullOrEmpty()) JsonUtil.toJson(darwinRunInfos!!) else "[]",
             KEY_BUILD_DIR to buildDir,
             KEY_REPOSITORY_NAME_WITH_NAMESPACE to repositoryNameWithNamespace,
-            KEY_STORE_RUN_CUSTOM_VAR to storeRunCustomVar
+            KEY_STORE_WINDOWS_RUN_CUSTOM_VAR to "windows$storeRunCustomVarSuffix",
+            KEY_STORE_LINUX_RUN_CUSTOM_VAR to "linux$storeRunCustomVarSuffix",
+            KEY_STORE_DARWIN_RUN_CUSTOM_VAR to "darwin$storeRunCustomVarSuffix"
         )
         if (queryDefaultScriptFlag) {
             val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
@@ -467,7 +470,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
             return storePkgEnvInfos
         }
-        val bkConfigInfo = JsonUtil.to(configFileContent, BkConfigInfo::class.java)
+        val bkConfigInfo = YamlUtil.to(configFileContent, object : TypeReference<BkConfigInfo>() {})
         val osDefaultEnvNumMap = mutableMapOf<String, Int>()
         bkConfigInfo.os.forEach { osConfigInfo ->
             storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(storeCode, version, osConfigInfo))
@@ -571,6 +574,11 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
         }
         val pkgLocalPath = osConfigInfo.packagePath
+        if (extEnvInfo != null) {
+            extEnvInfo!![OsConfigInfo::packagePath.name] = pkgLocalPath
+        } else {
+            extEnvInfo = mutableMapOf(OsConfigInfo::packagePath.name to pkgLocalPath)
+        }
         val pkgName = File(pkgLocalPath).name
         val pkgRepoPathSb = StringBuilder("$storeCode/$version/")
         if (configOsName.isNotBlank()) {
