@@ -78,5 +78,5 @@ interface ServiceDEVXResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         projectIds: Set<String>
-    ): Result<Map<String, EnvWithNodeCount>>
+    ): Result<List<EnvWithNodeCount>>
 }

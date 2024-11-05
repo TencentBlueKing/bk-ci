@@ -983,7 +983,7 @@ class WorkspaceService @Autowired constructor(
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
-            val find = userEnvs.values.find { it.envHashId == envId } ?: run {
+            val find = userEnvs.find { it.envHashId == envId } ?: run {
                 logger.warn("not find user env for $envId")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
@@ -1053,7 +1053,7 @@ class WorkspaceService @Autowired constructor(
     fun getEnvs4PublicWorkspace(userId: String): List<WorkspaceEnv> {
         /*提供给查询接口的走缓存*/
         val data = userEnvCache.get(userId) ?: return emptyList()
-        val nodeHashIds = data.values.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
+        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
 
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
@@ -1065,26 +1065,25 @@ class WorkspaceService @Autowired constructor(
             workspaceNames = public.map { it.value1() }.toSet(),
             checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
         ).associateBy({ it.nodeHashId }, { it.status })
-        return data.map { (projectId, env) ->
-            val normalNodeCount = env.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
-            val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
+        return data.map { it ->
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
+            val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
-                projectId = projectId,
-                envHashId = env.envHashId,
-                name = env.name,
+                envHashId = it.envHashId,
+                name = it.name,
                 normalNodeCount = normalNodeCount,
                 abnormalNodeCount = max(abnormalNodeCount, 0),
-                inUseNodeCount = env.nodeHashIds?.count { !nodeLoginMap[it].isNullOrEmpty() } ?: 0,
-                nodeHashIds = env.nodeHashIds
+                inUseNodeCount = it.nodeHashIds?.count { !nodeLoginMap[it].isNullOrEmpty() } ?: 0,
+                nodeHashIds = it.nodeHashIds
             )
         }
     }
 
-    private val userEnvCache: LoadingCache<String, Map<String, EnvWithNodeCount>> = Caffeine.newBuilder()
+    private val userEnvCache: LoadingCache<String, List<EnvWithNodeCount>> = Caffeine.newBuilder()
         .expireAfterWrite(Duration.ofMinutes(1))
         .build { key -> getUserEnv4Use(key) }
 
-    private fun getUserEnv4Use(userId: String): Map<String, EnvWithNodeCount> {
+    private fun getUserEnv4Use(userId: String): List<EnvWithNodeCount> {
         /*
         * 现有：user   ->      project     ->      env
         * 无法直接做到: user    ->    env
@@ -1097,7 +1096,7 @@ class WorkspaceService @Autowired constructor(
             logger.error("error in ServiceTxProjectResource::list|$userId", it)
         }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {
             logger.error("fail to get user projects|$userId")
-            return emptyMap()
+            return emptyList()
         }
         val userHas = all.intersect(userAll)
         return kotlin.runCatching {
@@ -1106,7 +1105,7 @@ class WorkspaceService @Autowired constructor(
             logger.error("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
         }.getOrNull() ?: kotlin.run {
             logger.error("fail to get user env|$userId|$userHas")
-            emptyMap()
+            emptyList()
         }
     }
 
