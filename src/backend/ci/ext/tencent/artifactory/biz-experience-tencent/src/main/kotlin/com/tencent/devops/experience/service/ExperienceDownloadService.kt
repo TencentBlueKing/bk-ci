@@ -206,7 +206,7 @@ class ExperienceDownloadService @Autowired constructor(
                         ttl = ttl ?: (24 * 3600),
                         experienceHashId = experienceHashId,
                         filePath = path,
-                        organization = if (isOuter) ORGANIZATION_OUTER else null,
+                        organization = if (isOuter) ORGANIZATION_OUTER else null
                     )
                 )
                 val token = client.get(ServiceArtifactoryDownLoadResource::class)

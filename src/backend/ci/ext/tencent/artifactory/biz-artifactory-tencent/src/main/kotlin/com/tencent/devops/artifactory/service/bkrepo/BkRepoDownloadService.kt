@@ -870,7 +870,6 @@ open class BkRepoDownloadService(
         return token
     }
 
-
     fun <T> getObjectByToken(token: String, clz: Class<T>): T? {
         val tokenRedisKey = tokenRedisKey(token)
         val json = SpringContextUtil.getBean(RedisOperation::class.java).get(tokenRedisKey)

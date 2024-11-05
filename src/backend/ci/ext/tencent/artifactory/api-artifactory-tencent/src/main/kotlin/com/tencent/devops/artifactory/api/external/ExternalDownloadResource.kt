@@ -30,6 +30,6 @@ interface ExternalDownloadResource {
         artifactoryType: ArtifactoryType,
         @Parameter(description = "Token", required = true)
         @PathParam("token")
-        token: String,
+        token: String
     ): String
 }
