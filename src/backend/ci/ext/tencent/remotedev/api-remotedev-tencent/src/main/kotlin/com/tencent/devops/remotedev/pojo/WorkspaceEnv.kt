@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共环境信息")
 data class WorkspaceEnv(
+    @get:Schema(title = "项目id", required = true)
+    val projectId: String,
     @get:Schema(title = "环境 HashId", required = true)
     val envHashId: String,
     @get:Schema(title = "环境名称", required = true)

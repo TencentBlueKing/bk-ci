@@ -83,12 +83,12 @@ class DEVXService @Autowired constructor(
         return nodeId
     }
 
-    fun getUserDEVXEnv(userId: String, projectIds: Set<String>): List<EnvWithNodeCount> {
+    fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Map<String, EnvWithNodeCount> {
         val envRecordList = devxDao.listEnv(dslContext, projectIds)
         if (envRecordList.isEmpty()) {
-            return emptyList()
+            return emptyMap()
         }
-        val res = mutableListOf<EnvWithNodeCount>()
+        val res = mutableMapOf<String, EnvWithNodeCount>()
         envRecordList.forEach { env ->
             if (environmentPermissionService.checkEnvPermission(
                     userId,
@@ -112,16 +112,14 @@ class DEVXService @Autowired constructor(
                 } else {
                     nodeIds.size - normalNodeCount
                 }
-                res.add(
-                    EnvWithNodeCount(
-                        envHashId = HashUtil.encodeLongId(env.envId),
-                        name = env.envName,
-                        normalNodeCount = normalNodeCount,
-                        abnormalNodeCount = abnormalNodeCount,
-                        sharedProjectId = null,
-                        sharedUserId = null,
-                        nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
-                    )
+                res[env.projectId] = EnvWithNodeCount(
+                    envHashId = HashUtil.encodeLongId(env.envId),
+                    name = env.envName,
+                    normalNodeCount = normalNodeCount,
+                    abnormalNodeCount = abnormalNodeCount,
+                    sharedProjectId = null,
+                    sharedUserId = null,
+                    nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
                 )
             }
         }

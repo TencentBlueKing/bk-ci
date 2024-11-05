@@ -57,7 +57,7 @@ class ServiceDEVXResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<List<EnvWithNodeCount>> {
+    override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<Map<String,EnvWithNodeCount>> {
         return Result(devxService.getUserDEVXEnv(userId, projectIds))
     }
 }
