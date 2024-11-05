@@ -765,7 +765,7 @@
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
-                            this.requestParams[i.id] = i.values[0].name
+                            this.requestParams[i.id] = i.values[0].name.trim()
                         } else {
                             this.requestParams[i.id] = i.name
                         }

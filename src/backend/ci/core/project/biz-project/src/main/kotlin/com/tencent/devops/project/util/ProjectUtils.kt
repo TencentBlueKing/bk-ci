@@ -138,6 +138,8 @@ object ProjectUtils {
             JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
         }
         return with(tProjectRecord) {
+            val projectProperties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+            val projectApprovalProperties = projectApprovalInfo?.properties
             ProjectDiffVO(
                 id = id,
                 projectId = projectId,
@@ -192,7 +194,9 @@ object ProjectUtils {
                 productId = productId,
                 afterProductId = projectApprovalInfo?.productId,
                 productName = beforeProductName,
-                afterProductName = projectApprovalInfo?.productName
+                afterProductName = projectApprovalInfo?.productName,
+                pipelineDialect = projectProperties?.pipelineDialect,
+                afterPipelineDialect = projectApprovalProperties?.pipelineDialect
             )
         }
     }
