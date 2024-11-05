@@ -96,6 +96,19 @@
     .template-ext-menu {
         height: 40px;
         display: flex;
+        .dot-menu-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 22px;
+            cursor: pointer;
+            border-radius: 50%;
+            &:hover {
+                background: rgba(0, 0, 0, 0) !important;
+                color: $primaryColor;
+            }
+        }
     }
 
     .ext-dot {
@@ -135,18 +148,7 @@
     .tippy-tooltip.dot-menu-theme {
         padding: 0 !important;
     }
-    .dot-menu-trigger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        font-size: 22px;
-        cursor: pointer;
-        border-radius: 50%;
-        &:hover {
-            color: $primaryColor;
-        }
-    }
+    
     .show-more {
         position: relative;
         padding-right: 20px;
