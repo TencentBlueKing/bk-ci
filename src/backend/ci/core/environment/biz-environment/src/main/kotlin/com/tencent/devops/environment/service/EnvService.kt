@@ -364,6 +364,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
@@ -434,6 +435,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
