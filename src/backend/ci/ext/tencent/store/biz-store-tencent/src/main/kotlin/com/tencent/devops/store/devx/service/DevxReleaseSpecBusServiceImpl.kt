@@ -98,7 +98,7 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
-import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_NAME_WITH_NAMESPACE
+import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -171,7 +171,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
             val repositoryInfo = createGitRepositoryResult.data
             repositoryInfo?.let {
-                extBaseFeatureInfo[KEY_REPOSITORY_NAME_WITH_NAMESPACE] = repositoryInfo.aliasName
+                extBaseFeatureInfo[KEY_REPOSITORY_HTTP_URL] = repositoryInfo.url
             }
         }
     }
@@ -191,7 +191,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType,
-                    fieldName = KEY_REPOSITORY_NAME_WITH_NAMESPACE
+                    fieldName = KEY_REPOSITORY_HTTP_URL
                 )?.fieldValue ?: ""
                 val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
                     repoId = repositoryNameWithNamespace,
@@ -199,7 +199,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                     reversion = null,
                     branch = MASTER,
                     repositoryType = RepositoryType.NAME,
-                    projectId = storeUpdateRequest.projectCode
+                    projectId = storeInnerPipelineConfig.innerPipelineProject
                 ).data
                 if (configFileContent.isNullOrBlank()) {
                     throw ErrorCodeException(
@@ -320,7 +320,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         var darwinRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            val osArch = baseEnvRecord.osArch ?: " "
+            val osArch = if (!baseEnvRecord.osArch.isNullOrBlank()) baseEnvRecord.osArch else " "
             val pkgRepoPath = baseEnvRecord.pkgPath
             val signatureFileKey = getSignatureFileKey()
             val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
@@ -367,12 +367,12 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
-            fieldNames = setOf(KEY_BUILD_DIR, KEY_REPOSITORY_NAME_WITH_NAMESPACE)
+            fieldNames = setOf(KEY_BUILD_DIR, KEY_REPOSITORY_HTTP_URL)
         )
         val buildDir = extFeatures.filter { it.fieldName == KEY_BUILD_DIR }.getOrNull(0)?.fieldValue ?: ""
-        val repositoryNameWithNamespace =
-            extFeatures.filter { it.fieldName == KEY_REPOSITORY_NAME_WITH_NAMESPACE }.getOrNull(0)?.fieldValue ?: ""
-        val storeRunCustomVarSuffix = if (repositoryNameWithNamespace.isBlank()) {
+        val repositoryHttpUrl =
+            extFeatures.filter { it.fieldName == KEY_REPOSITORY_HTTP_URL }.getOrNull(0)?.fieldValue ?: ""
+        val storeRunCustomVarSuffix = if (repositoryHttpUrl.isBlank()) {
             "-pkg"
         } else {
             "-repo"
@@ -386,7 +386,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_LINUX_RUN_INFO to if (!linuxRunInfos.isNullOrEmpty()) JsonUtil.toJson(linuxRunInfos!!) else "[]",
             KEY_DARWIN_RUN_INFO to if (!darwinRunInfos.isNullOrEmpty()) JsonUtil.toJson(darwinRunInfos!!) else "[]",
             KEY_BUILD_DIR to buildDir,
-            KEY_REPOSITORY_NAME_WITH_NAMESPACE to repositoryNameWithNamespace,
+            KEY_REPOSITORY_HTTP_URL to repositoryHttpUrl,
             KEY_STORE_WINDOWS_RUN_CUSTOM_VAR to "windows$storeRunCustomVarSuffix",
             KEY_STORE_LINUX_RUN_CUSTOM_VAR to "linux$storeRunCustomVarSuffix",
             KEY_STORE_DARWIN_RUN_CUSTOM_VAR to "darwin$storeRunCustomVarSuffix"
@@ -560,7 +560,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         osConfigInfo: OsConfigInfo
     ): StorePkgEnvInfo {
         val configOsName = osConfigInfo.osName
-        val configOsArch = osConfigInfo.osArch ?: ""
+        val configOsArch = osConfigInfo.osArch
         var extEnvInfo: MutableMap<String, Any>? = null
         osConfigInfo.signature?.originFilePaths?.let {
             val signatureFileKey = getSignatureFileKey()
@@ -584,7 +584,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         if (configOsName.isNotBlank()) {
             pkgRepoPathSb.append(configOsName).append("/")
         }
-        if (configOsArch.isNotBlank()) {
+        if (!configOsArch.isNullOrBlank()) {
             pkgRepoPathSb.append(configOsArch).append("/")
         }
         pkgRepoPathSb.append(pkgName)
