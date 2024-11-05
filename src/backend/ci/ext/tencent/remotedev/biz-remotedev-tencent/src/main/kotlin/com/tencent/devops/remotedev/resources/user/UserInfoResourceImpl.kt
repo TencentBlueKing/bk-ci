@@ -27,7 +27,8 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(userInfoCertService.faceRecognition(data))
     }
 
-    override fun asyncAuthCheck(data: UserInfoAuthCheck) {
+    override fun asyncAuthCheck(data: UserInfoAuthCheck): Result<Boolean> {
         userInfoCertService.asyncAuthCheck(data)
+        return Result(true)
     }
 }

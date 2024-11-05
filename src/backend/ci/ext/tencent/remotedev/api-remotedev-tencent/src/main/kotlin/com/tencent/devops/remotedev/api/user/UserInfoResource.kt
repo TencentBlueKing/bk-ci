@@ -49,5 +49,5 @@ interface UserInfoResource {
     @Path("/auth/check")
     fun asyncAuthCheck(
         data: UserInfoAuthCheck
-    )
+    ): Result<Boolean>
 }
