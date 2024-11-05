@@ -433,11 +433,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            searchCustom = false,
-            quotaType = type,
-            withProjectLimit = null
-        )
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                searchCustom = false,
+                quotaType = type,
+                withProjectLimit = null
+            )
         )
     }
 
@@ -680,5 +681,9 @@ class ServiceRemoteDevResourceImpl(
                 message = data.message
             )
         )
+    }
+
+    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
+        return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
     }
 }

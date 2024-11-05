@@ -435,4 +435,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
     }
+
+    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
+        logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
 }
