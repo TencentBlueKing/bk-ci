@@ -346,10 +346,19 @@ internal class EnvReplacementParserTest {
         val command8 = "echo \${{ variables.hello }}"
 
         val command9 = "echo \${{ ci.workspace }}"
+        val command10 = mutableMapOf(
+            "params" to mutableListOf(
+                mutableMapOf(
+                    "key" to "instance",
+                    "value" to "\${{variables.instance}}"
+                )
+            )
+        )
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha"
+            "variables.hello" to "hahahahaha",
+            "variables.instance" to "{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"
         )
         // 与EnvUtils的差异点：不支持传可空对象
 //        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
@@ -395,6 +404,13 @@ internal class EnvReplacementParserTest {
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )
+        )
+        val command10Expected = """
+            {"params":[{"key":"instance","value":"{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"}]}
+        """.trimIndent()
+        Assertions.assertEquals(
+            command10Expected,
+            EnvReplacementParser.parse(command10, data, true)
         )
     }
 
@@ -558,5 +574,53 @@ echo true"""
         val buff = EnvReplacementParser.parse(template, contextMap.plus(data), onlyExpression)
         println("template=$template\nreplaced=$buff\n")
         Assertions.assertEquals(expect, buff)
+    }
+
+    @Test
+    fun containsExpressions() {
+        val command = "{\"age\": \${{age}} , \"sex\": \"boy\", \"name\": \${{name}}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command))
+
+        val command1 = "hello \${{variables.abc}} world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command1))
+
+        val command2 = "\${{variables.abc}}world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command2))
+
+        val command3 = "hello\${{variables.abc}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command3))
+
+        val command4 = "hello\${{variables.abc"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command4))
+
+        val command5 = "hello\${{variables.abc}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command5))
+
+        val command6 = "hello\${variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command6))
+
+        val command7 = "hello\$variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command7))
+
+        val command8 = "echo \${{ variables.hello }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command8))
+
+        val command9 = "echo \${{ ci.workspace }} || \${{variables.hello}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command9))
+
+        val command10 = "echo \${{ ci.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command10))
+
+        val command11 = "echo \${{ variables.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command11))
+
+        val command12 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-16 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command12))
+
+        val command13 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command13))
+
+        val command14 = "\${{ strToTime(\${{variables.date}}) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command14))
     }
 }

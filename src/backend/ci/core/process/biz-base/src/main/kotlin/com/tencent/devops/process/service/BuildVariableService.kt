@@ -29,12 +29,14 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.PipelineBuildVarLock
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
@@ -102,7 +104,8 @@ class BuildVariableService @Autowired constructor(
             buildId = buildId,
             keys = keys
         )
-        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
+        val dialect = PipelineDialectUtil.getPipelineDialect(dataMap[PIPELINE_DIALECT])
+        return if (dialect.supportUseExpression()) {
             dataMap
         } else {
             PipelineVarUtil.mixOldVarAndNewVar(dataMap)
