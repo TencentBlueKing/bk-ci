@@ -239,7 +239,7 @@ interface AppArtifactoryResource {
     ): String
 
     @Operation(summary = "获取构建HAP文件的json5下载文件")
-    @Path("/{projectId}/{artifactoryType}/hapJson5")
+    @Path("/{projectId}/{artifactoryType}/hapJson5.json5")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @GET
     fun getHapJson5(

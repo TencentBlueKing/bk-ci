@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -84,7 +85,8 @@ class ArtifactoryTencentServiceConfig {
         client: Client,
         bkRepoClient: BkRepoClient,
         commonConfig: CommonConfig,
-        shortUrlService: ShortUrlService
+        shortUrlService: ShortUrlService,
+        redisOperation: RedisOperation
     ) = BkRepoDownloadService(
         pipelineService = pipelineService,
         bkRepoService = bkRepoService,
