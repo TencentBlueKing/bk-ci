@@ -1069,6 +1069,7 @@ class WorkspaceService @Autowired constructor(
             val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
+                projectId = it.projectId,
                 envHashId = it.envHashId,
                 name = it.name,
                 normalNodeCount = normalNodeCount,

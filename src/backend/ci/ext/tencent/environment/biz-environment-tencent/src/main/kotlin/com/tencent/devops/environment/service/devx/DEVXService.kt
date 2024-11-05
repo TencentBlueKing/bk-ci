@@ -114,6 +114,7 @@ class DEVXService @Autowired constructor(
                 }
                 res.add(
                     EnvWithNodeCount(
+                        projectId = env.projectId,
                         envHashId = HashUtil.encodeLongId(env.envId),
                         name = env.envName,
                         normalNodeCount = normalNodeCount,
