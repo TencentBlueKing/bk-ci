@@ -19,13 +19,13 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
@@ -38,15 +38,15 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
-class UpgradeWorkspaceHandler @Autowired constructor(
+class CloneWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
@@ -73,13 +73,13 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_EDIT_TYPE_CONTENT
     )
-    fun upgradeWorkspace(
+    fun cloneWorkspace(
         userId: String,
         projectId: String,
         workspaceName: String,
-        rebuildReq: WorkspaceUpgradeReq
+        rebuildReq: WorkspaceCloneReq
     ): WorkspaceResponse {
-        logger.info("$userId upgrade project $projectId workspace $workspaceName|$rebuildReq")
+        logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
@@ -88,7 +88,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to upgrade $workspaceName")
+                params = arrayOf("You do not have permission to clone $workspaceName")
             )
         }
 
@@ -108,37 +108,34 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                     params = arrayOf(
                         workspace.workspaceName,
-                        "status is already ${workspace.status}, can't upgrade now"
+                        "status is already ${workspace.status}, can't clone now"
                     )
                 )
             }
-            createCheckWhenUpgrade(
-                old = workspace,
-                machineType = rebuildReq.machineType
-            )
+            createCheckWhenClone(old = workspace)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.UPGRADE,
-                actionMessage = "start upgrade"
+                action = WorkspaceAction.CLONE,
+                actionMessage = "start clone"
             )
 
             workspaceDao.updateWorkspaceStatus(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.UPGRADING
+                status = WorkspaceStatus.CLONING
             )
 
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.UPGRADE,
+                action = WorkspaceAction.CLONE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status,
-                    WorkspaceStatus.UPGRADING
+                    WorkspaceStatus.CLONING
                 )
             )
 
@@ -146,10 +143,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 WorkspaceOperateEvent(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
-                    type = UpdateEventType.UPGRADE,
+                    type = UpdateEventType.CLONE,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
-                    machineType = rebuildReq.machineType,
                     gameId = null,
                     projectId = projectId
                 )
@@ -162,7 +158,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_UPGRADE,
                 status = true,
-                action = WorkspaceAction.UPGRADING,
+                action = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT,
@@ -172,27 +168,28 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             return WorkspaceResponse(
                 workspaceName = workspaceName,
                 workspaceHost = "",
-                status = WorkspaceAction.UPGRADING,
+                status = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START
             )
         }
     }
 
-    fun checkAndUpgradeVm(
+    fun checkAndCloneVm(
         workspaceName: String
     ) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: run {
-            logger.info("checkAndUpgradeVm not find workspace $workspaceName")
+            logger.info("checkAndCloneVm not find workspace $workspaceName")
             return
         }
         val bakWorkspaceName = ws.bakWorkspaceName
-        if (bakWorkspaceName == null || !bakWorkspaceName.startsWith("upgrade")) {
-            logger.info("checkAndUpgradeVm not need upgrade workspace $workspaceName")
+        if (bakWorkspaceName == null || !bakWorkspaceName.startsWith("clone")) {
+            logger.info("checkAndCloneVm not need clone workspace $workspaceName")
             return
         }
+        val oldWorkspaceName = bakWorkspaceName.split(".")[1]
         // 同步原有拥有者分配者信息
-        val shareInfos = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName = bakWorkspaceName)
+        val shareInfos = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName = oldWorkspaceName)
         deliverControl.assignUser2Workspace(
             userId = ws.createUserId,
             workspaceName = ws.workspaceName,
@@ -204,14 +201,14 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             checkPermission = false
         )
         // 别名等信息同步
-        val old = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = bakWorkspaceName)
+        val old = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = oldWorkspaceName)
         if (old != null) {
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = dslContext,
                 projectId = ws.projectId,
                 workspaceName = workspaceName,
                 workspaceProperty = WorkspaceProperty(
-                    old.displayName, old.remark, old.labels
+                    old.displayName.ifBlank { null }?.let { "[副本]$it" }, old.remark, old.labels
                 )
             )
 
@@ -222,10 +219,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         }
     }
 
-    private fun createCheckWhenUpgrade(
-        old: WorkspaceRecordWithWindows,
-        machineType: String
-    ) {
+    private fun createCheckWhenClone(old: WorkspaceRecordWithWindows) {
         val zoneId = checkNotNull(old.zoneId)
         val winConfigId = checkNotNull(old.winConfigId)
         val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
@@ -252,19 +246,20 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             )
         }
 
-        if (old.ownerType == WorkspaceOwnerType.PROJECT && old.winConfigId != windowsConfig.id?.toInt()) {
+        if (old.ownerType == WorkspaceOwnerType.PROJECT) {
             val workspaceNames = workspaceDao.fetchUserWorkspaceName(
                 dslContext = dslContext,
                 projectId = old.projectId,
                 ownerType = WorkspaceOwnerType.PROJECT
             )
             windowsResourceConfigService.createCheckSpecLimit(
-                windowsType = machineType,
+                windowsType = windowsConfig.size,
                 projectId = old.projectId,
                 workspaceNames = workspaceNames,
                 createCount = 1
             )
         }
+
         windowsResourceConfigService.createCheckWhenWinNotAlready(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
@@ -274,7 +269,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UpgradeWorkspaceHandler::class.java)
+        private val logger = LoggerFactory.getLogger(CloneWorkspaceHandler::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 }

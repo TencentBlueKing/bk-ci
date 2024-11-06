@@ -300,6 +300,11 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.EXCEPTION_CREATE_FAILED
             }
 
+            workspaceInfo.status == EnvStatusEnum.cloning -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.CLONING)
+                return WorkspaceStatus.CLONING
+            }
+
             workspaceInfo.status == EnvStatusEnum.unknow -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
@@ -307,7 +312,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                        "$workspaceName|${workspaceInfo.status}"
+                    "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -319,13 +324,13 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).seconds < DEFAULT_WAIT_TIME
-                ) ||
-                workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-                workspace.status.checkInProcess() || workspace.status.checkUnused()
+            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds < DEFAULT_WAIT_TIME
+            ) ||
+            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+            workspace.status.checkInProcess() || workspace.status.checkUnused()
     }
 
     fun updateStatusAndCreateHistory(
@@ -348,7 +353,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                    "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,

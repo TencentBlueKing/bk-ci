@@ -170,23 +170,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(desktopWorkspaceService.checkUserIpPermission(user, ip))
     }
 
-    override fun createWinWorkspaceByVm(
-        userId: String,
-        oldWorkspaceName: String?,
-        projectId: String?,
-        ownerType: WorkspaceOwnerType?,
-        uid: String
-    ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(
-            userId = userId,
-            oldWorkspaceName = oldWorkspaceName,
-            projectCode = projectId,
-            ownerType = ownerType,
-            uid = uid
-        )
-        return Result(res)
-    }
-
     override fun assignWorkspace(
         operator: String,
         owner: String?,
@@ -433,11 +416,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            searchCustom = false,
-            quotaType = type,
-            withProjectLimit = null
-        )
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                searchCustom = false,
+                quotaType = type,
+                withProjectLimit = null
+            )
         )
     }
 

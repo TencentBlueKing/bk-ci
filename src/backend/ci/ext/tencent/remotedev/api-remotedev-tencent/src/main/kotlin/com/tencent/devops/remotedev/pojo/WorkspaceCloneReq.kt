@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -25,33 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.kubernetes
+package com.tencent.devops.remotedev.pojo
 
-/**
- * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
- */
-enum class EnvStatusEnum {
-    pending,
-    running,
-    succeeded,
-    failed,
-    stopped,
-    unknow,
-    deleted,
-    readyToRun,
-    creating,
-    error,
-    createFailed,
-    startFailed,
-    starting,
-    stopping,
-    stopFailed,
-    abnormalAfterReady,
-    abnormalAfterRunning,
-    restarting,
-    rebuilding,
-    upgrading,
-    copying,
-    readyDelete,
-    cloning
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "克隆工作空间配置接口请求")
+data class WorkspaceCloneReq(
+    @get:Schema(title = "基线")
+    val baseline: String
+)

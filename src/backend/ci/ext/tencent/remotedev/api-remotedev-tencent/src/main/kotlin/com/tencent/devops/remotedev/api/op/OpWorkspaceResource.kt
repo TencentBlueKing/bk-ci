@@ -129,6 +129,9 @@ interface OpWorkspaceResource {
         ownerType: WorkspaceOwnerType?,
         @Parameter(description = "机器uid", required = true)
         @QueryParam("uid")
-        uid: String
+        uid: String,
+        @Parameter(description = "是否走备份流程", required = true)
+        @QueryParam("bak")
+        bak: Boolean
     ): Result<Boolean>
 }

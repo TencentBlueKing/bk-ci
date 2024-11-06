@@ -11,7 +11,6 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -130,27 +129,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "ip", required = true)
         @QueryParam("ip")
         ip: String
-    ): Result<Boolean>
-
-    @Operation(summary = "通过已有cgsIp实例创建workspace记录")
-    @POST
-    @Path("/create_win_workspace_by_vm")
-    fun createWinWorkspaceByVm(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
-        @QueryParam("oldWorkspaceName")
-        oldWorkspaceName: String?,
-        @Parameter(description = "项目ID，可以为空，如果oldWorkspaceName=null 必填", required = true)
-        @QueryParam("projectId")
-        projectId: String?,
-        @Parameter(description = "工作空间类型，可以为空，如果oldWorkspaceName=null 必填", required = true)
-        @QueryParam("ownerType")
-        ownerType: WorkspaceOwnerType?,
-        @Parameter(description = "机器uid", required = true)
-        @QueryParam("uid")
-        uid: String
     ): Result<Boolean>
 
     @Operation(summary = "提供给BCS做分配云桌面给指定用户")
