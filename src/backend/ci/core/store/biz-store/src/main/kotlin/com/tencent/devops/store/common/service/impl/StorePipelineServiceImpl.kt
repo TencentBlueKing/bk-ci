@@ -510,6 +510,13 @@ class StorePipelineServiceImpl @Autowired constructor(
                 pipeline = model,
                 channelCode = ChannelCode.AM
             ).data!!.id
+            if (storeCode == null) {
+                redisOperation.set(
+                    key = "$storeType-PIPELINE-BUILD:$suffix",
+                    value = pipelineId,
+                    expired = false
+                )
+            }
             return pipelineId
         } finally {
             lock.unlock()
