@@ -206,6 +206,11 @@ enum class ErrorCodeEnum(
         formatErrorMessage = "Some repo failed! Insufficient permissions or the repository has been deleted. " +
                 "Please make sure the credential owner has administrator permissions: " +
                 "Git requires Master and above, SVN requires root directory approver"
+    ),
+    IMAGE_NOT_FOUND_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132050",
+        formatErrorMessage = "Image {0} not found in project {1}"
     );
 
     fun getErrorMessage(): String {
