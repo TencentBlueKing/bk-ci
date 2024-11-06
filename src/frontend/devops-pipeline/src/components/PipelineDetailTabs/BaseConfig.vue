@@ -24,7 +24,7 @@
                     >
                         <li
                             class="parallel-conf-detail-row"
-                            v-for="item in prarallelSettingRows"
+                            v-for="item in parallelSettingRows"
                             :key="item.key"
                         >
                             <label>
@@ -36,7 +36,21 @@
                         </li>
                     </ul>
                     <template v-else>
-                        <label class="base-info-block-row-label">{{ $t(row.key) }}</label>
+                        <label
+                            v-if="row.key !== 'namingConvention'"
+                            class="base-info-block-row-label"
+                        >{{ $t(row.key) }}</label>
+                        <bk-popover
+                            v-else
+                            theme="light"
+                            :width="892"
+                            placement="top-start"
+                        >
+                            <label class="base-info-block-row-label dotted">{{ $t(row.key) }}</label>
+                            <div slot="content">
+                                <NamingConventionTip />
+                            </div>
+                        </bk-popover>
                         <span class="base-info-block-row-value">
                             <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                                 <template v-if="row.value.length > 0">
@@ -52,6 +66,10 @@
                                     --
                                 </template>
                             </template>
+                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
+                                <span>{{ row.value || '--' }}</span>
+                                <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
+                            </template>
                             <template v-else>
                                 {{ row.value || '--' }}
                             </template>
@@ -64,7 +82,11 @@
 </template>
 <script>
     import { convertTime } from '@/utils/util'
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
+        components: {
+            NamingConventionTip
+        },
         props: {
             basicInfo: {
                 type: Object,
@@ -73,7 +95,11 @@
         },
         data () {
             return {
-                activeName: ['baseInfo', 'executeConfig']
+                activeName: ['baseInfo', 'executeConfig'],
+                namingStyle: {
+                    CLASSIC: this.$t('CLASSIC'),
+                    CONSTRAINED: this.$t('CONSTRAINED')
+                }
             }
         },
         computed: {
@@ -88,6 +114,8 @@
             },
             baseInfoRows () {
                 const { basicInfo } = this
+                const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
+                const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
                 return [
                     {
                         key: 'pipelineName',
@@ -106,12 +134,19 @@
                         value: basicInfo?.desc ?? '--'
                     },
                     {
-                        key: 'creator',
-                        value: basicInfo?.creator ?? '--'
+                        key: 'namingConvention',
+                        value: namingConvention ?? '--',
+                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
                     },
                     {
-                        key: 'createTime',
-                        value: convertTime(basicInfo?.createTime) ?? '--'
+                        key: 'modificationDetail',
+                        value: basicInfo?.versionUpdater ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                    },
+                    {
+                        key: 'creatorDetail',
+                        value: basicInfo?.creator ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
                     }
                 ]
             },
@@ -126,7 +161,7 @@
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
-                    ...(runLockType === 'group_lock'
+                    ...(['group_lock', 'multiple'].includes(runLockType)
                         ? [{
                             key: 'parallelConfDetail'
                         }]
@@ -134,31 +169,52 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
+                const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
+                if (runLockType === 'group_lock') {
+                    return [
+                        {
+                            key: 'concurrencyGroup',
+                            label: 'group.groupName',
+                            value: this.basicInfo?.concurrencyGroup ?? '--'
+                        },
+                        {
+                            key: 'concurrencyCancelInProgress',
+                            label: 'settings.stopWhenNewCome',
+                            value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
+                        },
+                        ...(!this.basicInfo?.concurrencyCancelInProgress
+                            ? [
+                                {
+                                    key: 'maxQueueSize',
+                                    label: 'settings.largestNum',
+                                    value: this.basicInfo?.maxQueueSize ?? '--'
+                                },
+                                {
+                                    key: 'waitQueueTimeMinute',
+                                    label: 'settings.lagestTime',
+                                    value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
+                                }
+    
+                            ]
+                            : []
+                        )
+                    ]
+                }
+
                 return [
-                    {
-                        key: 'concurrencyGroup',
-                        label: 'group.groupName',
-                        value: this.basicInfo?.concurrencyGroup ?? '--'
-                    },
-                    {
-                        key: 'concurrencyCancelInProgress',
-                        label: 'settings.stopWhenNewCome',
-                        value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
-                    },
                     ...(!this.basicInfo?.concurrencyCancelInProgress
                         ? [
                             {
-                                key: 'maxQueueSize',
-                                label: 'settings.largestNum',
-                                value: this.basicInfo?.maxQueueSize ?? '--'
+                                key: 'maxConRunningQueueSize',
+                                label: 'settings.concurrentMaxConcurrency',
+                                value: this.basicInfo?.maxConRunningQueueSize ?? '--'
                             },
                             {
                                 key: 'waitQueueTimeMinute',
-                                label: 'settings.lagestTime',
+                                label: 'settings.concurrentTimeout',
                                 value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                             }
-
                         ]
                         : []
                     )
@@ -225,5 +281,17 @@
         }
     }
 
+    .dotted {
+        line-height: 18px;
+        color: #979BA5;
+        border-bottom: 1px dashed #979BA5;
+    }
+    .bk-tooltip {
+        text-align: right !important;
+    }
+
+}
+.base-info-block-row-value-gray {
+    color: #979BA5;
 }
 </style>

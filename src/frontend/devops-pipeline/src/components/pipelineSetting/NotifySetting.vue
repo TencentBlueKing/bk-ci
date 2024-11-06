@@ -28,6 +28,30 @@
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
+            <bk-form-item :label="$t('settings.noticeGroup')">
+                <bk-checkbox-group
+                    :value="subscription.groups"
+                    @change="value => updateSubscription('groups', value)"
+                >
+                    <bk-checkbox
+                        v-for="item in projectGroupAndUsers"
+                        :key="item.groupId"
+                        :value="item.groupId"
+                        class="groups-users-checkbox"
+                    >
+                        {{ item.groupName }}
+                        <bk-popover placement="top">
+                            <span class="info-notice-length">({{ item.users.length }})</span>
+                            <div
+                                slot="content"
+                                style="max-width: 300px;word-wrap:break-word; word-break: normal"
+                            >
+                                {{ item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup') }}
+                            </div>
+                        </bk-popover>
+                    </bk-checkbox>
+                </bk-checkbox-group>
+            </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
                 <user-input
                     name="additionUser"
@@ -103,7 +127,8 @@
         },
         props: {
             subscription: Object,
-            updateSubscription: Function
+            updateSubscription: Function,
+            projectGroupAndUsers: Array
         },
         data () {
             return {
@@ -162,6 +187,17 @@
             padding: 0;
             width: auto;
             margin-right: 24px;
+        }
+        .groups-users-checkbox {
+            width: 150px;
+            margin-bottom: 4px;
+            margin-right: 8px;
+            .bk-checkbox-text {
+                max-width: 126px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         }
         .notify-setting-no-data {
             vertical-align: top;

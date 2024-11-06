@@ -1,20 +1,16 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
-import com.tencent.devops.auth.pojo.enum.JoinedType
-import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
-import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
-import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
@@ -78,20 +74,7 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         userId: String,
         projectCode: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
-    ): GroupDetailsInfoVo = GroupDetailsInfoVo(
-        resourceCode = "resourceCode",
-        resourceName = "resourceName",
-        resourceType = "resourceType",
-        groupId = 0,
-        groupName = "",
-        groupDesc = "",
-        expiredAtDisplay = "",
-        expiredAt = 0,
-        joinedTime = 0,
-        removeMemberButtonControl = RemoveMemberButtonControl.OTHER,
-        joinedType = JoinedType.DIRECT,
-        operator = ""
-    )
+    ): Boolean = true
 
     override fun renewalIamGroupMembers(
         groupId: Int,
@@ -175,33 +158,23 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         return SQLPage(count = 0, records = emptyList())
     }
 
-    override fun listProjectMembersByComplexConditions(
-        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
-    ): SQLPage<ResourceMemberInfo> {
-        return SQLPage(count = 0, records = emptyList())
-    }
+    override fun addDepartedFlagToMembers(
+        records: List<ResourceMemberInfo>
+    ): List<ResourceMemberInfo> = emptyList()
 
-    override fun getMemberGroupsCount(
+    override fun listResourceGroupMembers(
         projectCode: String,
-        memberId: String,
-        groupName: String?,
-        minExpiredAt: Long?,
-        maxExpiredAt: Long?
-    ): List<MemberGroupCountWithPermissionsVo> {
-        return emptyList()
-    }
-
-    override fun getMemberGroupsDetails(
-        projectId: String,
         memberId: String,
         resourceType: String?,
         iamGroupIds: List<Int>?,
-        groupName: String?,
         minExpiredAt: Long?,
         maxExpiredAt: Long?,
         start: Int?,
         limit: Int?
-    ): SQLPage<GroupDetailsInfoVo> {
-        return SQLPage(0, records = emptyList())
-    }
+    ): Pair<Long, List<AuthResourceGroupMember>> = Pair(0, emptyList())
+
+    override fun listMemberGroupIdsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> = emptyList()
 }

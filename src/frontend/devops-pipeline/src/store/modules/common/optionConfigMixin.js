@@ -184,7 +184,8 @@ const optionConfigMixin = {
                 label: this.$t('storeMap.customConditionExp'),
                 isHidden: (element) => {
                     return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
-                }
+                },
+                placeholder: this.$t('storeMap.customConditionExpPlaceholder')
             },
             otherTask: {
                 isHidden: true,

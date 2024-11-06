@@ -9,8 +9,9 @@
         <span
             class="head-tab"
             slot="tab"
+            v-if="isGetPluginHeadTab"
         >
-            <template v-for="tab in tabList">
+            <template v-for="tab in sortedTabList">
                 <span
                     v-if="tab.show"
                     :key="tab.name"
@@ -43,7 +44,7 @@
                 v-if="currentTab === 'log'"
             />
             <component
-                v-if="currentTab === key"
+                v-show="currentTab === key"
                 :is="value.component"
                 v-bind="value.bindData"
                 v-for="(value, key) in componentList"
@@ -81,6 +82,10 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            properties: {
+                type: Array,
+                default: () => ['LOG', 'ARTIFACT', 'CONFIG']
             }
         },
         data () {
@@ -89,15 +94,16 @@
                 tabList: [
                     { name: 'log', show: true },
                     { name: 'artifactory', show: false, completeLoading: false },
-                    { name: 'report', show: false, completeLoading: false },
-                    { name: 'setting', show: true }
+                    { name: 'setting', show: true },
+                    { name: 'report', show: false, completeLoading: false }
                 ]
             }
         },
 
         computed: {
             ...mapState('atom', [
-                'globalEnvs'
+                'globalEnvs',
+                'isGetPluginHeadTab'
             ]),
 
             stages () {
@@ -163,6 +169,26 @@
                 // } catch (error) {
                 //     return null
                 // }
+            },
+            sortedTabList () {
+                const mapping = {
+                    LOG: 'log',
+                    ARTIFACT: 'artifactory',
+                    CONFIG: 'setting'
+                }
+
+                const orderedTabs = this.properties.map(prop => {
+                    const tabName = mapping[prop]
+                    return this.tabList.find(tab => tab.name === tabName)
+                }).filter(Boolean)
+
+                const reportTab = this.tabList.find(tab => tab.name === 'report')
+                if (reportTab) {
+                    orderedTabs.push(reportTab)
+                }
+                
+                this.currentTab = orderedTabs.find(tab => tab.show)?.name
+                return orderedTabs
             }
         },
 
@@ -171,29 +197,20 @@
                 this.tabList = [
                     { name: 'log', show: true },
                     { name: 'artifactory', show: true, completeLoading: false },
-                    { name: 'report', show: false, completeLoading: false },
-                    { name: 'setting', show: true }
+                    { name: 'setting', show: true },
+                    { name: 'report', show: false, completeLoading: false }
                 ]
-            },
-            tabList: {
-                handler (val) {
-                    const tab = val.find(tab => tab.name === this.currentTab)
-                    if (!tab.show) {
-                        this.currentTab = 'log'
-                    }
-                },
-                deep: true
             }
         },
 
         methods: {
             toggleTab (key, show = false) {
-                const tab = this.tabList.find(tab => tab.name === key)
+                const tab = this.sortedTabList.find(tab => tab.name === key)
                 tab.show = show
             },
 
             completeLoading (key) {
-                const tab = this.tabList.find(tab => tab.name === key)
+                const tab = this.sortedTabList.find(tab => tab.name === key)
                 tab.completeLoading = true
             }
         }

@@ -68,7 +68,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamBuildFinishListener::class.java)
+        private val logger = LoggerFactory.getLogger(StreamBuildFinishListenerService::class.java)
     }
 
     fun doFinish(buildFinishEvent: PipelineBuildFinishBroadCastEvent) {

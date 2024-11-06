@@ -28,9 +28,9 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.message.AmdMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
@@ -41,7 +41,7 @@ import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import org.slf4j.LoggerFactory
 
-@Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
+@Event(StreamBinding.WEBSOCKET_TMP_FANOUT)
 data class StoreWebsocketPush(
     val atomId: String,
     override val userId: String,

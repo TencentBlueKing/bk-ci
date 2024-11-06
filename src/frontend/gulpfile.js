@@ -6,6 +6,7 @@ const svgSprite = require('gulp-svg-sprite')
 const inject = require('gulp-inject')
 const rename = require('gulp-rename')
 const hash = require('gulp-hash')
+const { globSync } = require('glob')
 const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
@@ -15,20 +16,24 @@ const argv = yargs.alias({
     dist: 'd',
     env: 'e',
     lsVersion: 'l',
-    scope: 's'
+    scope: 's',
+    effect: 'effect'
 }).default({
     dist: 'frontend',
     env: 'master',
-    lsVersion: 'dev'
+    lsVersion: 'dev',
+    effect: false
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
     lsVersion: 'localStorage version',
     head: 'head file path',
-    base: 'base file path'
+    base: 'base file path',
+    effect: 'only buuild effected service'
 }).argv
-const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master' } = argv
+const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master', effect = false } = argv
 console.log(env, head, base)
+const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 const svgSpriteConfig = {
     mode: {
         symbol: true
@@ -88,7 +93,7 @@ task('build', series(cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
     
-    const cmd = scopeStr ? `run-many -t public:master ${scopeStr}` : 'affected -t public:master'
+    const cmd = effect ? 'affected -t public:master' : `run-many -t public:master ${scopeStr}`
     console.log('gulp cmd: ', cmd, cmd.split(' '))
     const { spawn } = require('node:child_process')
     const spawnCmd = spawn('pnpm', [
@@ -116,18 +121,37 @@ task('build', series(cb => {
     })
 }, (cb) => {
     try {
-        const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
-        fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-        return src(`${dist}/assetsBundles.js`, {
-            allowEmpty: true
-        })
-            .pipe(hash())
-            .pipe(dest(`${dist}/`))
+        const entryDir = path.join(__dirname, dist, "entry's")
+
+        // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
+        const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
+            const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
+            acc = {
+                ...acc,
+                ...content
+            }
+            return acc
+        }, {})
+    
+        console.log('final assets json!')
+        console.table(finalAssets)
+        const fileContent = `window.SERVICE_ASSETS = ${JSON.stringify(finalAssets)}`
+        
+        fs.writeFileSync(FINAL_ASSETS_JSON_FILENAME, fileContent)
+        if (fs.existsSync(entryDir)) {
+            fs.rmSync(entryDir, {
+                recursive: true,
+                force: true
+            })
+        }
+        return src(FINAL_ASSETS_JSON_FILENAME).pipe(hash()).pipe(dest(dist))
+        
     } catch (error) {
         console.log('build assetsBundles.js failed')
         console.error(error)
+        process.exit(1)
     }
-    cb()
+    
 }, (cb) => {
     ['console', 'pipeline'].map(prefix => {
         const dir = path.join(dist, prefix)

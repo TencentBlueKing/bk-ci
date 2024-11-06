@@ -729,7 +729,8 @@ class PipelineInfoDao {
         projectId: String,
         excludePipelineIds: List<String>,
         channelCode: ChannelCode? = null,
-        includeDelete: Boolean = false
+        includeDelete: Boolean = false,
+        filterPipelineIds: List<String>? = null
     ): Int {
         with(T_PIPELINE_INFO) {
             return dslContext.selectCount()
@@ -738,6 +739,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.notIn(excludePipelineIds))
                 .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
                 .let { if (includeDelete) it else it.and(DELETE.eq(false)) }
+                .let { if (filterPipelineIds != null) it.and(PIPELINE_ID.`in`(filterPipelineIds)) else it }
                 .fetchOne()?.value1() ?: 0
         }
     }

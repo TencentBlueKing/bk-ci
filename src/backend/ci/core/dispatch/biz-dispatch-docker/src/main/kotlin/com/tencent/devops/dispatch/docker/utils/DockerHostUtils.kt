@@ -85,8 +85,6 @@ class DockerHostUtils @Autowired constructor(
         unAvailableIpList: Set<String> = setOf(),
         clusterName: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
-        val grayEnv = bkTag.getFinalTag().contains("gray")
-
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.debug("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
@@ -94,7 +92,6 @@ class DockerHostUtils @Autowired constructor(
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
         val firstPair = dockerLoadCheck(
             dockerHostLoadConfig = dockerHostLoadConfigTriple.first,
-            grayEnv = grayEnv,
             clusterName = clusterName,
             specialIpSet = specialIpSet,
             unAvailableIpList = unAvailableIpList
@@ -102,7 +99,6 @@ class DockerHostUtils @Autowired constructor(
         val dockerPair = if (firstPair.first.isEmpty()) {
             val secondPair = dockerLoadCheck(
                 dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
-                grayEnv = grayEnv,
                 clusterName = clusterName,
                 specialIpSet = specialIpSet,
                 unAvailableIpList = unAvailableIpList
@@ -110,7 +106,6 @@ class DockerHostUtils @Autowired constructor(
             if (secondPair.first.isEmpty()) {
                 dockerLoadCheck(
                     dockerHostLoadConfig = dockerHostLoadConfigTriple.third,
-                    grayEnv = grayEnv,
                     clusterName = clusterName,
                     specialIpSet = specialIpSet,
                     unAvailableIpList = unAvailableIpList,
@@ -408,7 +403,6 @@ class DockerHostUtils @Autowired constructor(
 
     private fun dockerLoadCheck(
         dockerHostLoadConfig: DockerHostLoadConfig,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType,
         specialIpSet: Set<String>,
         unAvailableIpList: Set<String>,
@@ -417,7 +411,6 @@ class DockerHostUtils @Autowired constructor(
         val dockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
-                grayEnv = grayEnv,
                 clusterName = clusterName,
                 cpuLoad = dockerHostLoadConfig.cpuLoadThreshold,
                 memLoad = dockerHostLoadConfig.memLoadThreshold,
@@ -428,7 +421,7 @@ class DockerHostUtils @Autowired constructor(
             )
 
         return if (dockerIpList.isNotEmpty &&
-            sufficientResources(finalCheck, dockerIpList.size, grayEnv, clusterName)) {
+            sufficientResources(finalCheck, dockerIpList.size, clusterName)) {
             selectAvailableDockerIp(dockerIpList, unAvailableIpList)
         } else {
             Pair("", 0)
@@ -438,10 +431,9 @@ class DockerHostUtils @Autowired constructor(
     private fun sufficientResources(
         finalCheck: Boolean,
         fittingIpCount: Int,
-        grayEnv: Boolean,
         clusterName: DockerHostClusterType
     ): Boolean {
-        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, grayEnv, clusterName)
+        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, clusterName)
         // 最后一次check无论还剩几个可用ip，都要顶上，或者集群规模小于10不做判断
         if (enableIpCount < 10 || finalCheck) {
             return true

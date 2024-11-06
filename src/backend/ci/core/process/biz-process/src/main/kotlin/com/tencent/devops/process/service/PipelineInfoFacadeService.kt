@@ -54,7 +54,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -63,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -78,6 +78,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSIO
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -110,12 +111,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -135,10 +136,12 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineAuthorizationService: PipelineAuthorizationService
+    private val pipelineAuthorizationService: PipelineAuthorizationService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -307,7 +310,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        inheritedDialectSetting: Boolean? = true,
+        pipelineDialectSetting: String? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -412,7 +417,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -427,6 +432,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 watcher.start("deployPipeline")
+                val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                    projectId = projectId,
+                    asCodeSettings = setting?.pipelineAsCodeSettings,
+                    inheritedDialectSetting = inheritedDialectSetting,
+                    pipelineDialectSetting = pipelineDialectSetting
+                )
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     setting = setting,
@@ -444,7 +455,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    inheritedDialectSetting = inheritedDialectSetting,
+                    pipelineDialectSetting = pipelineDialectSetting,
+                    pipelineDialect = pipelineDialect
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -597,12 +611,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         } ?: newResource.model.name.ifBlank {
             yamlFileName
         }
+        val pipelineAsCodeSettings =
+            newResource.setting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
         // 通过PAC模式创建或保存的流水线均打开PAC
         // 修正创建时的流水线名和增加PAC开关参数
         val newSetting = newResource.setting.copy(
             projectId = projectId,
             pipelineName = pipelineName,
-            pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+            pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         return createPipeline(
             userId = userId,
@@ -649,13 +665,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         // 通过PAC模式创建或保存的流水线均打开PAC
         // 修正创建时的流水线名和增加PAC开关参数
         val pipelineName = newResource.model.name.ifBlank { yamlFileName }
+        val pipelineAsCodeSettings =
+            newResource.setting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = newResource.setting.copy(
                 pipelineName = pipelineName,
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false,
             versionStatus = versionStatus,
@@ -1107,6 +1125,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
+            val pipelineSetting = savedSetting ?: pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
+            val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                projectId = projectId,
+                pipelineSetting?.pipelineAsCodeSettings
+            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1121,7 +1144,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo
+                yamlInfo = yamlInfo,
+                pipelineDialect = pipelineDialect
             )
             // 审计
             ActionAuditContext.current()
@@ -1186,6 +1210,30 @@ class PipelineInfoFacadeService @Autowired constructor(
             description = null
         )
         return result
+    }
+
+    fun updateBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNo: BuildNoUpdateReq
+    ) {
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
+            params = buildNo.currentBuildNo.toString(),
+            description = null
+        )
+        pipelineBuildSummaryDao.updateBuildNo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo.currentBuildNo,
+            debug = false
+        )
     }
 
     fun saveAll(
@@ -1303,11 +1351,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineInfo: PipelineInfo
     ): Model {
         try {
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val buildNo = triggerContainer.buildNo
-            if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
-                    ?: buildNo.buildNo
+            val triggerContainer = model.getTriggerContainer()
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            triggerContainer.buildNo?.apply {
+                currentBuildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                    ?: buildNo
             }
             // 兼容性处理
             BuildPropertyCompatibilityTools.fix(triggerContainer.params)
