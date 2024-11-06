@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -434,5 +435,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<ExpandDiskValidateResp?> {
         logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
+    }
+
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$projectId|$upgradeReq")
+        return client.get(ServiceRemoteDevResource::class).upgradeWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            upgradeReq = upgradeReq
+        )
     }
 }
