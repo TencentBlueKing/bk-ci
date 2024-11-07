@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
@@ -232,7 +233,8 @@ class PipelineTaskPauseListener @Autowired constructor(
                 stepId = task.stepId,
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
-                buildStatus = BuildStatus.CANCELED.name
+                buildStatus = BuildStatus.CANCELED.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
             )
         )
     }

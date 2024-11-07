@@ -105,7 +105,7 @@
     "mirrorTagRule": "Lower-case letters, numbers, underline and dots only",
     "selectModel": "Select model",
     "confirmInfo": "Confirm information",
-    "setting": "Setting",
+    "setting": "Shared Settings",
     "removeShareEnvProjectSuc": "project {0} removed",
     "shareEnvSuc": "Share Env Successful",
     "removeShareProjectConfirm": "{0} will be removed",
@@ -271,5 +271,6 @@
     "启用": "Enable",
     "停用": "Disable",
     "启用成功": "Enable successful",
-    "停用成功": "Disable successful"
+    "停用成功": "Disable successful",
+    "authManage": "Permission Manage"
 }

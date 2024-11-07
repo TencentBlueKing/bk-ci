@@ -34,6 +34,14 @@
                     prop="displayName"
                     show-overflow-tooltip
                 >
+                    <template slot-scope="{ row }">
+                        <span
+                            class="display-name"
+                            @click="handleToNodeDetailPage(row)"
+                        >
+                            {{ row.displayName }}
+                        </span>
+                    </template>
                 </bk-table-column>
                 <bk-table-column
                     :width="150"
@@ -705,6 +713,9 @@
                         message: e.message || e
                     })
                 }
+            },
+            handleToNodeDetailPage (row) {
+                window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
             }
         }
     }
@@ -718,5 +729,10 @@
         .useless {
             color: #c3cdd7;
         }
+    }
+
+    .display-name {
+        color: #3a84ff;
+        cursor: pointer;
     }
 </style>

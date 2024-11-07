@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_SCRIPT_TASK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -78,6 +79,7 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
+        val enableArchiveFile = taskParams["enableArchiveFile"]?.toBooleanStrictOrNull()
         val script = URLDecoder.decode(
             taskParams["script"]
                 ?: throw TaskExecuteException(
@@ -118,12 +120,20 @@ open class ScriptTask : ITask() {
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
                 charsetType = charsetType,
-                taskId = buildTask.taskId,
-                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+                taskId = buildTask.taskId
+            )
+        } catch (exception: VariableNotFoundException) {
+            val errMessage = "Variable ${exception.variableKey} not found"
+            LoggerService.addErrorLine(errMessage)
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: $errMessage",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
-            if (!archiveFileIfExecFail.isNullOrBlank()) {
+            if (enableArchiveFile == true && !archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addErrorLine(
                     MessageUtil.getMessageByLocale(
                         SCRIPT_EXECUTION_FAIL,

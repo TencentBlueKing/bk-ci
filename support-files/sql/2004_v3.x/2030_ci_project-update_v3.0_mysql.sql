@@ -20,6 +20,15 @@ BEGIN
             ADD COLUMN `DOC_URL` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '文档链接';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                        AND COLUMN_NAME = 'PROPERTIES') THEN
+        ALTER TABLE T_PROJECT_APPROVAL
+            ADD COLUMN `PROPERTIES` text null DEFAULT NULL comment '项目其他配置';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -29,6 +29,7 @@ package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.stream.constants.StreamBinding
 import java.time.LocalDateTime
 
@@ -51,6 +52,8 @@ data class PipelineBuildStatusBroadCastEvent(
     val buildStatus: String?,
     val atomCode: String? = null,
     val eventTime: LocalDateTime? = LocalDateTime.now(),
+    val type: PipelineBuildStatusBroadCastEventType? = null,
+    val labels: Map<String, String>? = null,
     override var actionType: ActionType,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
