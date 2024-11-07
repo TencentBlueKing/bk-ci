@@ -37,7 +37,7 @@
                 >
                     <template slot-scope="{ row }">
                         <span
-                            class="display-name"
+                            :class="{ 'display-name': row.nodeType !== 'CMDB' }"
                             @click="handleToNodeDetailPage(row)"
                         >
                             {{ row.displayName }}
@@ -714,6 +714,7 @@
                 }
             },
             handleToNodeDetailPage (row) {
+                if (row.nodeType === 'CMDB') return
                 window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
             }
         }

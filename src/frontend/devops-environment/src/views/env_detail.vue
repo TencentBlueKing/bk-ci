@@ -262,8 +262,9 @@
 
         .tab-nav-item {
             float: left;
-            width: 100px;
+            min-width: 100px;
             height: 100%;
+            padding: 0 20px;
             line-height: 42px;
             text-align: center;
             background-color: rgb(250, 251, 253);
