@@ -211,11 +211,6 @@ class CloneWorkspaceHandler @Autowired constructor(
                     "[克隆]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
                 )
             )
-
-            // 删除旧云桌面
-            if (old.status.checkUnused()) {
-                deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
-            }
         }
     }
 
