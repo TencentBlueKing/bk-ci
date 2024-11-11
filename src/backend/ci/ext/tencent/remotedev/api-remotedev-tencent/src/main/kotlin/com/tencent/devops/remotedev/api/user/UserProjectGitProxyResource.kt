@@ -66,9 +66,9 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "工蜂仓库ID", required = true)
         @QueryParam("repoId")
         repoId: Long,
-        @Parameter(description = "仓库链接", required = true)
-        @QueryParam("url")
-        url: String
+        @Parameter(description = "仅删除数据不解绑工蜂ACL", required = true)
+        @QueryParam("onlyDelete")
+        onlyDelete: Boolean?
     ): Result<Boolean>
 
     @Operation(summary = "获取工蜂namespace")
