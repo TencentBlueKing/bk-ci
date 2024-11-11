@@ -68,8 +68,8 @@
                 'getAtomEnvConfig'
             ]),
             async onLoad () {
-                const { baseOS, dispatchType } = this.container
-                const containerInfo = { baseOS, dispatchType }
+                const { baseOS, dispatchType, jobId } = this.container
+                const containerInfo = { baseOS, dispatchType, jobId }
                 const currentUserInfo = this.$userInfo || {}
                 const atomDisabled = this.disabled || false
                 const envConf = await this.getEnvConf()
