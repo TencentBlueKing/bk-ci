@@ -508,7 +508,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
 
         val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        val extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
+        var extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
+        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        extData = extData.plus(baseFeatureExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) }))
         val htmlTemplateVersion = extData[KEY_HTML_TEMPLATE_VERSION]
         val initProjectCode =
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {

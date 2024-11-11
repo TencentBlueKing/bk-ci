@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
@@ -628,7 +629,8 @@ class GitService @Autowired constructor(
                     )
                 }
             }
-            return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
+            val id = dataMap[ID] as Long
+            return Result(GitRepositoryResp(id, nameSpaceName, atomRepositoryUrl as String))
         }
     }
 
