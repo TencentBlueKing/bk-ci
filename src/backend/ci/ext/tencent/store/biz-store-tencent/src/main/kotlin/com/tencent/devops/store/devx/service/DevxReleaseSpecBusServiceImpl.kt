@@ -192,43 +192,38 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val storeType = storeBaseCreateRequest.storeType
         val rdType = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.rdType
         if (rdType == RdTypeEnum.SELF_DEVELOPED.name) {
-            val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
-                dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE
-            )?.fieldValue
-            if (frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
-                // 获取组件配置文件
-                val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
+            // 获取组件配置文件
+            val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
+            )
+            val remoteRepoId =
+                extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
+            val oauthUserId =
+                extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
+            val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
+                remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
+            ).data
+            if (configFileContent.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(CONFIG_YML_NAME)
                 )
-                val remoteRepoId =
-                    extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
-                val oauthUserId =
-                    extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
-                val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
-                    remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
-                ).data
-                if (configFileContent.isNullOrBlank()) {
-                    throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(CONFIG_YML_NAME)
-                    )
-                }
-                val versionInfo = storeBaseCreateRequest.versionInfo
-                val version = versionInfo.version
-                // 解析配置文件中的环境信息
-                val storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
-                val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
-                    storeType = storeType,
-                    storeCode = storeCode,
-                    version = version,
-                    storePkgEnvInfos = storePkgEnvInfos
-                )
-                val bkStoreContext = storeUpdateRequest.bkStoreContext
-                val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-                storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
             }
+            val versionInfo = storeBaseCreateRequest.versionInfo
+            val version = versionInfo.version
+            // 解析配置文件中的环境信息
+            val storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
+            val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                storePkgEnvInfos = storePkgEnvInfos
+            )
+            val bkStoreContext = storeUpdateRequest.bkStoreContext
+            val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+            storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
         }
     }
 

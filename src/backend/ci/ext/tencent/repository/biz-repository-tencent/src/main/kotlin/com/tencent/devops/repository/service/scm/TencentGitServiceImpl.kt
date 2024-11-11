@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -70,17 +72,23 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import javax.servlet.http.HttpServletResponse
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import javax.servlet.http.HttpServletResponse
 
 @Primary
 @Service
 class TencentGitServiceImpl @Autowired constructor(
     private val client: Client,
-    private val gitOauthService: IGitOauthService
+    private val dslContext: DSLContext,
+    private val gitTokenDao: GitTokenDao
 ) : IGitService {
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = ""
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
@@ -794,10 +802,11 @@ class TencentGitServiceImpl @Autowired constructor(
         oauthUserId: String,
         ref: String
     ): String {
-        val token = gitOauthService.getAccessToken(oauthUserId)?.accessToken ?: throw ErrorCodeException(
+        val tokenRecord = gitTokenDao.getAccessToken(dslContext, oauthUserId) ?: throw ErrorCodeException(
             errorCode = NOT_AUTHORIZED_BY_OAUTH,
             params = arrayOf(oauthUserId)
         )
+        val token = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
         return client.getScm(ServiceGitResource::class).getGitFileContent(
             repoName = repoName,
             filePath = filePath,
