@@ -224,6 +224,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    override fun workspaceClone(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).workspaceClone(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)

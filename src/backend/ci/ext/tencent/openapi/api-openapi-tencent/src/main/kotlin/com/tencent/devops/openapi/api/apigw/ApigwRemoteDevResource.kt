@@ -300,6 +300,21 @@ interface ApigwRemoteDevResource {
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
 
+    @Operation(summary = "克隆工作空间", tags = ["v4_app_remotedev_win_workspace_clone"])
+    @POST
+    @Path("/workspace_clone")
+    fun workspaceClone(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "删除windows工作空间-项目", tags = ["v4_app_remotedev_win_project_delete"])
     @DELETE
     @Path("/project_win_workspace")

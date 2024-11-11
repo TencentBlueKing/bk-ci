@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -54,6 +55,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -96,7 +98,8 @@ class ServiceRemoteDevResourceImpl(
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
-    private val workspaceRecordService: WorkspaceRecordService
+    private val workspaceRecordService: WorkspaceRecordService,
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -362,6 +365,16 @@ class ServiceRemoteDevResourceImpl(
                 zoneType = zoneType
             )
         )
+    }
+
+    override fun workspaceClone(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        cloneWorkspaceHandler.cloneWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            rebuildReq = WorkspaceCloneReq(baseline = "暂未支持")
+        )
+        return Result(true)
     }
 
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {

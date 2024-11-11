@@ -230,6 +230,21 @@ interface ServiceRemoteDevResource {
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
 
+    @Operation(summary = "克隆windows工作空间")
+    @POST
+    @Path("/workspace_clone")
+    fun workspaceClone(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "删除windows工作空间-项目")
     @DELETE
     @Path("/project_win_workspace")
