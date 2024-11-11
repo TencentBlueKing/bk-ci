@@ -117,13 +117,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.time.LocalDateTime
-import java.util.LinkedList
-import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
