@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
+import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
@@ -1137,7 +1138,8 @@ class GitService @Autowired constructor(
                     )
                 }
             }
-            return Result(GitRepositoryResp(nameSpaceName, repositoryUrl as String))
+            val id = dataMap[ID] as Long
+            return Result(GitRepositoryResp(id, nameSpaceName, repositoryUrl as String))
         }
     }
 

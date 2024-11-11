@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
@@ -220,6 +221,24 @@ interface ServiceGitRepositoryResource {
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null
+    ): Result<String>
+
+    @Operation(summary = "根据远程仓库ID获取代码仓库单个文件内容")
+    @GET
+    @Path("/{remoteRepoId}/file/content/get")
+    fun getFileContent(
+        @Parameter(description = "远程仓库id")
+        @PathParam("remoteRepoId")
+        remoteRepoId: String,
+        @Parameter(description = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @Parameter(description = "oauth认证用戶ID")
+        @QueryParam("oauthUserId")
+        oauthUserId: String,
+        @Parameter(description = "分支（git）")
+        @QueryParam("branch")
+        branch: String?
     ): Result<String>
 
     @Operation(summary = "更新代码仓库单个文件内容")

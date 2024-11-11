@@ -51,7 +51,6 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonSchemaUtil
@@ -99,7 +98,9 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
+import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
+import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -172,8 +173,16 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
             val repositoryInfo = createGitRepositoryResult.data
             repositoryInfo?.let {
+                repositoryInfo.remoteRepoId?.let {
+                    extBaseFeatureInfo[KEY_REPOSITORY_ID] = it
+                }
                 extBaseFeatureInfo[KEY_REPOSITORY_HTTP_URL] = repositoryInfo.url
             }
+        }
+        if (baseFeatureInfo?.rdType == RdTypeEnum.SELF_DEVELOPED) {
+            val bkStoreContext = storeCreateRequest.bkStoreContext
+            val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+            extBaseFeatureInfo?.set(KEY_REPOSITORY_AUTHORIZER, userId)
         }
     }
 
@@ -188,24 +197,22 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             )?.fieldValue
             if (frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
                 // 获取组件配置文件
-                val repositoryNameWithNamespace = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType,
-                    fieldName = KEY_REPOSITORY_HTTP_URL
-                )?.fieldValue ?: ""
+                    fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
+                )
+                val remoteRepoId =
+                    extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
+                val oauthUserId =
+                    extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
                 val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
-                    repoId = repositoryNameWithNamespace,
-                    filePath = CONFIG_YML_NAME,
-                    reversion = null,
-                    branch = MASTER,
-                    repositoryType = RepositoryType.NAME,
-                    projectId = storeInnerPipelineConfig.innerPipelineProject
+                    remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
                 ).data
                 if (configFileContent.isNullOrBlank()) {
                     throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                        params = arrayOf(CONFIG_YML_NAME)
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(CONFIG_YML_NAME)
                     )
                 }
                 val versionInfo = storeBaseCreateRequest.versionInfo

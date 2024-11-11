@@ -28,9 +28,11 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -75,7 +77,10 @@ import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitService {
+class TencentGitServiceImpl @Autowired constructor(
+    private val client: Client,
+    private val gitOauthService: IGitOauthService
+) : IGitService {
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
@@ -781,5 +786,24 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             gitProjectId = gitProjectId,
             gitCreateMergeRequest = gitCreateMergeRequest
         )
+    }
+
+    fun getGitFileContent(
+        repoName: String,
+        filePath: String,
+        oauthUserId: String,
+        ref: String
+    ): String {
+        val token = gitOauthService.getAccessToken(oauthUserId)?.accessToken ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH,
+            params = arrayOf(oauthUserId)
+        )
+        return client.getScm(ServiceGitResource::class).getGitFileContent(
+            repoName = repoName,
+            filePath = filePath,
+            authType = RepoAuthType.OAUTH,
+            token = token,
+            ref = ref
+        ).data ?: ""
     }
 }

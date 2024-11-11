@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
@@ -41,7 +42,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
-import com.tencent.devops.repository.service.scm.GitService
+import com.tencent.devops.repository.service.scm.TencentGitServiceImpl
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
@@ -50,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitRepositoryResourceImpl @Autowired constructor(
-    private val gitService: GitService,
+    private val gitService: TencentGitServiceImpl,
     private val repoFileService: RepoFileService,
     private val repositoryService: RepositoryService,
     private val repositoryUserService: RepositoryUserService
@@ -117,6 +118,22 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
                 reversion = reversion,
                 branch = branch,
                 projectId = projectId ?: ""
+            )
+        )
+    }
+
+    override fun getFileContent(
+        remoteRepoId: String,
+        filePath: String,
+        oauthUserId: String,
+        branch: String?
+    ): Result<String> {
+        return Result(
+            gitService.getGitFileContent(
+                repoName = remoteRepoId,
+                filePath = filePath,
+                oauthUserId = oauthUserId,
+                ref = branch ?: MASTER
             )
         )
     }
