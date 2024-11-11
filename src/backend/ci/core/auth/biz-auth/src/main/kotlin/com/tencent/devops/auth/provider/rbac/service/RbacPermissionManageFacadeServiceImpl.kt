@@ -28,7 +28,7 @@ import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -52,7 +52,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class RbacPermissionResourceGroupAndMemberFacadeServiceImpl(
+class RbacPermissionManageFacadeServiceImpl(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val groupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
@@ -65,7 +65,7 @@ class RbacPermissionResourceGroupAndMemberFacadeServiceImpl(
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
     private val permissionAuthorizationService: PermissionAuthorizationService
-) : PermissionResourceGroupAndMemberFacadeService {
+) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,

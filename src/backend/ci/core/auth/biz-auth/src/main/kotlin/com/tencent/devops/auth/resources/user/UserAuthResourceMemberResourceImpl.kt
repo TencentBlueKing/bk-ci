@@ -13,7 +13,7 @@ import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -29,7 +29,7 @@ import com.tencent.devops.common.web.RestResource
 class UserAuthResourceMemberResourceImpl(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionService: PermissionService,
-    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
+    private val permissionManageFacadeService: PermissionManageFacadeService,
     private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthResourceMemberResource {
     override fun listProjectMembers(
@@ -72,7 +72,7 @@ class UserAuthResourceMemberResourceImpl(
         projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
     ): Result<SQLPage<ResourceMemberInfo>> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.listProjectMembersByComplexConditions(
+            permissionManageFacadeService.listProjectMembersByComplexConditions(
                 conditionReq = projectMembersQueryConditionReq
             )
         )
@@ -84,13 +84,13 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Result<GroupDetailsInfoVo> {
-        permissionResourceGroupAndMemberFacadeService.renewalGroupMember(
+        permissionManageFacadeService.renewalGroupMember(
             userId = userId,
             projectCode = projectId,
             renewalConditionReq = renewalConditionReq
         )
         return Result(
-            permissionResourceGroupAndMemberFacadeService.getMemberGroupsDetails(
+            permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 memberId = renewalConditionReq.targetMember.id,
                 iamGroupIds = listOf(renewalConditionReq.groupId)
@@ -105,7 +105,7 @@ class UserAuthResourceMemberResourceImpl(
         renewalConditionReq: GroupMemberRenewalConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.batchRenewalGroupMembersFromManager(
+            permissionManageFacadeService.batchRenewalGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 renewalConditionReq = renewalConditionReq
@@ -120,7 +120,7 @@ class UserAuthResourceMemberResourceImpl(
         removeMemberDTO: GroupMemberCommonConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.batchDeleteResourceGroupMembersFromManager(
+            permissionManageFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = removeMemberDTO
@@ -135,7 +135,7 @@ class UserAuthResourceMemberResourceImpl(
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.batchHandoverGroupMembersFromManager(
+            permissionManageFacadeService.batchHandoverGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 handoverMemberDTO = handoverMemberDTO
@@ -151,7 +151,7 @@ class UserAuthResourceMemberResourceImpl(
         conditionReq: GroupMemberCommonConditionReq
     ): Result<BatchOperateGroupMemberCheckVo> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.batchOperateGroupMembersCheck(
+            permissionManageFacadeService.batchOperateGroupMembersCheck(
                 userId = userId,
                 projectCode = projectId,
                 batchOperateType = batchOperateType,
@@ -167,7 +167,7 @@ class UserAuthResourceMemberResourceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Result<List<ResourceMemberInfo>> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.removeMemberFromProject(
+            permissionManageFacadeService.removeMemberFromProject(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberFromProjectReq = removeMemberFromProjectReq
@@ -182,7 +182,7 @@ class UserAuthResourceMemberResourceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.removeMemberFromProjectCheck(
+            permissionManageFacadeService.removeMemberFromProjectCheck(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberFromProjectReq = removeMemberFromProjectReq
@@ -208,7 +208,7 @@ class UserAuthResourceMemberResourceImpl(
             operateChannel = operateChannel ?: OperateChannel.MANAGER
         )
         return Result(
-            permissionResourceGroupAndMemberFacadeService.getMemberGroupsCount(
+            permissionManageFacadeService.getMemberGroupsCount(
                 projectCode = projectId,
                 memberId = memberId,
                 groupName = groupName,

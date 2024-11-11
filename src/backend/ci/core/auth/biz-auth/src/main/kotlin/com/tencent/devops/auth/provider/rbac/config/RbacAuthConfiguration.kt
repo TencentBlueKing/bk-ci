@@ -66,7 +66,7 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionExtService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionProjectService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceCallbackService
-import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupAndMemberFacadeServiceImpl
+import com.tencent.devops.auth.provider.rbac.service.RbacPermissionManageFacadeServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceGroupSyncService
@@ -94,7 +94,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -199,7 +199,7 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    fun permissionResourceGroupAndMemberFacadeService(
+    fun permissionFacadeService(
         permissionResourceGroupService: PermissionResourceGroupService,
         groupPermissionService: PermissionResourceGroupPermissionService,
         permissionResourceMemberService: PermissionResourceMemberService,
@@ -212,7 +212,7 @@ class RbacAuthConfiguration {
         permissionAuthorizationService: PermissionAuthorizationService,
         syncIamGroupMemberService: PermissionResourceGroupSyncService,
         authAuthorizationDao: AuthAuthorizationDao
-    ) = RbacPermissionResourceGroupAndMemberFacadeServiceImpl(
+    ) = RbacPermissionManageFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
         permissionResourceMemberService = permissionResourceMemberService,
@@ -593,13 +593,13 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         authResourceGroupMemberService: PermissionResourceMemberService,
         dslContext: DSLContext,
-        resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
+        permissionManageFacadeService: PermissionManageFacadeService
     ) = MigratePermissionHandoverService(
         permissionResourceMemberService = permissionResourceMemberService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
         dslContext = dslContext,
-        resourceGroupAndMemberFacadeService = resourceGroupAndMemberFacadeService
+        permissionManageFacadeService = permissionManageFacadeService
     )
 
     @Bean
