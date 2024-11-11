@@ -113,6 +113,17 @@ class WorkspaceSharedDao {
         }
     }
 
+    fun fetchSharedWorkspacesByUser(
+        dslContext: DSLContext,
+        sharedUser: String
+    ): List<WorkspaceShared> {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(SHARED_USER.eq(sharedUser))
+                .fetch(sharedMapper)
+        }
+    }
+
     fun batchDelete(
         dslContext: DSLContext,
         workspaceName: String,

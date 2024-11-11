@@ -551,6 +551,23 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
+    fun removeUserWorkspaceShare(
+        operator: String,
+        userId: String
+    ) {
+        val workspaces = sharedDao.fetchSharedWorkspacesByUser(dslContext, userId).ifEmpty { return }
+        workspaces.forEach { workspace ->
+            unShareWorkspace(
+                workspaceName = workspace.workspaceName,
+                operator = operator,
+                sharedUsers = listOf(userId),
+                mountType = null,
+                assignType = workspace.type,
+                forceDelete = true
+            )
+        }
+    }
+
     fun unShareWorkspace(
         workspaceName: String,
         operator: String,

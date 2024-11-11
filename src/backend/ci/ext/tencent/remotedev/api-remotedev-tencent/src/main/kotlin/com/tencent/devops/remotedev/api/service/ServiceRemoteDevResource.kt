@@ -565,4 +565,13 @@ interface ServiceRemoteDevResource {
         @QueryParam("size")
         size: String
     ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "剔除当前用户所有云桌面相关权限")
+    @POST
+    @Path("/remove_user_permission")
+    fun removeUserPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }
