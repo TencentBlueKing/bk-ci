@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -160,7 +161,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 stepId = task.stepId,
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
-                buildStatus = task.status.name
+                buildStatus = task.status.name,
+                type = when (actionType) {
+                    ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                    ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    else -> null
+                }
             )
         )
     }

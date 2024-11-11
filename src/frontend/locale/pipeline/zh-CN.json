@@ -56,6 +56,8 @@
   "success": "成功",
   "creator": "创建人",
   "created": "创建时间",
+  "creatorDetail": "创建人/时间",
+  "modificationDetail": "修改人/时间",
   "editSuc": "编辑成功",
   "saveSuc": "保存成功",
   "releaseSuc": "发布成功",
@@ -292,7 +294,8 @@
     "noRelatedPipeline": "暂无关联流水线",
     "all": "所有",
     "installedAt": "安装于",
-    "createdAt": "创建于"
+    "createdAt": "创建于",
+    "systemPlugin": "系统插件"
   },
   "settings": {
     "baseInfo": "基本信息",
@@ -756,7 +759,11 @@
     "directoryName": "目录名称",
     "directoryPath": "目录路径",
     "include": "包含",
-    "fileAndFolder": "{0} 个文件，{1} 个目录"
+    "fileAndFolder": "{0} 个文件，{1} 个目录",
+    "triggerResult": "触发结果",
+    "triggerSuc": "触发成功",
+    "triggerFail": "触发失败",
+    "triggerMismatch": "触发器不匹配"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
@@ -1148,7 +1155,8 @@
     "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
-    "minutes": "分钟"
+    "minutes": "分钟",
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1600,6 +1608,36 @@
   },
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
   "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
+  "namingConvention": "变量语法风格",
+  "inheritedProject": "继承项目设置",
+  "CLASSIC": "传统风格",
+  "CONSTRAINED": "制约风格",
+  "grammaticalDifferences": "语法差异",
+  "differenceItem": "差异项",
+
+  "expressionFormat": "表达式格式",
+  "traditionalFormat": "单花括号或双花括号",
+  "traditionalFormatExample": "如：${var}、${{var}}",
+  "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
+  "constraintFormatExample": "如：${{variables.var}}",
+
+  "expressionFunction": "表达式函数",
+  "expressionFunctionTip": "如contains、join、fromJSON等",
+  "traditionalFunctionFormat": "仅在流程控制选项 {0} 设置中可以使用",
+  "customExpressionsSatisfyRun": "自定义表达式满足时运行",
+  "constraintFunctionFormat": "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数",
+  "constraintFunctionFormatExample": "如变量 a 值为 Json 字符串，则 bash 脚本中，可以使用 fromJSON 读取 echo \"a.node is ${{fromJSON(a).node}}\"",
+
+  "variableValueTooLong": "变量值超长",
+  "traditionalValueTooLongMode": "仅警告未报错",
+
+  "variableNotFound": "变量不存在",
+  "traditionalNotFoundMode": "未报错，继续执行，依赖执行逻辑自行检查",
+  "constraintReadOnlyMode": "将报错，运行失败",
+
+  "variableStandard": "变量 ID 规范",
+  "traditionalStandardMode": "未限制",
+  "constraintStandardMode": "不支持中文 ID，减少不同构建环境下的兼容问题",
   "versionNotMatch": "当前版本非最新版本，无法执行",
   "buildNoBaseline": {
     "buildNoBaseline": "构建号基线",

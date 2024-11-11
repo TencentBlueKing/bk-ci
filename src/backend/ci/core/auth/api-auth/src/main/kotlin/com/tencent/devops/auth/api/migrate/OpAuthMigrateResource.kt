@@ -165,4 +165,12 @@ interface OpAuthMigrateResource {
         @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/enablePipelineListPermissionControl")
+    @Operation(summary = "开启流水线列表权限控制")
+    fun enablePipelineListPermissionControl(
+        @Parameter(description = "项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

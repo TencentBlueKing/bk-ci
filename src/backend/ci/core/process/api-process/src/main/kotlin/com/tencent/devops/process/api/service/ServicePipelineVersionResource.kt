@@ -314,4 +314,19 @@ interface ServicePipelineVersionResource {
         @QueryParam("storageType")
         storageType: String?
     ): Response
+
+    @Operation(summary = "重置流水线推荐版本号")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/resetBuildNo")
+    fun resetBuildNo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

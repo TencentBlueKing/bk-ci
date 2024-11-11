@@ -29,7 +29,6 @@ subprojects {
 
     configurations.forEach {
         it.exclude(group = "com.perforce", module = "*")
-        it.exclude(group = "com.google.guava", module = "*")
         it.exclude(group = "com.googlecode.javaewah", module = "*")
         it.exclude(group = "com.vdurmont", module = "*")
         it.exclude(group = "com.github.ulisesbocchio", module = "*")

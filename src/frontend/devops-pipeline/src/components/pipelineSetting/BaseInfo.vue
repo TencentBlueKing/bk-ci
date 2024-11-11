@@ -91,6 +91,15 @@
                     :handle-change="handleBaseInfoChange"
                 />
             </bk-form-item>
+
+            <bk-form-item ext-cls="namingConvention">
+                <syntax-style-configuration
+                    :inherited-dialect="settings.inheritedDialect"
+                    :pipeline-dialect="settings.pipelineDialect ?? currentPipelineDialect"
+                    @inherited-change="inheritedChange"
+                    @pipeline-dialect-change="pipelineDialectChange"
+                />
+            </bk-form-item>
         </bk-form>
     </div>
 </template>
@@ -98,13 +107,15 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
-    import { mapGetters } from 'vuex'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import { mapGetters, mapActions, mapState } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
         components: {
             VuexTextarea,
-            VuexInput
+            VuexInput,
+            SyntaxStyleConfiguration
         },
         props: {
             pipelineSetting: Object,
@@ -114,10 +125,18 @@
             },
             handleBaseInfoChange: Function
         },
+        data () {
+            return {
+                settings: {}
+            }
+        },
         computed: {
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
             }),
+            ...mapState('pipelines', [
+                'currentPipelineDialect'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -137,10 +156,27 @@
                 })
             }
         },
+        watch: {
+            'pipelineSetting.pipelineAsCodeSettings': {
+                handler (val) {
+                    if (val) {
+                        const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting.pipelineAsCodeSettings
+                        this.settings = {
+                            ...this.pipelineSetting.pipelineAsCodeSettings,
+                            pipelineDialect: inheritedDialect ? projectDialect : pipelineDialect
+                        }
+                    }
+                },
+                immediate: true
+            }
+        },
         created () {
             this.requestGrouptLists()
         },
         methods: {
+            ...mapActions('pipelines', [
+                'getPipelineDialect'
+            ]),
             /** *
              * 获取标签及其分组
              */
@@ -151,6 +187,8 @@
                     })
 
                     this.$store.commit('pipelines/updateGroupLists', res)
+                    // 获取当前项目语法风格
+                    await this.getPipelineDialect(this.projectId)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -169,6 +207,18 @@
             toManageLabel () {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/list/group`
                 window.open(url, '_blank')
+            },
+            inheritedChange (value) {
+                this.settings = {
+                    ...this.settings,
+                    inheritedDialect: value,
+                    ...value && { pipelineDialect: this.currentPipelineDialect }
+                }
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
+            },
+            pipelineDialectChange (value) {
+                this.settings.pipelineDialect = value
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
             }
         }
     }
@@ -231,6 +281,14 @@
                 justify-content: center;
                 color: #979BA5;
                 font-size: 12px;
+            }
+        }
+        .namingConvention {
+            position: relative;
+            .bk-form-control {
+                display: flex;
+                grid-gap: 16px;
+                margin-top: 8px;
             }
         }
     }

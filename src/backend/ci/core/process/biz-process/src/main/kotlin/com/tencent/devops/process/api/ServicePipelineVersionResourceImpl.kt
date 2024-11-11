@@ -451,6 +451,18 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
+    override fun resetBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) = Result(
+        pipelineInfoFacadeService.resetBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    )
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

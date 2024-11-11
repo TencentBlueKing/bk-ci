@@ -140,8 +140,7 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId update all docker enable.")
         val dockerUnavailableList = pipelineDockerIPInfoDao.getDockerIpList(
             dslContext = dslContext,
-            enable = false,
-            grayEnv = gray.isGray()
+            enable = false
         )
 
         dockerUnavailableList.forEach {
