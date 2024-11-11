@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -116,6 +117,23 @@ interface UserStoreComponentManageResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String
+    ): Result<Boolean>
+
+    @Operation(summary = "更改组件授权人信息")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/component/repository/authorizer/update")
+    fun updateStoreRepositoryAuthorizer(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)

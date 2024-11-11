@@ -63,12 +63,14 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
+import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
+import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -450,6 +452,43 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             modifier = userId
         )
         storeBaseEnvExtManageDao.batchSave(dslContext, listOf(storeBaseEnvExtDataPO))
+        return Result(true)
+    }
+
+    override fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Boolean> {
+        // 判断用户是否是管理员，只有管理员才能重置授权
+        if (!storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(userId)
+            )
+        }
+        val baseFeatureRecord =
+            storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
+        val storeBaseFeatureExtDataPO = StoreBaseFeatureExtDataPO(
+            id = UUIDUtil.generate(),
+            featureId = baseFeatureRecord.id,
+            storeCode = storeCode,
+            storeType = storeType,
+            fieldName = KEY_REPOSITORY_AUTHORIZER,
+            fieldValue = userId,
+            creator = userId,
+            modifier = userId
+        )
+        storeBaseFeatureExtManageDao.batchSave(dslContext, listOf(storeBaseFeatureExtDataPO))
         return Result(true)
     }
 

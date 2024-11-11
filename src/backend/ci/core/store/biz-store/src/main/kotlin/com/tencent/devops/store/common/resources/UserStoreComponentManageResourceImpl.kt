@@ -35,6 +35,7 @@ import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceI
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 
 @RestResource
@@ -85,5 +86,13 @@ class UserStoreComponentManageResourceImpl(
             userId = userId,
             handlerRequest = StoreDeleteRequest(storeCode, storeType)
         )
+    }
+
+    override fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Boolean> {
+        return storeComponentManageService.updateStoreRepositoryAuthorizer(userId, storeType, storeCode)
     }
 }
