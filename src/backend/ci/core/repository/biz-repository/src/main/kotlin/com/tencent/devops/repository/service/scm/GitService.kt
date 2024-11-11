@@ -702,7 +702,7 @@ class GitService @Autowired constructor(
                 .findGitDir()
                 .build()
             // 5、给文件添加git信息
-            gitRepository.config.setString("remote", "origin", "url", sampleProjectPath)
+            gitRepository.config.setString("remote", "origin", "url", atomRepositoryUrl)
             gitRepository.config.setString("user", null, "name", gitPublicAccount)
             gitRepository.config.setString("user", null, "email", gitPublicEmail)
             gitRepository.config.save()
