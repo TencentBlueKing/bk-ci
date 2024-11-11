@@ -37,7 +37,7 @@ import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -52,7 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
-    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
+    private val permissionManageFacadeService: PermissionManageFacadeService,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthResourceGroupResource {
@@ -94,7 +94,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         )
 
         return Result(
-            permissionResourceGroupAndMemberFacadeService.getMemberGroupsDetails(
+            permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 resourceType = resourceType,
                 memberId = memberId,
@@ -135,7 +135,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceGroupAndMemberFacadeService.batchDeleteResourceGroupMembersFromManager(
+            permissionManageFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = GroupMemberCommonConditionReq(

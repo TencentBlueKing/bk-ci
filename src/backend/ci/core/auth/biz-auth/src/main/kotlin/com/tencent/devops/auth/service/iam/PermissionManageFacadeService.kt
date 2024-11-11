@@ -16,7 +16,10 @@ import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
 import com.tencent.devops.common.api.model.SQLPage
 
-interface PermissionResourceGroupAndMemberFacadeService {
+/**
+ * 权限管理门面类
+ */
+interface PermissionManageFacadeService {
     /**
      * 查询成员所在资源用户组详情
      * 管理员视角返回用户直接加入/模板加入的用户组
@@ -107,25 +110,36 @@ interface PermissionResourceGroupAndMemberFacadeService {
         memberId: String
     ): Pair<List<Int>/*引起代持人权限失效的用户组*/, List<String>/*引起代持人权限失效的流水线*/>
 
-    // 无需审批版本
+    /**
+     * 续期用户权限-无需审批版本
+     * */
     fun renewalGroupMember(
         userId: String,
         projectCode: String,
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Boolean
 
+    /**
+     * 批量续期用户权限-管理员视角
+     * */
     fun batchRenewalGroupMembersFromManager(
         userId: String,
         projectCode: String,
         renewalConditionReq: GroupMemberRenewalConditionReq
     ): Boolean
 
+    /**
+     * 批量交接-管理员视角
+     * */
     fun batchHandoverGroupMembersFromManager(
         userId: String,
         projectCode: String,
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Boolean
 
+    /**
+     * 批量移除-管理员视角
+     * */
     fun batchDeleteResourceGroupMembersFromManager(
         userId: String,
         projectCode: String,

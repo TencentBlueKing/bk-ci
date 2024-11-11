@@ -14,10 +14,10 @@ import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.common.api.model.SQLPage
 
-class SamplePermissionResourceGroupAndMemberFacadeService : PermissionResourceGroupAndMemberFacadeService {
+class SamplePermissionManageFacadeService : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
         memberId: String,
