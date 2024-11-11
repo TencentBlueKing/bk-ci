@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -607,4 +608,19 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "磁盘扩容", tags = ["v4_app_remotedev_workspace_expand_disk"])
+    @POST
+    @Path("/workspace_expand_disk")
+    fun expandWorkspaceDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        @QueryParam("size")
+        size: String
+    ): Result<ExpandDiskValidateResp?>
 }

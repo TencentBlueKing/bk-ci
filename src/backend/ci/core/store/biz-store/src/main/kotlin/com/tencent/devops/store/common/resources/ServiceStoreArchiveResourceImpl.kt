@@ -34,6 +34,7 @@ import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -78,8 +79,7 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?,
-        queryConfigFileFlag: Boolean?
+        osArch: String?
     ): Result<List<StorePkgEnvInfo>> {
         val storeReleaseSpecBusService = SpringContextUtil.getBean(
             StoreReleaseSpecBusService::class.java,
@@ -92,8 +92,29 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = version,
                 osName = osName,
-                osArch = osArch,
-                queryConfigFileFlag = queryConfigFileFlag
+                osArch = osArch
+            )
+        )
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): Result<List<StorePkgEnvInfo>> {
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+        )
+        return Result(
+            storeReleaseSpecBusService.getComponentPkgEnvInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                queryComponentPkgEnvInfoParam = queryComponentPkgEnvInfoParam
             )
         )
     }

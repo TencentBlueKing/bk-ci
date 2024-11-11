@@ -29,7 +29,7 @@ package com.tencent.devops.auth.common
 
 object Constants {
     const val SUPER_MANAGER = -1
-    const val DEPT_LABEL = "id,name,parent,enabled,has_children"
+    const val DEPT_LABEL = "id,name,parent,enabled"
     const val USER_LABEL = "id,username,display_name,enabled,departments,extras"
     const val USER_NAME_AND_DISPLAY_NAME_LABEL = "id,username,display_name"
     const val LEVEL = "level"

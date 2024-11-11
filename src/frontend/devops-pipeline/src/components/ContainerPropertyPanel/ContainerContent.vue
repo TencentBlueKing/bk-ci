@@ -852,7 +852,6 @@
                     imageType: defaultBuildResource.imageType || '',
                     recommendFlag: defaultBuildResource.recommendFlag,
                     useRoot: val === 'THIRD_PARTY_PCG' ? false : undefined,
-                    dockerInfo: {},
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()

@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -432,7 +433,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type, null))
+        return Result(windowsResourceConfigService.allWindowsQuota(
+            searchCustom = false,
+            quotaType = type,
+            withProjectLimit = null
+        )
+        )
     }
 
     override fun updateUsageLimit(
@@ -659,5 +665,20 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
+    }
+
+    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+        val data = expertSupportService.expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size
+        ) ?: return Result(null)
+
+        return Result(
+            ExpandDiskValidateResp(
+                valid = data.valid,
+                message = data.message
+            )
+        )
     }
 }

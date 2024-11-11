@@ -29,7 +29,6 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -143,9 +142,6 @@ class TxProjectServiceImpl @Autowired constructor(
     projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
-    @Value("\${iam.v0.url:#{null}}")
-    private var v0IamUrl: String = ""
-
     @Value("\${tag.rbac:#{null}}")
     private var rbacTag: String = ""
 
@@ -250,15 +246,9 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val projectList = mutableSetOf<String>()
-        // 请求v3以及rbac的项目
-        val iamList = getIamUserProject(userId!!)
-        logger.info("$userId iam project: $iamList")
-
-        if (iamList.isNotEmpty()) {
-            projectList.addAll(iamList)
-        }
-        return projectList.toList()
+        val projectList = getIamUserProject(userId!!)
+        logger.info("$userId iam project: $projectList")
+        return projectList
     }
 
     override fun getProjectFromAuth(
@@ -267,17 +257,12 @@ class TxProjectServiceImpl @Autowired constructor(
         permission: AuthPermission,
         resourceType: String?
     ): List<String>? {
-        if (rbacTag.isBlank()) {
-            return emptyList()
-        }
-        return bkTag.invokeByTag(rbacTag) {
-            client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
-                userId = userId,
-                token = tokenService.getSystemToken()!!,
-                action = permission.value,
-                resourceType = resourceType
-            ).data
-        }
+        return client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+            userId = userId,
+            token = tokenService.getSystemToken(),
+            action = permission.value,
+            resourceType = resourceType
+        ).data
     }
 
     override fun isShowUserManageIcon(routerTag: String?): Boolean {
@@ -416,42 +401,17 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getIamUserProject(userId: String): List<String> {
-        if (rbacTag.isBlank()) {
-            return emptyList()
-        }
         logger.info("getUserProject tag: rbacTag=$rbacTag")
-        val projectList = mutableListOf<String>()
-        try {
-            getIamProjectList(
-                tag = rbacTag,
-                projectList = projectList,
-                userId = userId
-            )
-            logger.info("get rbac Project $projectList")
+        val projectList = try {
+            client.get(ServiceProjectAuthResource::class).getUserProjects(
+                userId = userId,
+                token = tokenService.getSystemToken()
+            ).data ?: emptyList()
         } catch (e: Exception) {
-            // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")
-            return emptyList()
+            emptyList()
         }
-        return projectList
-    }
-
-    private fun getIamProjectList(
-        tag: String,
-        projectList: MutableList<String>,
-        userId: String
-    ): List<String> {
-        if (!tag.isBlank()) {
-            val iamProjectList = bkTag.invokeByTag(tag) {
-                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
-                    userId = userId,
-                    token = tokenService.getSystemToken()!!
-                ).data
-            }
-            if (iamProjectList != null) {
-                projectList.addAll(iamProjectList)
-            }
-        }
+        logger.info("get rbac Project $projectList")
         return projectList
     }
 
@@ -540,10 +500,12 @@ class TxProjectServiceImpl @Autowired constructor(
                         validateProductExists()
                     }
                 }
+
                 ProjectOperation.UPDATE -> {
                     validateProductIdNotNull()
                     validateProductExists()
                 }
+
                 else -> {}
             }
         }

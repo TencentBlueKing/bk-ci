@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -424,5 +425,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("checkUserViewWorkspacePermission |$userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).checkUserViewWorkspacePermission(userId, workspaceName)
+    }
+
+    override fun expandWorkspaceDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<ExpandDiskValidateResp?> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
     }
 }

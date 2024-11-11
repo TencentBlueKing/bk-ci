@@ -110,7 +110,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
-                userId = userId,
                 searchCustom = searchCustom,
                 quotaType = QuotaType.OFFSHORE,
                 withProjectLimit = projectId

@@ -29,10 +29,11 @@ package com.tencent.devops.auth.common
 
 import com.tencent.devops.auth.filter.BlackListAspect
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
+import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
+import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
+import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.AuthUserBlackListService
-import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,17 +47,20 @@ class AuthCoreConfiguration {
     @Bean
     fun refreshDispatch(streamBridge: StreamBridge) = AuthRefreshDispatch(streamBridge)
 
-    @Bean
-    fun authRefreshEventListener(
-        @Autowired userPermissionService: UserPermissionService
-    ) = AuthRefreshEventListener(
-        userPermissionService = userPermissionService
-    )
+    @EventConsumer(true)
+    fun managerChangeConsumer(
+        @Autowired refreshListener: AuthRefreshEventListener
+    ) = ScsConsumerBuilder.build<ManagerOrganizationChangeEvent> { refreshListener.execute(it) }
 
     @EventConsumer(true)
-    fun refreshBroadCastConsumer(
+    fun managerUserChangeConsumer(
         @Autowired refreshListener: AuthRefreshEventListener
-    ) = ScsConsumerBuilder.build<RefreshBroadCastEvent> { refreshListener.execute(it) }
+    ) = ScsConsumerBuilder.build<ManagerUserChangeEvent> { refreshListener.execute(it) }
+
+    @EventConsumer(true)
+    fun strategyUpdateConsumer(
+        @Autowired refreshListener: AuthRefreshEventListener
+    ) = ScsConsumerBuilder.build<StrategyUpdateEvent> { refreshListener.execute(it) }
 
     @Bean
     fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)

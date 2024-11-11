@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.devx.service
 
-import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -51,7 +50,6 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
@@ -64,6 +62,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -84,7 +83,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Primary
 @Service("DEVX_RELEASE_SPEC_BUS_SERVICE")
@@ -94,8 +92,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
     private val storeCommonService: StoreCommonService,
-    private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
-    private val client: Client
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : StoreReleaseSpecBusService {
 
     companion object {
@@ -239,58 +236,63 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?,
-        queryConfigFileFlag: Boolean?
+        osArch: String?
     ): List<StorePkgEnvInfo> {
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
-        if (queryConfigFileFlag == true) {
-            val filePath = URLEncoder.encode("$storeCode/$version/$CONFIG_JSON_NAME", Charsets.UTF_8.name())
-            val configJsonStr =
-                client.get(ServiceArchiveComponentPkgResource::class).getFileContent(StoreTypeEnum.DEVX, filePath).data
-            if (configJsonStr.isNullOrBlank()) {
-                storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
-                return storePkgEnvInfos
-            }
-            val bkConfigInfo = JsonUtil.to(configJsonStr, BkConfigInfo::class.java)
-            val osDefaultEnvNumMap = mutableMapOf<String, Int>()
-            bkConfigInfo.os.forEach { osConfigInfo ->
-                storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
-                // 统计每种操作系统默认环境配置数量
-                val defaultFlag = osConfigInfo.defaultFlag
-                val configOsName = osConfigInfo.osName
-                val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
-                if (osDefaultEnvNumMap.containsKey(configOsName)) {
-                    osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
-                } else {
-                    osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
-                }
-            }
-            osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
-                // 判断每种操作系统默认环境配置是否有且只有1个
-                if (defaultEnvNum != 1) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                        params = arrayOf(CONFIG_JSON_NAME, osName, defaultEnvNum.toString())
-                    )
-                }
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
+        )
+        val baseEnvRecords = if (baseRecord != null) {
+            storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+                dslContext = dslContext, storeId = baseRecord.id, osName = osName, osArch = osArch
+            )
+        } else {
+            null
+        }
+        if (!baseEnvRecords.isNullOrEmpty()) {
+            baseEnvRecords.forEach { baseEnvRecord ->
+                storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
             }
         } else {
-            val baseRecord = storeBaseQueryDao.getComponent(
-                dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
-            )
-            val baseEnvRecords = if (baseRecord != null) {
-                storeBaseEnvQueryDao.getBaseEnvsByStoreId(
-                    dslContext = dslContext, storeId = baseRecord.id, osName = osName, osArch = osArch
-                )
+            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+        }
+        return storePkgEnvInfos
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): List<StorePkgEnvInfo> {
+        val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val configFileContent = queryComponentPkgEnvInfoParam.configFileContent
+        if (configFileContent.isBlank()) {
+            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+            return storePkgEnvInfos
+        }
+        val bkConfigInfo = JsonUtil.to(configFileContent, BkConfigInfo::class.java)
+        val osDefaultEnvNumMap = mutableMapOf<String, Int>()
+        bkConfigInfo.os.forEach { osConfigInfo ->
+            storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(osConfigInfo))
+            // 统计每种操作系统默认环境配置数量
+            val defaultFlag = osConfigInfo.defaultFlag
+            val configOsName = osConfigInfo.osName
+            val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
+            if (osDefaultEnvNumMap.containsKey(configOsName)) {
+                osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
             } else {
-                null
+                osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
             }
-            if (!baseEnvRecords.isNullOrEmpty()) {
-                baseEnvRecords.forEach { baseEnvRecord ->
-                    storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
-                }
-            } else {
-                storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+        }
+        osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
+            // 判断每种操作系统默认环境配置是否有且只有1个
+            if (defaultEnvNum != 1) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
+                    params = arrayOf(CONFIG_JSON_NAME, osName, defaultEnvNum.toString())
+                )
             }
         }
         return storePkgEnvInfos

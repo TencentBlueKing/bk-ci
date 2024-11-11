@@ -197,6 +197,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         isMemberJoinedToGroup
                     } catch (ignore: Exception) {
                         logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                        authResourceGroupApplyDao.delete(dslContext, it.id)
                         false
                     }
                 }
@@ -314,7 +315,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-    private fun syncProjectGroup(projectCode: String) {
+    override fun syncProjectGroup(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to sync project group :$projectCode")
         try {

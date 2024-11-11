@@ -155,12 +155,12 @@
                         >
                             <bk-radio-group v-model="experienceRange">
                                 <bk-radio
-                                    value="public"
+                                    value="internals"
                                     class="mr20"
                                 >
-                                    公开体验
+                                    内部体验组
                                 </bk-radio>
-                                <bk-radio value="internals">内部体验组</bk-radio>
+                                <bk-radio value="public">公开体验</bk-radio>
                             </bk-radio-group>
                         </bk-form-item>
                         <bk-form-item
@@ -415,7 +415,7 @@
                     title: ''
                 },
                 query: {},
-                experienceRange: 'public',
+                experienceRange: 'internals',
                 createReleaseForm: {
                     name: '',
                     version_no: '',

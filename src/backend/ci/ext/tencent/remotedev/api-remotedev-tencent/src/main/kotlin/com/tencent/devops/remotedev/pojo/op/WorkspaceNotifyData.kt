@@ -13,7 +13,9 @@ data class WorkspaceNotifyData(
     @Parameter(description = "title", required = true)
     val title: String,
     @Parameter(description = "desc", required = false)
-    val desc: String?
+    val desc: String?,
+    @Parameter(description = "通知类型", required = false)
+    val notifyType: List<RemoteDevNotifyType>?
 )
 
 data class WorkspaceDesktopNotifyData(
