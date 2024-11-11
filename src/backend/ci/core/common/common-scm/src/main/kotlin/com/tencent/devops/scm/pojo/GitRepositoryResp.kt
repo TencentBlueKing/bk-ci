@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "创建git仓库响应体")
 class GitRepositoryResp(
+    @get:Schema(title = "仓库ID", required = true)
+    val id: Long,
     @get:Schema(title = "仓库名称", required = true)
     val name: String,
     @get:Schema(title = "仓库地址", required = true)
