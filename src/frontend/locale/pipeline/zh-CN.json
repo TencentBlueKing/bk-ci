@@ -1648,7 +1648,8 @@
     "tips5": "- 流水线编排中，使用上下文 ${{ ci.build-no}} 引用",
     "tips6": "- 流水线引用的脚本文件中，使用内置环境变量 ${{BK_CI_BUILD_NO}} 引用",
     "tips7": "3. 示例，基线值为 0，策略为每次加 1，则下一次触发运行时构建号为 1",
-    "manualResetRequired": "修改基线后，可在升级实例同时应用，或升级实例后手动重置实例构建号",
+    "manualResetRequired": "基线值修改后不会自动生效，请务必在发布后手动重置",
+    "templateManualResetRequired": "修改基线后，可在升级实例同时应用，或升级实例后手动重置实例构建号",
     "resetRequiredTips": "检测到构建号基线值发生了变化，请手动重置构建号",
     "goReset": "去重置",
     "baselineValue": "基线值：",
@@ -1663,5 +1664,6 @@
   "deleteDraft": "删除草稿",
   "sureDeleteDraft": "确认删除该草稿？",
   "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
-  "noDraft": "暂无可删除的草稿"
+  "noDraft": "暂无可删除的草稿",
+  "isTaskTermination": "确认中止任务执行吗？"
 }

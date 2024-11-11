@@ -1650,7 +1650,8 @@
     "tips5": "- In pipeline orchestration, use the context ${{ ci.build-no }}",
     "tips6": "- In the script files referenced by the pipeline, use the built-in environment variable ${{BK_CI_BUILD_NO}}",
     "tips7": "3. Example: If the baseline value is 0 and the strategy is to increment by 1 each time, the build number for the next triggered run will be 1.",
-    "manualResetRequired": "After modifying the baseline, you can apply it while upgrading the instance, or manually reset the instance build number after the upgrade",
+    "manualResetRequired": "Changes to the baseline value will not take effect automatically. Please make sure to manually reset it after release.",
+    "templateManualResetRequired": "After modifying the baseline, you can apply it while upgrading the instance, or manually reset the instance build number after the upgrade",
     "resetRequiredTips": "A change in the build number baseline value has been detected. Please manually reset the build number.",
     "goReset": "Go Reset",
     "baselineValue": "buildNo:",
@@ -1665,5 +1666,6 @@
   "deleteDraft": "Delete Draft",
   "sureDeleteDraft": "Are you sure you want to delete this draft?",
   "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
-  "noDraft": "No drafts available for deletion"
+  "noDraft": "No drafts available for deletion",
+  "isTaskTermination": "Are you sure you want to terminate the task execution?"
 }
