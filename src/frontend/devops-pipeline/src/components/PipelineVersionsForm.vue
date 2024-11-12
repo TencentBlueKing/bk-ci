@@ -1,7 +1,7 @@
 <template>
     <bk-form
-        :class="[{ 'is-not-Preview': !isPreview }, 'pipeline-execute-version-params']"
-        :form-type="!isPreview ? 'vertical' : 'inline'"
+        :class="[{ 'is-not-Preview': !isPreview && !isInstance }, 'pipeline-execute-version-params']"
+        :form-type="!isPreview && !isInstance ? 'vertical' : 'inline'"
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
@@ -29,24 +29,44 @@
 
         <div
             class="execute-buildno-params"
-            v-if="!isPreview"
+            v-if="!isPreview && !isInstance"
         >
-            <form-field
-                :required="true"
-                :label="$t('buildNum')"
-                :is-error="errors.has('buildNo')"
-                :error-msg="errors.first('buildNo')"
+            <bk-form-item
+                required
+                :label="$t('buildNoBaseline.buildNoBaseline')"
+                :desc="baselineTooltipContent"
             >
-                <vuex-input
-                    :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled"
-                    input-type="number"
-                    name="buildNo"
-                    placeholder="BK_CI_BUILD_NO"
-                    v-validate.initial="'required|numeric'"
-                    :value="buildNo.buildNo"
-                    :handle-change="handleBuildNoChange"
-                />
-            </form-field>
+                <form-field
+                    :required="true"
+                    :is-error="errors.has('buildNo')"
+                    :error-msg="errors.first('buildNo')"
+                >
+                    <vuex-input
+                        :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled"
+                        input-type="number"
+                        name="buildNo"
+                        placeholder="BK_CI_BUILD_NO"
+                        v-validate.initial="'required|numeric'"
+                        :value="buildNo.buildNo"
+                        :handle-change="handleBuildNoChange"
+                    />
+                </form-field>
+                <span class="baseline-tips">
+                    <Logo
+                        size="14"
+                        name="warning-circle-fill"
+                    />
+                    <span class="baseline-tips-text">{{ $t('buildNoBaseline.templateManualResetRequired') }}</span>
+                </span>
+                <div id="baseline-tooltip-content">
+                    <p
+                        v-for="(tip, index) in buildNoBaselineTips"
+                        :key="index"
+                    >
+                        {{ tip }}
+                    </p>
+                </div>
+            </bk-form-item>
             <form-field
                 :required="true"
                 :is-error="errors.has('buildNoType')"
@@ -68,17 +88,53 @@
         >
             <label class="pipeline-execute-version-label">
                 <span>{{ $t('buildNum') }}</span>
+                <bk-checkbox
+                    v-if="isInstance"
+                    class="instance_reset"
+                    :value="buildNo.isReset"
+                >
+                    {{ $t('buildNoBaseline.instanceBuildNo') }}
+                </bk-checkbox>
             </label>
             <div class="preview-buildno-params">
                 <div class="build">
                     <span class="build-label">{{ $t('buildNoBaseline.baselineValue') }}</span>
-                    <span class="build-value">{{ `${buildNo.buildNo} (${currentBuildNoType})` }}</span>
+                    <span
+                        class="build-value"
+                        v-if="!isInstance"
+                    >
+                        {{ `${buildNo.buildNo} (${currentBuildNoType})` }}
+                    </span>
+                    <p
+                        class="build-input"
+                        v-else
+                    >
+                        <vuex-input
+                            :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled"
+                            input-type="number"
+                            name="buildNo"
+                            placeholder="BK_CI_BUILD_NO"
+                            v-validate.initial="'required|numeric'"
+                            :value="buildNo.buildNo"
+                            :handle-change="handleBuildNoChange"
+                        />
+                        <span class="bk-form-help is-danger">{{ errors.first('buildNo') }}</span>
+                    </p>
+                </div>
+                <div
+                    class="build"
+                    v-if="isInstance"
+                >
+                    <span class="build-label">{{ $t('buildNoBaseline.strategy') }}</span>
+                    <span class="build-value">
+                        {{ currentBuildNoType }}
+                    </span>
                 </div>
                 <div class="build">
                     <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                     <p>
                         <vuex-input
-                            :disabled="buildNo.buildNoType !== 'CONSISTENT'"
+                            :disabled="buildNo.buildNoType !== 'CONSISTENT' && !isInstance"
                             input-type="number"
                             name="currentBuildNo"
                             placeholder="CURRENT_BUILD_NO"
@@ -100,12 +156,14 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
             EnumInput,
             VuexInput,
-            FormField
+            FormField,
+            Logo
         },
         props: {
             isPreview: {
@@ -130,6 +188,18 @@
             handleVersionChange: {
                 type: Function,
                 default: () => () => { }
+            },
+            isInstance: {
+                type: Boolean
+            }
+        },
+        data () {
+            return {
+                baselineTooltipContent: {
+                    allowHTML: true,
+                    width: 610,
+                    content: '#baseline-tooltip-content'
+                }
             }
         },
         computed: {
@@ -152,6 +222,9 @@
             currentBuildNoType () {
                 const buildNoItem = this.buildNoRules.find(item => item.value === this.buildNo.buildNoType)
                 return buildNoItem ? buildNoItem.label : undefined
+            },
+            buildNoBaselineTips () {
+                return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
             }
         }
     }
@@ -164,12 +237,19 @@
     grid-gap: 10px;
 
     .pipeline-execute-version-label {
+        display: flex;
+        align-items: center;
         font-size: 12px;
         font-weight: 700;
 
         .desc-text {
             font-weight: normal;
             color: #979ba5;
+        }
+
+        .instance_reset {
+            font-weight: normal;
+            margin-left: 18px;
         }
     }
 
@@ -195,8 +275,17 @@
         display: grid;
         grid-gap: 8px;
         width: fit-content;
+        .baseline-tips {
+            svg {
+                vertical-align: middle;
+            }
+            .baseline-tips-text {
+                font-size: 12px;
+                color: #979BA5;
+            }
+        }
     }
-    .preview-buildno{
+    .preview-buildno {
         margin-left: 20px;
         
         .preview-buildno-params {
@@ -210,7 +299,7 @@
                 .build-label,
                 .build-value {
                     font-size: 12px;
-                    padding: 0 8px;
+                    padding: 0 12px;
                     border: 1px solid #dcdee5;
                     cursor: not-allowed;
                     height: 32px;
@@ -238,6 +327,10 @@
                         top: 70%;
                         left: 0;
                     }
+                }
+
+                .build-input {
+                    margin-right: 16px;
                 }
             }
         }

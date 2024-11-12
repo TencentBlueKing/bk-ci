@@ -1659,7 +1659,9 @@
     "confirm": "确定重置",
     "CONSISTENT": "重置后，后续构建将锁定为 {0}",
     "SUCCESS_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次成功构建将从 {1} 开始计数",
-    "EVERY_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次构建将从 {1} 开始计数"
+    "EVERY_BUILD_INCREMENT": "将构建号重置为基线值 {0} 后，下一次构建将从 {1} 开始计数",
+    "strategy": "策略",
+    "instanceBuildNo": "实例化后立即重置为基线值"
   },
   "deleteDraft": "删除草稿",
   "sureDeleteDraft": "确认删除该草稿？",

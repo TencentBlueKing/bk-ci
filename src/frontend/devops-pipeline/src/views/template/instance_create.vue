@@ -171,6 +171,7 @@
                                     :ref="`paramsForm${index}`"
                                     :build-no="param.buildParams"
                                     :disabled="disabled"
+                                    :is-instance="true"
                                     :version-param-values="param.paramValues"
                                     :handle-version-change="handleParamChange"
                                     :handle-build-no-change="handleBuildNoChange"
