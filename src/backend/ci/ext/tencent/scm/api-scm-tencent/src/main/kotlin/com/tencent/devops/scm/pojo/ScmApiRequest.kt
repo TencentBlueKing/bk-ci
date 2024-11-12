@@ -23,12 +23,19 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:biz-base-scm"))
-}
+package com.tencent.devops.scm.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "scm api请求")
+data class ScmApiRequest(
+    @get:Schema(title = "类名")
+    val serviceName: String,
+    @get:Schema(title = "方法名")
+    val methodName: String,
+    @get:Schema(title = "方法参数")
+    val parameters: List<ScmApiParameter>
+)

@@ -23,12 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:biz-base-scm"))
+package com.tencent.devops.scm.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.scm.api.ServiceScmApiProxyResource
+import com.tencent.devops.scm.pojo.ScmApiRequest
+import com.tencent.devops.scm.services.ScmApiProxyHandlerService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceScmApiProxyResourceImpl @Autowired constructor(
+    private val apiProxyHandlerService: ScmApiProxyHandlerService
+) : ServiceScmApiProxyResource {
+
+    override fun proxy(
+        serviceName: String,
+        methodName: String,
+        request: ScmApiRequest
+    ): Result<Any?> {
+        return Result(apiProxyHandlerService.invoke(request))
+    }
 }
