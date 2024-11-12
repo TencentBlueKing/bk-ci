@@ -1160,8 +1160,8 @@ class GitService @Autowired constructor(
                 "repositoryUrl:$repositoryUrl, nameSpaceName:$nameSpaceName," +
                 "tokenType:$tokenType,repositoryName:$repositoryName"
         )
-        val atomTmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
-        logger.info("initRepositoryInfo atomTmpWorkspace is:${atomTmpWorkspace.absolutePath}")
+        val tmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
+        logger.info("initRepositoryInfo tmpWorkspace is:${tmpWorkspace.absolutePath}")
         try {
             // 1、clone插件示例工程代码到插件工作空间下
             val credentialsProvider = if (tokenType == TokenTypeEnum.OAUTH) {
@@ -1170,19 +1170,25 @@ class GitService @Autowired constructor(
                 UsernamePasswordCredentialsProvider(gitPublicAccount, gitPublicSecret)
             }
             cloneRepo(
-                workspace = atomTmpWorkspace,
+                workspace = tmpWorkspace,
                 remoteUrl = sampleProjectPath,
                 credentialsProvider = credentialsProvider
             )
             // 2、删除下载下来示例工程的git信息
-            logger.info("initRepositoryInfo workspace is:${atomTmpWorkspace.absolutePath}")
-            val atomGitFileDir = File(atomTmpWorkspace, ".git")
+            logger.info("initRepositoryInfo workspace is:${tmpWorkspace.absolutePath}")
+            val atomGitFileDir = File(tmpWorkspace, ".git")
             if (atomGitFileDir.exists()) {
                 atomGitFileDir.deleteRecursively()
             }
+            // 处理示例工程的文件
+            val handleFileResult =
+                sampleProjectGitFileService.handleSampleProjectGitFile(nameSpaceName, repositoryName, tmpWorkspace)
+            if (handleFileResult.isNotOk()) {
+                return handleFileResult
+            }
             // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
             if (FrontendTypeEnum.SPECIAL == frontendType) {
-                val atomFrontendFileDir = File(atomGitFileDir, BK_FRONTEND_DIR_NAME)
+                val atomFrontendFileDir = File(tmpWorkspace, BK_FRONTEND_DIR_NAME)
                 if (!atomFrontendFileDir.exists()) {
                     atomFrontendFileDir.mkdirs()
                 }
@@ -1197,20 +1203,8 @@ class GitService @Autowired constructor(
                     FileSystemUtils.deleteRecursively(frontendGitFileDir)
                 }
             }
-            // 把task.json中的atomCode修改成用户对应的
-            val taskJsonFile = File(atomTmpWorkspace, "task.json")
-            if (taskJsonFile.exists()) {
-                val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
-                val taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
-                taskJsonMap["atomCode"] = repositoryName
-                val deleteFlag = taskJsonFile.delete()
-                if (deleteFlag) {
-                    taskJsonFile.createNewFile()
-                    taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
-                }
-            }
             // 3、重新生成git信息
-            Git.init().setDirectory(atomTmpWorkspace).setInitialBranch("master").call().close()
+            Git.init().setDirectory(tmpWorkspace).setInitialBranch("master").call().close()
             // 4、添加远程仓库
             val gitRepository =  FileRepositoryBuilder()
                 .setGitDir(atomGitFileDir)
@@ -1240,7 +1234,7 @@ class GitService @Autowired constructor(
             logger.error("initRepositoryInfo error is:", e)
             return Result(false)
         } finally {
-            FileSystemUtils.deleteRecursively(atomTmpWorkspace)
+            FileSystemUtils.deleteRecursively(tmpWorkspace)
         }
         return Result(true)
     }
