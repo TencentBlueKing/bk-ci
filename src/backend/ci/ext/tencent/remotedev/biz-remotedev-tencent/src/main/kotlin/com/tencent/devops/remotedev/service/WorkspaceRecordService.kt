@@ -282,7 +282,7 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     fun getWorkspaceRecordTicket(workspaceName: String, token: String): String {
-        val checkedToken = permissionService.checkAndGetUser1Password(token)
+        val checkedToken = permissionService.checkAndGetUser1PasswordNoDelete(token)
         if (checkedToken.workspaceName != workspaceName) {
             throw OperationException("Token verification failed.Please reapply for authorization.")
         }
