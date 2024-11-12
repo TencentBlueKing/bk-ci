@@ -66,6 +66,7 @@ import java.util.Properties
 import javax.sql.DataSource
 import org.apache.shardingsphere.broadcast.api.config.BroadcastRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableReferenceRuleConfiguration
+import org.apache.shardingsphere.single.api.config.SingleRuleConfiguration
 
 @Suppress("LongParameterList", "MagicNumber", "ComplexMethod")
 @Configuration
@@ -260,8 +261,11 @@ class BkShardingDataSourceConfiguration {
         bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null,
         registry: MeterRegistry
     ): DataSource {
+        val singleRuleConfiguration = SingleRuleConfiguration() // 单表不再自动加载
         val shardingRuleConfig = ShardingRuleConfiguration()
         val broadcastRuleConfig = BroadcastRuleConfiguration(mutableListOf())
+        // 生成单表规则
+        singleRuleConfiguration.tables = listOf("*.*")
         // 设置分片表的路由规则
         val dataSourceSize = dataSourceConfigs.size
         val bkTableRuleConfigs = shardingRuleConfig.tables
@@ -318,7 +322,7 @@ class BkShardingDataSourceConfiguration {
         dataSourceProperties.setProperty("sql-show", shardingLogSwitch.toString())
         return ShardingSphereDataSourceFactory.createDataSource(
             dataSourceMap(dataSourcePrefixName, dataSourceConfigs, registry),
-            listOf(shardingRuleConfig, broadcastRuleConfig),
+            listOf(singleRuleConfiguration, shardingRuleConfig, broadcastRuleConfig),
             dataSourceProperties
         )
     }
