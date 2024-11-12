@@ -147,7 +147,7 @@
             ]),
             isApkOrIpa (curReleaseDetail) {
                 const type = curReleaseDetail.installation_package.toUpperCase().substring(curReleaseDetail.installation_package.lastIndexOf('.') + 1)
-                return type === 'APK' || type === 'IPA'
+                return ['APK', 'IPA', 'HAP'].includes(type)
             },
             async refreshUrl () {
                 this.codeLoading = true
