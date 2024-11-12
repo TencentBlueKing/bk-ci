@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -135,7 +136,8 @@ class StartActionTaskContainerCmd(
                     jobId = jobId,
                     stepId = null,
                     executeCount = executeCount,
-                    buildStatus = commandContext.buildStatus.name
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START
                 )
             )
         }

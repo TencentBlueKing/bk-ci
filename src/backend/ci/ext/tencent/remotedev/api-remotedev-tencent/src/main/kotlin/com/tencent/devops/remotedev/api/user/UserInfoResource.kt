@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
+import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import io.swagger.v3.oas.annotations.Operation
@@ -42,4 +43,11 @@ interface UserInfoResource {
     fun faceRecognition(
         data: FaceRecognitionData
     ): Result<FaceRecognitionResult>
+
+    @Operation(summary = "发起异步检查用户权限中心权限过期")
+    @POST
+    @Path("/auth/check")
+    fun asyncAuthCheck(
+        data: UserInfoAuthCheck
+    ): Result<Boolean>
 }

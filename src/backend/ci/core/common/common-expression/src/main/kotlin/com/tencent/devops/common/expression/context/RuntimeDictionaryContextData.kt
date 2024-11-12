@@ -28,7 +28,7 @@
 package com.tencent.devops.common.expression.context
 
 import com.tencent.devops.common.expression.ContextDataRuntimeException
-import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
+import com.tencent.devops.common.expression.expression.sdk.CollectionPipelineResult
 import java.lang.Exception
 import java.util.TreeMap
 
@@ -43,40 +43,24 @@ interface RuntimeNamedValue {
  * @throws ContextDataRuntimeException
  */
 @Suppress("TooManyFunctions", "ReturnCount")
-class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedValue) :
-    DictionaryContextData() {
-
+class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedValue) : DictionaryContextData() {
     override var mIndexLookup: TreeMap<String, Int>? = null
     override var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
-    private fun requestAndSaveValue(key: String): PipelineContextData? {
-        return try {
-            val value = runtimeNamedValue.getValue(key)
-            if (value != null) {
-                set(key, value)
-            }
-            value
-        } catch (ignore: Exception) {
-            throw ContextDataRuntimeException("RuntimeDictionaryContextData request key:$key 's value error")
-        }
+    override operator fun get(key: String): PipelineContextData? {
+        return getRes(key).value
     }
 
-    override fun tryGetValue(key: String): Pair<PipelineContextData?, Boolean> {
-        if (mList.isNotEmpty() && indexLookup.containsKey(key)) {
-            return Pair(mList[indexLookup[key]!!].value, true)
+    override fun getRes(key: String): CollectionPipelineResult {
+        if (containsKey(key)) {
+            return CollectionPipelineResult(mList.getOrNull(indexLookup[key]!!)?.value)
         }
+
         // 对象中没有则去请求一次
-        val value = requestAndSaveValue(key) ?: return Pair(null, false)
+        // 暂时全部按照无KEY处理，上线后看看情况
+        val value = requestAndSaveValue(key) ?: return CollectionPipelineResult.noKey()
 
-        return Pair(value, true)
-    }
-
-    override operator fun get(k: String): PipelineContextData? {
-        return tryGetValue(k).first
-    }
-
-    override operator fun IReadOnlyObject.get(key: String): Any? {
-        return tryGetValue(key).first
+        return CollectionPipelineResult(value)
     }
 
     override fun clone(): PipelineContextData {
@@ -90,5 +74,17 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
         }
 
         return result
+    }
+
+    private fun requestAndSaveValue(key: String): PipelineContextData? {
+        return try {
+            val value = runtimeNamedValue.getValue(key)
+            if (value != null) {
+                set(key, value)
+            }
+            value
+        } catch (ignore: Exception) {
+            throw ContextDataRuntimeException("RuntimeDictionaryContextData request key:$key 's value error")
+        }
     }
 }

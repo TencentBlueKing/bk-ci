@@ -63,6 +63,7 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     var disablePipeline: Boolean?
     var recommendedVersion: RecommendedVersion?
     var customBuildNum: String?
+    var syntaxDialect: String?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
@@ -132,7 +133,9 @@ data class PreTemplateScriptBuildYamlParser(
     @JsonProperty("recommended-version")
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
-    override var customBuildNum: String? = null
+    override var customBuildNum: String? = null,
+    @JsonProperty("syntax-dialect")
+    override var syntaxDialect: String?
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
@@ -149,7 +152,8 @@ data class PreTemplateScriptBuildYamlParser(
             triggerOn = triggerOn,
             resources = resources,
             notices = notices,
-            concurrency = concurrency
+            concurrency = concurrency,
+            syntaxDialect = syntaxDialect
         )
     }
 

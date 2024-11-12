@@ -56,6 +56,7 @@ import java.util.StringTokenizer;
  * @see StringTokenizer
  * @author Greg Wilkins (gregw)
  */
+@SuppressWarnings("all")
 public class QuotedStringTokenizer
     extends StringTokenizer
 {

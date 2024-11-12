@@ -6,9 +6,9 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
-import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import org.jooq.DSLContext
@@ -25,12 +25,12 @@ class TemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineInfoExtService: PipelineInfoExtService,
     private val templateCommonService: TemplateCommonService,
     private val templateDao: TemplateDao,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
-    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
     fun updateTemplateSetting(
         projectId: String,
@@ -144,6 +144,11 @@ class TemplateSettingService @Autowired constructor(
             labels.addAll(it.labels)
         }
         setting.labels = labels
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+            projectId = projectId,
+            asCodeSettings = setting.pipelineAsCodeSettings
+        )
+        setting.pipelineAsCodeSettings = asCodeSettings
         return setting
     }
 

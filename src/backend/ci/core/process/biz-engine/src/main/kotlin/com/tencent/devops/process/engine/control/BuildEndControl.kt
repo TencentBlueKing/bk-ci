@@ -53,6 +53,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -258,7 +259,8 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.END,
                 buildStatus = buildStatus.name,
-                executeCount = buildInfo.executeCount
+                executeCount = buildInfo.executeCount,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_END
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",

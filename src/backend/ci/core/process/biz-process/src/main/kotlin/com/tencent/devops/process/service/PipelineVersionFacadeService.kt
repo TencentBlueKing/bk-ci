@@ -105,7 +105,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     companion object {
@@ -319,7 +320,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                 create = false,
                 versionStatus = VersionStatus.RELEASED,
                 channelCode = pipeline.channelCode,
-                yamlInfo = request.yamlInfo
+                yamlInfo = request.yamlInfo,
+                pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                    projectId = projectId,
+                    asCodeSettings = originSetting.pipelineAsCodeSettings
+                )
             )
             val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
             // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -329,7 +334,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             // 根据项目PAC状态进行接口调用
             val enabled = originYaml != null || request.enablePac
             val targetSettings = originSetting.copy(
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
+                pipelineAsCodeSettings = originSetting.pipelineAsCodeSettings?.copy(enable = enabled)
             )
             val (versionStatus, branchName) = if (
                 enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
@@ -570,7 +575,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = VersionStatus.COMMITTING,
             useSubscriptionSettings = request.useSubscriptionSettings,
             useLabelSettings = request.useLabelSettings,
-            useConcurrencyGroup = request.useConcurrencyGroup
+            useConcurrencyGroup = request.useConcurrencyGroup,
+            inheritedDialectSetting = request.inheritedDialect,
+            pipelineDialectSetting = request.pipelineDialect
         )
     }
 
@@ -644,7 +651,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             baseVersion = resource.baseVersion,
             baseVersionName = baseResource?.versionName,
             yamlSupported = yamlSupported,
-            yamlInvalidMsg = msg
+            yamlInvalidMsg = msg,
+            updater = resource.updater ?: resource.creator,
+            updateTime = resource.updateTime?.timestampmilli()
         )
     }
 
