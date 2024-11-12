@@ -436,8 +436,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
     }
 
-    override fun removeUserPermission(userId: String): Result<Boolean> {
-        logger.info("removeUserPermission |$userId")
-        return client.get(ServiceRemoteDevResource::class).removeUserPermission(userId)
+    override fun removeUserPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        removeUser: String
+    ): Result<Boolean> {
+        logger.info("removeUserPermission $appCode|$userId|$removeUser")
+        return client.get(ServiceRemoteDevResource::class).removeUserPermission(
+            userId = userId,
+            removeUser = removeUser
+        )
     }
 }

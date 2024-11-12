@@ -572,6 +572,9 @@ interface ServiceRemoteDevResource {
     fun removeUserPermission(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "被移除用户", required = true)
+        @QueryParam("removeUser")
+        removeUser: String
     ): Result<Boolean>
 }

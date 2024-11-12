@@ -14,7 +14,6 @@ import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.OperateCvmData
@@ -683,8 +682,8 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun removeUserPermission(userId: String): Result<Boolean> {
-        workspaceCommon.removeUserWorkspaceShare(operator = ADMIN_NAME, userId = userId)
+    override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
+        workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
         return Result(true)
     }
 }
