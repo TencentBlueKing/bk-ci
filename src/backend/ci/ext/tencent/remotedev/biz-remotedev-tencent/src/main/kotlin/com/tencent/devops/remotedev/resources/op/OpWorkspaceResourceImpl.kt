@@ -5,19 +5,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
-import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
-import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -25,14 +22,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
-    private val deleteControl: DeleteControl,
-    private val sleepControl: SleepControl,
-    private val jobService: WorkspaceCheckJob
+    private val workspaceRecordService: WorkspaceRecordService
 ) : OpWorkspaceResource {
-
-    companion object {
-        val logger = LoggerFactory.getLogger(OpWorkspaceResourceImpl::class.java)
-    }
 
     @AuditEntry(actionId = ActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
@@ -90,5 +81,12 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             uid = uid
         )
         return Result(res)
+    }
+
+    override fun createWorkspaceRecordTicket(userId: String, workspaceNames: Set<String>): Result<Boolean> {
+        workspaceNames.forEach {
+            workspaceRecordService.saveWorkspaceRecordTicket(it)
+        }
+        return Result(true)
     }
 }

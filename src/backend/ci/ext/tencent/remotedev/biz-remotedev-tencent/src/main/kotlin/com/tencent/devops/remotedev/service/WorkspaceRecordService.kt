@@ -271,7 +271,7 @@ class WorkspaceRecordService @Autowired constructor(
         )
     }
 
-    private fun saveWorkspaceRecordTicket(workspaceName: String) {
+    fun saveWorkspaceRecordTicket(workspaceName: String) {
         val random = ByteArray(32)
         SecureRandom().nextBytes(random)
         workspaceRecordTicketDao.create(
