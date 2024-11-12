@@ -11,6 +11,7 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -242,7 +243,8 @@ interface ServiceRemoteDevResource {
         projectId: String,
         @Parameter(description = "workspaceName", required = false)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        req: WorkspaceCloneReq
     ): Result<Boolean>
 
     @Operation(summary = "删除windows工作空间-项目")

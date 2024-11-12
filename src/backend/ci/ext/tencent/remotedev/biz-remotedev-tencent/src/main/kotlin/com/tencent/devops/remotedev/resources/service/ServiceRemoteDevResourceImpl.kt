@@ -367,12 +367,17 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun workspaceClone(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+    override fun workspaceClone(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean> {
         cloneWorkspaceHandler.cloneWorkspace(
             userId = userId,
             projectId = projectId,
             workspaceName = workspaceName,
-            rebuildReq = WorkspaceCloneReq(baseline = "暂未支持")
+            rebuildReq = req
         )
         return Result(true)
     }

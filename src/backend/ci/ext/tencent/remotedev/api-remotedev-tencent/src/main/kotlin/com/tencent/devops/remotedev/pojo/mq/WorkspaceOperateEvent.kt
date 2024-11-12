@@ -44,6 +44,7 @@ data class WorkspaceOperateEvent(
     val imageCosFile: String? = null,
     val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     val gameId: String?,
+    val zoneId: String? = null,
     val machineType: String? = null,
     val projectId: String? = null,
     val formatDataDisk: Boolean? = null,

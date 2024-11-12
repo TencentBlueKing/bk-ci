@@ -112,7 +112,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     )
                 )
             }
-            createCheckWhenClone(old = workspace)
+            val zoneId = createCheckWhenClone(old = workspace, req = rebuildReq)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -146,6 +146,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     type = UpdateEventType.CLONE,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
+                    zoneId = zoneId,
                     gameId = null,
                     projectId = projectId
                 )
@@ -214,8 +215,8 @@ class CloneWorkspaceHandler @Autowired constructor(
         }
     }
 
-    private fun createCheckWhenClone(old: WorkspaceRecordWithWindows) {
-        val zoneId = checkNotNull(old.zoneId)
+    private fun createCheckWhenClone(old: WorkspaceRecordWithWindows, req: WorkspaceCloneReq): String {
+        val zoneId = checkNotNull(req.zoneId ?: old.zoneId?.replace(Regex("\\d+"), ""))
         val winConfigId = checkNotNull(old.winConfigId)
         val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
             ?: throw ErrorCodeException(
@@ -229,7 +230,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 params = arrayOf(windowsConfig.size)
             )
         }
-        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(zoneId)
@@ -255,12 +256,12 @@ class CloneWorkspaceHandler @Autowired constructor(
             )
         }
 
-        windowsResourceConfigService.createCheckWhenWinNotAlready(
+        return windowsResourceConfigService.createCheckWhenWinNotAlready(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = 1,
             quotaType = QuotaType.parse(windowsZone.type)
-        )
+        ).first()
     }
 
     companion object {

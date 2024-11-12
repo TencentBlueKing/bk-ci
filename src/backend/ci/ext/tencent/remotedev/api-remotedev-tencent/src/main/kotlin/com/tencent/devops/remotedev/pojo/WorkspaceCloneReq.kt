@@ -32,5 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "克隆工作空间配置接口请求")
 data class WorkspaceCloneReq(
     @get:Schema(title = "基线")
-    val baseline: String
+    val baseline: String?,
+    @get:Schema(title = "区域")
+    val zoneId: String?
 )

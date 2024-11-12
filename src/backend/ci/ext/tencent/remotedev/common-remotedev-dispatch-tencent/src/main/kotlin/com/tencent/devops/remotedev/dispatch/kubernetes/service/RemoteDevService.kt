@@ -405,7 +405,8 @@ class RemoteDevService @Autowired constructor(
         remoteDevServiceFactory.loadRemoteDevService(event.mountType).cloneWorkspaceVm(
             userId = event.userId,
             workspaceName = event.workspaceName,
-            pipelineId = orderId
+            pipelineId = orderId,
+            zoneId = checkNotNull(event.zoneId)
         )
     }
 }
