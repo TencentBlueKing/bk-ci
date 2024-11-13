@@ -529,7 +529,7 @@ class ExperienceAppService(
         // 检查是否为专属包
         val experience = experienceDao.get(dslContext, experienceId)
         val properties = client.get(ServiceArtifactoryResource::class).properties(
-            userId = userId,
+            userId = experience.creator,
             projectId = experience.projectId,
             artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType),
             path = experience.artifactoryPath

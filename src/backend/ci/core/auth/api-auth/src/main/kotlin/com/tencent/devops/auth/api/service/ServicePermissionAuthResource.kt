@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -50,7 +49,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PERMISSION", description = "权限--权限校验以及资源操作相关接口")
-@Path("/open/service/auth/permission")
+@Path("/service/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
@@ -371,21 +370,5 @@ interface ServicePermissionAuthResource {
         @QueryParam("resourceCode")
         @Parameter(description = "资源Code")
         resourceCode: String
-    ): Result<Boolean>
-
-    @Path("/projects/{projectCode}/grant")
-    @POST
-    @Operation(summary = "授权实例级别权限")
-    fun grantInstancePermission(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "操作用户ID", required = true)
-        userId: String,
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "项目Id")
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
     ): Result<Boolean>
 }

@@ -34,7 +34,6 @@ import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -45,9 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED", "TooGenericExceptionCaught")
 class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
-    val bkAccessTokenApi: BkAccessTokenApi,
-    @Autowired(required = false)
-    val iamV3Service: IamV3Service?
+    val bkAccessTokenApi: BkAccessTokenApi
 ) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
@@ -56,14 +53,13 @@ class TencentProjectEventListener @Autowired constructor(
                 is ProjectCreateBroadCastEvent -> {
                     onReceiveProjectCreate(event)
                 }
+
                 is ProjectUpdateBroadCastEvent -> {
                     onReceiveProjectUpdate(event)
                 }
+
                 is ProjectUpdateLogoBroadCastEvent -> {
                     onReceiveProjectUpdateLogo(event)
-                }
-                is TxIamV3CreateEvent -> {
-                    iamV3Service?.createIamV3Project(event)
                 }
             }
         } catch (error: Exception) {
@@ -73,15 +69,7 @@ class TencentProjectEventListener @Autowired constructor(
 
     // 已改成同步，无需重复添加
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
-//        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-        // 过渡期间让新建项目直接设置为灰度v2
-//        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
-//        projectPaasCCService.createPaasCCProject(
-//            userId = event.userId,
-//            projectId = event.projectId,
-//            accessToken = accessToken,
-//            projectCreateInfo = event.projectInfo
-//        )
+        logger.info("receive project create event:$event")
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {

@@ -198,10 +198,10 @@ interface OpRemoteDevResource {
         taiUsers: List<String>
     ): Result<Boolean>
 
-    @Operation(summary = "detail表数据转移")
+    @Operation(summary = "初始化ip数据")
     @GET
-    @Path("/detail_dao_transfer_to_windows_dao")
-    fun detailDaoTransferToWindowsDao(
+    @Path("/init_workspace_ip")
+    fun initWorkspaceIp(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String

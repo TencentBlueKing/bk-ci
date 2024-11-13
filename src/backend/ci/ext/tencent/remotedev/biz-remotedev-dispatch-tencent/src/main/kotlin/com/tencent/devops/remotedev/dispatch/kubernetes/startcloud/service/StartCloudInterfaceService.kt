@@ -38,7 +38,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtil
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -46,7 +45,6 @@ import org.springframework.stereotype.Service
 
 @Service("startcloudInterfaceService")
 class StartCloudInterfaceService @Autowired constructor(
-    private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils
@@ -142,7 +140,7 @@ class StartCloudInterfaceService @Autowired constructor(
                     disk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "ssd" }?.pvcSize,
                     hdisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize,
                     imageStandard = it.basic?.imageStandard,
-                    node = it.basic?.node,
+                    node = it.basic?.node?.removePrefix("node-"),
                     image = it.basic?.image,
                     cpu = it.basic?.cpuCores.toString(),
                     mem = it.basic?.memoryLimit,

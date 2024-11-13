@@ -27,15 +27,9 @@
 
 package com.tencent.devops.project.listener
 
-import com.tencent.devops.project.EXCHANGE_PROJECT_COUNT_LOGIN
-import com.tencent.devops.project.ROUTE_PROJECT_COUNT_LOGIN
 import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.service.CountService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,16 +37,7 @@ import org.springframework.stereotype.Service
 class CountLoginConsumer @Autowired constructor(
     private val countService: CountService
 ) {
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [ROUTE_PROJECT_COUNT_LOGIN], value = Queue(value = ROUTE_PROJECT_COUNT_LOGIN, durable = "true"),
-            exchange = Exchange(
-                value = EXCHANGE_PROJECT_COUNT_LOGIN,
-                durable = "true",
-                delayed = "true",
-                type = "topic")
-        ))]
-    )
+
     fun onConsume(countLogin: UserCountLogin) {
         logger.info("Count consume login($countLogin)")
         try {

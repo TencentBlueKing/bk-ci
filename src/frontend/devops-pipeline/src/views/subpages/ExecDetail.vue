@@ -132,6 +132,7 @@
                 <plugin
                     :exec-detail="execDetail"
                     :editing-element-pos="editingElementPos"
+                    :properties="curProject.properties?.pluginDetailsDisplayOrder"
                     @close="hideSidePanel"
                 />
             </template>

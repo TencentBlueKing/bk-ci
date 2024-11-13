@@ -48,7 +48,6 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
@@ -149,7 +148,6 @@ class WindowsResourceConfigService @Autowired constructor(
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
-        userId: String,
         searchCustom: Boolean?,
         quotaType: QuotaType,
         withProjectLimit: String?
@@ -159,7 +157,7 @@ class WindowsResourceConfigService @Autowired constructor(
         val spec = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
         if (searchCustom != true) {
             workspaceCommon.realtimeStartCloudResourceList().forEach {
-                if (it.zoneId in spec) return@forEach
+                if (quotaType == QuotaType.OFFSHORE && it.zoneId in spec) return@forEach
                 val key = it.zoneId.replace(Regex("\\d+"), "")
                 val map = res.getOrPut(key) { mutableMapOf() }
                 if (it.status == 11 && it.locked != true && it.internal == quotaType.getInternal()) {
@@ -171,7 +169,7 @@ class WindowsResourceConfigService @Autowired constructor(
         SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
-            if (resource.zoneId in spec) return@forEach
+            if (quotaType == QuotaType.OFFSHORE && resource.zoneId in spec) return@forEach
             val key = resource.zoneId.replace(Regex("\\d+"), "")
             val map = res.getOrPut(key) { mutableMapOf() }
             resource.machineResources?.forEach { mas ->
@@ -281,14 +279,14 @@ class WindowsResourceConfigService @Autowired constructor(
             val diff = newNum - res.count()
             if (diff > 0) {
                 res.addAll(Array(minOf(diff, v)) { k })
-            } else return@forEach
+            } else {
+                return@forEach
+            }
         }
         return res
     }
 
-    fun getAllZone(
-        type: WindowsResourceZoneConfigType = WindowsResourceZoneConfigType.DEFAULT
-    ): List<WindowsResourceZoneConfig> {
+    fun getAllZone(): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
@@ -549,7 +547,8 @@ class WindowsResourceConfigService @Autowired constructor(
     fun createCheckSpecLimit(
         windowsType: String,
         projectId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        createCount: Int
     ) {
         val allSpecSize = getAllType(true, true).map { it.size }.toSet()
         if (windowsType.trim() in allSpecSize) {
@@ -564,7 +563,7 @@ class WindowsResourceConfigService @Autowired constructor(
                     workspaceNames = workspaceNames,
                     size = windowsType.trim()
                 )
-                if (count >= specQuota) {
+                if (count + createCount > specQuota) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
                         params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
@@ -577,42 +576,5 @@ class WindowsResourceConfigService @Autowired constructor(
                 )
             }
         }
-    }
-
-    fun createCheckWhenWinNotAlready(
-        zoneId: String,
-        winConfigId: Int,
-        newNum: Int,
-        ownerType: WorkspaceOwnerType
-    ) {
-        val windowsConfig = getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
-
-        if (windowsConfig.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(windowsConfig.size)
-            )
-        }
-        val windowsZone = getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(zoneId)
-            )
-        if (windowsZone.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(zoneId)
-            )
-        }
-        createCheckWhenWinNotAlready(
-            windowsZone = windowsZone,
-            windowsConfig = windowsConfig,
-            newNum = newNum,
-            quotaType = QuotaType.parse(windowsZone.type)
-        )
     }
 }

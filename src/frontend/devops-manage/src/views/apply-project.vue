@@ -31,6 +31,9 @@ const projectData = ref({
   subjectScopes: [],
   secrecy: false,
   authSecrecy: 0,
+  properties: {
+    pipelineDialect: 'CLASSIC',
+  }
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
@@ -98,25 +101,25 @@ const handleCancel = () => {
           @initProjectForm="initProjectForm"
           @productIdChange="productIdChange"
         >
-          <bk-form-item>
-            <bk-button
-              class="btn mr10"
-              theme="primary"
-              :loading="btnLoading"
-              @click="handleConfirm"
-            >
-              {{ t('提交') }}
-            </bk-button>
-            <bk-button
-              class="btn"
-              theme="default"
-              :loading="btnLoading"
-              @click="handleCancel"
-            >
-              {{ t('取消') }}
-            </bk-button>
-          </bk-form-item>
-        </project-form>
+      </project-form>
+      <div class="btn-group">
+        <bk-button
+          class="btn mr10"
+          theme="primary"
+          :loading="btnLoading"
+          @click="handleConfirm"
+        >
+          {{ t('提交') }}
+        </bk-button>
+        <bk-button
+          class="btn"
+          theme="default"
+          :loading="btnLoading"
+          @click="handleCancel"
+        >
+          {{ t('取消') }}
+        </bk-button>
+      </div>
       </section>
     </article>
   </section>
@@ -152,9 +155,10 @@ const handleCancel = () => {
       width: 1000px;
       flex: 1;
       margin: 0 auto;
-      background-color: #fff;
-      padding: 32px 120px 0 80px;
-      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
+    }
+    .btn-group {
+      display: flex;
+      margin: 24px 0;
     }
     .mr10 {
       margin-right: 10px;

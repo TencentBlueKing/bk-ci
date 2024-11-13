@@ -28,7 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.RemoteDevService
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component
 @Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
     private val remoteDevService: RemoteDevService,
-    private val remoteDevDispatcher: RemoteDevDispatcher
+    private val remoteDevDispatcher: SampleEventDispatcher
 ) {
 
     @BkTimed
@@ -114,7 +114,7 @@ class WorkspaceListener @Autowired constructor(
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event)
                     backEvent.status = true
-                    backEvent.environmentHost = workspaceResponse.environmentHost
+                    backEvent.environmentIp = workspaceResponse.environmentIp
                 }
 
                 UpdateEventType.STOP -> {

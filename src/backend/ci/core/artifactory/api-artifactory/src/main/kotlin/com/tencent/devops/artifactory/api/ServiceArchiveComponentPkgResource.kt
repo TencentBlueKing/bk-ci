@@ -108,6 +108,9 @@ interface ServiceArchiveComponentPkgResource {
         storeType: StoreTypeEnum,
         @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
-        filePath: String
+        filePath: String,
+        @Parameter(description = "仓库名称", required = false)
+        @QueryParam("repoName")
+        repoName: String? = null
     ): Result<String>
 }

@@ -27,11 +27,13 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
+import com.tencent.devops.turbo.vo.ResourceCostSummary
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
@@ -153,4 +155,40 @@ interface ApigwTurboResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Response<Page<ProjectResourceUsageVO>>
+
+    @GET
+    @Operation(summary = "触发项目资源统计上报任务", tags = ["v4_app_server_resources_upload_auto"])
+    @Path("/triggerAutoUpload/{month}")
+    fun triggerAutoUpload(
+        @Parameter(description = "用户信息")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "所属周期月份")
+        @PathParam("month")
+        month: String,
+        @Parameter(description = "起始统计日期")
+        @QueryParam(value = "startDate")
+        startDate: String?,
+        @Parameter(description = "截止统计日期")
+        @QueryParam("endDate")
+        endDate: String?
+    ): Response<Boolean>
+
+    @POST
+    @Operation(summary = "手动上报项目资源统计数据", tags = ["v4_app_server_resources_upload_manual"])
+    @Path("/manualUpload")
+    fun triggerManualUpload(
+        @Parameter(description = "用户信息")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "待上报的数据")
+        @Valid
+        summary: ResourceCostSummary
+    ): Response<Boolean>
 }

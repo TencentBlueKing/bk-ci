@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
@@ -55,20 +55,19 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
-import com.tencent.devops.lambda.dao.process.LambdaBuildCommitDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
-import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
+import com.tencent.devops.lambda.pojo.ReportBuildFinishEvent
 import com.tencent.devops.lambda.service.store.LambdaStoreService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -100,12 +99,27 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient,
     private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
-    private val lambdaBuildCommitDao: LambdaBuildCommitDao,
-    private val lambdaStoreService: LambdaStoreService
+    private val lambdaStoreService: LambdaStoreService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
+    private val delayTime = 20000
+
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        Thread.sleep(1000)
+        pipelineEventDispatcher.dispatch(
+            ReportBuildFinishEvent(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                source = event.source,
+                userId = event.userId,
+                actionType = event.actionType,
+                delayMills = delayTime
+            )
+        )
+    }
+
+    fun onBuildFinishDelay(event: ReportBuildFinishEvent) {
         val history = lambdaPipelineBuildDao.getBuildHistory(
             dslContext = dslContext,
             projectId = event.projectId,
@@ -187,44 +201,6 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-    fun onBuildCommitFinish(event: PipelineBuildCommitFinishEvent) {
-        val records = lambdaBuildCommitDao.getCommits(
-            dslContext = dslContext,
-            projectId = event.projectId,
-            buildId = event.buildId
-        )
-        if (records.isEmpty()) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build commits is empty")
-            return
-        }
-        try {
-            records.map { record ->
-                val buildCommits = with(record) {
-                    DataPlatBuildCommits(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        commitId = commitId,
-                        authorName = authorName,
-                        message = message,
-                        repoType = repositoryType,
-                        commitTime = commitTime.format(dateTimeFormatter),
-                        createTime = createTime.format(dateTimeFormatter),
-                        mrId = mergeRequestId,
-                        url = url,
-                        eventType = eventType,
-                        channel = channel,
-                        action = action
-                    )
-                }
-                checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
-                kafkaClient.send(lambdaKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
-        }
-    }
-
     private fun pushTaskDetail(projectInfo: ProjectOrganize, task: TPipelineBuildTaskRecord) {
         try {
             val isSecrecy = projectInfo.secrecy
@@ -278,7 +254,7 @@ class LambdaDataService @Autowired constructor(
                 }
             } else {
                 val taskParams = if (
-                    // @type 为buildType
+                // @type 为buildType
                     taskParamMap["@type"] != "marketBuild" &&
                     taskParamMap["@type"] != "marketBuildLess"
                 ) {
@@ -296,11 +272,13 @@ class LambdaDataService @Autowired constructor(
                                 inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
                             }
                         }
+
                         taskParamMap["@type"] == "windowsScript" -> {
                             inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                         }
+
                         taskParamMap["@type"] == "manualReviewUserTask" -> {
                             inputMap["name"] = taskParamMap["name"] as String
                             inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
@@ -308,6 +286,7 @@ class LambdaDataService @Autowired constructor(
                                 inputMap["desc"] = taskParamMap["params"] as String
                             }
                         }
+
                         else -> {
                             inputMap["key"] = "value"
                         }
@@ -416,7 +395,7 @@ class LambdaDataService @Autowired constructor(
         try {
             logger.info(
                 "pushBuildHistory buildId=${historyRecord.buildId}" +
-                        "|${historyRecord.executeTime}|${historyRecord.buildNum}"
+                    "|${historyRecord.executeTime}|${historyRecord.buildNum}"
             )
             val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
             val buildHistoryTopic = checkParamBlank(lambdaKafkaTopicConfig.buildHistoryTopic, "buildHistoryTopic")
@@ -452,12 +431,14 @@ class LambdaDataService @Autowired constructor(
                     gitUrl = gitRepository.data!!.url
                     sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
+
                 "gitCodeRepoCommon" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     gitUrl = inputMap["repositoryUrl"].toString()
                     sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
+
                 "PullFromGithub", "GitLab" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
@@ -471,6 +452,7 @@ class LambdaDataService @Autowired constructor(
                     gitUrl = gitRepository.data!!.url
                     sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
+
                 "gitCodeRepo" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
@@ -493,6 +475,7 @@ class LambdaDataService @Autowired constructor(
                         sendGitTask2Kafka(atomCode as String, task, gitUrl)
                     }
                 }
+
                 "checkout" -> {
                     // post action阶段不需要统计
                     if (task.taskName == "POST：checkout") {
@@ -519,6 +502,7 @@ class LambdaDataService @Autowired constructor(
                                 )
                             gitRepository.data!!.url
                         }
+
                         else -> ""
                     }
                     if (gitUrl.isNotBlank()) {
@@ -712,26 +696,33 @@ class LambdaDataService @Autowired constructor(
             StartType.MANUAL.name -> {
                 ManualTriggerElement.classType
             }
+
             StartType.TIME_TRIGGER.name -> {
                 TimerTriggerElement.classType
             }
+
             StartType.WEB_HOOK.name -> {
                 when (webhookType) {
                     CodeType.SVN.name -> {
                         CodeSVNWebHookTriggerElement.classType
                     }
+
                     CodeType.GIT.name -> {
                         CodeGitWebHookTriggerElement.classType
                     }
+
                     CodeType.GITLAB.name -> {
                         CodeGitlabWebHookTriggerElement.classType
                     }
+
                     CodeType.GITHUB.name -> {
                         CodeGithubWebHookTriggerElement.classType
                     }
+
                     else -> RemoteTriggerElement.classType
                 }
             }
+
             else -> { // StartType.SERVICE.name,  StartType.PIPELINE.name, StartType.REMOTE.name
                 RemoteTriggerElement.classType
             }

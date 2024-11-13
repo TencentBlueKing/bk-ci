@@ -70,14 +70,25 @@
                 <span>{{ $t('buildNum') }}</span>
             </label>
             <div class="preview-buildno-params">
-                <p class="build">
+                <div class="build">
                     <span class="build-label">{{ $t('buildNoBaseline.baselineValue') }}</span>
                     <span class="build-value">{{ `${buildNo.buildNo} (${currentBuildNoType})` }}</span>
-                </p>
-                <p class="build">
+                </div>
+                <div class="build">
                     <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
-                    <span class="build-value">{{ buildNo.currentBuildNo }}</span>
-                </p>
+                    <p>
+                        <vuex-input
+                            :disabled="buildNo.buildNoType !== 'CONSISTENT'"
+                            input-type="number"
+                            name="currentBuildNo"
+                            placeholder="CURRENT_BUILD_NO"
+                            v-validate.initial="'required|numeric'"
+                            :value="buildNo.currentBuildNo"
+                            :handle-change="handleBuildNoChange"
+                        />
+                        <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
+                    </p>
+                </div>
             </div>
         </bk-form-item>
     </bk-form>
@@ -200,19 +211,33 @@
                 .build-value {
                     font-size: 12px;
                     padding: 0 8px;
-                    border: 1px solid #C4C6CC;
+                    border: 1px solid #dcdee5;
                     cursor: not-allowed;
+                    height: 32px;
                 }
 
                 .build-label {
                     background-color: #F5F7FA;
                     border-radius: 2px 0 0 2px;
                 }
+
                 .build-value {
                     margin-right: 16px;
                     border-left: none;
                     border-radius: 0 2px 2px 0;
                     background-color: #FAFBFD;
+                }
+
+                p {
+                    position: relative;
+                    display: flex;
+
+                    .is-danger{
+                        position: absolute;
+                        white-space: nowrap;
+                        top: 70%;
+                        left: 0;
+                    }
                 }
             }
         }

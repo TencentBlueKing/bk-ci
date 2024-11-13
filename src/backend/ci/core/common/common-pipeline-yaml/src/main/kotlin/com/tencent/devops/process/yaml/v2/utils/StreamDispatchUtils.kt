@@ -129,10 +129,12 @@ object StreamDispatchUtils {
                     password = info.password,
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
-                    jobId = job.id
+                    jobId = job.id,
+                    credentialProjectId = null
                 ),
                 options = info.options,
-                imagePullPolicy = info.imagePullPolicy
+                imagePullPolicy = info.imagePullPolicy,
+                storeImage = null
             )
 
             return ThirdPartyAgentEnvDispatchType(

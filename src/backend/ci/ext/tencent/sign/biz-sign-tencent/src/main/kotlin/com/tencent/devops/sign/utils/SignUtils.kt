@@ -50,6 +50,7 @@ object SignUtils {
             "Shared Frameworks",
             "Shared Support",
             "PlugIns",
+            "Extensions",
             "XPC Services",
             "Watch"
         )

@@ -106,7 +106,7 @@
     "mirrorTagRule": "Lower-case letters, numbers, underline and dots only",
     "selectModel": "Select model",
     "confirmInfo": "Confirm information",
-    "setting": "Setting",
+    "setting": "Shared Settings",
     "removeShareEnvProjectSuc": "project {0} removed",
     "shareEnvSuc": "Share Env Successful",
     "removeShareProjectConfirm": "{0} will be removed",
@@ -239,7 +239,8 @@
         "usage": "Usage",
         "installMethod": "Installation Method",
         "remoteInstall": "Remote Installation",
-        "manualInstall": "Manual Installation"
+        "manualInstall": "Manual Installation",
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -441,5 +442,6 @@
     "无法连通网络？": "Unable to connect to the network?",
     "正在生成手动安装命令": "Generating manual installation command",
     "已加载X条": "{0} items loaded",
-    "共X个节点": "Total: {0} items"
+    "共X个节点": "Total: {0} items",
+    "authManage": "Permission Manage"
 }

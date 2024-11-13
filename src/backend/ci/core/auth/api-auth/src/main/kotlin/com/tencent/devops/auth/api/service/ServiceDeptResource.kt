@@ -79,4 +79,13 @@ interface ServiceDeptResource {
         @Parameter(description = "用户名称", required = true)
         name: String
     ): Result<UserAndDeptInfoVo?>
+
+    @GET
+    @Path("/checkUserDeparted")
+    @Operation(summary = "检查用户是否离职")
+    fun checkUserDeparted(
+        @QueryParam("name")
+        @Parameter(description = "用户名称", required = true)
+        name: String
+    ): Result<Boolean>
 }

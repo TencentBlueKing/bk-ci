@@ -34,9 +34,6 @@ import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
 import com.tencent.devops.experience.pojo.enums.PushStatus
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.QUEUE_NOTIFY_PUSH
-import com.tencent.devops.notify.ROUTE_PUSH
 import com.tencent.xinge.XingeApp
 import com.tencent.xinge.bean.AudienceType
 import com.tencent.xinge.bean.ClickAction
@@ -50,20 +47,16 @@ import com.tencent.xinge.bean.ios.Aps
 import com.tencent.xinge.push.app.PushAppRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Service
 class ExperienceNotifyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushHistoryDao: ExperiencePushHistoryDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val redisOperation: RedisOperation
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
@@ -85,19 +78,10 @@ class ExperienceNotifyService @Autowired constructor(
 
     // 发送MQ
     fun sendMqMsg(message: AppNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_PUSH, message)
+        message.sendTo(streamBridge)
     }
 
     // 消费MQ消息，然后发送信鸽，修改推送信息状态
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_PUSH],
-                value = Queue(value = QUEUE_NOTIFY_PUSH, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )]
-    )
     fun onReceiveAppNotifyMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation) {
         try {
             sendMessage(appNotifyMessageWithOperation)

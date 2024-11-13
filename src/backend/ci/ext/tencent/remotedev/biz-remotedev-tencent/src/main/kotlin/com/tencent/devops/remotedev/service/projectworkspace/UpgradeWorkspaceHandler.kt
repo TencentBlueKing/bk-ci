@@ -7,8 +7,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -21,10 +21,12 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
@@ -36,12 +38,12 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class UpgradeWorkspaceHandler @Autowired constructor(
@@ -53,7 +55,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val deliverControl: DeliverControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
@@ -110,23 +112,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     )
                 )
             }
-            if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
-                val workspaceNames = workspaceDao.fetchUserWorkspaceName(
-                    dslContext = dslContext,
-                    projectId = workspace.projectId,
-                    ownerType = WorkspaceOwnerType.PROJECT
-                )
-                windowsResourceConfigService.createCheckSpecLimit(
-                    windowsType = rebuildReq.machineType,
-                    projectId = workspace.projectId,
-                    workspaceNames = workspaceNames
-                )
-            }
-            windowsResourceConfigService.createCheckWhenWinNotAlready(
-                zoneId = checkNotNull(workspace.zoneId),
-                winConfigId = checkNotNull(workspace.winConfigId),
-                newNum = 1,
-                ownerType = workspace.ownerType
+            createCheckWhenUpgrade(
+                old = workspace,
+                machineType = rebuildReq.machineType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -232,6 +220,57 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
             }
         }
+    }
+
+    private fun createCheckWhenUpgrade(
+        old: WorkspaceRecordWithWindows,
+        machineType: String
+    ) {
+        val zoneId = checkNotNull(old.zoneId)
+        val winConfigId = checkNotNull(old.winConfigId)
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(winConfigId.toString())
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(windowsConfig.size)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(zoneId)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(zoneId)
+            )
+        }
+
+        if (old.ownerType == WorkspaceOwnerType.PROJECT && old.winConfigId != windowsConfig.id?.toInt()) {
+            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+                dslContext = dslContext,
+                projectId = old.projectId,
+                ownerType = WorkspaceOwnerType.PROJECT
+            )
+            windowsResourceConfigService.createCheckSpecLimit(
+                windowsType = machineType,
+                projectId = old.projectId,
+                workspaceNames = workspaceNames,
+                createCount = 1
+            )
+        }
+        windowsResourceConfigService.createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = 1,
+            quotaType = QuotaType.parse(windowsZone.type)
+        )
     }
 
     companion object {

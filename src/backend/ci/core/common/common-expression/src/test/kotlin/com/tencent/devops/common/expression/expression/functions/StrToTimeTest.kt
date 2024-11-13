@@ -37,6 +37,7 @@ import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
@@ -56,7 +57,7 @@ internal class StrToTimeTest {
             ExpressionParser.createTree(
                 "strToTime('2023-3-15')",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+            )!!.evaluate(null, ev, EvaluationOptions(false), null)
         }
     }
 
@@ -69,8 +70,8 @@ internal class StrToTimeTest {
     )
     fun evaluateCoreTest(format: String) {
         val (exp, expect) = format.split(" => ")
-        val res1 = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
-        val res2 = ExpressionParser.createTree(expect, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res1 = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
+        val res2 = ExpressionParser.createTree(expect, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
         Assertions.assertEquals(res1, res2)
     }
 
@@ -84,7 +85,7 @@ internal class StrToTimeTest {
     )
     fun eqTest(format: String) {
         val (exp, expect) = format.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
         Assertions.assertEquals(expect, res.toString())
     }
 
@@ -100,7 +101,7 @@ internal class StrToTimeTest {
         val res =
             ExpressionParser
                 .createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, SubNameValueEvaluateInfo())!!
-                .subNameValueEvaluate(null, parametersEv, null, SubNameValueEvaluateInfo(), null).value
+                .subNameValueEvaluate(null, parametersEv, EvaluationOptions(false), SubNameValueEvaluateInfo(), null).value
         Assertions.assertEquals(expect, res)
     }
 

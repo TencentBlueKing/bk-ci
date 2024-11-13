@@ -598,7 +598,7 @@
                     })
                     this.commandStatus = res.status
                     this.commandStep = res || {}
-                    if (res.code === 3800015 || ['PENDING'].includes(this.commandStatus)) {
+                    if ([0, 3800015].includes(res.code) || ['PENDING'].includes(this.commandStatus)) {
                         this.timeoutIdTask2 = setTimeout(async () => {
                             this.fetchInstallCommand()
                         }, 5000)
@@ -608,12 +608,11 @@
                         this.isLoading = false
                     }
                 } catch (e) {
-                    if (e.status === 3800015) {
+                    if ([0, 3800015].includes(e.code)) {
                         this.timeoutIdTask2 = setTimeout(async () => {
                             this.fetchInstallCommand()
                         }, 5000)
                     }
-                    this.isLoading = false
                 }
             },
 
