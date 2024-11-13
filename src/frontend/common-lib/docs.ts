@@ -1,8 +1,7 @@
 
 // const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/持续集成平台/产品白皮书`
-// const gatePrefix = `${DOCS_URL_PREFIX}/docs/markdown/质量红线/产品白皮书`
+// const gatePrefix = `${DOCS_URL_PREFIX}/markdown/质量红线/产品白皮书`
 // const turboPrefix = `${DOCS_URL_PREFIX}/docs/markdown/编译加速/产品白皮书`
-
 export const BkciDocs = {
     BKCI_DOC: `${IWIKI_DOCS_URL}/display/DevOps`, // 首页跳转文档
     GATE_DOC: `${IWIKI_DOCS_URL}/x/MYbm`, // 质量红线文档
