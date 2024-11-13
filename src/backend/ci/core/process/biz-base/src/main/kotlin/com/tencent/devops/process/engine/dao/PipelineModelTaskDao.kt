@@ -29,13 +29,16 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
+import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -44,7 +47,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcatDistinct
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -123,9 +125,12 @@ class PipelineModelTaskDao {
             if (projectCode != null) {
                 condition.add(PROJECT_ID.eq(projectCode))
             }
-
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .groupBy(ATOM_CODE)
                 .fetch()
