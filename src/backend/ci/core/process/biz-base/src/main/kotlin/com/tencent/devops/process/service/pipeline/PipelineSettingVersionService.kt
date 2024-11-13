@@ -38,6 +38,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
@@ -51,7 +52,8 @@ class PipelineSettingVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     /**
@@ -133,6 +135,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 } else {
                     null
                 }
+                settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
             if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
@@ -144,6 +147,10 @@ class PipelineSettingVersionService @Autowired constructor(
                 }
                 settingInfo.labelNames = labelNames
             }
+            settingInfo.pipelineAsCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+                projectId = projectId,
+                settingInfo.pipelineAsCodeSettings
+            )
         }
 
         return settingInfo

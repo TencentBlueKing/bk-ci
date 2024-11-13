@@ -39,11 +39,10 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.view.PipelineViewGroupCommonService
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelinePermissionService(
@@ -54,7 +53,8 @@ class RbacPipelinePermissionService(
     val pipelineInfoDao: PipelineInfoDao,
     val pipelineViewGroupCommonService: PipelineViewGroupCommonService,
     val authResourceApi: AuthResourceApi,
-    val client: Client
+    val client: Client,
+    val projectCacheService: ProjectCacheService
 ) : PipelinePermissionService {
 
     override fun checkPipelinePermission(
@@ -301,8 +301,7 @@ class RbacPipelinePermissionService(
     }
 
     override fun isControlPipelineListPermission(projectId: String): Boolean {
-        val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectId).data
-            ?: throw NotFoundException("Fail to find the project info of project($projectId)")
+        val projectInfo = projectCacheService.getProject(projectId) ?: return false
         return projectInfo.properties?.pipelineListPermissionControl == true
     }
 

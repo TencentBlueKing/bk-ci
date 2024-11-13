@@ -104,7 +104,7 @@ const customeRules = {
     },
     paramsIdRule: {
         validate: function (value, args) {
-            return /^[a-z][a-z\d_]+$/gi.test(value)
+            return /^[a-z][a-z\d_]*$/gi.test(value)
         }
     },
     buildNumRule: {

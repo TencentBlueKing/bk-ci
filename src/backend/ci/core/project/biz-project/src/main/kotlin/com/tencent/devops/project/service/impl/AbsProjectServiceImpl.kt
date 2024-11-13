@@ -62,6 +62,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -550,6 +551,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         )
                     }
                 }
+                // 属性只能变更前端展示的,其他的字段由op变更
+                val properties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                    ?: ProjectProperties()
+                if (projectUpdateInfo.properties != null) {
+                    projectUpdateInfo.properties =
+                        properties.copy(pipelineDialect = projectUpdateInfo.properties!!.pipelineDialect)
+                }
                 // 判断是否需要审批,当修改最大授权范围/权限敏感/关联运营产品时需要审批
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
@@ -570,7 +578,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
                         finalNeedApproval = finalNeedApproval,
-                        beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                        beforeSubjectScopes = JsonUtil.to(
+                            projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}
+                        ),
                         afterSubjectScopes = subjectScopes
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
@@ -620,8 +630,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     afterProjectName = projectUpdateInfo.projectName,
                     beforeProductId = projectInfo.productId,
                     afterProductId = projectUpdateInfo.productId,
-                    beforeOrganization = with(projectInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
-                    afterOrganization = with(projectUpdateInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
+                    beforeOrganization = with(projectInfo) {
+                        getOrganizationStr(bgName, businessLineName, deptName, centerName)
+                    },
+                    afterOrganization = with(projectUpdateInfo) {
+                        getOrganizationStr(bgName, businessLineName, deptName, centerName)
+                    },
                     beforeSubjectScopes = projectInfo.subjectScopes,
                     afterSubjectScopes = subjectScopesStr,
                     operator = userId,
@@ -726,7 +740,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
             val isSubjectScopesChange = isSubjectScopesChange(
-                beforeSubjectScopes = JsonUtil.to(projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}),
+                beforeSubjectScopes = JsonUtil.to(
+                    projectInfo.subjectScopes,
+                    object : TypeReference<List<SubjectScopeInfo>>() {}
+                ),
                 afterSubjectScopes = afterSubjectScopes
             )
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
@@ -1625,6 +1642,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
 
         return true
+    }
+
+    override fun getPipelineDialect(projectId: String): String {
+        return getByEnglishName(englishName = projectId)?.properties?.pipelineDialect
+            ?: PipelineDialectType.CLASSIC.name
     }
 
     companion object {
