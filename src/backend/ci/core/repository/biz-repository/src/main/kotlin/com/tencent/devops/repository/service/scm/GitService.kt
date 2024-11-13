@@ -695,14 +695,14 @@ class GitService @Autowired constructor(
             }
             // 3、重新生成git信息
             Git.init().setDirectory(atomTmpWorkspace).setInitialBranch("master").call().close()
-            // 4、添加远程仓库
-            val gitRepository =  FileRepositoryBuilder()
+            val gitRepository = FileRepositoryBuilder()
                 .setGitDir(atomGitFileDir)
                 .readEnvironment()
                 .findGitDir()
                 .build()
-            // 5、给文件添加git信息
+            // 4、添加远程仓库
             gitRepository.config.setString("remote", "origin", "url", atomRepositoryUrl)
+            // 5、给文件添加git信息
             gitRepository.config.setString("user", null, "name", gitPublicAccount)
             gitRepository.config.setString("user", null, "email", gitPublicEmail)
             gitRepository.config.save()
