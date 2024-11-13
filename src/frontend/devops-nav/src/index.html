@@ -174,7 +174,7 @@
           return ''
         } else {
           var res = location.pathname.match(reg)
-          return res && res[1] !== '0' ? res[1] : ''
+          return res && res[1] !== '0' && !res[1].startsWith('git_') ? res[1] : ''
         }
       } catch (e) {
         console.warn(e)
