@@ -170,7 +170,7 @@
             grid-gap: 10px;
             grid-auto-flow: column;
             .input-com {
-                overflow: hidden;
+                min-width: 0;
                 display: block;
             }
         }
