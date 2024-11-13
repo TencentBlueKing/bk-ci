@@ -81,11 +81,6 @@ const namingConventionData = [
         constrainedMode: t('将报错，运行失败'),
     },
     {
-        difference: t('变量不存在'),
-        classic: t('未报错，继续执行，依赖执行逻辑自行检查'),
-        constrainedMode: t('将报错，运行失败'),
-    },
-    {
         difference: t('变量 ID 规范'),
         classic: t('未限制'),
         constrainedMode: t('不支持中文 ID，减少不同构建环境下的兼容问题'),
