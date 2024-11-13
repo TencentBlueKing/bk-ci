@@ -492,16 +492,27 @@ class StorePipelineServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, key, 60L)
         try {
             lock.lock()
+            val suffix = storeCode ?: "PUBLIC"
+            val pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
+            val pipelineList = client.get(ServicePipelineResource::class).searchByName(
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                projectId = storeInnerPipelineConfig.innerPipelineProject,
+                pipelineName = pipelineName
+            ).data
+            pipelineList?.forEach {
+                if (it.pipelineName == pipelineName) {
+                    return it.pipelineId
+                }
+            }
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = dslContext,
                 business = StoreTypeEnum.valueOf(storeType).name,
                 feature = "initBuildPipeline",
                 businessValue = "PIPELINE_MODEL"
             )
-            val suffix = storeCode ?: "PUBLIC"
             val pipelineModel = pipelineModelConfig!!.configValue.replace(
                 "#{$KEY_PIPELINE_NAME}",
-                "$storeType-PIPELINE-BUILD:$suffix"
+                pipelineName
             )
             val model = JsonUtil.to(pipelineModel, Model::class.java)
              val pipelineId = client.get(ServicePipelineResource::class).create(
@@ -512,7 +523,7 @@ class StorePipelineServiceImpl @Autowired constructor(
             ).data!!.id
             if (storeCode == null) {
                 redisOperation.set(
-                    key = "$storeType-PIPELINE-BUILD:$suffix",
+                    key = pipelineName,
                     value = pipelineId,
                     expired = false
                 )
