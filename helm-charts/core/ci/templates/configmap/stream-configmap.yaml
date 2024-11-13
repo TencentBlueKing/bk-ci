@@ -1,5 +1,6 @@
 #stream configmap
 {{ if .Values.configmap.enabled -}}
+{{ if .Values.stream.enabled -}}
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -15,4 +16,5 @@ metadata:
 data:
   application.yml: |-
     {{- include "bkci.stream.yaml" . | nindent 4 -}}
+{{- end -}}
 {{- end -}}

@@ -76,10 +76,21 @@ function setLsLocale (locale) {
     }
 }
 
+function getLanguageCode(lang) {
+    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/);
+    
+    if (languageCodeMatch) {
+        return languageCodeMatch[0].toUpperCase();
+    }
+
+    return 'ZH'
+}
+
 export default (r, initSetLocale = false) => {
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
+    const lang = getLanguageCode(initLocale.split('_')[0].toLocaleUpperCase())
     
     const i18n = new VueI18n({
         locale: initLocale,
@@ -154,6 +165,7 @@ export default (r, initSetLocale = false) => {
     }
      
     return {
+        lang,
         i18n,
         setLocale,
         localeList,
