@@ -66,16 +66,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (pipelineViewFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -166,16 +169,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (pipelineViewFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -217,16 +223,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (pipelineViewFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {

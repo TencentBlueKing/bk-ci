@@ -57,7 +57,8 @@ class UserStoreLogResourceImpl @Autowired constructor(
             buildId = buildId,
             debug = debug,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            pipelineViewFlag = false
         )
     }
 
@@ -81,7 +82,8 @@ class UserStoreLogResourceImpl @Autowired constructor(
             start = start,
             debug = debug,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            pipelineViewFlag = false
         )
     }
 
@@ -111,7 +113,8 @@ class UserStoreLogResourceImpl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            pipelineViewFlag = false
         )
     }
 }

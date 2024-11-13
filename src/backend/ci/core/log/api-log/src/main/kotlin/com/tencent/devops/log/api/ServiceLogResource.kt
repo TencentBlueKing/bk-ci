@@ -100,7 +100,10 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验插件流水线权限", required = false)
+        @QueryParam("pipelineViewFlag")
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "获取更多日志")
@@ -154,7 +157,10 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验插件流水线权限", required = false)
+        @QueryParam("pipelineViewFlag")
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行前的日志")
@@ -199,7 +205,10 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验插件流水线权限", required = false)
+        @QueryParam("pipelineViewFlag")
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")

@@ -64,7 +64,8 @@ class StoreLogServiceImpl @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -81,7 +82,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                pipelineViewFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -98,7 +100,8 @@ class StoreLogServiceImpl @Autowired constructor(
         start: Long,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -116,7 +119,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                pipelineViewFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -136,7 +140,8 @@ class StoreLogServiceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -157,7 +162,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                pipelineViewFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)

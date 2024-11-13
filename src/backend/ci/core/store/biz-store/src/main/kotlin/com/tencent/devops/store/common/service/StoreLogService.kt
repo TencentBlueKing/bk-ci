@@ -45,7 +45,8 @@ interface StoreLogService {
         buildId: String,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs?>
 
     fun getAfterLogs(
@@ -57,7 +58,8 @@ interface StoreLogService {
         start: Long,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs?>
 
     fun getMoreLogs(
@@ -72,6 +74,7 @@ interface StoreLogService {
         start: Long,
         end: Long,
         tag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        pipelineViewFlag: Boolean = true
     ): Result<QueryLogs?>
 }
