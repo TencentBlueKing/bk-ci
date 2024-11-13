@@ -25,7 +25,7 @@ import com.tencent.devops.remotedev.utils.RsaUtil
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
