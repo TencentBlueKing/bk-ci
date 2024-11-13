@@ -139,7 +139,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
-import java.nio.charset.Charset
 
 @Suppress("ALL")
 @Service
@@ -1205,7 +1204,7 @@ class GitService @Autowired constructor(
             }
             // 3、重新生成git信息
             Git.init().setDirectory(tmpWorkspace).setInitialBranch("master").call().close()
-            val gitRepository =  FileRepositoryBuilder()
+            val gitRepository = FileRepositoryBuilder()
                 .setGitDir(atomGitFileDir)
                 .readEnvironment()
                 .findGitDir()
