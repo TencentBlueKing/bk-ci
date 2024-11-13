@@ -141,6 +141,10 @@
 
     function setProjectIdCookie(projectId) {
       try {
+        if (projectId.startsWith('git_')) {
+            console.log('current project is from stream')
+            return
+        }
         if (projectId) {
           var subDomains = getSubDomain()
           subDomains.forEach(domain => {
