@@ -75,11 +75,6 @@
                         constrainedMode: this.$t('constraintReadOnlyMode')
                     },
                     {
-                        difference: this.$t('variableNotFound'),
-                        classic: this.$t('traditionalNotFoundMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
                         difference: this.$t('variableStandard'),
                         classic: this.$t('traditionalStandardMode'),
                         constrainedMode: this.$t('constraintStandardMode')
