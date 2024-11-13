@@ -49,7 +49,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PROJECT", description = "权限--项目相关接口")
-@Path("/open/service/auth/projects")
+@Path("/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {

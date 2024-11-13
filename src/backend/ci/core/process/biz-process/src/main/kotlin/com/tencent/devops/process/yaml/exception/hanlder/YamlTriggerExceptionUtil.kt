@@ -52,7 +52,7 @@ object YamlTriggerExceptionUtil {
                 PipelineTriggerFailedMsg(exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail)
             )
             else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
+                PipelineTriggerReason.TRIGGER_FAILED.name,
                 PipelineTriggerFailedMsg(exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail)
             )
         }

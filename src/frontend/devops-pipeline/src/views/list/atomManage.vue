@@ -21,6 +21,7 @@
                     <span>{{ panel.label }}</span>
                 </template>
                 <bk-table
+                    v-bkloading="{ isLoading: tableLoading }"
                     :data="atomList"
                     size="large"
                     :empty-text="$t('noData')"
@@ -245,6 +246,7 @@
                     list: []
                 },
                 isLoading: false,
+                tableLoading: false,
                 defaultPaging: {
                     current: 1,
                     count: 0,
@@ -308,6 +310,7 @@
 
             fetchAtomList () {
                 const classifyCode = this.active === 'all' ? '' : this.active
+                this.tableLoading = true
                 return this.getInstallAtomList({
                     projectCode: this.projectId,
                     page: this.defaultPaging.current,
@@ -317,6 +320,7 @@
                     const data = res.data || {}
                     this.atomList = data.records || []
                     this.defaultPaging.count = data.count || 0
+                    this.tableLoading = false
                 })
             },
 
@@ -385,6 +389,9 @@
             getInstallInfo (row) {
                 let des = this.$t('atomManage.installedAt')
                 if (row.default) des = this.$t('atomManage.createdAt')
+                if (row.installer === 'system') {
+                    return this.$t('atomManage.systemPlugin')
+                }
                 return `${row.installer} ${des} ${row.installTime}`
             },
 

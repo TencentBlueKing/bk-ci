@@ -27,19 +27,19 @@
 
 package com.tencent.devops.metrics.config
 
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.metrics.listener.BuildMetricsUserListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.event.EventListener
 
 @Configuration
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class MetricsUserListenerConfiguration {
-    @EventListener
-    fun buildMetricsUserListener(
+    @EventConsumer
+    fun buildMetricsUserConsumer(
         @Autowired buildMetricsUserListener: BuildMetricsUserListener
     ) = ScsConsumerBuilder.build<PipelineBuildStatusBroadCastEvent> { buildMetricsUserListener.execute(it) }
 }
