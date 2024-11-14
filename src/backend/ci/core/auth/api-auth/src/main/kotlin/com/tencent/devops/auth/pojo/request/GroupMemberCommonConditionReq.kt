@@ -12,8 +12,6 @@ open class GroupMemberCommonConditionReq(
     open val resourceTypes: List<String> = emptyList(),
     @get:Schema(title = "全量选择")
     open val allSelection: Boolean = false,
-    @get:Schema(title = "是否排除唯一管理员组")
-    open var excludedUniqueManagerGroup: Boolean = false,
     @get:Schema(title = "目标对象")
     open val targetMember: ResourceMemberInfo,
     @get:Schema(title = "操作渠道")
@@ -21,7 +19,6 @@ open class GroupMemberCommonConditionReq(
 ) {
     override fun toString(): String {
         return "GroupMemberCommonConditionReq(groupIds=$groupIds,resourceTypes=$resourceTypes," +
-            "allSelection=$allSelection,excludedUniqueManagerGroup=$excludedUniqueManagerGroup," +
-            "targetMember=$targetMember,operateChannel=$operateChannel)"
+            "allSelection=$allSelection,targetMember=$targetMember,operateChannel=$operateChannel)"
     }
 }

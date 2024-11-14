@@ -6,33 +6,49 @@ import com.tencent.bk.sdk.iam.dto.response.MemberGroupDetailsResponse
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_APPROVAL
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_FINISH
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_HANDLE
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_REVOKE
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
+import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.HandoverAction
+import com.tencent.devops.auth.pojo.enum.HandoverStatus
+import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.enum.JoinedType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
+import com.tencent.devops.auth.service.iam.PermissionHandoverService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.lock.HandleHandoverApplicationLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -43,6 +59,9 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
+import com.tencent.devops.common.auth.enums.HandoverChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
@@ -61,10 +80,12 @@ class RbacPermissionManageFacadeServiceImpl(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val iamV2ManagerService: V2ManagerService,
-    private val rbacCacheService: RbacCacheService,
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
-    private val permissionAuthorizationService: PermissionAuthorizationService
+    private val permissionAuthorizationService: PermissionAuthorizationService,
+    private val permissionHandoverService: PermissionHandoverService,
+    private val rbacCacheService: RbacCacheService,
+    private val redisOperation: RedisOperation
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
@@ -149,11 +170,11 @@ class RbacPermissionManageFacadeServiceImpl(
         val groupMemberDetailMap = mutableMapOf<String, MemberGroupDetailsResponse>()
         // 直接加入的用户
         val userGroupIds = resourceGroupMembers
-            .filter { it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) }
+            .filter { it.memberType == MemberType.USER.type }
             .map { it.iamGroupId }
         if (userGroupIds.isNotEmpty()) {
             iamV2ManagerService.listMemberGroupsDetails(
-                ManagerScopesEnum.getType(ManagerScopesEnum.USER),
+                MemberType.USER.type,
                 memberId,
                 userGroupIds.joinToString(",")
             ).forEach {
@@ -162,11 +183,11 @@ class RbacPermissionManageFacadeServiceImpl(
         }
         // 直接加入的组织
         val deptGroupIds = resourceGroupMembers
-            .filter { it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT) }
+            .filter { it.memberType == MemberType.DEPARTMENT.type }
             .map { it.iamGroupId }
         if (deptGroupIds.isNotEmpty()) {
             iamV2ManagerService.listMemberGroupsDetails(
-                ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
+                MemberType.DEPARTMENT.type,
                 memberId,
                 deptGroupIds.joinToString(",")
             ).forEach {
@@ -174,12 +195,12 @@ class RbacPermissionManageFacadeServiceImpl(
             }
         }
         // 人员模板加入的组
-        resourceGroupMembers.filter { it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE) }
+        resourceGroupMembers.filter { it.memberType == MemberType.TEMPLATE.type }
             .groupBy({ it.memberId }, { it.iamGroupId.toString() })
             .forEach { (iamTemplateId, iamGroupIds) ->
                 if (iamGroupIds.isEmpty()) return@forEach
                 iamV2ManagerService.listMemberGroupsDetails(
-                    ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                    MemberType.TEMPLATE.type,
                     iamTemplateId,
                     iamGroupIds.joinToString(",")
                 ).forEach {
@@ -231,7 +252,7 @@ class RbacPermissionManageFacadeServiceImpl(
             expiredAt = expiredAt,
             joinedTime = joinedTime,
             removeMemberButtonControl = when {
-                authResourceGroupMember.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE) ->
+                authResourceGroupMember.memberType == MemberType.TEMPLATE.type ->
                     RemoveMemberButtonControl.TEMPLATE
 
                 resourceGroup.resourceType == AuthResourceType.PROJECT.value &&
@@ -245,8 +266,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     RemoveMemberButtonControl.OTHER
             },
             joinedType = when (authResourceGroupMember.memberType) {
-                ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE) -> JoinedType.TEMPLATE
-                ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT) -> JoinedType.DEPARTMENT
+                MemberType.TEMPLATE.type -> JoinedType.TEMPLATE
+                MemberType.DEPARTMENT.type -> JoinedType.DEPARTMENT
                 else -> JoinedType.DIRECT
             },
             operator = ""
@@ -263,32 +284,12 @@ class RbacPermissionManageFacadeServiceImpl(
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?
-    ): List<MemberGroupCountWithPermissionsVo> {
-        // 查询项目下包含该成员的组列表
-        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
-            dslContext = dslContext,
+    ): List<ResourceType2CountVo> {
+        val (iamTemplateIds, memberDeptInfos) = getMemberTemplateIdsAndDeptInfos(
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId
-        ).map { it.iamGroupId.toString() }
-        // 通过项目组ID获取人员模板ID
-        val iamTemplateId = authResourceGroupDao.listByRelationId(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            iamGroupIds = projectGroupIds
-        ).filter { it.iamTemplateId != null }
-            .map { it.iamTemplateId.toString() }
-        // 获取用户部门信息
-        val memberDeptInfos = if (operateChannel == OperateChannel.PERSONAL) {
-            deptService.getUserInfo(
-                userId = "admin",
-                name = memberId
-            )?.deptInfo ?: return emptyList()
-            deptService.getUserDeptInfo(memberId).toList()
-        } else {
-            emptyList()
-        }
-
+            memberId = memberId,
+            operateChannel = operateChannel
+        )
         val iamGroupIdsByConditions = listIamGroupIdsByConditions(
             condition = IamGroupIdsQueryConditionDTO(
                 projectCode = projectCode,
@@ -303,43 +304,32 @@ class RbacPermissionManageFacadeServiceImpl(
             dslContext = dslContext,
             projectCode = projectCode,
             memberId = memberId,
-            iamTemplateIds = iamTemplateId,
+            iamTemplateIds = iamTemplateIds,
             iamGroupIds = iamGroupIdsByConditions,
             minExpiredAt = minExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) },
             maxExpiredAt = maxExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) },
             memberDeptInfos = memberDeptInfos
         )
-        val memberGroupCountList = mutableListOf<MemberGroupCountWithPermissionsVo>()
-        // 项目排在第一位
-        memberGroupCountMap[AuthResourceType.PROJECT.value]?.let { projectCount ->
-            memberGroupCountList.add(
-                MemberGroupCountWithPermissionsVo(
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceTypeName = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthResourceType.PROJECT.value + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                    ),
-                    count = projectCount
-                )
-            )
+        return rbacCacheService.convertResourceType2Count(memberGroupCountMap)
+    }
+
+    private fun getMemberTemplateIdsAndDeptInfos(
+        projectCode: String,
+        memberId: String,
+        operateChannel: OperateChannel?
+    ): Pair<List<String>, List<String>> {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = memberId
+        )
+        // 获取用户部门信息
+        val memberDeptInfos = if (operateChannel == OperateChannel.PERSONAL) {
+            getMemberDeptInfos(memberId)
+        } else {
+            emptyList()
         }
-
-        rbacCacheService.listResourceTypes()
-            .filter { it.resourceType != AuthResourceType.PROJECT.value }
-            .forEach { resourceTypeInfoVo ->
-                memberGroupCountMap[resourceTypeInfoVo.resourceType]?.let { count ->
-                    val memberGroupCount = MemberGroupCountWithPermissionsVo(
-                        resourceType = resourceTypeInfoVo.resourceType,
-                        resourceTypeName = I18nUtil.getCodeLanMessage(
-                            messageCode = resourceTypeInfoVo.resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
-                            defaultMessage = resourceTypeInfoVo.name
-                        ),
-                        count = count
-                    )
-                    memberGroupCountList.add(memberGroupCount)
-                }
-            }
-
-        return memberGroupCountList
+        return Pair(iamTemplateIds, memberDeptInfos)
     }
 
     override fun listIamGroupIdsByConditions(condition: IamGroupIdsQueryConditionDTO): List<Int> {
@@ -398,17 +388,12 @@ class RbacPermissionManageFacadeServiceImpl(
         start: Int?,
         limit: Int?
     ): Pair<Long, List<AuthResourceGroupMember>> {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+        // 获取用户的部门信息以及加入的项目级别用户组模板ID
+        val (iamTemplateIds, memberDeptInfos) = getMemberTemplateIdsAndDeptInfos(
             projectCode = projectCode,
-            memberId = memberId
+            memberId = memberId,
+            operateChannel = operateChannel
         )
-        // 获取用户所属组织
-        val memberDeptInfos = if (operateChannel == OperateChannel.PERSONAL) {
-            getMemberDeptInfos(memberId)
-        } else {
-            emptyList()
-        }
 
         val minExpiredTime = minExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
         val maxExpiredTime = maxExpiredAt?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
@@ -475,87 +460,50 @@ class RbacPermissionManageFacadeServiceImpl(
     private fun getGroupIdsByGroupMemberCondition(
         projectCode: String,
         commonCondition: GroupMemberCommonConditionReq
-    ): Map<ManagerScopesEnum, List<Int>> {
-        val finalResourceGroupMembers = mutableListOf<AuthResourceGroupMember>()
-        with(commonCondition) {
-            // 1.根据条件筛选出用户组
-            val resourceGroupMembersByCondition = when {
-                // 全选
-                allSelection -> {
+    ): Map<MemberType, List<Int>> {
+        val finalMemberGroups = mutableListOf<AuthResourceGroupMember>()
+
+        val resourceGroupMembersByCondition = when {
+            commonCondition.allSelection -> {
+                listResourceGroupMembers(
+                    projectCode = projectCode,
+                    memberId = commonCondition.targetMember.id,
+                    operateChannel = commonCondition.operateChannel
+                ).second
+            }
+
+            commonCondition.resourceTypes.isNotEmpty() -> {
+                commonCondition.resourceTypes.flatMap { resourceType ->
                     listResourceGroupMembers(
                         projectCode = projectCode,
                         memberId = commonCondition.targetMember.id,
+                        resourceType = resourceType,
                         operateChannel = commonCondition.operateChannel
                     ).second
                 }
-                // 全选某些资源类型用户组
-                resourceTypes.isNotEmpty() -> {
-                    resourceTypes.flatMap { resourceType ->
-                        listResourceGroupMembers(
-                            projectCode = projectCode,
-                            memberId = commonCondition.targetMember.id,
-                            resourceType = resourceType,
-                            operateChannel = commonCondition.operateChannel
-                        ).second
-                    }
-                }
-
-                else -> {
-                    emptyList()
-                }
             }
 
-            if (resourceGroupMembersByCondition.isNotEmpty()) {
-                finalResourceGroupMembers.addAll(resourceGroupMembersByCondition)
-            }
-
-            if (groupIds.isNotEmpty()) {
-                val resourceGroupMembersOfSelect = listResourceGroupMembers(
-                    projectCode = projectCode,
-                    memberId = commonCondition.targetMember.id,
-                    iamGroupIds = groupIds
-                ).second
-                finalResourceGroupMembers.addAll(resourceGroupMembersOfSelect)
-            }
-
-            // 2.进行分类，直接/模板/部门加入
-            val groupIdsOfDirectJoined = finalResourceGroupMembers.filter {
-                it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)
-            }.map { it.iamGroupId }.toMutableList()
-
-            val groupInfoIdsOfTemplateJoined = finalResourceGroupMembers.filter {
-                it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
-            }.map { it.iamGroupId }.toMutableList()
-
-            val groupInfoIdsOfDepartmentJoined = finalResourceGroupMembers.filter {
-                it.memberType == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
-            }.map { it.iamGroupId }.toMutableList()
-
-            // 3.根据条件排除用户组。
-            // 3.1 排除唯一管理组（将用户移出用户组时，需进行排除）
-            if (excludedUniqueManagerGroup) {
-                val excludedUniqueManagerGroupIds = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
-                    dslContext = dslContext,
-                    projectCode = projectCode,
-                    iamGroupIds = groupIdsOfDirectJoined
-                )
-                groupIdsOfDirectJoined.removeAll {
-                    excludedUniqueManagerGroupIds.contains(it)
-                }
-            }
-            // 4.组装返回结果。
-            val result = mutableMapOf<ManagerScopesEnum, List<Int>>()
-            if (groupIdsOfDirectJoined.isNotEmpty()) {
-                result[ManagerScopesEnum.USER] = groupIdsOfDirectJoined
-            }
-            if (groupInfoIdsOfTemplateJoined.isNotEmpty()) {
-                result[ManagerScopesEnum.TEMPLATE] = groupInfoIdsOfTemplateJoined
-            }
-            if (groupInfoIdsOfDepartmentJoined.isNotEmpty()) {
-                result[ManagerScopesEnum.DEPARTMENT] = groupInfoIdsOfTemplateJoined
-            }
-            return result
+            else -> emptyList()
         }
+
+        finalMemberGroups.addAll(resourceGroupMembersByCondition)
+
+        if (commonCondition.groupIds.isNotEmpty()) {
+            val groupsOfSelect = listResourceGroupMembers(
+                projectCode = projectCode,
+                memberId = commonCondition.targetMember.id,
+                iamGroupIds = commonCondition.groupIds,
+                operateChannel = commonCondition.operateChannel
+            ).second
+            finalMemberGroups.addAll(groupsOfSelect)
+        }
+
+        // 分类
+        val result = mutableMapOf<MemberType, List<Int>>()
+        finalMemberGroups.groupBy { it.memberType }.forEach { (memberType, groups) ->
+            result[MemberType.get(memberType)] = groups.map { it.iamGroupId }
+        }
+        return result
     }
 
     override fun listProjectMembersByComplexConditions(
@@ -648,9 +596,8 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         iamGroupIds: List<Int>,
         memberId: String
-    ): Pair<List<Int>, List<String>> {
+    ): InvalidAuthorizationsDTO {
         logger.info("list invalid authorizations after operated groups:$projectCode|$iamGroupIds|$memberId")
-        deptService.getUserInfo(memberId, memberId) ?: return Pair(emptyList(), emptyList())
         // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
         val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
             projectCode = projectCode,
@@ -688,7 +635,7 @@ class RbacPermissionManageFacadeServiceImpl(
 
         // 3.1.若用户在未退出的组中拥有整个项目的流水线执行权限，则本次不会对任何的流水线代持人权限造成影响。
         if (hasAllPipelineExecutePermAfterOperateGroups)
-            return Pair(emptyList(), emptyList())
+            return InvalidAuthorizationsDTO(emptyList(), emptyList())
 
         // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
         val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
@@ -754,9 +701,12 @@ class RbacPermissionManageFacadeServiceImpl(
         }
         logger.debug("pipelines without authorization:{}", pipelinesWithoutAuthorization)
         if (pipelinesWithoutAuthorization.isNotEmpty()) {
-            return Pair(operatedGroupsWithExecutePerm, pipelinesWithoutAuthorization)
+            return InvalidAuthorizationsDTO(
+                invalidGroupIds = operatedGroupsWithExecutePerm,
+                invalidAuthorizations = pipelinesWithoutAuthorization
+            )
         }
-        return Pair(emptyList(), emptyList())
+        return InvalidAuthorizationsDTO(emptyList(), emptyList())
     }
 
     override fun renewalGroupMember(
@@ -786,8 +736,7 @@ class RbacPermissionManageFacadeServiceImpl(
     ) {
         logger.info("renewal group member ${renewalConditionReq.targetMember}|$projectCode|$groupId|$expiredAt")
         val targetMember = renewalConditionReq.targetMember
-        if (targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
-            deptService.isUserDeparted(targetMember.id)) {
+        if (targetMember.type == MemberType.USER.type && deptService.isUserDeparted(targetMember.id)) {
             return
         }
         val secondsOfRenewalDuration = TimeUnit.DAYS.toSeconds(renewalConditionReq.renewalDuration.toLong())
@@ -838,12 +787,119 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Boolean {
-        logger.info("batch handover group members $userId|$projectCode|$handoverMemberDTO")
+        logger.info("batch handover group members from manager $userId|$projectCode|$handoverMemberDTO")
         handoverMemberDTO.checkHandoverTo()
+        // 若交接对象是部门，直接进行交接
+        if (handoverMemberDTO.targetMember.type == MemberType.DEPARTMENT.type) {
+            batchOperateGroupMembers(
+                projectCode = projectCode,
+                conditionReq = handoverMemberDTO,
+                operateGroupMemberTask = ::handoverTask
+            )
+        }
+        // 若操作对象是用户，需要将被影响流水线授权一并交接给授权人
+        val groupIds = getGroupIdsByGroupMemberCondition(
+            projectCode = projectCode,
+            commonCondition = handoverMemberDTO
+        )[MemberType.USER] ?: return true
+        // 交接用户组
         batchOperateGroupMembers(
             projectCode = projectCode,
             conditionReq = handoverMemberDTO,
             operateGroupMemberTask = ::handoverTask
+        )
+        // 获取导致流水线代持人权限受到影响的流水线，并进行交接
+        val invalidPipelines = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = groupIds,
+            memberId = handoverMemberDTO.targetMember.id
+        ).invalidAuthorizations
+        if (invalidPipelines.isNotEmpty()) {
+            // 交接授权
+            permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                operator = userId,
+                projectCode = projectCode,
+                condition = ResourceAuthorizationHandoverConditionRequest(
+                    projectCode = projectCode,
+                    resourceType = ResourceTypeId.PIPELINE,
+                    filterResourceCodes = invalidPipelines,
+                    handoverChannel = HandoverChannelCode.MANAGER,
+                    handoverFrom = handoverMemberDTO.targetMember.id,
+                    handoverTo = handoverMemberDTO.handoverTo.id
+                )
+            )
+        }
+        return true
+    }
+
+    override fun batchHandoverApplicationFromPersonal(
+        userId: String,
+        projectCode: String,
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Boolean {
+        logger.info("batch handover group members from personal $userId|$projectCode|$handoverMemberDTO")
+        handoverMemberDTO.checkHandoverTo()
+        // 成员直接加入的组
+        val groupIds = getGroupIdsByGroupMemberCondition(
+            projectCode = projectCode,
+            commonCondition = handoverMemberDTO
+        )[MemberType.get(MemberType.USER.type)]
+        if (groupIds.isNullOrEmpty()) {
+            return true
+        }
+        // 本次操作导致流水线代持人权限受到影响的流水线
+        val invalidPipelines = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = groupIds,
+            memberId = handoverMemberDTO.targetMember.id
+        ).invalidAuthorizations
+        val resourceGroups = authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = groupIds.map { it.toString() }
+        )
+
+        val handoverDetails = mutableListOf<HandoverDetailDTO>()
+        val flowNo = permissionHandoverService.generateFlowNo()
+        val title = permissionHandoverService.generateTitle(
+            groupCount = groupIds.size,
+            authorizationCount = invalidPipelines.size
+        )
+        resourceGroups.forEach { groupInfo ->
+            handoverDetails.add(
+                HandoverDetailDTO(
+                    projectCode = projectCode,
+                    flowNo = flowNo,
+                    itemId = groupInfo.relationId,
+                    resourceType = groupInfo.resourceType,
+                    handoverType = HandoverType.GROUP
+                )
+            )
+        }
+        invalidPipelines.forEach { pipelineId ->
+            handoverDetails.add(
+                HandoverDetailDTO(
+                    projectCode = projectCode,
+                    flowNo = flowNo,
+                    itemId = pipelineId,
+                    resourceType = ResourceTypeId.PIPELINE,
+                    handoverType = HandoverType.AUTHORIZATION
+                )
+            )
+        }
+        // 创建交接单
+        permissionHandoverService.createHandoverApplication(
+            overview = HandoverOverviewCreateDTO(
+                projectCode = projectCode,
+                flowNo = flowNo,
+                title = title,
+                applicant = handoverMemberDTO.targetMember.id,
+                approver = handoverMemberDTO.handoverTo.id,
+                handoverStatus = HandoverStatus.PENDING,
+                groupCount = groupIds.size,
+                authorizationCount = invalidPipelines.size
+            ),
+            details = handoverDetails
         )
         return true
     }
@@ -851,15 +907,164 @@ class RbacPermissionManageFacadeServiceImpl(
     override fun batchDeleteResourceGroupMembersFromManager(
         userId: String,
         projectCode: String,
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
     ): Boolean {
         logger.info("batch delete group members $userId|$projectCode|$removeMemberDTO")
-        removeMemberDTO.excludedUniqueManagerGroup = true
+        // 若操作对象是组织，则直接退出即可。
+        if (removeMemberDTO.targetMember.type == MemberType.DEPARTMENT.type) {
+            batchOperateGroupMembers(
+                projectCode = projectCode,
+                conditionReq = removeMemberDTO,
+                operateGroupMemberTask = ::deleteTask
+            )
+            return true
+        }
+        // 以下逻辑是用户类型成员的批量移出组
+        // 根据条件获取成员直接加入的用户组
+        val groupIds = getGroupIdsByGroupMemberCondition(
+            projectCode = projectCode,
+            commonCondition = removeMemberDTO
+        )[MemberType.USER] ?: return true
+        // 获取唯一管理员组
+        val uniqueManagerGroups = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = groupIds
+        )
+        // 获取导致流水线代持人权限受到影响的用户组及流水线
+        val (invalidGroups, invalidPipelines) =
+            listInvalidAuthorizationsAfterOperatedGroups(
+                projectCode = projectCode,
+                iamGroupIds = groupIds,
+                memberId = removeMemberDTO.targetMember.id
+            )
+        val (toHandoverGroups, toDeleteGroups) = groupIds.partition {
+            uniqueManagerGroups.contains(it) || invalidGroups.contains(it)
+        }
+        // 直接退出的用户组
         batchOperateGroupMembers(
             projectCode = projectCode,
-            conditionReq = removeMemberDTO,
+            conditionReq = GroupMemberRemoveConditionReq(
+                groupIds = toDeleteGroups,
+                targetMember = removeMemberDTO.targetMember
+            ),
             operateGroupMemberTask = ::deleteTask
         )
+        // 交接唯一拥有者、影响代持人权限的用户组以及流水线授权
+        if (toHandoverGroups.isNotEmpty()) {
+            removeMemberDTO.checkHandoverTo()
+            batchOperateGroupMembers(
+                projectCode = projectCode,
+                conditionReq = GroupMemberHandoverConditionReq(
+                    groupIds = toHandoverGroups,
+                    targetMember = removeMemberDTO.targetMember,
+                    handoverTo = removeMemberDTO.handoverTo!!
+                ),
+                operateGroupMemberTask = ::handoverTask
+            )
+            permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                operator = userId,
+                projectCode = projectCode,
+                condition = ResourceAuthorizationHandoverConditionRequest(
+                    projectCode = projectCode,
+                    resourceType = ResourceTypeId.PIPELINE,
+                    filterResourceCodes = invalidPipelines,
+                    handoverChannel = HandoverChannelCode.MANAGER,
+                    handoverFrom = removeMemberDTO.targetMember.id,
+                    handoverTo = removeMemberDTO.handoverTo!!.id
+                )
+            )
+        }
+        return true
+    }
+
+    override fun batchDeleteResourceGroupMembersFromPersonal(
+        userId: String,
+        projectCode: String,
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Boolean {
+        logger.info("batch delete group members from personal $userId|$projectCode|$removeMemberDTO")
+        // 根据条件获取成员直接加入的用户组
+        val groupIds = getGroupIdsByGroupMemberCondition(
+            projectCode = projectCode,
+            commonCondition = removeMemberDTO
+        )[MemberType.USER] ?: return true
+        // 获取唯一管理员组
+        val uniqueManagerGroups = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = groupIds
+        )
+        // 获取导致流水线代持人权限受到影响的用户组及流水线
+        val (invalidGroups, invalidPipelines) =
+            listInvalidAuthorizationsAfterOperatedGroups(
+                projectCode = projectCode,
+                iamGroupIds = groupIds,
+                memberId = removeMemberDTO.targetMember.id
+            )
+        val (toHandoverGroups, toDeleteGroups) = groupIds.partition {
+            uniqueManagerGroups.contains(it) || invalidGroups.contains(it)
+        }
+        // 直接退出的用户组
+        batchOperateGroupMembers(
+            projectCode = projectCode,
+            conditionReq = GroupMemberRemoveConditionReq(
+                groupIds = toDeleteGroups,
+                targetMember = removeMemberDTO.targetMember
+            ),
+            operateGroupMemberTask = ::deleteTask
+        )
+        // 交接唯一拥有者、影响代持人权限的用户组以及流水线授权
+        if (toHandoverGroups.isNotEmpty()) {
+            removeMemberDTO.checkHandoverTo()
+            val resourceGroups = authResourceGroupDao.listByRelationId(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = toHandoverGroups.map { it.toString() }
+            )
+
+            val handoverDetails = mutableListOf<HandoverDetailDTO>()
+            val flowNo = permissionHandoverService.generateFlowNo()
+            val title = permissionHandoverService.generateTitle(
+                groupCount = groupIds.size,
+                authorizationCount = invalidPipelines.size
+            )
+            resourceGroups.forEach { groupInfo ->
+                handoverDetails.add(
+                    HandoverDetailDTO(
+                        projectCode = projectCode,
+                        flowNo = flowNo,
+                        itemId = groupInfo.relationId,
+                        resourceType = groupInfo.resourceType,
+                        handoverType = HandoverType.GROUP
+                    )
+                )
+            }
+            invalidPipelines.forEach { pipelineId ->
+                handoverDetails.add(
+                    HandoverDetailDTO(
+                        projectCode = projectCode,
+                        flowNo = flowNo,
+                        itemId = pipelineId,
+                        resourceType = ResourceTypeId.PIPELINE,
+                        handoverType = HandoverType.AUTHORIZATION
+                    )
+                )
+            }
+            permissionHandoverService.createHandoverApplication(
+                overview = HandoverOverviewCreateDTO(
+                    projectCode = projectCode,
+                    flowNo = flowNo,
+                    title = title,
+                    applicant = removeMemberDTO.targetMember.id,
+                    approver = removeMemberDTO.handoverTo!!.id,
+                    handoverStatus = HandoverStatus.PENDING,
+                    groupCount = toHandoverGroups.size,
+                    authorizationCount = invalidPipelines.size
+                ),
+                details = handoverDetails
+            )
+        }
         return true
     }
 
@@ -889,7 +1094,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     deleteTask(
                         projectCode = projectCode,
                         groupId = groupId,
-                        removeMemberDTO = GroupMemberCommonConditionReq(
+                        removeMemberDTO = GroupMemberRemoveConditionReq(
                             targetMember = handoverMemberDTO.targetMember
                         ),
                         expiredAt = finalExpiredAt
@@ -907,7 +1112,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 deleteTask(
                     projectCode = projectCode,
                     groupId = groupId,
-                    removeMemberDTO = GroupMemberCommonConditionReq(
+                    removeMemberDTO = GroupMemberRemoveConditionReq(
                         targetMember = handoverMemberDTO.targetMember
                     ),
                     expiredAt = finalExpiredAt
@@ -951,7 +1156,7 @@ class RbacPermissionManageFacadeServiceImpl(
     private fun deleteTask(
         projectCode: String,
         groupId: Int,
-        removeMemberDTO: GroupMemberCommonConditionReq,
+        removeMemberDTO: GroupMemberRemoveConditionReq,
         expiredAt: Long
     ) {
         val targetMember = removeMemberDTO.targetMember
@@ -976,33 +1181,68 @@ class RbacPermissionManageFacadeServiceImpl(
         conditionReq: GroupMemberCommonConditionReq
     ): BatchOperateGroupMemberCheckVo {
         logger.info("batch operate group member check|$userId|$projectCode|$batchOperateType|$conditionReq")
-        // 获取用户加入的用户组
+        // 获取成员加入的用户组
         val joinedType2GroupIds = getGroupIdsByGroupMemberCondition(
             projectCode = projectCode,
             commonCondition = conditionReq
         )
-        val groupIdsOfDirectJoined = joinedType2GroupIds[ManagerScopesEnum.USER] ?: emptyList()
-        val groupInfoIdsOfTemplateJoined = joinedType2GroupIds[ManagerScopesEnum.TEMPLATE] ?: emptyList()
+        // 通过组织或者模板加入的用户组
+        val groupsOfTemplateOrDeptJoined = when (conditionReq.targetMember.type) {
+            MemberType.USER.type -> {
+                listOfNotNull(
+                    joinedType2GroupIds[MemberType.DEPARTMENT],
+                    joinedType2GroupIds[MemberType.TEMPLATE]
+                ).flatten()
+            }
 
-        val totalCount = groupIdsOfDirectJoined.size + groupInfoIdsOfTemplateJoined.size
-        val groupCountOfTemplateJoined = groupInfoIdsOfTemplateJoined.size
-
+            else -> joinedType2GroupIds[MemberType.TEMPLATE] ?: emptyList()
+        }
+        // 直接加入的组
+        val groupsOfDirectlyJoined = joinedType2GroupIds[MemberType.get(conditionReq.targetMember.type)] ?: emptyList()
+        // 总数
+        val totalCount = groupsOfTemplateOrDeptJoined.size + groupsOfDirectlyJoined.size
         return when (batchOperateType) {
             BatchOperateType.REMOVE -> {
-                val groupCountOfUniqueManager = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
-                    dslContext = dslContext,
-                    projectCode = projectCode,
-                    iamGroupIds = groupIdsOfDirectJoined
-                ).size
-                BatchOperateGroupMemberCheckVo(
-                    totalCount = totalCount,
-                    inoperableCount = groupCountOfUniqueManager + groupCountOfTemplateJoined
-                )
+                if (conditionReq.targetMember.type == MemberType.DEPARTMENT.type) {
+                    BatchOperateGroupMemberCheckVo(
+                        totalCount = totalCount,
+                        operableCount = groupsOfDirectlyJoined.size,
+                        inoperableCount = groupsOfTemplateOrDeptJoined.size
+                    )
+                } else {
+                    val groupsOfUniqueManager = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        iamGroupIds = groupsOfDirectlyJoined
+                    )
+                    // 本次操作导致流水线代持人权限受到影响的用户组及流水线
+                    val (invalidGroups, invalidPipelines) =
+                        listInvalidAuthorizationsAfterOperatedGroups(
+                            projectCode = projectCode,
+                            iamGroupIds = groupsOfDirectlyJoined,
+                            memberId = conditionReq.targetMember.id
+                        )
+                    // 当批量移出时，
+                    // 直接加入的组中，唯一管理员组/影响流水线代持权限不允许被移出
+                    // 间接加入的组中，通过组织、模板加入的组不允许被移出
+                    val groupsOfInOperableWhenBatchRemove = groupsOfDirectlyJoined.count {
+                        groupsOfUniqueManager.contains(it) || invalidGroups.contains(it)
+                    } + groupsOfTemplateOrDeptJoined.size
+
+                    BatchOperateGroupMemberCheckVo(
+                        totalCount = totalCount,
+                        operableCount = totalCount - groupsOfInOperableWhenBatchRemove,
+                        inoperableCount = groupsOfInOperableWhenBatchRemove,
+                        uniqueManagerCount = groupsOfUniqueManager.size,
+                        invalidPipelineAuthorizationCount = invalidPipelines.size
+                    )
+                }
             }
 
             BatchOperateType.RENEWAL -> {
+                // 部门/组织加入以及永久权限的组不允许再续期
                 with(conditionReq) {
-                    val isUserDeparted = targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+                    val isUserDeparted = targetMember.type == MemberType.USER.type &&
                         deptService.isUserDeparted(targetMember.id)
                     // 离职用户不允许续期
                     if (isUserDeparted) {
@@ -1016,27 +1256,29 @@ class RbacPermissionManageFacadeServiceImpl(
                             projectCode = projectCode,
                             memberId = targetMember.id,
                             memberType = targetMember.type,
-                            groupIds = groupIdsOfDirectJoined
+                            groupIds = groupsOfDirectlyJoined
                         ).filter {
                             // iam用的是秒级时间戳
                             it.expiredAt == PERMANENT_EXPIRED_TIME / 1000
                         }.size
+                        val groupsOfInOperableWhenBatchRenewal = groupCountOfPermanentExpiredTime + groupsOfTemplateOrDeptJoined.size
                         BatchOperateGroupMemberCheckVo(
                             totalCount = totalCount,
-                            inoperableCount = groupCountOfPermanentExpiredTime + groupCountOfTemplateJoined
+                            operableCount = totalCount - groupsOfInOperableWhenBatchRenewal,
+                            inoperableCount = groupsOfInOperableWhenBatchRenewal
                         )
                     }
                 }
             }
 
             BatchOperateType.HANDOVER -> {
-                // 已过期（除唯一管理员组）或通过模板加入的不允许移交
+                // 已过期（除唯一管理员组 ）或通过模板/组织加入的不允许移交
                 with(conditionReq) {
-                    val finalGroupIds = groupIdsOfDirectJoined.toMutableList()
+                    val finalGroupIds = groupsOfDirectlyJoined.toMutableList()
                     val uniqueManagerGroupIds = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
                         dslContext = dslContext,
                         projectCode = projectCode,
-                        iamGroupIds = groupIdsOfDirectJoined
+                        iamGroupIds = groupsOfDirectlyJoined
                     )
                     // 去除唯一管理员组
                     if (uniqueManagerGroupIds.isNotEmpty()) {
@@ -1051,9 +1293,19 @@ class RbacPermissionManageFacadeServiceImpl(
                         // iam用的是秒级时间戳
                         it.expiredAt < System.currentTimeMillis() / 1000
                     }.size
+                    val inoperableCount = groupsOfTemplateOrDeptJoined.size + groupCountOfExpired
+                    // 本次操作导致流水线代持人权限受到影响的流水线
+                    val invalidPipelines = listInvalidAuthorizationsAfterOperatedGroups(
+                        projectCode = projectCode,
+                        iamGroupIds = groupsOfDirectlyJoined,
+                        memberId = conditionReq.targetMember.id
+                    ).invalidAuthorizations
+
                     BatchOperateGroupMemberCheckVo(
                         totalCount = totalCount,
-                        inoperableCount = groupCountOfTemplateJoined + groupCountOfExpired
+                        operableCount = totalCount - inoperableCount,
+                        inoperableCount = groupsOfTemplateOrDeptJoined.size + groupCountOfExpired,
+                        invalidPipelineAuthorizationCount = invalidPipelines.size
                     )
                 }
             }
@@ -1061,7 +1313,8 @@ class RbacPermissionManageFacadeServiceImpl(
             else -> {
                 BatchOperateGroupMemberCheckVo(
                     totalCount = totalCount,
-                    inoperableCount = groupCountOfTemplateJoined
+                    inoperableCount = groupsOfTemplateOrDeptJoined.size,
+                    operableCount = groupsOfDirectlyJoined.size
                 )
             }
         }
@@ -1076,7 +1329,7 @@ class RbacPermissionManageFacadeServiceImpl(
         return with(removeMemberFromProjectReq) {
             val memberType = targetMember.type
             val isNeedToHandover = handoverTo != null
-            if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) && isNeedToHandover) {
+            if (memberType == MemberType.USER.type && isNeedToHandover) {
                 removeMemberFromProjectReq.checkHandoverTo()
                 val handoverMemberDTO = GroupMemberHandoverConditionReq(
                     allSelection = true,
@@ -1100,7 +1353,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     )
                 )
             } else {
-                val removeMemberDTO = GroupMemberCommonConditionReq(
+                val removeMemberDTO = GroupMemberRemoveConditionReq(
                     allSelection = true,
                     targetMember = targetMember
                 )
@@ -1111,7 +1364,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 )
             }
 
-            if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+            if (memberType == MemberType.USER.type) {
                 // 查询用户还存在那些组织中
                 val userDeptInfos = deptService.getUserInfo(
                     userId = "admin",
@@ -1122,7 +1375,7 @@ class RbacPermissionManageFacadeServiceImpl(
                         dslContext = dslContext,
                         projectCode = projectCode,
                         memberNames = userDeptInfos,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+                        memberType = MemberType.DEPARTMENT.type
                     )
                 }
             }
@@ -1147,7 +1400,7 @@ class RbacPermissionManageFacadeServiceImpl(
         ).let { it.totalCount == it.inoperableCount }
 
         val isMemberHasNoAuthorizations =
-            if (targetMember.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+            if (targetMember.type == MemberType.USER.type) {
                 permissionAuthorizationService.listResourceAuthorizations(
                     condition = ResourceAuthorizationConditionRequest(
                         projectCode = projectCode,
@@ -1160,6 +1413,105 @@ class RbacPermissionManageFacadeServiceImpl(
         return isMemberHasNoPermission && isMemberHasNoAuthorizations
     }
 
+    override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean {
+        val overview = permissionHandoverService.getHandoverOverview(request.flowNo)
+        logger.info("revoke hanover application:{}|{} ", request, overview)
+        HandleHandoverApplicationLock(redisOperation, request.flowNo).use { lock ->
+            if (!lock.tryLock()) {
+                logger.warn("The handover application is being processed!$request")
+                throw ErrorCodeException(errorCode = ERROR_HANDOVER_HANDLE)
+            }
+            try {
+                handleHanoverCheck(request = request, overview = overview)
+                if (request.handoverAction == HandoverAction.AGREE) {
+                    handleHandoverAgreeAction(
+                        request = request,
+                        overview = overview
+                    )
+                }
+                permissionHandoverService.updateHandoverApplication(
+                    overview = request
+                )
+            } catch (e: Exception) {
+                logger.warn("handle hanover application error,$e|$request")
+                throw e
+            }
+        }
+        return true
+    }
+
+    private fun handleHanoverCheck(
+        request: HandoverOverviewUpdateReq,
+        overview: HandoverOverviewVo
+    ) {
+        if (overview.handoverStatus != HandoverStatus.PENDING) {
+            throw ErrorCodeException(errorCode = ERROR_HANDOVER_FINISH)
+        }
+        if (request.handoverAction == HandoverAction.REVOKE && request.operator != overview.applicant) {
+            throw ErrorCodeException(errorCode = ERROR_HANDOVER_REVOKE)
+        }
+        if (request.handoverAction != HandoverAction.REVOKE && request.operator != overview.approver) {
+            throw ErrorCodeException(errorCode = ERROR_HANDOVER_APPROVAL)
+        }
+    }
+
+    private fun handleHandoverAgreeAction(
+        request: HandoverOverviewUpdateReq,
+        overview: HandoverOverviewVo
+    ) {
+        val handoverDetails = permissionHandoverService.listHandoverDetails(
+            projectCode = overview.projectCode,
+            flowNo = overview.flowNo
+        )
+        val handoverType2Records = handoverDetails.groupBy { it.handoverType }
+
+        // 交接用户组
+        val groupsOfHandover = handoverType2Records[HandoverType.GROUP]?.map { it.itemId.toInt() }
+        if (!groupsOfHandover.isNullOrEmpty()) {
+            val targetMember = ResourceMemberInfo(
+                id = overview.applicant,
+                name = deptService.getMemberInfo(overview.applicant, ManagerScopesEnum.USER).displayName,
+                type = MemberType.USER.type
+            )
+            val handoverTo = ResourceMemberInfo(
+                id = overview.approver,
+                name = deptService.getMemberInfo(overview.approver, ManagerScopesEnum.USER).displayName,
+                type = MemberType.USER.type
+            )
+
+            val groupMemberHandoverConditionReq = GroupMemberHandoverConditionReq(
+                groupIds = groupsOfHandover,
+                targetMember = targetMember,
+                handoverTo = handoverTo
+            )
+            batchOperateGroupMembers(
+                projectCode = overview.projectCode,
+                conditionReq = groupMemberHandoverConditionReq,
+                operateGroupMemberTask = ::handoverTask
+            )
+        }
+
+        // 交接授权
+        val authorizationsOfHandover = handoverType2Records[HandoverType.AUTHORIZATION]
+        if (!authorizationsOfHandover.isNullOrEmpty()) {
+            val resourceType2Authorizations = authorizationsOfHandover.groupBy { it.resourceType }
+            resourceType2Authorizations.forEach { (resourceType, authorizations) ->
+                permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                    operator = request.operator,
+                    projectCode = overview.projectCode,
+                    condition = ResourceAuthorizationHandoverConditionRequest(
+                        projectCode = overview.projectCode,
+                        resourceType = resourceType,
+                        filterResourceCodes = authorizations.map { it.itemId },
+                        handoverChannel = HandoverChannelCode.MANAGER,
+                        handoverFrom = overview.applicant,
+                        handoverTo = overview.approver
+                    )
+                )
+            }
+        }
+    }
+
     private fun <T : GroupMemberCommonConditionReq> batchOperateGroupMembers(
         projectCode: String,
         conditionReq: T,
@@ -1170,11 +1522,11 @@ class RbacPermissionManageFacadeServiceImpl(
             expiredAt: Long
         ) -> Unit
     ): Boolean {
-        // 直接加入的组
+        // 成员直接加入的组
         val groupIds = getGroupIdsByGroupMemberCondition(
             projectCode = projectCode,
             commonCondition = conditionReq
-        )[ManagerScopesEnum.USER]
+        )[MemberType.get(conditionReq.targetMember.type)]
         if (groupIds.isNullOrEmpty()) {
             return true
         }
@@ -1232,8 +1584,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     memberGroupsDetailsList.addAll(
                         // 若离职，则从数据库获取用户加入组的过期时间，调用iam接口会报错。
                         // 虽然数据库的过期时间可能不是最新的。
-                        if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
-                            deptService.isUserDeparted(userId = memberId)) {
+                        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)) {
                             val records = authResourceGroupMemberDao.listMemberGroupDetail(
                                 dslContext = dslContext,
                                 projectCode = projectCode,

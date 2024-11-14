@@ -3,17 +3,20 @@ package com.tencent.devops.auth.provider.sample.service
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.common.api.model.SQLPage
 
@@ -44,7 +47,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?
-    ): List<MemberGroupCountWithPermissionsVo> = emptyList()
+    ): List<ResourceType2CountVo> = emptyList()
 
     override fun listIamGroupIdsByConditions(
         condition: IamGroupIdsQueryConditionDTO
@@ -76,7 +79,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         projectCode: String,
         iamGroupIds: List<Int>,
         memberId: String
-    ): Pair<List<Int>, List<String>> = Pair(emptyList(), emptyList())
+    ): InvalidAuthorizationsDTO = InvalidAuthorizationsDTO(emptyList(), emptyList())
 
     override fun renewalGroupMember(
         userId: String,
@@ -96,10 +99,22 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Boolean = true
 
+    override fun batchHandoverApplicationFromPersonal(
+        userId: String,
+        projectCode: String,
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Boolean = true
+
     override fun batchDeleteResourceGroupMembersFromManager(
         userId: String,
         projectCode: String,
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Boolean = true
+
+    override fun batchDeleteResourceGroupMembersFromPersonal(
+        userId: String,
+        projectCode: String,
+        removeMemberDTO: GroupMemberRemoveConditionReq
     ): Boolean = true
 
     override fun batchOperateGroupMembersCheck(
@@ -120,4 +135,6 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Boolean = true
+
+    override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean = true
 }

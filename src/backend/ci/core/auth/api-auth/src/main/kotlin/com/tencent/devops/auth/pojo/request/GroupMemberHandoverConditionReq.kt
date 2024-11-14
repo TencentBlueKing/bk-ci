@@ -41,8 +41,6 @@ data class GroupMemberHandoverConditionReq(
     override val resourceTypes: List<String> = emptyList(),
     @get:Schema(title = "全量选择")
     override val allSelection: Boolean = false,
-    @get:Schema(title = "是否排除唯一管理员组")
-    override var excludedUniqueManagerGroup: Boolean = false,
     @get:Schema(title = "目标对象")
     override val targetMember: ResourceMemberInfo,
     @get:Schema(title = "操作渠道")
@@ -53,7 +51,6 @@ data class GroupMemberHandoverConditionReq(
     groupIds = groupIds,
     resourceTypes = resourceTypes,
     allSelection = allSelection,
-    excludedUniqueManagerGroup = excludedUniqueManagerGroup,
     operateChannel = operateChannel,
     targetMember = targetMember
 ) {

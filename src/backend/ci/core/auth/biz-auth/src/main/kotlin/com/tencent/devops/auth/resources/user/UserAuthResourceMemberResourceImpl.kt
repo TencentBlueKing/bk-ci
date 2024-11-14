@@ -6,13 +6,14 @@ import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
@@ -117,10 +118,24 @@ class UserAuthResourceMemberResourceImpl(
     override fun batchRemoveGroupMembersFromManager(
         userId: String,
         projectId: String,
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
     ): Result<Boolean> {
         return Result(
             permissionManageFacadeService.batchDeleteResourceGroupMembersFromManager(
+                userId = userId,
+                projectCode = projectId,
+                removeMemberDTO = removeMemberDTO
+            )
+        )
+    }
+
+    override fun batchRemoveGroupMembersFromPersonal(
+        userId: String,
+        projectId: String,
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Result<Boolean> {
+        return Result(
+            permissionManageFacadeService.batchDeleteResourceGroupMembersFromPersonal(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = removeMemberDTO
@@ -136,6 +151,20 @@ class UserAuthResourceMemberResourceImpl(
     ): Result<Boolean> {
         return Result(
             permissionManageFacadeService.batchHandoverGroupMembersFromManager(
+                userId = userId,
+                projectCode = projectId,
+                handoverMemberDTO = handoverMemberDTO
+            )
+        )
+    }
+
+    override fun batchHandoverApplicationFromPersonal(
+        userId: String,
+        projectId: String,
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Result<Boolean> {
+        return Result(
+            permissionManageFacadeService.batchHandoverApplicationFromPersonal(
                 userId = userId,
                 projectCode = projectId,
                 handoverMemberDTO = handoverMemberDTO
@@ -201,7 +230,7 @@ class UserAuthResourceMemberResourceImpl(
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?
-    ): Result<List<MemberGroupCountWithPermissionsVo>> {
+    ): Result<List<ResourceType2CountVo>> {
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
             projectCode = projectId,
@@ -216,7 +245,8 @@ class UserAuthResourceMemberResourceImpl(
                 maxExpiredAt = maxExpiredAt,
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
-                action = action
+                action = action,
+                operateChannel = operateChannel
             )
         )
     }

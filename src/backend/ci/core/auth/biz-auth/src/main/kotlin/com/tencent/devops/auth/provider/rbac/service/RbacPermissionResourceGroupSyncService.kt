@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
@@ -724,7 +725,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         iamGroupId = iamGroupId,
                         memberId = iamGroupTemplate.id,
                         memberName = iamGroupTemplate.name,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                        memberType = MemberType.TEMPLATE.type,
                         expiredTime = expiredTime
                     )
                 )

@@ -27,15 +27,17 @@
 
 package com.tencent.devops.auth.pojo.request
 
+import com.tencent.devops.auth.constant.AuthMessageCode.INVALID_HANDOVER_TO
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "用户组成员续期")
-data class GroupMemberRenewalConditionReq(
+@Schema(title = "用户组成员移除条件请求体")
+data class GroupMemberRemoveConditionReq(
     @get:Schema(title = "组IDs")
-    override val groupIds: List<Int>,
-    @get:Schema(title = "全选某种资源类型下的用户组")
+    override val groupIds: List<Int> = emptyList(),
+    @get:Schema(title = "全选的资源类型")
     override val resourceTypes: List<String> = emptyList(),
     @get:Schema(title = "全量选择")
     override val allSelection: Boolean = false,
@@ -43,12 +45,20 @@ data class GroupMemberRenewalConditionReq(
     override val targetMember: ResourceMemberInfo,
     @get:Schema(title = "操作渠道")
     override val operateChannel: OperateChannel = OperateChannel.MANAGER,
-    @get:Schema(title = "续期时长(天)")
-    val renewalDuration: Int
+    @get:Schema(title = "授予人")
+    val handoverTo: ResourceMemberInfo? = null
 ) : GroupMemberCommonConditionReq(
     groupIds = groupIds,
     resourceTypes = resourceTypes,
     allSelection = allSelection,
     operateChannel = operateChannel,
     targetMember = targetMember
-)
+) {
+    fun checkHandoverTo() {
+        if (handoverTo == null || handoverTo.id == targetMember.id) {
+            throw ErrorCodeException(
+                errorCode = INVALID_HANDOVER_TO
+            )
+        }
+    }
+}

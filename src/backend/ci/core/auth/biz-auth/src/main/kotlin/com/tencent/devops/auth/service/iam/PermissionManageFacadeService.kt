@@ -3,17 +3,20 @@ package com.tencent.devops.auth.service.iam
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.model.SQLPage
 
 /**
@@ -56,7 +59,7 @@ interface PermissionManageFacadeService {
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel? = OperateChannel.MANAGER
-    ): List<MemberGroupCountWithPermissionsVo>
+    ): List<ResourceType2CountVo>
 
     /**
      * 根据条件查询组ID
@@ -108,7 +111,7 @@ interface PermissionManageFacadeService {
         projectCode: String,
         iamGroupIds: List<Int>,
         memberId: String
-    ): Pair<List<Int>/*引起代持人权限失效的用户组*/, List<String>/*引起代持人权限失效的流水线*/>
+    ): InvalidAuthorizationsDTO
 
     /**
      * 续期用户权限-无需审批版本
@@ -138,12 +141,30 @@ interface PermissionManageFacadeService {
     ): Boolean
 
     /**
+     * 批量交接申请-个人视角
+     * */
+    fun batchHandoverApplicationFromPersonal(
+        userId: String,
+        projectCode: String,
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Boolean
+
+    /**
      * 批量移除-管理员视角
      * */
     fun batchDeleteResourceGroupMembersFromManager(
         userId: String,
         projectCode: String,
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Boolean
+
+    /**
+     * 批量退出-个人视角
+     * */
+    fun batchDeleteResourceGroupMembersFromPersonal(
+        userId: String,
+        projectCode: String,
+        removeMemberDTO: GroupMemberRemoveConditionReq
     ): Boolean
 
     fun batchOperateGroupMembersCheck(
@@ -164,4 +185,9 @@ interface PermissionManageFacadeService {
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Boolean
+
+    /**
+     * 处理交接审批单
+     * */
+    fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean
 }

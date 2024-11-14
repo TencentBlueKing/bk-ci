@@ -368,6 +368,7 @@ class AuthResourceGroupDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
+        iamGroupIds: List<String>? = null,
         offset: Int,
         limit: Int
     ): List<AuthResourceGroup> {
@@ -375,6 +376,13 @@ class AuthResourceGroupDao {
             val records = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty()) {
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    } else {
+                        it
+                    }
+                }
                 .offset(offset)
                 .limit(limit)
                 .fetch()

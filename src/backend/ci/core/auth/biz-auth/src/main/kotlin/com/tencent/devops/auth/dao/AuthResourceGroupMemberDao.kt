@@ -27,10 +27,10 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
@@ -418,17 +418,17 @@ class AuthResourceGroupMemberDao {
             with(projectMembersQueryConditionDTO) {
                 conditions.add(PROJECT_CODE.eq(projectCode))
                 if (queryTemplate == false) {
-                    conditions.add(MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                    conditions.add(MEMBER_TYPE.notEqual(MemberType.TEMPLATE.type))
                 } else {
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.TEMPLATE.type))
                 }
                 memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
                 userName?.let { name ->
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.USER.type))
                     conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
                 }
                 deptName?.let { name ->
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.DEPARTMENT.type))
                     conditions.add(MEMBER_NAME.like("%$name%"))
                 }
                 minExpiredTime?.let { minTime -> conditions.add(EXPIRED_TIME.ge(minTime)) }
@@ -494,7 +494,7 @@ class AuthResourceGroupMemberDao {
             )
             .from(tResourceGroupMember)
             .where(tResourceGroupMember.PROJECT_CODE.eq(projectCode))
-            .and(tResourceGroupMember.MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+            .and(tResourceGroupMember.MEMBER_TYPE.notEqual(MemberType.TEMPLATE.type))
             .groupBy(tResourceGroupMember.MEMBER_ID)
             .unionAll(
                 dslContext.select(
@@ -523,11 +523,11 @@ class AuthResourceGroupMemberDao {
             conditions.add(memberTypeField.eq(memberType))
         }
         if (userName != null) {
-            conditions.add(memberTypeField.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+            conditions.add(memberTypeField.eq(MemberType.USER.type))
             conditions.add(memberId.like("%$userName%").or(memberName.like("%$userName%")))
         }
         if (deptName != null) {
-            conditions.add(memberTypeField.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+            conditions.add(memberTypeField.eq(MemberType.DEPARTMENT.type))
             conditions.add(memberName.like("%$deptName%"))
         }
         return conditions
@@ -639,23 +639,24 @@ class AuthResourceGroupMemberDao {
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             conditions.add(PROJECT_CODE.eq(projectCode))
             conditions.add(
+                // 获取直接加入
                 (MEMBER_ID.eq(memberId).and(
-                    MEMBER_TYPE.`in`(
-                        listOf(
-                            ManagerScopesEnum.getType(ManagerScopesEnum.USER),
-                            ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
-                        )
-                    )
-                ))
-                    .or(
-                        MEMBER_ID.`in`(iamTemplateIds)
-                            .and(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
-                    )
-                    .or(
-                        MEMBER_ID.`in`(memberDeptInfos)
-                            .and(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
-                    )
-            )
+                    MEMBER_TYPE.`in`(listOf(MemberType.USER.type, MemberType.DEPARTMENT.type))
+                )).let {
+                    // 获取模板加入
+                    if (iamTemplateIds.isNotEmpty()) {
+                        it.or(MEMBER_ID.`in`(iamTemplateIds).and(MEMBER_TYPE.eq(MemberType.TEMPLATE.type)))
+                    } else {
+                        it
+                    }
+                }.let {
+                    // 获取组织加入
+                    if (!memberDeptInfos.isNullOrEmpty()) {
+                        it.or(MEMBER_ID.`in`(memberDeptInfos).and(MEMBER_TYPE.eq(MemberType.DEPARTMENT.type)))
+                    } else {
+                        it
+                    }
+                })
             resourceType?.let { conditions.add(RESOURCE_TYPE.eq(resourceType)) }
             minExpiredAt?.let { conditions.add(EXPIRED_TIME.ge(minExpiredAt)) }
             maxExpiredAt?.let { conditions.add(EXPIRED_TIME.le(maxExpiredAt)) }
