@@ -237,7 +237,8 @@ class StoreTemplateDao {
             .where(
                 tTemplate.TEMPLATE_STATUS.`in`(templateStatusList)
                     .and(tTemplate.CLASSIFY_ID.eq(classifyId))
-            )
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
+            ).groupBy(tStoreProjectRel.PROJECT_CODE)
             .fetchOne(0, Int::class.java)!!
     }
 }

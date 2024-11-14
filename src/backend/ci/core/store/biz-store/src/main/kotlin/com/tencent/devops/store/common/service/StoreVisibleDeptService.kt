@@ -25,15 +25,63 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.common.service
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 
-@Schema(title = "插件市场-插件可见范围请求报文体")
-data class AtomVisibleDeptReq(
-    @get:Schema(title = "插件代码", required = true)
-    val atomCode: String,
-    @get:Schema(title = "机构列表", required = true)
-    val deptInfos: List<DeptInfo>
-)
+/**
+ * store组件可见范围逻辑类
+ * since: 2019-01-08
+ */
+@Suppress("ALL")
+interface StoreVisibleDeptService {
+
+    /**
+     * 查看store组件可见范围
+     */
+    fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ): Result<StoreVisibleDeptResp?>
+
+    /**
+     * 批量获取已经审核通过的可见范围
+     */
+    fun batchGetVisibleDept(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>>
+
+    /**
+     * 设置store组件可见范围
+     */
+    fun addVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptInfos: List<DeptInfo>,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 删除store组件可见范围
+     */
+    fun deleteVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptIds: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 判断用户是否有组件的权限
+     */
+    fun checkUserInvalidVisibleStoreInfo(
+        userStoreDeptInfoRequest: UserStoreDeptInfoRequest
+    ): Boolean
+}

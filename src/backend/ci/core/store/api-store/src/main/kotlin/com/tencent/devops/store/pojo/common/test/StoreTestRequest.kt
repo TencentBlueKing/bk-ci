@@ -25,17 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common.test
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
 
-@Schema(title = "工作台-更新组件请求报文体")
-data class StoreUpdateRequest(
-    @get:Schema(title = "项目代码", required = false)
-    val projectCode: String? = null,
-    @get:Schema(title = "基础信息", required = true)
-    @field:Valid
-    val baseInfo: StoreBaseUpdateRequest
-) : HandlerRequest()
+@Schema(title = "组件测试信息请求报文")
+data class StoreTestRequest(
+    @get:Schema(title = "测试信息列表")
+    val testItems: List<StoreTestItem>
+)

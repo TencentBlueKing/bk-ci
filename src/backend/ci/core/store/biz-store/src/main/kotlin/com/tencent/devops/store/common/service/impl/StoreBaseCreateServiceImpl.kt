@@ -195,22 +195,24 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             type = StoreMemberTypeEnum.ADMIN.type.toByte(),
             storeType = storeType.type.toByte()
         )
-        // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
-        storeProjectRelDao.addStoreProjectRel(
-            dslContext = context,
-            userId = userId,
-            storeCode = storeCode,
-            projectCode = storeCreateRequest.projectCode,
-            type = StoreProjectTypeEnum.INIT.type.toByte(),
-            storeType = storeType.type.toByte()
-        )
-        storeProjectRelDao.addStoreProjectRel(
-            dslContext = context,
-            userId = userId,
-            storeCode = storeCode,
-            projectCode = storeCreateRequest.projectCode,
-            type = StoreProjectTypeEnum.TEST.type.toByte(),
-            storeType = storeType.type.toByte()
-        )
+        storeCreateRequest.projectCode?.let {
+            // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeCode = storeCode,
+                projectCode = it,
+                type = StoreProjectTypeEnum.INIT.type.toByte(),
+                storeType = storeType.type.toByte()
+            )
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeCode = storeCode,
+                projectCode = it,
+                type = StoreProjectTypeEnum.TEST.type.toByte(),
+                storeType = storeType.type.toByte()
+            )
+        }
     }
 }

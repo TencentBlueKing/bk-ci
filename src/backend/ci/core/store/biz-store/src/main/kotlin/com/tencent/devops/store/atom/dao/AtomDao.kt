@@ -215,17 +215,19 @@ class AtomDao : AtomBaseDao() {
      * 统计还在使用处于下架中或者已下架状态的插件的项目的个数
      */
     fun countUndercarriageAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
+        val tAtom = TAtom.T_ATOM
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val atomStatusList = listOf(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        return dslContext.selectCount().from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
+        return dslContext.selectCount().from(tAtom).join(tStoreProjectRel)
+            .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
             .where(
-                a.ATOM_STATUS.`in`(atomStatusList)
-                    .and(a.CLASSIFY_ID.eq(classifyId))
-            )
+                tAtom.ATOM_STATUS.`in`(atomStatusList)
+                    .and(tAtom.CLASSIFY_ID.eq(classifyId))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            ).groupBy(tStoreProjectRel.PROJECT_CODE)
             .fetchOne(0, Int::class.java)!!
     }
 

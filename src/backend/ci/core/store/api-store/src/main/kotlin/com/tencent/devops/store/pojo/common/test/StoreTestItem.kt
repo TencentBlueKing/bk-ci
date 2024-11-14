@@ -25,18 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.pojo.common.test
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "机构信息报文体")
-data class DeptInfo(
-    @get:Schema(title = "机构ID", required = true)
-    val deptId: Int,
-    @get:Schema(title = "机构名称", required = true)
-    val deptName: String,
-    @get:Schema(title = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String? = null,
-    @get:Schema(title = "批注", required = false)
-    val comment: String? = null
+@Schema(title = "测试项信息")
+data class StoreTestItem(
+    @get:Schema(title = "项目代码", required = true)
+    val projectCode: String,
+    @get:Schema(title = "实例ID", required = false)
+    val instanceId: String? = null
 )

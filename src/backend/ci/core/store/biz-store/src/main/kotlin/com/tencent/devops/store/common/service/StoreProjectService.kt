@@ -33,6 +33,8 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
+import com.tencent.devops.store.pojo.common.test.StoreTestRequest
 
 /**
  * store项目通用业务逻辑类
@@ -108,4 +110,23 @@ interface StoreProjectService {
      * 更新组件初始化项目信息
      */
     fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean
+
+    /**
+     * 保存组件测试信息
+     */
+    fun saveStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeTestRequest: StoreTestRequest
+    ): Boolean
+
+    /**
+     * 获取组件测试信息
+     */
+    fun getStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): List<StoreTestItem>
 }
