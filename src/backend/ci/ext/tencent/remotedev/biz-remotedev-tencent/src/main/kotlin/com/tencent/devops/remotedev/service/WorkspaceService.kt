@@ -454,6 +454,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
+
+                WorkspaceShared.AssignType.COLLABORATOR -> TODO()
             }
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
@@ -592,6 +594,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
+                WorkspaceShared.AssignType.COLLABORATOR -> TODO()
             }
         }
 
@@ -901,22 +905,6 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
-        val now = LocalDateTime.now()
-        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
-        val usageTime = workspace.usageTime + if (workspace.status.checkRunning()) {
-            // 如果正在运行，需要加上目前距离该次启动的时间
-            Duration.between(lastHistory?.startTime ?: now, now).seconds
-        } else {
-            0
-        }
-        val sleepingTime = workspace.sleepingTime + if (workspace.status.checkSleeping()) {
-            // 如果正在休眠，需要加上目前距离上次结束的时间
-            Duration.between(lastHistory?.endTime ?: now, now).seconds
-        } else {
-            0
-        }
-
         val winInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
         val workspaceConf = if (winInfo != null) {
             workspaceResourceTypeDao.fetchAny(dslContext, winInfo.winConfigId)
@@ -946,8 +934,8 @@ class WorkspaceService @Autowired constructor(
             status = workspace.status,
             lastUpdateTime = workspace.updateTime.timestamp(),
             chargeableTime = 0,
-            usageTime = usageTime,
-            sleepingTime = sleepingTime,
+            usageTime = 0,
+            sleepingTime = 0,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,
@@ -1297,18 +1285,6 @@ class WorkspaceService @Autowired constructor(
         ) ?: emptyMap()
     }
 
-    // 检测过期的工作空间分享并且取消
-    fun checkAndUnshared() {
-        workspaceSharedDao.fetchExpireShare(dslContext).forEach { record ->
-            workspaceCommon.unShareWorkspace(
-                workspaceName = record.workspaceName,
-                operator = record.operator,
-                sharedUsers = listOf(record.sharedUser),
-                mountType = WorkspaceMountType.START
-            )
-        }
-    }
-
     @Deprecated("不要新增功能，希望废弃该接口")
     fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Boolean {
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
@@ -1374,7 +1350,6 @@ class WorkspaceService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
-        private const val DISCOUNT_TIME = 10000
 
         private fun String.removeSuffixNumb(): String {
             for (i in this.lastIndex downTo 0) {
