@@ -8085,7 +8085,7 @@ packages:
     engines: {node: '>=0.10'}
 
   es6-iterator@2.0.3:
-    resolution: {integrity: sha1-p96IkUGgWpSwhUQDstCg+/qY87c=}
+    resolution: {integrity: sha512-zw4SRzoUkd+cl+ZoE15A9o1oQd920Bb0iOJMQkQhl3jNc03YqVjAhG7scf9C5KWRU/R13Orf588uCC6525o02g==}
 
   es6-promise@2.3.0:
     resolution: {integrity: sha512-oyOjMhyKMLEjOOtvkwg0G4pAzLQ9WdbbeX7WdqKzvYXu+UFgD0Zo/Brq5Q49zNmnGPPzV5rmYvrr0jz1zWx8Iw==}
