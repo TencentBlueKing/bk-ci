@@ -79,4 +79,8 @@ data class StoreInfoQuery(
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_QUERY_PARAM_CHECK_FAIL)
         }
     }
+
+    fun getSpecQueryFlag(): Boolean {
+        return queryProjectComponentFlag || installed != null || updateFlag != null
+    }
 }

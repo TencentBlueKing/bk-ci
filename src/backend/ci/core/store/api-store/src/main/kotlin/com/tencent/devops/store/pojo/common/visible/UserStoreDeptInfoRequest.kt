@@ -25,17 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common.visible
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
 
-@Schema(title = "工作台-更新组件请求报文体")
-data class StoreUpdateRequest(
-    @get:Schema(title = "项目代码", required = false)
-    val projectCode: String? = null,
-    @get:Schema(title = "基础信息", required = true)
-    @field:Valid
-    val baseInfo: StoreBaseUpdateRequest
-) : HandlerRequest()
+@Schema(title = "用户和组件可见范围校验请求报文")
+data class UserStoreDeptInfoRequest(
+    @get:Schema(title = "用户ID", required = true)
+    val userId: String,
+    @get:Schema(title = "用户机构ID列表", required = true)
+    val userDeptIdList: List<Int>,
+    @get:Schema(title = "store组件代码", required = true)
+    val storeCode: String,
+    @get:Schema(title = "store组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "公共组件标识", required = true)
+    val publicFlag: Boolean,
+    @get:Schema(title = "store组件机构信息列表", required = true)
+    val storeDepInfoList: List<DeptInfo>?
+)

@@ -37,6 +37,7 @@ enum class StoreStatusEnum {
     CHECKING, // 验证中
     CHECK_FAIL, // 验证失败
     TESTING, // 测试中
+    EDITING, // 填写信息中
     AUDITING, // 审核中
     AUDIT_REJECT, // 审核驳回
     RELEASED, // 已发布

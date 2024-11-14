@@ -33,7 +33,6 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
-import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -130,6 +129,7 @@ class MarketStoreQueryDao {
             tStoreBase.STORE_TYPE,
             tStoreBase.NAME,
             tStoreBase.VERSION,
+            tStoreBase.STATUS,
             tStoreBase.DOCS_LINK,
             tStoreBase.DESCRIPTION,
             tStoreBase.SUMMARY,
@@ -164,7 +164,7 @@ class MarketStoreQueryDao {
         val tClassify = TClassify.T_CLASSIFY
         val conditions = mutableListOf<Condition>()
         // 缩减查询范围
-        if (storeInfoQuery.queryProjectComponentFlag) {
+        if (storeInfoQuery.getSpecQueryFlag()) {
             conditions.add(
                 tStoreBase.ID.`in`(
                     getStoreIdsByCondition(
@@ -217,41 +217,20 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): SelectConditionStep<Record1<String>> {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val selectJoinStep = dslContext.selectDistinct(tStoreBase.ID).from(tStoreBase)
-        val subConditions = mutableListOf<Condition>()
-        subConditions.addAll(setStoreVisibleCondition(tStoreBase, tStoreBaseFeature, tStoreProjectRel, storeInfoQuery))
-        subConditions.apply {
-            storeInfoQuery.projectCode?.let {
-                if (storeInfoQuery.queryProjectComponentFlag) {
-                    selectJoinStep.leftJoin(tStoreBaseFeature).on(
-                        tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                            .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-                    )
-                    selectJoinStep.leftJoin(tStoreProjectRel).on(
-                        tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
-                            .and(tStoreBase.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
-                    )
-                    subConditions.add(tStoreProjectRel.PROJECT_CODE.eq(it).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true)))
-                }
-            }
-        }
-
+        val subConditions = setStoreVisibleCondition(tStoreBase, storeInfoQuery)
         return selectJoinStep.where(subConditions)
     }
 
     fun setStoreVisibleCondition(
         tStoreBase: TStoreBase,
-        tStoreBaseFeature: TStoreBaseFeature,
-        tStoreProjectRel: TStoreProjectRel,
         storeInfoQuery: StoreInfoQuery
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        if (storeInfoQuery.queryProjectComponentFlag) {
-            var testStoreQueryCondition = storeInfoQuery.testStoreCodes?.let { testStoreCodes ->
+        if (storeInfoQuery.getSpecQueryFlag()) {
+            val testStoreQueryCondition = storeInfoQuery.testStoreCodes?.let { testStoreCodes ->
                 tStoreBase.STORE_CODE.`in`(testStoreCodes).and(
                     tStoreBase.STATUS.`in`(
                         listOf(
@@ -262,13 +241,7 @@ class MarketStoreQueryDao {
                 )
             }
 
-            storeInfoQuery.projectCode?.let { projectCode ->
-                testStoreQueryCondition = testStoreQueryCondition?.and(
-                    tStoreProjectRel.PROJECT_CODE.eq(projectCode).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true))
-                )
-            }
-
-            var normalStoreQueryCondition = storeInfoQuery.normalStoreCodes?.let { normalStoreCodes ->
+            val normalStoreQueryCondition = storeInfoQuery.normalStoreCodes?.let { normalStoreCodes ->
                 tStoreBase.STORE_CODE.`in`(normalStoreCodes).and(
                     tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name)
                 ).and(
@@ -276,18 +249,12 @@ class MarketStoreQueryDao {
                 )
             }
 
-            storeInfoQuery.projectCode?.let { projectCode ->
-                normalStoreQueryCondition = normalStoreQueryCondition?.and(
-                    tStoreProjectRel.PROJECT_CODE.eq(projectCode).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true))
-                )
-            }
-
             if (testStoreQueryCondition != null && normalStoreQueryCondition != null) {
-                conditions.add(normalStoreQueryCondition!!.or(testStoreQueryCondition))
+                conditions.add(normalStoreQueryCondition.or(testStoreQueryCondition))
             } else if (testStoreQueryCondition != null) {
-                conditions.add(testStoreQueryCondition!!)
+                conditions.add(testStoreQueryCondition)
             } else if (normalStoreQueryCondition != null) {
-                conditions.add(normalStoreQueryCondition!!)
+                conditions.add(normalStoreQueryCondition)
             }
         } else {
             conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))

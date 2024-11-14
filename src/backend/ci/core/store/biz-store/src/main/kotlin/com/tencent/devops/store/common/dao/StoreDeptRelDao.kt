@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
-import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext

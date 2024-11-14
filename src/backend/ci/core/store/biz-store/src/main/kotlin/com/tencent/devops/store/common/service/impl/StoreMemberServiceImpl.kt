@@ -294,7 +294,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 val context = DSL.using(t)
                 storeMemberDao.delete(context, id)
                 // 删除成员对应的调试项目
-                storeProjectRelDao.deleteUserStoreTestProject(
+                storeProjectRelDao.deleteStoreProject(
                     dslContext = context,
                     userId = record.username,
                     storeProjectType = StoreProjectTypeEnum.TEST,

@@ -31,16 +31,19 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreComponentManageResource
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
+import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import com.tencent.devops.store.pojo.common.test.StoreTestRequest
 
 @RestResource
 class UserStoreComponentManageResourceImpl(
-    private val storeComponentManageService: StoreComponentManageServiceImpl
+    private val storeComponentManageService: StoreComponentManageService,
+    private val storeProjectService: StoreProjectService
 ) : UserStoreComponentManageResource {
 
     override fun updateComponentBaseInfo(
@@ -94,5 +97,21 @@ class UserStoreComponentManageResourceImpl(
         storeCode: String
     ): Result<Boolean> {
         return storeComponentManageService.updateStoreRepositoryAuthorizer(userId, storeType, storeCode)
+    }
+
+    override fun saveStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeTestRequest: StoreTestRequest
+    ): Result<Boolean> {
+        return  Result(
+            storeProjectService.saveStoreTestInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                storeTestRequest = storeTestRequest
+            )
+        )
     }
 }
