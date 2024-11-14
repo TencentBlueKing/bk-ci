@@ -280,6 +280,7 @@
             color: #63656e;
             overflow: auto;
             max-height: 216px;
+            min-width: 120px;
             z-index: 2;
             li {
                 padding: 0 16px;
