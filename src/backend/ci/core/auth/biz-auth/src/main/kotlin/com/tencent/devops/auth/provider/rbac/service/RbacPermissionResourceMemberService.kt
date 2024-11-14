@@ -131,8 +131,8 @@ class RbacPermissionResourceMemberService(
             projectCode = projectCode
         )
         return ResourceMemberCountVO(
-            userCount = projectMemberCount[ManagerScopesEnum.getType(ManagerScopesEnum.USER)] ?: 0,
-            departmentCount = projectMemberCount[ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)] ?: 0
+            userCount = projectMemberCount[MemberType.USER.type] ?: 0,
+            departmentCount = projectMemberCount[MemberType.DEPARTMENT.type] ?: 0
         )
     }
 
@@ -178,7 +178,7 @@ class RbacPermissionResourceMemberService(
 
     override fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo> {
         val userMembers = records.filter {
-            it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+            it.type == MemberType.USER.type
         }.map { it.id }
         val departedMembers = if (userMembers.isNotEmpty()) {
             deptService.listDepartedMembers(
@@ -188,7 +188,7 @@ class RbacPermissionResourceMemberService(
             return records
         }
         return records.map {
-            if (it.type != ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+            if (it.type != MemberType.USER.type) {
                 it.copy(departed = false)
             } else {
                 it.copy(departed = departedMembers.contains(it.id))
@@ -204,7 +204,7 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
-        if (memberType == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+        if (memberType == MemberType.USER.type &&
             deptService.isUserDeparted(memberId)) {
             return true
         }
@@ -271,8 +271,8 @@ class RbacPermissionResourceMemberService(
             iamGroupId = iamGroupId
         )
         // 获取用户组中用户以及部门
-        val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
-        val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+        val userType = MemberType.USER.type
+        val deptType = MemberType.DEPARTMENT.type
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
@@ -434,8 +434,8 @@ class RbacPermissionResourceMemberService(
             projectCode = projectCode,
             iamGroupId = iamGroupId
         )
-        val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
-        val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+        val userType = MemberType.USER.type
+        val deptType = MemberType.DEPARTMENT.type
         val allMemberIds = mutableListOf<String>()
         if (!members.isNullOrEmpty()) {
             deleteIamGroupMembers(
@@ -499,7 +499,7 @@ class RbacPermissionResourceMemberService(
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
             .filter { it.expiredAt > nowTimestamp }
-            .partition { it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) }
+            .partition { it.type == MemberType.USER.type }
 
         return BkAuthGroupAndUserList(
             displayName = groupInfo.name,
@@ -652,7 +652,7 @@ class RbacPermissionResourceMemberService(
         type: String,
         memberIds: List<String>
     ): Boolean {
-        val membersOfNeedToDelete = if (type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+        val membersOfNeedToDelete = if (type == MemberType.USER.type) {
             memberIds.filterNot { deptService.isUserDeparted(it) }
         } else {
             memberIds
@@ -668,14 +668,14 @@ class RbacPermissionResourceMemberService(
     }
 
     private fun MutableList<ManagerMember>.removeDepartedMembers(): List<ManagerMember> {
-        val userMemberIds = this.filter { it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) }.map { it.id }
+        val userMemberIds = this.filter { it.type == MemberType.USER.type }.map { it.id }
         if (userMemberIds.isEmpty()) return this
         // 获取离职的人员
         val departedMembers = deptService.listDepartedMembers(
             memberIds = userMemberIds
         )
         return this.filterNot {
-            it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+            it.type == MemberType.USER.type &&
                 departedMembers.contains(it.id)
         }
     }

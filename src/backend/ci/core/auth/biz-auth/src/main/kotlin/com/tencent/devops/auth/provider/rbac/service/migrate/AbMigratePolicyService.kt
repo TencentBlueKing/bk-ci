@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
@@ -41,6 +40,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
@@ -382,7 +382,7 @@ abstract class AbMigratePolicyService(
                     permissionResourceMemberService.addGroupMember(
                         projectCode = projectCode,
                         memberId = userId,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.USER),
+                        memberType = MemberType.USER.type,
                         expiredAt = System.currentTimeMillis() / MILLISECOND +
                             TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
                         iamGroupId = groupId

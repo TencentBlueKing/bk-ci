@@ -25,30 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.request
+package com.tencent.devops.auth.service.lock
 
-import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.enum.OperateChannel
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@Schema(title = "用户组成员续期")
-data class GroupMemberRenewalConditionReq(
-    @get:Schema(title = "组IDs")
-    override val groupIds: List<Int>,
-    @get:Schema(title = "全选某种资源类型下的用户组")
-    override val resourceTypes: List<String> = emptyList(),
-    @get:Schema(title = "全量选择")
-    override val allSelection: Boolean = false,
-    @get:Schema(title = "目标对象")
-    override val targetMember: ResourceMemberInfo,
-    @get:Schema(title = "操作渠道")
-    override val operateChannel: OperateChannel = OperateChannel.MANAGER,
-    @get:Schema(title = "续期时长(天)")
-    val renewalDuration: Int
-) : GroupMemberCommonConditionReq(
-    groupIds = groupIds,
-    resourceTypes = resourceTypes,
-    allSelection = allSelection,
-    operateChannel = operateChannel,
-    targetMember = targetMember
-)
+class HandleHandoverApplicationLock(
+    redisOperation: RedisOperation,
+    flowNo: String
+) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "auth.handover.$flowNo.lock",
+        expiredTimeInSeconds = 1800
+    ) {
+    override fun decorateKey(key: String): String {
+        return key
+    }
+}

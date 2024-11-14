@@ -28,13 +28,13 @@
 
 package com.tencent.devops.auth.resources.user
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
-import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
@@ -138,11 +138,11 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
             permissionManageFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
-                removeMemberDTO = GroupMemberCommonConditionReq(
+                removeMemberDTO = GroupMemberRemoveConditionReq(
                     groupIds = listOf(groupId),
                     targetMember = ResourceMemberInfo(
                         id = userId,
-                        type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+                        type = MemberType.USER.type
                     )
                 )
             )

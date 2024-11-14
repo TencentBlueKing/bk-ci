@@ -122,6 +122,15 @@ interface PermissionAuthorizationService {
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>
 
     /**
+     * 交接授权申请
+     */
+    fun handoverAuthorizationsApplication(
+        operator: String,
+        projectCode: String,
+        condition: ResourceAuthorizationHandoverConditionRequest
+    ): Boolean
+
+    /**
      * 批量重置授权人--项目下全量
      */
     fun resetAllResourceAuthorization(

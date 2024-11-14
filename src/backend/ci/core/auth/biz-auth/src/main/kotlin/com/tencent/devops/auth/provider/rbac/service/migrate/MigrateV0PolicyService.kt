@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -41,6 +40,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
@@ -486,7 +486,7 @@ class MigrateV0PolicyService constructor(
                     groupId = it.toInt(),
                     defaultGroup = true,
                     member = RoleGroupMemberInfo().apply {
-                        type = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)
+                        type = MemberType.TEMPLATE.type
                         id = subjectTemplateId
                         name = subjectTemplateId
                         expiredAt = 0

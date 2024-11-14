@@ -5,13 +5,14 @@ import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
@@ -120,13 +121,41 @@ interface UserAuthResourceMemberResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "批量移除成员请求实体")
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch/personal/remove")
+    @Operation(summary = "批量退出用户组成员--个人视角")
+    fun batchRemoveGroupMembersFromPersonal(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "批量移除成员请求实体")
+        removeMemberDTO: GroupMemberRemoveConditionReq
     ): Result<Boolean>
 
     @PUT
     @Path("/batch/handover")
     @Operation(summary = "批量交接用户组成员--管理员视角")
     fun batchHandoverGroupMembersFromManager(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "批量交接成员请求实体")
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/batch/personal/handover")
+    @Operation(summary = "批量交接用户组成员--个人视角")
+    fun batchHandoverApplicationFromPersonal(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -216,5 +245,5 @@ interface UserAuthResourceMemberResource {
         @QueryParam("operateChannel")
         @Parameter(description = "操作渠道")
         operateChannel: OperateChannel?
-    ): Result<List<MemberGroupCountWithPermissionsVo>>
+    ): Result<List<ResourceType2CountVo>>
 }

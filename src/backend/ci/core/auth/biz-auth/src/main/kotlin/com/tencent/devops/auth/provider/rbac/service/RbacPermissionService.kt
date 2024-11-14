@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
@@ -39,6 +38,7 @@ import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -179,7 +179,7 @@ class RbacPermissionService(
             } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
-                .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+                .type(MemberType.USER.type)
                 .build()
 
             val actionDTO = ActionDTO()

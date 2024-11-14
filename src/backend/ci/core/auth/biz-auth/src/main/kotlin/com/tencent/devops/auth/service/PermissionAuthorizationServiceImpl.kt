@@ -3,8 +3,14 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_AUTHORIZATION
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
+import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
+import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
+import com.tencent.devops.auth.pojo.enum.HandoverStatus
+import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.auth.service.iam.PermissionHandoverService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -36,7 +42,8 @@ class PermissionAuthorizationServiceImpl(
     private val client: Client,
     private val permissionResourceValidateService: PermissionResourceValidateService,
     private val deptService: DeptService,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val permissionHandoverService: PermissionHandoverService
 ) : PermissionAuthorizationService {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionAuthorizationServiceImpl::class.java)
@@ -224,6 +231,58 @@ class PermissionAuthorizationServiceImpl(
             result[ResourceAuthorizationHandoverStatus.FAILED] = failedList
         }
         return result
+    }
+
+    override fun handoverAuthorizationsApplication(
+        operator: String,
+        projectCode: String,
+        condition: ResourceAuthorizationHandoverConditionRequest
+    ): Boolean {
+        val handoverResult = resetResourceAuthorizationByResourceType(
+            operator = operator,
+            projectCode = projectCode,
+            condition = condition.copy(
+                preCheck = true,
+                checkPermission = false
+            )
+        )
+        if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_HANDOVER_AUTHORIZATION)
+        }
+        val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
+        val authorizationCount = resourceAuthorizationList.size
+        val flowNo = permissionHandoverService.generateFlowNo()
+        val title = permissionHandoverService.generateTitle(
+            groupCount = 0,
+            authorizationCount = authorizationCount
+        )
+        val handoverDetails = mutableListOf<HandoverDetailDTO>()
+        resourceAuthorizationList.forEach { authorization ->
+            handoverDetails.add(
+                HandoverDetailDTO(
+                    projectCode = projectCode,
+                    flowNo = flowNo,
+                    itemId = authorization.resourceCode,
+                    resourceType = authorization.resourceType,
+                    handoverType = HandoverType.AUTHORIZATION
+                )
+            )
+        }
+        // 创建交接单
+        permissionHandoverService.createHandoverApplication(
+            overview = HandoverOverviewCreateDTO(
+                projectCode = projectCode,
+                flowNo = flowNo,
+                title = title,
+                applicant = condition.handoverFrom!!,
+                approver = condition.handoverTo!!,
+                handoverStatus = HandoverStatus.PENDING,
+                groupCount = 0,
+                authorizationCount = resourceAuthorizationList.size
+            ),
+            details = handoverDetails
+        )
+        return true
     }
 
     override fun resetAllResourceAuthorization(

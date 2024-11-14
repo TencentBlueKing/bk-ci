@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
@@ -444,17 +443,17 @@ class AuthResourceGroupMemberDao {
             with(projectMembersQueryConditionDTO) {
                 conditions.add(PROJECT_CODE.eq(projectCode))
                 if (queryTemplate == false) {
-                    conditions.add(MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                    conditions.add(MEMBER_TYPE.notEqual(MemberType.TEMPLATE.type))
                 } else {
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.TEMPLATE.type))
                 }
                 memberType?.let { type -> conditions.add(MEMBER_TYPE.eq(type)) }
                 userName?.let { name ->
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.USER.type))
                     conditions.add(MEMBER_ID.like("%$name%").or(MEMBER_NAME.like("%$name%")))
                 }
                 deptName?.let { name ->
-                    conditions.add(MEMBER_TYPE.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+                    conditions.add(MEMBER_TYPE.eq(MemberType.DEPARTMENT.type))
                     conditions.add(MEMBER_NAME.like("%$name%"))
                 }
                 minExpiredTime?.let { minTime -> conditions.add(EXPIRED_TIME.ge(minTime)) }
@@ -522,7 +521,7 @@ class AuthResourceGroupMemberDao {
             )
             .from(tResourceGroupMember)
             .where(tResourceGroupMember.PROJECT_CODE.eq(projectCode))
-            .and(tResourceGroupMember.MEMBER_TYPE.notEqual(ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)))
+            .and(tResourceGroupMember.MEMBER_TYPE.notEqual(MemberType.TEMPLATE.type))
             .groupBy(tResourceGroupMember.MEMBER_ID)
             .unionAll(
                 dslContext.select(
@@ -551,11 +550,11 @@ class AuthResourceGroupMemberDao {
             conditions.add(memberTypeField.eq(memberType))
         }
         if (userName != null) {
-            conditions.add(memberTypeField.eq(ManagerScopesEnum.getType(ManagerScopesEnum.USER)))
+            conditions.add(memberTypeField.eq(MemberType.USER.type))
             conditions.add(memberId.like("%$userName%").or(memberName.like("%$userName%")))
         }
         if (deptName != null) {
-            conditions.add(memberTypeField.eq(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)))
+            conditions.add(memberTypeField.eq(MemberType.DEPARTMENT.type))
             conditions.add(memberName.like("%$deptName%"))
         }
         return conditions
