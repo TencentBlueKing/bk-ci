@@ -64,6 +64,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -212,7 +213,8 @@ class PipelineBuildService(
                     )
                 } else {
                     null
-                }
+                },
+                asCodeEnabled = setting.pipelineAsCodeSettings?.enable
             )
 
             val context = StartBuildContext.init(
@@ -275,7 +277,8 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         isMobile: Boolean,
         debug: Boolean? = false,
-        pipelineAuthorizer: String? = null
+        pipelineAuthorizer: String? = null,
+        asCodeEnabled: Boolean?
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -366,6 +369,13 @@ class PipelineBuildService(
             ),
             readOnly = true
         )
+        // TODO 兼容stream逻辑,发布时,流水线已经启动,发布后没有这个变量，导致流水线报错,上线后需删除
+        if (channelCode == ChannelCode.GIT && asCodeEnabled == true) {
+            pipelineParamMap[PIPELINE_DIALECT] = BuildParameters(
+                PIPELINE_DIALECT, "CONSTRAINED", readOnly = true
+            )
+        }
+
         // 自定义触发源材料信息
         startValues?.get(BK_CI_MATERIAL_ID)?.let {
             pipelineParamMap[BK_CI_MATERIAL_ID] = BuildParameters(
