@@ -38,7 +38,6 @@ enum class WorkspaceOwnerType {
 
     companion object {
         fun projectNames() = listOf(PROJECT.name, PROJECT_PUBLIC.name)
-        fun oldNames() = listOf(PROJECT.name, PERSONAL.name)
         fun parse(value: String): WorkspaceOwnerType {
             return values().find { it.name == value } ?: PERSONAL
         }
