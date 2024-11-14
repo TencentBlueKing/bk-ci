@@ -169,17 +169,6 @@ class WorkspaceWindowsDao {
         }
     }
 
-    fun fetchLastWindowsBak(
-        dslContext: DSLContext,
-        workspaceName: String
-    ): TWorkspaceWindowsRecord? {
-        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            return dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.like("$workspaceName.bak.%"))
-                .orderBy(ID.desc()).fetchAny()
-        }
-    }
-
     fun fetchRecordByProjectIp(
         dslContext: DSLContext,
         projectId: String,
