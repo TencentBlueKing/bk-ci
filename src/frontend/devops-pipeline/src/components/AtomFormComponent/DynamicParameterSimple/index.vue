@@ -26,9 +26,8 @@
             :key="paramIndex"
         >
             <parameter-com
-                v-for="(model, index) in parameter.rowAttributes"
-                :class="[{ 'last-child': index === parameter.rowAttributes.length - 1 }, 'input-com']"
-                :style="{ maxWidth: `calc(${100 / parameter.rowAttributes.length}% - ${58 / parameter.rowAttributes.length}px)` }"
+                v-for="model in parameter.rowAttributes"
+                class="input-com"
                 v-bind="model"
                 :key="model.id"
                 @update-key="(newValue) => updateKey(model, newValue)"
@@ -166,14 +165,13 @@
         }
         .param-com {
             margin-bottom: 10px;
-            display: flex;
+            display: grid;
             align-items: center;
+            grid-gap: 10px;
+            grid-auto-flow: column;
             .input-com {
-                flex: 1;
-                margin-right: 10px;
-                &.last-child {
-                    margin-right: 0;
-                }
+                min-width: 0;
+                display: block;
             }
         }
         .param-label {
