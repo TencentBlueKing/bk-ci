@@ -790,13 +790,13 @@ class CreateControl @Autowired constructor(
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsType.toString())
+                params = arrayOf(workspaceCreate.windowsType)
             )
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsType.toString())
+                params = arrayOf(workspaceCreate.windowsType)
             )
         }
 
