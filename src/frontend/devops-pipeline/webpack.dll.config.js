@@ -27,7 +27,7 @@ module.exports = (env = {}, argv) => {
             'axios',
             'vee-validate',
             'vue-i18n',
-            'moment'
+            'dayjs'
         ],
         output: {
             publicPath: 'auto',

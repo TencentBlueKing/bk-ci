@@ -422,6 +422,9 @@ importers:
       core-js:
         specifier: 3.10.0
         version: 3.10.0
+      dayjs:
+        specifier: ^1.11.2
+        version: 1.11.11
       js-cookie:
         specifier: 3.0.1
         version: 3.0.1
@@ -1359,15 +1362,15 @@ importers:
       clipboard:
         specifier: ^1.7.1
         version: 1.7.1
+      dayjs:
+        specifier: ^1.11.2
+        version: 1.11.11
       js-base64:
         specifier: ^3.7.2
         version: 3.7.7
       mavon-editor:
         specifier: ^2.10.4
         version: 2.10.4
-      moment:
-        specifier: ^2.29.2
-        version: 2.30.1
       monaco-editor:
         specifier: ^0.40.0
         version: 0.40.0
@@ -8743,6 +8746,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   global-dirs@0.1.1:
     resolution: {integrity: sha512-NknMLn7F2J7aflwFOlGdNIuCDpN3VGoSoB+aap3KABFWbHVn1TCgFC+np23J8W2BiZbjfEw3BFBycSMv1AFblg==}
@@ -9532,7 +9536,7 @@ packages:
     resolution: {integrity: sha512-x7+VxdxOdlV3CYpjvRLBv5Lo9OJerlYanjwFrPR9fuGPjCiNiCzFgAWpiLAohSbsnH4ZAys3SBh+hq5rJosxUQ==}
 
   is-stream@1.1.0:
-    resolution: {integrity: sha1-EtSj3U5o4Lec6428hBc66A2RykQ=}
+    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==}
     engines: {node: '>=0.10.0'}
 
   is-stream@2.0.1:
@@ -12851,7 +12855,7 @@ packages:
     deprecated: request has been deprecated, see https://github.com/request/request/issues/3142
 
   require-directory@2.1.1:
-    resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
+    resolution: {integrity: sha1-jGStX9MNqxyXbiNE/+f3kqam30I=}
     engines: {node: '>=0.10.0'}
 
   require-from-string@2.0.2:
