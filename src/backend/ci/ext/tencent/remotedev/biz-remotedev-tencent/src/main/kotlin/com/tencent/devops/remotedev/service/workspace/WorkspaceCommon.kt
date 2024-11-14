@@ -78,8 +78,6 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -88,6 +86,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -591,7 +591,7 @@ class WorkspaceCommon @Autowired constructor(
             assignType = assignType
         )
         // 解绑后对原先的共享人推送websocket刷新客户端列表
-        sharedUsers.forEach { it ->
+        sharedUsers.forEach {
             notifyControl.dispatchWebsocketPushEvent(
                 userId = it,
                 workspaceName = workspaceName,
@@ -621,7 +621,8 @@ class WorkspaceCommon @Autowired constructor(
                         "workspaceName" to workspaceName,
                         "owner" to (owner ?: "")
                     )
-                ), formatted = false
+                ),
+                    formatted = false
             )
         )
     }
@@ -696,13 +697,14 @@ class WorkspaceCommon @Autowired constructor(
             info.buildParam.forEach { (k, v) ->
                 when (v) {
                     "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    "repoId" -> newParam[k] = REPOID ?: ""
-                    "localDriver" -> newParam[k] = LOCALDRIVER ?: ""
+                    "repoId" -> newParam[k] = REPOID
+                    "localDriver" -> newParam[k] = LOCALDRIVER
                     else -> newParam[k] = v
                 }
             }
             AsyncExecute.dispatch(
-                streamBridge, AsyncPipelineEvent(
+                streamBridge,
+                    AsyncPipelineEvent(
                     userId = info.userId ?: user,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
@@ -769,6 +771,7 @@ class WorkspaceCommon @Autowired constructor(
         userId: String,
         workspaceName: String
     ): Boolean {
+        logger.info("$userId del devx env node|$workspaceName")
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
