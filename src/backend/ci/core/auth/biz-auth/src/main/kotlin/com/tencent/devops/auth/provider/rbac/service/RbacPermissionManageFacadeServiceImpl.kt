@@ -612,14 +612,16 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberId = memberId,
             resourceType = ResourceTypeId.PIPELINE,
-            excludeIamGroupIds = operatedGroupsWithExecutePerm
+            excludeIamGroupIds = operatedGroupsWithExecutePerm,
+            operateChannel = OperateChannel.PERSONAL
         ).second.toMutableList().apply {
             addAll(
                 listResourceGroupMembers(
                     projectCode = projectCode,
                     memberId = memberId,
                     resourceType = ResourceTypeId.PROJECT,
-                    excludeIamGroupIds = operatedGroupsWithExecutePerm
+                    excludeIamGroupIds = operatedGroupsWithExecutePerm,
+                    operateChannel = OperateChannel.PERSONAL
                 ).second
             )
         }.map { it.iamGroupId }

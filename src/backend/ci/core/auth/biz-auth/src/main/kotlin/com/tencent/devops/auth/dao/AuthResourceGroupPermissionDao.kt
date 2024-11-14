@@ -215,6 +215,7 @@ class AuthResourceGroupPermissionDao {
             dslContext.select(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)
                 .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(filterIamGroupIds))
                 .and(ACTION_RELATED_RESOURCE_TYPE.eq(resourceType))
                 .and(ACTION.eq(action))
                 .groupBy(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)
