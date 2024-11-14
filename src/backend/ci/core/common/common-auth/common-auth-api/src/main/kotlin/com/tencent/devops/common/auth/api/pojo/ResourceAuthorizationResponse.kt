@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("LongParameterList")
 data class ResourceAuthorizationResponse(
     @get:Schema(title = "ID")
-    val id: Long,
+    val id: Long? = null,
     @get:Schema(title = "项目ID")
     val projectCode: String,
     @get:Schema(title = "资源类型")
