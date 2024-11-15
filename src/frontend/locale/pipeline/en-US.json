@@ -1053,7 +1053,12 @@
     "alwaysPull": "Always pull on each run",
     "ifNotPresent": "Pull only if not present locally",
     "enableDockerTips": "When using this feature, please ensure that the build machine has Docker installed, and that the user running the third-party build agent has the necessary permissions to operate Docker.",
-    "enabledPrivileged": "Enable Privileged Mode"
+    "enabledPrivileged": "Enable Privileged Mode",
+    "batchAddTit": "Batch Add",
+    "lineBreak": "Separate multiple options with line breaks",
+    "noEnglishCommas": "Each option cannot contain English commas",
+    "formatSupport": "Similar to the HTML select tag, options support value=name / value formats",
+    "batchCopy": "One-click Copy"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1628,9 +1633,6 @@
 
   "variableValueTooLong": "Variable Value Too Long",
   "traditionalValueTooLongMode": "Only Warning without Error",
-
-  "variableNotFound": "Variable Not Found",
-  "traditionalNotFoundMode": "No Error, Continue Execution, Check Execution Logic as Needed",
   "constraintReadOnlyMode": "It will cause errors and the run will fail",
 
   "variableStandard": "Variable ID Standard",

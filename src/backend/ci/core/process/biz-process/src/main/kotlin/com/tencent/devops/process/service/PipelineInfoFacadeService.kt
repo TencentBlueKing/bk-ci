@@ -1236,6 +1236,37 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
     }
 
+    fun resetBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Boolean {
+        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
+        val buildNo = releaseVersion.model.getTriggerContainer().buildNo
+            ?: return false
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
+            params = buildNo.buildNo.toString(),
+            description = null
+        )
+        pipelineBuildSummaryDao.updateBuildNo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo.buildNo,
+            debug = false
+        )
+        return true
+    }
+
     fun saveAll(
         userId: String,
         projectId: String,
