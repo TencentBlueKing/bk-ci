@@ -34,7 +34,16 @@
                     width="150"
                     prop="displayName"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="{ row }">
+                        <span
+                            :class="{ 'display-name': row.nodeType !== 'CMDB' }"
+                            @click="handleToNodeDetailPage(row)"
+                        >
+                            {{ row.displayName }}
+                        </span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :width="150"
                     label="IP"
@@ -653,6 +662,10 @@
                         message: e.message || e
                     })
                 }
+            },
+            handleToNodeDetailPage (row) {
+                if (row.nodeType === 'CMDB') return
+                window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
             }
         }
     }
@@ -670,5 +683,10 @@
     .loading-icon {
         display: inline-flex;
         margin-right: 5px;
+    }
+
+    .display-name {
+        color: #3a84ff;
+        cursor: pointer;
     }
 </style>
