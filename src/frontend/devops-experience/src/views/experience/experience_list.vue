@@ -74,7 +74,7 @@
                             <span
                                 class="link-text"
                                 :title="`${props.row.name}（ ${props.row.version} ）`"
-                                @click="toRowDetail"
+                                @click="toRowDetail(props.row)"
                             >{{ props.row.name }}（{{ props.row.version }}）</span>
                         </template>
                     </bk-table-column>
