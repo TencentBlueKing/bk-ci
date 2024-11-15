@@ -2,6 +2,7 @@ const { src, dest, parallel, series, task } = require('gulp')
 const fetch = require('node-fetch')
 const chalk = require('chalk')
 const fs = require('fs')
+const { globSync } = require('glob')
 const path = require('path')
 const htmlmin = require('gulp-htmlmin')
 const svgSprite = require('gulp-svg-sprite')
@@ -55,7 +56,7 @@ const gateWayTagMap = {
     'stream-gray': ''
 }
 
-async function getAssetsJSON (jsonUrl) {
+async function generateAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
@@ -66,7 +67,30 @@ async function getAssetsJSON (jsonUrl) {
 
         console.log(chalk.blue.bold(`Successfully get assets json from ${jsonUrl}!`))
         console.table(assets)
-        return assets
+        const entryDir = path.join(__dirname, dist, "entry's")
+        fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assets))
+        // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
+        const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
+            const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
+            acc = {
+                ...acc,
+                ...content
+            }
+            return acc
+        }, assets)
+    
+        console.log(chalk.greenBright.bold('final assets json!'))
+        console.table(finalAssets)
+        const fileContent = `window.SERVICE_ASSETS = ${JSON.stringify(finalAssets)}`
+        fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(finalAssets))
+        
+        fs.writeFileSync(FINAL_ASSETS_JSON_FILENAME, fileContent)
+        if (fs.existsSync(entryDir)) {
+            fs.rmdirSync(entryDir, {
+                recursive: true,
+                force: true
+            })
+        }
     } catch (error) {
         console.log(chalk.yellow.bgRed.bold(`Failed get assets json from ${jsonUrl}!`))
         process.exit(1)
@@ -163,25 +187,26 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
     const dir = path.join(dist, prefix)
     const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
     const fileName = `frontend#${prefix}#index.html`
+    
     return () => src(path.join(dir, fileName), { allowEmpty: true })
-        .pipe(inject(src([
-            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
-            `${dist}/svg-sprites/${spriteNameGlob}`
-        ], {
-            read: false
-        }), {
-            ignorePath: dist,
-            addRootSlash: false,
-            addPrefix: '__BK_CI_PUBLIC_PATH__'
-        }))
-        .pipe(htmlmin({
-            collapseWhitespace: true,
-            removeComments: true,
-            minifyJS: true
-        }))
-        .pipe(dest(dir))
-}
-)))
+            .pipe(inject(src([
+                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+                `${dist}/svg-sprites/${spriteNameGlob}`
+            ], {
+                read: false,
+                allowEmpty: false
+            }), {
+                ignorePath: dist,
+                addRootSlash: false,
+                addPrefix: '__BK_CI_PUBLIC_PATH__'
+            }))
+            .pipe(htmlmin({
+                collapseWhitespace: true,
+                removeComments: true,
+                minifyJS: true
+            }))
+            .pipe(dest(dir))   
+})))
 
 async function execAsync () {
     const spinner = new Ora('building bk-ci frontend project').start()
@@ -194,7 +219,7 @@ async function execAsync () {
         const spawnCmd = spawn('pnpm', [
             'exec',
             'nx',
-            '--parallel=16',
+            '--parallel=22',
             ...cmd.split(' ')
         ], {
             stdio: 'inherit',
@@ -208,8 +233,8 @@ async function execAsync () {
         spawnCmd.on('close', async (code) => {
             console.log(`child process exited with code ${code}`)
             if (code) {
-                reject(Error('build failed'))
-                spinner.fail('Failed bk-ci frontend project')
+                spinner.fail('Failed to build bk-ci frontend project')
+                reject(Error('Failed to build bk-ci frontend project'))
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')
@@ -220,4 +245,4 @@ async function execAsync () {
     })
 }
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'hash-asset-bundle-json', 'inject-asset')

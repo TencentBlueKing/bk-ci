@@ -40,14 +40,14 @@
     var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
     var BK_CI_VERSION = '__BK_CI_VERSION__'
     var LOCALE_DOMAIN = '__BK_DOMAIN__'
-    var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
-    var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
+    var BK_PAAS_PRIVATE_URL = '<%= BK_PAAS_PRIVATE_URL %>'
+    var BK_CI_AUTH_PROVIDER = '<%= BK_CI_AUTH_PROVIDER %>'
     var ENTERPRISE_VERSION = false
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
-    var BK_SHARED_RES_URL = '__BK_SHARED_RES_URL__' 
+    var BK_SHARED_RES_URL = '<%= BK_SHARED_RES_URL %>'
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
   </script>
-  <script>
+  <script> 
 
     // 动态加载js
     function importScript(src, oHead, fOnload) {
