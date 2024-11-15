@@ -415,15 +415,20 @@ export default {
             this.handleChooseGroup(this.groupList[0]);
             break;
           case 'add_user_confirm':
+          case 'add_template_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.groupList[this.curGroupIndex].templateCount += data.data.templates.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm': {
+          case 'remove_user_confirm':
+          case 'remove_template_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
+            const templates = data.data.members.filter(i => i.type === 'template')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.groupList[this.curGroupIndex].templateCount -= templates.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           }
