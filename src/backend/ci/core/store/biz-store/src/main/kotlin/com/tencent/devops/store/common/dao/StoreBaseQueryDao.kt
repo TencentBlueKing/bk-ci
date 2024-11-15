@@ -160,6 +160,7 @@ class StoreBaseQueryDao {
                             .and(CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
                     )
                     .where(conditions)
+                    .skipCheck()
                     .fetch()
             } else {
                 conditions.add(LATEST_FLAG.eq(true))
