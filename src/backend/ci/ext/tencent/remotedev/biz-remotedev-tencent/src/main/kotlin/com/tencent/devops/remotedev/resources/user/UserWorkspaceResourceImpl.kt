@@ -139,15 +139,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_VIEW)
-    override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
-        return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
-    }
-
-    override fun getWorkspaceUserDetail(userId: String): Result<WorkspaceUserDetail?> {
-        return Result(workspaceService.getWorkspaceUserDetail(userId))
-    }
-
     override fun getAuthorizedGitRepository(
         userId: String,
         search: String?,

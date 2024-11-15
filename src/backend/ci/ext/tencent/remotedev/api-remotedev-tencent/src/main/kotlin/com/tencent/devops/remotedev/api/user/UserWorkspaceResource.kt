@@ -170,27 +170,6 @@ interface UserWorkspaceResource {
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
 
-    @Operation(summary = "获取指定工作空间详情")
-    @GET
-    @Path("/workspace_detail")
-    fun getWorkspaceDetail(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工作空间名称", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<WorkspaceDetail?>
-
-    @Operation(summary = "获取用户工作空间详情")
-    @GET
-    @Path("/user_detail")
-    fun getWorkspaceUserDetail(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<WorkspaceUserDetail?>
-
     @Operation(summary = "获取指定工作空间详情时间线")
     @GET
     @Path("/detail_timeline")
