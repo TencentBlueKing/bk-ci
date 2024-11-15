@@ -32,6 +32,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupMemberRecord
@@ -368,6 +369,7 @@ class AuthResourceGroupMemberDao {
             )
             .orderBy(field(MEMBER_ID))
             .offset(offset).limit(limit)
+            .skipCheck()
             .fetch().map {
                 ResourceMemberInfo(id = it.value1(), name = it.value2(), type = it.value3())
             }
@@ -455,6 +457,7 @@ class AuthResourceGroupMemberDao {
             countDistinct(field(MEMBER_ID, Long::class.java))
         ).from(resourceMemberUnionAuthorizationMember)
             .groupBy(field(MEMBER_TYPE, Long::class.java))
+            .skipCheck()
             .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
     }
 
@@ -479,6 +482,7 @@ class AuthResourceGroupMemberDao {
                     deptName = deptName
                 )
             )
+            .skipCheck()
             .fetchOne(0, Long::class.java) ?: 0L
     }
 
