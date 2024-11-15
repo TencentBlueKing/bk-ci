@@ -207,22 +207,6 @@ class SleepControl @Autowired constructor(
         )
     }
 
-    fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
-        if (!event.status) {
-            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
-            when (workspaceInfo.status) {
-                EnvStatusEnum.stopped -> event.status = true
-                else -> logger.warn(
-                    "stop workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
-                )
-            }
-        }
-        doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
-    }
-
     fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(

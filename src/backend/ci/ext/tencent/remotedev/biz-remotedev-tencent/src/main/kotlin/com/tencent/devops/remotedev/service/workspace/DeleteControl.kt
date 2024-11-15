@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -379,7 +380,7 @@ class DeleteControl @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, WorkspaceMountType.START).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
