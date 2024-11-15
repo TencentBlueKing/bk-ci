@@ -163,6 +163,7 @@ class MarketStoreQueryDao {
         val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
         val tClassify = TClassify.T_CLASSIFY
         val conditions = mutableListOf<Condition>()
+        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         // 缩减查询范围
         if (storeInfoQuery.getSpecQueryFlag()) {
             conditions.add(
