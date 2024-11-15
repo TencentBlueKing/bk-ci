@@ -41,11 +41,6 @@ interface IPipelineDialect {
     fun supportUseExpression(): Boolean
 
     /**
-     * 是否支持长变量
-     */
-    fun supportLongVarValue(): Boolean
-
-    /**
      * 是否支持中文变量名
      */
     fun supportChineseVarName(): Boolean
