@@ -152,7 +152,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     resourceGroup = resourceGroup,
                     groupMemberDetail = groupMemberDetail,
                     uniqueManagerGroups = uniqueManagerGroups,
-                    authResourceGroupMember = it
+                    authResourceGroupMember = it,
+                    operateChannel = operateChannel
                 )
             )
         }
@@ -234,7 +235,8 @@ class RbacPermissionManageFacadeServiceImpl(
         resourceGroup: TAuthResourceGroupRecord,
         groupMemberDetail: MemberGroupDetailsResponse?,
         uniqueManagerGroups: List<Int>,
-        authResourceGroupMember: AuthResourceGroupMember
+        authResourceGroupMember: AuthResourceGroupMember,
+        operateChannel: OperateChannel?
     ): GroupDetailsInfoVo {
         // 如果用户离职，查询权限中心接口会报错，因此从数据库直接取数据，而不去调用权限中心接口。
         val (expiredAt, joinedTime) = if (groupMemberDetail != null) {
@@ -275,6 +277,10 @@ class RbacPermissionManageFacadeServiceImpl(
                 authResourceGroupMember.memberType == MemberType.TEMPLATE.type ->
                     RemoveMemberButtonControl.TEMPLATE
 
+                operateChannel == OperateChannel.PERSONAL &&
+                    authResourceGroupMember.memberType == MemberType.DEPARTMENT.type ->
+                    RemoveMemberButtonControl.DEPARTMENT
+
                 resourceGroup.resourceType == AuthResourceType.PROJECT.value &&
                     uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
                     RemoveMemberButtonControl.UNIQUE_MANAGER
@@ -285,9 +291,11 @@ class RbacPermissionManageFacadeServiceImpl(
                 else ->
                     RemoveMemberButtonControl.OTHER
             },
-            joinedType = when (authResourceGroupMember.memberType) {
-                MemberType.TEMPLATE.type -> JoinedType.TEMPLATE
-                MemberType.DEPARTMENT.type -> JoinedType.DEPARTMENT
+            joinedType = when {
+                authResourceGroupMember.memberType == MemberType.TEMPLATE.type -> JoinedType.TEMPLATE
+                authResourceGroupMember.memberType == MemberType.DEPARTMENT.type &&
+                    operateChannel == OperateChannel.PERSONAL -> JoinedType.DEPARTMENT
+
                 else -> JoinedType.DIRECT
             },
             operator = ""
