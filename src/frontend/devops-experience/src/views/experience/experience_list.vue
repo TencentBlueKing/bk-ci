@@ -303,6 +303,10 @@
                             {
                                 name: 'IOS',
                                 id: 'IOS'
+                            },
+                            {
+                                name: 'HarmonyOS Next',
+                                id: 'HAP'
                             }
                         ]
                     },
@@ -381,7 +385,8 @@
                     
                     const platformLabelMap = {
                         ANDROID: 'Android',
-                        IOS: 'iOS'
+                        IOS: 'iOS',
+                        HAP: 'HarmonyOS Next'
                     }
                     const sourceLabelMap = {
                         PIPELINE: '流水线',
