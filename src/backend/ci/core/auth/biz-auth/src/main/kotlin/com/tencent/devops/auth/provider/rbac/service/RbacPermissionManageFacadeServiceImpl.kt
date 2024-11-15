@@ -160,7 +160,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
     private fun getGroupMemberDetailMap(
         memberId: String,
-        resourceGroupMembers: List<AuthResourceGroupMember>
+        resourceGroupMembers: List<AuthResourceGroupMember>,
+        operateChannel: OperateChannel?
     ): Map<String, MemberGroupDetailsResponse> {
         // 如果用户离职，查询权限中心接口会报错
         if (deptService.isUserDeparted(memberId)) {
@@ -181,17 +182,34 @@ class RbacPermissionManageFacadeServiceImpl(
                 groupMemberDetailMap["${it.id}_$memberId"] = it
             }
         }
-        // 直接加入的组织
-        val deptGroupIds = resourceGroupMembers
+        val deptGroups = resourceGroupMembers
             .filter { it.memberType == MemberType.DEPARTMENT.type }
-            .map { it.iamGroupId }
-        if (deptGroupIds.isNotEmpty()) {
-            iamV2ManagerService.listMemberGroupsDetails(
-                MemberType.DEPARTMENT.type,
-                memberId,
-                deptGroupIds.joinToString(",")
-            ).forEach {
-                groupMemberDetailMap["${it.id}_$memberId"] = it
+        when {
+            deptGroups.isEmpty() -> {}
+            operateChannel == OperateChannel.PERSONAL -> {
+                // 个人视角，会获取用户通过组织间接加入的组
+                deptGroups.groupBy({ it.memberId }, { it.iamGroupId.toString() })
+                    .forEach { (deptId, iamGroupIds) ->
+                        if (iamGroupIds.isEmpty()) return@forEach
+                        iamV2ManagerService.listMemberGroupsDetails(
+                            MemberType.DEPARTMENT.type,
+                            deptId,
+                            iamGroupIds.joinToString(",")
+                        ).forEach {
+                            groupMemberDetailMap["${it.id}_$deptId"] = it
+                        }
+                    }
+            }
+            else -> {
+                // 管理员视角，获取组织直接加入的用户组
+                val deptGroupIds = deptGroups.map { it.iamGroupId }
+                iamV2ManagerService.listMemberGroupsDetails(
+                    MemberType.DEPARTMENT.type,
+                    memberId,
+                    deptGroupIds.joinToString(",")
+                ).forEach {
+                    groupMemberDetailMap["${it.id}_$memberId"] = it
+                }
             }
         }
         // 人员模板加入的组
