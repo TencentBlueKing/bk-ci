@@ -257,7 +257,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         }
         if (flag) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(name)
             )
         }
