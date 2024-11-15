@@ -140,7 +140,8 @@ class RbacPermissionManageFacadeServiceImpl(
         // 用户组成员详情
         val groupMemberDetailMap = getGroupMemberDetailMap(
             memberId = memberId,
-            resourceGroupMembers = resourceGroupMembers
+            resourceGroupMembers = resourceGroupMembers,
+            operateChannel = operateChannel
         )
         val records = mutableListOf<GroupDetailsInfoVo>()
         resourceGroupMembers.forEach {
@@ -200,6 +201,7 @@ class RbacPermissionManageFacadeServiceImpl(
                         }
                     }
             }
+
             else -> {
                 // 管理员视角，获取组织直接加入的用户组
                 val deptGroupIds = deptGroups.map { it.iamGroupId }
