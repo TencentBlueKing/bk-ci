@@ -852,10 +852,12 @@ class RbacPermissionManageFacadeServiceImpl(
                 condition = ResourceAuthorizationHandoverConditionRequest(
                     projectCode = projectCode,
                     resourceType = ResourceTypeId.PIPELINE,
+                    fullSelection = true,
                     filterResourceCodes = invalidPipelines,
                     handoverChannel = HandoverChannelCode.MANAGER,
                     handoverFrom = handoverMemberDTO.targetMember.id,
-                    handoverTo = handoverMemberDTO.handoverTo.id
+                    handoverTo = handoverMemberDTO.handoverTo.id,
+                    checkPermission = false
                 )
             )
         }
@@ -999,9 +1001,11 @@ class RbacPermissionManageFacadeServiceImpl(
                     projectCode = projectCode,
                     resourceType = ResourceTypeId.PIPELINE,
                     filterResourceCodes = invalidPipelines,
+                    fullSelection = true,
                     handoverChannel = HandoverChannelCode.MANAGER,
                     handoverFrom = removeMemberDTO.targetMember.id,
-                    handoverTo = removeMemberDTO.handoverTo!!.id
+                    handoverTo = removeMemberDTO.handoverTo!!.id,
+                    checkPermission = false
                 )
             )
         }
@@ -1533,9 +1537,11 @@ class RbacPermissionManageFacadeServiceImpl(
                         projectCode = overview.projectCode,
                         resourceType = resourceType,
                         filterResourceCodes = authorizations.map { it.itemId },
+                        fullSelection = true,
                         handoverChannel = HandoverChannelCode.MANAGER,
                         handoverFrom = overview.applicant,
-                        handoverTo = overview.approver
+                        handoverTo = overview.approver,
+                        checkPermission = false
                     )
                 )
             }
