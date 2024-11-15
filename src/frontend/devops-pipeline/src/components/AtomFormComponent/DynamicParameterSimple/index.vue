@@ -4,23 +4,6 @@
         v-bkloading="{ isLoading }"
     >
         <li
-            class="param-label"
-            style="display: flex; padding-right:30px;"
-        >
-            <span
-                v-for="(item, index) in curParameters[0].rowAttributes"
-                :key="index"
-                class="input-label"
-                :title="item.label"
-            >
-                {{ item.label }}：
-                <i
-                    class="bk-icon icon-info-circle label-desc"
-                    v-bk-tooltips.top="{ content: item.desc, allowHTML: false }"
-                />
-            </span>
-        </li>
-        <li
             class="param-com"
             v-for="(parameter, paramIndex) in curParameters"
             :key="paramIndex"
@@ -174,10 +157,7 @@
                 display: block;
             }
         }
-        .param-label {
-            display: flex;
-            padding-right: 30px;
-        }
+
         .input-label {
             flex: 1;
         }
