@@ -300,7 +300,7 @@ interface UserStoreComponentQueryResource {
         storeCode: String
     ): Result<List<StoreTestItem>>
 
-    @Operation(summary = "获取扩展服务所有媒体信息")
+    @Operation(summary = "获取组件媒体信息")
     @Path("/types/{storeType}/codes/{storeCode}/component/media/info/get")
     @GET
     fun getStoreMediaInfo(
