@@ -30,9 +30,9 @@ package com.tencent.devops.store.template.service.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.template.service.TemplateVisibleDeptService
 import com.tencent.devops.store.template.service.TxMarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.BUILD
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
+import com.tencent.devops.common.api.constant.EDIT
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
@@ -44,6 +45,7 @@ import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.constant.NUM_SEVEN
 import com.tencent.devops.common.api.constant.NUM_SIX
 import com.tencent.devops.common.api.constant.NUM_THREE
 import com.tencent.devops.common.api.constant.NUM_TWO
@@ -622,15 +624,16 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BUILD), BUILD, NUM_THREE, UNDO))
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = TEST), TEST, NUM_FOUR, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = EDIT), EDIT, NUM_FIVE, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SIX, UNDO))
         } else {
             processInfo.add(
-                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO)
+                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_SIX, UNDO)
             )
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SEVEN, UNDO))
         }
-        val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+        val totalStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
         when (status) {
             StoreStatusEnum.INIT, StoreStatusEnum.COMMITTING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
@@ -648,16 +651,20 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
             }
 
-            StoreStatusEnum.AUDITING -> {
+            StoreStatusEnum.EDITING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
             }
 
+            StoreStatusEnum.AUDITING -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_SIX, DOING)
+            }
+
             StoreStatusEnum.AUDIT_REJECT -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_SIX, FAIL)
             }
 
             StoreStatusEnum.RELEASED -> {
-                val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+                val currStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
                 storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
             }
 
