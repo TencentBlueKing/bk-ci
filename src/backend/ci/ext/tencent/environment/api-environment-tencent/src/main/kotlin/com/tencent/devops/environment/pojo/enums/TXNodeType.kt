@@ -25,33 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.environment.pojo.enums
 
-enum class WorkspaceSystemType {
-    LINUX,
-    WINDOWS_GPU;
+enum class TXNodeType(val typeName: String) {
+    DEVX("云桌面");
 
-    fun checkWindows() = this == WINDOWS_GPU
-
-    fun needSafeInitialization() = this == WINDOWS_GPU
-
-    fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> WorkspaceStatus.RUNNING
-        this == WINDOWS_GPU && ownerType.personalUse() -> WorkspaceStatus.PREPARING
-        this == WINDOWS_GPU && ownerType.projectUse() -> WorkspaceStatus.DELIVERING
-        else -> WorkspaceStatus.RUNNING
-    }
-
-    fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> true
-        this == WINDOWS_GPU && ownerType.personalUse() -> false
-        this == WINDOWS_GPU && ownerType.projectUse() -> true
-        else -> true
-    }
-
-    companion object {
-        fun parse(value: String): WorkspaceSystemType {
-            return values().find { it.name == value } ?: WINDOWS_GPU
-        }
-    }
+    fun nodeType() = NodeType.valueOf(name)
 }

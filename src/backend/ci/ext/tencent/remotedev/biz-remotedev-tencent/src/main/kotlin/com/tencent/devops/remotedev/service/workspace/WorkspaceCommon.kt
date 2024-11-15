@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
@@ -35,6 +36,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -307,7 +310,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                        "$workspaceName|${workspaceInfo.status}"
+                    "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -319,13 +322,13 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).seconds < DEFAULT_WAIT_TIME
-                ) ||
-                workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-                workspace.status.checkInProcess() || workspace.status.checkUnused()
+            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds < DEFAULT_WAIT_TIME
+            ) ||
+            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+            workspace.status.checkInProcess() || workspace.status.checkUnused()
     }
 
     fun updateStatusAndCreateHistory(
@@ -348,7 +351,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                    "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -395,16 +398,16 @@ class WorkspaceCommon @Autowired constructor(
     ): Boolean {
         if (profile.isDebug()) return true
 
-        val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchOneSetting(
-                dslContext = dslContext,
-                userId = creator
-            ).projectId.ifBlank { null }
-
-            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(
+        val projectId = when {
+            workspaceOwnerType.projectUse() -> workspaceDao.fetchAnyWorkspace(
                 dslContext = dslContext,
                 workspaceName = workspaceName
             )?.projectId
+
+            else -> remoteDevSettingDao.fetchOneSetting(
+                dslContext = dslContext,
+                userId = creator
+            ).projectId.ifBlank { null }
         } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
             return false
@@ -459,7 +462,7 @@ class WorkspaceCommon @Autowired constructor(
     fun autoAssignOwner(
         ws: WorkspaceRecordInf
     ) {
-        if (ws.ownerType != WorkspaceOwnerType.PROJECT) return
+        if (!ws.ownerType.projectUse()) return
         val owners = sharedDao.fetchWorkspaceOwner(dslContext, setOf(ws.workspaceName)).values
         if (owners.isEmpty()) return
         shareWorkspace(
@@ -489,7 +492,8 @@ class WorkspaceCommon @Autowired constructor(
         operator: String,
         assigns: List<ProjectWorkspaceAssign>,
         mountType: WorkspaceMountType,
-        ownerType: WorkspaceOwnerType
+        ownerType: WorkspaceOwnerType,
+        notify: Boolean = true
     ) {
         // 获取workspaceName对应的cgsId
         val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
@@ -514,40 +518,42 @@ class WorkspaceCommon @Autowired constructor(
             ""
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
-        assigns.forEach {
-            // 没有注册setting就注册
-            remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
-            whiteListService.shareWorkspace(operator, it.userId)
-            if (it.type == WorkspaceShared.AssignType.OWNER) {
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
-                    userIds = mutableSetOf(it.userId),
-                    workspaceName = workspaceName,
-                    cc = mutableSetOf(operator),
-                    projectId = projectId,
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
-                    bodyParams = mutableMapOf(
-                        "workspaceName" to workspaceName,
-                        "cgsId" to cgsId,
-                        "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
-                        "userId" to it.userId
+        if (notify) {
+            assigns.forEach {
+                // 没有注册setting就注册
+                remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
+                whiteListService.shareWorkspace(operator, it.userId)
+                if (it.type == WorkspaceShared.AssignType.OWNER) {
+                    notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
+                        userIds = mutableSetOf(it.userId),
+                        workspaceName = workspaceName,
+                        cc = mutableSetOf(operator),
+                        projectId = projectId,
+                        notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                        bodyParams = mutableMapOf(
+                            "workspaceName" to workspaceName,
+                            "cgsId" to cgsId,
+                            "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
+                            "userId" to it.userId
+                        )
                     )
+                    // 分配拥有者后触发L盘挂载
+                    makeDiskMount(cgsId.substringAfter("."), operator)
+                }
+                notifyControl.dispatchWebsocketPushEvent(
+                    userId = it.userId,
+                    workspaceName = workspaceName,
+                    workspaceHost = null,
+                    errorMsg = null,
+                    type = WebSocketActionType.WORKSPACE_ASSIGN,
+                    status = true,
+                    action = WorkspaceAction.ASSIGN,
+                    systemType = null,
+                    workspaceMountType = mountType,
+                    ownerType = null,
+                    projectId = ""
                 )
-                // 分配拥有者后触发L盘挂载
-                makeDiskMount(cgsId.substringAfter("."), operator)
             }
-            notifyControl.dispatchWebsocketPushEvent(
-                userId = it.userId,
-                workspaceName = workspaceName,
-                workspaceHost = null,
-                errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_ASSIGN,
-                status = true,
-                action = WorkspaceAction.ASSIGN,
-                systemType = null,
-                workspaceMountType = mountType,
-                ownerType = null,
-                projectId = ""
-            )
         }
     }
 
@@ -564,7 +570,7 @@ class WorkspaceCommon @Autowired constructor(
             workspaceName = workspaceName,
             sharedUsers = sharedUsers
         )
-        if (mountType == WorkspaceMountType.START && checkUserNeedUnShare(unShareInfo, assignType)) {
+        if (mountType == WorkspaceMountType.START && unShareInfo.find { it.type != assignType } == null) {
             unShareInfo.groupBy { it.resourceId }.forEach { (resourceId, info) ->
                 val receivers = info.map { it.sharedUser }
                 logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
@@ -585,7 +591,7 @@ class WorkspaceCommon @Autowired constructor(
             assignType = assignType
         )
         // 解绑后对原先的共享人推送websocket刷新客户端列表
-        sharedUsers.forEach { it ->
+        sharedUsers.forEach {
             notifyControl.dispatchWebsocketPushEvent(
                 userId = it,
                 workspaceName = workspaceName,
@@ -602,18 +608,6 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
-    private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
-        var res = false
-        ws.forEach {
-            if (it.type != assignType) {
-                return false
-            } else {
-                res = true
-            }
-        }
-        return res
-    }
-
     fun genWorkspaceCCInfo(
         projectId: String,
         workspaceName: String,
@@ -627,7 +621,8 @@ class WorkspaceCommon @Autowired constructor(
                         "workspaceName" to workspaceName,
                         "owner" to (owner ?: "")
                     )
-                ), formatted = false
+                ),
+                    formatted = false
             )
         )
     }
@@ -702,13 +697,14 @@ class WorkspaceCommon @Autowired constructor(
             info.buildParam.forEach { (k, v) ->
                 when (v) {
                     "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    "repoId" -> newParam[k] = REPOID ?: ""
-                    "localDriver" -> newParam[k] = LOCALDRIVER ?: ""
+                    "repoId" -> newParam[k] = REPOID
+                    "localDriver" -> newParam[k] = LOCALDRIVER
                     else -> newParam[k] = v
                 }
             }
             AsyncExecute.dispatch(
-                streamBridge, AsyncPipelineEvent(
+                streamBridge,
+                    AsyncPipelineEvent(
                     userId = info.userId ?: user,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
@@ -755,5 +751,44 @@ class WorkspaceCommon @Autowired constructor(
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
         }
+    }
+
+    fun devxEnvNodeInit(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ip: String,
+        size: String
+    ): Boolean {
+        val nodeId = client.get(ServiceDEVXResource::class).createNode(
+            userId = userId, projectId = projectId, workspaceName = workspaceName, ip = ip, size = size
+        ).data ?: return false
+        workspaceWindowsDao.updateNodeHashId(dslContext, HashUtil.encodeLongId(nodeId), workspaceName)
+        return true
+    }
+
+    fun devxEnvNodeDel(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        logger.info("$userId del devx env node|$workspaceName")
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (workspace.nodeHashId == null) {
+            logger.info("ignore del devx env node|$workspaceName")
+            return true
+        }
+        val ok = client.get(ServiceNodeResource::class).deleteNodes(
+            userId = workspace.createUserId,
+            projectId = workspace.projectId,
+            nodeHashIds = listOf(checkNotNull(workspace.nodeHashId))
+        ).data ?: return false
+        if (ok) {
+            workspaceWindowsDao.updateNodeHashId(dslContext, null, workspaceName)
+        }
+        return true
     }
 }

@@ -25,33 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.environment.resources
 
-enum class WorkspaceSystemType {
-    LINUX,
-    WINDOWS_GPU;
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
+import com.tencent.devops.environment.service.devx.DEVXService
+import org.springframework.beans.factory.annotation.Autowired
 
-    fun checkWindows() = this == WINDOWS_GPU
+@RestResource
+class ServiceDEVXResourceImpl @Autowired constructor(
+    private val devxService: DEVXService
+) : ServiceDEVXResource {
 
-    fun needSafeInitialization() = this == WINDOWS_GPU
-
-    fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> WorkspaceStatus.RUNNING
-        this == WINDOWS_GPU && ownerType.personalUse() -> WorkspaceStatus.PREPARING
-        this == WINDOWS_GPU && ownerType.projectUse() -> WorkspaceStatus.DELIVERING
-        else -> WorkspaceStatus.RUNNING
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ip: String,
+        size: String
+    ): Result<Long> {
+        return Result(
+            devxService.createNode(
+                userId = userId,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                ip = ip,
+                size = size
+            )
+        )
     }
 
-    fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> true
-        this == WINDOWS_GPU && ownerType.personalUse() -> false
-        this == WINDOWS_GPU && ownerType.projectUse() -> true
-        else -> true
-    }
-
-    companion object {
-        fun parse(value: String): WorkspaceSystemType {
-            return values().find { it.name == value } ?: WINDOWS_GPU
-        }
+    override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<List<EnvWithNodeCount>> {
+        return Result(devxService.getUserDEVXEnv(userId, projectIds))
     }
 }

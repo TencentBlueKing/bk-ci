@@ -27,31 +27,22 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WorkspaceSystemType {
-    LINUX,
-    WINDOWS_GPU;
+import io.swagger.v3.oas.annotations.media.Schema
 
-    fun checkWindows() = this == WINDOWS_GPU
-
-    fun needSafeInitialization() = this == WINDOWS_GPU
-
-    fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> WorkspaceStatus.RUNNING
-        this == WINDOWS_GPU && ownerType.personalUse() -> WorkspaceStatus.PREPARING
-        this == WINDOWS_GPU && ownerType.projectUse() -> WorkspaceStatus.DELIVERING
-        else -> WorkspaceStatus.RUNNING
-    }
-
-    fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
-        this == LINUX -> true
-        this == WINDOWS_GPU && ownerType.personalUse() -> false
-        this == WINDOWS_GPU && ownerType.projectUse() -> true
-        else -> true
-    }
-
-    companion object {
-        fun parse(value: String): WorkspaceSystemType {
-            return values().find { it.name == value } ?: WINDOWS_GPU
-        }
-    }
-}
+@Schema(title = "公共环境信息")
+data class WorkspaceEnv(
+    @get:Schema(title = "环境所属项目Id", required = true)
+    val projectId: String,
+    @get:Schema(title = "环境 HashId", required = true)
+    val envHashId: String,
+    @get:Schema(title = "环境名称", required = true)
+    val name: String,
+    @get:Schema(title = "正常节点数量", required = true)
+    val normalNodeCount: Int,
+    @get:Schema(title = "异常节点数量", required = true)
+    val abnormalNodeCount: Int,
+    @get:Schema(title = "正在使用节点数量", required = true)
+    val inUseNodeCount: Int,
+    @get:Schema(title = "节点hash id", required = false)
+    val nodeHashIds: List<String>? = null
+)

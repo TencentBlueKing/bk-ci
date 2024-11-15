@@ -48,6 +48,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -102,6 +103,7 @@ class CreateControl @Autowired constructor(
     private val dispatcher: SampleEventDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val workspaceResourceTypeDao: WindowsResourceTypeDao,
     private val redisCache: RedisCacheService,
     private val whiteListService: WhiteListService,
     private val workspaceCommon: WorkspaceCommon,
@@ -169,10 +171,9 @@ class CreateControl @Autowired constructor(
         val projectLimit = projectInfo.properties?.cloudDesktopNum
             ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
             ?: 20
-        val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+        val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
             dslContext = dslContext,
-            projectId = projectInfo.englishName,
-            ownerType = WorkspaceOwnerType.PROJECT
+            projectId = projectInfo.englishName
         )
         val createCount = workspaceCreate.assignNames.ifEmpty { null }?.size ?: workspaceCreate.count
         if (workspaceNames.size + createCount > projectLimit) {
@@ -206,7 +207,10 @@ class CreateControl @Autowired constructor(
                 projectName = projectInfo.projectName,
                 businessLineName = projectInfo.businessLineName
             ),
-            ownerType = WorkspaceOwnerType.PROJECT
+            ownerType = when {
+                workspaceCreate.ownerType?.projectUse() == true -> workspaceCreate.ownerType!!
+                else -> WorkspaceOwnerType.PROJECT
+            }
         )
     }
 
@@ -540,8 +544,22 @@ class CreateControl @Autowired constructor(
                 )
 
                 // 个人云桌面创建成功后做异步设置，团队项目改到分配时做L盘挂载
-                if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                if (ws.ownerType.personalUse()) {
                     workspaceCommon.makeDiskMount(ip, event.userId)
+                }
+
+                if (ws.ownerType.projectPublicUse()) {
+                    val winInfo = checkNotNull(
+                        workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)
+                    )
+                    val winConfig = workspaceResourceTypeDao.fetchAny(dslContext, winInfo.winConfigId)
+                    workspaceCommon.devxEnvNodeInit(
+                        userId = event.userId,
+                        projectId = ws.projectId,
+                        workspaceName = ws.workspaceName,
+                        ip = ip,
+                        size = winConfig?.size ?: ""
+                    )
                 }
 
                 // 给有cfs的机器绑定权限组
@@ -665,8 +683,8 @@ class CreateControl @Autowired constructor(
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .deleteWorkspace(userId, workspaceName, bakName)
         }
-        when (checkOwnerType) {
-            WorkspaceOwnerType.PROJECT -> {
+        when {
+            checkOwnerType.projectUse() -> {
                 val projectInfo = kotlin.runCatching {
                     client.get(ServiceProjectResource::class).get(projectId)
                 }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
@@ -689,7 +707,7 @@ class CreateControl @Autowired constructor(
                 )
             }
 
-            WorkspaceOwnerType.PERSONAL -> {
+            else -> {
                 val userInfo = kotlin.runCatching {
                     client.get(ServiceTxUserResource::class).get(userId)
                 }.onFailure { logger.warn("get user $userId info error|${it.message}") }
@@ -772,13 +790,13 @@ class CreateControl @Autowired constructor(
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsType.toString())
+                params = arrayOf(workspaceCreate.windowsType)
             )
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsType.toString())
+                params = arrayOf(workspaceCreate.windowsType)
             )
         }
 

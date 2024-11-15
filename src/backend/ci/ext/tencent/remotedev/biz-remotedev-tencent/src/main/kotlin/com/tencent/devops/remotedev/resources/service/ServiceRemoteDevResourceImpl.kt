@@ -383,7 +383,7 @@ class ServiceRemoteDevResourceImpl(
 
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+        if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
@@ -412,7 +412,7 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String
     ): Result<WeSecProjectWorkspace?> {
         val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PROJECT || workspace.projectId != projectId) {
+        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != projectId) {
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
