@@ -454,8 +454,6 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
-
-                WorkspaceShared.AssignType.COLLABORATOR -> TODO()
             }
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
@@ -594,8 +592,6 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
-
-                WorkspaceShared.AssignType.COLLABORATOR -> TODO()
             }
         }
 
