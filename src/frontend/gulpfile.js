@@ -2,7 +2,6 @@ const { src, dest, parallel, series, task } = require('gulp')
 const fetch = require('node-fetch')
 const chalk = require('chalk')
 const fs = require('fs')
-const { globSync } = require('glob')
 const path = require('path')
 const htmlmin = require('gulp-htmlmin')
 const svgSprite = require('gulp-svg-sprite')
@@ -50,13 +49,13 @@ const BUNDLE_NAME = 'assets_bundle.json'
 const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
 const gateWayTagMap = {
-    'dev': 'dev-rbac',
-    'test': 'test-rbac',
-    'stream': '',
+    dev: 'dev-rbac',
+    test: 'test-rbac',
+    stream: '',
     'stream-gray': ''
 }
 
-async function generateAssetsJSON (jsonUrl) {
+async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
@@ -67,30 +66,7 @@ async function generateAssetsJSON (jsonUrl) {
 
         console.log(chalk.blue.bold(`Successfully get assets json from ${jsonUrl}!`))
         console.table(assets)
-        const entryDir = path.join(__dirname, dist, "entry's")
-        fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assets))
-        // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
-        const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
-            const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
-            acc = {
-                ...acc,
-                ...content
-            }
-            return acc
-        }, assets)
-    
-        console.log(chalk.greenBright.bold('final assets json!'))
-        console.table(finalAssets)
-        const fileContent = `window.SERVICE_ASSETS = ${JSON.stringify(finalAssets)}`
-        fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(finalAssets))
-        
-        fs.writeFileSync(FINAL_ASSETS_JSON_FILENAME, fileContent)
-        if (fs.existsSync(entryDir)) {
-            fs.rmdirSync(entryDir, {
-                recursive: true,
-                force: true
-            })
-        }
+        return assets
     } catch (error) {
         console.log(chalk.yellow.bgRed.bold(`Failed get assets json from ${jsonUrl}!`))
         process.exit(1)
@@ -156,8 +132,8 @@ task('build', async () => {
 
 task('generate-assets-json', () => {
     const entryDir = path.join(__dirname, dist, "entry's")
-    const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME);
-    const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'));
+    const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME)
+    const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'))
     // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
     const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
         const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
@@ -187,26 +163,25 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
     const dir = path.join(dist, prefix)
     const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
     const fileName = `frontend#${prefix}#index.html`
-    
     return () => src(path.join(dir, fileName), { allowEmpty: true })
-            .pipe(inject(src([
-                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
-                `${dist}/svg-sprites/${spriteNameGlob}`
-            ], {
-                read: false,
-                allowEmpty: false
-            }), {
-                ignorePath: dist,
-                addRootSlash: false,
-                addPrefix: '__BK_CI_PUBLIC_PATH__'
-            }))
-            .pipe(htmlmin({
-                collapseWhitespace: true,
-                removeComments: true,
-                minifyJS: true
-            }))
-            .pipe(dest(dir))   
-})))
+        .pipe(inject(src([
+            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+            `${dist}/svg-sprites/${spriteNameGlob}`
+        ], {
+            read: false
+        }), {
+            ignorePath: dist,
+            addRootSlash: false,
+            addPrefix: '__BK_CI_PUBLIC_PATH__'
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true
+        }))
+        .pipe(dest(dir))
+}
+)))
 
 async function execAsync () {
     const spinner = new Ora('building bk-ci frontend project').start()
@@ -245,4 +220,4 @@ async function execAsync () {
     })
 }
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'hash-asset-bundle-json', 'inject-asset')
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')
