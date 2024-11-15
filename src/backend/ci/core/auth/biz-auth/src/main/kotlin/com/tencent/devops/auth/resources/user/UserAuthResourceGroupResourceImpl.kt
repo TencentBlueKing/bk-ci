@@ -103,6 +103,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 maxExpiredAt = maxExpiredAt,
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
+                operateChannel = operateChannel,
                 action = action,
                 start = start,
                 limit = limit
