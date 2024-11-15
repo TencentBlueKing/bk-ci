@@ -119,7 +119,7 @@ export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],
     zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],
     apkfile: ['.apk'],
-    ipafile: ['.ipa']
+    ipafile: ['.ipa', '.hap']
 }
 export function extForFile (name) {
     const defaultIcon = 'file'

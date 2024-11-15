@@ -196,7 +196,7 @@
                         class="bkci-dropdown-item"
                         @click.stop="goToGithubSource"
                     >
-                        {{ $t('community') }}
+                        {{ $t('openSource') }}
                     </li>
                 </template>
             </bk-popover>
@@ -277,14 +277,14 @@
         showSystemLog: boolean = false
         langs: Array<any> = [
             {
-                icon: 'english',
-                name: 'English',
-                id: 'en-US'
-            },
-            {
                 icon: 'chinese',
                 name: '中文',
                 id: 'zh-CN'
+            },
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
             }
         ]
  

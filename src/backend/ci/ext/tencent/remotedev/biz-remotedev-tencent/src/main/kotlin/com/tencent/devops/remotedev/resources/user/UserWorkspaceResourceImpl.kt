@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -139,6 +140,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
+    override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {
+        return Result(workspaceService.getEnvs4PublicWorkspace(userId))
+    }
+
     override fun getAuthorizedGitRepository(
         userId: String,
         search: String?,
@@ -208,8 +213,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)
-    override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
-        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
     }
 
     override fun projectAccessDevicePermissions(

@@ -90,5 +90,9 @@ data class NodeWithPermission(
     @get:Schema(title = "job任务ID")
     val taskId: Long?,
     @get:Schema(title = "主机serverId")
-    val serverId: Long?
+    val serverId: Long?,
+    @get:Schema(title = "机型")
+    val size: String? = null,
+    @get:Schema(title = "该节点所属环境名")
+    val envNames: List<String>? = null
 )

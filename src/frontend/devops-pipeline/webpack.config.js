@@ -45,7 +45,6 @@ module.exports = (env, argv) => {
         ...config.plugins,
         new MonacoWebpackPlugin({
             publicPath: '/pipeline',
-            languages: ['yaml'],
             filename: '[name].[contenthash].worker.js',
             customLanguages: [
                 {
@@ -69,7 +68,8 @@ module.exports = (env, argv) => {
             },
             templateParameters: {
                 PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
-                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
+                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : '',
+                API_PATH_PREFIX: isProd ? '/ms' : '//dev.devops.woa.com/ms'
             },
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),

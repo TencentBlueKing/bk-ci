@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境信息-Node数量")
 data class EnvWithNodeCount(
+    @get:Schema(title = "环境所属项目Id", required = true)
+    val projectId: String,
     @get:Schema(title = "环境 HashId", required = true)
     val envHashId: String,
     @get:Schema(title = "环境名称", required = true)
@@ -42,6 +44,7 @@ data class EnvWithNodeCount(
     @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String?,
     @get:Schema(title = "分享人", required = false)
-    val sharedUserId: String?
-
+    val sharedUserId: String?,
+    @get:Schema(title = "节点hash id", required = false)
+    val nodeHashIds: List<String>? = null
 )

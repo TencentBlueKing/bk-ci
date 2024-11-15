@@ -60,6 +60,7 @@ class WorkspaceSharedDao {
             dslContext.selectCount().from(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(SHARED_USER.eq(sharedUser))
+                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
                 .fetchOne(0, Int::class.java)!! > 0
         }
     }

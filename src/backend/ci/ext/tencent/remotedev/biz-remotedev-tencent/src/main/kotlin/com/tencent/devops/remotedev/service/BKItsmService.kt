@@ -121,6 +121,46 @@ class BKItsmService @Autowired constructor(
         )
     }
 
+    fun userAuthCheck(
+        recordId: Long,
+        projectId: String,
+        userId: String,
+        groupNames: List<String>,
+        admins: Set<String>
+    ): String {
+        return createTicket(
+            creator = userId,
+            fields = listOf(
+                mapOf(
+                    "key" to "title",
+                    "value" to "云桌面项目权限续期申请"
+                ),
+                mapOf(
+                    "key" to "projectId",
+                    "value" to projectId
+                ),
+                mapOf(
+                    "key" to "userId",
+                    "value" to userId
+                ),
+                mapOf(
+                    "key" to "recordId",
+                    "value" to recordId.toString()
+                ),
+                mapOf(
+                    "key" to "admins",
+                    "value" to admins.joinToString(",")
+                ),
+                mapOf(
+                    "key" to "groupNames",
+                    "value" to groupNames.joinToString("\n")
+                )
+            ),
+            serviceId = bkConfig.userAuthCheckServiceId!!,
+            errorParam1 = projectId
+        )
+    }
+
     private fun createTicket(
         creator: String,
         fields: List<Map<String, String>>,

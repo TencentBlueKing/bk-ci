@@ -72,39 +72,22 @@
       @cancel="handleHiddenCloseManage"
     >
       <template #header>
-        <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
+        <i class="warning-icon header-warning-icon manage-icon manage-icon-more-fill"></i>
         <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
-      <template v-if="resourceType === 'pipeline_template'">
+      <template>
         <div class="close-tips">
-          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [t('流水线模板')]) }}</p>
+          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceTypeName]) }}</p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('将编辑者中的用户移除') }}
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
+            {{ closeManageTips || t('将编辑者、执行者、查看者中的用户移除') }}
           </p>
           <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
             {{ t('删除对应组内用户继承该组的权限') }}
           </p>
           <p>
-            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('删除对应组信息和组权限') }}
-          </p>
-        </div>
-      </template>
-      <template v-else>
-        <div class="close-tips">
-          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
-          <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('将编辑者、执行者、查看者中的用户移除') }}
-          </p>
-          <p>
-            <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-            {{ t('删除对应组内用户继承该组的权限') }}
-          </p>
-          <p>
-            <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
             {{ t('删除对应组信息和组权限') }}
           </p>
         </div>
@@ -200,6 +183,24 @@ export default {
       }
       return ['userCount', 'departmentCount']
     },
+    resourceTypeName () {
+      const nameMap = {
+        'pipeline': this.t('流水线'),
+        'pipeline_group': this.t('流水线组'),
+        'pipeline_template': this.t('流水线模板'),
+        'environment': this.t('环境')
+      };
+      return nameMap[this.resourceType] || this.resourceType;
+    },
+    closeManageTips () {
+      const tipsMap = {
+        'pipeline': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_group': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_template': this.t('将编辑者中的用户移除'),
+        'environment': this.t('将拥有者、使用者组中的用户移除')
+      }
+      return tipsMap[this.resourceType];
+    }
   },
   watch: {
     activeIndex(newVal) {
@@ -301,15 +302,20 @@ export default {
             this.handleChooseGroup(this.groupList[0]);
             break;
           case 'add_user_confirm':
+          case 'add_template_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.groupList[this.curGroupIndex].templateCount += data.data.templates.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
-          case 'remove_user_confirm': {
+          case 'remove_user_confirm':
+          case 'remove_template_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
+            const templates = data.data.members.filter(i => i.type === 'template')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.groupList[this.curGroupIndex].templateCount -= templates.length
             this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           }
@@ -510,8 +516,23 @@ export default {
         margin: 15px 0 30px;
     }
     .close-tips {
-        padding: 20px;
-        background: #f5f6fa;
+      padding: 20px;
+      background: #f5f6fa;
+          p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+    }
+    .warning-icon {
+      color: #ff9c01;
+      font-size: 14px;
+      position: relative;
+      top: -1px;
+      margin-right: 4px;
+    }
+    .header-warning-icon {
+      font-size: 42px;
     }
     .option-btns {
         text-align: center;
