@@ -96,8 +96,9 @@ interface RemoteDevInterface {
         userId: String,
         workspaceName: String,
         pipelineId: String,
-        machineType: String,
-        zoneId: String
+        machineType: String?,
+        zoneId: String?,
+        live: Boolean?
     ): String
 
     /**

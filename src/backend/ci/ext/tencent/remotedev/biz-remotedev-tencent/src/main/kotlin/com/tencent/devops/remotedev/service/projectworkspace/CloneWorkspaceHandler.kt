@@ -149,7 +149,8 @@ class CloneWorkspaceHandler @Autowired constructor(
                     zoneId = zoneId,
                     machineType = rebuildReq.machineType,
                     gameId = null,
-                    projectId = projectId
+                    projectId = projectId,
+                    live = rebuildReq.live
                 )
             )
 

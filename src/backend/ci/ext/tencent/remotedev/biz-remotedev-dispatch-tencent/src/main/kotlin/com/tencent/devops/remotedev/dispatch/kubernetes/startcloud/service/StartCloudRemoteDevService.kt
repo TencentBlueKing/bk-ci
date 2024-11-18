@@ -258,8 +258,9 @@ class StartCloudRemoteDevService @Autowired constructor(
         userId: String,
         workspaceName: String,
         pipelineId: String,
-        machineType: String,
-        zoneId: String
+        machineType: String?,
+        zoneId: String?,
+        live: Boolean?
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -270,7 +271,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 userId = userId,
                 pipelineId = pipelineId,
                 zoneId = zoneId,
-                machineType = machineType
+                machineType = machineType,
+                live = live
             )
         )
         return resp.taskUid
