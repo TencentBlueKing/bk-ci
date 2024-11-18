@@ -149,8 +149,9 @@ abstract class PipelineService @Autowired constructor(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceCode = pipelineId
             ).data
-        } catch (ignored: Exception) {
-           null
+        } catch (e: Exception) {
+            logger.error("Failed to get pipeline oauth user, projectId: $projectId, pipelineId: $pipelineId, error: $e")
+            null
         }?.handoverFrom
     }
 }
