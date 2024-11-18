@@ -104,8 +104,12 @@ class PipelineModelTaskDao {
     fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = getListByAtomCodeCond(this, atomCode, projectCode)
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .fetchOne(0, Int::class.java)!!
         }
@@ -224,13 +228,16 @@ class PipelineModelTaskDao {
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
             )
-
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
                 groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION)
             )
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .groupBy(PIPELINE_ID)
                 .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
