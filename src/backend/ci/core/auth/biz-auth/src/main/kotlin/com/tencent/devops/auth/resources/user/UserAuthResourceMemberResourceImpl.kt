@@ -134,6 +134,12 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         removeMemberDTO: GroupMemberRemoveConditionReq
     ): Result<Boolean> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = removeMemberDTO.targetMember.id
+        )
         return Result(
             permissionManageFacadeService.batchDeleteResourceGroupMembersFromPersonal(
                 userId = userId,
@@ -163,6 +169,12 @@ class UserAuthResourceMemberResourceImpl(
         projectId: String,
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Result<Boolean> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = handoverMemberDTO.targetMember.id
+        )
         return Result(
             permissionManageFacadeService.batchHandoverApplicationFromPersonal(
                 userId = userId,
@@ -172,13 +184,18 @@ class UserAuthResourceMemberResourceImpl(
         )
     }
 
-    @BkManagerCheck
     override fun batchOperateGroupMembersCheck(
         userId: String,
         projectId: String,
         batchOperateType: BatchOperateType,
         conditionReq: GroupMemberCommonConditionReq
     ): Result<BatchOperateGroupMemberCheckVo> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = conditionReq.operateChannel,
+            targetMemberId = conditionReq.targetMember.id
+        )
         return Result(
             permissionManageFacadeService.batchOperateGroupMembersCheck(
                 userId = userId,
@@ -234,7 +251,8 @@ class UserAuthResourceMemberResourceImpl(
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
             projectCode = projectId,
-            operateChannel = operateChannel ?: OperateChannel.MANAGER
+            operateChannel = operateChannel ?: OperateChannel.MANAGER,
+            targetMemberId = memberId
         )
         return Result(
             permissionManageFacadeService.getMemberGroupsCount(

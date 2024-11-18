@@ -156,7 +156,8 @@ class RbacPermissionResourceValidateService(
     override fun validateUserProjectPermissionByChannel(
         userId: String,
         projectCode: String,
-        operateChannel: OperateChannel
+        operateChannel: OperateChannel,
+        targetMemberId: String
     ) {
         if (operateChannel == OperateChannel.PERSONAL) {
             // 个人视角校验
@@ -169,6 +170,11 @@ class RbacPermissionResourceValidateService(
             if (!hasVisitPermission) {
                 throw PermissionForbiddenException(
                     message = "The user does not have permission to visit the project!"
+                )
+            }
+            if (userId != targetMemberId){
+                throw PermissionForbiddenException(
+                    message = "You do not have permission to operate other user groups!"
                 )
             }
         } else {

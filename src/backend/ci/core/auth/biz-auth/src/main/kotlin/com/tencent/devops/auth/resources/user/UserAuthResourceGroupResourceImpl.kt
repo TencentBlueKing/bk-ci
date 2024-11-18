@@ -90,7 +90,8 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
             projectCode = projectId,
-            operateChannel = operateChannel ?: OperateChannel.MANAGER
+            operateChannel = operateChannel ?: OperateChannel.MANAGER,
+            targetMemberId = memberId
         )
 
         return Result(
@@ -118,6 +119,12 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = userId
+        )
         return Result(
             permissionResourceMemberService.renewalGroupMember(
                 userId = userId,
