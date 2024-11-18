@@ -80,10 +80,16 @@ class CloneWorkspaceHandler @Autowired constructor(
         rebuildReq: WorkspaceCloneReq
     ): WorkspaceResponse {
         logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId
+                projectId = projectId,
+                ownerType = workspace.ownerType
             ) && !permissionService.hasUserManager(userId, projectId)
         ) {
             throw ErrorCodeException(
@@ -92,11 +98,6 @@ class CloneWorkspaceHandler @Autowired constructor(
             )
         }
 
-        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
         RedisCallLimit(
             redisOperation = redisOperation,
             lockKey = "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -252,10 +253,9 @@ class CloneWorkspaceHandler @Autowired constructor(
         }
 
         if (old.ownerType == WorkspaceOwnerType.PROJECT) {
-            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+            val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
                 dslContext = dslContext,
-                projectId = old.projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                projectId = old.projectId
             )
             windowsResourceConfigService.createCheckSpecLimit(
                 windowsType = windowsConfig.size,
