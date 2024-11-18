@@ -60,5 +60,22 @@ data class ProjectProperties(
         PluginDetailsDisplayOrder.CONFIG
     ),
     @get:Schema(title = "流水线语法风格")
-    var pipelineDialect: String? = "CLASSIC"
-)
+    var pipelineDialect: String? = "CLASSIC",
+    @get:Schema(title = "是否开启流水线命名提示")
+    var enablePipelineNameTips: Boolean? = false,
+    @get:Schema(title = "流水线命名格式")
+    var pipelineNameFormat: String? = null
+) {
+    /**
+     * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改
+     */
+    fun userCopy(updateProperties: ProjectProperties): ProjectProperties {
+        return with(updateProperties) {
+            copy(
+                pipelineDialect = pipelineDialect,
+                enablePipelineNameTips = enablePipelineNameTips,
+                pipelineNameFormat = pipelineNameFormat
+            )
+        }
+    }
+}

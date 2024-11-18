@@ -554,10 +554,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 // 属性只能变更前端展示的,其他的字段由op变更
                 val properties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
                     ?: ProjectProperties()
-                if (projectUpdateInfo.properties != null) {
-                    projectUpdateInfo.properties =
-                        properties.copy(pipelineDialect = projectUpdateInfo.properties!!.pipelineDialect)
-                }
+                projectUpdateInfo.properties = projectUpdateInfo.properties?.let { properties.userCopy(it) }
                 // 判断是否需要审批,当修改最大授权范围/权限敏感/关联运营产品时需要审批
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
