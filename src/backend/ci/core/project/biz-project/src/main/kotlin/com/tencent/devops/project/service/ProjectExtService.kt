@@ -56,9 +56,4 @@ interface ProjectExtService {
         accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String?
-
-    fun enableProject(
-        userId: String,
-        projectId: String
-    )
 }

@@ -162,9 +162,9 @@ class BkRepoClient constructor(
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
     }
 
-    fun enableProject(userId: String, projectId: String) {
-        logger.info("enableProject, userId: $userId, projectId: $projectId")
-        val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = true)))
+    fun enableProject(userId: String, projectId: String, enabled: Boolean) {
+        logger.info("enableProject, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = enabled)))
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId")
             .headers(getCommonHeaders(userId, projectId).toHeaders())
