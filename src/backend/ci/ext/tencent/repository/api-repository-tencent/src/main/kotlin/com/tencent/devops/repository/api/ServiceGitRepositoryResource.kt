@@ -203,21 +203,21 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/{repoId}/getFileContent")
     fun getFileContent(
-        @Parameter(description = "仓库id")
+        @Parameter(description = "仓库id", required = true)
         @PathParam("repoId")
         repoId: String,
-        @Parameter(description = "文件路径")
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "版本号（svn）")
+        @Parameter(description = "版本号（svn）", required = false)
         @QueryParam("reversion")
-        reversion: String?,
-        @Parameter(description = "分支（git）")
+        reversion: String? = null,
+        @Parameter(description = "分支（git）", required = false)
         @QueryParam("branch")
-        branch: String?,
+        branch: String? = null,
         @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
-        repositoryType: RepositoryType?,
+        repositoryType: RepositoryType? = null,
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null
@@ -227,18 +227,24 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/{remoteRepoId}/file/content/get")
     fun getFileContent(
-        @Parameter(description = "远程仓库id")
+        @Parameter(description = "远程仓库id", required = true)
         @PathParam("remoteRepoId")
         remoteRepoId: String,
-        @Parameter(description = "文件路径")
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "oauth认证用戶ID")
+        @Parameter(description = "认证方式", required = false)
+        @QueryParam("authType")
+        authType: RepoAuthType? = null,
+        @Parameter(description = "oauth认证用戶ID", required = false)
         @QueryParam("oauthUserId")
-        oauthUserId: String,
-        @Parameter(description = "分支（git）")
+        oauthUserId: String? = null,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String? = null,
+        @Parameter(description = "分支（git）", required = false)
         @QueryParam("branch")
-        branch: String?
+        branch: String? = null
     ): Result<String>
 
     @Operation(summary = "更新代码仓库单个文件内容")

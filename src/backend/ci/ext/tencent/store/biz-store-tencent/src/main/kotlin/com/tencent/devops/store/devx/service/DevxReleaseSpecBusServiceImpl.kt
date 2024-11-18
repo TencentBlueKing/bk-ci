@@ -201,7 +201,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
     }
 
-    private fun doStoreEnvBus(
+    override fun doStoreEnvBus(
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String,
@@ -216,10 +216,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         )
         val remoteRepoId =
             extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
-        val oauthUserId =
-            extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
         val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
-            remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
+            remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, branch = MASTER
         ).data
         if (configFileContent.isNullOrBlank()) {
             throw ErrorCodeException(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -89,6 +90,9 @@ class TencentGitServiceImpl @Autowired constructor(
 
     @Value("\${aes.git:#{null}}")
     private val aesKey: String = ""
+
+    @Value("\${repository.git.devopsPrivateToken:#{null}}")
+    private val devopsPrivateToken: String = ""
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
@@ -799,19 +803,29 @@ class TencentGitServiceImpl @Autowired constructor(
     fun getGitFileContent(
         repoName: String,
         filePath: String,
-        oauthUserId: String,
+        authType: RepoAuthType?,
+        oauthUserId: String?,
+        token: String?,
         ref: String
     ): String {
-        val tokenRecord = gitTokenDao.getAccessToken(dslContext, oauthUserId) ?: throw ErrorCodeException(
-            errorCode = NOT_AUTHORIZED_BY_OAUTH,
-            params = arrayOf(oauthUserId)
-        )
-        val token = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        val finalToken = if (token.isNullOrBlank() && authType == RepoAuthType.OAUTH) {
+            if (oauthUserId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("oauthUserId")
+                )
+            }
+            val tokenRecord = gitTokenDao.getAccessToken(dslContext, oauthUserId) ?: throw ErrorCodeException(
+                errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(oauthUserId)
+            )
+            BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        } else {
+            token ?: devopsPrivateToken
+        }
         return client.getScm(ServiceGitResource::class).getGitFileContent(
             repoName = repoName,
             filePath = filePath,
-            authType = RepoAuthType.OAUTH,
-            token = token,
+            authType = authType,
+            token = finalToken,
             ref = ref
         ).data ?: ""
     }

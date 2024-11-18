@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
@@ -125,14 +126,18 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     override fun getFileContent(
         remoteRepoId: String,
         filePath: String,
-        oauthUserId: String,
+        authType: RepoAuthType?,
+        oauthUserId: String?,
+        token: String?,
         branch: String?
     ): Result<String> {
         return Result(
             gitService.getGitFileContent(
                 repoName = remoteRepoId,
                 filePath = filePath,
+                authType = authType,
                 oauthUserId = oauthUserId,
+                token = token,
                 ref = branch ?: MASTER
             )
         )
