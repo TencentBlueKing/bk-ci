@@ -63,18 +63,23 @@ class RbacPermissionHandoverService(
         authorizationCount: Int
     ): String {
         return I18nUtil.getCodeLanMessage(messageCode = AuthI18nConstants.BK_APPLY_TO_HANDOVER).let {
-            if (groupCount > 0) {
-                it.plus(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_GROUPS, params = arrayOf(groupCount.toString())))
-            } else {
-                it
-            }
-        }.let {
-            if (authorizationCount > 0) {
-                it.plus(",").plus(
-                    I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_AUTHORIZATIONS, params = arrayOf(authorizationCount.toString()))
-                )
-            } else {
-                it
+            when {
+                groupCount > 0 && authorizationCount > 0 -> {
+                    it.plus(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_GROUPS, params = arrayOf(groupCount.toString()))).plus(",")
+                    it.plus(
+                        I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_AUTHORIZATIONS, params = arrayOf(authorizationCount.toString()))
+                    )
+                }
+
+                groupCount > 0 -> {
+                    it.plus(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_GROUPS, params = arrayOf(groupCount.toString())))
+                }
+
+                else -> {
+                    it.plus(
+                        I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_AUTHORIZATIONS, params = arrayOf(authorizationCount.toString()))
+                    )
+                }
             }
         }
     }

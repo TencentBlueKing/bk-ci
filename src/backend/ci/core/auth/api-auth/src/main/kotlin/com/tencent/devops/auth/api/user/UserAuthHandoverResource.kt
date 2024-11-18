@@ -56,7 +56,7 @@ interface UserAuthHandoverResource {
 
     @GET
     @Path("/{flowNo}/getResourceType2CountOfHandover")
-    @Operation(summary = "获取资源授权管理")
+    @Operation(summary = "获取资源授权管理数量")
     fun getResourceType2CountOfHandover(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -26,8 +26,8 @@ data class HandoverOverviewQueryReq(
     val maxCreatedTime: Long? = null,
     @get:Schema(title = "交接类型")
     val handoverType: HandoverType? = null,
-    @get:Schema(title = "限制")
-    val limit: Int? = null,
-    @get:Schema(title = "起始值")
-    val offset: Int? = null
+    @get:Schema(title = "页数")
+    val page: Int? = null,
+    @get:Schema(title = "页大小")
+    val pageSize: Int? = null
 )
