@@ -32,17 +32,13 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
-import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.MockArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.RbacArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -84,7 +80,8 @@ class ArtifactoryTencentServiceConfig {
         client: Client,
         bkRepoClient: BkRepoClient,
         commonConfig: CommonConfig,
-        shortUrlService: ShortUrlService
+        shortUrlService: ShortUrlService,
+        redisOperation: RedisOperation
     ) = BkRepoDownloadService(
         pipelineService = pipelineService,
         bkRepoService = bkRepoService,
@@ -92,18 +89,6 @@ class ArtifactoryTencentServiceConfig {
         bkRepoClient = bkRepoClient,
         commonConfig = commonConfig,
         shortUrlService = shortUrlService
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun defaultPipelineService(
-        client: Client,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        authPermissionApi: AuthPermissionApi,
-        authProjectApi: AuthProjectApi,
-        artifactoryAuthServiceCode: RepoAuthServiceCode
-    ) = DefaultPipelineServiceImpl(
-        client, pipelineAuthServiceCode, authPermissionApi, authProjectApi, artifactoryAuthServiceCode
     )
 
     @Bean

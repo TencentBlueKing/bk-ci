@@ -18,6 +18,12 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
+    -- 特殊处理json5到灰度, 后续发完正式可以删除
+    if ngx.var.uri:sub(-#("hapJson5.json5")) == "hapJson5.json5" then
+        ngx.log(ngx.ERR , "use special logic")
+        return "rbac-gray"
+    end
+
     local gateway_project = ngx.var.project
     local devops_service = ngx.var.service
     local devops_project_id = ngx.var.project_id

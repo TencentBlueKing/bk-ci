@@ -269,7 +269,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         projectId: String,
         workspaceName: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        startTime: Long,
+        stopTime: Long
     ): Result<Page<WorkspaceRecordMetadata>> {
         permissionService.checkUserProjectManager(userId, projectId)
         if (!workspaceRecordService.checkWorkspaceUserApproval(workspaceName, userId)) {
@@ -284,7 +286,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                startTime = startTime,
+                stopTime = stopTime
             )
         )
     }

@@ -48,13 +48,17 @@ import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MIN_API_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_TARGET_API_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION_CODE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -65,24 +69,27 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId.PIPELINE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.slf4j.LoggerFactory
+import org.springframework.util.DigestUtils
 
 @Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
-open class BkRepoDownloadService @Autowired constructor(
+open class BkRepoDownloadService(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
     private val client: Client,
@@ -240,6 +247,122 @@ open class BkRepoDownloadService @Autowired constructor(
         """.trimIndent()
     }
 
+    override fun outerHapJson5Content(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String {
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
+        )
+
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
+
+        val creatorId = if (experienceHashId != null) {
+            val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
+            if (experience.isOk() && experience.data != null) {
+                experience.data!!.creator
+            } else {
+                userId
+            }
+        } else {
+            userId
+        }
+
+        // 获取IP下载链接
+        val outerDownloadUrl = outerDownloadUrlByToken(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath,
+            ttl = ttl
+        ).url
+
+        // 获取参数(HAP 企业分发无法拼参数 , 特殊处理)
+        val toHttpUrl = outerDownloadUrl.toHttpUrl()
+        val queryParams = toHttpUrl.queryParameterNames.associateWith { name ->
+            toHttpUrl.queryParameterValues(name)[0]
+        }
+        val outerDownloadUrlData = outerDownloadUrl.split("?")[0].split("/api/share/")
+        val hapExternalDownloadUrl = outerDownloadUrlData[0] + "/api/token/" + queryParams["token"] +
+                "/user/" + queryParams["userId"] + "/" + outerDownloadUrlData[1]
+
+        // 获取IPA属性
+        val repoName = RepoUtils.getRepoByType(artifactoryType)
+        val path = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val fileProperties = bkRepoClient.listMetadata(
+            userId = creatorId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path
+        )
+        val fileDetail = bkRepoClient.getFileDetail(
+            userId = creatorId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path
+        )
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appVersionCode = fileProperties[ARCHIVE_PROPS_APP_VERSION_CODE]?.toInt() ?: 0
+        val appMinApiVersion = fileProperties[ARCHIVE_PROPS_APP_MIN_API_VERSION] ?: ""
+        val appTargetApiVersion = fileProperties[ARCHIVE_PROPS_APP_TARGET_API_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+        val sha256 = fileDetail!!.sha256
+        val deployDomain = HomeHostUtil.outerServerHost().removePrefix("https://").removePrefix("http://")
+        return """
+            {
+              "app": {
+                "bundleName": "$bundleIdentifier",
+                "bundleType": "app",
+                "versionCode": $appVersionCode,
+                "versionName": "$appVersion",
+                "label": "$appTitle",
+                "deployDomain": "$deployDomain",
+                "icons": {
+                  "normal": "$appIcon",
+                  "large": "$appIcon"
+                },
+                "minAPIVersion": "$appMinApiVersion",
+                "targetAPIVersion": "$appTargetApiVersion",
+                "modules": [
+                  {
+                    "name": "$appTitle",
+                    "type": "entry",
+                    "deviceTypes": [
+                      "tablet",
+                      "phone"
+                    ],
+                    "packageUrl": "$hapExternalDownloadUrl",
+                    "packageHash": "$sha256"
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+    }
+
     @ActionAuditRecord(
         actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
@@ -264,6 +387,41 @@ open class BkRepoDownloadService @Autowired constructor(
         ).replace("+", "%20")
         val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
                 "$artifactoryType/filePlist?path=$normalizedPath" +
+                "&x-devops-project-id=$projectId"
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerHapJson5Url(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "outerHapJson5Url, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
+                "$artifactoryType/hapJson5?path=$normalizedPath" +
                 "&x-devops-project-id=$projectId"
         // 审计
         audit(
@@ -704,6 +862,25 @@ open class BkRepoDownloadService @Autowired constructor(
             logger.warn("audit download artifacts fail!$projectId|$repoName|$path")
         }
     }
+
+    fun createTokenForJson(json: String, ttlSecond: Int): String {
+        val token = DigestUtils.md5DigestAsHex(json.toByteArray())
+        logger.info("create token for json , token: $token , json: $json")
+        SpringContextUtil.getBean(RedisOperation::class.java).set(tokenRedisKey(token), json, ttlSecond.toLong())
+        return token
+    }
+
+    fun <T> getObjectByToken(token: String, clz: Class<T>): T? {
+        val tokenRedisKey = tokenRedisKey(token)
+        val json = SpringContextUtil.getBean(RedisOperation::class.java).get(tokenRedisKey)
+        if (json == null) {
+            logger.warn("get json is null , token: $token")
+            return null
+        }
+        return JsonUtil.to(json, clz)
+    }
+
+    private fun tokenRedisKey(token: String) = "artifactory:token:$token"
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoDownloadService::class.java)

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -46,6 +47,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.CdsToken
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -67,7 +69,6 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService,
-    private val whiteListService: WhiteListService,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {
@@ -79,6 +80,12 @@ class PermissionService @Autowired constructor(
     @Value("\${remoteDev.enablePermission:true}")
     private val enablePermission: Boolean = true
 
+    @Value("\${remoteDev.aes.key:}")
+    private val aesKey: String = ""
+
+    @Value("\${remoteDev.aes.iv:}")
+    private val aesIV: String = ""
+
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -89,8 +96,11 @@ class PermissionService @Autowired constructor(
                     return if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
                         listOf(ws.createUserId)
                     } else {
-                        workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
-                            .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                        workspaceSharedDao.fetchWorkspaceSharedInfo(
+                            dslContext = dslContext,
+                            workspaceName = ws.workspaceName,
+                            assignType = WorkspaceShared.AssignType.OWNER
+                        ).map { it.sharedUser }
                     }
                 }
             }
@@ -119,7 +129,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (ownerType == WorkspaceOwnerType.PROJECT && !checkUserVisitPermission(userId, projectId)) {
+        if (ownerType.projectUse() && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -127,13 +137,18 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+    fun hasOwnerPermission(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         kotlin.runCatching {
             checkOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                ownerType = ownerType
             )
         }.fold(
             { return true }, {
@@ -216,11 +231,17 @@ class PermissionService @Autowired constructor(
         )
     }
 
-    fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+    fun hasManagerOrOwnerPermission(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         return hasOwnerPermission(
             userId = userId,
             workspaceName = workspaceName,
-            projectId = projectId
+            projectId = projectId,
+            ownerType = ownerType
         ) || hasUserManager(userId, projectId)
     }
 
@@ -270,10 +291,21 @@ class PermissionService @Autowired constructor(
             UserOnePassword(
                 userId, workspaceName, projectId
             ),
-                expiredInSecond
+            expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
+    }
+
+    fun checkCdsToken(cdsToken: String): CdsToken {
+        return kotlin.runCatching {
+            val value = AESUtil.decryptWithIV(aesKey, aesIV, cdsToken)
+            val split = value.split("::::")
+            CdsToken(split[0], split[1], split[2], split[3])
+        }.onFailure {
+            logger.warn("checkCdsToken error|$cdsToken|${it.message}")
+            throw OperationException("cdsToken is illegal.")
+        }.getOrThrow()
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {

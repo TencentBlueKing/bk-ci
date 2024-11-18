@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -124,10 +126,23 @@ class UserPTemplateResourceImpl @Autowired constructor(
         projectId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         page: Int?,
         pageSize: Int?
     ): Result<TemplateListModel> {
-        return Result(templateFacadeService.listTemplate(projectId, userId, templateType, storeFlag, page, pageSize))
+        return Result(
+            templateFacadeService.listTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateType = templateType,
+                storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listAllTemplate(
@@ -158,7 +173,9 @@ class UserPTemplateResourceImpl @Autowired constructor(
         setting: PipelineSetting
     ): Result<Boolean> {
         if (setting.runLockType == PipelineRunLockType.SINGLE ||
-            setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+            setting.runLockType == PipelineRunLockType.SINGLE_LOCK ||
+            setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
+            setting.runLockType == PipelineRunLockType.MULTIPLE
         ) {
             if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX

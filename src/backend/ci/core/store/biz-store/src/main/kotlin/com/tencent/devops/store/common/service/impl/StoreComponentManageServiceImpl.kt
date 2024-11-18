@@ -394,30 +394,24 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         if (baseRecord.status in inValidStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
-        if (projectCode.isNotBlank()) {
-            val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-            if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
-                // 如果从缓存中查出该组件是公共组件则无需权限校验
-                return Result(true)
-            }
-            val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-            val checkFlag = publicFlag == true ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
-            if (!checkFlag) {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            return Result(true)
+        }
+        val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+        val checkFlag = publicFlag == true || storeMemberDao.isStoreMember(
+            dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
+        ) || storeProjectService.isInstalledByProject(
+            projectCode = projectCode, storeCode = storeCode, storeType = storeType.type.toByte()
+        )
+        if (!checkFlag) {
+            if (projectCode.isNotBlank()) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
                     params = arrayOf(projectCode, storeCode)
                 )
-            }
-        } else {
-            val checkFlag = storeMemberDao.isStoreMember(
-                dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
-            )
-            if (!checkFlag) {
+            } else {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
                     params = arrayOf(storeCode)

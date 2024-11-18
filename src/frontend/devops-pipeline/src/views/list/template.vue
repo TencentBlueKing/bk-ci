@@ -195,9 +195,9 @@
             showSetting () {
                 this.setting.isShow = true
             },
-            getTempFromSelf (success) {
+            getTempFromSelf (params, success) {
                 const { pagingConfig: { current, limit } } = this.$refs.selfTemp
-                this.getApiData(current, limit).then((res) => {
+                this.getApiData(current, limit, params).then((res) => {
                     success(res)
                     const list = res.models || []
                     this.showSelfEmpty = list.length <= 0
@@ -207,13 +207,14 @@
             /**
              * 获取流水线模板列表
              */
-            async getApiData (pageIndex, pageSize) {
+            async getApiData (pageIndex, pageSize, params = {}) {
                 this.isLoading = true
                 try {
                     const res = await this.$store.dispatch('pipelines/requestTemplateList', {
                         projectId: this.projectId,
                         pageIndex,
-                        pageSize
+                        pageSize,
+                        params
                     })
                     this.isManagerUser = res.hasPermission
                     this.hasCreatePermission = res.hasCreatePermission

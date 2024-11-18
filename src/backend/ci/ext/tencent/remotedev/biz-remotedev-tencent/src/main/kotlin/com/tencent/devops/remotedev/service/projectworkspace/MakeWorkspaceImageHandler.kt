@@ -48,7 +48,6 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -62,13 +61,13 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class MakeWorkspaceImageHandler @Autowired constructor(
@@ -111,7 +110,13 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You do not have permission to make $workspaceName image")
@@ -209,7 +214,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 action = WorkspaceAction.MAKE_IMAGE,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = workspace.projectId
             )
 

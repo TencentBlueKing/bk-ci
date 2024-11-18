@@ -68,7 +68,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("recommended-version")
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
-    override var customBuildNum: String? = null
+    override var customBuildNum: String? = null,
+    @JsonProperty("syntax-dialect")
+    override var syntaxDialect: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -89,7 +91,8 @@ data class PreTemplateScriptBuildYamlV3Parser(
             resources = resources,
             notices = notices,
             concurrency = concurrency,
-            disablePipeline = disablePipeline
+            disablePipeline = disablePipeline,
+            syntaxDialect = syntaxDialect
         )
     }
 

@@ -407,6 +407,7 @@ class StoreProjectRelDao {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.update(this)
                 .set(PROJECT_CODE, storeProjectInfo.projectId)
+                .set(CREATOR, storeProjectInfo.userId)
                 .set(MODIFIER, userId)
                 .where(STORE_CODE.eq(storeProjectInfo.storeCode))
                 .and(STORE_TYPE.eq(storeProjectInfo.storeType.type.toByte()))
@@ -587,6 +588,26 @@ class StoreProjectRelDao {
                     .and(STORE_TYPE.eq(storeType))
                     .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
                 )
+                .fetchOne()
+        }
+    }
+
+    fun getUserTestProjectRelByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        projectCode: String,
+        userId: String
+    ): TStoreProjectRelRecord? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(CREATOR.eq(userId))
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            return dslContext.selectFrom(this)
+                .where(conditions)
                 .fetchOne()
         }
     }

@@ -48,18 +48,12 @@ class HashFilesFunction : Function() {
         val contextValues = context.state as ExecutionContext
         var workspaceData = contextValues.expressionValues[ciWorkSpaceKey.split(".")[0]]
         workspaceData = if (workspaceData == null) {
-            if (contextValues.expressionValues[workSpaceKey] == null) {
-                throw ContextNotFoundException("$workSpaceKey/$ciWorkSpaceKey")
-            } else {
-                contextValues.expressionValues[workSpaceKey]
-            }
+            contextValues.expressionValues[workSpaceKey]
+                ?: throw ContextNotFoundException("$workSpaceKey/$ciWorkSpaceKey")
         } else {
-            if (workspaceData !is DictionaryContextData || workspaceData[ciWorkSpaceKey.split(".")[1]] == null) {
-                if (contextValues.expressionValues[workSpaceKey] == null) {
-                    throw ContextNotFoundException("$workSpaceKey/$ciWorkSpaceKey")
-                } else {
-                    contextValues.expressionValues[workSpaceKey]
-                }
+            if (workspaceData !is DictionaryContextData || !workspaceData.containsKey(ciWorkSpaceKey.split(".")[1])) {
+                contextValues.expressionValues[workSpaceKey]
+                    ?: throw ContextNotFoundException("$workSpaceKey/$ciWorkSpaceKey")
             } else {
                 workspaceData[ciWorkSpaceKey.split(".")[1]]
             }

@@ -66,6 +66,19 @@
             </form-field>
 
             <form-field
+                :label="$t('namingConvention')"
+                :custom-desc="true"
+            >
+                <syntax-style-configuration
+                    :is-show-popover="false"
+                    :inherited-dialect="templateSetting.pipelineAsCodeSettings?.inheritedDialect"
+                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? currentPipelineDialect"
+                    @inherited-change="inheritedChange"
+                    @pipeline-dialect-change="pipelineDialectChange"
+                />
+            </form-field>
+
+            <form-field
                 :label="$t('settings.runLock')"
                 class="opera-lock-radio"
             >
@@ -125,6 +138,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
     import { NotifyTab } from '@/components/PipelineEditTabs/'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
@@ -133,7 +147,8 @@
         components: {
             NotifyTab,
             FormField,
-            RunningLock
+            RunningLock,
+            SyntaxStyleConfiguration
         },
         props: {
             isLoading: Boolean,
@@ -150,7 +165,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'templateSetting'
+                'templateSetting',
+                'currentPipelineDialect'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -243,7 +259,9 @@
         },
         methods: {
             ...mapActions('pipelines', [
-                'requestTemplateSetting'
+                'requestTemplateSetting',
+                'updateTemplateSetting',
+                'getPipelineDialect'
             ]),
             ...mapActions('atom', [
                 'updatePipelineSetting'
@@ -282,6 +300,8 @@
                     })
                     $store.commit('pipelines/updateGroupLists', res)
                     this.dataList = this.tagGroupList
+                    // 获取当前项目语法风格
+                    await this.getPipelineDialect(this.projectId)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -330,6 +350,17 @@
             handleUpdateNotify (name, value) {
                 Object.assign(this.templateSetting, { [name]: value })
                 this.setIsEditing()
+            },
+            inheritedChange (value) {
+                const settings = this.templateSetting.pipelineAsCodeSettings
+                settings.inheritedDialect = value
+
+                if (value) {
+                    settings.pipelineDialect = this.currentPipelineDialect
+                }
+            },
+            pipelineDialectChange (value) {
+                this.templateSetting.pipelineAsCodeSettings.pipelineDialect = value
             }
         }
     }

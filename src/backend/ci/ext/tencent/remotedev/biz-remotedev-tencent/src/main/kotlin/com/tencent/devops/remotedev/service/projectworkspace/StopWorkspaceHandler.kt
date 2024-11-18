@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -44,7 +44,6 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -70,7 +69,7 @@ class StopWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl
@@ -171,7 +170,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STOPPING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = workspace.projectId
             )
 

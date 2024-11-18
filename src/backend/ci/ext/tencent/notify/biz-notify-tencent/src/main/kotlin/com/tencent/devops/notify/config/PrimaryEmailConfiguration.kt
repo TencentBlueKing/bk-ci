@@ -7,8 +7,8 @@ import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.inner.EmailServiceImpl
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -24,11 +24,11 @@ class PrimaryEmailConfiguration {
     fun emailService(
         tofService: TOFService,
         emailNotifyDao: EmailNotifyDao,
-        rabbitTemplate: RabbitTemplate,
+        streamBridge: StreamBridge,
         configuration: TOFConfiguration,
         tof4Service: TOF4Service
     ): EmailService {
         logger.info("init bk email tof service")
-        return EmailServiceImpl(tofService, emailNotifyDao, rabbitTemplate, configuration, tof4Service)
+        return EmailServiceImpl(tofService, emailNotifyDao, streamBridge, configuration, tof4Service)
     }
 }

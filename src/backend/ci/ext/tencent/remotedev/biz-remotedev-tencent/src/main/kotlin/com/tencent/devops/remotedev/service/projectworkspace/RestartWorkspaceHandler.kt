@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -46,7 +46,6 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -75,7 +74,7 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl,
@@ -104,7 +103,13 @@ class RestartWorkspaceHandler @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You do not have permission to restart $workspaceName")
@@ -181,7 +186,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.RESTARTING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = workspace.projectId
             )
 
@@ -236,7 +241,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
             }
             // 重装成功后做异步设置(L盘挂载)
-            val ip = event.environmentIp?.substringAfter(".")
+            val ip = event.environmentIp
             ip?.let {
                 workspaceCommon.makeDiskMount(it, event.userId)
             }

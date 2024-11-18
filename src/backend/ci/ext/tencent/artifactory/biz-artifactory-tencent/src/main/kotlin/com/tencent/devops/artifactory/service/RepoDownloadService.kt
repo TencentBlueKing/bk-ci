@@ -123,9 +123,33 @@ interface RepoDownloadService {
     ): String
 
     /**
+     * 外网使用的HAP的Json5的内容
+     */
+    fun outerHapJson5Content(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String
+
+    /**
      * 外网使用的IPA的Plist的地址
      */
     fun outerPlistUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url
+
+    /**
+     * 外网使用的IPA的Plist的地址
+     */
+    fun outerHapJson5Url(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,

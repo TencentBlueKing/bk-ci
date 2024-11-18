@@ -238,17 +238,19 @@ class WorkspaceJoinDao {
                     conditions.add(SYSTEM_TYPE.`in`(types.map { it.name }))
                 }
             }
-
+            /* 二级匹配OWNER_TYPE */
+            /* 第一级以search中单独指定为准 */
             search.workspaceOwnerType?.ifEmpty { null }?.let { types ->
                 if (search.onFuzzyMatch) {
                     conditions.add(OWNER_TYPE.likeRegex(types.joinToString("|") { it.name }))
                 } else {
                     conditions.add(OWNER_TYPE.`in`(types.map { it.name }))
                 }
-            }
-
-            queryType.ownerType()?.let {
-                conditions.add(OWNER_TYPE.eq(it.name))
+            } ?: run {
+                /* 第二级以来源渠道为准 */
+                queryType.ownerType().let { ownerType ->
+                    conditions.add(OWNER_TYPE.`in`(ownerType.map { it.name }))
+                }
             }
         }
 
@@ -262,13 +264,7 @@ class WorkspaceJoinDao {
 
         if (!search.sips.isNullOrEmpty()) {
             conditions.add(
-                TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(
-                    search.sips?.joinToString(
-                        separator = "$|^[^.]+.",
-                        prefix = "^[^.]+.",
-                        postfix = "$"
-                    )
-                )
+                TWorkspace.T_WORKSPACE.IP.`in`(search.sips)
             )
         }
 

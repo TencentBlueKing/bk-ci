@@ -127,6 +127,7 @@ class QualityNotifyGroupService @Autowired constructor(
             ProjectGroupAndUsers(
                 groupName = it.displayName,
                 groupId = it.roleName,
+                groupRoleId = it.roleId,
                 users = it.userIdList.toSet()
             )
         }

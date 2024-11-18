@@ -91,7 +91,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    width: 100%;
+    max-width: 540px;
     display: inline-block;
   }
   .tip-style {

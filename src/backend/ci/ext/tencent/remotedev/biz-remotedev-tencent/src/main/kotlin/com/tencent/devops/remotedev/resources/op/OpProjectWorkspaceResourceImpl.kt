@@ -25,7 +25,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -44,8 +43,8 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("ALL")
 @RestResource
@@ -60,7 +59,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -81,15 +80,15 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
-        when (data.type) {
-            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(
+        when {
+            data.type.projectUse() -> assignProjectWorkspace(
                 data = data,
                 userId = userId,
                 cgsData = cgsData,
                 zoneType = zoneType
             )
 
-            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data = data, cgsData = cgsData)
+            else -> assignPersonalWorkspace(data = data, cgsData = cgsData)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -119,7 +118,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                streamBridge, AsyncPipelineEvent(
                     userId = info.userId ?: userId,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

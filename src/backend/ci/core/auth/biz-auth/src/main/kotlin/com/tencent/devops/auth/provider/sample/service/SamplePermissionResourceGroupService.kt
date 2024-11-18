@@ -31,10 +31,9 @@ package com.tencent.devops.auth.provider.sample.service
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
-import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Pagination
 
@@ -56,14 +55,10 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return emptyList()
     }
 
-    override fun getGroupPolicies(
-        userId: String,
+    override fun listIamGroupIdsByGroupName(
         projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo> {
-        return emptyList()
-    }
+        groupName: String
+    ): List<Int> = emptyList()
 
     override fun deleteGroup(
         userId: String?,
@@ -89,12 +84,41 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
-    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
-        return emptyMap()
-    }
-
-    override fun createProjectGroupByGroupCode(
+    override fun createGroupAndPermissionsByGroupCode(
         projectId: String,
-        groupCode: String
-    ) = true
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String,
+        groupName: String?,
+        groupDesc: String?
+    ): Int = 0
+
+    override fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Int = 0
+
+    override fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ): Boolean = true
+
+    override fun deleteManagerDefaultGroup(
+        userId: String,
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean = true
+
+    override fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean = true
 }

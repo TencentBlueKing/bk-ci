@@ -38,6 +38,8 @@ data class StageReviewGroup(
     val name: String = "Flow 1",
     @get:Schema(title = "审核人员", required = true)
     var reviewers: List<String> = listOf(),
+    @get:Schema(title = "审核用户组", required = false)
+    var groups: List<String> = listOf(),
     @get:Schema(title = "审核结果（枚举）", required = false)
     var status: String? = null,
     @get:Schema(title = "审核操作人", required = false)

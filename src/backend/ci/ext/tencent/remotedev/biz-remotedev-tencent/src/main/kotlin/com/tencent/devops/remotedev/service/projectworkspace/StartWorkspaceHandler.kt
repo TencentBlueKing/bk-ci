@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -45,7 +45,6 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -73,7 +72,7 @@ class StartWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val permissionService: PermissionService,
-    private val dispatcher: RemoteDevDispatcher,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
@@ -104,7 +103,13 @@ class StartWorkspaceHandler @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
 
-        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You do not have permission to start $workspaceName")
@@ -180,7 +185,7 @@ class StartWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STARTING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = workspace.projectId
             )
 

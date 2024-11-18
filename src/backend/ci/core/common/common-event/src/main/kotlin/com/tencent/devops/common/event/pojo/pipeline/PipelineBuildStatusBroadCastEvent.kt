@@ -28,14 +28,15 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.stream.constants.StreamBinding
 import java.time.LocalDateTime
 
 /**
  * 构建状态的广播事件，用于通知等
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT)
+@Event(destination = StreamBinding.PIPELINE_BUILD_CALL_BACK_FANOUT)
 data class PipelineBuildStatusBroadCastEvent(
     override val source: String,
     override val projectId: String,
@@ -51,6 +52,8 @@ data class PipelineBuildStatusBroadCastEvent(
     val buildStatus: String?,
     val atomCode: String? = null,
     val eventTime: LocalDateTime? = LocalDateTime.now(),
+    val type: PipelineBuildStatusBroadCastEventType? = null,
+    val labels: Map<String, String>? = null,
     override var actionType: ActionType,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

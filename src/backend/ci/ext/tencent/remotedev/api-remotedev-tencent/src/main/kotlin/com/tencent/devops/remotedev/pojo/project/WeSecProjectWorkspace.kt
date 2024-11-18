@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -70,8 +71,13 @@ data class WeSecProjectWorkspace(
     @JsonProperty("mac_address")
     @get:Schema(title = "mac地址")
     val macAddress: String? = null,
+    @JsonProperty("zone_type")
+    @get:Schema(title = "专区类型")
+    val zoneType: WindowsResourceZoneConfigType? = null,
     @get:Schema(title = "共享人")
-    val viewers: List<String>? = emptyList()
+    val viewers: List<String>? = emptyList(),
+    @get:Schema(title = "母机IP")
+    val nodeIp: String? = null
 )
 
 @Schema(title = "组织信息")

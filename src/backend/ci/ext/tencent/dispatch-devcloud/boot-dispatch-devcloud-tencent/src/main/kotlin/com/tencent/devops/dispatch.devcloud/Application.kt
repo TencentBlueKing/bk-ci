@@ -27,11 +27,9 @@
 
 package com.tencent.devops.dispatch.devcloud
 
-import com.tencent.devops.common.dispatch.sdk.config.MQConfiguration
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
 
 @ComponentScan(
     basePackages = [
@@ -41,8 +39,7 @@ import org.springframework.context.annotation.FilterType
         "com.tencent.devops.dispatch.pcg",
         "com.tencent.devops.dispatch.windows",
         "com.tencent.devops.dispatch.codecc"
-    ],
-    excludeFilters = [ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = [MQConfiguration::class])]
+    ]
 )
 @MicroService
 class Application

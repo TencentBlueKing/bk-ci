@@ -28,20 +28,18 @@
 package com.tencent.devops.environment
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.config.EnvTypeEnumModifier
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
-import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -50,6 +48,14 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 class TencentServiceConfig {
+
+    /**
+     * 动态扩展EnvType中的配置项
+     */
+    @PostConstruct
+    fun envTypeChange() {
+        EnvTypeEnumModifier().modified()
+    }
 
     /**
      *  下载链接服务
@@ -66,26 +72,6 @@ class TencentServiceConfig {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun environmentPermissionServiceImpl(
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        environmentAuthServiceCode: EnvironmentAuthServiceCode,
-        managerService: ManagerService,
-        envDao: EnvDao,
-        nodeDao: NodeDao,
-        dslContext: DSLContext
-    ) = EnvironmentPermissionServiceImpl(
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        environmentAuthServiceCode = environmentAuthServiceCode,
-        managerService = managerService,
-        envDao = envDao,
-        nodeDao = nodeDao,
-        dslContext = dslContext
-    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
