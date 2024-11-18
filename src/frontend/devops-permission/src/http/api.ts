@@ -39,8 +39,18 @@ export default {
   getGroupPermissionDetail(groupId: any) {
     return fetch.get(`${apiPerfix}/auth/apply/${groupId}/getGroupPermissionDetail`)
   },
-
+  // 获取oauth授权列表
   getOauthResource() {
     return fetch.get(`${apiPerfix}/oauth/resource`)
+  },
+  // 删除oauth授权
+  deleteOauth(type: any) {
+    return fetch.delete(`${apiPerfix}/oauth/resource/delete?oauthType=${type}`)
+  },
+  getOauthRelSource(type: any, page: Number, pageSize: Number) {
+    return fetch.get(`${apiPerfix}/oauth/resource/relSource?oauthType=${type}&page=${page}&pageSize=${pageSize}`)
+  },
+  refreshOauth(oauthType: any, redirectUrl: any) {
+    return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
   }
 }
