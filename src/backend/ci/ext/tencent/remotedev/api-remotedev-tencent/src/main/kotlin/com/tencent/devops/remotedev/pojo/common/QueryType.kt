@@ -31,17 +31,21 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 
 enum class QueryType {
     WEB {
-        override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
+        override fun ownerType(): Set<WorkspaceOwnerType> =
+            setOf(WorkspaceOwnerType.PROJECT, WorkspaceOwnerType.PROJECT_PUBLIC)
     }, // 0
     OP {
-        override fun ownerType(): WorkspaceOwnerType? = null
+        override fun ownerType(): Set<WorkspaceOwnerType> =
+            setOf(WorkspaceOwnerType.PROJECT, WorkspaceOwnerType.PERSONAL, WorkspaceOwnerType.PROJECT_PUBLIC)
     }, // 1
     CLIENT {
-        override fun ownerType(): WorkspaceOwnerType? = null
+        override fun ownerType(): Set<WorkspaceOwnerType> =
+            setOf(WorkspaceOwnerType.PROJECT, WorkspaceOwnerType.PERSONAL, WorkspaceOwnerType.PROJECT_PUBLIC)
     }, // 1
     SERVICE {
-        override fun ownerType(): WorkspaceOwnerType? = null
+        override fun ownerType(): Set<WorkspaceOwnerType> =
+            setOf(WorkspaceOwnerType.PROJECT, WorkspaceOwnerType.PERSONAL, WorkspaceOwnerType.PROJECT_PUBLIC)
     }; // 2
 
-    abstract fun ownerType(): WorkspaceOwnerType?
+    abstract fun ownerType(): Set<WorkspaceOwnerType>
 }

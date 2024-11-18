@@ -48,7 +48,9 @@ data class WindowsWorkspaceCreate(
     @get:Schema(title = "指定数据盘大小")
     val pvcs: List<Pvc> = emptyList(),
     @get:Schema(title = "创建时指定污点")
-    val specifyTaints: String? = null
+    val specifyTaints: String? = null,
+    @get:Schema(title = "云桌面类型")
+    val ownerType: WorkspaceOwnerType? = null
 )
 
 @Schema(title = "自定义数据盘信息")

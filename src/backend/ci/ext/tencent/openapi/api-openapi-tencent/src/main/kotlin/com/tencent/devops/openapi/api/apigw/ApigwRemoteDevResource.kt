@@ -641,4 +641,22 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "请求报文", required = true)
         upgradeReq: WorkspaceUpgradeReq
     ): Result<Boolean>
+
+    @Operation(summary = "剔除当前用户所有云桌面相关权限", tags = ["v4_app_remotedev_remove_user_permission"])
+    @POST
+    @Path("/remove_user_permission")
+    fun removeUserPermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "被移除用户", required = true)
+        @QueryParam("removeUser")
+        removeUser: String
+    ): Result<Boolean>
 }

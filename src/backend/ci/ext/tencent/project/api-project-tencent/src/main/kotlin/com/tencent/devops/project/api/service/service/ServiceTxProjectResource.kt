@@ -71,9 +71,12 @@ interface ServiceTxProjectResource {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
         @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String
+        accessToken: String?
     ): Result<List<ProjectVO>>
 
     @GET

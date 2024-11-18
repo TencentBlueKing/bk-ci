@@ -451,4 +451,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             upgradeReq = upgradeReq
         )
     }
+
+    override fun removeUserPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        removeUser: String
+    ): Result<Boolean> {
+        logger.info("removeUserPermission $appCode|$userId|$removeUser")
+        return client.get(ServiceRemoteDevResource::class).removeUserPermission(
+            userId = userId,
+            removeUser = removeUser
+        )
+    }
 }

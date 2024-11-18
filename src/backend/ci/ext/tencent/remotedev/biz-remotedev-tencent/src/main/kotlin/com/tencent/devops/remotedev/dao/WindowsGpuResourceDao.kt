@@ -32,10 +32,12 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWindowsGpuPool
 import com.tencent.devops.model.remotedev.tables.TWindowsVmResource
+import com.tencent.devops.model.remotedev.tables.records.TWindowsGpuPoolRecord
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
 import org.jooq.DSLContext
 import org.jooq.Record2
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -161,5 +163,15 @@ class WindowsGpuResourceDao {
                 }
             }
         ).execute()
+    }
+
+    // 获取pool实例信息
+    fun batchFetchWindowsGpuPool(
+        dslContext: DSLContext,
+        hostIps: List<String>
+    ): Result<TWindowsGpuPoolRecord> {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            return dslContext.selectFrom(this).where(CGS_ID.`in`(hostIps)).fetch()
+        }
     }
 }

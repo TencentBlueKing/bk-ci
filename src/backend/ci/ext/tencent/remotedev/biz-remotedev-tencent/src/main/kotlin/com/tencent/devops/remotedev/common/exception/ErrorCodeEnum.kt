@@ -211,6 +211,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132050",
         formatErrorMessage = "Image {0} not found in project {1}"
+    ),
+    REMOVE_TGIT_LINK_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132050",
+        formatErrorMessage = "unbinding TGIT failed: {0}, directly delete the binding information"
     );
 
     fun getErrorMessage(): String {

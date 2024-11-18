@@ -30,6 +30,7 @@ package com.tencent.devops.artifactory.resources.service
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
+import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
@@ -119,6 +120,12 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     override fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Result<Boolean> {
         return Result(
             bkRepoClient.checkApkDefenderTask(projectId, userId, taskId)
+        )
+    }
+
+    override fun createTokenForJson(tokenForJsonRequest: TokenForJsonRequest): Result<String> {
+        return Result(
+            bkRepoDownloadService.createTokenForJson(tokenForJsonRequest.json, tokenForJsonRequest.ttlSecond)
         )
     }
 

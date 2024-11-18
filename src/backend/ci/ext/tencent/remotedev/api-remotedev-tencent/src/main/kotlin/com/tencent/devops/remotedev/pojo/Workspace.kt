@@ -48,6 +48,7 @@ interface IWorkspace {
     val winConfig: WindowsResourceTypeConfig?
     var currentLoginUsers: List<String>
     var bakWorkspaceName: String?
+    val ownerType: WorkspaceOwnerType
 }
 
 @Schema(title = "工作空间信息")
@@ -88,12 +89,12 @@ data class Workspace(
     override var currentLoginUsers: List<String> = emptyList(),
     @get:Schema(title = "备份的workspace name")
     override var bakWorkspaceName: String? = null,
+    @get:Schema(title = "工作空间归属")
+    override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "镜像id")
     val imageId: String = "",
-    @get:Schema(title = "工作空间归属")
-    val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "当前用户在此工作空间分配的人员类型")
     val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
     @get:Schema(title = "windows资源配置id")

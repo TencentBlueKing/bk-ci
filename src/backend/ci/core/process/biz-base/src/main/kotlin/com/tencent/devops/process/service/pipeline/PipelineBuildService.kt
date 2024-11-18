@@ -36,7 +36,6 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -85,7 +84,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -249,11 +247,6 @@ class PipelineBuildService(
                 debug = debug ?: false,
                 versionName = versionName,
                 yamlVersion = yamlVersion
-            )
-            // 校验流水线启动变量长度
-            checkBuildParameterLength(
-                pipelineDialect = pipelineDialectType.dialect,
-                buildParameters = context.buildParameters
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -429,20 +422,5 @@ class PipelineBuildService(
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
 //        return originStartParams
-    }
-
-    private fun checkBuildParameterLength(
-        pipelineDialect: IPipelineDialect,
-        buildParameters: List<BuildParameters>
-    ) {
-        val longVarNames = buildParameters.filter {
-            it.value.toString().length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX
-        }.map { it.key }
-        if (longVarNames.isNotEmpty() && !pipelineDialect.supportLongVarValue()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH,
-                params = arrayOf(longVarNames.toString())
-            )
-        }
     }
 }

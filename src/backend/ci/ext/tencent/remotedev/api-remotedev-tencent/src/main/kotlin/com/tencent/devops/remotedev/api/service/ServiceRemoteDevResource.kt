@@ -584,4 +584,16 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "请求报文", required = true)
         upgradeReq: WorkspaceUpgradeReq
     ): Result<Boolean>
+
+    @Operation(summary = "剔除当前用户所有云桌面相关权限")
+    @POST
+    @Path("/remove_user_permission")
+    fun removeUserPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "被移除用户", required = true)
+        @QueryParam("removeUser")
+        removeUser: String
+    ): Result<Boolean>
 }
