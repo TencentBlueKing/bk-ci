@@ -11,7 +11,7 @@ import TgitIcon from '@/image/tgit.png';
 import GitlabIcon from '@/image/gitlab.png';
 import GithubIcon from '@/image/github.png';
 import SvnIcon from '@/image/svn.png';
-import P4Icon from '@/image/p4.png';
+import P4Icon from '@/image/P4.png';
 import GitExpireIcon from '@/image/git-expire.png';
 import TgitExpireIcon from '@/image/tgit-expire.png';
 import GitlabExpireIcon from '@/image/gitlab-expire.png';
