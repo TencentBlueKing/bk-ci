@@ -51,11 +51,11 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
                 kubernetes_domain = config.kubernetes.domain
             end
 
-            -- 特殊处理的域名,优先级最高
-            local special_key = gateway_project .. ":" .. devops_tag
-            if config.kubernetes.special_domain[special_key] ~= nil then
-                kubernetes_domain = config.kubernetes.special_domain[special_key]
-            end
+        end
+        -- 特殊处理的域名,优先级最高
+        local special_key = gateway_project .. ":" .. devops_tag
+        if config.kubernetes.special_domain[special_key] ~= nil then
+            kubernetes_domain = config.kubernetes.special_domain[special_key]
         end
         return kubernetes_domain .. "/ms/" .. service_name
     end
