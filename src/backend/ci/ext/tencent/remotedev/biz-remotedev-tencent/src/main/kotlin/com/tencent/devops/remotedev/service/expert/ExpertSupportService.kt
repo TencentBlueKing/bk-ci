@@ -487,26 +487,30 @@ class ExpertSupportService @Autowired constructor(
             createLaterTime = DateTimeUtil.convertTimestampToLocalDateTime(createLaterTimestamp)
         )
         return records.map {
-            val recordInfo = JsonUtil.to(it.info.data(), object : TypeReference<SupRecordInfo>() {})
+            val recordInfo = if (it.info == null) {
+                null
+            } else {
+                JsonUtil.to(it.info.data(), object : TypeReference<SupRecordInfo>() {})
+            }
             SupRecordData(
                 id = it.id,
                 createTime = it.createTime,
                 content = it.content,
-                requestIp = recordInfo.requestIp,
+                requestIp = recordInfo?.requestIp,
                 hostIp = it.hostIp,
                 projectId = it.projectId,
-                projectManager = recordInfo.projectManager,
+                projectManager = recordInfo?.projectManager,
                 machineType = it.machineType,
                 city = it.city,
-                clientVersion = recordInfo.clientVersion,
-                machineStatus = recordInfo.machineStatus,
-                cdsVersion = recordInfo.cdsVersion,
-                cdsRegion = recordInfo.cdsRegion,
-                cdsStatus = recordInfo.cdsStatus,
-                cdsPort = recordInfo.cdsPort,
-                agentStatus = recordInfo.agentStatus,
-                owner = recordInfo.owner,
-                viewers = recordInfo.viewers,
+                clientVersion = recordInfo?.clientVersion,
+                machineStatus = recordInfo?.machineStatus,
+                cdsVersion = recordInfo?.cdsVersion,
+                cdsRegion = recordInfo?.cdsRegion,
+                cdsStatus = recordInfo?.cdsStatus,
+                cdsPort = recordInfo?.cdsPort,
+                agentStatus = recordInfo?.agentStatus,
+                owner = recordInfo?.owner,
+                viewers = recordInfo?.viewers,
                 loginName = it.supporter
             )
         }
@@ -516,26 +520,30 @@ class ExpertSupportService @Autowired constructor(
         id: Long
     ): SupRecordData? {
         val record = expertSupportDao.getSup(dslContext, id) ?: return null
-        val recordInfo = JsonUtil.to(record.info.data(), object : TypeReference<SupRecordInfo>() {})
+        val recordInfo = if (record.info == null) {
+            null
+        } else {
+            JsonUtil.to(record.info.data(), object : TypeReference<SupRecordInfo>() {})
+        }
         return SupRecordData(
             id = record.id,
             createTime = record.createTime,
             content = record.content,
-            requestIp = recordInfo.requestIp,
+            requestIp = recordInfo?.requestIp,
             hostIp = record.hostIp,
             projectId = record.projectId,
-            projectManager = recordInfo.projectManager,
+            projectManager = recordInfo?.projectManager,
             machineType = record.machineType,
             city = record.city,
-            clientVersion = recordInfo.clientVersion,
-            machineStatus = recordInfo.machineStatus,
-            cdsVersion = recordInfo.cdsVersion,
-            cdsRegion = recordInfo.cdsRegion,
-            cdsStatus = recordInfo.cdsStatus,
-            cdsPort = recordInfo.cdsPort,
-            agentStatus = recordInfo.agentStatus,
-            owner = recordInfo.owner,
-            viewers = recordInfo.viewers,
+            clientVersion = recordInfo?.clientVersion,
+            machineStatus = recordInfo?.machineStatus,
+            cdsVersion = recordInfo?.cdsVersion,
+            cdsRegion = recordInfo?.cdsRegion,
+            cdsStatus = recordInfo?.cdsStatus,
+            cdsPort = recordInfo?.cdsPort,
+            agentStatus = recordInfo?.agentStatus,
+            owner = recordInfo?.owner,
+            viewers = recordInfo?.viewers,
             loginName = record.supporter
         )
     }
