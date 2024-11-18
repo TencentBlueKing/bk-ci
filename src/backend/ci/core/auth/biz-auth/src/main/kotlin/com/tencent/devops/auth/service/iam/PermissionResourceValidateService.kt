@@ -54,6 +54,7 @@ interface PermissionResourceValidateService {
     fun validateUserProjectPermissionByChannel(
         userId: String,
         projectCode: String,
-        operateChannel: OperateChannel
+        operateChannel: OperateChannel,
+        targetMemberId: String
     )
 }
