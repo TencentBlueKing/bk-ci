@@ -983,7 +983,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
                     projectId = projectId,
-                    pipelineId = pipelineId,
+                    pipelineId = newPipelineId,
                     setting = newSetting,
                     dispatchPipelineUpdateEvent = false,
                     updateLabels = false
