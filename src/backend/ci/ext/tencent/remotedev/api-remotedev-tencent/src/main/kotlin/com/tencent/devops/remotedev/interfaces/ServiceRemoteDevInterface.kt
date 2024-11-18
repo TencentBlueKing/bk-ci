@@ -24,4 +24,10 @@ interface ServiceRemoteDevInterface {
         operator: String,
         imageId: String
     )
+
+    fun workspaceCreateDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    )
 }

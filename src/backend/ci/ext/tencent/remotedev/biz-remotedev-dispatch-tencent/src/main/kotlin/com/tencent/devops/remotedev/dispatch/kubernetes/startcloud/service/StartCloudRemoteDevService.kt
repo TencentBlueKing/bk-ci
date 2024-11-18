@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
@@ -334,7 +335,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
-        return startAndBcsCommonService.expandDisk(userId, workspaceName, size)
+        return startAndBcsCommonService.expandDisk(userId = userId, workspaceName = workspaceName, size = size)
+    }
+
+    override fun createDisk(workspaceName: String, userId: String, size: String): CreateDiskResp {
+        return startAndBcsCommonService.createDisk(userId = userId, workspaceName = workspaceName, size = size)
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

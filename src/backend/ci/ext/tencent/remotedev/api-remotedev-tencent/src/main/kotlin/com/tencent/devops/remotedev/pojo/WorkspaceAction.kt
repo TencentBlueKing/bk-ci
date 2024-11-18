@@ -52,5 +52,6 @@ enum class WorkspaceAction {
     EXPAND_DISK,
     // 升级配置
     UPGRADE,
-    UPGRADING
+    UPGRADING,
+    CREATE_DISK
 }

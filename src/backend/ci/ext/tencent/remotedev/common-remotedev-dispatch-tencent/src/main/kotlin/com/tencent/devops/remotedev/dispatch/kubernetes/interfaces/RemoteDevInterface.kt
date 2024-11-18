@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatus
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -118,4 +119,10 @@ interface RemoteDevInterface {
         userId: String,
         size: String
     ): ExpandDiskValidateResp
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): CreateDiskResp
 }
