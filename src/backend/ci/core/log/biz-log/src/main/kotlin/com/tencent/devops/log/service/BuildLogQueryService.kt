@@ -67,9 +67,9 @@ class BuildLogQueryService @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean? = null,
-        pipelineViewFlag: Boolean = true
+        pipelineCheckFlag: Boolean = true
     ): Result<QueryLogs> {
-        if (pipelineViewFlag) {
+        if (pipelineCheckFlag) {
             validateAuth(
                 userId = userId,
                 projectId = projectId,
@@ -170,9 +170,9 @@ class BuildLogQueryService @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean? = null,
-        pipelineViewFlag: Boolean = true
+        pipelineCheckFlag: Boolean = true
     ): Result<QueryLogs> {
-        if (pipelineViewFlag) {
+        if (pipelineCheckFlag) {
             validateAuth(
                 userId = userId,
                 projectId = projectId,
@@ -224,9 +224,9 @@ class BuildLogQueryService @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean? = null,
-        pipelineViewFlag: Boolean = true
+        pipelineCheckFlag: Boolean = true
     ): Result<QueryLogs> {
-        if (pipelineViewFlag) {
+        if (pipelineCheckFlag) {
             validateAuth(
                 userId = userId,
                 projectId = projectId,

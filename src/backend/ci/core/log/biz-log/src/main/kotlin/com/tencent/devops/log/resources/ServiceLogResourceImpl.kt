@@ -65,7 +65,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
-        pipelineViewFlag: Boolean
+        pipelineCheckFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
             userId = userId,
@@ -81,7 +81,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
-            pipelineViewFlag = pipelineViewFlag
+            pipelineCheckFlag = pipelineCheckFlag
         )
     }
 
@@ -102,7 +102,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
-        pipelineViewFlag: Boolean
+        pipelineCheckFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -121,7 +121,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
-            pipelineViewFlag = pipelineViewFlag
+            pipelineCheckFlag = pipelineCheckFlag
         )
     }
 
@@ -139,7 +139,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
-        pipelineViewFlag: Boolean
+        pipelineCheckFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -155,7 +155,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
-            pipelineViewFlag = pipelineViewFlag
+            pipelineCheckFlag = pipelineCheckFlag
         )
     }
 
