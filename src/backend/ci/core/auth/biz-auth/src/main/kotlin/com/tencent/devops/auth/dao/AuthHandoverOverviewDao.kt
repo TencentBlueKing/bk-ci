@@ -6,6 +6,7 @@ import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.auth.tables.TAuthHandoverOverview
 import com.tencent.devops.model.auth.tables.records.TAuthHandoverOverviewRecord
 import org.jooq.Condition
@@ -80,10 +81,12 @@ class AuthHandoverOverviewDao {
             dslContext.selectFrom(this)
                 .where(buildQueryConditions(queryRequest))
                 .let {
-                    if (queryRequest.limit != null && queryRequest.offset != null)
-                        it.limit(queryRequest.limit).offset(queryRequest.offset)
-                    else
+                    if (queryRequest.page != null && queryRequest.pageSize != null) {
+                        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(queryRequest.page, queryRequest.pageSize)
+                        it.limit(sqlLimit.limit).offset(sqlLimit.offset)
+                    } else {
                         it
+                    }
                 }.fetch().map { it.convert(queryRequest.memberID) }
         }
     }
