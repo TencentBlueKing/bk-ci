@@ -398,12 +398,17 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
+    @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     override fun fetchExpertSupRecord(
         userId: String,
         workspaceName: String,
         createLaterTimestamp: Long
     ): Result<List<SupRecordData>> {
         return Result(expertSupportService.fetchSupRecord(workspaceName, createLaterTimestamp))
+    }
+
+    override fun fetchExpertSupRecordAny(id: Long): Result<SupRecordData?> {
+        return Result(expertSupportService.fetchSupRecordAny(id))
     }
 
     override fun getProjectWorkspace(
@@ -433,11 +438,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            searchCustom = false,
-            quotaType = type,
-            withProjectLimit = null
-        )
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                searchCustom = false,
+                quotaType = type,
+                withProjectLimit = null
+            )
         )
     }
 
