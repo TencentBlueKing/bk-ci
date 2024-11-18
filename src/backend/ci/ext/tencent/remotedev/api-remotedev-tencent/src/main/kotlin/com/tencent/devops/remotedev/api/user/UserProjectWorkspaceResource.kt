@@ -322,7 +322,7 @@ interface UserProjectWorkspaceResource {
         upgradeReq: WorkspaceUpgradeReq
     ): Result<Boolean>
 
-    @Operation(summary = "云桌面调整配置")
+    @Operation(summary = "云桌面克隆")
     @POST
     @Path("/workspace/{workspaceName}/clone")
     fun cloneWorkspace(
