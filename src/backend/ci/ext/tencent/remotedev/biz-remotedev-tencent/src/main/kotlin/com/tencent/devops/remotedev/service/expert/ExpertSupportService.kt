@@ -511,7 +511,7 @@ class ExpertSupportService @Autowired constructor(
                 agentStatus = recordInfo?.agentStatus,
                 owner = recordInfo?.owner,
                 viewers = recordInfo?.viewers,
-                loginName = it.supporter
+                loginName = it.creator
             )
         }
     }
@@ -544,7 +544,7 @@ class ExpertSupportService @Autowired constructor(
             agentStatus = recordInfo?.agentStatus,
             owner = recordInfo?.owner,
             viewers = recordInfo?.viewers,
-            loginName = record.supporter
+            loginName = record.creator
         )
     }
 
