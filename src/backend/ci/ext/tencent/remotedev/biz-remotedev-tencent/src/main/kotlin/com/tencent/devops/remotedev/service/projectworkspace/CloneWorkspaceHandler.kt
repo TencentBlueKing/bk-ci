@@ -160,7 +160,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 workspaceName = workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_UPGRADE,
+                type = WebSocketActionType.WORKSPACE_CLONE,
                 status = true,
                 action = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
