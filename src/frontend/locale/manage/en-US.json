@@ -286,9 +286,6 @@
     "变量值超长": "Variable Value Too Long",
     "仅警告未报错": "Only Warning without Error",
 
-    "变量不存在": "Variable Not Found",
-    "未报错，继续执行，依赖执行逻辑自行检查": "No Error, Continue Execution, Check Execution Logic as Needed",
-
     "变量 ID 规范": "Variable ID Standard",
     "未限制": "No Restriction",
     "不支持中文 ID，减少不同构建环境下的兼容问题": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",

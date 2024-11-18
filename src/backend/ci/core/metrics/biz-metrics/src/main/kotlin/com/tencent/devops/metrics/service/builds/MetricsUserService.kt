@@ -444,8 +444,13 @@ class MetricsUserService @Autowired constructor(
         val metrics = local[key]
         logger.debug("metricsRemove|key={}|value={}|metrics={}", key, value, metrics)
         if (metrics != null) {
+            // 立即删除
+            metrics.meters.forEach { meter ->
+                registry.remove(meter)
+            }
+            local.remove(key)
             // 异步删除
-            delayArray.first.add(key to metrics)
+//            delayArray.first.add(key to metrics)
         }
     }
 
