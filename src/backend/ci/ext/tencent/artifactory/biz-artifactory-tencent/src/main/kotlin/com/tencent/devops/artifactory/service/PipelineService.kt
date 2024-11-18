@@ -150,10 +150,7 @@ abstract class PipelineService @Autowired constructor(
                 resourceCode = pipelineId
             ).data
         } catch (ignored: Exception) {
-            throw CustomException(
-                javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE,
-                "get pipeline oauth user failed:${ignored.message}"
-            )
+           null
         }?.handoverFrom
     }
 }
