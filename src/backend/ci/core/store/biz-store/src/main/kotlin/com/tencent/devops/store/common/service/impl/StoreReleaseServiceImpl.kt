@@ -484,16 +484,20 @@ class StoreReleaseServiceImpl @Autowired constructor(
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
         val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
         val storeReleaseSpecBusService = SpringContextUtil.getBean(
-            StoreReleaseSpecBusService::class.java,
-            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+            StoreReleaseSpecBusService::class.java, StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         val status = storeReleaseSpecBusService.getStoreRunPipelineStatus(startFlag = false)
         status?.let {
             checkStoreVersionOptRight(userId, storeId, status)
         }
+        val storeCode = record.storeCode
+        val version = record.version
+        // 处理环境信息逻辑
+        storeReleaseSpecBusService.doStoreEnvBus(
+            storeCode = storeCode, storeType = storeType, version = version, userId = userId
+        )
         val storeRunPipelineParam = StoreRunPipelineParam(
-            userId = userId,
-            storeId = storeId
+            userId = userId, storeId = storeId
         )
         storePipelineService.runPipeline(storeRunPipelineParam)
         return true
