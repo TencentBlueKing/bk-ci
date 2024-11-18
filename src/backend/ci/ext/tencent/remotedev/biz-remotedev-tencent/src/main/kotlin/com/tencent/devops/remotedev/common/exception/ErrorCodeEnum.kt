@@ -206,6 +206,11 @@ enum class ErrorCodeEnum(
         formatErrorMessage = "Some repo failed! Insufficient permissions or the repository has been deleted. " +
                 "Please make sure the credential owner has administrator permissions: " +
                 "Git requires Master and above, SVN requires root directory approver"
+    ),
+    REMOVE_TGIT_LINK_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132050",
+        formatErrorMessage = "unbinding TGIT failed: {0}, directly delete the binding information"
     );
 
     fun getErrorMessage(): String {

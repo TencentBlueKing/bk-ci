@@ -20,5 +20,6 @@ enum class AsyncExecuteEventType {
     ASYNC_TGIT_ACL_USER,
     ASYNC_TCLOUD_CFS,
     ASYNC_JOB_PIPELINE,
-    ASYNC_NOTIFY
+    ASYNC_NOTIFY,
+    ASYNC_USER_AUTH_CHECK
 }

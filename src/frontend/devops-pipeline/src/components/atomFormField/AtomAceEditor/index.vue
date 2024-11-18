@@ -18,7 +18,7 @@
             class="ace-wrapper"
             :read-only="disabled"
             :value="value"
-            :lang="lang"
+            :lang="dynamicLang"
             :name="name"
             :full-screen="isFullScreen"
             @input="handleScriptInput"
@@ -50,6 +50,10 @@
                 type: Object,
                 default: () => ({})
             },
+            atomValue: {
+                type: Object,
+                default: () => ({})
+            },
             defaultHeight: {
                 type: Number,
                 default: 360
@@ -60,6 +64,14 @@
                 height: 360,
                 isLoading: false,
                 isFullScreen: false
+            }
+        },
+        computed: {
+            dynamicLang () {
+                if (this.atomValue?.dynamicAceLang === 'auto') {
+                    return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'bash'
+                }
+                return this.atomValue?.dynamicAceLang ?? this.lang
             }
         },
         watch: {

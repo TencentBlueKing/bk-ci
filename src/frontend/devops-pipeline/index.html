@@ -125,7 +125,7 @@
     <script>
         var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
         var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>";
-        var API_URL_PREFIX = "/ms";
+        var API_URL_PREFIX = "<%= API_PATH_PREFIX %>";
         var WEB_URL_PREFIX = "/console";
         var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
@@ -133,7 +133,7 @@
         var BADGE_URL_PREFIX = "__BK_CI_BADGE_URL__";
         var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
         var LOCALE_DOMAIN = '__BK_DOMAIN__'
-        var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
+        var BK_PAAS_PRIVATE_URL = '<%= BK_PAAS_PRIVATE_URL %>'
         var BKCI_YAML_SCHEMA_URI = 'https://staticfile.woa.com/bkdevops/ci-yaml-schema/latest/ci-v3.json'
     </script>
 </body>

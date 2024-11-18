@@ -120,11 +120,12 @@
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
+                            const val = (param.type === 'MULTIPLE' && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
+                                value: param.type === 'MULTIPLE' && !Array.isArray(val) ? [] : val
                             }
                         } else {
                             restParam = {
@@ -220,10 +221,11 @@
 
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
-                if (isMultipleParam(param.type) || isRemoteType(param)) { // 复选框，需要将数组转化为逗号隔开的字符串
-                    value = Array.isArray(value) ? value.join(',') : ''
+                if (isMultipleParam(param.type) || (isRemoteType(param) && param.multiSelect)) { // 复选框，需要将数组转化为逗号隔开的字符串
+                    this.handleParamChange(param.name, Array.isArray(value) ? value.join(',') : '')
+                } else {
+                    this.handleParamChange(param.name, value)
                 }
-                this.handleParamChange(param.name, value)
             },
             showMetadata (type, value) {
                 return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
