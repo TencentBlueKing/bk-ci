@@ -79,7 +79,7 @@ class RbacPermissionResourceMemberService(
                     resourceCode = resourceCode,
                     minExpiredTime = LocalDateTime.now(),
                     memberType = MemberType.USER.type
-                ).map { it.memberId }
+                ).map { it.memberId }.distinct()
             }
             // 获取特定资源下特定用户组成员
             else -> {
@@ -116,7 +116,8 @@ class RbacPermissionResourceMemberService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
 
         groupId2Members.forEach { (groupId, members) ->
-            val (userMembers, deptMembers) = members.partition { it.memberType == MemberType.USER.type }
+            val userMembers = members.filter { it.memberType == MemberType.USER.type }
+            val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
             val groupName = resourceGroupInfos.firstOrNull { it.relationId.toInt() == groupId }?.groupName
                 ?: return@forEach
             result.add(

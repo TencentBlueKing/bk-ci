@@ -135,6 +135,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             )
                             verifyResults.forEach { (groupId, verifyResult) ->
                                 if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
+                                    logger.info("The member of group needs to have been renewed:$projectCode|$groupId|$memberId")
                                     syncIamGroupMember(
                                         projectCode = projectCode,
                                         iamGroupId = groupId
