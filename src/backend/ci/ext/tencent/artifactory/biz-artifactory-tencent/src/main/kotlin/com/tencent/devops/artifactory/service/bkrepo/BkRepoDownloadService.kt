@@ -419,16 +419,16 @@ open class BkRepoDownloadService(
             "outerHapJson5Url, userId: $userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
-        val normalizedPath = URLEncoder.encode(
-            argPath,
-            "utf-8"
-        ).replace("+", "%20")
+//        val normalizedPath = URLEncoder.encode(
+//            argPath,
+//            "utf-8"
+//        ).replace("+", "%20")
 
         val hapJson5InfoJson = JsonUtil.toSortJson(
             HapJson5Info(
                 userId = userId,
                 ttl = ttl,
-                filePath = normalizedPath
+                filePath = argPath
             )
         )
         val token = client.get(ServiceArtifactoryDownLoadResource::class)
@@ -442,7 +442,7 @@ open class BkRepoDownloadService(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
-            path = normalizedPath
+            path = argPath
         )
         return Url(url)
     }
