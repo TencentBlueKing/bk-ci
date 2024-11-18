@@ -79,6 +79,7 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -553,6 +554,46 @@ class WorkspaceCommon @Autowired constructor(
                     ownerType = null,
                     projectId = ""
                 )
+            }
+        }
+    }
+
+    fun removeUserWorkspaceShare(
+        operator: String,
+        userId: String
+    ) {
+        val records = workspaceJoinDao.fetchWorkspaceFromUser(dslContext, userId).ifEmpty { return }
+        records.forEach { (workspaceName, status, assignType) ->
+            unShareWorkspace(
+                workspaceName = workspaceName,
+                operator = operator,
+                sharedUsers = listOf(userId),
+                mountType = null,
+                assignType = assignType,
+                forceDelete = true
+            )
+            // 是OWNER进入待分配状态
+            if (assignType == WorkspaceShared.AssignType.OWNER) {
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    val toStatus = WorkspaceStatus.DISTRIBUTING
+                    workspaceDao.updateWorkspaceStatus(
+                        workspaceName = workspaceName,
+                        status = toStatus,
+                        dslContext = transactionContext
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceName = workspaceName,
+                        operator = operator,
+                        action = WorkspaceAction.SYSTEM_CHANGES,
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            toStatus.name
+                        )
+                    )
+                }
             }
         }
     }

@@ -37,14 +37,12 @@ import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
@@ -142,15 +140,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {
         return Result(workspaceService.getEnvs4PublicWorkspace(userId))
-    }
-
-    @AuditEntry(actionId = ActionId.CGS_VIEW)
-    override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
-        return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
-    }
-
-    override fun getWorkspaceUserDetail(userId: String): Result<WorkspaceUserDetail?> {
-        return Result(workspaceService.getWorkspaceUserDetail(userId))
     }
 
     override fun getAuthorizedGitRepository(

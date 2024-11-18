@@ -681,4 +681,9 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
+        workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
+        return Result(true)
+    }
 }

@@ -473,6 +473,36 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
+    fun fetchWorkspaceFromUser(
+        dslContext: DSLContext,
+        userId: String
+    ): List<Triple<String, WorkspaceStatus, WorkspaceShared.AssignType>> {
+        return dslContext.select(
+            TWorkspace.T_WORKSPACE.NAME,
+            TWorkspace.T_WORKSPACE.STATUS,
+            TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
+        )
+            .from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .where(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch()
+            .map {
+                Triple(
+                    it[TWorkspace.T_WORKSPACE.NAME.name] as String,
+                    WorkspaceStatus.load(it[TWorkspace.T_WORKSPACE.STATUS] as Int),
+                    WorkspaceShared.AssignType.parse(it[TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE] as String)
+                )
+            }
+    }
+
     // 获取正常状态的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
