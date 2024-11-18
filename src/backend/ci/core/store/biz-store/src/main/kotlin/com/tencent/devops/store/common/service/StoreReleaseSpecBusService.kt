@@ -140,4 +140,18 @@ interface StoreReleaseSpecBusService {
         isNormalUpgrade: Boolean,
         status: StoreStatusEnum
     ): List<ReleaseProcessItem>
+
+    /**
+     * 执行组件环境信息业务
+     * @param userId 流水线ID
+     * @param storeType 组件类型
+     * @param storeCode 组件标识
+     * @param version 组件版本
+     */
+    fun doStoreEnvBus(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        userId: String
+    )
 }
