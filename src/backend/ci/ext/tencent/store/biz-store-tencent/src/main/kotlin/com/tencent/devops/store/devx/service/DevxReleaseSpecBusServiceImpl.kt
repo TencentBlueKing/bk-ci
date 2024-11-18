@@ -94,7 +94,6 @@ import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.devx.BkConfigInfo
 import com.tencent.devops.store.pojo.devx.OsConfigInfo
 import com.tencent.devops.store.pojo.devx.SignatureConfigInfo
-import com.tencent.devops.store.pojo.devx.constants.KEY_AUTH_USER_ID
 import com.tencent.devops.store.pojo.devx.constants.KEY_BUILD_DIR
 import com.tencent.devops.store.pojo.devx.constants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
@@ -194,39 +193,48 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val storeType = storeBaseCreateRequest.storeType
         val rdType = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.rdType
         if (rdType == RdTypeEnum.SELF_DEVELOPED.name) {
-            // 获取组件配置文件
-            val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType,
-                fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
-            )
-            val remoteRepoId =
-                extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
-            val oauthUserId =
-                extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
-            val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
-                remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
-            ).data
-            if (configFileContent.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(CONFIG_YML_NAME)
-                )
-            }
-            val versionInfo = storeBaseCreateRequest.versionInfo
-            val version = versionInfo.version
-            // 解析配置文件中的环境信息
-            val storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
-            val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
-                storeType = storeType,
-                storeCode = storeCode,
-                version = version,
-                storePkgEnvInfos = storePkgEnvInfos
-            )
             val bkStoreContext = storeUpdateRequest.bkStoreContext
             val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-            storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
+            val versionInfo = storeBaseCreateRequest.versionInfo
+            val version = versionInfo.version
+            doStoreEnvBus(storeCode = storeCode, storeType = storeType, version = version, userId = userId)
         }
+    }
+
+    private fun doStoreEnvBus(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        userId: String
+    ) {
+        // 获取组件配置文件
+        val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
+        )
+        val remoteRepoId =
+            extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
+        val oauthUserId =
+            extFeatures.filter { it.fieldName == KEY_REPOSITORY_AUTHORIZER }.getOrNull(0)?.fieldValue ?: ""
+        val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
+            remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, oauthUserId = oauthUserId, branch = MASTER
+        ).data
+        if (configFileContent.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(CONFIG_YML_NAME)
+            )
+        }
+        // 解析配置文件中的环境信息
+        val storePkgEnvInfos = generateStorePkgEnvInfos(storeCode, version, configFileContent)
+        val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            storePkgEnvInfos = storePkgEnvInfos
+        )
+        storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
     }
 
     override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
@@ -396,12 +404,6 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             KEY_STORE_LINUX_RUN_CUSTOM_VAR to "linux$storeRunCustomVarSuffix",
             KEY_STORE_DARWIN_RUN_CUSTOM_VAR to "darwin$storeRunCustomVarSuffix"
         )
-        if (repositoryHttpUrl.isBlank()) {
-            val authUserId = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.creator
-            authUserId?.let {
-                startParamMap[KEY_AUTH_USER_ID] = it
-            }
-        }
         if (queryDefaultScriptFlag) {
             val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
                 dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE

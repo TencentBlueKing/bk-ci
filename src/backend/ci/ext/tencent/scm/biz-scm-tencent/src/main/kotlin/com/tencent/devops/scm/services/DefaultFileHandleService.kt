@@ -30,6 +30,7 @@ package com.tencent.devops.scm.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import org.springframework.stereotype.Service
 import java.io.File
@@ -51,7 +52,12 @@ class DefaultFileHandleService : AbstractFileHandleService {
         if (bkConfigFile.exists()) {
             val fileContent = bkConfigFile.readText(Charset.forName(Charsets.UTF_8.name()))
             val dataMap = YamlUtil.to(fileContent, object : TypeReference<MutableMap<String, Any>>() {})
+            val originStoreCode = dataMap[KEY_STORE_CODE].toString()
             dataMap[KEY_STORE_CODE] = repositoryName
+            val packagePath = dataMap[KEY_PACKAGE_PATH]?.toString()
+            if (!packagePath.isNullOrBlank()) {
+                dataMap[KEY_PACKAGE_PATH] = packagePath.replace(originStoreCode, repositoryName)
+            }
             val deleteFlag = bkConfigFile.delete()
             if (deleteFlag) {
                 bkConfigFile.createNewFile()
