@@ -34,5 +34,7 @@ data class WorkspaceCloneReq(
     @get:Schema(title = "基线")
     val baseline: String?,
     @get:Schema(title = "区域")
-    val zoneId: String?
+    val zoneId: String?,
+    @get:Schema(title = "机型")
+    val machineType: String?
 )

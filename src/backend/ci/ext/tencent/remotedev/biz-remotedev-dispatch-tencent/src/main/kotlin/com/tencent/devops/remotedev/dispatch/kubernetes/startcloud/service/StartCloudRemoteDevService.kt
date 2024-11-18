@@ -254,7 +254,13 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun cloneWorkspaceVm(userId: String, workspaceName: String, pipelineId: String, zoneId: String): String {
+    override fun cloneWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        pipelineId: String,
+        machineType: String,
+        zoneId: String
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
@@ -263,7 +269,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 userId = userId,
                 pipelineId = pipelineId,
-                zoneId = zoneId
+                zoneId = zoneId,
+                machineType = machineType
             )
         )
         return resp.taskUid

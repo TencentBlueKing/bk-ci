@@ -406,6 +406,7 @@ class RemoteDevService @Autowired constructor(
             userId = event.userId,
             workspaceName = event.workspaceName,
             pipelineId = orderId,
+            machineType = checkNotNull(event.machineType),
             zoneId = checkNotNull(event.zoneId)
         )
     }

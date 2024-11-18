@@ -92,7 +92,13 @@ interface RemoteDevInterface {
     /**
      * 工作空间克隆
      */
-    fun cloneWorkspaceVm(userId: String, workspaceName: String, pipelineId: String, zoneId: String): String
+    fun cloneWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        pipelineId: String,
+        machineType: String,
+        zoneId: String
+    ): String
 
     /**
      * 获取工作空间web端链接

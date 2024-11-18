@@ -147,6 +147,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     zoneId = zoneId,
+                    machineType = rebuildReq.machineType,
                     gameId = null,
                     projectId = projectId
                 )
@@ -217,12 +218,19 @@ class CloneWorkspaceHandler @Autowired constructor(
 
     private fun createCheckWhenClone(old: WorkspaceRecordWithWindows, req: WorkspaceCloneReq): String {
         val zoneId = checkNotNull(req.zoneId ?: old.zoneId?.replace(Regex("\\d+"), ""))
-        val winConfigId = checkNotNull(old.winConfigId)
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
+        val windowsConfig = if (req.machineType != null) {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(req.machineType))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(req.machineType.toString())
+                )
+        } else {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(old.winConfigId))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(old.winConfigId.toString())
+                )
+        }
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
