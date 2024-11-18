@@ -57,7 +57,8 @@ gateway_tpl.flush()
 gateway_tpl.close()
 
 # 更新依赖
-os.system("/bin/bash -c dependencyBuild.sh")
+os.system("chmod +x ./dependencyBuild.sh")
+os.system("/bin/bash -c ./dependencyBuild.sh")
 
 # 打包
 os.system("helm package . --version " + os.environ.get("chart_version") + " --app-version "+os.environ.get("version"))
