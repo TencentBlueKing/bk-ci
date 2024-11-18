@@ -46,6 +46,7 @@ import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -59,6 +60,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -81,6 +83,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
+        private val syncMemberExpiredExecutorService = Executors.newFixedThreadPool(5)
         private val syncResourceMemberExecutorService = Executors.newFixedThreadPool(50)
     }
 
@@ -98,6 +101,49 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     offset = offset
                 ).data ?: break
                 batchSyncGroupAndMember(projectCodes = projectCodes.map { it.englishName })
+                offset += limit
+            } while (projectCodes.size == limit)
+        }
+    }
+
+    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) {
+        logger.info("start to sync group member expired time|$projectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
+            do {
+                val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
+                    limit = limit,
+                    offset = offset
+                ).data?.map { it.englishName } ?: break
+                projectCodes.forEach { projectCode ->
+                    syncMemberExpiredExecutorService.submit {
+                        logger.info("start to sync project group member expired time|$projectCode")
+                        val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
+                            dslContext = dslContext,
+                            projectCode = projectCode,
+                            maxExpiredTime = LocalDateTime.now()
+                        )
+                        val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
+                        memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
+                            val verifyResults = iamV2ManagerService.verifyGroupValidMember(
+                                memberId,
+                                groupInfos.joinToString(",") { it.iamGroupId.toString() }
+                            )
+                            verifyResults.forEach { (groupId, verifyResult) ->
+                                if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
+                                    syncIamGroupMember(
+                                        projectCode = projectCode,
+                                        iamGroupId = groupId
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 offset += limit
             } while (projectCodes.size == limit)
         }
