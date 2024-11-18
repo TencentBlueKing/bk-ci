@@ -71,9 +71,9 @@ class AuthCronSyncGroupAndMember(
     }
 
     /**
-     * 6小时同步一次用户过期时间
+     * 1小时同步一次用户过期时间
      * */
-    @Scheduled(initialDelay = 1000, fixedRate = 21600000)
+    @Scheduled(initialDelay = 1000, fixedRate = 3600000)
     fun syncGroupMemberExpiredTimeRegularly() {
         if (!enable) {
             return

@@ -57,4 +57,8 @@ class SimpleProjectExtService @Autowired constructor(
     ): String {
         return ""
     }
+
+    override fun enableProject(userId: String, projectId: String) {
+        return
+    }
 }
