@@ -60,6 +60,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_USER_ENV
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsGpuResourceDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -149,7 +150,9 @@ class WorkspaceService @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val taiClient: TaiClient,
     private val taiService: TaiService,
-    private val startCloudInterfaceService: StartCloudInterfaceService
+    private val startCloudInterfaceService: StartCloudInterfaceService,
+    private val windowsGpuResourceDao: WindowsGpuResourceDao
+
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -620,7 +623,8 @@ class WorkspaceService @Autowired constructor(
 
         // 获取CDS对应的母机ip信息
         val hostIps = result.mapNotNull { it.hostIp }.filter { it.isNotEmpty() }
-        val cdsInfo = startCloudInterfaceService.getCgsData(hostIps, null).associateBy { it.cgsId }
+        val cdsInfo = windowsGpuResourceDao.batchFetchWindowsGpuPool(dslContext = dslContext, hostIps = hostIps)
+            .associateBy { it.cgsId }
 
         val defaultZoneConfig = windowsResourceConfigService.getAllZone()
             .associateBy { it.zoneShortName }
