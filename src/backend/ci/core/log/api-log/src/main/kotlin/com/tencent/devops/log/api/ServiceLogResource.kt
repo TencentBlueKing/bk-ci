@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.*
 import javax.ws.rs.core.Response
 
 /**
@@ -98,7 +99,10 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("pipelineCheckFlag")
-        pipelineCheckFlag: Boolean
+        pipelineCheckFlag: Boolean,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false
     ): Result<QueryLogs>
 
     @Operation(summary = "获取更多日志")

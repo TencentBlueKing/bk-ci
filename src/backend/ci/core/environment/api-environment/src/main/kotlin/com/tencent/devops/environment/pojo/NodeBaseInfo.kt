@@ -62,5 +62,7 @@ data class NodeBaseInfo(
     @get:Schema(title = "当前环境是否启用这个 node")
     val envEnableNode: Boolean?,
     @get:Schema(title = "最后更新时间")
-    val lastModifyTime: Long? = null
+    val lastModifyTime: Long? = null,
+    @get:Schema(title = "机型")
+    val size: String? = null
 )

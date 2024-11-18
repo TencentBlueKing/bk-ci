@@ -46,6 +46,15 @@ class EnvNodeDao {
         }
     }
 
+    fun listNodeIds(dslContext: DSLContext, projectId: String, nodeIds: List<Long>): List<TEnvNodeRecord> {
+        with(TEnvNode.T_ENV_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetch()
+        }
+    }
+
     fun count(dslContext: DSLContext, projectId: String, envId: Long): Int {
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.selectCount()

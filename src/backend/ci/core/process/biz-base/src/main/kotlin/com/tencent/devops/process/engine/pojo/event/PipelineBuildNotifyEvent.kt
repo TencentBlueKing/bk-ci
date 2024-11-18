@@ -27,17 +27,17 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
 /**
  * 流水线构建通知
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
+@Event(StreamBinding.PIPELINE_BUILD_NOTIFY)
 data class PipelineBuildNotifyEvent(
     override val source: String,
     override val projectId: String,
@@ -56,6 +56,5 @@ data class PipelineBuildNotifyEvent(
     val position: String?,
     val stageId: String?,
     override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

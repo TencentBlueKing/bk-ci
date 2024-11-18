@@ -36,11 +36,12 @@ import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -78,7 +79,8 @@ class ProjectApprovalDao {
                 TIPS_STATUS,
                 PROJECT_TYPE,
                 PRODUCT_ID,
-                PRODUCT_NAME
+                PRODUCT_NAME,
+                PROPERTIES
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -102,7 +104,10 @@ class ProjectApprovalDao {
                 tipsStatus,
                 projectCreateInfo.projectType,
                 projectCreateInfo.productId,
-                projectCreateInfo.productName
+                projectCreateInfo.productName,
+                projectCreateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                }
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -122,6 +127,9 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectCreateInfo.projectType)
                 .set(PRODUCT_ID, projectCreateInfo.productId)
                 .set(PRODUCT_NAME, projectCreateInfo.productName)
+                .set(PROPERTIES, projectCreateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .execute()
         }
     }
@@ -156,6 +164,9 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
                 .set(PRODUCT_NAME, projectUpdateInfo.productName)
+                .set(PROPERTIES, projectUpdateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -187,6 +198,9 @@ class ProjectApprovalDao {
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
                 .set(PRODUCT_ID, projectApprovalInfo.productId)
                 .set(PRODUCT_NAME, projectApprovalInfo.productName)
+                .set(PROPERTIES, projectApprovalInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -287,7 +301,8 @@ class ProjectApprovalDao {
                 tipsStatus = tipsStatus,
                 projectType = projectType,
                 productId = productId,
-                productName = productName
+                productName = productName,
+                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
             )
         }
     }

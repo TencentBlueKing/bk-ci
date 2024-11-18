@@ -68,6 +68,10 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
         }
     }
 
+    fun getProjectDialect(projectId: String): String? {
+        return getProject(projectId = projectId)?.properties?.pipelineDialect
+    }
+
     private fun getProjectInner(projectId: String): ProjectVO {
         return client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw NotFoundException("Fail to find the project info of project($projectId)")

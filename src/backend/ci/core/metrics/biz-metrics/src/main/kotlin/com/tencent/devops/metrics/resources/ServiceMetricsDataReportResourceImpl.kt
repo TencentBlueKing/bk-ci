@@ -28,15 +28,18 @@
 package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 
 @RestResource
 class ServiceMetricsDataReportResourceImpl constructor(
+    private val metricsDataReportService: MetricsDataReportService,
     private val metricsThirdPlatformDataReportService: MetricsThirdPlatformDataReportService
 ) : ServiceMetricsDataReportResource {
 
@@ -50,5 +53,9 @@ class ServiceMetricsDataReportResourceImpl constructor(
 
     override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Result<Boolean> {
         return Result(metricsThirdPlatformDataReportService.metricsTurboDataReport(turboDataReportDTO))
+    }
+
+    override fun metricsJobDispatchDataReport(dispatchJobMetricsData: DispatchJobMetricsData): Result<Boolean> {
+        return Result(metricsDataReportService.metricsJobDispatchDataReport(dispatchJobMetricsData))
     }
 }

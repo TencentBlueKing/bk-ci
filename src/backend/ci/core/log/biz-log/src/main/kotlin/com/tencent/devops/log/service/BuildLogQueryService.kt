@@ -67,7 +67,8 @@ class BuildLogQueryService @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean? = null,
-        pipelineCheckFlag: Boolean = true
+        pipelineCheckFlag: Boolean = true,
+        reverse: Boolean?
     ): Result<QueryLogs> {
         if (pipelineCheckFlag) {
             validateAuth(
@@ -91,7 +92,8 @@ class BuildLogQueryService @Autowired constructor(
                 containerHashId = containerHashId,
                 executeCount = executeCount,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = reverse
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)

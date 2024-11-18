@@ -28,9 +28,10 @@
 package com.tencent.devops.common.pipeline.pojo
 
 data class BuildNo(
-    var buildNo: Int,
+    var buildNo: Int, // 用于保存编排中定义的构建号初始值
     val buildNoType: BuildNoType,
-    var required: Boolean? = false
+    var required: Boolean? = false,
+    var currentBuildNo: Int? = null // 用于替换当前的最新值，如果是创建流水线则不传值
 )
 
 enum class BuildNoType {

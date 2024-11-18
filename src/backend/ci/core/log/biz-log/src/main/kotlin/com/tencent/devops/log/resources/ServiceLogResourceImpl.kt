@@ -65,7 +65,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
-        pipelineCheckFlag: Boolean
+        pipelineCheckFlag: Boolean,
+        reverse: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
             userId = userId,
@@ -81,6 +82,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
+            reverse = reverse ?: false,
             pipelineCheckFlag = pipelineCheckFlag
         )
     }
