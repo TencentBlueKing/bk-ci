@@ -326,6 +326,9 @@
                     this.inputValue = ''
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 }
+            },
+            searchKeyList () {
+                this.searchNode()
             }
         },
         methods: {
