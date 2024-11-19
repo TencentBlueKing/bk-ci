@@ -30,10 +30,13 @@ package com.tencent.devops.artifactory.service.bkrepo
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.HapJson5Info
+import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
@@ -416,19 +419,30 @@ open class BkRepoDownloadService(
             "outerHapJson5Url, userId: $userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
-        val normalizedPath = URLEncoder.encode(
-            argPath,
-            "utf-8"
-        ).replace("+", "%20")
-        val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
-                "$artifactoryType/hapJson5?path=$normalizedPath" +
-                "&x-devops-project-id=$projectId"
+//        val normalizedPath = URLEncoder.encode(
+//            argPath,
+//            "utf-8"
+//        ).replace("+", "%20")
+
+        val hapJson5InfoJson = JsonUtil.toSortJson(
+            HapJson5Info(
+                userId = userId,
+                ttl = ttl,
+                filePath = argPath
+            )
+        )
+        val token = client.get(ServiceArtifactoryDownLoadResource::class)
+            .createTokenForJson(TokenForJsonRequest(hapJson5InfoJson, 60)).data!!
+
+        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/external/artifactories" +
+                "/$projectId/$artifactoryType/$token/hapJson5.json5"
+
         // 审计
         audit(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
-            path = normalizedPath
+            path = argPath
         )
         return Url(url)
     }

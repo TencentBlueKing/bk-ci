@@ -15,17 +15,17 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
-import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class UpgradeWorkspaceHandler @Autowired constructor(
+class CloneWorkspaceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
@@ -59,8 +59,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) {
 
     @ActionAuditRecord(
@@ -74,19 +73,18 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_EDIT_TYPE_CONTENT
     )
-    fun upgradeWorkspace(
+    fun cloneWorkspace(
         userId: String,
         projectId: String,
         workspaceName: String,
-        rebuildReq: WorkspaceUpgradeReq
+        rebuildReq: WorkspaceCloneReq
     ): WorkspaceResponse {
-        logger.info("$userId upgrade project $projectId workspace $workspaceName|$rebuildReq")
+        logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
@@ -96,9 +94,10 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to upgrade $workspaceName")
+                params = arrayOf("You do not have permission to clone $workspaceName")
             )
         }
+
         RedisCallLimit(
             redisOperation = redisOperation,
             lockKey = "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -110,37 +109,34 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                     params = arrayOf(
                         workspace.workspaceName,
-                        "status is already ${workspace.status}, can't upgrade now"
+                        "status is already ${workspace.status}, can't clone now"
                     )
                 )
             }
-            createCheckWhenUpgrade(
-                old = workspace,
-                machineType = rebuildReq.machineType
-            )
+            val zoneId = createCheckWhenClone(old = workspace, req = rebuildReq)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.UPGRADE,
-                actionMessage = "start upgrade"
+                action = WorkspaceAction.CLONE,
+                actionMessage = "start clone"
             )
 
             workspaceDao.updateWorkspaceStatus(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.UPGRADING
+                status = WorkspaceStatus.CLONING
             )
 
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.UPGRADE,
+                action = WorkspaceAction.CLONE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status,
-                    WorkspaceStatus.UPGRADING
+                    WorkspaceStatus.CLONING
                 )
             )
 
@@ -148,12 +144,14 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 WorkspaceOperateEvent(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
-                    type = UpdateEventType.UPGRADE,
+                    type = UpdateEventType.CLONE,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
+                    zoneId = zoneId,
                     machineType = rebuildReq.machineType,
                     gameId = null,
-                    projectId = projectId
+                    projectId = projectId,
+                    live = rebuildReq.live
                 )
             )
 
@@ -162,39 +160,40 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 workspaceName = workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_UPGRADE,
+                type = WebSocketActionType.WORKSPACE_CLONE,
                 status = true,
-                action = WorkspaceAction.UPGRADING,
+                action = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = workspace.ownerType,
+                ownerType = WorkspaceOwnerType.PROJECT,
                 projectId = projectId
             )
 
             return WorkspaceResponse(
                 workspaceName = workspaceName,
                 workspaceHost = "",
-                status = WorkspaceAction.UPGRADING,
+                status = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START
             )
         }
     }
 
-    fun checkAndUpgradeVm(
+    fun checkAndCloneVm(
         workspaceName: String
     ) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: run {
-            logger.info("checkAndUpgradeVm not find workspace $workspaceName")
+            logger.info("checkAndCloneVm not find workspace $workspaceName")
             return
         }
         val bakWorkspaceName = ws.bakWorkspaceName
-        if (bakWorkspaceName == null || !bakWorkspaceName.startsWith("upgrade")) {
-            logger.info("checkAndUpgradeVm not need upgrade workspace $workspaceName")
+        if (bakWorkspaceName == null || !bakWorkspaceName.startsWith("clone")) {
+            logger.info("checkAndCloneVm not need clone workspace $workspaceName")
             return
         }
+        val oldWorkspaceName = bakWorkspaceName.split(".")[1]
         // 同步原有拥有者分配者信息
-        val shareInfos = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName = bakWorkspaceName)
+        val shareInfos = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName = oldWorkspaceName)
         deliverControl.assignUser2Workspace(
             userId = ws.createUserId,
             workspaceName = ws.workspaceName,
@@ -206,38 +205,34 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             checkPermission = false
         )
         // 别名等信息同步
-        val old = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = bakWorkspaceName)
+        val old = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = oldWorkspaceName)
         if (old != null) {
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = dslContext,
                 projectId = ws.projectId,
                 workspaceName = workspaceName,
                 workspaceProperty = WorkspaceProperty(
-                    old.displayName, old.remark, old.labels
+                    "[克隆]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
                 )
             )
-            if (old.nodeHashId != null) {
-                workspaceWindowsDao.updateNodeHashId(dslContext, old.nodeHashId, workspaceName)
-            }
-
-            // 删除旧云桌面
-            if (old.status.checkUnused()) {
-                deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
-            }
         }
     }
 
-    private fun createCheckWhenUpgrade(
-        old: WorkspaceRecordWithWindows,
-        machineType: String
-    ) {
-        val zoneId = checkNotNull(old.zoneId)
-        val winConfigId = checkNotNull(old.winConfigId)
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
+    private fun createCheckWhenClone(old: WorkspaceRecordWithWindows, req: WorkspaceCloneReq): String {
+        val zoneId = checkNotNull(req.zoneId ?: old.zoneId?.replace(Regex("\\d+"), ""))
+        val windowsConfig = if (req.machineType != null) {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(req.machineType))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(req.machineType.toString())
+                )
+        } else {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(old.winConfigId))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(old.winConfigId.toString())
+                )
+        }
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
@@ -245,7 +240,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 params = arrayOf(windowsConfig.size)
             )
         }
-        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId.replace(Regex("\\d+"), ""))
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(zoneId)
@@ -257,28 +252,29 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             )
         }
 
-        if (old.ownerType.projectUse() && old.winConfigId != windowsConfig.id?.toInt()) {
+        if (old.ownerType == WorkspaceOwnerType.PROJECT) {
             val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
                 dslContext = dslContext,
                 projectId = old.projectId
             )
             windowsResourceConfigService.createCheckSpecLimit(
-                windowsType = machineType,
+                windowsType = windowsConfig.size,
                 projectId = old.projectId,
                 workspaceNames = workspaceNames,
                 createCount = 1
             )
         }
-        windowsResourceConfigService.createCheckWhenWinNotAlready(
+
+        return windowsResourceConfigService.createCheckWhenWinNotAlready(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = 1,
             quotaType = QuotaType.parse(windowsZone.type)
-        )
+        ).first()
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UpgradeWorkspaceHandler::class.java)
+        private val logger = LoggerFactory.getLogger(CloneWorkspaceHandler::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 }

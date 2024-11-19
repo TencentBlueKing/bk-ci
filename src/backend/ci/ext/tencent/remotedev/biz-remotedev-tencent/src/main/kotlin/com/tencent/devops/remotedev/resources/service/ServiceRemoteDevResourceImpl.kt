@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -55,6 +56,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -99,7 +101,8 @@ class ServiceRemoteDevResourceImpl(
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val workspaceRecordService: WorkspaceRecordService,
-    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -171,23 +174,6 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkUserIpPermission(user: String, ip: String): Result<Boolean> {
         return Result(desktopWorkspaceService.checkUserIpPermission(user, ip))
-    }
-
-    override fun createWinWorkspaceByVm(
-        userId: String,
-        oldWorkspaceName: String?,
-        projectId: String?,
-        ownerType: WorkspaceOwnerType?,
-        uid: String
-    ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(
-            userId = userId,
-            oldWorkspaceName = oldWorkspaceName,
-            projectCode = projectId,
-            ownerType = ownerType,
-            uid = uid
-        )
-        return Result(res)
     }
 
     override fun assignWorkspace(
@@ -384,6 +370,21 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
+    override fun workspaceClone(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean> {
+        cloneWorkspaceHandler.cloneWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            rebuildReq = req
+        )
+        return Result(true)
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
@@ -436,11 +437,12 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(
-            searchCustom = false,
-            quotaType = type,
-            withProjectLimit = null
-        )
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                searchCustom = false,
+                quotaType = type,
+                withProjectLimit = null
+            )
         )
     }
 

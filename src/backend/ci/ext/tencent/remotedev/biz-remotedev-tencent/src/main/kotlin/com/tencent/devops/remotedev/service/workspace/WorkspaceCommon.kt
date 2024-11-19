@@ -304,6 +304,11 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.EXCEPTION_CREATE_FAILED
             }
 
+            workspaceInfo.status == EnvStatusEnum.cloning -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.CLONING)
+                return WorkspaceStatus.CLONING
+            }
+
             workspaceInfo.status == EnvStatusEnum.unknow -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
