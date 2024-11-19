@@ -1,15 +1,9 @@
 <template>
   <bk-loading class="manage" :loading="isLoading"  :zIndex="100">
     <div class="manage-search">
-      <bk-search-select
-        v-model="searchValue"
-        :data="searchData"
-        unique-select
-        class="multi-search"
-        value-behavior="need-key"
-        :placeholder="filterTips"
-        :get-menu-list="getMenuList"
-        @search="handleSearch(searchValue)"
+      <manage-search
+        ref="manageSearchRef"
+        @search-init="init"
       />
     </div>
     <div class="manage-article" v-if="memberList.length">
@@ -22,7 +16,7 @@
           :active-tab="activeTab"
           @refresh="refresh"
           @handle-click="asideClick"
-          @page-change="handleAsidePageChange"
+          @page-change="getAsidePageChange"
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
         />
@@ -79,6 +73,13 @@
         </div>
       </div>
     </div>
+    <bk-exception
+      v-else-if="isNotProject"
+      :description="t('请先选择项目')"
+      scene="part"
+      type="empty"
+    >
+    </bk-exception>
     <bk-exception
       v-else
       :description="t('没有数据')"
@@ -369,6 +370,7 @@ import ProjectUserSelector from '@/components/project-user-selector';
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
+import manageSearch from "./manage-search.vue";
 import { storeToRefs } from 'pinia';
 import { batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants.js";
 
@@ -378,6 +380,7 @@ const route = useRoute();
 const formRef = ref(null);
 const renewalRef = ref(null);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
+const isNotProject = computed(() => projectId.value === 'my-project' || !projectId.value);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
 const sliderTitle = ref();
@@ -395,7 +398,6 @@ const rules = {
     { required: true, message: t('请输入移交人'), trigger: 'blur' },
   ],
 };
-const searchValue = ref([]);
 const inoperableCount = ref();
 const totalCount = ref();
 const renewalLoading = ref(false);
@@ -406,25 +408,9 @@ const loadingMap = {
   handover: handoverLoading,
   remove: removerLoading
 };
-const filterTips = computed(() => {
-  return searchData.value.map(item => item.name).join(' / ');
-});
-const searchData = computed(() => {
-  const data = [
-    {
-      name: t('用户'),
-      id: 'user',
-    },
-    {
-      name: t('组织架构'),
-      id: 'department',
-    },
-  ]
-  return data.filter(data => {
-    return !searchValue.value.find(val => val.id === data.id)
-  })
-});
+const searchGroup = ref();
 const manageAsideRef = ref(null);
+const manageSearchRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 const operatorLoading = ref(false);
@@ -491,15 +477,11 @@ const {
 onMounted(() => {
   init(true);
 });
-
-watch(searchValue, (newSearchValue) => {
-  init(undefined, newSearchValue);
+watch(projectId, () => {
+  init(true);
 });
-function handleSearch (value) {
-  if(!value.length) return;
-  init(undefined, value);
-}
 function init (flag, searchValue) {
+  searchGroup.value = searchValue
   memberPagination.value.current = 1;
   asideItem.value = undefined;
   getProjectMembers(projectId.value, flag, searchValue);
@@ -507,8 +489,12 @@ function init (flag, searchValue) {
 function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
+function getAsidePageChange (current, projectId) {
+  handleAsidePageChange(current, projectId, searchGroup.value)
+}
 async function refresh () {
-  getProjectMembers(projectId.value, true, searchValue.value)
+  manageSearchRef.value?.clearSearch();
+  getProjectMembers(projectId.value, true);
 }
 /**
  * 移交弹窗打开时
@@ -725,26 +711,6 @@ function asideRemoveConfirm (removeUser, handOverForm) {
   handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
 
-async function getMenuList (item, keyword) {
-  const query = {
-    memberType: item.id,
-    page: 1,
-    pageSize: 400
-  }
-  if (item.id === 'user' && keyword) {
-    query.userName = keyword
-  } else if (item.id === 'department' && keyword) {
-    query.deptName = keyword
-  }
-  const res = await http.getProjectMembers(projectId.value, query)
-  return res.records.map(i => {
-    return {
-      ...i,
-      displayName: i.name || i.id,
-      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
-    }
-  })
-}
 function handleChangeOverFormName ({list, userList}) {
   if(!list){
     Object.assign(handOverForm.value, getHandOverForm());
@@ -776,10 +742,6 @@ function closeDeptListPermissionDialog () {
     background: #FFFFFF;
     padding: 16px 24px;
     box-shadow: 0 2px 4px 0 #1919290d;
-
-    .multi-search {
-      width: 50%;
-    }
   }
 
   .manage-article {

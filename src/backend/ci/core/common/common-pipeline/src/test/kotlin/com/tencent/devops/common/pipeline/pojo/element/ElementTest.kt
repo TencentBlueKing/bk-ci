@@ -51,7 +51,7 @@ class ElementTest {
     @Test
     fun testElementJsonOrder() {
         val jsonFile = ElementTest::class.java.classLoader.getResource("windowsElement.json")
-        val expected = jsonFile!!.readText().trim('\n')
+        val expected = jsonFile!!.readText().trim()
         val wel = WindowsScriptElement(
             id = "e-326ce1c320204980a3d2a0f241bccd63",
             name = "batch script",
@@ -127,15 +127,15 @@ class ElementTest {
     }
 
     @Test
-    fun isElementEnable() {
+    fun elementEnabled() {
         val element = ManualTriggerElement()
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = null
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = elementAdditionalOptions(enable = true)
-        assertTrue(element.isElementEnable())
+        assertTrue(element.elementEnabled())
         element.additionalOptions = elementAdditionalOptions(enable = false)
-        assertFalse(element.isElementEnable())
+        assertFalse(element.elementEnabled())
     }
 
     @Test

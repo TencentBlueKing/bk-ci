@@ -29,10 +29,10 @@ package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
 
-@Event(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT)
+@Event(StreamBinding.PIPELINE_BUILD_QUALITY_REVIEW_FANOUT)
 data class PipelineBuildQualityReviewBroadCastEvent(
     override val source: String,
     override val projectId: String,

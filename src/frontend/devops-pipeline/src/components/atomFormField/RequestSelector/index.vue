@@ -1,5 +1,6 @@
 <template>
-    <selector :popover-min-width="popoverMinWidth"
+    <selector
+        :popover-min-width="popoverMinWidth"
         :tools="tools"
         :name="name"
         :edit="edit"
@@ -18,7 +19,10 @@
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
-                <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
+                <a
+                    :href="urlParse(webUrl + itemTargetUrl, { projectId })"
+                    target="_blank"
+                >
                     <i class="devops-icon icon-plus-circle" />
                     {{ itemText || $t('template.relatedCodelib') }}
                 </a>
@@ -116,6 +120,8 @@
             getResponseData (response, dataPath = 'data.records', defaultVal = []) {
                 try {
                     switch (true) {
+                        case Array.isArray(response):
+                            return response
                         case response.data && response.data.resources && Array.isArray(response.data.resources):
                             return response.data.resources
                         case response.data && response.data.record && Array.isArray(response.data.record):

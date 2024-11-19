@@ -35,5 +35,6 @@ data class ReviewVariable(
     val type: String,
     val default: Any?,
     val values: Any?,
+    val required: Boolean?,
     val description: String?
 )

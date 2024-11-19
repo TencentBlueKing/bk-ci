@@ -30,21 +30,21 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
+import java.util.regex.Pattern
 import java.util.stream.Collectors
-import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
-
-    private val logger = LoggerFactory.getLogger(ITask::class.java)
-
     private val environment = HashMap<String, String>()
 
     private val monitorData = HashMap<String, Any>()
@@ -57,6 +57,13 @@ abstract class ITask {
 
     /* 存储常量的key */
     private lateinit var constVar: List<String>
+    /*  */
+    private lateinit var dialect: IPipelineDialect
+
+    companion object {
+        // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.-]*"
+    }
 
     fun run(
         buildTask: BuildTask,
@@ -67,6 +74,7 @@ abstract class ITask {
             .filter { it.readOnly == true }
             .map { it.key }
             .collect(Collectors.toList())
+        dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
         execute(buildTask, buildVariables, workspace)
     }
 
@@ -95,23 +103,44 @@ abstract class ITask {
     )
 
     protected fun addEnv(env: Map<String, String>) {
-        if (this::constVar.isInitialized) {
-            var errFlag = false
-            env.forEach { (key, _) ->
-                if (key in constVar) {
-                    LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
-                    errFlag = true
-                }
+        var errReadOnlyFlag = false
+        var errChineseVarName = false
+        val errChineseVars = mutableSetOf<String>()
+        env.keys.forEach { key ->
+            if (this::constVar.isInitialized && key in constVar) {
+                LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
+                errReadOnlyFlag = true
             }
-            if (errFlag) {
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, key)) {
+                errChineseVars.add(key)
+                errChineseVarName = true
+            }
+        }
+        if (errReadOnlyFlag) {
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+        }
+        if (this::dialect.isInitialized) {
+            if (errChineseVarName && !dialect.supportChineseVarName()) {
+                LoggerService.addWarnLine(
+                    "Variable $errChineseVars name is illegal,Variable names can only use letters, " +
+                            "numbers and underscores, " +
+                            "and the first character cannot start with a number"
+                )
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                            "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
+                            " message: variable name is illegal.",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
             }
         }
+
         environment.putAll(env)
     }
 

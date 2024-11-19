@@ -361,6 +361,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
+    const val ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH = "2101256" // 流水线启动参数{0}超出4000长度限制
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -520,6 +521,7 @@ object ProcessMessageCode {
     const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+    const val BK_STAGE_REVIEW_EMPTY_REVIEWER = "bkStageReviewEmptyViewer" // 由于无审核人，被系统自动驳回
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
@@ -552,4 +554,8 @@ object ProcessMessageCode {
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
+
+    // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
+        "bkNotSubPipelineExecutePermissionResetErrorTitle"
 }

@@ -4,13 +4,15 @@
         <base-info
             :pipeline-setting="pipelineSetting"
             :editable="editable"
-            :handle-base-info-change="handleBaseInfoChange">
+            :handle-base-info-change="handleBaseInfoChange"
+        >
         </base-info>
         <running-lock
             :pipeline-setting="pipelineSetting"
             :editable="editable"
             :handle-running-lock-change="handleRunningLockChange"
-            style="margin-top: 24px;">
+            style="margin-top: 24px;"
+        >
         </running-lock>
     </section>
 </template>
@@ -55,7 +57,7 @@
         },
         methods: {
             handleBaseInfoChange (name, value) {
-                if (this.pipelineSetting[name] !== value) {
+                if (this.pipelineSetting[name] !== value || name === 'pipelineAsCodeSettings') {
                     this.updatePipelineSetting({
                         setting: this.pipelineSetting,
                         param: {

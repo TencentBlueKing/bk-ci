@@ -1,28 +1,66 @@
 <template>
-    <div :class="{
-        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
-    }" :id="container.id">
-        <h3 :class="jobTitleCls" @click.stop="showContainerPanel">
-            <status-icon type="container" :editable="reactiveData.editable" :container-disabled="disabled"
-                :status="containerStatus" :depend-on-value="dependOnValue">
+    <div
+        :class="{
+            'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
+        }"
+        :id="container.id"
+    >
+        <h3
+            :class="jobTitleCls"
+            @click.stop="showContainerPanel"
+        >
+            <status-icon
+                type="container"
+                :editable="reactiveData.editable"
+                :container-disabled="disabled"
+                :status="containerStatus"
+                :depend-on-value="dependOnValue"
+            >
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span :class="displayNameCls" :title="displayName">
+                <span
+                    :class="displayNameCls"
+                    :title="displayName"
+                >
                     {{ displayName }}
                 </span>
             </p>
-            <container-type :class="containerTypeCls" :container="container"
-                v-if="!reactiveData.canSkipElement"></container-type>
-            <Logo v-if="showCopyJob && !container.isError" :title="t('copyJob')" class="copyJob"
-                @click.stop="handleCopyContainer" name="clipboard" size="16" />
-            <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
-            <span @click.stop v-if="reactiveData.canSkipElement">
-                <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer"
-                    :disabled="disabled"></bk-checkbox>
+            <container-type
+                :class="containerTypeCls"
+                :container="container"
+                v-if="!reactiveData.canSkipElement"
+            ></container-type>
+            <Logo
+                v-if="showCopyJob && !container.isError"
+                :title="t('copyJob')"
+                class="copyJob"
+                @click.stop="handleCopyContainer"
+                name="clipboard"
+                size="16"
+            />
+            <i
+                v-if="showCopyJob"
+                @click.stop="deleteJob"
+                class="add-plus-icon close"
+            />
+            <span
+                @click.stop
+                v-if="reactiveData.canSkipElement"
+            >
+                <bk-checkbox
+                    class="atom-canskip-checkbox"
+                    v-model="container.runContainer"
+                    :disabled="disabled"
+                ></bk-checkbox>
             </span>
-            <Logo v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
-            " name="matrix" size="16" class="matrix-flag-icon">
+            <Logo
+                v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
+                "
+                name="matrix"
+                size="16"
+                class="matrix-flag-icon"
+            >
             </Logo>
             <Logo
                 name="angle-circle-down"
@@ -31,10 +69,20 @@
                 :class="matrixFoldLogoCls"
             >
             </Logo>
-            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">
+            <bk-button
+                v-if="showDebugBtn"
+                class="debug-btn"
+                theme="warning"
+                @click.stop="debugDocker"
+            >
                 {{ t("debugConsole") }}
             </bk-button>
-            <Logo v-if="container.locateActive" name="location-right" class="container-locate-icon" size="18" />
+            <Logo
+                v-if="container.locateActive"
+                name="location-right"
+                class="container-locate-icon"
+                size="18"
+            />
         </h3>
         <atom-list
             v-if="showAtomList"

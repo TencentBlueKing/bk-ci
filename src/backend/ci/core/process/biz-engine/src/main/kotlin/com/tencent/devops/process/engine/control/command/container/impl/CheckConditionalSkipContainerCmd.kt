@@ -61,7 +61,7 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.status.isReadyToRun()
+                commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -108,6 +108,9 @@ class CheckConditionalSkipContainerCmd constructor(
         val jobControlOption = containerControlOption.jobControlOption
         val conditions = jobControlOption.customVariables ?: emptyList()
 
+        // #10751 如果设置了job不可用，则直接跳过，无需判断后续的条件
+        if (!jobControlOption.enable) return true
+
         val message = StringBuilder()
         val needSkip = if (containerControlOption.inFinallyStage) {
             skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
@@ -148,7 +151,7 @@ class CheckConditionalSkipContainerCmd constructor(
         if (needSkip) {
             LOG.info(
                 "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
             )
         }
         return needSkip

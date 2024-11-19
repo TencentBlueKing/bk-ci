@@ -6,7 +6,7 @@ const getters: GetterTree<RootState, any> = {
     getCollectServices: (state: RootState) => {
         return state.services.reduce((collects: any, service: any) => {
             Array.isArray(service.children) && service.children.forEach((child: any) => {
-                if (child.collected) {
+                if (child.collected && child.status !== 'developing' && child.status !== 'planning') {
                     collects.push(child)
                 }
             })

@@ -46,10 +46,14 @@ open class DictionaryContextData : AbsDictionaryContextData() {
         return result
     }
 
-    override fun fetchValue(): Map<String, Any> {
+    override fun fetchValue(): Any {
         val map = mutableMapOf<String, Any>()
         if (mList.isNotEmpty()) {
             mList.forEach {
+                if (it.value is DictionaryContextDataWithVal) {
+                    map[it.key] = it.value.fetchValueNative()
+                    return@forEach
+                }
                 map[it.key] = it.value?.fetchValue() ?: ""
             }
         }

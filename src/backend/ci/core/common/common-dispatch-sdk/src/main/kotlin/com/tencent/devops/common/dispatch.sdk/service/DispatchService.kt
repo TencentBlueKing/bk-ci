@@ -48,8 +48,9 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KE
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -65,15 +66,15 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import feign.RetryableException
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
@@ -154,10 +155,33 @@ class DispatchService constructor(
     }
 
     fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
-        val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(event)
+        return checkRunning(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            containerId = event.containerId,
+            retryTime = event.retryTime,
+            executeCount = event.executeCount,
+            logTag = "$event"
+        )
+    }
+
+    fun checkRunning(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        retryTime: Int,
+        executeCount: Int?,
+        logTag: String?
+    ): Boolean {
+        val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            logTag = logTag
+        )
 
         var needStart = true
-        if (event.executeCount != startBuildTask.executeCount) {
+        if (executeCount != startBuildTask.executeCount) {
             // 如果已经重试过或执行次数不匹配则直接丢弃
             needStart = false
         } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
@@ -168,9 +192,9 @@ class DispatchService constructor(
         }
 
         if (!needStart) {
-            logger.warn("The build event($event) is not running")
+            logger.warn("The build event($logTag) is not running")
             // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
-            if (event.retryTime > 1 || buildContainer.status.isCancel()) {
+            if (retryTime > 1 || buildContainer.status.isCancel()) {
                 return false
             }
 
@@ -185,30 +209,75 @@ class DispatchService constructor(
         return true
     }
 
-    fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
-        logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
+    fun onFailure(
+        event: PipelineAgentStartupEvent,
+        e: BuildFailureException
+    ) {
+        onFailure(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            e = e,
+            logTag = "$event"
+        )
+    }
+
+    fun onFailure(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        e: BuildFailureException,
+        logTag: String?
+    ) {
+        onContainerFailure(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            e = e,
+            logTag
+        )
+        DispatchLogRedisUtils.removeRedisExecuteCount(buildId)
+    }
+
+    private fun onContainerFailure(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        e: BuildFailureException,
+        logTag: String?
+    ) {
+        logger.warn("[$buildId|$vmSeqId] Container startup failure")
         try {
-            val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(event)
+            val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(
+                projectId = projectId,
+                buildId = buildId,
+                containerId = vmSeqId,
+                logTag = logTag
+            )
             if (buildContainer.status.isCancel() || startBuildTask.status.isCancel()) {
                 return
             }
 
             client.get(ServiceBuildResource::class).setVMStatus(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
                 status = BuildStatus.FAILED,
                 errorType = e.errorType,
                 errorCode = e.errorCode,
                 errorMsg = e.formatErrorMessage
             )
         } catch (ignore: ClientException) {
-            logger.error("SystemErrorLogMonitor|onContainerFailure|${event.buildId}|error=${e.message},${e.errorCode}")
+            logger.error("SystemErrorLogMonitor|onContainerFailure|$buildId|error=${e.message},${e.errorCode}")
         }
     }
 
-    fun redispatch(event: IPipelineEvent) {
+    fun redispatch(event: IEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }
@@ -254,40 +323,55 @@ class DispatchService constructor(
      * 针对服务间调用出现 Connection refused 的异常，进行重试
      */
     private fun getContainerStartupInfoWithRetry(
-        event: PipelineAgentStartupEvent,
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        logTag: String?,
         retryTimes: Int = RETRY_TIMES
     ): Pair<PipelineBuildTask, PipelineBuildContainer> {
-        with(event) {
-            try {
-                return getContainerStartupInfo(event)
-            } catch (e: RetryableException) {
-                if (retryTimes > 0) {
-                    logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| getContainerStartupInfo failed, " +
-                            "retryTimes=$retryTimes", e.message)
-                    Thread.sleep(1000)
-                    return getContainerStartupInfoWithRetry(event, retryTimes - 1)
-                } else {
-                    throw e
-                }
+        try {
+            return getContainerStartupInfo(
+                projectId = projectId,
+                buildId = buildId,
+                containerId = containerId,
+                logTag = logTag
+            )
+        } catch (e: RetryableException) {
+            if (retryTimes > 0) {
+                logger.warn("[$buildId]|[$containerId]| getContainerStartupInfo failed, " +
+                        "retryTimes=$retryTimes", e.message)
+                Thread.sleep(1000)
+                return getContainerStartupInfoWithRetry(
+                    projectId = projectId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    logTag = logTag,
+                    retryTimes = retryTimes - 1
+                )
+            } else {
+                throw e
             }
         }
     }
 
     private fun getContainerStartupInfo(
-        event: PipelineAgentStartupEvent
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        logTag: String?
     ): Pair<PipelineBuildTask, PipelineBuildContainer> {
         // 判断流水线当前container是否在运行中
         val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            containerId = event.containerId,
-            taskId = VMUtils.genStartVMTaskId(event.containerId)
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            taskId = VMUtils.genStartVMTaskId(containerId)
         )
         val startBuildTask = statusResult.data?.startBuildTask
         val buildContainer = statusResult.data?.buildContainer
         if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
             logger.warn(
-                "The build event($event) fail to check if pipeline task is running " +
+                "The build event($logTag) fail to check if pipeline task is running " +
                         "because of statusResult(${statusResult.message})"
             )
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)

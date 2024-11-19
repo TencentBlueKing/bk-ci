@@ -1,15 +1,50 @@
 <template>
     <section>
-        <bk-form form-type="vertical" class="new-ui-form" :key="param">
-            <form-field :hide-colon="true" :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="idValidRule" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+        <bk-form
+            form-type="vertical"
+            class="new-ui-form"
+            :key="param"
+        >
+            <form-field
+                :hide-colon="true"
+                :required="true"
+                :label="idLabel"
+                :is-error="errors.has(`pipelineParam.id`)"
+                :error-msg="errors.first(`pipelineParam.id`)"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :data-vv-scope="'pipelineParam'"
+                    v-validate="idValidRule"
+                    name="id"
+                    :placeholder="$t('nameInputTips')"
+                    :value="param.id"
+                />
             </form-field>
 
-            <form-field :hide-colon="true" :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="`notInList:${getUniqueArgs('name')}`" name="name" :placeholder="$t('newui.pipelineParam.nameInputTips')" :value="param.name" />
+            <form-field
+                :hide-colon="true"
+                :label="nameLabel"
+                :is-error="errors.has('pipelineParam.name')"
+                :error-msg="errors.first('pipelineParam.name')"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :data-vv-scope="'pipelineParam'"
+                    v-validate="`notInList:${getUniqueArgs('name')}`"
+                    name="name"
+                    :placeholder="$t('newui.pipelineParam.nameInputTips')"
+                    :value="param.name"
+                />
             </form-field>
 
-            <form-field :hide-colon="true" :required="true" :label="typeLabel">
+            <form-field
+                :hide-colon="true"
+                :required="true"
+                :label="typeLabel"
+            >
                 <selector
                     :popover-min-width="246"
                     :disabled="disabled"
@@ -29,8 +64,17 @@
             >
             </param-value-option>
 
-            <form-field :hide-colon="true" :label="$t('desc')">
-                <vuex-textarea :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
+            <form-field
+                :hide-colon="true"
+                :label="$t('desc')"
+            >
+                <vuex-textarea
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    name="desc"
+                    :placeholder="$t('editPage.descTips')"
+                    :value="param.desc"
+                />
             </form-field>
 
             <template v-if="paramType !== 'constant'">
@@ -41,7 +85,8 @@
                         :desc="$t('newui.pipelineParam.buildParamTips')"
                         :disabled="disabled"
                         :value="param.required"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                     <atom-checkbox
                         name="valueNotEmpty"
                         class="neccessary-checkbox"
@@ -49,7 +94,8 @@
                         :disabled="disabled"
                         :text="$t('editPage.required')"
                         :value="param.valueNotEmpty"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
                 <div class="param-checkbox-row">
                     <atom-checkbox
@@ -58,7 +104,8 @@
                         :text="$t('editPage.readOnlyOnRun')"
                         :desc="$t('newui.pipelineParam.readOnlyTips')"
                         :value="param.readOnly"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
             </template>
         </bk-form>
@@ -151,7 +198,8 @@
                         name: this.$t(`storeMap.${item.name}`)
                     }
                 })
-                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : list
+                const variableList = list.filter(item => item.id !== 'CHECKBOX')
+                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : variableList
             }
         },
         created () {

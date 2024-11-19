@@ -54,9 +54,14 @@ import com.tencent.devops.common.wechatwork.model.response.UserIdNameResponse
 import com.tencent.devops.common.wechatwork.model.response.UserIdsConvertResponse
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMentioned
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMentionedMentioned
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
+import java.io.InputStream
+import java.time.Duration.between
+import java.time.LocalDateTime
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -67,9 +72,6 @@ import org.dom4j.Element
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.InputStream
-import java.time.Duration.between
-import java.time.LocalDateTime
 
 @Service
 class WechatWorkService @Autowired constructor(
@@ -424,7 +426,8 @@ class WechatWorkService @Autowired constructor(
     fun sendByApp(
         chatId: String,
         content: String,
-        markerDownFlag: Boolean
+        markerDownFlag: Boolean,
+        mentionUsers: List<String>
     ) {
         logger.info("send group msg by app: $chatId")
         if (markerDownFlag) {
@@ -435,6 +438,11 @@ class WechatWorkService @Autowired constructor(
             richTextContentList.add(
                 RichtextText(RichtextTextText(content))
             )
+            if (mentionUsers.isNotEmpty()) {
+                richTextContentList.add(
+                    RichtextMentioned(RichtextMentionedMentioned(mentionUsers))
+                )
+            }
             val richTextMessage = RichtextMessage(receiver, richTextContentList)
             sendRichText(richTextMessage)
         }

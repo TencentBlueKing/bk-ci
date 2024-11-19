@@ -124,12 +124,15 @@ const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
 const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
 const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
+const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
 /**
  * 自定义触发材料
  */
 const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" // 触发材料ID
 const val BK_CI_MATERIAL_NAME = "BK_CI_MATERIAL_NAME" // 触发材料名称
 const val BK_CI_MATERIAL_URL = "BK_CI_MATERIAL_URL" // 触发材料链接
+
+const val BK_CI_AUTHORIZER = "BK_CI_AUTHORIZER" // 流水线权限代持人
 
 /**
  * 流水线设置-最大排队数量-默认值

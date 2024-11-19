@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.extend
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -43,6 +44,9 @@ interface ModelCheckPlugin {
 
     /**
      * 检查[model]编排的完整性，并返回[JobSize + ElementSize = MetaSize]所有元素数量
+     * @param userId 操作人
+     * @param oauthUser 当前流水线权限代持人
+     * @param pipelineDialect 流水线方言,只有新增/编辑流水线或模版时才需要传入
      * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
     @Throws(ErrorCodeException::class)
@@ -50,7 +54,9 @@ interface ModelCheckPlugin {
         model: Model,
         projectId: String?,
         userId: String,
-        isTemplate: Boolean = false
+        isTemplate: Boolean = false,
+        oauthUser: String? = null,
+        pipelineDialect: IPipelineDialect? = null
     ): Int
 
     /**

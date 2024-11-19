@@ -4,16 +4,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
-import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
-import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -28,12 +25,12 @@ class TemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineInfoExtService: PipelineInfoExtService,
     private val templateCommonService: TemplateCommonService,
     private val templateDao: TemplateDao,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
-    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
     fun updateTemplateSetting(
         projectId: String,
@@ -110,31 +107,22 @@ class TemplateSettingService @Autowired constructor(
         return setting.copy(version = settingVersion)
     }
 
-    fun insertTemplateSetting(
+    fun saveDefaultTemplateSetting(
         context: DSLContext,
         userId: String,
         projectId: String,
         templateId: String,
-        pipelineName: String,
-        isTemplate: Boolean
+        templateName: String
     ): PipelineSetting {
-        val failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-        val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
-            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-        val failSubscription = Subscription(
-            types = failType,
-            groups = emptySet(),
-            users = "\${{ci.actor}}",
-            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-        )
-        val setting = PipelineSetting.defaultSetting(
-            projectId = projectId, pipelineId = templateId, pipelineName = pipelineName,
-            maxPipelineResNum = null, failSubscription = failSubscription
+        val defaultSetting = templateCommonService.getDefaultSetting(
+            projectId = projectId,
+            templateId = templateId,
+            templateName = templateName
         )
         return saveTemplatePipelineSetting(
             context = context,
             userId = userId,
-            setting = setting
+            setting = defaultSetting
         )
     }
 
@@ -156,6 +144,11 @@ class TemplateSettingService @Autowired constructor(
             labels.addAll(it.labels)
         }
         setting.labels = labels
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+            projectId = projectId,
+            asCodeSettings = setting.pipelineAsCodeSettings
+        )
+        setting.pipelineAsCodeSettings = asCodeSettings
         return setting
     }
 

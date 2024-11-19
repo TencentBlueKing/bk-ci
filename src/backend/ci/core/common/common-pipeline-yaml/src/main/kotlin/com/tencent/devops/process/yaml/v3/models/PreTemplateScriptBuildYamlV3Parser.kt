@@ -68,7 +68,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("recommended-version")
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
-    override var customBuildNum: String? = null
+    override var customBuildNum: String? = null,
+    @JsonProperty("syntax-dialect")
+    override var syntaxDialect: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -89,12 +91,16 @@ data class PreTemplateScriptBuildYamlV3Parser(
             resources = resources,
             notices = notices,
             concurrency = concurrency,
-            disablePipeline = disablePipeline
+            disablePipeline = disablePipeline,
+            syntaxDialect = syntaxDialect
         )
     }
 
     @JsonIgnore
     lateinit var preYaml: PreScriptBuildYamlV3Parser
+
+    private val formatStages = lazy { ScriptYmlUtils.formatStage(preYaml, transferData) }
+    private val formatFinallyStage = lazy { ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData) }
 
     @JsonIgnore
     val transferData: YamlTransferData = YamlTransferData()
@@ -137,12 +143,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
 
     override fun formatStages(): List<Stage> {
         checkInitialized()
-        return ScriptYmlUtils.formatStage(preYaml, transferData)
+        return formatStages.value
     }
 
     override fun formatFinallyStage(): List<Job> {
         checkInitialized()
-        return ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData)
+        return formatFinallyStage.value
     }
 
     override fun formatResources(): Resources? {
