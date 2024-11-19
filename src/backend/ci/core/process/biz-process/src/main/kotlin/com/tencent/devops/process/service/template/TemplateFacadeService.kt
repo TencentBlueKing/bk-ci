@@ -1540,7 +1540,10 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
                     buildNo = instanceBuildNoObj,
-                    param = instanceParams
+                    param = instanceParams,
+                    updateBuildNo = instanceTriggerContainer.buildNo?.let { ino ->
+                        ino.buildNo != templateModel.getTriggerContainer().buildNo?.buildNo
+                    }
                 )
             }.toMap()
         } catch (ignored: Throwable) {
