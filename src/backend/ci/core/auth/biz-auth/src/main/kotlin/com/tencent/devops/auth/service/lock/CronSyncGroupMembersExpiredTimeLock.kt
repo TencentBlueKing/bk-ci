@@ -25,26 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.auth.service.lock
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@RestResource
-class ServiceBkRepoResourceImpl(
-    private val bkRepoClient: BkRepoClient
-) : ServiceBkRepoResource {
-    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
-        return Result(bkRepoClient.createBkRepoResource(userId, projectId))
-    }
-
-    override fun enableProject(
-        userId: String,
-        projectId: String,
-        enabled: Boolean
-    ): Result<Boolean> {
-        return Result(bkRepoClient.enableProject(userId, projectId, enabled))
+class CronSyncGroupMembersExpiredTimeLock(redisOperation: RedisOperation) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "cron.sync.group.member.expired.lock",
+        // 2小时，防止服务重启，锁未释放
+        expiredTimeInSeconds = 7200000
+    ) {
+    override fun decorateKey(key: String): String {
+        return key
     }
 }
