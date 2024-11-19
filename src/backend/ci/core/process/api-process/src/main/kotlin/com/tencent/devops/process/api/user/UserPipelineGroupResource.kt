@@ -33,12 +33,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
-import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -167,7 +166,7 @@ interface UserPipelineGroupResource {
     @Operation(summary = "获取流水线标签")
     @GET
     @Path("/{projectId}/{pipelineId}/labels/")
-    fun getPipelineLabel(
+    fun getPipelineLabels(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -177,5 +176,5 @@ interface UserPipelineGroupResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<List<PipelineGroupWithLabels>>
+    ): Result<List<PipelineGroup>>
 }

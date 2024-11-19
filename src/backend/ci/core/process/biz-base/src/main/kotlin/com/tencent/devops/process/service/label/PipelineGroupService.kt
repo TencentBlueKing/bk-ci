@@ -137,6 +137,12 @@ class PipelineGroupService @Autowired constructor(
         }
     }
 
+    fun getPipelineLabels(userId: String, projectId: String, pipelineId: String): List<PipelineGroup> {
+        val labelRecords = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId)
+        val labelIds = labelRecords.map { it.labelId }.toSet()
+        return getLabelsGroupByGroup(projectId, labelIds)
+    }
+
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {
         val count = pipelineGroupDao.countByName(dslContext, pipelineGroup.projectId, pipelineGroup.name)
         if (count >= 1) {

@@ -33,7 +33,6 @@ import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
-import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -84,13 +83,13 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
         }
     }
 
-    override fun getPipelineLabel(
+    override fun getPipelineLabels(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): Result<List<PipelineGroupWithLabels>> {
+    ): Result<List<PipelineGroup>> {
         return Result(
-            pipelineGroupService.getGroups(
+            pipelineGroupService.getPipelineLabels(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
