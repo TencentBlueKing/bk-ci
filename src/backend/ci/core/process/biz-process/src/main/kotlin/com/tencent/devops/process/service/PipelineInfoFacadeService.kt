@@ -310,9 +310,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        inheritedDialectSetting: Boolean? = true,
-        pipelineDialectSetting: String? = null
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -432,12 +430,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 watcher.start("deployPipeline")
-                val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                    projectId = projectId,
-                    asCodeSettings = setting?.pipelineAsCodeSettings,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting
-                )
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     setting = setting,
@@ -455,10 +447,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting,
-                    pipelineDialect = pipelineDialect
+                    yamlInfo = yamlInfo
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -1125,11 +1114,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
-            val pipelineSetting = savedSetting ?: pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
-            val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                projectId = projectId,
-                pipelineSetting?.pipelineAsCodeSettings
-            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1144,8 +1128,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo,
-                pipelineDialect = pipelineDialect
+                yamlInfo = yamlInfo
             )
             // 审计
             ActionAuditContext.current()
