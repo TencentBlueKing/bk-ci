@@ -457,42 +457,66 @@ onBeforeUnmount(() => {
     </div>
     <div class="project-tab">
       <p class="title">{{t('高级信息')}}</p>
-      <bk-form-item
-        v-if="isRbac"
-        :label="t('项目最大可授权人员范围')"
-        :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
-        property="subjectScopes"
-        :required="true">
-        <bk-tag
-          v-for="(subjectScope, index) in projectData.subjectScopes"
-          :key="index"
+      <div v-if="isRbac">
+        <div class="sub-title">{{ t('权限')  }}</div>
+        <bk-form-item
+          :label="t('项目最大可授权人员范围')"
+          :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
+          property="subjectScopes"
+          :required="true">
+          <bk-tag
+            v-for="(subjectScope, index) in projectData.subjectScopes"
+            :key="index"
+          >
+            {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
+          </bk-tag>
+          <EditLine
+            class="edit-line ml5"
+            @click="showMemberDialog"
+          />
+        </bk-form-item>
+      </div>
+      <div v-if="projectData.properties">
+        <div class="sub-title">{{ t('流水线')  }}</div>
+        <bk-form-item
+          property="pipelineDialect"
         >
-          {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
-        </bk-tag>
-        <EditLine
-          class="edit-line ml5"
-          @click="showMemberDialog"
-        />
-      </bk-form-item>
-      <bk-form-item
-        property="pipelineDialect"
-        v-if="projectData.properties"
-      >
-        <template #label>
-          <dialect-popover-table />
-        </template>
-        <bk-radio-group
-          v-model="projectData.properties.pipelineDialect"
-          @change="handleChangeForm"
+          <template #label>
+            <dialect-popover-table />
+          </template>
+          <bk-radio-group
+            v-model="projectData.properties.pipelineDialect"
+            @change="handleChangeForm"
+          >
+            <bk-radio label="CLASSIC">
+              <span>{{ t('CLASSIC') }}</span>
+            </bk-radio>
+            <bk-radio label="CONSTRAINED">
+              <span>{{ t('CONSTRAINED') }}</span>
+            </bk-radio>
+          </bk-radio-group>
+        </bk-form-item>
+        <bk-form-item
+          :label="t('命名规范提示')"
+          :description="t('开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。')"
         >
-          <bk-radio label="CLASSIC">
-            <span>{{ t('CLASSIC') }}</span>
-          </bk-radio>
-          <bk-radio label="CONSTRAINED">
-            <span>{{ t('CONSTRAINED') }}</span>
-          </bk-radio>
-        </bk-radio-group>
-      </bk-form-item>
+          <bk-switcher
+            v-model="projectData.properties.enablePipelineNameTips"
+            size="large"
+            theme="primary"
+          />
+          <bk-input
+            class="textarea"
+            v-show="projectData.properties.enablePipelineNameTips"
+            v-model="projectData.properties.pipelineNameFormat"
+            :placeholder="t('请输入流水线命名规范提示说明')"
+            :rows="3"
+            :maxlength="100"
+            type="textarea"
+          >
+          </bk-input>
+        </bk-form-item>
+      </div>
     </div>
   </bk-form>
 
@@ -520,6 +544,7 @@ onBeforeUnmount(() => {
     :deep(textarea) {
         width: auto;
     }
+    margin-top: 10px;
   }
   :deep(.bk-form-label) {
     font-size: 12px;
@@ -564,22 +589,31 @@ onBeforeUnmount(() => {
   }
   .project-tab {
     width: 100%;
-    padding: 16px 120px 1px 24px;
+    padding: 20px 30px;
     background-color: #fff;
     box-shadow: 0 2px 2px 0 #00000026;
-  }
-  .advanced {
-    margin-bottom: 24px;
-  }
-  .title {
-    width: 56px;
-    height: 22px;
-    margin-bottom: 16px;
-    font-family: MicrosoftYaHei-Bold;
-    font-weight: 700;
-    font-size: 14px;
-    color: #63656E;
-    letter-spacing: 0;
-    line-height: 22px;
+    &.advanced {
+      margin-bottom: 24px;
+    }
+    .title {
+      width: 56px;
+      height: 22px;
+      margin-bottom: 16px;
+      font-family: MicrosoftYaHei-Bold;
+      font-weight: 700;
+      font-size: 14px;
+      color: #63656E;
+      letter-spacing: 0;
+      line-height: 22px;
+    }
+    .sub-title {
+      font-size: 14px;
+      border-bottom: 2px solid #DCDEE5;
+      margin-bottom: 15px;
+    }
+    .conventions-input {
+      margin-top: 10px;
+      max-width: 1000px;
+    }
   }
 </style>
