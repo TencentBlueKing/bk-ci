@@ -602,7 +602,8 @@ class CreateControl @Autowired constructor(
         oldWorkspaceName: String?,
         projectCode: String?,
         ownerType: WorkspaceOwnerType?,
-        uid: String
+        uid: String,
+        bak: Boolean
     ): Boolean {
         val taskInfo = kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getTaskInfoByUid(uid).data!!
@@ -635,18 +636,18 @@ class CreateControl @Autowired constructor(
                 return false
             }
 
-        val oldWs = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = oldWorkspaceName)
+        val copy = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = oldWorkspaceName)
         val projectId = when {
-            oldWs != null -> oldWs.projectId
+            copy != null -> copy.projectId
             else -> checkNotNull(projectCode)
         }
 
         val checkOwnerType = when {
-            oldWs != null -> oldWs.ownerType
+            copy != null -> copy.ownerType
             else -> checkNotNull(ownerType)
         }
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, checkOwnerType)
-        val workspaceName = oldWorkspaceName ?: generateWorkspaceName()
+        val workspaceName = if (bak) checkNotNull(oldWorkspaceName) else generateWorkspaceName()
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getTypeConfig(vm.machineType)
@@ -666,22 +667,31 @@ class CreateControl @Autowired constructor(
             winConfigId = windowsConfig.id?.toInt(),
             zoneId = vm.zoneId
         )
-        if (oldWs != null) {
-            // 直接硬删除记录。新的工作空间会复用原先的name
-            val bakName = "$workspaceName.bak.${LocalDateTime.now()}"
-            // 备份windows config
-            workspaceWindowsDao.bakWindowsConfig(dslContext, oldWs.workspaceName, bakName)
-            // 备份分享信息
-            workspaceSharedDao.bakWorkspaceShareInfo(dslContext, oldWs.workspaceName, bakName)
+        if (copy != null) {
+            // 当存在引用副本的情况，将细分多种情况
+            val bakName = when {
+                /*克隆副本，但不删除副本*/
+                !bak -> "clone.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+                /*升级副本，升级后需删除副本*/
+                copy.status.checkUpgrading() -> "upgrade.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+                /*修复副本，旧副本立即删除*/
+                else -> "fix.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+            }
             ws.bakWorkspaceName = bakName
-            workspaceDao.bakWorkspace(
-                dslContext = dslContext,
-                workspaceName = oldWs.workspaceName,
-                bakName = bakName,
-                status = if (oldWs.status.checkUpgrading()) WorkspaceStatus.UNUSED else WorkspaceStatus.DELETED
-            )
-            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .deleteWorkspace(userId, workspaceName, bakName)
+            if (bak) {
+                // 备份windows config
+                workspaceWindowsDao.bakWindowsConfig(dslContext, copy.workspaceName, bakName)
+                // 备份分享信息
+                workspaceSharedDao.bakWorkspaceShareInfo(dslContext, copy.workspaceName, bakName)
+                workspaceDao.bakWorkspace(
+                    dslContext = dslContext,
+                    workspaceName = copy.workspaceName,
+                    bakName = bakName,
+                    status = if (copy.status.checkUpgrading()) WorkspaceStatus.UNUSED else WorkspaceStatus.DELETED
+                )
+                SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+                    .deleteWorkspace(userId, workspaceName, bakName)
+            }
         }
         when {
             checkOwnerType.projectUse() -> {

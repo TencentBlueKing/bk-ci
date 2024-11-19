@@ -53,5 +53,8 @@ enum class WorkspaceAction {
     // 升级配置
     UPGRADE,
     UPGRADING,
+    // 克隆
+    CLONE,
+    CLONING,
     CREATE_DISK
 }

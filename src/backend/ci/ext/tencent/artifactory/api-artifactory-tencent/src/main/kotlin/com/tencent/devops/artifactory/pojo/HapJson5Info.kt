@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class HapJson5Info(
     val userId: String,
     val ttl: Int,
-    val experienceHashId: String,
+    val experienceHashId: String? = null,
     val filePath: String,
-    val organization: String?
+    val organization: String? = null
 )

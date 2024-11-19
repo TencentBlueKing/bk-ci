@@ -255,6 +255,30 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun cloneWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        pipelineId: String,
+        machineType: String?,
+        zoneId: String?,
+        live: Boolean?
+    ): String {
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.CLONE_VM,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                userId = userId,
+                pipelineId = pipelineId,
+                zoneId = zoneId,
+                machineType = machineType,
+                live = live
+            )
+        )
+        return resp.taskUid
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }

@@ -76,6 +76,9 @@
             isBuildEnv () {
                 return this.curEnvDetail && this.curEnvDetail.envType === 'BUILD'
             },
+            isDevxEnv () {
+                return this.curEnvDetail && this.curEnvDetail.envType === 'DEVX'
+            },
             tabs () {
                 const tabs = [
                     {
@@ -83,12 +86,6 @@
                         tabName: 'node',
                         label: 'node',
                         comp: nodeTab
-                    },
-                    {
-                        cls: 'config-item',
-                        tabName: 'config',
-                        label: 'configItem',
-                        comp: configTab
                     },
                     {
                         cls: 'base-item',
@@ -103,6 +100,15 @@
                         comp: authTab
                     }
                 ]
+                if (!this.isDevxEnv) {
+                    const index = tabs.findIndex(tab => tab.tabName === 'base')
+                    tabs.splice(index, 0, {
+                        cls: 'config-item',
+                        tabName: 'config',
+                        label: 'configItem',
+                        comp: configTab
+                    })
+                }
                 if (this.isBuildEnv) {
                     const index = tabs.findIndex(tab => tab.tabName === 'auth')
                     tabs.splice(index, 0, {

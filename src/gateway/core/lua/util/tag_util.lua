@@ -21,7 +21,7 @@ function _M:get_tag(ns_config)
     -- 特殊处理json5到灰度, 后续发完正式可以删除
     if ngx.var.uri:sub(-#("hapJson5.json5")) == "hapJson5.json5" then
         ngx.log(ngx.ERR , "use special logic")
-        return "rbac-gray"
+        return "kubernetes-rbac-gray"
     end
 
     local gateway_project = ngx.var.project

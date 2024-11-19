@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -25,28 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.dispatch.kubernetes.pojo
+package com.tencent.devops.remotedev.pojo
 
-import com.fasterxml.jackson.annotation.JsonValue
+import io.swagger.v3.oas.annotations.media.Schema
 
-enum class EnvironmentAction(val action: String) {
-    CREATE("create"),
-    START("start"),
-    STOP("stop"),
-    RECREATE("recreate"),
-    SCALE("scale"),
-    DELETE("delete"),
-    DELETE_VM("deletevm"),
-    RESTART("restart"),
-    MAKE_IMAGE("copyvm"),
-    REBUILD("rebuild/vm"),
-    EXPAND_DISK("expanddisk"),
-    UPGRADE_VM("upgrade/vm"),
-    CLONE_VM("vm/clone"),
-    CREATE_DISK("createdisk");
-
-    @JsonValue
-    fun getValue(): String {
-        return action
-    }
-}
+@Schema(title = "克隆工作空间配置接口请求")
+data class WorkspaceCloneReq(
+    @get:Schema(title = "基线")
+    val baseline: String?,
+    @get:Schema(title = "区域，默认和原机器一致")
+    val zoneId: String?,
+    @get:Schema(title = "机型，默认和原机器一致")
+    val machineType: String?,
+    @get:Schema(title = "是否开机备份，默认false")
+    val live: Boolean?
+)
