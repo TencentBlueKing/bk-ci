@@ -84,7 +84,7 @@ class StreamLogService @Autowired constructor(
             debug = debug,
             jobId = null,
             stepId = null,
-            pipelineCheckFlag = true
+            checkPermissionFlag = true
         ).data!!
     }
 
@@ -113,7 +113,7 @@ class StreamLogService @Autowired constructor(
             debug = debug,
             jobId = null,
             stepId = null,
-            pipelineCheckFlag = true
+            checkPermissionFlag = true
         ).data!!
     }
 

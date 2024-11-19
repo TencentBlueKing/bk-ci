@@ -83,7 +83,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                pipelineCheckFlag = pipelineViewFlag
+                checkPermissionFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -120,7 +120,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                pipelineCheckFlag = pipelineViewFlag
+                checkPermissionFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -163,7 +163,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                pipelineCheckFlag = pipelineViewFlag
+                checkPermissionFlag = pipelineViewFlag
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
