@@ -83,7 +83,8 @@ class StreamLogService @Autowired constructor(
             executeCount = executeCount,
             debug = debug,
             jobId = null,
-            stepId = null
+            stepId = null,
+            pipelineCheckFlag = true
         ).data!!
     }
 
@@ -111,7 +112,8 @@ class StreamLogService @Autowired constructor(
             executeCount = executeCount,
             debug = debug,
             jobId = null,
-            stepId = null
+            stepId = null,
+            pipelineCheckFlag = true
         ).data!!
     }
 

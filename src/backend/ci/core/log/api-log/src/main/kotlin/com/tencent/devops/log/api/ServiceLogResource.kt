@@ -37,7 +37,14 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -98,7 +105,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("pipelineCheckFlag")
-        pipelineCheckFlag: Boolean = true,
+        pipelineCheckFlag: Boolean,
         @Parameter(description = "查询结果是否倒序，默认false", required = false)
         @QueryParam("reverse")
         reverse: Boolean? = false
@@ -159,7 +166,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("pipelineCheckFlag")
-        pipelineCheckFlag: Boolean = true
+        pipelineCheckFlag: Boolean
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行前的日志")
@@ -208,7 +215,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("pipelineCheckFlag")
-        pipelineCheckFlag: Boolean = true
+        pipelineCheckFlag: Boolean
     ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")

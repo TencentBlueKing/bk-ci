@@ -88,7 +88,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             debug = debug,
             jobId = if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            pipelineCheckFlag = true
         )
     }
 
@@ -130,7 +131,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             executeCount = executeCount,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            pipelineCheckFlag = true
         )
     }
 
@@ -166,7 +168,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             executeCount = executeCount,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            pipelineCheckFlag = true
         )
     }
 
