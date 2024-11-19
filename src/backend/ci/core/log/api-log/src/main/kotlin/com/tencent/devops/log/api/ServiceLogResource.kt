@@ -105,7 +105,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
-        checkPermissionFlag: Boolean= true,
+        checkPermissionFlag: Boolean = true,
         @Parameter(description = "查询结果是否倒序，默认false", required = false)
         @QueryParam("reverse")
         reverse: Boolean? = false
