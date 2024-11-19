@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
@@ -31,7 +30,6 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -312,7 +310,8 @@ class StartAndBcsCommonService @Autowired constructor(
                     userId = task.operator,
                     workspaceName = task.workspaceName,
                     type = UpdateEventType.REBUILD,
-                    status = true
+                    status = true,
+                    taskUid = task.uid
                 )
             )
         } else {
@@ -329,7 +328,8 @@ class StartAndBcsCommonService @Autowired constructor(
                     workspaceName = task.workspaceName,
                     type = UpdateEventType.REBUILD,
                     status = false,
-                    errorMsg = JsonUtil.toJson(taskStatus)
+                    errorMsg = JsonUtil.toJson(taskStatus),
+                    taskUid = task.uid
                 )
             )
         }

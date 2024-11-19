@@ -28,8 +28,11 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.RebuildOptions
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.WorkspaceOperateCommonObject
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -41,6 +44,7 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
+    private val redisOperation: RedisOperation,
     private val remoteDevService: RemoteDevService,
     private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
@@ -83,12 +87,18 @@ class WorkspaceListener @Autowired constructor(
                 }
 
                 UpdateEventType.REBUILD -> {
-                    remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
+                    val taskUid = remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
                         imageCosFile = event.imageCosFile ?: "",
                         formatDataDisk = event.formatDataDisk
                     )
+                    if (event.rebuildRemoveOwner == true) {
+                        WorkspaceOperateCommonObject.saveRebuildOptions(
+                            redisOperation, taskUid, RebuildOptions(true)
+                        )
+                        logger.debug("rebuildWorkspace|saveRebuildOptions|$taskUid")
+                    }
                 }
 
                 UpdateEventType.UPGRADE -> {
@@ -112,6 +122,7 @@ class WorkspaceListener @Autowired constructor(
                         zoneId = checkNotNull(event.zoneId)
                     )
                 }
+
                 else -> {
                 }
             }
