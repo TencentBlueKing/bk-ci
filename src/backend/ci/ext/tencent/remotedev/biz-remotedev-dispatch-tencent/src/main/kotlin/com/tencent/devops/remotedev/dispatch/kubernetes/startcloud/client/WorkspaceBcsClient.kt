@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import java.net.SocketTimeoutException
 import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
@@ -369,6 +370,18 @@ class WorkspaceBcsClient @Autowired constructor(
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskDataV2>>().data
+    }
+
+    fun fetchDiskList(
+        uid: String
+    ): List<VmDiskInfo>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/vm/$uid/disks"
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

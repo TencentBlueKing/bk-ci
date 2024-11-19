@@ -199,8 +199,12 @@ class StartAndBcsCommonService @Autowired constructor(
         workspaceName: String,
         size: String
     ): CreateDiskResp {
-        // TODO: 在创建前应该还有一步检查是否可以创建，等接口
         val envId = getEnvironmentUid(workspaceName)
+        // 存在hdd就不能挂盘了
+        val hdd = bcsClient.fetchDiskList(envId)?.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }
+        if (hdd != null) {
+            return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}")
+        }
         val data = CreateDiskData(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
         val taskId = bcsClient.createDisk(data)?.taskUid ?: run {
             logger.warn("createDisk $workspaceName|$size taskId is null")

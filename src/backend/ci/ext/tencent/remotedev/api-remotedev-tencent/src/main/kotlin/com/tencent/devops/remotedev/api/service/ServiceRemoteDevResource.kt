@@ -563,7 +563,9 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @QueryParam("size")
-        size: String
+        size: String,
+        @QueryParam("action")
+        action: String?
     ): Result<ExpandDiskValidateResp?>
 
     @Operation(summary = "剔除当前用户所有云桌面相关权限")
