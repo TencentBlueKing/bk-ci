@@ -30,7 +30,7 @@ class TxProjectExtServiceImpl(
     private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper
-) : ProjectExtService {
+) : AbsProjectExtServiceImpl() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectExtServiceImpl::class.java)
