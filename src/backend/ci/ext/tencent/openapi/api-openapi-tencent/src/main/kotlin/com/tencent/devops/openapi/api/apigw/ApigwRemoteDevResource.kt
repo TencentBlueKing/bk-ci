@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -298,6 +299,22 @@ interface ApigwRemoteDevResource {
         zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "克隆工作空间", tags = ["v4_app_remotedev_win_workspace_clone"])
+    @POST
+    @Path("/workspace_clone")
+    fun workspaceClone(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        req: WorkspaceCloneReq
     ): Result<Boolean>
 
     @Operation(summary = "删除windows工作空间-项目", tags = ["v4_app_remotedev_win_project_delete"])

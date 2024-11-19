@@ -15,7 +15,8 @@ interface ServiceRemoteDevInterface {
         oldWorkspaceName: String?,
         projectId: String?,
         ownerType: WorkspaceOwnerType?,
-        uid: String
+        uid: String,
+        bak: Boolean
     ): Result<Boolean>
 
     fun makeImageCallback(
