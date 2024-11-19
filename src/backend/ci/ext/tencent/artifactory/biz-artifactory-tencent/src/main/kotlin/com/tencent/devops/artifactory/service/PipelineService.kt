@@ -28,7 +28,6 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
