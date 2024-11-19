@@ -8,5 +8,5 @@ data class ProjectMetadata(
     /**
      * 元数据值
      */
-    var value: Any,
+    var value: Any
 )
