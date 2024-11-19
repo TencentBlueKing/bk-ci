@@ -697,7 +697,7 @@ open class BkRepoDownloadService(
             }
         }
 
-        val accessUserId: String
+        var accessUserId: String
         val projectDownloadErrorMsg: String?
         val pipelineDownloadErrorMsg: String?
         if (!userId.isNullOrBlank()) {
@@ -713,6 +713,11 @@ open class BkRepoDownloadService(
         } else {
             accessUserId = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+            val pipelineOauthUser = pipelineService.getPipelineOauthUser(projectId, pipelineId)
+            if (!pipelineOauthUser.isNullOrBlank()) {
+                accessUserId = pipelineOauthUser
+            }
             projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                 params = arrayOf(accessUserId, targetProjectId)
