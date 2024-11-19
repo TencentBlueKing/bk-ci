@@ -32,13 +32,14 @@ import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.service.impl.AbsProjectExtServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SimpleProjectExtService @Autowired constructor(
     private val client: Client
-) : ProjectExtService {
+) : AbsProjectExtServiceImpl() {
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,

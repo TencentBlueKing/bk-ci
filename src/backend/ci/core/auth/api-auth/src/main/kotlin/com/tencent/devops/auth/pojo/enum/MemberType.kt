@@ -25,26 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.web.RestResource
+enum class MemberType(val type: String) {
+    USER("user"),
 
-@RestResource
-class ServiceBkRepoResourceImpl(
-    private val bkRepoClient: BkRepoClient
-) : ServiceBkRepoResource {
-    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
-        return Result(bkRepoClient.createBkRepoResource(userId, projectId))
-    }
+    DEPARTMENT("department"),
 
-    override fun enableProject(
-        userId: String,
-        projectId: String,
-        enabled: Boolean
-    ): Result<Boolean> {
-        return Result(bkRepoClient.enableProject(userId, projectId, enabled))
+    TEMPLATE("template");
+
+    companion object {
+        fun get(type: String): MemberType {
+            MemberType.values().forEach {
+                if (type == it.type) return it
+            }
+            throw IllegalArgumentException("No enum for constant $type")
+        }
     }
 }

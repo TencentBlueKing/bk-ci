@@ -35,6 +35,8 @@ class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncServ
 
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
 
+    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
+
     override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
 
     override fun syncGroupAndMember(projectCode: String) = Unit
