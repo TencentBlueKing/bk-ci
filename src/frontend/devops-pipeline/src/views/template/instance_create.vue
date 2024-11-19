@@ -20,6 +20,11 @@
                 ></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
         <div
             class="sub-view-port"
             v-if="showContent"
@@ -269,6 +274,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
+    import AlertTips from '@/components/AlertTips.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
 
@@ -279,7 +285,8 @@
             instancePipelineName,
             instanceMessage,
             Logo,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            AlertTips
         },
         data () {
             return {
@@ -346,6 +353,15 @@
             },
             isCopyInstance () {
                 return !!(this.copyPipelineName && this.queryPipelineId)
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
             }
         },
         async mounted () {

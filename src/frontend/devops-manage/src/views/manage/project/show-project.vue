@@ -430,30 +430,30 @@ onMounted(async () => {
                     </div>
                   </bk-form-item>
                   <bk-form-item :label="t('项目所属运营产品')" property="bg">
-                  <span>{{ projectData.productName || projectData.productId }}</span>
-                  <div class="diff-content" v-if="projectData.afterProductId">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
-                    <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
-                  </div>
-                </bk-form-item>
-                <bk-form-item :label="t('项目所属组织')" property="bg">
-                  <span>
-                    {{projectData.deptInfo}}
-                  </span>
-                  <div
-                    class="diff-content"
-                    v-if="projectDiffData.afterDeptInfo && projectDiffData.afterDeptInfo !== projectData.deptInfo"
-                  >
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
+                    <span>{{ projectData.productName || projectData.productId }}</span>
+                    <div class="diff-content" v-if="projectData.afterProductId">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item :label="t('项目所属组织')" property="bg">
                     <span>
-                      {{ projectDiffData.afterDeptInfo }}
+                      {{projectData.deptInfo}}
                     </span>
-                  </div>
-                </bk-form-item>
+                    <div
+                      class="diff-content"
+                      v-if="projectDiffData.afterDeptInfo && projectDiffData.afterDeptInfo !== projectData.deptInfo"
+                    >
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>
+                        {{ projectDiffData.afterDeptInfo }}
+                      </span>
+                    </div>
+                  </bk-form-item>
                   <bk-form-item :label="t('项目性质')" property="authSecrecy">
                     <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
                     <div class="diff-content" v-if="projectData.afterAuthSecrecy">
