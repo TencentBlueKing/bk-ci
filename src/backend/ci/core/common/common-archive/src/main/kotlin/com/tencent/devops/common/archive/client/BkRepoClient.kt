@@ -162,7 +162,7 @@ class BkRepoClient constructor(
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
     }
 
-    fun enableProject(userId: String, projectId: String, enabled: Boolean) {
+    fun enableProject(userId: String, projectId: String, enabled: Boolean): Boolean {
         logger.info("enableProject, userId: $userId, projectId: $projectId, enabled: $enabled")
         val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = enabled)))
         val request = Request.Builder()
@@ -171,6 +171,7 @@ class BkRepoClient constructor(
             .put(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+        return true
     }
 
     private fun createGenericRepo(

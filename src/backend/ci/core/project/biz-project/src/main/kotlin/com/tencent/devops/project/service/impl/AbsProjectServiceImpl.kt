@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CREATE_CONTENT
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_EDIT_CONTENT
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_CONTENT
@@ -146,9 +145,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val profile: Profile,
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
-
-    @Autowired
-    private lateinit var bkRepoClient: BkRepoClient
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
@@ -1274,7 +1270,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             enabled = enabled
         )
         try {
-            bkRepoClient.enableProject(
+            projectExtService.enableProject(
                 userId = userId ?: "",
                 projectId = englishName,
                 enabled = enabled
