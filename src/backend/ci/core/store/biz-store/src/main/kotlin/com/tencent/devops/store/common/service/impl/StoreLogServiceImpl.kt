@@ -64,8 +64,7 @@ class StoreLogServiceImpl @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?,
-        pipelineViewFlag: Boolean
+        executeCount: Int?
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -83,7 +82,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                checkPermissionFlag = pipelineViewFlag
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -100,8 +99,7 @@ class StoreLogServiceImpl @Autowired constructor(
         start: Long,
         debug: Boolean?,
         tag: String?,
-        executeCount: Int?,
-        pipelineViewFlag: Boolean
+        executeCount: Int?
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -120,7 +118,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                checkPermissionFlag = pipelineViewFlag
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -140,8 +138,7 @@ class StoreLogServiceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
-        executeCount: Int?,
-        pipelineViewFlag: Boolean
+        executeCount: Int?
     ): Result<QueryLogs?> {
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         if (validateResult.isNotOk()) {
@@ -163,7 +160,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 executeCount = executeCount,
                 jobId = null,
                 stepId = null,
-                checkPermissionFlag = pipelineViewFlag
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)

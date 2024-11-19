@@ -83,8 +83,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             debug = debug,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag,
-            checkPermissionFlag = true
+            archiveFlag = archiveFlag
         )
     }
 
@@ -126,8 +125,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag,
-            checkPermissionFlag = true
+            archiveFlag = archiveFlag
         )
     }
 
@@ -163,8 +161,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag,
-            checkPermissionFlag = true
+            archiveFlag = archiveFlag
         )
     }
 

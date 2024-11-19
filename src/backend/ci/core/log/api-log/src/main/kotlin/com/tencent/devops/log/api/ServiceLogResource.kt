@@ -105,7 +105,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
-        checkPermissionFlag: Boolean,
+        checkPermissionFlag: Boolean= true,
         @Parameter(description = "查询结果是否倒序，默认false", required = false)
         @QueryParam("reverse")
         reverse: Boolean? = false
@@ -166,7 +166,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行前的日志")
@@ -215,7 +215,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否校验流水线权限", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")

@@ -186,8 +186,7 @@ class LLMService @Autowired constructor(
             executeCount = executeCount,
             jobId = null,
             stepId = null,
-            reverse = true,
-            checkPermissionFlag = true
+            reverse = true
         ).data
 
         if (logsData?.status != LogStatus.SUCCEED.status || logsData.logs.isEmpty()) {
