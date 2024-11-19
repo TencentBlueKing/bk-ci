@@ -54,7 +54,7 @@ data class WeSecProjectWorkspace(
     @JsonProperty("inner_ip")
     val innerIp: String?,
     @get:Schema(title = "状态")
-    val status: WorkspaceStatus?,
+    val status: String?,
     @get:Schema(title = "工作空间实际拥有者，待分配时为空")
     @JsonProperty("real_owner")
     val realOwner: String? = null,
@@ -73,7 +73,7 @@ data class WeSecProjectWorkspace(
     val macAddress: String? = null,
     @JsonProperty("zone_type")
     @get:Schema(title = "专区类型")
-    val zoneType: WindowsResourceZoneConfigType? = null,
+    val zoneType: String? = null,
     @get:Schema(title = "共享人")
     val viewers: List<String>? = emptyList(),
     @get:Schema(title = "母机IP")

@@ -666,13 +666,14 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res.createTime),
                 owner = owner ?: res.createUserId,
                 realOwner = owner ?: "",
-                status = res.status,
+                status = res.status.name,
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
                 currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip) }?.toSet() ?: emptySet(),
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
-                zoneType = specZoneConfig[res.zoneId]?.type ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type,
+                zoneType = specZoneConfig[res.zoneId]?.type?.name
+                    ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type?.name,
                 viewers = viewers[name],
                 nodeIp = cdsInfo[res.hostIp]?.node
             )
