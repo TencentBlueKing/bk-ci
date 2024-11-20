@@ -67,7 +67,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import feign.RetryableException
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "TooManyFunctions")
