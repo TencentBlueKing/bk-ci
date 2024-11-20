@@ -164,12 +164,12 @@ const fetchDiffProjectData = () => {
     projectDiffData.value.afterDeptInfo = generateDeptName(res, true);
     fetchOperationalList(projectDiffData.value.afterBgName);
 
-    fieldMap.forEach((field) => {
+    fieldMap.forEach(field => {
       if ((projectData.value[field.current] !== projectDiffData.value[field.after])) {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
-    propertiesFieldMap.forEach((field) => {
+    propertiesFieldMap.forEach(field => {
       if (projectData.value?.properties[field.current] !== projectDiffData.value?.[field.after]) {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
