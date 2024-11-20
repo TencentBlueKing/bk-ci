@@ -25,15 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.dialect
+package com.tencent.devops.auth.pojo.enum
 
-/**
- * 传统模式流水线方言
- */
-class ClassicPipelineDialect : IPipelineDialect {
-    override fun getPipelineDialectType() = PipelineDialectType.CLASSIC.name
+enum class MemberType(val type: String) {
+    USER("user"),
 
-    override fun supportUseExpression() = false
+    DEPARTMENT("department"),
 
-    override fun supportChineseVarName() = true
+    TEMPLATE("template");
+
+    companion object {
+        fun get(type: String): MemberType {
+            MemberType.values().forEach {
+                if (type == it.type) return it
+            }
+            throw IllegalArgumentException("No enum for constant $type")
+        }
+    }
 }

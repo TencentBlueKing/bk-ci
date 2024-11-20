@@ -1052,7 +1052,12 @@
     "alwaysPull": "每次运行时拉取",
     "ifNotPresent": "当本地不存在时才拉取",
     "enableDockerTips": "使用此功能时，请确保构建机已经安装Docker运行环境，且第三方构建机Agent的启动用户拥有Docker的操作权限",
-    "enabledPrivileged": "是否开启特权模式"
+    "enabledPrivileged": "是否开启特权模式",
+    "batchAddTit": "批量添加",
+    "lineBreak": "多个选项用换行符分隔",
+    "noEnglishCommas": "每个选项不能包含英文逗号",
+    "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式",
+    "batchCopy": "一键复制"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1316,7 +1321,7 @@
   "dynamicGroupTips": "组内所包含的流水线根据设置的流水线名称\\标签等属性去动态匹配",
   "lastModify": "最近修改时间",
   "projectedGroupDisableTips": "仅项目管理员可以创建项目可见的流水线组",
-  "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
+  "groupEditDisableTips": "只有管理员可以对项目流水线组添加\\移出流水线",
   "pacGroupDisableTips": "由开启 PAC 模式自动创建，不支持手动添加/移除流水线",
   "noDeletePipelines": "删除流水线列表为空",
   "deleted": "已删除",
@@ -1630,9 +1635,6 @@
 
   "variableValueTooLong": "变量值超长",
   "traditionalValueTooLongMode": "仅警告未报错",
-
-  "variableNotFound": "变量不存在",
-  "traditionalNotFoundMode": "未报错，继续执行，依赖执行逻辑自行检查",
   "constraintReadOnlyMode": "将报错，运行失败",
 
   "variableStandard": "变量 ID 规范",

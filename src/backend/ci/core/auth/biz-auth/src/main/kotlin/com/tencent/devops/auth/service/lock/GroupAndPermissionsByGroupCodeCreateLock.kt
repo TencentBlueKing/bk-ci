@@ -25,15 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.dialect
+package com.tencent.devops.auth.service.lock
 
-/**
- * 传统模式流水线方言
- */
-class ClassicPipelineDialect : IPipelineDialect {
-    override fun getPipelineDialectType() = PipelineDialectType.CLASSIC.name
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-    override fun supportUseExpression() = false
-
-    override fun supportChineseVarName() = true
+class GroupAndPermissionsByGroupCodeCreateLock(
+    redisOperation: RedisOperation,
+    projectCode: String,
+    resourceType: String,
+    resourceCode: String,
+    groupCode: String
+) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "group.and.permissions.create.$projectCode.$resourceType.$resourceCode.$groupCode",
+        expiredTimeInSeconds = 30,
+        sleepTime = 2L
+    ) {
+    override fun decorateKey(key: String): String {
+        return key
+    }
 }

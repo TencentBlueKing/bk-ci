@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
     <div class="project-tab">
       <p class="title">{{t('高级信息')}}</p>
       <bk-form-item
-        v-if="!isRbac"
+        v-if="isRbac"
         :label="t('项目最大可授权人员范围')"
         :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
         property="subjectScopes"
