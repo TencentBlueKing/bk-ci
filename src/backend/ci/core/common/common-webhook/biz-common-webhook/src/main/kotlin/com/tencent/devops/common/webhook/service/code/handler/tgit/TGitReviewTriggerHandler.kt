@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
@@ -205,6 +206,7 @@ class TGitReviewTriggerHandler(
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
             startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
             startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
+            startParams[PIPELINE_GIT_COMMIT_MESSAGE] = commitInfo?.message ?: ""
         }
 
         return startParams

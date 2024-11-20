@@ -105,6 +105,7 @@
             >
                 <notify-setting
                     ref="notifySettingTab"
+                    :project-group-and-users="projectGroupAndUsers"
                     :subscription="sliderEditItem"
                     :update-subscription="updateEditItem"
                 />
@@ -131,6 +132,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import { deepCopy } from '@/utils/util'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
 
@@ -177,6 +179,7 @@
                 editType: '', // 当前编辑通知类型，成功或失败
                 editIndex: -1, // 当前编辑哪一项通知， -1表示新增
                 icons: ['icon-right-shape', 'icon-down-shape'],
+                projectGroupAndUsers: [],
                 notifyList: [
                     {
                         type: 'successSubscriptionList',
@@ -223,7 +226,13 @@
                 return actionType + ' - ' + targetType
             }
         },
+        async created () {
+            this.projectGroupAndUsers = await this.requestProjectGroupAndUsers(this.$route.params)
+        },
         methods: {
+            ...mapActions('pipelines', [
+                'requestProjectGroupAndUsers'
+            ]),
             getRenderInfo (type) {
                 return this[type]
             },

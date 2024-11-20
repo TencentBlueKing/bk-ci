@@ -36,14 +36,12 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -55,6 +53,9 @@ import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -171,7 +172,7 @@ class BuildEndControl @Autowired constructor(
             buildStatus = buildStatus,
             errorInfoList = buildInfo.errorInfoList,
             errorMsg = errorMsg,
-            executeCount = buildInfo.executeCount ?: 1
+            executeCount = buildInfo.executeCount
         )
 
         // 记录本流水线最后一次构建的状态
@@ -180,7 +181,7 @@ class BuildEndControl @Autowired constructor(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount ?: 1,
+                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount,
                 debug = buildInfo.debug
             ),
             currentBuildStatus = buildInfo.status,
@@ -258,7 +259,8 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.END,
                 buildStatus = buildStatus.name,
-                executeCount = buildInfo.executeCount
+                executeCount = buildInfo.executeCount,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_END
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",

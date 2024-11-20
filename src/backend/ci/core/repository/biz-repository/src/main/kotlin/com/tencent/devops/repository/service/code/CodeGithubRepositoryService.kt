@@ -127,7 +127,7 @@ class CodeGithubRepositoryService @Autowired constructor(
             repositoryId = repositoryId
         ).url
         var gitProjectId: Long? = null
-        if (sourceUrl != repository.url) {
+        if (sourceUrl != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
                     "targetUrl=[${repository.url}]"

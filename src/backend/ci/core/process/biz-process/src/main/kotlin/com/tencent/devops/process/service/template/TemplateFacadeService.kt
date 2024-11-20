@@ -92,6 +92,8 @@ import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -120,6 +122,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
@@ -178,7 +181,8 @@ class TemplateFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val templateCommonService: TemplateCommonService,
-    private val templateSettingService: TemplateSettingService
+    private val templateSettingService: TemplateSettingService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -689,6 +693,8 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int? = null,
         pageSize: Int? = null,
         keywords: String? = null
@@ -702,6 +708,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
+            orderBy = orderBy,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             templateIds = null
@@ -745,6 +753,8 @@ class TemplateFacadeService @Autowired constructor(
         storeFlag: Boolean?,
         hasManagerPermission: Boolean?,
         checkPermission: Boolean = true,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int?,
         pageSize: Int?,
         includePublicFlag: Boolean? = null,
@@ -759,6 +769,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 hasManagerPermission = hasManagerPermission,
@@ -781,6 +793,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 templatesByPermissionMap = templatesByPermissionMap
@@ -793,6 +807,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         hasManagerPermission: Boolean?,
@@ -806,6 +822,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templateIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -837,6 +855,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         templatesByPermissionMap: Map<AuthPermission, List<String>>
@@ -868,6 +888,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templatesWithListPermIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -989,7 +1011,9 @@ class TemplateFacadeService @Autowired constructor(
                         hasPermission = hasManagerPermission,
                         canView = templateWithPermission.templatesWithViewPermIds?.contains(templateId),
                         canDelete = templateWithPermission.templatesWithDeletePermIds?.contains(templateId),
-                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId)
+                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId),
+                        creator = record[tTemplate.CREATOR],
+                        updateTime = record[tTemplate.UPDATE_TIME].timestampmilli()
                     )
                 )
             }
@@ -1291,7 +1315,7 @@ class TemplateFacadeService @Autowired constructor(
             creator = latestTemplate.creator
         )
         val versions = listTemplateVersions(latestTemplate.projectId, latestTemplate.id)
-        val triggerContainer = templateResult.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = templateResult.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
         return TemplateModelDetail(
@@ -1405,8 +1429,8 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun compareModel(versions: List<TemplateVersion>, v1Model: Model, v2Model: Model): TemplateCompareModelResult {
-        val v1TriggerContainer = v1Model.stages[0].containers[0] as TriggerContainer
-        val v2TriggerContainer = v2Model.stages[0].containers[0] as TriggerContainer
+        val v1TriggerContainer = v1Model.getTriggerContainer()
+        val v2TriggerContainer = v2Model.getTriggerContainer()
         return TemplateCompareModelResult(
             versions,
             TemplateCompareModel(
@@ -1482,7 +1506,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ERROR_TEMPLATE_NOT_EXISTS
                 )
             val templateModel: Model = objectMapper.readValue(template.template)
-            val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
+            val templateTriggerContainer = templateModel.getTriggerContainer()
             val latestInstances = listLatestModel(projectId, pipelineIds)
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds, projectId)
             val buildNos = pipelineBuildSummaryDao.getSummaries(dslContext, projectId, pipelineIds).map {
@@ -1492,7 +1516,7 @@ class TemplateFacadeService @Autowired constructor(
             return latestInstances.map {
                 val pipelineId = it.key
                 val instanceModel: Model = objectMapper.readValue(it.value)
-                val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
+                val instanceTriggerContainer = instanceModel.getTriggerContainer()
                 val instanceParams = paramService.filterParams(
                     userId = userId,
                     projectId = projectId,
@@ -1501,14 +1525,12 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
-                val buildNo = templateTriggerContainer.buildNo
-                var instanceBuildNoObj: BuildNo? = null
                 // 模板中的buildNo存在才需要回显
-                if (buildNo != null) {
-                    instanceBuildNoObj = BuildNo(
-                        buildNoType = buildNo.buildNoType,
-                        required = buildNo.required ?: instanceTriggerContainer.buildNo?.required,
-                        buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                val instanceBuildNoObj = templateTriggerContainer.buildNo?.let { no ->
+                    BuildNo(
+                        buildNoType = no.buildNoType,
+                        required = no.required ?: instanceTriggerContainer.buildNo?.required,
+                        buildNo = buildNos[pipelineId] ?: no.buildNo
                     )
                 }
 
@@ -1992,11 +2014,11 @@ class TemplateFacadeService @Autowired constructor(
         instance: Model,
         template: Model
     ): Model {
-        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParams = (template.getTriggerContainer()).templateParams
         if (templateParams.isNullOrEmpty()) {
             return instance
         }
-        val triggerContainer = instance.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = instance.getTriggerContainer()
         val finalParams = ArrayList<BuildFormProperty>()
         val params = triggerContainer.params
         params.forEach { param ->
@@ -2038,7 +2060,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun instanceParamModel(userId: String, projectId: String, model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = paramService.filterParams(userId, projectId, null, triggerContainer.params)
         val templateParams =
             if (triggerContainer.templateParams == null || triggerContainer.templateParams!!.isEmpty()) {
@@ -2301,11 +2323,14 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
+        // 模版先都统一使用项目配置
+        val projectDialect = projectId?.let { pipelineAsCodeService.getProjectDialect(projectId = it) }
         modelCheckPlugin.checkModelIntegrity(
             model = template,
             projectId = projectId,
             userId = userId,
-            isTemplate = true
+            isTemplate = true,
+            pipelineDialect = projectDialect
         )
         checkPipelineParam(template)
     }
@@ -2354,7 +2379,7 @@ class TemplateFacadeService @Autowired constructor(
      * 模板的流水线变量和模板常量不能相同
      */
     private fun checkPipelineParam(template: Model) {
-        val triggerContainer = template.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = template.getTriggerContainer()
 
         if (triggerContainer.params.isEmpty()) {
             return
@@ -2608,7 +2633,7 @@ class TemplateFacadeService @Autowired constructor(
         val templateRecord =
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version) ?: return
         val template: Model = objectMapper.readValue(templateRecord.template)
-        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParams = (template.getTriggerContainer()).templateParams
         if (templateParams.isNullOrEmpty()) {
             return
         }

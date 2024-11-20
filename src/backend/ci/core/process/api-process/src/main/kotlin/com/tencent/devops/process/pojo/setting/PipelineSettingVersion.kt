@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -71,7 +72,11 @@ data class PipelineSettingVersion(
     @get:Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String?,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
-    var concurrencyCancelInProgress: Boolean?
+    var concurrencyCancelInProgress: Boolean?,
+    @get:Schema(title = "并发构建数量限制", required = false)
+    var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "YAML流水线特殊配置", required = false)
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 ) {
     companion object {
 
@@ -90,7 +95,9 @@ data class PipelineSettingVersion(
             maxQueueSize = setting.maxQueueSize,
             buildNumRule = setting.buildNumRule,
             concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-            concurrencyGroup = setting.concurrencyGroup
+            concurrencyGroup = setting.concurrencyGroup,
+            maxConRunningQueueSize = setting.maxConRunningQueueSize,
+            pipelineAsCodeSettings = setting.pipelineAsCodeSettings
         )
     }
 }

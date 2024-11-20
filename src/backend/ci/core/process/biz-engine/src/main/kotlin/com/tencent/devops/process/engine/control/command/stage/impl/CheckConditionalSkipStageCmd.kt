@@ -53,8 +53,8 @@ class CheckConditionalSkipStageCmd constructor(
     override fun canExecute(commandContext: StageContext): Boolean {
         // 仅在初次进入Stage
         return commandContext.stage.controlOption?.finally != true &&
-            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.buildStatus.isReadyToRun()
+                commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+                commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {

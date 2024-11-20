@@ -220,14 +220,16 @@ class PipelineTaskService @Autowired constructor(
         projectId: String,
         buildId: String,
         taskId: String?,
-        stepId: String? = null
+        stepId: String? = null,
+        executeCount: Int? = null
     ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            stepId = stepId
+            stepId = stepId,
+            executeCount = executeCount
         )
     }
 
@@ -298,7 +300,8 @@ class PipelineTaskService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            stepId = stepId
+            stepId = stepId,
+            executeCount = null
         )
     }
 
@@ -328,7 +331,8 @@ class PipelineTaskService @Autowired constructor(
                 projectId = updateTaskInfo.projectId,
                 buildId = updateTaskInfo.buildId,
                 taskId = updateTaskInfo.taskId,
-                stepId = null
+                stepId = null,
+                executeCount = null
             )
         }
         if (updateTaskInfo.taskStatus.isFinish()) {

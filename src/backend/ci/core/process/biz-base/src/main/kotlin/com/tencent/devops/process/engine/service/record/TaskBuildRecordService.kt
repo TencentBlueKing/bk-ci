@@ -412,7 +412,12 @@ class TaskBuildRecordService(
         )
         buildRecordContainer?.let {
             val buildTask = pipelineBuildTaskDao.get(
-                dslContext = dslContext, projectId = projectId, buildId = buildId, taskId = taskId, stepId = null
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                stepId = null,
+                executeCount = executeCount
             ) ?: return@let
             val runCondition = buildTask.additionalOptions?.runCondition
             val containPostTaskFlag = buildRecordContainer.containPostTaskFlag

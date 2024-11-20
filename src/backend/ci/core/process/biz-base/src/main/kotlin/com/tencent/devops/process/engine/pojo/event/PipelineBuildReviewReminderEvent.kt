@@ -28,16 +28,16 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 用于审核提醒（利用延迟消费）
  * @author royalhuang
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_REVIEW_REMINDER)
+@Event(StreamBinding.PIPELINE_BUILD_REVIEW_REMINDER)
 data class PipelineBuildReviewReminderEvent(
     override val source: String,
     override val projectId: String,

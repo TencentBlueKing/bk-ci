@@ -36,6 +36,7 @@ import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
@@ -62,11 +63,11 @@ internal class HashFilesFunctionTest {
         fun noRootPath() {
             val exp = "hashFiles('/data/a/a')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
             }
             val exp1 = "hashFiles('D: \\data\\.\\..')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp1, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+                ExpressionParser.createTree(exp1, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
             }
         }
 
@@ -75,7 +76,7 @@ internal class HashFilesFunctionTest {
         fun noIndexPath() {
             val exp = "hashFiles('/data/./..')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, EvaluationOptions(false), null).value
             }
         }
     }
@@ -103,7 +104,7 @@ internal class HashFilesFunctionTest {
                         HashFilesFunction()
                     )
                 )
-            )!!.evaluate(null, ev, null, null).value
+            )!!.evaluate(null, ev, EvaluationOptions(false), null).value
         )
     }
 
@@ -129,7 +130,7 @@ internal class HashFilesFunctionTest {
                     )
                 ),
                 subInfo
-            )!!.subNameValueEvaluate(null, parametersEv, null, subInfo, null).value
+            )!!.subNameValueEvaluate(null, parametersEv, EvaluationOptions(false), subInfo, null).value
         )
     }
 

@@ -267,7 +267,11 @@ class PipelineBuildQualityService(
                 taskId = taskId
             ).data ?: setOf()
 
-            auditUserSet.map { buildVariableService.replaceTemplate(projectId, buildId, it) }.toSet()
+            auditUserSet.map {
+                buildVariableService.replaceTemplate(projectId, buildId, it)
+            }.flatMap {
+                it.split(";", ",")
+            }.toSet()
         } catch (ignore: Exception) {
             logger.error("quality get audit user list fail: ${ignore.message}", ignore)
             setOf()
