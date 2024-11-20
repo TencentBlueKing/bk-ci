@@ -14,4 +14,8 @@ class UserMonitorResourceImpl @Autowired constructor(
     override fun checkEnableDashboard(userId: String, projectId: String): Result<EnableDashboardResp> {
         return Result(bkBizProjectService.checkEnableDashboard(projectId))
     }
+
+    override fun enableDashboard(userId: String, projectId: String): Result<EnableDashboardResp> {
+        return Result(bkBizProjectService.enableDashBoard(userId, projectId))
+    }
 }
