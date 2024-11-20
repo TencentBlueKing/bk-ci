@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -119,8 +120,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     limit = limit,
                     offset = offset
                 ).data?.map { it.englishName } ?: break
-                projectCodes.forEach { projectCode ->
-                    syncMemberExpiredExecutorService.submit {
+                val futures = projectCodes.map { projectCode ->
+                    syncMemberExpiredExecutorService.submit(Callable {
                         logger.info("start to sync project group member expired time|$projectCode")
                         val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
                             dslContext = dslContext,
@@ -136,15 +137,19 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             verifyResults.forEach { (groupId, verifyResult) ->
                                 if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
                                     logger.info("The member of group needs to have been renewed:$projectCode|$groupId|$memberId")
-                                    syncIamGroupMember(
+                                    authResourceGroupMemberDao.update(
+                                        dslContext = dslContext,
                                         projectCode = projectCode,
-                                        iamGroupId = groupId
+                                        iamGroupId = groupId,
+                                        expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
+                                        memberId = memberId
                                     )
                                 }
                             }
                         }
-                    }
+                    })
                 }
+                futures.forEach { it.get() }
                 offset += limit
             } while (projectCodes.size == limit)
         }
@@ -218,62 +223,58 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncIamGroupMembersOfApply() {
-        val traceId = MDC.get(TraceTag.BIZID)
-        syncExecutorService.submit {
-            MDC.put(TraceTag.BIZID, traceId)
-            val limit = 100
-            var offset = 0
-            val startEpoch = System.currentTimeMillis()
-            val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
-            val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
-            do {
-                logger.info("sync members of apply | start")
-                // 获取7天内未审批单据
-                val records = authResourceGroupApplyDao.list(
-                    dslContext = dslContext,
-                    day = 7,
-                    limit = limit,
-                    offset = offset
-                )
-                val (recordsOfSuccess, recordsOfPending) = records.partition {
-                    try {
-                        val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
-                            it.memberId,
-                            it.iamGroupId.toString()
-                        )[it.iamGroupId]?.belong == true
-                        isMemberJoinedToGroup
-                    } catch (ignore: Exception) {
-                        logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
-                        authResourceGroupApplyDao.delete(dslContext, it.id)
-                        false
-                    }
+        val limit = 100
+        var offset = 0
+        val startEpoch = System.currentTimeMillis()
+        val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
+        val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
+        do {
+            logger.info("sync members of apply | start")
+            // 获取7天内未审批单据
+            val records = authResourceGroupApplyDao.list(
+                dslContext = dslContext,
+                day = 7,
+                limit = limit,
+                offset = offset
+            )
+            val (recordsOfSuccess, recordsOfPending) = records.partition {
+                try {
+                    val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
+                        it.memberId,
+                        it.iamGroupId.toString()
+                    )[it.iamGroupId]?.belong == true
+                    isMemberJoinedToGroup
+                } catch (ignore: Exception) {
+                    logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                    authResourceGroupApplyDao.delete(dslContext, it.id)
+                    false
                 }
-                finalRecordsOfPending.addAll(recordsOfPending)
-                finalRecordsOfSuccess.addAll(recordsOfSuccess)
-                offset += limit
-            } while (records.size == limit)
-            if (finalRecordsOfPending.isNotEmpty()) {
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordsOfPending.map { it.id },
-                    applyToGroupStatus = ApplyToGroupStatus.PENDING
-                )
             }
-            if (finalRecordsOfSuccess.isNotEmpty()) {
-                finalRecordsOfSuccess.forEach {
-                    syncIamGroupMember(
-                        projectCode = it.projectCode,
-                        iamGroupId = it.iamGroupId
-                    )
-                }
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordsOfSuccess.map { it.id },
-                    applyToGroupStatus = ApplyToGroupStatus.SUCCEED
-                )
-            }
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
+            finalRecordsOfPending.addAll(recordsOfPending)
+            finalRecordsOfSuccess.addAll(recordsOfSuccess)
+            offset += limit
+        } while (records.size == limit)
+        if (finalRecordsOfPending.isNotEmpty()) {
+            authResourceGroupApplyDao.batchUpdate(
+                dslContext = dslContext,
+                ids = finalRecordsOfPending.map { it.id },
+                applyToGroupStatus = ApplyToGroupStatus.PENDING
+            )
         }
+        if (finalRecordsOfSuccess.isNotEmpty()) {
+            finalRecordsOfSuccess.forEach {
+                syncIamGroupMember(
+                    projectCode = it.projectCode,
+                    iamGroupId = it.iamGroupId
+                )
+            }
+            authResourceGroupApplyDao.batchUpdate(
+                dslContext = dslContext,
+                ids = finalRecordsOfSuccess.map { it.id },
+                applyToGroupStatus = ApplyToGroupStatus.SUCCEED
+            )
+        }
+        logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
     }
 
     override fun syncGroupAndMember(projectCode: String) {
