@@ -144,11 +144,18 @@ const fieldMap = [
     current: 'productName',
     after: 'afterProductName'
   },
+  
+];
+const propertiesFieldMap = [
   {
     current: 'pipelineDialect',
     after: 'afterPipelineDialect',
   },
-];
+  {
+    current: 'pipelineNameFormat',
+    after: 'afterPipelineNameFormat',
+  },
+]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
     englishName: projectCode,
@@ -158,7 +165,12 @@ const fetchDiffProjectData = () => {
     fetchOperationalList(projectDiffData.value.afterBgName);
 
     fieldMap.forEach((field) => {
-      if (projectData.value[field.current] !== projectDiffData.value[field.after]) {
+      if ((projectData.value[field.current] !== projectDiffData.value[field.after])) {
+        projectData.value[field.after] = projectDiffData.value[field.after];
+      }
+    });
+    propertiesFieldMap.forEach((field) => {
+      if (projectData.value?.properties[field.current] !== projectDiffData.value?.[field.after]) {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
@@ -517,11 +529,11 @@ onMounted(async () => {
                     property="pipelineNameFormat"
                   >
                     <span class="item-value">{{ projectData.properties.pipelineNameFormat || '--' }}</span>
-                    <div class="diff-content" v-if="projectData.properties.afterPipelineNameFormat">
+                    <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
                       <p class="update-title">
                         {{ t('本次更新：') }}
                       </p>
-                      <span>{{ projectData.properties.afterPipelineNameFormat }}</span>
+                      <span>{{ projectData.afterPipelineNameFormat }}</span>
                     </div>
                   </bk-form-item>
                 </bk-form>
