@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
-import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -38,6 +37,10 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
+
+    companion object {
+        private const val BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH = "BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH"
+    }
 
     private val logger = LoggerFactory.getLogger(JavaAtomRunConditionHandleServiceImpl::class.java)
 
@@ -63,7 +66,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 javaPath = atomJdkPath
             }
         }
-        System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, javaPath)
+        System.setProperty(BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH, javaPath)
         return true
     }
 
@@ -72,7 +75,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         postEntryParam: String?
     ): String {
-        val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+        val executePath = System.getProperty(BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH)
         logger.info(
             "handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam,executePath:$executePath"
         )
