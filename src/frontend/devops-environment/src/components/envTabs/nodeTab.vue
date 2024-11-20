@@ -665,7 +665,11 @@
             },
             handleToNodeDetailPage (row) {
                 if (row.nodeType === 'CMDB') return
-                window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
+                if (this.curEnvDetail.envType === 'DEVX') {
+                    window.open(`${location.origin}/console/devx/${this.projectId}/instance-manage?active=${row.displayName}&tab=baseInfo`, '_blank')
+                } else {
+                    window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
+                }
             }
         }
     }
