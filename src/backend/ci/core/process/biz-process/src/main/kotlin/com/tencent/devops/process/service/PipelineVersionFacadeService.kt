@@ -581,7 +581,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 name = request.pipelineName,
                 templateId = request.templateId,
                 instanceFromTemplate = false,
-                staticViews = request.staticViews
+                staticViews = request.staticViews,
+                labels = request.labels
             ),
             channelCode = ChannelCode.BS,
             setting = setting,

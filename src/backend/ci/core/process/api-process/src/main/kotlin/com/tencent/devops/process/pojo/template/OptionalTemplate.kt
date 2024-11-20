@@ -90,7 +90,7 @@ data class CloneTemplateSettingExist(
                 notifySettingExist = !setting.notifySettingIsNull(),
                 concurrencySettingExist = !setting.concurrencySettingIsNull(),
                 labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false,
-                inheritedDialect = setting.pipelineAsCodeSettings?.inheritedDialect,
+                inheritedDialect = setting.pipelineAsCodeSettings?.inheritedDialect ?: true,
                 pipelineDialect = setting.pipelineAsCodeSettings?.pipelineDialect
             )
         }

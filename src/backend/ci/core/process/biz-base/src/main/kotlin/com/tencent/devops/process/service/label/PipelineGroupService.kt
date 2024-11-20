@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
@@ -55,9 +56,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -65,6 +64,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -135,12 +135,6 @@ class PipelineGroupService @Autowired constructor(
                 labelNames = it.labels.map { label -> label.name }
             )
         }
-    }
-
-    fun getPipelineLabels(userId: String, projectId: String, pipelineId: String): List<PipelineGroup> {
-        val labelRecords = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId)
-        val labelIds = labelRecords.map { it.labelId }.toSet()
-        return getLabelsGroupByGroup(projectId, labelIds)
     }
 
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {

@@ -82,18 +82,4 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
             Result(data = false, message = e.message)
         }
     }
-
-    override fun getPipelineLabels(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<List<PipelineGroup>> {
-        return Result(
-            pipelineGroupService.getPipelineLabels(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        )
-    }
 }
