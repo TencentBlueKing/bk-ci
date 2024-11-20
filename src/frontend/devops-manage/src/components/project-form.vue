@@ -596,15 +596,10 @@ onBeforeUnmount(() => {
       margin-bottom: 24px;
     }
     .title {
-      width: 56px;
-      height: 22px;
       margin-bottom: 16px;
-      font-family: MicrosoftYaHei-Bold;
       font-weight: 700;
       font-size: 14px;
       color: #63656E;
-      letter-spacing: 0;
-      line-height: 22px;
     }
     .sub-title {
       font-size: 14px;
