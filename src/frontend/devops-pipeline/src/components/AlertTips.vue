@@ -82,7 +82,8 @@
         align-items: baseline;
         width: 100%;
         font-size: 12px;
-        padding: 0 10px;
+        padding: 0 15px;
+        line-height: 20px;
         background: #F0F8FF;
         border: 2px solid #C5DAFF;
         border-radius: 4px;
@@ -90,13 +91,14 @@
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
-        max-height: 3em;
         &.expand {
             max-height: 15em;
             overflow: auto;
             -webkit-line-clamp: unset;
         }
         .tips-icon {
+            position: relative;
+            bottom: 1px;
             color: #3A84FF;
             margin-right: 5px;
             flex-shrink: 0;
