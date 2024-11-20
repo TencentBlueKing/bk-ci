@@ -70,10 +70,12 @@ data class ProjectProperties(
      * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改
      */
     fun userCopy(updateProperties: ProjectProperties): ProjectProperties {
-        return copy(
-            pipelineDialect = updateProperties.pipelineDialect,
-            enablePipelineNameTips = updateProperties.enablePipelineNameTips,
-            pipelineNameFormat = updateProperties.pipelineNameFormat
-        )
+        with(updateProperties) {
+            return this@ProjectProperties.copy(
+                pipelineDialect = pipelineDialect,
+                enablePipelineNameTips = enablePipelineNameTips,
+                pipelineNameFormat = pipelineNameFormat
+            )
+        }
     }
 }
