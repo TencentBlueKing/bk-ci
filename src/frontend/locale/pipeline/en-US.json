@@ -1621,24 +1621,20 @@
   "CONSTRAINED": "Constraint Style",
   "grammaticalDifferences": "Grammatical Differences",
   "differenceItem": "Difference Item",
-
   "expressionFormat": "Expression Format",
   "traditionalFormat": "Single or Double Curly Braces",
   "traditionalFormatExample": "e.g., ${var}, ${{var}}",
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${{variables.var}}",
-
   "expressionFunction": "Expression Functions",
   "expressionFunctionTip": "e.g., contains, join, fromJSON...",
   "traditionalFunctionFormat": "Can only be used in the flow control option {0} settings",
   "customExpressionsSatisfyRun": "custom expressions satisfy run",
   "constraintFunctionFormat": "Functions can be used in pipeline configurations such as flow control options, plugin parameters, and Job settings",
   "constraintFunctionFormatExample": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo \"a.node is ${{fromJSON(a).node}}\"",
-
   "variableValueTooLong": "Variable Value Too Long",
   "traditionalValueTooLongMode": "Only Warning without Error",
   "constraintReadOnlyMode": "It will cause errors and the run will fail",
-
   "variableStandard": "Variable ID Standard",
   "traditionalStandardMode": "No Restriction",
   "constraintStandardMode": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",
@@ -1665,7 +1661,11 @@
     "SUCCESS_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next successful build will start counting from {1}",
     "EVERY_BUILD_INCREMENT": "After resetting the build number to the baseline value {0}, the next build will start counting from {1}",
     "strategy": "Strategy",
-    "instanceBuildNo": "Immediately reset to baseline value after instantiation"
+    "instanceBuildNo": "Immediately reset to baseline value after instantiation",
+    "forthcomingReset": "Build number has changed, reset is imminent!",
+    "instanceConfirm": "Instantiate and reset build number",
+    "forthcomingResetPipeline": "The following pipeline build numbers have been detected to change, and will automatically reset after instantiation:",
+    "uncheck": "If you do not need to reset immediately, you can uncheck \"Reset to baseline value immediately after instantiation\", and manually reset it on the pipeline view page when needed."
   },
   "deleteDraft": "Delete Draft",
   "sureDeleteDraft": "Are you sure you want to delete this draft?",

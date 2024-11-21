@@ -1,7 +1,7 @@
 <template>
     <bk-form
-        :class="[{ 'is-not-Preview': !isPreview && !isInstance }, 'pipeline-execute-version-params']"
-        :form-type="!isPreview && !isInstance ? 'vertical' : 'inline'"
+        :class="[{ 'is-not-Preview': isTemplateEdit }, 'pipeline-execute-version-params']"
+        :form-type="formType"
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
@@ -28,8 +28,8 @@
         </bk-form-item>
 
         <div
+            v-if="isTemplateEdit"
             class="execute-buildno-params"
-            v-if="!isPreview && !isInstance"
         >
             <bk-form-item
                 required
@@ -42,7 +42,7 @@
                     :error-msg="errors.first('buildNo')"
                 >
                     <vuex-input
-                        :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled"
+                        :disabled="isPreviewAndLockedNo"
                         input-type="number"
                         name="buildNo"
                         placeholder="BK_CI_BUILD_NO"
@@ -83,15 +83,16 @@
             </form-field>
         </div>
         <bk-form-item
-            ext-cls="preview-buildno"
             v-else
+            ext-cls="preview-buildno"
         >
             <label class="pipeline-execute-version-label">
                 <span>{{ $t('buildNum') }}</span>
                 <bk-checkbox
-                    v-if="isInstance"
+                    v-if="isInstance && !isInitInstance"
                     class="instance_reset"
-                    :value="buildNo.isReset"
+                    :value="updateBuildNo"
+                    @change="handleCheckChange"
                 >
                     {{ $t('buildNoBaseline.instanceBuildNo') }}
                 </bk-checkbox>
@@ -110,7 +111,7 @@
                         v-else
                     >
                         <vuex-input
-                            :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled"
+                            :disabled="isPreviewAndLockedNo"
                             input-type="number"
                             name="buildNo"
                             placeholder="BK_CI_BUILD_NO"
@@ -130,11 +131,14 @@
                         {{ currentBuildNoType }}
                     </span>
                 </div>
-                <div class="build">
+                <div
+                    class="build"
+                    v-if="!isInitInstance"
+                >
                     <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                     <p>
                         <vuex-input
-                            :disabled="buildNo.buildNoType !== 'CONSISTENT' && !isInstance"
+                            :disabled="(isConsistent && !isInstance) || isInstance"
                             input-type="number"
                             name="currentBuildNo"
                             placeholder="CURRENT_BUILD_NO"
@@ -143,6 +147,16 @@
                             :handle-change="handleBuildNoChange"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
+                        <span
+                            v-if="updateBuildNo && isInstance"
+                            class="reset-build-no"
+                        >
+                            <Logo
+                                size="14"
+                                name="arrow-right"
+                            />
+                            {{ buildNo.buildNo }}
+                        </span>
                     </p>
                 </div>
             </div>
@@ -189,9 +203,13 @@
                 type: Function,
                 default: () => () => { }
             },
-            isInstance: {
-                type: Boolean
-            }
+            handleCheckChange: {
+                type: Function,
+                default: () => () => { }
+            },
+            isInstance: Boolean,
+            isInitInstance: Boolean,
+            updateBuildNo: Boolean
         },
         data () {
             return {
@@ -225,6 +243,18 @@
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
+            },
+            formType () {
+                return this.isTemplateEdit ? 'vertical' : 'inline'
+            },
+            isLockedNo () {
+                return this.buildNo.buildNoType !== 'CONSISTENT'
+            },
+            isTemplateEdit () {
+                return !this.isPreview && !this.isInstance
+            },
+            isPreviewAndLockedNo () {
+                return (this.isConsistent && this.isPreview) || this.disabled
             }
         }
     }
@@ -258,6 +288,7 @@
         grid-template-columns: repeat(3, 1fr);
         grid-gap: 16px;
         width: 222px;
+        margin-right: 20px;
 
         .execute-build-version-input:not(:last-child) {
             position: relative;
@@ -286,8 +317,7 @@
         }
     }
     .preview-buildno {
-        margin-left: 20px;
-        
+        margin-left: 0;
         .preview-buildno-params {
             display: flex;
             
@@ -311,6 +341,7 @@
                 }
 
                 .build-value {
+                    min-width: 153px;
                     margin-right: 16px;
                     border-left: none;
                     border-radius: 0 2px 2px 0;
@@ -321,11 +352,20 @@
                     position: relative;
                     display: flex;
 
-                    .is-danger{
+                    .is-danger {
                         position: absolute;
                         white-space: nowrap;
                         top: 70%;
                         left: 0;
+                    }
+
+                    .reset-build-no {
+                        display: flex;
+                        align-items: center;
+                        color: #3A84FF;
+                        svg {
+                            margin: 0 8px 0 16px;
+                        }
                     }
                 }
 

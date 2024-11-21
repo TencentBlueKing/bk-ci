@@ -172,9 +172,12 @@
                                     :build-no="param.buildParams"
                                     :disabled="disabled"
                                     :is-instance="true"
+                                    :is-init-instance="!hashVal"
+                                    :update-build-no="param.updateBuildNo"
                                     :version-param-values="param.paramValues"
                                     :handle-version-change="handleParamChange"
                                     :handle-build-no-change="handleBuildNoChange"
+                                    :handle-check-change="handleCheckChange"
                                 ></pipeline-versions-form>
                             </div>
                         </section>
@@ -309,7 +312,8 @@
                 paramValues: {},
                 templateParamValues: {},
                 showUpdateDialog: false,
-                displayName: ''
+                displayName: '',
+                resetInstanceName: []
             }
         },
         computed: {
@@ -463,6 +467,7 @@
                     }
                     if (item.buildNo) {
                         pipelineItem.buildParams = item.buildNo
+                        pipelineItem.updateBuildNo = item.updateBuildNo
                     }
                     if (item.param.length) {
                         const paramValues = item.param.reduce((values, param) => {
@@ -535,6 +540,13 @@
                     }
                 })
             },
+            handleCheckChange (value) {
+                this.pipelineNameList.forEach(item => {
+                    if (item.pipelineName === this.currentPipelineParams.pipelineName) {
+                        item.updateBuildNo = value
+                    }
+                })
+            },
             lastClickPipeline (key) {
                 this.pipelineNameList.forEach((item, index) => {
                     item.selected = index === key
@@ -604,6 +616,61 @@
                     readOnly: false
                 }))
             },
+            async handleInstance (params) {
+                let message, theme
+                const { $store, loading } = this
+
+                loading.isLoading = true
+
+                try {
+                    let res
+                    const payload = {
+                        projectId: this.projectId,
+                        templateId: this.templateId,
+                        versionId: this.instanceVersion,
+                        useTemplateSettings: this.isTemplateSetting,
+                        params
+                    }
+                    if (this.hashVal) {
+                        res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
+                        if (res) {
+                            this.showUpdateDialog = true
+                        }
+                    } else {
+                        res = await $store.dispatch('pipelines/createTemplateInstance', payload)
+                        if (res) {
+                            const successCount = res.successPipelines.length
+                            const failCount = res.failurePipelines.length
+
+                            if (successCount && !failCount) {
+                                message = this.$t('template.submitSucTips', [successCount])
+                                theme = 'success'
+
+                                this.$showTips({
+                                    message: message,
+                                    theme: theme
+                                })
+                                this.toInstanceManage()
+                            } else if (failCount) {
+                                this.successList = res.successPipelines || []
+                                this.failList = res.failurePipelines || []
+                                this.failMessage = res.failureMessages || []
+                                this.showInstanceMessage = true
+                            }
+                        }
+                    }
+                } catch (err) {
+                    message = err.message || err
+                    theme = 'error'
+
+                    this.$showTips({
+                        message: message,
+                        theme: theme
+                    })
+                } finally {
+                    this.loading.isLoading = false
+                }
+            },
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
@@ -617,15 +684,16 @@
                     })
                 } else {
                     const params = []
-                    let message, theme
-                    const { $store, loading } = this
+                    const h = this.$createElement
 
                     this.pipelineNameList.forEach(pipeline => {
+                        const { currentBuildNo, ...buildParams } = pipeline.buildParams
                         params.push({
                             pipelineName: pipeline.pipelineName,
                             pipelineId: this.hashVal ? pipeline.pipelineId : undefined,
-                            buildNo: pipeline.buildParams || undefined,
-                            param: pipeline.params
+                            buildNo: buildParams || undefined,
+                            param: pipeline.params,
+                            updateBuildNo: pipeline.updateBuildNo
                         })
                     })
                     const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
@@ -636,56 +704,31 @@
                         })
                         return
                     }
+                    this.resetInstanceName = params.filter(item => item.updateBuildNo).map(item => item.pipelineName)
 
-                    loading.isLoading = true
-
-                    try {
-                        let res
-                        const payload = {
-                            projectId: this.projectId,
-                            templateId: this.templateId,
-                            versionId: this.instanceVersion,
-                            useTemplateSettings: this.isTemplateSetting,
-                            params
-                        }
-                        if (this.hashVal) {
-                            res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
-                            if (res) {
-                                this.showUpdateDialog = true
+                    if (this.resetInstanceName.length) {
+                        this.$bkInfo({
+                            width: 600,
+                            type: 'warning',
+                            title: this.$t('buildNoBaseline.forthcomingReset'),
+                            okText: this.$t('buildNoBaseline.instanceConfirm'),
+                            cancelText: this.$t('cancel'),
+                            subHeader: h('div', { class: 'reset-content' }, [
+                                h('div', { class: 'reset-pipeline-name' }, [
+                                    h('p', { class: 'reset-info' }, this.$t('buildNoBaseline.forthcomingResetPipeline')),
+                                    h('ul', { class: 'pipeline-list' }, this.resetInstanceName.map(
+                                        name => h('li', `- ${name}`)
+                                    ))
+                                ]),
+                                h('p', { class: 'reset-info' }, this.$t('buildNoBaseline.uncheck'))
+                            ]),
+                            confirmFn: () => {
+                                this.handleInstance(params)
+                                console.log('🚀 ~ submit ~ this.pipelineNameList:', this.resetInstanceName)
                             }
-                        } else {
-                            res = await $store.dispatch('pipelines/createTemplateInstance', payload)
-                            if (res) {
-                                const successCount = res.successPipelines.length
-                                const failCount = res.failurePipelines.length
-
-                                if (successCount && !failCount) {
-                                    message = this.$t('template.submitSucTips', [successCount])
-                                    theme = 'success'
-
-                                    this.$showTips({
-                                        message: message,
-                                        theme: theme
-                                    })
-                                    this.toInstanceManage()
-                                } else if (failCount) {
-                                    this.successList = res.successPipelines || []
-                                    this.failList = res.failurePipelines || []
-                                    this.failMessage = res.failureMessages || []
-                                    this.showInstanceMessage = true
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        message = err.message || err
-                        theme = 'error'
-
-                        this.$showTips({
-                            message: message,
-                            theme: theme
                         })
-                    } finally {
-                        this.loading.isLoading = false
+                    } else {
+                        this.handleInstance(params)
                     }
                 }
             }
@@ -976,5 +1019,23 @@
                 cursor: pointer;
             }
         }
+    }
+    .reset-content {
+        font-size: 14px;
+        text-align: left;
+        .reset-pipeline-name {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+            background-color: #f5f6fa;
+            .reset-info {
+                margin-bottom: 20px;
+            }
+            li {
+                margin: 8px 0;
+            }
+        }
+
     }
 </style>
