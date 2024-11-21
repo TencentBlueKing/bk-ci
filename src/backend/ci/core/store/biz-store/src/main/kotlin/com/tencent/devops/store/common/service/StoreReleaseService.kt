@@ -131,4 +131,15 @@ interface StoreReleaseService {
         userId: String,
         storeId: String
     ): Boolean
+
+    /**
+     * 返回上一步
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 布尔值
+     */
+    fun back(
+        userId: String,
+        storeId: String
+    ): Boolean
 }
