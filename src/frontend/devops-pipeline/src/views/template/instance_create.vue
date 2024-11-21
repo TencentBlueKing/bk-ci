@@ -724,7 +724,6 @@
                             ]),
                             confirmFn: () => {
                                 this.handleInstance(params)
-                                console.log('🚀 ~ submit ~ this.pipelineNameList:', this.resetInstanceName)
                             }
                         })
                     } else {
