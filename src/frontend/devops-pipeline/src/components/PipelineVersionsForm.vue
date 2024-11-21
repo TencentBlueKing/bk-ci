@@ -91,7 +91,7 @@
                 <bk-checkbox
                     v-if="isInstance && !isInitInstance"
                     class="instance_reset"
-                    :value="updateBuildNo"
+                    :value="resetBuildNo"
                     @change="handleCheckChange"
                 >
                     {{ $t('buildNoBaseline.instanceBuildNo') }}
@@ -138,7 +138,7 @@
                     <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                     <p>
                         <vuex-input
-                            :disabled="(isConsistent && !isInstance) || isInstance"
+                            :disabled="(isLockedNo && !isInstance) || isInstance"
                             input-type="number"
                             name="currentBuildNo"
                             placeholder="CURRENT_BUILD_NO"
@@ -148,7 +148,7 @@
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
                         <span
-                            v-if="updateBuildNo && isInstance"
+                            v-if="resetBuildNo && isInstance"
                             class="reset-build-no"
                         >
                             <Logo
@@ -209,7 +209,7 @@
             },
             isInstance: Boolean,
             isInitInstance: Boolean,
-            updateBuildNo: Boolean
+            resetBuildNo: Boolean
         },
         data () {
             return {
@@ -254,7 +254,7 @@
                 return !this.isPreview && !this.isInstance
             },
             isPreviewAndLockedNo () {
-                return (this.isConsistent && this.isPreview) || this.disabled
+                return (this.isLockedNo && this.isPreview) || this.disabled
             }
         }
     }

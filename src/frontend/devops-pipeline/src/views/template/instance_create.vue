@@ -173,7 +173,7 @@
                                     :disabled="disabled"
                                     :is-instance="true"
                                     :is-init-instance="!hashVal"
-                                    :update-build-no="param.updateBuildNo"
+                                    :reset-build-no="param.resetBuildNo"
                                     :version-param-values="param.paramValues"
                                     :handle-version-change="handleParamChange"
                                     :handle-build-no-change="handleBuildNoChange"
@@ -467,7 +467,7 @@
                     }
                     if (item.buildNo) {
                         pipelineItem.buildParams = item.buildNo
-                        pipelineItem.updateBuildNo = item.updateBuildNo
+                        pipelineItem.resetBuildNo = item.updateBuildNo
                     }
                     if (item.param.length) {
                         const paramValues = item.param.reduce((values, param) => {
@@ -543,7 +543,7 @@
             handleCheckChange (value) {
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
-                        item.updateBuildNo = value
+                        item.resetBuildNo = value
                     }
                 })
             },
@@ -693,7 +693,7 @@
                             pipelineId: this.hashVal ? pipeline.pipelineId : undefined,
                             buildNo: buildParams || undefined,
                             param: pipeline.params,
-                            updateBuildNo: pipeline.updateBuildNo
+                            resetBuildNo: pipeline.resetBuildNo
                         })
                     })
                     const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
@@ -704,8 +704,8 @@
                         })
                         return
                     }
-                    this.resetInstanceName = params.filter(item => item.updateBuildNo).map(item => item.pipelineName)
-
+                    this.resetInstanceName = params.filter(item => item.resetBuildNo).map(item => item.pipelineName)
+  
                     if (this.resetInstanceName.length) {
                         this.$bkInfo({
                             width: 600,
