@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
             v-model="projectData.properties.pipelineNameFormat"
             :placeholder="t('请输入流水线命名规范提示说明')"
             :rows="3"
-            :maxlength="100"
+            :maxlength="200"
             type="textarea"
           >
           </bk-input>
