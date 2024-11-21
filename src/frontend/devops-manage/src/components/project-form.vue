@@ -617,7 +617,7 @@ onBeforeUnmount(() => {
             v-model="projectData.properties.pipelineNameFormat"
             :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
             :rows="3"
-            :maxlength="100"
+            :maxlength="200"
             type="textarea"
           >
           </bk-input>
