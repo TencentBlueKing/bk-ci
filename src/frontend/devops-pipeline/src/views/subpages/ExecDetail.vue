@@ -61,10 +61,10 @@
                         name="default-user"
                         size="24"
                     />
-                    <span v-if="execDetail.triggerUser">
+                    <span v-if="execDetail.lastModifyUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.triggerUser,
+                                execDetail.lastModifyUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
