@@ -151,3 +151,6 @@ with open(output_value_yaml, 'w') as value_file:
             default_value = '80'
         value = str(default_value_dict.get(camelize, default_value))
         value_file.write('  '+camelize+': '+value+'\n')
+
+# 更新依赖
+os.system("/bin/bash -c ./dependencyBuild.sh")

@@ -35,11 +35,5 @@ class ClassicPipelineDialect : IPipelineDialect {
 
     override fun supportUseExpression() = false
 
-    override fun supportUseSingleCurlyBracesVar() = true
-
-    override fun supportLongVarValue() = true
-
     override fun supportChineseVarName() = true
-
-    override fun supportMissingVar() = true
 }

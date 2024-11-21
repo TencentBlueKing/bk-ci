@@ -45,15 +45,16 @@ import {
 } from '@/utils/permission'
 import bkMagic from 'bk-magic-vue'
 
-import { pipelineDocs } from '../../common-lib/docs'
+import createDocs from '../../common-lib/docs'
 // 权限指令
 import 'bk-magic-vue/dist/bk-magic-vue.min.css'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 
-const { i18n, setLocale } = createLocale(
+const { lang, i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
+const { pipelineDocs } = createDocs(lang, window.BK_CI_VERSION)
 const isInIframe = window.self !== window.parent
 
 Vue.use(focus)

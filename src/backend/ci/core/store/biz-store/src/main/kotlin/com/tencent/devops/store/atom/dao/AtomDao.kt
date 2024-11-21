@@ -1130,8 +1130,7 @@ class AtomDao : AtomBaseDao() {
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
         val tc = TClassify.T_CLASSIFY
-        return step.join(tc)
-            .on(ta.CLASSIFY_ID.eq(tc.ID))
+        return step.join(tc).on(ta.CLASSIFY_ID.eq(tc.ID))
             .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
@@ -1154,9 +1153,6 @@ class AtomDao : AtomBaseDao() {
             dslContext = dslContext
         )
         val tc = TClassify.T_CLASSIFY
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta).groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
@@ -1176,11 +1172,6 @@ class AtomDao : AtomBaseDao() {
             tspr.TYPE.`as`(KEY_INSTALL_TYPE)
         )
             .from(ta)
-            .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)
@@ -1203,12 +1194,18 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             conditions.add(ta.DEFAULT_FLAG.eq(true))
-            conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            conditions.add(ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                )
+            ))
         } else {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
-            conditions.add(tspr.TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
+        conditions.add(ta.LATEST_FLAG.eq(true))
 
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
@@ -1442,11 +1439,6 @@ class AtomDao : AtomBaseDao() {
             dslContext = dslContext
         )
         val tc = TClassify.T_CLASSIFY
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta)
-            .where(ta.DEFAULT_FLAG.eq(true).and(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
-            .groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
@@ -1463,11 +1455,6 @@ class AtomDao : AtomBaseDao() {
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME)
         )
             .from(ta)
-            .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .where(conditions)
