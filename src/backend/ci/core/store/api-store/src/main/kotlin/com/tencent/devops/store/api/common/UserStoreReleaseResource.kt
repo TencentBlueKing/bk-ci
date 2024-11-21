@@ -154,4 +154,16 @@ interface UserStoreReleaseResource {
         @PathParam("storeId")
         storeId: String
     ): Result<Boolean>
+
+    @Operation(summary = "返回上一步")
+    @PUT
+    @Path("/components/{storeId}/step/back")
+    fun back(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件Id", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<Boolean>
 }

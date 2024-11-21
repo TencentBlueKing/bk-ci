@@ -503,6 +503,33 @@ class StoreReleaseServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun back(userId: String, storeId: String): Boolean {
+        val record = storeBaseQueryDao.getComponentById(dslContext, storeId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
+        val recordStatus = StoreStatusEnum.valueOf(record.status)
+        when (recordStatus) {
+            StoreStatusEnum.TESTING -> {
+                // 测试中状态的上一步需要进行重新构建
+                rebuild(userId, storeId)
+            }
+
+            StoreStatusEnum.EDITING -> {
+                // 把组件状态置为上一步的状态
+                storeBaseManageDao.updateStoreBaseInfo(
+                    dslContext = dslContext, updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                        id = storeId, status = StoreStatusEnum.TESTING, modifier = userId
+                    )
+                )
+            }
+
+            else -> {
+                // 其它状态不允许回退至上一步
+                throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+            }
+        }
+        return true
+    }
+
     private fun offlineComponentByVersion(
         storeType: StoreTypeEnum,
         storeCode: String,
@@ -620,9 +647,9 @@ class StoreReleaseServiceImpl @Autowired constructor(
         )?.fieldValue
         val testingValidPreviousStatuses = if (repositoryHashId.isNullOrBlank()) {
             // 传包方式可以进入测试中的状态是提交中
-            listOf(StoreStatusEnum.COMMITTING)
+            listOf(StoreStatusEnum.COMMITTING, StoreStatusEnum.EDITING)
         } else {
-            listOf(StoreStatusEnum.BUILDING, StoreStatusEnum.CHECKING)
+            listOf(StoreStatusEnum.BUILDING, StoreStatusEnum.CHECKING, StoreStatusEnum.EDITING)
         }
         val releasedValidPreviousStatuses = if (isNormalUpgrade == true) {
             // 普通升级可以由测试中的状态直接发布

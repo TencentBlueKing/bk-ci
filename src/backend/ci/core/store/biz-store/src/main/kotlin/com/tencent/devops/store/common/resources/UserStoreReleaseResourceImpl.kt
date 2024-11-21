@@ -86,4 +86,8 @@ class UserStoreReleaseResourceImpl @Autowired constructor(
     override fun rebuild(userId: String, storeId: String): Result<Boolean> {
         return Result(storeReleaseService.rebuild(userId, storeId))
     }
+
+    override fun back(userId: String, storeId: String): Result<Boolean> {
+        return Result(storeReleaseService.back(userId, storeId))
+    }
 }
