@@ -25,28 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.plugin.trigger.pojo.event
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * 订阅流水线事件
- *
- * @version 1.0
- */
-@Event(StreamBinding.PIPELINE_TIMER)
-data class PipelineTimerBuildEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val channelCode: ChannelCode,
-    val taskId: String,
-    val startParam: Map<String,String>?,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@Tag(name = "OP_PIPELINE_AGENT_REF", description = "OP-流水线-更新流水线定时触发信息")
+@Path("/op/pipeline/timer")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineTimerResource {
+
+    @Operation(summary = "更新定时触发器信息")
+    @POST
+    @Path("/update")
+    fun updatePipelineTimerInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
+}

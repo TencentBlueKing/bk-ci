@@ -31,6 +31,7 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -49,7 +50,8 @@ open class PipelineTimerDao {
         channelCode: ChannelCode,
         repoHashId: String?,
         branchs: String?,
-        noScm: Boolean?
+        noScm: Boolean?,
+        startParam: String?
     ): Int {
         return with(T_PIPELINE_TIMER) {
             dslContext.insertInto(
@@ -62,7 +64,8 @@ open class PipelineTimerDao {
                 CHANNEL,
                 REPO_HASH_ID,
                 BRANCHS,
-                NO_SCM
+                NO_SCM,
+                START_PARAM
             ).values(
                 projectId,
                 pipelineId,
@@ -72,7 +75,8 @@ open class PipelineTimerDao {
                 channelCode.name,
                 repoHashId,
                 branchs,
-                noScm
+                noScm,
+                startParam
             )
                 .onDuplicateKeyUpdate()
                 .set(CREATE_TIME, LocalDateTime.now())
@@ -82,14 +86,15 @@ open class PipelineTimerDao {
                 .set(REPO_HASH_ID, repoHashId)
                 .set(BRANCHS, branchs)
                 .set(NO_SCM, noScm)
+                .set(START_PARAM, startParam)
                 .execute()
         }
     }
 
-    open fun get(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineTimerRecord? {
+    open fun get(dslContext: DSLContext, projectId: String, pipelineId: String, taskId: String): TPipelineTimerRecord? {
         return with(T_PIPELINE_TIMER) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId).and(TASK_ID.eq(taskId))))
                 .fetchAny()
         }
     }
@@ -102,9 +107,75 @@ open class PipelineTimerDao {
         }
     }
 
+    open fun delete(dslContext: DSLContext, projectId: String, pipelineId: String, taskId: String): Int {
+        return with(T_PIPELINE_TIMER) {
+            dslContext.delete(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId).and(TASK_ID.eq(taskId))))
+                .execute()
+        }
+    }
+
     open fun list(dslContext: DSLContext, offset: Int, limit: Int): Result<TPipelineTimerRecord> {
         return with(T_PIPELINE_TIMER) {
             dslContext.selectFrom(this).limit(offset, limit).skipCheck().fetch()
+        }
+    }
+
+    fun list(dslContext: DSLContext, projectId: String, pipelineId: String): Result<TPipelineTimerRecord> {
+        return with(T_PIPELINE_TIMER) {
+            dslContext.selectFrom(this).where(
+                PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId))
+            ).fetch()
+        }
+    }
+
+    fun listPipeline(
+        dslContext: DSLContext,
+        projectId: String?,
+        pipelineId: String?,
+        offset: Int,
+        limit: Int
+    ): List<Pair<String, String>> {
+        return with(T_PIPELINE_TIMER) {
+            val conditions = mutableListOf<Condition>()
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            dslContext.select(PROJECT_ID, PIPELINE_ID)
+                .from(this)
+                .where(conditions)
+                .groupBy(PROJECT_ID, PIPELINE_ID)
+                .orderBy(PROJECT_ID, PIPELINE_ID)
+                .limit(offset, limit)
+                .skipCheck()
+                .fetch()
+                .map {
+                    it.value1() to it.value2()
+                }
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        startParam: String?
+    ): Int {
+        return with(T_PIPELINE_TIMER) {
+            dslContext.update(this)
+                .set(TASK_ID, taskId)
+                .let {
+                    if (!startParam.isNullOrBlank()) {
+                        it.set(START_PARAM, startParam)
+                    }
+                    it
+                }
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
         }
     }
 }

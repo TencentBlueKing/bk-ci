@@ -79,7 +79,11 @@ class PipelineTimerBuildListener @Autowired constructor(
 
     override fun run(event: PipelineTimerBuildEvent) {
         val pipelineTimer =
-            pipelineTimerService.get(projectId = event.projectId, pipelineId = event.pipelineId) ?: return
+            pipelineTimerService.get(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                taskId = event.taskId
+            ) ?: return
         with(pipelineTimer) {
             when {
                 repoHashId.isNullOrBlank() ->
@@ -107,7 +111,7 @@ class PipelineTimerBuildListener @Autowired constructor(
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
                 if (buildResult.data.isNullOrBlank()) {
-                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
+                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId, event.taskId)
                     logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")

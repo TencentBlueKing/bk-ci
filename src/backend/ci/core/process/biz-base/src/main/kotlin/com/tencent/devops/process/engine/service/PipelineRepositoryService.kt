@@ -1307,6 +1307,17 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 批量获取model
+     */
+    fun getModel(projectId: String, pipelineId: String): Model? {
+        return pipelineResourceDao.getLatestVersionModelString(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { str2model(it, pipelineId) }
+    }
+
+    /**
      * 获取编排版本的通用方法
      * 1 如果指定了[version]则一定按照version号查询版本
      * 2 如果没有指定版本，则通过[includeDraft]控制是否过滤掉草稿，获得最新版本流水线
