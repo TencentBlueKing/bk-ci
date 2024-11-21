@@ -61,10 +61,8 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
-import org.apache.kafka.common.utils.SecurityUtils.resourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -127,7 +125,7 @@ class ProjectLocalService @Autowired constructor(
                 client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
                     token = tokenService.getSystemToken()
-                ).data
+                ).data!!
             }
         } catch (e: Exception) {
             logger.error("getUserProjects error", e)
