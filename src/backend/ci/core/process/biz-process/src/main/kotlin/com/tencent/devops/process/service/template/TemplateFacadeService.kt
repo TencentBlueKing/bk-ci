@@ -1876,6 +1876,16 @@ class TemplateFacadeService @Autowired constructor(
                 checkPermission = true,
                 checkTemplate = false
             )
+            templateInstanceUpdate.buildNo?.let {
+                if (templateInstanceUpdate.resetBuildNo == true) {
+                    pipelineInfoFacadeService.updateBuildNo(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        targetBuildNo = it.buildNo
+                    )
+                }
+            }
         }
     }
 
