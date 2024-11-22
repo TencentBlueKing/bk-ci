@@ -46,7 +46,15 @@ interface PermissionProjectService {
         resourceType: String? = null
     ): List<String>
 
+    /**
+     * 是否有项目访问权限
+     * */
     fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
+
+    /**
+     * 是否是项目成员，即加入了项目
+     * */
+    fun isProjectMember(userId: String, projectCode: String): Boolean
 
     fun checkUserInProjectLevelGroup(
         userId: String,

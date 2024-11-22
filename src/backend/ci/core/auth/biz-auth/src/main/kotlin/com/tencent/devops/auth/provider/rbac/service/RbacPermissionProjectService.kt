@@ -149,6 +149,16 @@ class RbacPermissionProjectService(
         }
     }
 
+    override fun isProjectMember(
+        userId: String,
+        projectCode: String
+    ): Boolean {
+        return resourceMemberService.isProjectMember(
+            projectCode = projectCode,
+            memberId = userId
+        )
+    }
+
     override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
         return resourceGroupMemberService.getResourceGroupMembers(
             projectCode = projectCode,

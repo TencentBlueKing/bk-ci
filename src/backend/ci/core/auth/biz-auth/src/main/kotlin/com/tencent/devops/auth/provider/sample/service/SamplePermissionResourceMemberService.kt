@@ -43,6 +43,10 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         departments: List<String>?
     ) = true
 
+    override fun isProjectMember(projectCode: String, memberId: String): Boolean {
+        return true
+    }
+
     override fun batchDeleteResourceGroupMembers(
         projectCode: String,
         iamGroupId: Int,

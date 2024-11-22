@@ -269,6 +269,22 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun isMemberInProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberId: String
+    ): Boolean {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(MEMBER_ID.eq(memberId))
+                .and(EXPIRED_TIME.ge(LocalDateTime.now()))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
+
     fun handoverGroupMembers(
         dslContext: DSLContext,
         projectCode: String,
