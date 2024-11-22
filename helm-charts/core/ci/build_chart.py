@@ -153,4 +153,5 @@ with open(output_value_yaml, 'w') as value_file:
         value_file.write('  '+camelize+': '+value+'\n')
 
 # 更新依赖
+os.system("chmod +x ./dependencyBuild.sh")
 os.system("/bin/bash -c ./dependencyBuild.sh")
