@@ -90,7 +90,7 @@
                                             @click.stop
                                         >
                                             <i
-                                                @click.stop="handleCopy(param)"
+                                                @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))"
                                                 class="bk-icon icon-copy"
                                             ></i>
                                             <bk-popconfirm
@@ -127,7 +127,7 @@
 
 <script>
     import vueDraggable from 'vuedraggable'
-    import { bkVarWrapper, bkVarRepoRefWrapper, copyToClipboard } from '@/utils/util'
+    import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     export default {
         components: {
             vueDraggable
@@ -182,12 +182,7 @@
         },
         methods: {
             bkVarWrapper,
-            bkVarRepoRefWrapper,
-            handleCopy (param) {
-                const { id, type } = param
-                const con = type === 'REPO_REF'
-                    ? this.bkVarRepoRefWrapper(id)
-                    : this.bkVarWrapper('variables.' + id)
+            handleCopy (con) {
                 copyToClipboard(con)
                 this.$bkMessage({
                     theme: 'success',
