@@ -307,7 +307,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
         yamlInfo: PipelineYamlVo? = null
@@ -439,7 +438,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
-                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     versionStatus = versionStatus,
                     branchName = branchName,
@@ -454,21 +452,6 @@ class PipelineInfoFacadeService @Autowired constructor(
 
                 // 先进行模板关联操作
                 if (templateId != null) {
-                    watcher.start("addLabel")
-                    if (useLabelSettings == true || versionStatus == VersionStatus.RELEASED) {
-                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-                        val labels = ArrayList<String>()
-                        groups.forEach {
-                            labels.addAll(it.labels)
-                        }
-                        pipelineGroupService.updatePipelineLabel(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            labelIds = labels
-                        )
-                    }
-                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,

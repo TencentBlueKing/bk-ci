@@ -590,7 +590,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             instanceType = request.instanceType,
             versionStatus = VersionStatus.COMMITTING,
             useSubscriptionSettings = request.useSubscriptionSettings,
-            useLabelSettings = request.useLabelSettings,
             useConcurrencyGroup = request.useConcurrencyGroup
         )
     }
