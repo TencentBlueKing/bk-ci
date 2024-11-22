@@ -960,10 +960,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 是否可更新
             val installedVersion = installedInfoMap?.get(storeCode)
             val updateFlag = storeInfoQuery.updateFlag ?: run {
-                installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion) || status in listOf(
-                    StoreStatusEnum.TESTING.name,
-                    StoreStatusEnum.AUDITING.name
-                )
+                installedVersion == null || StoreUtils.isGreaterVersion(
+                    version,
+                    installedVersion
+                ) || status in StoreStatusEnum.getTestStatusList()
             }
             val osList = queryComponentOsName(storeCode, storeTypeEnum)
             val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(

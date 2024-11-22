@@ -67,5 +67,13 @@ enum class StoreStatusEnum {
                 AUDITING.name
             )
         }
+
+        fun getTestStatusList(): List<String> {
+            return listOf(
+                TESTING.name,
+                EDITING.name,
+                AUDITING.name
+            )
+        }
     }
 }
