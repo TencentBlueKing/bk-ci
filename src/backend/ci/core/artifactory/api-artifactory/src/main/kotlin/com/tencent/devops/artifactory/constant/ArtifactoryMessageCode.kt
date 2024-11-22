@@ -91,6 +91,9 @@ object ArtifactoryMessageCode {
     const val JOB_EXECUTE_FAIL = "2102047" // JOB执行失败,msg{0}
 
     const val HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102048" // 流水线代持人{0}没有项目{1}下载权限
+    // 流水线代持人{0}在项目{1}下没有流水线{2}下载构件权限
+    const val HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009"
+
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
     // 【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
     const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"
