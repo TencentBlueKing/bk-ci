@@ -233,13 +233,7 @@ class MarketStoreQueryDao {
         if (storeInfoQuery.getSpecQueryFlag()) {
             val testStoreQueryCondition = storeInfoQuery.testStoreCodes?.let { testStoreCodes ->
                 tStoreBase.STORE_CODE.`in`(testStoreCodes).and(
-                    tStoreBase.STATUS.`in`(
-                        listOf(
-                            StoreStatusEnum.TESTING.name,
-                            StoreStatusEnum.EDITING.name,
-                            StoreStatusEnum.AUDITING.name
-                        )
-                    )
+                    tStoreBase.STATUS.`in`(StoreStatusEnum.getTestStatusList())
                 )
             }
 
