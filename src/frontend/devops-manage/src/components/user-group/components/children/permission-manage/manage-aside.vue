@@ -373,7 +373,7 @@ async function handConfirm (flag) {
         emit('removeConfirm', removeUser.value, handOverForm.value);
       }
     } else {
-      emit('removeConfirm', removeUser.value);
+      emit('removeConfirm', removeUser.value, {});
     }
   } catch (error) {}
 }

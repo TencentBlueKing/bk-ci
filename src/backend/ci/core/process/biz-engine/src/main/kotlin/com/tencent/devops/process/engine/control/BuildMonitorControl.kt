@@ -31,13 +31,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
@@ -89,6 +89,7 @@ class BuildMonitorControl @Autowired constructor(
 ) {
 
     companion object {
+        const val START_EVENT_SOURCE = "start_monitor"
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
         private val LOG = LoggerFactory.getLogger(BuildMonitorControl::class.java)
@@ -425,11 +426,12 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
         if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.queueTime)) {
-            val exitQueue = pipelineRuntimeExtService.existQueue(
+            val exitQueue = pipelineRuntimeExtService.changeBuildStatus(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
-                buildStatus = buildInfo.status
+                oldBuildStatus = buildInfo.status,
+                newBuildStatus = BuildStatus.UNEXEC
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
             val errorInfo = I18nUtil.generateResponseDataObject<String>(
@@ -492,7 +494,7 @@ class BuildMonitorControl @Autowired constructor(
                 val triggerContainer = model.getTriggerContainer()
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
-                        source = "start_monitor",
+                        source = START_EVENT_SOURCE,
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         userId = buildInfo.startUser,

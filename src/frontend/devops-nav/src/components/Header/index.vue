@@ -174,6 +174,12 @@
                     </li>
                     <li
                         class="bkci-dropdown-item"
+                        @click.stop="toggleShowVersionLog(true)"
+                    >
+                        {{ $t('releaseNotes') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
                         @click.stop="goToFeedBack"
                     >
                         {{ $t('feedback') }}
@@ -182,7 +188,7 @@
                         class="bkci-dropdown-item"
                         @click.stop="goToGithubSource"
                     >
-                        {{ $t('community') }}
+                        {{ $t('openSource') }}
                     </li>
                 </template>
             </bk-popover>
@@ -197,6 +203,10 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+        <system-log
+            :show-system-log="showSystemLog"
+            :toggle-show-log="toggleShowVersionLog"
+        />
     </div>
 </template>
 
@@ -210,6 +220,7 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
@@ -222,7 +233,8 @@
             ApplyProjectDialog,
             Logo,
             DevopsSelect,
-            LocaleSwitcher
+            LocaleSwitcher,
+            SystemLog
         }
     })
     export default class Header extends Vue {
@@ -240,16 +252,17 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        showSystemLog: boolean = false
         langs: Array<any> = [
-            {
-                icon: 'english',
-                name: 'English',
-                id: 'en-US'
-            },
             {
                 icon: 'chinese',
                 name: '中文',
                 id: 'zh-CN'
+            },
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
             }
         ]
  
@@ -442,6 +455,10 @@
 
         handleHide () {
             this.togglePopupShow(false)
+        }
+
+        toggleShowVersionLog (value: boolean) {
+            this.showSystemLog = value
         }
     }
 </script>

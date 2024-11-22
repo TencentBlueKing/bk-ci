@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
@@ -60,7 +60,7 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val repoPipelineRefService: RepoPipelineRefService,
     private val subPipelineRefService: SubPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
         val watcher = Watcher(id = "${event.traceId}|DeletePipeline#${event.pipelineId}|${event.clearUpModel}")

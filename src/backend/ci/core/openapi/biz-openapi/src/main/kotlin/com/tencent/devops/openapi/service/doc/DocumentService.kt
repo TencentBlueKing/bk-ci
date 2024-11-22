@@ -85,10 +85,6 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
-import org.apache.commons.lang3.StringUtils
-import org.reflections.Reflections
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import kotlin.jvm.internal.DefaultConstructorMarker
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -96,6 +92,10 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaType
+import org.apache.commons.lang3.StringUtils
+import org.reflections.Reflections
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import io.swagger.v3.oas.annotations.media.Schema as SchemaAnnotation
 
 @Service
@@ -163,7 +163,9 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == PATH_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == PATH_PARAM } ?: emptyList()
+                            ),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
@@ -179,7 +181,9 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == QUERY_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == QUERY_PARAM } ?: emptyList()
+                            ),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
@@ -195,7 +199,9 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == HEADER_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == HEADER_PARAM } ?: emptyList()
+                            ),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
                             .setRow(
@@ -676,16 +682,20 @@ class DocumentService {
         }
     }
 
-    private fun loadModelJson(model: Schema<*>?, loadJson: MutableMap<String, Any>) {
+    private fun loadModelJson(
+        model: Schema<*>?,
+        loadJson: MutableMap<String, Any>,
+        deep: MutableSet<String> = mutableSetOf()
+    ) {
         if (model == null) return
         if (StringUtils.isNotBlank(model.`$ref`)) {
             val key = model.`$ref`.removePrefix("#/components/schemas/")
-            definitions[key]?.let { loadModelJson(it, loadJson) }
+            definitions[key]?.let { loadModelJson(it, loadJson, deep) }
         }
         when (model) {
             is ComposedSchema -> {
                 model.allOf?.forEach {
-                    loadModelJson(it, loadJson)
+                    loadModelJson(it, loadJson, deep)
                 }
             }
 
@@ -694,18 +704,23 @@ class DocumentService {
                     loadJson[model.discriminator.toString()] = "string"
                 }
                 model.properties?.forEach { (key, property) ->
-                    loadJson[key] = loadPropertyJson(property)
+                    loadJson[key] = loadPropertyJson(property, deep)
                 }
             }
         }
     }
 
-    private fun loadPropertyJson(property: Schema<*>): Any {
+    private fun loadPropertyJson(property: Schema<*>, deep: MutableSet<String> = mutableSetOf()): Any {
         if (StringUtils.isNotBlank(property.`$ref`)) {
-            val loadJson = mutableMapOf<String, Any>()
-            val key = property.`$ref`.removePrefix("#/components/schemas/")
-            definitions[key]?.let { loadModelJson(it, loadJson) }
-            return loadJson
+            if (property.`$ref` !in deep) {
+                deep.add(property.`$ref`)
+                val loadJson = mutableMapOf<String, Any>()
+                val key = property.`$ref`.removePrefix("#/components/schemas/")
+                definitions[key]?.let { loadModelJson(it, loadJson, deep) }
+                return loadJson
+            } else {
+                return property.`$ref`
+            }
         }
         return when (property) {
             // swagger无法获取到map的key类型
@@ -718,7 +733,7 @@ class DocumentService {
             }
 
             is ArraySchema -> {
-                listOf(loadPropertyJson(property.items))
+                listOf(loadPropertyJson(property.items, deep))
             }
 
             is StringSchema -> {

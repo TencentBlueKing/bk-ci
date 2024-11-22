@@ -22,6 +22,7 @@ export const TEXTAREA = 'TEXTAREA'
 export const BOOLEAN = 'BOOLEAN'
 export const ENUM = 'ENUM'
 export const MULTIPLE = 'MULTIPLE'
+export const CHECKBOX = 'CHECKBOX'
 export const SVN_TAG = 'SVN_TAG'
 export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
@@ -95,6 +96,17 @@ export const DEFAULT_PARAM = {
         required: true,
         readOnly: false
     },
+    [CHECKBOX]: {
+        id: 'checkbox',
+        name: 'checkbox',
+        defaultValue: false,
+        defalutValueLabel: 'defaultValue',
+        desc: '',
+        type: CHECKBOX,
+        typeDesc: 'checkbox',
+        required: true,
+        readOnly: false
+    },
     [SVN_TAG]: {
         id: 'svntag',
         name: 'svntag',
@@ -135,23 +147,6 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CODE_LIB,
         typeDesc: 'codelib',
-        required: true,
-        readOnly: false
-    },
-    [CONTAINER_TYPE]: {
-        id: 'buildResource',
-        name: 'buildResource',
-        defaultValue: '',
-        defalutValueLabel: 'defaultValue',
-        defaultValueLabelTips: 'defaultValueDesc',
-        containerType: {
-            os: 'LINUX',
-            buildType: 'DOCKER'
-        },
-        desc: '',
-        options: [],
-        type: CONTAINER_TYPE,
-        typeDesc: 'buildResource',
         required: true,
         readOnly: false
     },
@@ -218,6 +213,13 @@ export const CHECK_DEFAULT_PARAM = {
         desc: '',
         options: [],
         valueType: MULTIPLE,
+        required: true
+    },
+    [CHECKBOX]: {
+        key: 'checkbox',
+        value: false,
+        desc: '',
+        valueType: CHECKBOX,
         required: true
     }
 }
@@ -316,6 +318,7 @@ export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
+export const isCheakboxParam = paramType(CHECKBOX)
 export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
 export const isCodelibParam = paramType(CODE_LIB)

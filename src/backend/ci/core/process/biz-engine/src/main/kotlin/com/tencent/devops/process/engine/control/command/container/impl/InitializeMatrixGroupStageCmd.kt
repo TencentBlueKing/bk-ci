@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.pipeline.option.JobControlOption
@@ -69,6 +70,7 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
@@ -177,7 +179,6 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
-        val asCodeEnabled = commandContext.pipelineAsCodeEnabled ?: false
         val modelStage = containerBuildDetailService.getBuildModel(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
@@ -197,6 +198,7 @@ class InitializeMatrixGroupStageCmd(
             containerId = parentContainer.containerId,
             executeCount = parentContainer.executeCount
         )
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()
         val buildTaskList = mutableListOf<PipelineBuildTask>()
@@ -215,8 +217,8 @@ class InitializeMatrixGroupStageCmd(
 
         LOG.info(
             "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-                "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
-                "|context=$context|asCodeEnabled=$asCodeEnabled"
+                    "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
+                    "|context=$context|dialect=${variables[PIPELINE_DIALECT]}"
         )
 
         val matrixOption: MatrixControlOption
@@ -238,7 +240,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
+                matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
@@ -255,10 +257,9 @@ class InitializeMatrixGroupStageCmd(
                         if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
                     }
                     val allContext = customBuildEnv.plus(contextCase)
-                    val contextPair = if (asCodeEnabled) {
+                    val contextPair = if (dialect.supportUseExpression()) {
                         EnvReplacementParser.getCustomExecutionContextByMap(allContext)
                     } else null
-
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
                     val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
@@ -276,9 +277,17 @@ class InitializeMatrixGroupStageCmd(
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
-                                self.mutexGroupName, allContext, asCodeEnabled, contextPair
+                                value = self.mutexGroupName,
+                                contextMap = allContext,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = contextPair
                             ),
-                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, contextPair)
+                            linkTip = EnvReplacementParser.parse(
+                                value = self.linkTip,
+                                contextMap = allContext,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = contextPair
+                            )
                         )
                     }
                     val newSeq = context.containerSeq++
@@ -290,7 +299,12 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
+                        name = EnvReplacementParser.parse(
+                            value = modelContainer.name,
+                            contextMap = allContext,
+                            onlyExpression = dialect.supportUseExpression(),
+                            contextPair = contextPair
+                        ),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -315,13 +329,28 @@ class InitializeMatrixGroupStageCmd(
                             },
                         buildEnv = buildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                            EnvReplacementParser.parse(
+                                value = self,
+                                contextMap = allContext,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = contextPair
+                            )
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                            EnvReplacementParser.parse(
+                                value = self,
+                                contextMap = allContext,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = contextPair
+                            )
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                            EnvReplacementParser.parse(
+                                value = self,
+                                contextMap = allContext,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = contextPair
+                            )
                         }
                     )
                     newContainer.jobId?.let { matrixJobIds.add(it) }
@@ -397,7 +426,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
+                matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -411,22 +440,30 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
-                    val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
-                    } else null
+                    val replacement = EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
                                 value = self.mutexGroupName,
                                 contextMap = contextCase,
-                                onlyExpression = asCodeEnabled,
+                                onlyExpression = dialect.supportUseExpression(),
                                 contextPair = replacement
                             ),
-                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
+                            linkTip = EnvReplacementParser.parse(
+                                value = self.linkTip,
+                                contextMap = contextCase,
+                                onlyExpression = dialect.supportUseExpression(),
+                                contextPair = replacement
+                            )
                         )
                     }
                     val newContainer = NormalContainer(
-                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled, replacement),
+                        name = EnvReplacementParser.parse(
+                            value = modelContainer.name,
+                            contextMap = contextCase,
+                            onlyExpression = dialect.supportUseExpression(),
+                            contextPair = replacement
+                        ),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),

@@ -424,7 +424,11 @@
                 this.handleChange('versionParam', ...args)
             },
             handleBuildNoChange (name, value) {
-                this.buildNo.buildNo = value
+                if (name === 'currentBuildNo') {
+                    this.buildNo.currentBuildNo = value
+                } else {
+                    this.buildNo.buildNo = value
+                }
 
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,

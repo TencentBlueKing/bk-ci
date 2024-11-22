@@ -34,10 +34,13 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
 
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
+    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
 
     override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
 
     override fun syncGroupAndMember(projectCode: String) = Unit
+
+    override fun syncProjectGroup(projectCode: String) = Unit
 
     override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
 
