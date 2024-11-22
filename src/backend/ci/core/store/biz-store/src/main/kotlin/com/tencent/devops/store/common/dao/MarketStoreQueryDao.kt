@@ -236,6 +236,7 @@ class MarketStoreQueryDao {
                     tStoreBase.STATUS.`in`(
                         listOf(
                             StoreStatusEnum.TESTING.name,
+                            StoreStatusEnum.EDITING.name,
                             StoreStatusEnum.AUDITING.name
                         )
                     )
