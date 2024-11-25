@@ -149,12 +149,18 @@ class NotifyControl @Autowired constructor(
             owners = notifyData.owner?.toSet(),
             projectIds = notifyData.projectId?.toSet(),
             notStatus = setOf(WorkspaceStatus.DELETED, WorkspaceStatus.PREPARING, WorkspaceStatus.DELIVERING_FAILED),
-            checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.PROJECT_ID)
+            checkField = listOf(
+                TWorkspace.T_WORKSPACE.NAME,
+                TWorkspace.T_WORKSPACE.PROJECT_ID
+            )
         )
-
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         notifyDao.add(dslContext, userId, notifyData)
+
+        val personalUsers = workspace.filter { it.ownerType == WorkspaceOwnerType.PERSONAL }
+            .map { it.createUserId }
+            .toMutableSet()
 
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
@@ -162,7 +168,7 @@ class NotifyControl @Autowired constructor(
             workspaceSharedDao.fetchWorkspaceOwner(
                 dslContext = dslContext,
                 workspaceNames = workspace.map { it.workspaceName }.toSet().ifEmpty { return }
-            ).values.toSet()
+            ).values.toSet().plus(personalUsers)
         }
 
         // 给拥有者的客户端发送消息
