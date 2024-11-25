@@ -101,6 +101,7 @@ config = {
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
+        devnetDomain = "__BK_CI_KUBERNETES_DEVNET_DOMAIN__",
         codecc = { domain = "__CODECC_KUBERNETES_DOMAIN__" },
         api = {
             url = "__BK_CI_KUBERNETES_API_URL__",
