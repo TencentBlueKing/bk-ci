@@ -29,22 +29,22 @@ package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.pipeline.SubPipelineRefService
+import com.tencent.devops.process.service.pipeline.SubPipelineUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpSubPipelineResourceImpl @Autowired constructor(
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
 ) : OpSubPipelineRefResource {
     override fun createSubPipelineRef(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
         if (!pipelineId.isNullOrBlank() && !projectId.isNullOrBlank()) {
-            subPipelineRefService.createSubPipelineRef(
+            subPipelineUpgradeService.createSubPipelineRef(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId
             )
         } else {
-            subPipelineRefService.createAllSubPipelineRef(
+            subPipelineUpgradeService.createAllSubPipelineRef(
                 projectId = projectId,
                 userId = userId
             )

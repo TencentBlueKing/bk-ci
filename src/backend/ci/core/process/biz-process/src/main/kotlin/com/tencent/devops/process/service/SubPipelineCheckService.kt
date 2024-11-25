@@ -1,45 +1,37 @@
 package com.tencent.devops.process.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineResourceDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
-import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
 import com.tencent.devops.process.service.pipeline.SubPipelineRefService
-import com.tencent.devops.process.utils.PipelineVarUtil
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.HashMap
-import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
+/**
+ * 子流水线合法性检查服务
+ */
 @Service
+@SuppressWarnings("TooManyFunctions", "LongParameterList")
 class SubPipelineCheckService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResourceDao,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val defaultModelCheckPlugin: DefaultModelCheckPlugin,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRefService: SubPipelineRefService,
+    private val SubPipelineTaskService: SubPipelineTaskService
 ) {
 
     /**
@@ -56,12 +48,12 @@ class SubPipelineCheckService @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): Set<String> {
-        val model = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val model = SubPipelineTaskService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         val stages = model.stages
-        val contextMap = getContextMap(stages)
+        val contextMap = SubPipelineTaskService.getContextMap(stages)
         val elements = mutableListOf<ElementHolder>()
         stages.forEachIndexed { index, stage ->
             if (index == 0) return@forEachIndexed
@@ -97,7 +89,7 @@ class SubPipelineCheckService @Autowired constructor(
         elements.forEach { holder ->
             // 禁用的插件不校验
             if (!holder.enableElement()) return@forEach
-            val subPipelineTaskParam = getSubPipelineParam(
+            val subPipelineTaskParam = SubPipelineTaskService.getSubPipelineParam(
                 element = holder.element,
                 projectId = projectId,
                 contextMap = contextMap
@@ -194,10 +186,11 @@ class SubPipelineCheckService @Autowired constructor(
                 subPipelineId = subPipelineId,
                 subProjectId = subProjectId
             )
-            val checkResult = subPipelineRefService.checkCircularDependency(
+            val checkResult = checkCircularDependency(
                 subPipelineRef = subPipelineRef,
                 rootPipelineKey = rootPipelineKey,
-                existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef))
+                existsPipeline = HashMap(mapOf(rootPipelineKey to subPipelineRef)),
+                recursiveChain = mutableListOf(subPipelineRef)
             )
             if (!checkResult.result) {
                 errorDetails.add(checkResult.errorMessage ?: "")
@@ -212,186 +205,140 @@ class SubPipelineCheckService @Autowired constructor(
 
     fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
 
-    @Suppress("UNCHECKED_CAST")
-    fun getSubPipelineParam(
-        projectId: String,
-        element: Element,
-        contextMap: Map<String, String>
-    ) = when (element) {
-        is SubPipelineCallElement -> {
-            resolveSubPipelineCall(
-                projectId = projectId,
-                element = element,
-                contextMap = contextMap
-            )
-        }
 
-        is MarketBuildAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        is MarketBuildLessAtomElement -> {
-            resolveSubPipelineExec(
-                projectId = projectId,
-                inputMap = element.data["input"] as Map<String, Any>,
-                contextMap = contextMap
-            )
-        }
-
-        else -> null
-    }
-
-    private fun resolveSubPipelineCall(
-        projectId: String,
-        element: SubPipelineCallElement,
-        contextMap: Map<String, String>
-    ): SubPipelineTaskParam? {
-        val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
-        val subPipelineId = element.subPipelineId
-        val subPipelineName = element.subPipelineName
-        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
-            projectId = projectId,
-            subProjectId = projectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        ) ?: return null
-        return SubPipelineTaskParam(
-            taskProjectId = projectId,
-            taskPipelineType = subPipelineType,
-            taskPipelineId = subPipelineId,
-            taskPipelineName = subPipelineName,
-            projectId = finalProjectId,
-            pipelineId = finalPipelineId,
-            pipelineName = finalPipeName
-        )
-    }
-
-    private fun resolveSubPipelineExec(
-        projectId: String,
-        inputMap: Map<String, Any>,
-        contextMap: Map<String, String>
-    ): SubPipelineTaskParam? {
-        val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
-        val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
-        val subPipelineName = inputMap["subPipelineName"]?.toString()
-        val subPipelineId = inputMap["subPip"]?.toString()
-        val subPipelineType = when (subPipelineTypeStr) {
-            "ID" -> SubPipelineType.ID
-            "NAME" -> SubPipelineType.NAME
-            else -> return null
-        }
-        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
-            projectId = projectId,
-            subProjectId = subProjectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        ) ?: return null
-        return SubPipelineTaskParam(
-            taskProjectId = subProjectId,
-            taskPipelineType = subPipelineType,
-            taskPipelineId = subPipelineId,
-            taskPipelineName = subPipelineName,
-            projectId = finalProjectId,
-            pipelineId = finalPipelineId,
-            pipelineName = finalPipeName
-        )
-    }
-
-    @SuppressWarnings("LongParameterList")
-    private fun getSubPipelineParam(
-        projectId: String,
-        subProjectId: String,
-        subPipelineType: SubPipelineType,
-        subPipelineId: String?,
-        subPipelineName: String?,
-        contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
-        return when (subPipelineType) {
-            SubPipelineType.ID -> {
-                if (subPipelineId.isNullOrBlank()) {
-                    return null
-                }
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = subProjectId, pipelineId = subPipelineId
-                ) ?: run {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                                "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-                    )
-                    return null
-                }
-                Triple(subProjectId, subPipelineId, pipelineInfo.pipelineName)
-            }
-
-            SubPipelineType.NAME -> {
-                if (subPipelineName.isNullOrBlank()) {
-                    return null
-                }
-                val finalSubProjectId = EnvUtils.parseEnv(subProjectId, contextMap)
-                var finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
-                var finalSubPipelineId = pipelineRepositoryService.listPipelineIdByName(
-                    projectId = finalSubProjectId,
-                    pipelineNames = setOf(finalSubPipelineName),
-                    filterDelete = true
-                )[finalSubPipelineName]
-                // 流水线名称直接使用流水线ID代替
-                if (finalSubPipelineId.isNullOrBlank() && PIPELINE_ID_PATTERN.matcher(
-                        finalSubPipelineName
-                    ).matches()
-                ) {
-                    finalSubPipelineId = finalSubPipelineName
-                    finalSubPipelineName = pipelineRepositoryService.getPipelineInfo(
-                        projectId = finalSubProjectId, pipelineId = finalSubPipelineName
-                    )?.pipelineName ?: ""
-                }
-                if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
-                    logger.info(
-                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
-                                "subProjectId:$subProjectId|subPipelineName:$subPipelineName"
-                    )
-                    return null
-                }
-                Triple(finalSubProjectId, finalSubPipelineId, finalSubPipelineName)
-            }
-        }
-    }
 
     /**
-     * 获取最新版流水线编排
+     * 检查循环依赖
      */
-    fun getModel(projectId: String, pipelineId: String): Model? {
-        var model: Model? = null
-        val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
-        if (modelString.isNullOrBlank()) {
-            logger.warn("model not found: [$projectId|$pipelineId]")
+    @SuppressWarnings("LongMethod")
+    fun checkCircularDependency(
+        subPipelineRef: SubPipelineRef,
+        rootPipelineKey: String,
+        recursiveChain: MutableList<SubPipelineRef>,
+        existsPipeline: HashMap<String, SubPipelineRef>
+    ): ElementCheckResult {
+        with(subPipelineRef) {
+            logger.info("check circular dependency|subPipelineRef[$this]|existsPipeline[$existsPipeline]")
+            val pipelineRefKey = subRefKey()
+            if (existsPipeline.contains(pipelineRefKey)) {
+                val chainStr = recursiveChain.joinToString(separator = "->") { "[${it.chainKey()}]" }
+                logger.warn(
+                    "subPipeline does not allow loop calls|projectId:$subProjectId|" +
+                            "pipelineId:$subPipelineId|chain[$chainStr]"
+                )
+                return getCircularDependencyResult(
+                    parentPipelineRef = existsPipeline[pipelineRefKey]!!,
+                    subPipelineRef = subPipelineRef,
+                    rootPipelineKey = rootPipelineKey,
+                    pipelineRefKey = pipelineRefKey
+                )
+            }
+            val subRefList = subPipelineRefService.list(
+                projectId = subProjectId,
+                pipelineId = subPipelineId
+            ).map {
+                SubPipelineRef(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    channel = it.channel,
+                    element = EmptyElement(
+                        id = it.taskId,
+                        name = it.taskName
+                    ),
+                    stageId = it.stageId,
+                    containerId = it.containerId,
+                    subPipelineId = it.subPipelineId,
+                    subProjectId = it.subProjectId,
+                    subPipelineName = it.subPipelineName ?: "",
+                    taskProjectId = it.taskProjectId,
+                    taskPipelineType = SubPipelineType.valueOf(it.taskPipelineType),
+                    taskPipelineId = it.taskPipelineId,
+                    taskPipelineName = it.taskPipelineName,
+                    taskSeq = it.taskSeq
+                )
+            }
+            logger.info("check circular dependency|subRefList[$subRefList]")
+            if (subRefList.isEmpty()) return ElementCheckResult(true)
+            subRefList.forEach {
+                val exist = HashMap(existsPipeline)
+                val chain = mutableListOf<SubPipelineRef>()
+                // 保存链路
+                chain.addAll(recursiveChain)
+                chain.add(it)
+                exist[it.refKey()] = it
+                logger.info(
+                    "callPipelineStartup|" +
+                            "supProjectId:${it.subProjectId},subPipelineId:${it.subPipelineId}," +
+                            "subElementId:${it.element.id},parentProjectId:${it.projectId}," +
+                            "parentPipelineId:${it.pipelineId}"
+                )
+                val checkResult = checkCircularDependency(
+                    subPipelineRef = it,
+                    rootPipelineKey = rootPipelineKey,
+                    recursiveChain = chain,
+                    existsPipeline = exist
+                )
+                // 检查不成功，直接返回
+                if (!checkResult.result) {
+                    return checkResult
+                }
+                existsPipeline.putAll(exist)
+            }
+            return ElementCheckResult(true)
         }
-        try {
-            model = objectMapper.readValue(modelString, Model::class.java)
-        } catch (ignored: Exception) {
-            logger.warn("parse process($pipelineId) model fail", ignored)
-        }
-        return model
     }
 
-    private fun getContextMap(stages: List<Stage>): Map<String, String> {
-        val triggerContainer = stages[0].containers[0] as TriggerContainer
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
+    private fun pipelineEditUrl(projectId: String, pipelineId: String) =
+        "/console/pipeline/$projectId/$pipelineId/edit"
+
+    private fun getCircularDependencyResult(
+        rootPipelineKey: String,
+        pipelineRefKey: String,
+        parentPipelineRef: SubPipelineRef,
+        subPipelineRef: SubPipelineRef
+    ):ElementCheckResult {
+        val (msgCode, params) = with(subPipelineRef){
+            when {
+                // [当前流水线] -> [当前流水线]
+                "${projectId}_$pipelineId" == rootPipelineKey -> {
+                    ProcessMessageCode.BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to
+                            emptyArray<String>()
+                }
+                // [其他流水线] -> [当前流水线]
+                pipelineRefKey == rootPipelineKey -> {
+                    val editUrl = pipelineEditUrl(projectId, pipelineId)
+                    ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
+                        editUrl,
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskSeq}]"
+                    )
+                }
+                // [其他流水线_1] -> [其他流水线_2]
+                // [其他流水线_2] -> ... ->[其他流水线_1]
+                else -> {
+                    val editUrlBase = pipelineEditUrl(parentPipelineRef.projectId, parentPipelineRef.pipelineId)
+                    val editUrl = pipelineEditUrl(projectId, pipelineId)
+                    ProcessMessageCode.BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
+                        editUrl,
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskSeq}]",
+                        editUrlBase,
+                        parentPipelineRef.pipelineName.ifBlank { subPipelineRef.pipelineName }
+                    )
+                }
+            }
         }
-        return PipelineVarUtil.fillVariableMap(variables)
+
+        return ElementCheckResult(
+            result = false,
+            errorMessage = I18nUtil.getCodeLanMessage(
+                messageCode = msgCode,
+                params = params
+            )
+        )
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)
-        private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }
 }

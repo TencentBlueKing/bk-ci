@@ -87,6 +87,7 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.engine.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -105,6 +106,7 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -123,6 +125,7 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -164,7 +167,9 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val subPipelineRefDao: SubPipelineRefDao,
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     companion object {
@@ -836,6 +841,14 @@ class PipelineRepositoryService constructor(
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                subPipelineRefDao.batchAdd(
+                    dslContext = transactionContext,
+                    subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
+                        model = model,
+                        channel = channelCode.name,
+                        modelTasks = modelTasks.toList()
+                    )
+                )
             }
         } finally {
             lock.unlock()
@@ -1133,6 +1146,20 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                        watcher.start("updateSubPipelineRef")
+                        subPipelineRefDao.deleteAll(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        subPipelineRefDao.batchAdd(
+                            dslContext = transactionContext,
+                            subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
+                                model = model,
+                                channel = channelCode.name,
+                                modelTasks = modelTasks.toList()
+                            )
+                        )
                     }
                 }
 
@@ -1552,7 +1579,7 @@ class PipelineRepositoryService constructor(
 
                 pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                 pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-
+                subPipelineRefDao.deleteAll(transactionContext, projectId, pipelineId)
                 pipelineEventDispatcher.dispatch(
                     PipelineDeleteEvent(
                         source = "delete_pipeline",
@@ -1874,6 +1901,14 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
+            subPipelineRefDao.batchAdd(
+                dslContext = transactionContext,
+                subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
+                    model = existModel,
+                    channel = channelCode.name,
+                    modelTasks = tasks.toList()
+                )
+            )
         }
 
         val version = pipelineInfoDao.getPipelineVersion(

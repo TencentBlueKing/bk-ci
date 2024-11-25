@@ -75,7 +75,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
     override fun beforeDelete(element: Element, param: BeforeDeleteParam) {
         element.id?.let {
-            subPipelineRefService.deleteElement(
+            subPipelineRefService.delete(
                 projectId = param.projectId,
                 pipelineId = param.pipelineId,
                 taskId = it

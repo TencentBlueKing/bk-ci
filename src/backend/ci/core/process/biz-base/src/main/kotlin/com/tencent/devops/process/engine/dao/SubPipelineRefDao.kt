@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.model.process.tables.TPipelineSubRef
 import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
@@ -53,14 +53,14 @@ class SubPipelineRefDao {
                     PIPELINE_ID,
                     PIPELINE_NAME,
                     CHANNEL,
-                    STAGE_NAME,
-                    CONTAINER_NAME,
+                    STAGE_ID,
+                    CONTAINER_ID,
                     TASK_ID,
                     TASK_NAME,
                     SUB_PROJECT_ID,
                     SUB_PIPELINE_ID,
                     SUB_PIPELINE_NAME,
-                    CONTAINER_SEQ,
+                    TASK_SEQ,
                     TASK_PROJECT_ID,
                     TASK_PIPELINE_TYPE,
                     TASK_PIPELINE_ID,
@@ -70,27 +70,27 @@ class SubPipelineRefDao {
                     it.pipelineId,
                     it.pipelineName,
                     it.channel,
-                    it.stageName,
-                    it.containerName,
+                    it.stageId,
+                    it.containerId,
                     it.element.id,
                     it.element.name,
                     it.subProjectId,
                     it.subPipelineId,
                     it.subPipelineName,
-                    it.containerSeq,
+                    it.taskSeq,
                     it.taskProjectId,
                     it.taskPipelineType.name,
                     it.taskPipelineId,
                     it.taskPipelineName
                 ).onDuplicateKeyUpdate()
-                    .set(STAGE_NAME, it.stageName)
-                    .set(CONTAINER_NAME, it.containerName)
+                    .set(STAGE_ID, it.stageId)
+                    .set(STAGE_ID, it.containerId)
                     .set(TASK_NAME, it.element.name)
                     .set(PIPELINE_NAME, it.pipelineName)
                     .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_PIPELINE_ID, it.subPipelineId)
                     .set(SUB_PIPELINE_NAME, it.subPipelineName)
-                    .set(CONTAINER_SEQ, it.containerSeq)
+                    .set(TASK_SEQ, it.taskSeq)
                     .set(TASK_PROJECT_ID, it.taskProjectId)
                     .set(TASK_PIPELINE_TYPE, it.taskPipelineType.name)
                     .set(TASK_PIPELINE_ID, it.taskPipelineId)

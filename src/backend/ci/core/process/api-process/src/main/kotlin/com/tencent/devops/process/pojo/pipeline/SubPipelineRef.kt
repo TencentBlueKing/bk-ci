@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线依赖信息")
@@ -45,9 +47,9 @@ data class SubPipelineRef(
     @get:Schema(title = "插件", required = true)
     val element: Element,
     @get:Schema(title = "stage名称", required = true)
-    val stageName: String,
+    val stageId: String,
     @get:Schema(title = "容器名称", required = true)
-    val containerName: String,
+    val containerId: String,
     @get:Schema(title = "子流水线流水线Id", required = true)
     val subPipelineId: String,
     @get:Schema(title = "子流水线项目Id", required = true)
@@ -60,12 +62,8 @@ data class SubPipelineRef(
     val elementEnable: Boolean = true,
     @get:Schema(title = "是否为模板流水线", required = true)
     val isTemplate: Boolean = false,
-    @get:Schema(title = "父流水线授权用户", required = true)
-    val oauthUser: String? = null,
-    @get:Schema(title = "上下文参数", required = false)
-    val contextMap: Map<String, String> = emptyMap(),
     @get:Schema(title = "插件序号", required = false)
-    val containerSeq: String = "",
+    val taskSeq: String = "",
     @get:Schema(title = "插件参数[projectId]", required = false)
     val taskProjectId: String = "",
     @get:Schema(title = "插件参数[type]", required = false)
@@ -81,8 +79,8 @@ data class SubPipelineRef(
         projectId = projectId,
         channel = "",
         element = EmptyElement(),
-        stageName = "",
-        containerName = "",
+        stageId = "",
+        containerId = "",
         subPipelineId = subPipelineId,
         subProjectId = subProjectId,
         subPipelineName = "",
@@ -90,4 +88,12 @@ data class SubPipelineRef(
         elementEnable = true,
         isTemplate = false
     )
+
+    // 递归检查使用
+    fun refKey() = "$projectId|$pipelineId"
+
+    fun subRefKey() = "$subProjectId|$subPipelineId"
+
+    // 链路打印
+    fun chainKey() = "$projectId|$pipelineId|$taskSeq"
 }
