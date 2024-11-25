@@ -43,14 +43,13 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            if ngx.var.devops_region == 'DEVNET' and devops_tag == 'kubernetes-stream-gray' and devops_tag == 'kubernetes-rbac-gray' then
+            if ngx.var.devops_region == 'DEVNET' and devops_tag ~= 'kubernetes-rbac' and devops_tag ~= 'kubernetes-stream' and devops_tag ~= 'kubernetes-auto' then
                 kubernetes_domain = config.kubernetes.devnetDomain
             elseif self:is_recovery_project(devops_project_id) then
                 kubernetes_domain = config.kubernetes.recovery.domain
             else
                 kubernetes_domain = config.kubernetes.domain
             end
-
         end
         -- 特殊处理的域名,优先级最高
         local special_key = gateway_project .. ":" .. devops_tag
