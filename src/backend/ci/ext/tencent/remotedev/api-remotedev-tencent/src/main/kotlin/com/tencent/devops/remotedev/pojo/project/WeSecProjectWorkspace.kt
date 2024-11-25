@@ -28,8 +28,6 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "提供给安全侧的项目下云桌面信息")
