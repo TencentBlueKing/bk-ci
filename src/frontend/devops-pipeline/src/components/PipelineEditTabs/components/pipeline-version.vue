@@ -69,6 +69,7 @@
                                 >
                                     {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
                                     <span
+                                        v-if="pipelineModel"
                                         class="dafault-value-reset"
                                         @click="goResetBuildNo"
                                     >{{ $t('buildNoBaseline.resetBuildNo') }}</span>
@@ -305,6 +306,10 @@
                 required: true
             },
             isDirectShowVersion: {
+                type: Boolean,
+                default: false
+            },
+            pipelineModel: {
                 type: Boolean,
                 default: false
             }
