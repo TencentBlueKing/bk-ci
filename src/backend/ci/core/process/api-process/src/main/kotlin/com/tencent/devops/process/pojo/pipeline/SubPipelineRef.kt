@@ -95,5 +95,8 @@ data class SubPipelineRef(
     fun subRefKey() = "$subProjectId|$subPipelineId"
 
     // 链路打印
-    fun chainKey() = "$projectId|$pipelineId|$taskSeq"
+    fun chainKey() = "$projectId|$pipelineId|$stageId-$containerId-$taskSeq"
+
+    // 插件下标
+    fun relSeq() = "$stageId-$containerId-$taskSeq"
 }

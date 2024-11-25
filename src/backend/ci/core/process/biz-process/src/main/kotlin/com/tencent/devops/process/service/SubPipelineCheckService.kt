@@ -310,7 +310,7 @@ class SubPipelineCheckService @Autowired constructor(
                     val editUrl = pipelineEditUrl(projectId, pipelineId)
                     ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                         editUrl,
-                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskSeq}]"
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.relSeq()}]"
                     )
                 }
                 // [其他流水线_1] -> [其他流水线_2]
@@ -320,7 +320,7 @@ class SubPipelineCheckService @Autowired constructor(
                     val editUrl = pipelineEditUrl(projectId, pipelineId)
                     ProcessMessageCode.BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                         editUrl,
-                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskSeq}]",
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.relSeq()}]",
                         editUrlBase,
                         parentPipelineRef.pipelineName.ifBlank { subPipelineRef.pipelineName }
                     )
