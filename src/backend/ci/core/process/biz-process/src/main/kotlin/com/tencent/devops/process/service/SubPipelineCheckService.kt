@@ -263,7 +263,7 @@ class SubPipelineCheckService @Autowired constructor(
             subRefList.forEach {
                 val exist = HashMap(existsPipeline)
                 val chain = mutableListOf<SubPipelineRef>()
-                // 保存链路
+                // 保存原有链路
                 chain.addAll(recursiveChain)
                 chain.add(it)
                 exist[it.refKey()] = it
@@ -284,6 +284,7 @@ class SubPipelineCheckService @Autowired constructor(
                     return checkResult
                 }
                 existsPipeline.putAll(exist)
+                recursiveChain.addAll(chain)
             }
             return ElementCheckResult(true)
         }

@@ -240,7 +240,7 @@ class SubPipelineUpgradeService @Autowired constructor(
                                 subPipelineId = it.pipelineId,
                                 channel = channel,
                                 subPipelineName = it.pipelineName,
-                                taskSeq = "${stageIndex + 1}-${jobIndex + 1}-${taskIndex + 1}",
+                                taskSeq = "${taskIndex + 1}",
                                 taskProjectId = it.taskProjectId,
                                 taskPipelineId = it.taskPipelineId,
                                 taskPipelineType = it.taskPipelineType,
