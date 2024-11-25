@@ -152,7 +152,8 @@ class NotifyControl @Autowired constructor(
             checkField = listOf(
                 TWorkspace.T_WORKSPACE.NAME,
                 TWorkspace.T_WORKSPACE.PROJECT_ID,
-                TWorkspace.T_WORKSPACE.OWNER_TYPE
+                TWorkspace.T_WORKSPACE.OWNER_TYPE,
+                TWorkspace.T_WORKSPACE.CREATOR
             )
         )
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
