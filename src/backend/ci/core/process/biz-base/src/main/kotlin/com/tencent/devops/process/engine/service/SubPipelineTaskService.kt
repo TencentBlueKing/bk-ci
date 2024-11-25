@@ -21,6 +21,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 
@@ -32,7 +33,8 @@ class SubPipelineTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
-    private val pipelineRepositoryService: PipelineRepositoryService,
+    @Lazy
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
     @Suppress("UNCHECKED_CAST")
     fun getSubPipelineParam(
