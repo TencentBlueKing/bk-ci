@@ -85,7 +85,7 @@ class UserInfoCertService @Autowired constructor(
             }
             // error exist
             val checkError = result.error.details?.filter { it.code in loadFaceRecognitionErrorCodeCache() }
-            if (checkError != null) {
+            if (!checkError.isNullOrEmpty()) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.FACE_RECOGNITION_ERROR.errorCode,
                     params = arrayOf("${result.error.code}|${result.error.message}|$checkError")
