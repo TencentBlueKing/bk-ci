@@ -27,15 +27,12 @@
 plugins {
     id("com.google.cloud.tools.jib")
 }
-
 val toImageRepo = System.getProperty("to.image.repo")
 val toImageTag = System.getProperty("to.image.tag")
 var toImage = System.getProperty("jib.to.image")
-
 // 加这个判断 , 主要是为了编译kts时不报错
 if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNullOrBlank())) {
     val service = name.replace("boot-", "").replace("-tencent", "")
-
     if (toImage.isNullOrBlank() && !toImageRepo.isNullOrBlank()) {
         toImage = toImageRepo.let {
             if (toImageRepo.endsWith("/")) it else it + "/"
@@ -81,7 +78,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-Dserver.port=80"
     )
     finalJvmFlags.addAll(jvmFlagList)
-
     jib {
         // 环境变量
         container {

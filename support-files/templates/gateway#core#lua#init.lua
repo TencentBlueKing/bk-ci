@@ -91,7 +91,6 @@ config = {
     kubernetes = {
         domain = "kubernetes.demo.com",
         devnetDomain = "devnet.kubernetes.demo.com",
-        switchAll = false,
         codecc = { domain = "kubernetes.demo.com" },
         api = {
             url = "https://127.0.0.1/api/v1/nodes",
