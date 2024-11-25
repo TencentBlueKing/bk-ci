@@ -211,6 +211,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132050",
         formatErrorMessage = "unbinding TGIT failed: {0}, directly delete the binding information"
+    ),
+    FACE_RECOGNITION_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132051",
+        formatErrorMessage = "user face recognition error: {0}"
     );
 
     fun getErrorMessage(): String {
