@@ -55,7 +55,7 @@ class TaiClient @Autowired constructor(
         return res.data
     }
 
-    fun faceCheck(userId: String, data: FaceCheckData): TaiResponse<FaceRecognitionResult?> {
+    fun faceCheck(userId: String, data: FaceCheckData): TaiResponseWithError<FaceRecognitionResult> {
         val url = "$apiUrl/prod/api/v1/open/odc/users/$userId/face-check/"
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = data, formatted = false)
@@ -64,7 +64,7 @@ class TaiClient @Autowired constructor(
             .header("X-Bkapi-Authorization", authorization)
             .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponse<FaceRecognitionResult?>>()
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponseWithError<FaceRecognitionResult>>()
         return res
     }
 
@@ -75,13 +75,13 @@ class TaiClient @Autowired constructor(
             val responseData = try {
                 objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             } catch (e: Exception) {
+                logger.error("TaiClient resolveResponse fail|${e.message}", e)
                 if (!this.isSuccessful) {
                     throw RemoteServiceException(
                         "request api[${this.request.url.toUrl()}] error|$responseContent",
                         this.code
                     )
                 } else {
-                    logger.error("TaiClient resolveResponse fail|${e.message}", e)
                     throw RemoteServiceException(
                         "parse api[${this.request.url.toUrl()}] resp $responseContent",
                         this.code
@@ -101,7 +101,12 @@ data class TaiUserInfoRequest(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaiResponse<T>(
-    val data: T,
+    val data: T
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiResponseWithError<T>(
+    val data: T?,
     val error: TaiResponseError?
 )
 
