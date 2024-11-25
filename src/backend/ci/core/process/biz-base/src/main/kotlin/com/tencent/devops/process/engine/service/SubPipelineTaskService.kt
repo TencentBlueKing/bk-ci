@@ -1,8 +1,6 @@
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
@@ -14,8 +12,6 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.utils.ElementUtils
-import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
@@ -251,7 +247,7 @@ class SubPipelineTaskService @Autowired constructor(
         return subPipelineRefList
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
     }

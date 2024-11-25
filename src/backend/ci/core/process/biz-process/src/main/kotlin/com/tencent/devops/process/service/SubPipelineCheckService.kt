@@ -206,8 +206,6 @@ class SubPipelineCheckService @Autowired constructor(
 
     fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
 
-
-
     /**
      * 检查循环依赖
      */
@@ -302,8 +300,8 @@ class SubPipelineCheckService @Autowired constructor(
         pipelineRefKey: String,
         parentPipelineRef: SubPipelineRef,
         subPipelineRef: SubPipelineRef
-    ):ElementCheckResult {
-        val (msgCode, params) = with(subPipelineRef){
+    ): ElementCheckResult {
+        val (msgCode, params) = with(subPipelineRef) {
             when {
                 // [当前流水线] -> [当前流水线]
                 refKey() == rootPipelineKey -> {

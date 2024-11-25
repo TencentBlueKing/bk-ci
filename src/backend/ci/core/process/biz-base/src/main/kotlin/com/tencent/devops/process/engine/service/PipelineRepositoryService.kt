@@ -106,7 +106,6 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -125,7 +124,6 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger

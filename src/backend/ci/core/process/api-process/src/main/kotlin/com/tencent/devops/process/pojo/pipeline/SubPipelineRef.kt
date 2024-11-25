@@ -27,11 +27,9 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
-import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线依赖信息")
