@@ -7,6 +7,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -23,7 +24,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         projectId: String,
         data: LinktgitData
     ): Result<Map<String, Boolean>> {
-        return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data.codeUrls))
+        return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data))
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_LIST)
@@ -32,21 +33,37 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_DELETE)
-    override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, url: String): Result<Boolean> {
-        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, url))
+    override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, onlyDelete: Boolean?): Result<Boolean> {
+        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, onlyDelete))
     }
 
     override fun getTGitNamespaces(
+        projectId: String,
         userId: String,
         page: Int,
         pageSize: Int,
-        svnProject: Boolean
+        svnProject: Boolean,
+        credId: String?
     ): Result<List<TGitNamespace>> {
-        return Result(gitProxyTGitService.getTGitNamespaces(userId, page, pageSize, svnProject))
+        return Result(
+            gitProxyTGitService.getTGitNamespaces(
+                projectId = projectId,
+                userId = userId,
+                page = page,
+                pageSize = pageSize,
+                svnProject = svnProject,
+                credId = credId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
     override fun createProject(userId: String, data: CreateTGitProjectInfo): Result<Boolean> {
         return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, data))
+    }
+
+    override fun reBindingTgitLink(userId: String, data: ReBindingLinkData): Result<Boolean> {
+        gitProxyTGitService.reBinding(userId, data)
+        return Result(true)
     }
 }

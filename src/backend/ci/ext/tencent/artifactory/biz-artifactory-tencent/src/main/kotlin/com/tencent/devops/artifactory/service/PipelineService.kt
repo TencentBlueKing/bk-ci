@@ -27,7 +27,9 @@
 
 package com.tencent.devops.artifactory.service
 
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import org.slf4j.LoggerFactory
@@ -137,5 +139,18 @@ abstract class PipelineService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
+    }
+
+    fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Exception) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom
     }
 }

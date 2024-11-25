@@ -20,7 +20,7 @@ class ExperienceCleanJob @Autowired constructor(
 ) {
     @Scheduled(cron = "0 10 0 * * ?")
     fun clean() {
-        val redisLock = RedisLock(redisOperation, "expJobHot", 60L)
+        val redisLock = RedisLock(redisOperation, "expJobClean", 60L)
         try {
             logger.info("Experience clean job start")
             if (redisLock.tryLock()) {

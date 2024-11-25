@@ -54,7 +54,8 @@ enum class WorkspaceStatus {
     EXCEPTION_STOP_FAILED, // 19 异常 关机异常
     EXCEPTION_ABNORMAL_AFTER_RUNNING, // 20 异常 运行后异常
     EXCEPTION_ABNORMAL_AFTER_READY, // 21 异常 准备后异常
-    EXCEPTION_CREATE_FAILED; // 22 异常 创建异常
+    EXCEPTION_CREATE_FAILED, // 22 异常 创建异常
+    CLONING; // 23 正在克隆
 
     enum class Types {
         USING {
@@ -114,7 +115,8 @@ enum class WorkspaceStatus {
 
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING ||
-        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING
+        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING ||
+        this == CLONING
 
     /**
      * 当正在做某事时，不能新建任务去执行
@@ -122,7 +124,8 @@ enum class WorkspaceStatus {
     fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING
+            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING ||
+            this == CLONING
 
     companion object {
         fun load(index: Int): WorkspaceStatus {
@@ -160,5 +163,6 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING -> "运行后异常"
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY -> "准备后异常"
         WorkspaceStatus.EXCEPTION_CREATE_FAILED -> "创建异常"
+        WorkspaceStatus.CLONING -> "克隆中"
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
+import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
@@ -38,9 +39,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -55,6 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface ServiceArtifactoryDownLoadResource {
 
     @Operation(summary = "获取文件第三方下载链接")
@@ -172,4 +174,11 @@ interface ServiceArtifactoryDownLoadResource {
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>
+
+    @Operation(summary = "创建一次性使用的token给json保存")
+    @Path("/createTokenForJson")
+    @POST
+    fun createTokenForJson(
+        tokenForJsonRequest: TokenForJsonRequest
+    ): Result<String>
 }

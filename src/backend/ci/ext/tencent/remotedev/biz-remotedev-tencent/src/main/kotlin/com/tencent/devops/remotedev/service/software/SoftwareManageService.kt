@@ -53,6 +53,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareInfo
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -82,7 +83,8 @@ class SoftwareManageService @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val workspaceDao: WorkspaceDao,
     private val httpCallBackService: HttpCallBackService,
-    private val softwareManageDao: SoftwareManageDao
+    private val softwareManageDao: SoftwareManageDao,
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) {
     @Value("\${remoteDev.appCode:}")
     val appCode = ""
@@ -183,6 +185,7 @@ class SoftwareManageService @Autowired constructor(
                         workspaceCommon.autoAssignOwner(workspace)
 
                         upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
+                        cloneWorkspaceHandler.checkAndCloneVm(workspaceName)
 
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
@@ -228,6 +231,8 @@ class SoftwareManageService @Autowired constructor(
                         )
                     )
                     upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
+                    cloneWorkspaceHandler.checkAndCloneVm(workspaceName)
+
                     httpCallBackService.asyncTask(
                         WindowsDevCouldCallback(
                             workspaceName,

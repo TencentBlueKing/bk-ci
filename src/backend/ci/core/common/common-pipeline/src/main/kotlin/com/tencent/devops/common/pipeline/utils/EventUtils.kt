@@ -33,7 +33,11 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 
 @Suppress("ComplexMethod")
 object EventUtils {
+    private val callBackEventMap = CallBackEvent.values().associateBy { it.name }
     fun PipelineBuildStatusBroadCastEvent.toEventType(): CallBackEvent? {
+        if (type != null && callBackEventMap[type!!.name] != null) {
+            return callBackEventMap[type!!.name]
+        }
         if (!taskId.isNullOrBlank()) {
             if (actionType == ActionType.START) {
                 return CallBackEvent.BUILD_TASK_START

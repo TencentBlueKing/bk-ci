@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -319,6 +320,23 @@ interface UserProjectWorkspaceResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean>
+
+    @Operation(summary = "云桌面克隆")
+    @POST
+    @Path("/workspace/{workspaceName}/clone")
+    fun cloneWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        cloneReq: WorkspaceCloneReq
     ): Result<Boolean>
 
     @Operation(summary = "申请查看当前工作空间录屏")

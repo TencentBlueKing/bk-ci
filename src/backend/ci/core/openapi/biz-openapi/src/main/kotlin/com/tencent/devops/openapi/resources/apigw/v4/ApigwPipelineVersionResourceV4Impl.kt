@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -292,20 +291,18 @@ class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun updateBuildNo(
+    override fun resetBuildNo(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String,
-        buildNo: BuildNoUpdateReq
+        pipelineId: String
     ): Result<Boolean> {
-        logger.info("OPENAPI_PIPELINE_V4|$userId|updateBuildNo|$projectId|$pipelineId")
-        return client.get(ServicePipelineVersionResource::class).updateBuildNo(
+        logger.info("OPENAPI_PIPELINE_V4|$userId|resetBuildNo|$projectId|$pipelineId")
+        return client.get(ServicePipelineVersionResource::class).resetBuildNo(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildNo = buildNo
+            pipelineId = pipelineId
         )
     }
 }
