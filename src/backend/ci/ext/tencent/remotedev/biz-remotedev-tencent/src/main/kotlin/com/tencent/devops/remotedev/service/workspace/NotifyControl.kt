@@ -158,6 +158,7 @@ class NotifyControl @Autowired constructor(
 
         notifyDao.add(dslContext, userId, notifyData)
 
+        // 增加个人云桌面的拥有者
         val personalUsers = workspace.filter { it.ownerType == WorkspaceOwnerType.PERSONAL }
             .map { it.createUserId }
             .toMutableSet()
@@ -165,6 +166,7 @@ class NotifyControl @Autowired constructor(
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
         } else {
+            // 团队实例拥有者 +个人实例拥有者
             workspaceSharedDao.fetchWorkspaceOwner(
                 dslContext = dslContext,
                 workspaceNames = workspace.map { it.workspaceName }.toSet().ifEmpty { return }
