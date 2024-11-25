@@ -687,11 +687,15 @@
                     const h = this.$createElement
 
                     this.pipelineNameList.forEach(pipeline => {
-                        const { currentBuildNo, ...buildParams } = pipeline.buildParams
+                        let buildNo
+                        if (pipeline.buildParams && typeof pipeline.buildParams === 'object') {
+                            const { currentBuildNo, ...buildParams } = pipeline.buildParams
+                            buildNo = buildParams
+                        }
                         params.push({
                             pipelineName: pipeline.pipelineName,
                             pipelineId: this.hashVal ? pipeline.pipelineId : undefined,
-                            buildNo: buildParams || undefined,
+                            buildNo,
                             param: pipeline.params,
                             resetBuildNo: pipeline.resetBuildNo
                         })
