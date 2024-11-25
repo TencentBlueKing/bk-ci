@@ -30,7 +30,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         end
     end
     -- scm特殊处理
-    if service_name == 'scm' and (devops_tag == 'kubernetes-rbac' or devops_tag == 'kubernetes-stream' and devops_tag or 'kubernetes-auto') then
+    if service_name == 'scm' and (devops_tag == 'kubernetes-rbac' or devops_tag == 'kubernetes-stream' or devops_tag == 'kubernetes-auto') then
         no_container = true
     end
     if no_container and string.find(devops_tag, '^kubernetes-') then
