@@ -119,10 +119,11 @@ class WorkspaceListener @Autowired constructor(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
                         pipelineId = orderId,
-                        zoneId = checkNotNull(event.zoneId)
+                        machineType = event.machineType,
+                        zoneId = event.zoneId,
+                        live = event.live
                     )
                 }
-
                 else -> {
                 }
             }
