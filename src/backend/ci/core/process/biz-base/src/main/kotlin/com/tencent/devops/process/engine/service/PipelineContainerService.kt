@@ -467,7 +467,7 @@ class PipelineContainerService @Autowired constructor(
                     taskBuildRecords.add(
                         BuildRecordTask(
                             projectId = context.projectId, pipelineId = context.pipelineId,
-                            buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                            buildId = context.buildId, stageId = stage.id!!, containerId = container.id!!,
                             taskId = atomElement.id!!, classType = atomElement.getClassType(),
                             atomCode = atomElement.getAtomCode(), executeCount = context.executeCount,
                             resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
@@ -627,6 +627,10 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
+                                /*重试时重置构建机互斥组名称，以便变量更改时能生效*/
+                                controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
+                                /*重试时重置互斥组名称，以便变量更改时能生效*/
+                                controlOption.mutexGroup?.runtimeMutexGroup = null
                                 updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer
@@ -690,7 +694,7 @@ class PipelineContainerService @Autowired constructor(
                 BuildRecordContainer(
                     projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
-                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    containerId = container.id!!, containerType = container.getClassType(),
                     executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
                     matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()

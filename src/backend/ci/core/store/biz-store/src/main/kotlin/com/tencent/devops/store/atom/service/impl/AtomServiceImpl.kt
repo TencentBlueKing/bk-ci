@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -58,16 +59,29 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.PROJECT_NO_PERMISSION
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
+import com.tencent.devops.store.atom.service.AtomLabelService
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreIndexManageService
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.PROJECT_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -111,31 +125,19 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.UnInstallReq
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomLabelService
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreHonorService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.service.StoreIndexManageService
-import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreUserService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
-import org.apache.commons.collections4.ListUtils
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import org.apache.commons.collections4.ListUtils
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * 插件业务逻辑类
@@ -1055,20 +1057,58 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Page<InstalledAtom> {
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
-        if (count == 0) {
-            return Page(page, pageSize, 0, result)
-        }
-        val records = atomDao.getInstalledAtoms(
+        val defaultAtomCount = atomDao.countInstalledAtoms(
+            dslContext = dslContext,
+            classifyCode = classifyCode,
+            name = name
+        )
+        val projectAtomCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
-            name = name,
-            page = page,
-            pageSize = pageSize
+            name = name
         )
+        val count = projectAtomCount + defaultAtomCount
+        if (count == 0) {
+            return Page(page, pageSize, 0, result)
+        }
+        var records: org.jooq.Result<out Record>? = null
         val atomCodeList = mutableListOf<String>()
+        if (projectAtomCount > (page - 1) * pageSize) {
+            records = atomDao.getInstalledAtoms(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        }
         records?.forEach {
+            atomCodeList.add(it[KEY_ATOM_CODE] as String)
+        }
+
+        // 查询完项目下安装插件则开始查询默认插件
+        var defaultAtoms: org.jooq.Result<out Record>? = null
+        if (records.isNullOrEmpty() || records.size < pageSize) {
+            var limit = pageSize
+            var offset = 0
+            // 通过计算已分页总量与项目下已安装插件的差值确定查询默认插件的起始值
+            val thresholdNum = (page - 1) * pageSize - projectAtomCount
+            if (thresholdNum > 0) {
+                offset = thresholdNum
+            } else {
+                limit = page * pageSize - projectAtomCount
+            }
+            defaultAtoms = atomDao.getDefaultAtoms(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                name = name,
+                offset = offset,
+                limit = limit
+            )
+        }
+        defaultAtoms?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
         }
 
@@ -1078,13 +1118,48 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode
         ).data
         val hasManagerPermission = hasManagerPermission(projectCode, userId)
-        records?.forEach {
+        records?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        defaultAtoms?.let {
+            convertInstalledAtom(
+                userId = userId,
+                records = it,
+                pipelineStat = pipelineStat,
+                hasManagerPermission = hasManagerPermission,
+                result = result
+            )
+        }
+        return Page(page, pageSize, count.toLong(), result)
+    }
+
+    private fun convertInstalledAtom(
+        userId: String,
+        records: org.jooq.Result<out Record>,
+        pipelineStat: Map<String, Int>?,
+        hasManagerPermission: Boolean,
+        result: MutableList<InstalledAtom>
+    ) {
+        records.forEach {
             val atomCode = it[KEY_ATOM_CODE] as String
-            val installer = it[KEY_INSTALLER] as String
-            val installType = it[KEY_INSTALL_TYPE] as Byte
+            val default = it[KEY_DEFAULT_FLAG] as Boolean
+            val installer = if (default) {
+                SYSTEM
+            } else {
+                it[KEY_INSTALLER] as String
+            }
             // 判断项目是否是初始化项目或者调试项目
-            val isInitTest = installType == StoreProjectTypeEnum.INIT.type.toByte() ||
-                installType == StoreProjectTypeEnum.TEST.type.toByte()
+            val isInitTest = if (default) false else {
+                val installType = it[KEY_INSTALL_TYPE] as? Byte
+                installType == StoreProjectTypeEnum.INIT.type.toByte() ||
+                        installType == StoreProjectTypeEnum.TEST.type.toByte()
+            }
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
@@ -1107,14 +1182,23 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     summary = it[KEY_SUMMARY] as? String,
                     publisher = it[KEY_PUBLISHER] as? String,
                     installer = installer,
-                    installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
-                    installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
+                    installTime = if (default) {
+                        ""
+                    } else {
+                        DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime)
+                    },
+                    installType = if (default) {
+                        StoreProjectTypeEnum.COMMON.name
+                    } else { StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()) },
                     pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
-                    hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                    hasPermission = if (default) {
+                        false
+                    } else {
+                        !isInitTest && (hasManagerPermission || installer == userId)
+                    }
                 )
             )
         }
-        return Page(page, pageSize, count.toLong(), result)
     }
 
     /**

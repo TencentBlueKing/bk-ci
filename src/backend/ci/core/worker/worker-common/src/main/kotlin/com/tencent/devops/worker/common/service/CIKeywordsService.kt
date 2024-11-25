@@ -6,6 +6,7 @@ import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import org.slf4j.LoggerFactory
 
 object CIKeywordsService {
     private val buildApi = ApiFactory.create(EngineBuildSDKApi::class)
@@ -26,6 +27,8 @@ object CIKeywordsService {
         override val key: String = "ci"
     ) : RuntimeNamedValue {
         override fun getValue(key: String): PipelineContextData? {
+            // TODO: 理论上不会走这里的代码逻辑，先打印日志保守点看看
+            logger.info("CIKeywordsRuntimeNamedValue|ci.token")
             // 不是需要的关键字直接返回空
             if (key != CI_TOKEN_CONTEXT.removePrefix("ci.")) {
                 return null
@@ -33,4 +36,6 @@ object CIKeywordsService {
             return StringContextData(getOrRequestToken() ?: "")
         }
     }
+
+    private val logger = LoggerFactory.getLogger(CIKeywordsService::class.java)
 }

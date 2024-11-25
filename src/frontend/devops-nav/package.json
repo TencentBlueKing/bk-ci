@@ -86,7 +86,8 @@
     "vue-router": "3.6.5",
     "vuex": "3.6.2",
     "vuex-class": "^0.3.0",
-    "vuex-typescript-interface": "^1.0.3"
+    "vuex-typescript-interface": "^1.0.3",
+    "markdown-it": "^14.1.0"
   },
   "nx": {
     "targets": {

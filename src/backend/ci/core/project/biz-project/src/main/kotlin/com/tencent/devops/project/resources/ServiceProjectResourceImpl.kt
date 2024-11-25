@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectOrganizationService
@@ -274,6 +275,18 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun getExistedEnglishName(englishName: List<String>): Result<List<String>?> {
         return Result(
             projectService.getExistedEnglishName(englishName)
+        )
+    }
+
+    override fun updatePluginDetailsDisplay(
+        projectId: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean> {
+        return Result(
+            projectService.updatePluginDetailsDisplay(
+                englishName = projectId,
+                pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
+            )
         )
     }
 }

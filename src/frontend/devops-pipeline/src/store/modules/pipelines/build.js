@@ -100,9 +100,9 @@ const actions = {
         const query = {
             version
         }
-        if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
+        if (params.buildNo && typeof params.buildNo.currentBuildNo !== 'undefined') {
             Object.assign(query, {
-                buildNo: params.buildNo.buildNo
+                buildNo: params.buildNo.currentBuildNo
             })
             delete params.buildNo
         }

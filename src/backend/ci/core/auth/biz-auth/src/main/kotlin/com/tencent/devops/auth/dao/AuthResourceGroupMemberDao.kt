@@ -117,7 +117,7 @@ class AuthResourceGroupMemberDao {
     fun batchCreate(dslContext: DSLContext, groupMembers: List<AuthResourceGroupMember>) {
         val now = LocalDateTime.now()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            dslContext.batch(groupMembers.map {
+            groupMembers.forEach {
                 dslContext.insertInto(
                     this,
                     PROJECT_CODE,
@@ -146,13 +146,14 @@ class AuthResourceGroupMemberDao {
                 ).onDuplicateKeyUpdate()
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
-            }).execute()
+                    .execute()
+            }
         }
     }
 
     fun batchUpdate(dslContext: DSLContext, groupMembers: List<AuthResourceGroupMember>) {
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            dslContext.batch(groupMembers.map {
+            groupMembers.forEach {
                 dslContext.update(this)
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
@@ -160,7 +161,8 @@ class AuthResourceGroupMemberDao {
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(IAM_GROUP_ID.eq(it.iamGroupId))
                     .and(MEMBER_ID.eq(it.memberId))
-            }).execute()
+                    .execute()
+            }
         }
     }
 
@@ -292,10 +294,14 @@ class AuthResourceGroupMemberDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String? = null,
+        resourceCode: String? = null,
         memberId: String? = null,
         memberName: String? = null,
         memberType: String? = null,
-        iamGroupId: Int? = null
+        iamGroupId: Int? = null,
+        maxExpiredTime: LocalDateTime? = null,
+        minExpiredTime: LocalDateTime? = null,
+        groupCode: String? = null
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.selectFrom(this)
@@ -305,6 +311,10 @@ class AuthResourceGroupMemberDao {
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
             iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
+            maxExpiredTime?.let { select.and(EXPIRED_TIME.le(maxExpiredTime)) }
+            minExpiredTime?.let { select.and(EXPIRED_TIME.ge(minExpiredTime)) }
+            resourceCode?.let { select.and(RESOURCE_CODE.eq(resourceCode)) }
+            groupCode?.let { select.and(GROUP_CODE.eq(groupCode)) }
             select.fetch().map { convert(it) }
         }
     }
@@ -325,7 +335,7 @@ class AuthResourceGroupMemberDao {
         }
     }
 
-    fun listProjectMember(
+    fun listProjectMembers(
         dslContext: DSLContext,
         projectCode: String,
         memberType: String?,
@@ -551,6 +561,24 @@ class AuthResourceGroupMemberDao {
                 .where(conditions)
             select.groupBy(RESOURCE_TYPE)
             select.fetch().map { Pair(it.value1(), it.value2().toLong()) }.toMap()
+        }
+    }
+
+    fun listMemberGroupIdsInProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberId: String,
+        iamTemplateIds: List<String>
+    ): List<Int> {
+        val conditions = buildMemberGroupCondition(
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds
+        )
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(IAM_GROUP_ID).from(this)
+                .where(conditions)
+                .fetch().map { it.value1() }
         }
     }
 

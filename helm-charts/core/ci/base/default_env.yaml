@@ -17,7 +17,7 @@ bkCiIamCallbackUser: bk_iam
 bkCiAppCode: bk_ci
 bkCiNotifyWeworkSendChannel: weworkAgent
 bkCiInfluxdbDb: agentMetrix
-bkCiDocsUrl: https://bk.tencent.com
+bkCiDocsUrl: https://bk.tencent.com/docs
 bkCiArtifactoryRealm: local
 bkRepoHost: repo.demo.com
 bkRepoFqdn: repo.demo.com

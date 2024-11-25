@@ -44,7 +44,7 @@ const goToManage = () => {
   border-bottom: 1px solid #DCDEE5;
 }
 .manage-header {
-  height: 60px;
+  height: 59px;
   background: #FFFFFF;
   box-shadow: 0 2px 5px 0 rgba(51,60,72,0.03);
   display: flex;

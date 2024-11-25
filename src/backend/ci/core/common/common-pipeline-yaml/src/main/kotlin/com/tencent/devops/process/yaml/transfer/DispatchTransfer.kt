@@ -35,8 +35,10 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoStoreImage
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
@@ -190,10 +192,21 @@ class DispatchTransfer @Autowired(required = false) constructor(
                     password = info.password,
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
-                    jobId = job.id
+                    jobId = job.id,
+                    credentialProjectId = null
                 ),
                 options = info.options,
-                imagePullPolicy = info.imagePullPolicy
+                imagePullPolicy = info.imagePullPolicy,
+                imageType = info.imageType,
+                storeImage = if (info.imageType == ImageType.BKSTORE && info.imageCode != null) {
+                    ThirdPartyAgentDockerInfoStoreImage(
+                        imageName = null,
+                        imageCode = info.imageCode,
+                        imageVersion = info.imageVersion
+                    )
+                } else {
+                    null
+                }
             )
         } else null
     }
