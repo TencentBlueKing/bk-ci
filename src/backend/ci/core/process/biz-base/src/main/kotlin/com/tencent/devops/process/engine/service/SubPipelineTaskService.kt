@@ -12,6 +12,7 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
@@ -224,6 +225,13 @@ class SubPipelineTaskService @Autowired constructor(
                 element = JsonUtil.mapTo(it.taskParams, Element::class.java),
                 contextMap = getContextMap(model.stages)
             ) ?: return@forEach
+            // 目前触发stage不显示在构建界面，所以stageId需要减1
+            val finalStageId = it.stageId.let { stageId ->
+                val order = stageId.replace("stage-", "").toIntOrNull()
+                order?.let {
+                    VMUtils.genStageId(order - 1)
+                } ?: stageId
+            }
             subPipelineRefList.add(
                 SubPipelineRef(
                     projectId = it.projectId,
@@ -231,7 +239,7 @@ class SubPipelineTaskService @Autowired constructor(
                     pipelineName = model.name,
                     channel = channel,
                     element = EmptyElement(id = it.taskId, name = it.taskName),
-                    stageId = it.stageId,
+                    stageId = finalStageId,
                     containerId = it.containerId,
                     subPipelineId = subPipelineTaskParam.pipelineId,
                     subProjectId = subPipelineTaskParam.projectId,
