@@ -70,7 +70,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
-import com.tencent.devops.project.constant.ProjectConstant.PIPELINE_NAME_FORMAT
+import com.tencent.devops.project.constant.ProjectConstant.PIPELINE_NAME_FORMAT_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -1651,7 +1651,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     private fun validateProperties(properties: ProjectProperties?) {
         properties?.pipelineNameFormat?.let {
-            if (it.length > PIPELINE_NAME_FORMAT) {
+            if (it.length > PIPELINE_NAME_FORMAT_MAX_LENGTH) {
                 throw ErrorCodeException(
                     errorCode = ProjectMessageCode.ERROR_PIPELINE_NAME_FORMAT_TOO_LONG,
                     defaultMessage = "The naming convention for pipelines should not exceed 200 characters."

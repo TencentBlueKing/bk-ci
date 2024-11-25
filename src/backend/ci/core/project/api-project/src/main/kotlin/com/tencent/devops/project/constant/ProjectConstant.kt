@@ -32,5 +32,5 @@ object ProjectConstant {
     const val PROJECT_ID_MAX_LENGTH = 32
     const val NAME_MIN_LENGTH = 2
     // 流水线命名规范
-    const val PIPELINE_NAME_FORMAT = 200
+    const val PIPELINE_NAME_FORMAT_MAX_LENGTH = 200
 }
