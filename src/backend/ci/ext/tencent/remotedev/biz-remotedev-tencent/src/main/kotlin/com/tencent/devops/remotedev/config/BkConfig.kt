@@ -45,6 +45,8 @@ class BkConfig {
     val recordViewServiceId: Int? = null
     @Value("\${bkitsm.dailyCheckServiceId:#{null}}")
     val dailyCheckServiceId: Int? = null
+    @Value("\${bkitsm.userAuthCheckServiceId:#{null}}")
+    val userAuthCheckServiceId: Int? = null
 
     // bkvision配置
     @Value("\${bkvision.url:}")

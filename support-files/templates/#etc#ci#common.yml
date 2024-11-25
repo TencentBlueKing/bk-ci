@@ -14,8 +14,8 @@ spring:
 # spring cloud stream 配置，common-stream
     stream:
       binders:
-        rabbit:
-          type: core-rabbit
+        core-rabbit:
+          type: rabbit
           environment:
             spring:
               rabbitmq:
@@ -23,7 +23,8 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-          type: extend-rabbit
+        extend-rabbit:
+          type: rabbit
           environment:
             spring:
               rabbitmq:

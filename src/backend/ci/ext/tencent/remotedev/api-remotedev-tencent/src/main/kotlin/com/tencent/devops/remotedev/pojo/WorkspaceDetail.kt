@@ -37,6 +37,8 @@ data class WorkspaceDetail(
     val workspaceName: String,
     @get:Schema(title = "工作空间备注名称")
     val displayName: String?,
+    @get:Schema(title = "项目id")
+    val projectId: String,
     @get:Schema(title = "工作空间状态")
     val status: WorkspaceStatus,
     @get:Schema(title = "最近状态修改时间")

@@ -34,8 +34,31 @@
             return this.$t(`${this.$route.params.id}ServiceDesc`)
         }
 
+        get languageCode (): string {
+            const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
+            if (languageCodeMatch) {
+                return languageCodeMatch[0].toUpperCase()
+            }
+            return 'ZH'
+        }
+
+        get bkCiVersion (): string {
+            let version = window.BK_CI_VERSION
+            if (version.startsWith('v')) {
+                version = version.substring(1)
+            }
+            
+            const match = version.match(/^(\d+)\./)
+            
+            if (match) {
+                return `/${match[1]}.0`
+            }
+            
+            return ''
+        }
+
         get guideUrl (): string {
-            return `${DOCS_URL_PREFIX}${this.service.docUrl || ''}`
+            return `${DOCS_URL_PREFIX}/markdown/${this.languageCode}/Devops${this.bkCiVersion}${this.service.docUrl || ''}`
         }
 
         beforeRouteEnter (to, from, next) {

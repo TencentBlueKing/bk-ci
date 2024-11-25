@@ -5,6 +5,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
+import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.service.UserInfoCertService
@@ -24,5 +25,10 @@ class UserInfoResourceImpl @Autowired constructor(
 
     override fun faceRecognition(data: FaceRecognitionData): Result<FaceRecognitionResult> {
         return Result(userInfoCertService.faceRecognition(data))
+    }
+
+    override fun asyncAuthCheck(data: UserInfoAuthCheck): Result<Boolean> {
+        userInfoCertService.asyncAuthCheck(data)
+        return Result(true)
     }
 }

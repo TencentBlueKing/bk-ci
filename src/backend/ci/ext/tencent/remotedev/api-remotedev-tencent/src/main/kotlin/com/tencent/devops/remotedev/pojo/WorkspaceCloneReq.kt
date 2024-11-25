@@ -33,6 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class WorkspaceCloneReq(
     @get:Schema(title = "基线")
     val baseline: String?,
-    @get:Schema(title = "区域")
-    val zoneId: String?
+    @get:Schema(title = "区域，默认和原机器一致")
+    val zoneId: String?,
+    @get:Schema(title = "机型，默认和原机器一致")
+    val machineType: String?,
+    @get:Schema(title = "是否开机备份，默认false")
+    val live: Boolean?
 )

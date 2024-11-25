@@ -13,6 +13,8 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
+import com.tencent.devops.remotedev.pojo.async.AsyncUserAuthCheck
+import com.tencent.devops.remotedev.service.UserInfoCertService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobActionService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
@@ -30,7 +32,8 @@ class AsyncExecuteListener @Autowired constructor(
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
     private val jobActionService: RemoteDevJobActionService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val userInfoCertService: UserInfoCertService
 ) {
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
         logger.debug("listenAsyncExecuteEvent|$event")
@@ -101,6 +104,11 @@ class AsyncExecuteListener @Autowired constructor(
                     userId = data.operator,
                     notifyData = data.notifyData
                 )
+            }
+
+            AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK -> {
+                val data = objectMapper.readValue<AsyncUserAuthCheck>(event.eventStr)
+                userInfoCertService.doAsyncAuthCheck(data)
             }
         }
     }

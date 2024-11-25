@@ -65,11 +65,11 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
@@ -249,7 +249,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(
             FileDetailForApp(
                 name = fileDetail.name,
-                platform = if (fileDetail.name.endsWith(".apk")) PlatformEnum.ANDROID.name else PlatformEnum.IOS.name,
+                platform = PlatformEnum.ofTail(fileDetail.name).name,
                 size = fileDetail.size,
                 createdTime = fileDetail.createdTime,
                 projectName = projectName,
@@ -290,9 +290,20 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return if (path.endsWith(".ipa")) {
+        val platformEnum = PlatformEnum.ofTail(path)
+        return if (platformEnum == PlatformEnum.IOS) {
             Result(
                 bkRepoDownloadService.outerPlistUrl(
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    argPath = path,
+                    ttl = 24 * 3600
+                )
+            )
+        } else if (platformEnum == PlatformEnum.HAP) {
+            Result(
+                bkRepoDownloadService.outerHapJson5Url(
                     userId = userId,
                     projectId = projectId,
                     artifactoryType = artifactoryType,
@@ -303,6 +314,30 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         } else {
             downloadUrl(userId, projectId, artifactoryType, path)
         }
+    }
+
+    override fun getHapJson5(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        experienceHashId: String?,
+        organization: String?,
+        ttl: Int?
+    ): String {
+        checkParameters(userId, projectId, path)
+        if (PlatformEnum.ofTail(path) != PlatformEnum.HAP) {
+            throw BadRequestException("Path must end with ${PlatformEnum.HAP.tails}")
+        }
+        return bkRepoDownloadService.outerHapJson5Content(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            argPath = path,
+            ttl = ttl ?: (24 * 3600),
+            experienceHashId = experienceHashId,
+            organization = organization
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)

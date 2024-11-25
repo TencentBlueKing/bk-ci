@@ -68,6 +68,8 @@ data class ProjectWorkspace(
     override var currentLoginUsers: List<String>,
     @get:Schema(title = "备份的workspace name")
     override var bakWorkspaceName: String? = null,
+    @get:Schema(title = "工作空间归属")
+    override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "专家协助")

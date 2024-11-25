@@ -39,4 +39,12 @@ class ServiceBkRepoResourceImpl(
     override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
         return Result(bkRepoClient.createBkRepoResource(userId, projectId))
     }
+
+    override fun enableProject(
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        return Result(bkRepoClient.enableProject(userId, projectId, enabled))
+    }
 }

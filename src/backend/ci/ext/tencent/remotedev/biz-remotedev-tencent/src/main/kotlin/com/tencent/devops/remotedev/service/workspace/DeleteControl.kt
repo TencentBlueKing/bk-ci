@@ -425,6 +425,7 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+            workspaceCommon.devxEnvNodeDel(operator, workspaceName)
         } else {
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,

@@ -57,8 +57,8 @@
     ]
   },
   "dependencies": {
-    "axios": "0.28.0",
     "@tencent/bk-magic-vue": "2.5.9-beta.6",
+    "axios": "0.28.0",
     "js-cookie": "^3.0.1",
     "vue-i18n": "~8.18.1"
   },

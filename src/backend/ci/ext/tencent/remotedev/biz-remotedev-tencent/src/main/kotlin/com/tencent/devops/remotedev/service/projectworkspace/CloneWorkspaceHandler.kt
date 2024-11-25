@@ -80,10 +80,16 @@ class CloneWorkspaceHandler @Autowired constructor(
         rebuildReq: WorkspaceCloneReq
     ): WorkspaceResponse {
         logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId
+                projectId = projectId,
+                ownerType = workspace.ownerType
             ) && !permissionService.hasUserManager(userId, projectId)
         ) {
             throw ErrorCodeException(
@@ -92,11 +98,6 @@ class CloneWorkspaceHandler @Autowired constructor(
             )
         }
 
-        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
         RedisCallLimit(
             redisOperation = redisOperation,
             lockKey = "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -147,8 +148,10 @@ class CloneWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     zoneId = zoneId,
+                    machineType = rebuildReq.machineType,
                     gameId = null,
-                    projectId = projectId
+                    projectId = projectId,
+                    live = rebuildReq.live
                 )
             )
 
@@ -157,7 +160,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 workspaceName = workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_UPGRADE,
+                type = WebSocketActionType.WORKSPACE_CLONE,
                 status = true,
                 action = WorkspaceAction.CLONING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
@@ -217,12 +220,19 @@ class CloneWorkspaceHandler @Autowired constructor(
 
     private fun createCheckWhenClone(old: WorkspaceRecordWithWindows, req: WorkspaceCloneReq): String {
         val zoneId = checkNotNull(req.zoneId ?: old.zoneId?.replace(Regex("\\d+"), ""))
-        val winConfigId = checkNotNull(old.winConfigId)
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
+        val windowsConfig = if (req.machineType != null) {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(req.machineType))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(req.machineType.toString())
+                )
+        } else {
+            windowsResourceConfigService.getTypeConfig(checkNotNull(old.winConfigId))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(old.winConfigId.toString())
+                )
+        }
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
@@ -243,10 +253,9 @@ class CloneWorkspaceHandler @Autowired constructor(
         }
 
         if (old.ownerType == WorkspaceOwnerType.PROJECT) {
-            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+            val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
                 dslContext = dslContext,
-                projectId = old.projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                projectId = old.projectId
             )
             windowsResourceConfigService.createCheckSpecLimit(
                 windowsType = windowsConfig.size,

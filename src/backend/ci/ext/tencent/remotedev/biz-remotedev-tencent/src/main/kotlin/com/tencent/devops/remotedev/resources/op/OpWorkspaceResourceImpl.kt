@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
-import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -14,8 +13,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
-import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,10 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
-    private val createControl: CreateControl,
-    private val deleteControl: DeleteControl,
-    private val sleepControl: SleepControl,
-    private val jobService: WorkspaceCheckJob
+    private val createControl: CreateControl
 ) : OpWorkspaceResource {
 
     companion object {
@@ -92,5 +86,36 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             bak = bak
         )
         return Result(res)
+    }
+
+    override fun devxEnvNodeInit(userId: String, workspaceName: String): Result<Boolean> {
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName
+        ) ?: return Result(false)
+        val ip = ws.ip?.substringAfter(".") ?: run {
+            logger.info("workspace not find ip|$workspaceName")
+            return Result(false)
+        }
+        workspaceCommon.devxEnvNodeInit(
+            userId = userId,
+            projectId = ws.projectId,
+            workspaceName = ws.workspaceName,
+            ip = ip,
+            size = ws.machineType ?: ""
+        )
+        if (ws.ownerType != WorkspaceOwnerType.PROJECT_PUBLIC) {
+            workspaceService.changeWorkspaceOwnerType(
+                ws.workspaceName,
+                ws.ownerType,
+                WorkspaceOwnerType.PROJECT_PUBLIC
+            )
+        }
+        return Result(true)
+    }
+
+    override fun devxEnvNodeDel(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceCommon.devxEnvNodeDel(userId, workspaceName)
+        return Result(true)
     }
 }

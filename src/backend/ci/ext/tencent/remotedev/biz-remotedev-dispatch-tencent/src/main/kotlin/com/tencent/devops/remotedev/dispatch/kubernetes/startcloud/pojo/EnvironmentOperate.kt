@@ -11,5 +11,6 @@ data class EnvironmentOperate(
     val zoneId: String? = null,
     val machineType: String? = null,
     val formatDataDisk: Boolean? = null,
-    val size: String? = null
+    val size: String? = null,
+    val live: Boolean? = null
 )
