@@ -151,7 +151,8 @@ class NotifyControl @Autowired constructor(
             notStatus = setOf(WorkspaceStatus.DELETED, WorkspaceStatus.PREPARING, WorkspaceStatus.DELIVERING_FAILED),
             checkField = listOf(
                 TWorkspace.T_WORKSPACE.NAME,
-                TWorkspace.T_WORKSPACE.PROJECT_ID
+                TWorkspace.T_WORKSPACE.PROJECT_ID,
+                TWorkspace.T_WORKSPACE.OWNER_TYPE
             )
         )
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
@@ -162,6 +163,8 @@ class NotifyControl @Autowired constructor(
         val personalUsers = workspace.filter { it.ownerType == WorkspaceOwnerType.PERSONAL }
             .map { it.createUserId }
             .toMutableSet()
+
+        logger.debug("notifyWorkspaceInfo|workspace|$workspace|personalUsers|$personalUsers")
 
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
