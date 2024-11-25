@@ -59,6 +59,8 @@ func main() {
 		}
 	}()
 
+	logs.Infof("version: %s", config.AgentVersion)
+
 	if ok := systemutil.CheckProcess(upgraderProcess); !ok {
 		logs.Warn("get process lock failed, exit")
 		return

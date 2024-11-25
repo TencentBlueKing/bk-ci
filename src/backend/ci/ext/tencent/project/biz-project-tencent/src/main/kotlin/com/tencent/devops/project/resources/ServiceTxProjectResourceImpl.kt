@@ -208,10 +208,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(accessToken: String): Result<List<ProjectVO>> {
+    override fun list(userId: String?, accessToken: String?): Result<List<ProjectVO>> {
         return Result(
             projectService.list(
-                userId = "",
+                userId = userId ?: "",
                 accessToken = accessToken,
                 unApproved = false
             )

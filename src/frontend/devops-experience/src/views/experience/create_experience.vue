@@ -19,14 +19,14 @@
                     <template v-if="hasPermission">
                         <div class="version-name">
                             <bk-form-item
-                                label="ipa/apk文件"
+                                label="ipa/apk/hap文件"
                                 label-width="190"
                                 :required="true"
                                 property="name"
                             >
                                 <bk-input
                                     ref="releaseName"
-                                    placeholder="请从版本仓库中选择一个ipa或apk文件"
+                                    placeholder="请从版本仓库中选择一个ipa或apk或hap文件"
                                     name="releaseName"
                                     disabled
                                     v-model="createReleaseForm.name"
@@ -44,7 +44,7 @@
                             label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
-                            desc="展示于蓝盾App上的应用名。如果为空，将自动获取ipa/apk内置的应用名"
+                            desc="展示于蓝盾App上的应用名。如果为空，将自动获取ipa/apk/hap内置的应用名"
                             property="experienceName"
                         >
                             <bk-input
@@ -155,12 +155,12 @@
                         >
                             <bk-radio-group v-model="experienceRange">
                                 <bk-radio
-                                    value="public"
+                                    value="internals"
                                     class="mr20"
                                 >
-                                    公开体验
+                                    内部体验组
                                 </bk-radio>
-                                <bk-radio value="internals">内部体验组</bk-radio>
+                                <bk-radio value="public">公开体验</bk-radio>
                             </bk-radio-group>
                         </bk-form-item>
                         <bk-form-item
@@ -415,7 +415,7 @@
                     title: ''
                 },
                 query: {},
-                experienceRange: 'public',
+                experienceRange: 'internals',
                 createReleaseForm: {
                     name: '',
                     version_no: '',
@@ -895,7 +895,7 @@
                     if (!this.createReleaseForm.desc) message = '请填写版本描述'
                     if (!this.createReleaseForm.versionTitle) message = '请填写版本标题'
                     // if (!this.createReleaseForm.experienceName) message = '请填写体验名称'
-                    if (!this.createReleaseForm.name) message = '请选择ipa/apk文件'
+                    if (!this.createReleaseForm.name) message = '请选择ipa/apk/hap文件'
                     this.$bkMessage({
                         message,
                         theme

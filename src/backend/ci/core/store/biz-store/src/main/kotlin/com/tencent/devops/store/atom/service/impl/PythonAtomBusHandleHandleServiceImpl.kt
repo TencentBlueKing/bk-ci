@@ -48,4 +48,8 @@ class PythonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         // python插件目前没有用到osArch，无需转换
         return osArch
     }
+
+    override fun getDefaultRuntimeVersion(): String? {
+        return null
+    }
 }

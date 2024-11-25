@@ -93,14 +93,15 @@ config = {
         devnetDomain = "devnet.kubernetes.demo.com",
         switchAll = false,
         codecc = { domain = "kubernetes.demo.com" },
-        useForceHeader = false,
-        tags = {},
-        codeccTags = {},
         api = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""
         },
-        special_domain = {}
+        special_domain = {},
+        recovery = {
+            switchAll = false,
+            domain = "k8s.demo.com"
+        }
     }
 }
 

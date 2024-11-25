@@ -78,7 +78,7 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), this.getLang(newVal))
                 }
             },
 
@@ -92,15 +92,42 @@
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-editor'
-            )
+            const [monaco, { GongfengMonacoEditor, ReleaseChannel }] = await Promise.all([
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    'monaco-editor'
+                ),
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    '@tencent/gongfeng-copilot-monaco'
+                )
+            ])
+
+            this.monaco = monaco
+            const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                app: {
+                    name: 'bkci',
+                    // 接入方版本号
+                    version: '1.0.0'
+                },
+                // env: ReleaseChannel.INSIDER,
+                env: ReleaseChannel.PRODUCTION,
+                forceAuthentication: false
+                // forceAuthentication: false,
+                // authenticatedSession: {
+                //     accessToken: '',
+                //     user: ''
+                // }
+            })
+
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-            this.editor = this.monaco.editor.create(this.$el, {
+            this.editor = await gongfengEditor.createEditor(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
                 theme: 'ciYamlTheme',
@@ -130,7 +157,10 @@
             getLang (lang) {
                 const langMap = {
                     sh: 'shell',
-                    batchfile: 'bat'
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell'
                 }
 
                 return langMap[lang] || lang

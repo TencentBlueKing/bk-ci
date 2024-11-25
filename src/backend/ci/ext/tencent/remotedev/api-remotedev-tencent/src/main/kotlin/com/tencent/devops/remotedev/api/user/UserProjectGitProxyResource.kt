@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.v3.oas.annotations.Operation
@@ -65,15 +66,18 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "工蜂仓库ID", required = true)
         @QueryParam("repoId")
         repoId: Long,
-        @Parameter(description = "仓库链接", required = true)
-        @QueryParam("url")
-        url: String
+        @Parameter(description = "仅删除数据不解绑工蜂ACL", required = true)
+        @QueryParam("onlyDelete")
+        onlyDelete: Boolean?
     ): Result<Boolean>
 
     @Operation(summary = "获取工蜂namespace")
     @GET
     @Path("/tgit/namespaces")
     fun getTGitNamespaces(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -85,7 +89,10 @@ interface UserProjectGitProxyResource {
         pageSize: Int,
         @Parameter(description = "是否是svn项目", required = true)
         @QueryParam("svnProject")
-        svnProject: Boolean
+        svnProject: Boolean,
+        @Parameter(description = "凭据 ID", required = true)
+        @QueryParam("credId")
+        credId: String?
     ): Result<List<TGitNamespace>>
 
     @Operation(summary = "创建工蜂项目")
@@ -97,5 +104,16 @@ interface UserProjectGitProxyResource {
         userId: String,
         @Parameter(description = "创建项目信息", required = true)
         data: CreateTGitProjectInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "重新绑定工蜂关联")
+    @POST
+    @Path("/tgit/reBinding")
+    fun reBindingTgitLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "绑定信息", required = true)
+        data: ReBindingLinkData
     ): Result<Boolean>
 }

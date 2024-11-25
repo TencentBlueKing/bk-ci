@@ -154,4 +154,10 @@ interface PipelinePermissionService {
         userId: String,
         projectId: String
     ): Boolean
+
+    /**
+     * 判断该项目是否进行列表权限控制
+     * @param projectId projectId
+     */
+    fun isControlPipelineListPermission(projectId: String): Boolean
 }

@@ -14,8 +14,10 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -223,6 +225,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    override fun workspaceClone(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        return client.get(ServiceRemoteDevResource::class).workspaceClone(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            req = req
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
@@ -424,5 +441,27 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("checkUserViewWorkspacePermission |$userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).checkUserViewWorkspacePermission(userId, workspaceName)
+    }
+
+    override fun expandWorkspaceDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<ExpandDiskValidateResp?> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
+    }
+
+    override fun removeUserPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        removeUser: String
+    ): Result<Boolean> {
+        logger.info("removeUserPermission $appCode|$userId|$removeUser")
+        return client.get(ServiceRemoteDevResource::class).removeUserPermission(
+            userId = userId,
+            removeUser = removeUser
+        )
     }
 }

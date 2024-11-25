@@ -33,21 +33,17 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.dao.BkBizProjectDao
 import com.tencent.devops.environment.model.AgentHostInfo
-import com.tencent.devops.environment.pojo.BkBizProjectLock
-import com.tencent.devops.environment.pojo.BkMetadataResp
 import com.tencent.devops.environment.pojo.BkMonitorRequestBody
 import com.tencent.devops.environment.pojo.BkMonitorRequestBodyQueryConfigs
 import com.tencent.devops.environment.pojo.BkMonitorResp
 import com.tencent.devops.environment.pojo.BkMonitorRespData
 import com.tencent.devops.environment.pojo.BkMonitorRespDataSeries
+import com.tencent.devops.environment.service.BkBizProjectService
 import com.tencent.devops.environment.utils.NumberUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -59,9 +55,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class BkMonitorMetricsService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val dslContext: DSLContext,
-    private val bkBizProjectDao: BkBizProjectDao,
-    private val redisOperation: RedisOperation
+    private val bkBizProjectService: BkBizProjectService
 ) {
 
     @Value("\${bkMonitor.gateway:#{null}}")
@@ -303,7 +297,7 @@ class BkMonitorMetricsService @Autowired constructor(
 
     private fun searchMetrics(projectId: String, promql: String, timeRange: String): List<BkMonitorRespDataSeries>? {
         val startTime = System.currentTimeMillis()
-        val bizId = getBizId(projectId) ?: return null
+        val bizId = bkBizProjectService.getBizId(projectId) ?: return null
         val body = BkMonitorRequestBody(
             bkBizId = bizId.inv() + 1,
             queryConfigs = listOf(
@@ -334,65 +328,6 @@ class BkMonitorMetricsService @Autowired constructor(
         logger.info("searchMetrics $promql cost ${System.currentTimeMillis() - startTime}ms")
 
         return data
-    }
-
-    private fun getBizId(projectId: String): Long? {
-        var bizId = bkBizProjectDao.fetchBizId(dslContext, projectId)
-        if (bizId != null) {
-            return bizId
-        }
-        // 因为同时会有四个方法进行查询，所以加锁写入
-        val bizLock = BkBizProjectLock(
-            redisOperation = redisOperation,
-            projectId = projectId
-        )
-        try {
-            bizLock.lock()
-            // 进来后再查询下，因为会有其他同时强锁的写入
-            bizId = bkBizProjectDao.fetchBizId(dslContext, projectId)
-            if (bizId != null) {
-                return bizId
-            }
-            // 没有就拿取新的
-            val url = "$bkMonitorGateway/metadata_get_space_detail?space_uid=bkci__$projectId"
-            val headerStr = objectMapper.writeValueAsString(
-                mapOf("bk_app_code" to bkMonitorAppCode, "bk_app_secret" to bkMonitorAppSecret)
-            ).replace("\\s".toRegex(), "")
-
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .addHeader("X-Bkapi-Authorization", headerStr)
-                .build()
-
-            OkhttpUtils.doHttp(request).use {
-                if (!it.isSuccessful) {
-                    logger.warn("request failed, uri:($url)|response: ($it)")
-                    throw RemoteServiceException("request failed, response:($it)")
-                }
-                val responseStr = it.body!!.string()
-                val resp = objectMapper.readValue<BkMetadataResp>(responseStr)
-                if (resp.code != 200L || !resp.result) {
-                    // 请求错误
-                    logger.warn("request failed, url:($url)|response:($it)")
-                    throw RemoteServiceException("request failed, response:(${resp.message})")
-                }
-                logger.debug("request response：${objectMapper.writeValueAsString(resp.data)}")
-                bizId = resp.data?.id
-                if (bizId == null) {
-                    logger.error("request bk mate data is null")
-                    return null
-                }
-
-                bkBizProjectDao.add(dslContext, bizId!!, projectId)
-                return bizId
-            }
-        } catch (e: Exception) {
-            logger.error("get bizId error", e)
-            return null
-        } finally {
-            bizLock.unlock()
-        }
     }
 
     private fun requestBkMonitor(body: Any): BkMonitorRespData? {

@@ -85,7 +85,8 @@ init:
   iam: false
   turbo: false
   bkrepo: false
-  defaultImage: false
+  defaultImage:
+    enabled: false
   plugin:
     enabled: false
 

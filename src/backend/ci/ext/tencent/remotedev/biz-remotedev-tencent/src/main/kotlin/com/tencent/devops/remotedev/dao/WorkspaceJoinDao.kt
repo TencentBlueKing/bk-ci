@@ -238,17 +238,19 @@ class WorkspaceJoinDao {
                     conditions.add(SYSTEM_TYPE.`in`(types.map { it.name }))
                 }
             }
-
+            /* 二级匹配OWNER_TYPE */
+            /* 第一级以search中单独指定为准 */
             search.workspaceOwnerType?.ifEmpty { null }?.let { types ->
                 if (search.onFuzzyMatch) {
                     conditions.add(OWNER_TYPE.likeRegex(types.joinToString("|") { it.name }))
                 } else {
                     conditions.add(OWNER_TYPE.`in`(types.map { it.name }))
                 }
-            }
-
-            queryType.ownerType()?.let {
-                conditions.add(OWNER_TYPE.eq(it.name))
+            } ?: run {
+                /* 第二级以来源渠道为准 */
+                queryType.ownerType().let { ownerType ->
+                    conditions.add(OWNER_TYPE.`in`(ownerType.map { it.name }))
+                }
             }
         }
 
@@ -262,13 +264,7 @@ class WorkspaceJoinDao {
 
         if (!search.sips.isNullOrEmpty()) {
             conditions.add(
-                TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.likeRegex(
-                    search.sips?.joinToString(
-                        separator = "$|^[^.]+.",
-                        prefix = "^[^.]+.",
-                        postfix = "$"
-                    )
-                )
+                TWorkspace.T_WORKSPACE.IP.`in`(search.sips)
             )
         }
 
@@ -475,6 +471,36 @@ class WorkspaceJoinDao {
             .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID.name] as String? ?: "" }
             .filter { it.isNotBlank() }
             .toSet()
+    }
+
+    fun fetchWorkspaceFromUser(
+        dslContext: DSLContext,
+        userId: String
+    ): List<Triple<String, WorkspaceStatus, WorkspaceShared.AssignType>> {
+        return dslContext.select(
+            TWorkspace.T_WORKSPACE.NAME,
+            TWorkspace.T_WORKSPACE.STATUS,
+            TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
+        )
+            .from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .where(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch()
+            .map {
+                Triple(
+                    it[TWorkspace.T_WORKSPACE.NAME.name] as String,
+                    WorkspaceStatus.load(it[TWorkspace.T_WORKSPACE.STATUS] as Int),
+                    WorkspaceShared.AssignType.parse(it[TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE] as String)
+                )
+            }
     }
 
     // 获取正常状态的 workspace 的用户

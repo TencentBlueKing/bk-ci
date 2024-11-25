@@ -33,7 +33,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -129,14 +128,6 @@ func watch() {
 			cmd := exec.Command(agentPath)
 			cmd.Dir = workDir
 
-			// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
-			stdErr, errstd := cmd.StderrPipe()
-			if errstd != nil {
-				logs.WithError(errstd).Error("get agent stderr pipe error")
-			} else {
-				defer stdErr.Close()
-			}
-
 			logs.Info("start devops agent")
 			if !fileutil.Exists(agentPath) {
 				logs.Errorf("agent file: %s not exists", agentPath)
@@ -172,17 +163,6 @@ func watch() {
 					}
 				}
 				logs.WithError(err).Error("agent process error")
-
-				// 读取可能的报错
-				if errstd != nil {
-					return
-				}
-				out, err := io.ReadAll(stdErr)
-				if err != nil {
-					logs.WithError(err).Error("read agent stderr out error")
-				} else {
-					logs.Error("agent process error out", string(out))
-				}
 			}
 			logs.Info("agent process exited")
 

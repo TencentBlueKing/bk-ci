@@ -23,12 +23,14 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -53,6 +55,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -95,7 +98,8 @@ class ServiceRemoteDevResourceImpl(
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
-    private val workspaceRecordService: WorkspaceRecordService
+    private val workspaceRecordService: WorkspaceRecordService,
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -167,23 +171,6 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkUserIpPermission(user: String, ip: String): Result<Boolean> {
         return Result(desktopWorkspaceService.checkUserIpPermission(user, ip))
-    }
-
-    override fun createWinWorkspaceByVm(
-        userId: String,
-        oldWorkspaceName: String?,
-        projectId: String?,
-        ownerType: WorkspaceOwnerType?,
-        uid: String
-    ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(
-            userId = userId,
-            oldWorkspaceName = oldWorkspaceName,
-            projectCode = projectId,
-            ownerType = ownerType,
-            uid = uid
-        )
-        return Result(res)
     }
 
     override fun assignWorkspace(
@@ -380,9 +367,24 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
+    override fun workspaceClone(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean> {
+        cloneWorkspaceHandler.cloneWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            rebuildReq = req
+        )
+        return Result(true)
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+        if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
@@ -411,7 +413,7 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String
     ): Result<WeSecProjectWorkspace?> {
         val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PROJECT || workspace.projectId != projectId) {
+        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != projectId) {
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
@@ -432,7 +434,13 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type, null))
+        return Result(
+            windowsResourceConfigService.allWindowsQuota(
+                searchCustom = false,
+                quotaType = type,
+                withProjectLimit = null
+            )
+        )
     }
 
     override fun updateUsageLimit(
@@ -659,5 +667,25 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkUserViewWorkspacePermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
+    }
+
+    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+        val data = expertSupportService.expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size
+        ) ?: return Result(null)
+
+        return Result(
+            ExpandDiskValidateResp(
+                valid = data.valid,
+                message = data.message
+            )
+        )
+    }
+
+    override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
+        workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
+        return Result(true)
     }
 }

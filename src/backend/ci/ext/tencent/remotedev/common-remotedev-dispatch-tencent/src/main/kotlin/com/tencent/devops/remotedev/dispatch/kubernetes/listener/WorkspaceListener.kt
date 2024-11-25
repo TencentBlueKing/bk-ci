@@ -137,6 +137,10 @@ class WorkspaceListener @Autowired constructor(
                     remoteDevService.upgradeWorkspace(event)
                 }
 
+                UpdateEventType.CLONE -> {
+                    remoteDevService.cloneWorkspace(event)
+                }
+
                 else -> {
                 }
             }

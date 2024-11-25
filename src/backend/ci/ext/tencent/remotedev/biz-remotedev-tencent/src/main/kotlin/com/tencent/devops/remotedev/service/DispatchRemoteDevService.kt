@@ -29,14 +29,16 @@ class DispatchRemoteDevService(
         oldWorkspaceName: String?,
         projectId: String?,
         ownerType: WorkspaceOwnerType?,
-        uid: String
+        uid: String,
+        bak: Boolean
     ): Result<Boolean> {
         val res = createControl.createWinWorkspaceByVm(
             userId = userId,
             oldWorkspaceName = oldWorkspaceName,
             projectCode = projectId,
             ownerType = ownerType,
-            uid = uid
+            uid = uid,
+            bak = bak
         )
         return Result(res)
     }

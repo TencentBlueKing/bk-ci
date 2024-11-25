@@ -41,15 +41,17 @@ import validDictionary from './utils/validDictionary'
 
 import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
 import bkMagic from '@tencent/bk-magic-vue'
+
+import createDocs from '../../common-lib/docs'
 // 权限指令
 import '@tencent/bk-magic-vue/dist/bk-magic-vue.min.css'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
-import { pipelineDocs } from '../../common-lib/docs'
 
-const { i18n, setLocale } = createLocale(
+const { lang, i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
+const { pipelineDocs } = createDocs(lang, window.BK_CI_VERSION)
 const isInIframe = window.self !== window.parent
 
 Vue.use(focus)

@@ -8,7 +8,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
+module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const version = env && env.version ? env.version : 'tencent'
@@ -24,7 +24,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         devtool: 'eval-cheap-module-source-map',
         entry,
         output: {
-            publicPath: isDev ? `//dev-static.devops.woa.com${publicPath}` : publicPath,
+            publicPath: isDev && !isConsole ? `//dev-static.devops.woa.com${publicPath}` : publicPath,
             chunkFilename: '[name].[chunkhash].js',
             filename: '[name].[contenthash].min.js',
             path: buildDist,
@@ -60,7 +60,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         : {
                             loader: MiniCssExtractPlugin.loader,
                             options: {
-                                publicPath: (resourcePath, context) => ''
+                                publicPath: () => ''
                             }
                         }, 'css-loader', 'sass-loader']
                 },

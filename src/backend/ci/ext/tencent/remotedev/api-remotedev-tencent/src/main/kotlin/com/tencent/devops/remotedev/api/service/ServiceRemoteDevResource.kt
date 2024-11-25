@@ -11,9 +11,10 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -131,27 +132,6 @@ interface ServiceRemoteDevResource {
         ip: String
     ): Result<Boolean>
 
-    @Operation(summary = "通过已有cgsIp实例创建workspace记录")
-    @POST
-    @Path("/create_win_workspace_by_vm")
-    fun createWinWorkspaceByVm(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
-        @QueryParam("oldWorkspaceName")
-        oldWorkspaceName: String?,
-        @Parameter(description = "项目ID，可以为空，如果oldWorkspaceName=null 必填", required = true)
-        @QueryParam("projectId")
-        projectId: String?,
-        @Parameter(description = "工作空间类型，可以为空，如果oldWorkspaceName=null 必填", required = true)
-        @QueryParam("ownerType")
-        ownerType: WorkspaceOwnerType?,
-        @Parameter(description = "机器uid", required = true)
-        @QueryParam("uid")
-        uid: String
-    ): Result<Boolean>
-
     @Operation(summary = "提供给BCS做分配云桌面给指定用户")
     @POST
     @Path("/assignWorkspace")
@@ -249,6 +229,22 @@ interface ServiceRemoteDevResource {
         zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "克隆windows工作空间")
+    @POST
+    @Path("/workspace_clone")
+    fun workspaceClone(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        req: WorkspaceCloneReq
     ): Result<Boolean>
 
     @Operation(summary = "删除windows工作空间-项目")
@@ -550,5 +546,30 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "扩容磁盘大小")
+    @POST
+    @Path("/expanddisk")
+    fun expandDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("size")
+        size: String
+    ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "剔除当前用户所有云桌面相关权限")
+    @POST
+    @Path("/remove_user_permission")
+    fun removeUserPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "被移除用户", required = true)
+        @QueryParam("removeUser")
+        removeUser: String
     ): Result<Boolean>
 }

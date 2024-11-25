@@ -69,7 +69,6 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService,
-    private val whiteListService: WhiteListService,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {
@@ -97,8 +96,11 @@ class PermissionService @Autowired constructor(
                     return if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
                         listOf(ws.createUserId)
                     } else {
-                        workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
-                            .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                        workspaceSharedDao.fetchWorkspaceSharedInfo(
+                            dslContext = dslContext,
+                            workspaceName = ws.workspaceName,
+                            assignType = WorkspaceShared.AssignType.OWNER
+                        ).map { it.sharedUser }
                     }
                 }
             }
@@ -127,7 +129,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (ownerType == WorkspaceOwnerType.PROJECT && !checkUserVisitPermission(userId, projectId)) {
+        if (ownerType.projectUse() && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -135,13 +137,18 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+    fun hasOwnerPermission(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         kotlin.runCatching {
             checkOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                ownerType = ownerType
             )
         }.fold(
             { return true }, {
@@ -224,11 +231,17 @@ class PermissionService @Autowired constructor(
         )
     }
 
-    fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+    fun hasManagerOrOwnerPermission(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         return hasOwnerPermission(
             userId = userId,
             workspaceName = workspaceName,
-            projectId = projectId
+            projectId = projectId,
+            ownerType = ownerType
         ) || hasUserManager(userId, projectId)
     }
 

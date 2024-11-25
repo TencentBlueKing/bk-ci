@@ -6,8 +6,8 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Credential
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
@@ -64,12 +64,20 @@ class CodeCCDispatchListener @Autowired constructor(
         // 判断是否有docker vm构建记录，不存在则默认为devcloud构建
         if (buildHistory != null) {
             sampleEventDispatcher.dispatch(
-                event.copy(routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix)
+                event.copy(
+                    routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix,
+                    dispatchType = DockerDispatchType("")
+                )
             )
             return
         }
 
-        sampleEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix))
+        sampleEventDispatcher.dispatch(
+            event.copy(
+                routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix,
+                dispatchType = PublicDevCloudDispathcType("", "")
+            )
+        )
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
