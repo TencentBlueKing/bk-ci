@@ -43,7 +43,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            if ngx.var.devops_region == 'DEVNET' then
+            if ngx.var.devops_region == 'DEVNET' and devops_tag == 'kubernetes-stream-gray' and devops_tag == 'kubernetes-rbac-gray' then
                 kubernetes_domain = config.kubernetes.devnetDomain
             elseif self:is_recovery_project(devops_project_id) then
                 kubernetes_domain = config.kubernetes.recovery.domain
