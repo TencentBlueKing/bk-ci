@@ -164,8 +164,8 @@ class CreateControl @Autowired constructor(
         }
 
         // 校验传入的镜像是否该项目自定义镜像，禁止跨项目使用
-        val notProjectImage = !imageManageService.checkBaseImage(workspaceCreate.imageCosFile) &&
-            !imageManageService.checkProjectImage(projectId, workspaceCreate.imageCosFile)
+        val notProjectImage = workspaceCreate.imageCosFile.isBlank() ||
+            (!imageManageService.checkBaseImage(workspaceCreate.imageCosFile) && !imageManageService.checkProjectImage(projectId, workspaceCreate.imageCosFile))
         if (notProjectImage) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.IMAGE_NOT_FOUND_ERROR.errorCode,
