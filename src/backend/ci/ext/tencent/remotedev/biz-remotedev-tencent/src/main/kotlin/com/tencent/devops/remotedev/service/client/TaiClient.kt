@@ -71,21 +71,22 @@ class TaiClient @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
-
             logger.info("taihu request: ${this.request.url} resp: $responseContent")
-
-            if (!this.isSuccessful) {
-                throw RemoteServiceException(
-                    "request api[${this.request.url.toUrl()}] error|$responseContent",
-                    this.code
-                )
-            }
-
             val responseData = try {
                 objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             } catch (e: Exception) {
-                logger.error("TaiClient resolveResponse fail|${e.message}", e)
-                throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
+                if (!this.isSuccessful) {
+                    throw RemoteServiceException(
+                        "request api[${this.request.url.toUrl()}] error|$responseContent",
+                        this.code
+                    )
+                } else {
+                    logger.error("TaiClient resolveResponse fail|${e.message}", e)
+                    throw RemoteServiceException(
+                        "parse api[${this.request.url.toUrl()}] resp $responseContent",
+                        this.code
+                    )
+                }
             }
 
             return responseData
