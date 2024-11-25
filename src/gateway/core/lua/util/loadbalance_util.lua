@@ -28,6 +28,10 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if value == service_name then
             no_container = true
         end
+        -- scm特殊处理
+        if value == 'scm' and (devops_tag == 'kubernetes-rbac' or devops_tag == 'kubernetes-stream' and devops_tag or 'kubernetes-auto') then
+            no_container = true
+        end
     end
     if no_container and string.find(devops_tag, '^kubernetes-') then
         devops_tag = string.sub(devops_tag, 12)
@@ -43,7 +47,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            if ngx.var.devops_region == 'DEVNET' and devops_tag ~= 'kubernetes-rbac' and devops_tag ~= 'kubernetes-stream' and devops_tag ~= 'kubernetes-auto' then
+            if ngx.var.devops_region == 'DEVNET' then
                 kubernetes_domain = config.kubernetes.devnetDomain
             elseif self:is_recovery_project(devops_project_id) then
                 kubernetes_domain = config.kubernetes.recovery.domain
