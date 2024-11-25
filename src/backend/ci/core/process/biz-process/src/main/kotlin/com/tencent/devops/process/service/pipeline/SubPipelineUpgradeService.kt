@@ -235,7 +235,7 @@ class SubPipelineUpgradeService @Autowired constructor(
                                 pipelineName = pipelineName,
                                 element = element,
                                 stageId = stage.id ?: "",
-                                containerId = container.id.toString(),
+                                containerId = container.containerId.toString(),
                                 subProjectId = it.projectId,
                                 subPipelineId = it.pipelineId,
                                 channel = channel,

@@ -1,6 +1,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
@@ -176,7 +177,7 @@ class SubPipelineCheckService @Autowired constructor(
         subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
-        val rootPipelineKey = "${projectId}_$pipelineId"
+        val rootPipelineKey = "${projectId}|$pipelineId"
         subPipelineElementMap.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
@@ -218,7 +219,10 @@ class SubPipelineCheckService @Autowired constructor(
         existsPipeline: HashMap<String, SubPipelineRef>
     ): ElementCheckResult {
         with(subPipelineRef) {
-            logger.info("check circular dependency|subPipelineRef[$this]|existsPipeline[$existsPipeline]")
+            logger.info(
+                "check circular dependency|subPipelineRef[$this]|" +
+                        "existsPipeline[${JsonUtil.toJson(existsPipeline, false)}]"
+            )
             val pipelineRefKey = subRefKey()
             if (existsPipeline.contains(pipelineRefKey)) {
                 val chainStr = recursiveChain.joinToString(separator = "->") { "[${it.chainKey()}]" }
@@ -302,7 +306,7 @@ class SubPipelineCheckService @Autowired constructor(
         val (msgCode, params) = with(subPipelineRef){
             when {
                 // [当前流水线] -> [当前流水线]
-                "${projectId}_$pipelineId" == rootPipelineKey -> {
+                refKey() == rootPipelineKey -> {
                     ProcessMessageCode.BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to
                             emptyArray<String>()
                 }
