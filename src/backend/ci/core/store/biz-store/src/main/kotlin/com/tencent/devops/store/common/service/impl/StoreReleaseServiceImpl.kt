@@ -66,6 +66,7 @@ import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -297,6 +298,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
         // 保存可见范围信息
         val deptInfoList = storeReleaseInfoUpdateRequest.deptInfoList
         deptInfoList?.let {
+            deptInfoList.forEach {
+                // 上架过程中设置的可见范围状态默认为待审核状态
+                it.status = DeptStatusEnum.APPROVING.name
+            }
             storeVisibleDeptService.addVisibleDept(
                 userId = userId,
                 storeType = storeType,

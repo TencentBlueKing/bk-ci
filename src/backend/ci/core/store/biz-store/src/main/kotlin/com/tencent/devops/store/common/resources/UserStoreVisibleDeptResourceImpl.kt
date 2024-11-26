@@ -23,11 +23,16 @@ class UserStoreVisibleDeptResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getVisibleDept(userId: String, storeType: String, storeCode: String): Result<StoreVisibleDeptResp?> {
+    override fun getVisibleDept(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        deptStatusInfos: String?
+    ): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(
             storeCode = storeCode,
             storeType = StoreTypeEnum.valueOf(storeType),
-            deptStatus = null
+            deptStatusInfos = deptStatusInfos
         )
     }
 
