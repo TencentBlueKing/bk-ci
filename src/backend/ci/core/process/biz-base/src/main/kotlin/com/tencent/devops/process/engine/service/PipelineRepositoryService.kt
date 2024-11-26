@@ -402,7 +402,8 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    stageIndex = index
                 )
             }
         }
@@ -500,7 +501,8 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlInfo: PipelineYamlVo?,
+        stageIndex: Int
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -510,10 +512,10 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        stage.containers.forEach { c ->
+        stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
-                return@forEach
+                return@forEachIndexed
             }
 
             val mutexGroup = when (c) {
@@ -596,7 +598,8 @@ class PipelineRepositoryService constructor(
                         classType = e.getClassType(),
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
-                        additionalOptions = e.additionalOptions
+                        additionalOptions = e.additionalOptions,
+                        taskPosition = "$stageIndex-${containerIndex + 1}-$taskSeq"
                     )
                 )
             }

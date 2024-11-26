@@ -52,15 +52,13 @@ class SubPipelineRefDao {
                     PROJECT_ID,
                     PIPELINE_ID,
                     PIPELINE_NAME,
+                    TASK_POSITION,
                     CHANNEL,
-                    STAGE_ID,
-                    CONTAINER_ID,
                     TASK_ID,
                     TASK_NAME,
                     SUB_PROJECT_ID,
                     SUB_PIPELINE_ID,
                     SUB_PIPELINE_NAME,
-                    TASK_SEQ,
                     TASK_PROJECT_ID,
                     TASK_PIPELINE_TYPE,
                     TASK_PIPELINE_ID,
@@ -69,28 +67,24 @@ class SubPipelineRefDao {
                     it.projectId,
                     it.pipelineId,
                     it.pipelineName,
+                    it.taskPosition,
                     it.channel,
-                    it.stageId,
-                    it.containerId,
                     it.element.id,
                     it.element.name,
                     it.subProjectId,
                     it.subPipelineId,
                     it.subPipelineName,
-                    it.taskSeq,
                     it.taskProjectId,
                     it.taskPipelineType.name,
                     it.taskPipelineId,
                     it.taskPipelineName
                 ).onDuplicateKeyUpdate()
-                    .set(STAGE_ID, it.stageId)
-                    .set(CONTAINER_ID, it.containerId)
                     .set(TASK_NAME, it.element.name)
                     .set(PIPELINE_NAME, it.pipelineName)
                     .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_PIPELINE_ID, it.subPipelineId)
                     .set(SUB_PIPELINE_NAME, it.subPipelineName)
-                    .set(TASK_SEQ, it.taskSeq)
+                    .set(TASK_POSITION, it.taskPosition)
                     .set(TASK_PROJECT_ID, it.taskProjectId)
                     .set(TASK_PIPELINE_TYPE, it.taskPipelineType.name)
                     .set(TASK_PIPELINE_ID, it.taskPipelineId)

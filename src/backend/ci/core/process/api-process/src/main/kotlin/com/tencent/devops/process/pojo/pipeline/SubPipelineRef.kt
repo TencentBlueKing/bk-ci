@@ -44,10 +44,8 @@ data class SubPipelineRef(
     val channel: String,
     @get:Schema(title = "插件", required = true)
     val element: Element,
-    @get:Schema(title = "stage名称", required = true)
-    val stageId: String,
-    @get:Schema(title = "容器名称", required = true)
-    val containerId: String,
+    @get:Schema(title = "插件所在位置[stageIndex-containerIndex-taskIndex]", required = true)
+    val taskPosition: String,
     @get:Schema(title = "子流水线流水线Id", required = true)
     val subPipelineId: String,
     @get:Schema(title = "子流水线项目Id", required = true)
@@ -60,8 +58,6 @@ data class SubPipelineRef(
     val elementEnable: Boolean = true,
     @get:Schema(title = "是否为模板流水线", required = true)
     val isTemplate: Boolean = false,
-    @get:Schema(title = "插件序号", required = false)
-    val taskSeq: String = "",
     @get:Schema(title = "插件参数[projectId]", required = false)
     val taskProjectId: String = "",
     @get:Schema(title = "插件参数[type]", required = false)
@@ -77,14 +73,13 @@ data class SubPipelineRef(
         projectId = projectId,
         channel = "",
         element = EmptyElement(),
-        stageId = "",
-        containerId = "",
         subPipelineId = subPipelineId,
         subProjectId = subProjectId,
         subPipelineName = "",
         userId = "",
         elementEnable = true,
-        isTemplate = false
+        isTemplate = false,
+        taskPosition = ""
     )
 
     // 递归检查使用
@@ -93,8 +88,5 @@ data class SubPipelineRef(
     fun subRefKey() = "$subProjectId|$subPipelineId"
 
     // 链路打印
-    fun chainKey() = "$projectId|$pipelineId|$stageId-$containerId-$taskSeq"
-
-    // 插件下标
-    fun relSeq() = "$stageId-$containerId-$taskSeq"
+    fun chainKey() = "$projectId|$pipelineId|$taskPosition"
 }

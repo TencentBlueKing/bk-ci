@@ -218,7 +218,7 @@ class SubPipelineCheckService @Autowired constructor(
             )
             val pipelineRefKey = subRefKey()
             if (existsPipeline.contains(pipelineRefKey)) {
-                val chainStr = recursiveChain.joinToString(separator = "->") { "[${it.chainKey()}]" }
+                val chainStr = formatChain(recursiveChain)
                 logger.warn(
                     "subPipeline does not allow loop calls|projectId:$subProjectId|" +
                             "pipelineId:$subPipelineId|chain[$chainStr]"
@@ -243,8 +243,7 @@ class SubPipelineCheckService @Autowired constructor(
                         id = it.taskId,
                         name = it.taskName
                     ),
-                    stageId = it.stageId,
-                    containerId = it.containerId,
+                    taskPosition = it.taskPosition,
                     subPipelineId = it.subPipelineId,
                     subProjectId = it.subProjectId,
                     subPipelineName = it.subPipelineName ?: "",
@@ -252,7 +251,6 @@ class SubPipelineCheckService @Autowired constructor(
                     taskPipelineType = SubPipelineType.valueOf(it.taskPipelineType),
                     taskPipelineId = it.taskPipelineId,
                     taskPipelineName = it.taskPipelineName,
-                    taskSeq = it.taskSeq
                 )
             }
             logger.info("check circular dependency|subRefList[$subRefList]")
@@ -308,7 +306,7 @@ class SubPipelineCheckService @Autowired constructor(
                     val editUrl = pipelineEditUrl(projectId, pipelineId)
                     ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                         editUrl,
-                        "${subPipelineRef.pipelineName} [${subPipelineRef.relSeq()}]"
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskPosition}]"
                     )
                 }
                 // [其他流水线_1] -> [其他流水线_2]
@@ -318,7 +316,7 @@ class SubPipelineCheckService @Autowired constructor(
                     val editUrl = pipelineEditUrl(projectId, pipelineId)
                     ProcessMessageCode.BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE to arrayOf(
                         editUrl,
-                        "${subPipelineRef.pipelineName} [${subPipelineRef.relSeq()}]",
+                        "${subPipelineRef.pipelineName} [${subPipelineRef.taskPosition}]",
                         editUrlBase,
                         parentPipelineRef.pipelineName.ifBlank { subPipelineRef.pipelineName }
                     )
@@ -333,6 +331,19 @@ class SubPipelineCheckService @Autowired constructor(
                 params = params
             )
         )
+    }
+
+    private fun formatChain(chain: List<SubPipelineRef>): String {
+        val stringBuilder = StringBuilder()
+        chain.forEachIndexed { index, element ->
+            // 计算当前行的缩进字符串
+            val indent = " ".repeat(index)
+            stringBuilder.append(indent)
+                .append("->")
+                .append(element.chainKey())
+                .append("\n")
+        }
+        return stringBuilder.toString()
     }
 
     companion object {

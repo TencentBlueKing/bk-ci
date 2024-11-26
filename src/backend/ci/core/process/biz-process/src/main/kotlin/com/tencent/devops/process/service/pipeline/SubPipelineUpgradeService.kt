@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.util.ThreadPoolUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
@@ -218,7 +217,7 @@ class SubPipelineUpgradeService @Autowired constructor(
         if (!stage.stageEnabled()) {
             return
         }
-        stage.containers.forEachIndexed c@{ jobIndex, container ->
+        stage.containers.forEachIndexed c@{ containerIndex, container ->
             if (container is TriggerContainer || !container.containerEnabled()) {
                 return@c
             }
@@ -235,13 +234,11 @@ class SubPipelineUpgradeService @Autowired constructor(
                                 projectId = projectId,
                                 pipelineName = pipelineName,
                                 element = element,
-                                stageId = VMUtils.genStageId(stageIndex + 1), // 排除了触发stage
-                                containerId = container.containerId.toString(),
                                 subProjectId = it.projectId,
                                 subPipelineId = it.pipelineId,
                                 channel = channel,
                                 subPipelineName = it.pipelineName,
-                                taskSeq = "${taskIndex + 1}",
+                                taskPosition = "${stageIndex + 1}-${containerIndex + 1}+${taskIndex + 1}",
                                 taskProjectId = it.taskProjectId,
                                 taskPipelineId = it.taskPipelineId,
                                 taskPipelineType = it.taskPipelineType,
