@@ -662,7 +662,7 @@ interface ApigwRemoteDevResource {
         removeUser: String
     ): Result<Boolean>
 
-    @Operation(summary = "查询录屏权限相关信息", tags = ["v4_get_user_workspace_record_permission_info"])
+    @Operation(summary = "查询录屏权限相关信息", tags = ["v4_app_get_user_workspace_record_permission_info"])
     @GET
     @Path("/get_user_workspace_record_permission_info")
     fun getUserWorkspaceRecordPermission(
@@ -679,7 +679,7 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<UserWorkspaceRecordPermissionInfo>
 
-    @Operation(summary = "录屏权限续期", tags = ["v4_update_user_workspace_record_permission_info"])
+    @Operation(summary = "录屏权限续期", tags = ["v4_app_update_user_workspace_record_permission_info"])
     @POST
     @Path("/update_user_workspace_record_permission_info")
     fun updateUserWorkspaceRecordPermission(
@@ -696,7 +696,7 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "查看当前工作空间录屏元数据", tags = ["v4_get_user_workspace_record_metadata"])
+    @Operation(summary = "查看当前工作空间录屏元数据", tags = ["v4_app_get_user_workspace_record_metadata"])
     @POST
     @Path("/get_user_workspace_record_metadata")
     fun getViewRecordMetadata(
