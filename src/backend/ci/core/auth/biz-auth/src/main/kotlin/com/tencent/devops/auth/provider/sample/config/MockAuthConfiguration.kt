@@ -8,7 +8,7 @@ import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionServi
 import com.tencent.devops.auth.provider.sample.service.SampleOrganizationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionApplyService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionHandoverService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionHandoverApplicationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionManageFacadeService
@@ -28,7 +28,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionHandoverService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
@@ -132,6 +132,6 @@ class MockAuthConfiguration {
     fun samplePermissionResourceGroupSyncService() = SamplePermissionResourceGroupSyncService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionHandoverService::class)
-    fun samplePermissionHandoverService() = SamplePermissionHandoverService()
+    @ConditionalOnMissingBean(PermissionHandoverApplicationService::class)
+    fun samplePermissionHandoverService() = SamplePermissionHandoverApplicationService()
 }

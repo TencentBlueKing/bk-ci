@@ -172,7 +172,7 @@ class RbacPermissionResourceValidateService(
                     message = "The user does not have permission to visit the project!"
                 )
             }
-            if (userId != targetMemberId){
+            if (userId != targetMemberId) {
                 throw PermissionForbiddenException(
                     message = "You do not have permission to operate other user groups!"
                 )

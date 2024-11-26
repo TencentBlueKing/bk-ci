@@ -10,7 +10,7 @@ import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
 import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.service.iam.PermissionHandoverService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -43,7 +43,7 @@ class PermissionAuthorizationServiceImpl(
     private val permissionResourceValidateService: PermissionResourceValidateService,
     private val deptService: DeptService,
     private val permissionService: PermissionService,
-    private val permissionHandoverService: PermissionHandoverService
+    private val permissionHandoverApplicationService: PermissionHandoverApplicationService
 ) : PermissionAuthorizationService {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionAuthorizationServiceImpl::class.java)
@@ -143,6 +143,10 @@ class PermissionAuthorizationServiceImpl(
             count = count.toLong(),
             records = record
         )
+    }
+
+    override fun listUserProjects(userId: String): List<String> {
+        return authAuthorizationDao.listUserProjects(dslContext, userId)
     }
 
     override fun modifyResourceAuthorization(resourceAuthorizationList: List<ResourceAuthorizationDTO>): Boolean {
@@ -251,8 +255,8 @@ class PermissionAuthorizationServiceImpl(
         }
         val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
         val authorizationCount = resourceAuthorizationList.size
-        val flowNo = permissionHandoverService.generateFlowNo()
-        val title = permissionHandoverService.generateTitle(
+        val flowNo = permissionHandoverApplicationService.generateFlowNo()
+        val title = permissionHandoverApplicationService.generateTitle(
             groupCount = 0,
             authorizationCount = authorizationCount
         )
@@ -269,7 +273,7 @@ class PermissionAuthorizationServiceImpl(
             )
         }
         // 创建交接单
-        permissionHandoverService.createHandoverApplication(
+        permissionHandoverApplicationService.createHandoverApplication(
             overview = HandoverOverviewCreateDTO(
                 projectCode = projectCode,
                 flowNo = flowNo,

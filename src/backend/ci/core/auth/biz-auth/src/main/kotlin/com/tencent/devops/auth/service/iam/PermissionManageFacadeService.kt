@@ -11,11 +11,15 @@ import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.ResourceType2CountOfHandoverQuery
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
+import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.model.SQLPage
 
@@ -167,6 +171,9 @@ interface PermissionManageFacadeService {
         removeMemberDTO: GroupMemberRemoveConditionReq
     ): Boolean
 
+    /**
+     * 批量操作检查
+     * */
     fun batchOperateGroupMembersCheck(
         userId: String,
         projectCode: String,
@@ -174,12 +181,18 @@ interface PermissionManageFacadeService {
         conditionReq: GroupMemberCommonConditionReq
     ): BatchOperateGroupMemberCheckVo
 
+    /**
+     * 将用户移出项目-管理员视角
+     * */
     fun removeMemberFromProject(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo>
 
+    /**
+     * 将用户移出项目检查-管理员视角
+     * */
     fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
@@ -190,4 +203,19 @@ interface PermissionManageFacadeService {
      * 处理交接审批单
      * */
     fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean
+
+    /**
+     * 根据资源类型进行分类-交接
+     * */
+    fun getResourceType2CountOfHandover(queryReq: ResourceType2CountOfHandoverQuery): List<ResourceType2CountVo>
+
+    /**
+     * 获取交接中授权相关-分为预览/交接单审批两个场景
+     * */
+    fun listAuthorizationsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo>
+
+    /**
+     * 获取交接中用户组相关-分为预览/交接单审批两个场景
+     * */
+    fun listGroupsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo>
 }

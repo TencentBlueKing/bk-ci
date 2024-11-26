@@ -11,11 +11,15 @@ import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.ResourceType2CountOfHandoverQuery
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
+import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.common.api.model.SQLPage
@@ -137,4 +141,16 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
     ): Boolean = true
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean = true
+
+    override fun getResourceType2CountOfHandover(queryReq: ResourceType2CountOfHandoverQuery): List<ResourceType2CountVo> {
+        return emptyList()
+    }
+
+    override fun listAuthorizationsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo> {
+        return SQLPage(0, emptyList())
+    }
+
+    override fun listGroupsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {
+        return SQLPage(0, emptyList())
+    }
 }
