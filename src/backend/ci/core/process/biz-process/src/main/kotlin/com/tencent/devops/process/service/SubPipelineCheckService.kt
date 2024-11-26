@@ -5,12 +5,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
@@ -32,7 +29,7 @@ import javax.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val SubPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     /**
@@ -49,12 +46,12 @@ class SubPipelineCheckService @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): Set<String> {
-        val model = SubPipelineTaskService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val model = subPipelineTaskService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         val stages = model.stages
-        val contextMap = SubPipelineTaskService.getContextMap(stages)
+        val contextMap = subPipelineTaskService.getContextMap(stages)
         val elements = mutableListOf<ElementHolder>()
         stages.forEachIndexed { index, stage ->
             if (index == 0) return@forEachIndexed
@@ -90,7 +87,7 @@ class SubPipelineCheckService @Autowired constructor(
         elements.forEach { holder ->
             // 禁用的插件不校验
             if (!holder.enableElement()) return@forEach
-            val subPipelineTaskParam = SubPipelineTaskService.getSubPipelineParam(
+            val subPipelineTaskParam = subPipelineTaskService.getSubPipelineParam(
                 element = holder.element,
                 projectId = projectId,
                 contextMap = contextMap
@@ -200,11 +197,9 @@ class SubPipelineCheckService @Autowired constructor(
         return errorDetails
     }
 
-    fun supportElement(element: Element) = element is SubPipelineCallElement ||
-            (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
-            (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
+    fun supportElement(element: Element) = subPipelineTaskService.supportElement(element)
 
-    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
+    fun supportAtomCode(atomCode: String) = subPipelineTaskService.supportAtomCode(atomCode)
 
     /**
      * 检查循环依赖
@@ -342,6 +337,5 @@ class SubPipelineCheckService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)
-        private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }
 }

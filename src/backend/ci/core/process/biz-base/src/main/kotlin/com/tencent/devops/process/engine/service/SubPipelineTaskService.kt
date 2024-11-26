@@ -36,6 +36,18 @@ class SubPipelineTaskService @Autowired constructor(
     @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
+    /**
+     * 支持的元素
+     */
+    fun supportElement(element: Element) = element is SubPipelineCallElement ||
+            (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
+            (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
+
+    /**
+     * 子流水线插件atomCode
+     */
+    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
+
     @Suppress("UNCHECKED_CAST")
     fun getSubPipelineParam(
         projectId: String,
@@ -219,7 +231,10 @@ class SubPipelineTaskService @Autowired constructor(
         modelTasks: List<PipelineModelTask>
     ): List<SubPipelineRef> {
         val subPipelineRefList = mutableListOf<SubPipelineRef>()
-        modelTasks.forEach {
+        modelTasks.filter {
+            val element = JsonUtil.mapTo(it.taskParams, Element::class.java)
+            supportElement(element) && element.elementEnabled()
+        }.forEach {
             val subPipelineTaskParam = getSubPipelineParam(
                 projectId = it.projectId,
                 element = JsonUtil.mapTo(it.taskParams, Element::class.java),
@@ -258,5 +273,6 @@ class SubPipelineTaskService @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
+        private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }
 }
