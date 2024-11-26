@@ -65,11 +65,10 @@
                                 {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
-                                    v-if="disabled"
+                                    v-if="pipelineModel"
                                 >
                                     {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
                                     <span
-                                        v-if="pipelineModel"
                                         class="dafault-value-reset"
                                         @click="goResetBuildNo"
                                     >{{ $t('buildNoBaseline.resetBuildNo') }}</span>

@@ -467,7 +467,8 @@
                     }
                     if (item.buildNo) {
                         pipelineItem.buildParams = item.buildNo
-                        pipelineItem.resetBuildNo = item.updateBuildNo
+                        pipelineItem.resetBuildNo = false
+                        pipelineItem.initBuildNo = item.buildNo.buildNo
                     }
                     if (item.param.length) {
                         const paramValues = item.param.reduce((values, param) => {
@@ -537,6 +538,9 @@
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.buildParams[name] = value
+                        if (this.hashVal || this.isCopyInstance) {
+                            item.resetBuildNo = item.initBuildNo !== Number(value)
+                        }
                     }
                 })
             },
