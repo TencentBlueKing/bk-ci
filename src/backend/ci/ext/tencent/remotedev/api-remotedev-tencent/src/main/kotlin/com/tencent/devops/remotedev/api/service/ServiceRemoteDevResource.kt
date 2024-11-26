@@ -277,6 +277,7 @@ interface ServiceRemoteDevResource {
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
 
+    @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     @Operation(summary = "获取专家求助单据数据")
     @GET
     @Path("/fetch_expert_sup_record")
@@ -291,6 +292,15 @@ interface ServiceRemoteDevResource {
         @QueryParam("createLaterTime")
         createLaterTimestamp: Long
     ): Result<List<SupRecordData>>
+
+    @Operation(summary = "获取某条专家求助单据数据")
+    @GET
+    @Path("/fetch_expert_sup_record_any")
+    fun fetchExpertSupRecordAny(
+        @Parameter(description = "单据ID", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<SupRecordData?>
 
     @Operation(summary = "获取windows空闲资源数据")
     @GET

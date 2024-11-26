@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -267,6 +268,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 records = records
             )
         )
+    }
+
+    override fun getExpertSupRecord(appCode: String?, apigwType: String?, id: Long): Result<SupRecordData?> {
+        logger.info("getExpertSupRecord $id")
+        return client.get(ServiceRemoteDevResource::class).fetchExpertSupRecordAny(id)
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
