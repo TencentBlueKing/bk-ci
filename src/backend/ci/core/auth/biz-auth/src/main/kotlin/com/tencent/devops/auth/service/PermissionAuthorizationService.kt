@@ -81,6 +81,13 @@ interface PermissionAuthorizationService {
     ): SQLPage<ResourceAuthorizationResponse>
 
     /**
+     * 获取用户授权相关项目
+     */
+    fun listUserProjects(
+        userId: String
+    ): List<String>
+
+    /**
      * 修改资源授权管理
      */
     fun modifyResourceAuthorization(

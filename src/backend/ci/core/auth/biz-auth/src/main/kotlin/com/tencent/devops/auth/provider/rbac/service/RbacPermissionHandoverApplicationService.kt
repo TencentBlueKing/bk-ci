@@ -8,15 +8,15 @@ import com.tencent.devops.auth.dao.AuthHandoverOverviewDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
-import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
+import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
-import com.tencent.devops.auth.service.iam.PermissionHandoverService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -29,7 +29,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class RbacPermissionHandoverService(
+class RbacPermissionHandoverApplicationService(
     private val dslContext: DSLContext,
     private val handoverOverviewDao: AuthHandoverOverviewDao,
     private val handoverDetailDao: AuthHandoverDetailDao,
@@ -37,7 +37,7 @@ class RbacPermissionHandoverService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val rbacCacheService: RbacCacheService,
     private val redisOperation: RedisOperation
-) : PermissionHandoverService {
+) : PermissionHandoverApplicationService {
     override fun createHandoverApplication(
         overview: HandoverOverviewCreateDTO,
         details: List<HandoverDetailDTO>
@@ -131,23 +131,24 @@ class RbacPermissionHandoverService(
         )
     }
 
-    override fun listAuthorizationsOfHandover(
+    override fun listAuthorizationsOfHandoverApplication(
         queryReq: HandoverDetailsQueryReq
     ): SQLPage<HandoverAuthorizationDetailVo> {
-        val overview = getHandoverOverview(queryReq.flowNo)
+        val flowNo = queryReq.flowNo!!
+        val overview = getHandoverOverview(flowNo)
         val resourceCodes = handoverDetailDao.list(
             dslContext = dslContext,
             projectCode = overview.projectCode,
-            flowNo = queryReq.flowNo,
+            flowNo = flowNo,
             resourceType = queryReq.resourceType,
-            handoverType = queryReq.handoverType
+            handoverType = HandoverType.AUTHORIZATION
         ).map { it.itemId }
         val count = handoverDetailDao.count(
             dslContext = dslContext,
             projectCode = overview.projectCode,
-            flowNo = queryReq.flowNo,
+            flowNo = flowNo,
             resourceType = queryReq.resourceType,
-            handoverType = queryReq.handoverType
+            handoverType = HandoverType.AUTHORIZATION
         )
         val records = authorizationDao.list(
             dslContext = dslContext,
@@ -162,20 +163,21 @@ class RbacPermissionHandoverService(
             HandoverAuthorizationDetailVo(
                 resourceCode = it.resourceCode,
                 resourceName = it.resourceName,
-                handoverType = queryReq.handoverType,
+                handoverType = HandoverType.AUTHORIZATION,
                 handoverFrom = overview.applicant
             )
         }
         return SQLPage(records = records, count = count)
     }
 
-    override fun listGroupsOfHandover(
+    override fun listGroupsOfHandoverApplication(
         queryReq: HandoverDetailsQueryReq
     ): SQLPage<HandoverGroupDetailVo> {
-        val handoverOverview = getHandoverOverview(queryReq.flowNo)
+        val flowNo = queryReq.flowNo!!
+        val handoverOverview = getHandoverOverview(flowNo)
         val iamGroupIdsByHandover = listHandoverDetails(
             projectCode = handoverOverview.projectCode,
-            flowNo = queryReq.flowNo,
+            flowNo = flowNo,
             resourceType = queryReq.resourceType,
             handoverType = HandoverType.GROUP
         ).map { it.itemId }
@@ -208,7 +210,7 @@ class RbacPermissionHandoverService(
         )
     }
 
-    override fun getResourceType2CountOfHandover(flowNo: String): List<ResourceType2CountVo> {
+    override fun getResourceType2CountOfHandoverApplication(flowNo: String): List<ResourceType2CountVo> {
         val handoverOverview = getHandoverOverview(flowNo)
         val resourceType2CountWithGroup = handoverDetailDao.countWithResourceType(
             dslContext = dslContext,
@@ -258,7 +260,7 @@ class RbacPermissionHandoverService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionHandoverService::class.java)
+        private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)
         private const val FLOW_NO_PREFIX = "REQ"
         private const val FLOW_NO_KEY = "AUTH:HANDOVER:FLOW:NO:%s"
     }

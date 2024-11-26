@@ -3,6 +3,7 @@ package com.tencent.devops.auth.api.user
 import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
+import com.tencent.devops.auth.pojo.request.ResourceType2CountOfHandoverQuery
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
@@ -16,7 +17,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -54,16 +54,15 @@ interface UserAuthHandoverResource {
         queryRequest: HandoverOverviewQueryReq
     ): Result<SQLPage<HandoverOverviewVo>>
 
-    @GET
-    @Path("/{flowNo}/getResourceType2CountOfHandover")
+    @POST
+    @Path("/getResourceType2CountOfHandover")
     @Operation(summary = "获取资源授权管理数量")
     fun getResourceType2CountOfHandover(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流程号", required = true)
-        @PathParam("flowNo")
-        flowNo: String
+        @Parameter(description = "查询请求体", required = true)
+        queryReq: ResourceType2CountOfHandoverQuery
     ): Result<List<ResourceType2CountVo>>
 
     @POST

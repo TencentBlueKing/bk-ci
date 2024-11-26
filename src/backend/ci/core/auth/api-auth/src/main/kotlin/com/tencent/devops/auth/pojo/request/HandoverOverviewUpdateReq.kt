@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class HandoverOverviewUpdateReq(
     @get:Schema(title = "项目ID")
     val projectCode: String,
-    @get:Schema(title = "项目ID")
+    @get:Schema(title = "流程单号")
     val flowNo: String,
     @get:Schema(title = "操作人")
     val operator: String,

@@ -208,6 +208,19 @@ class AuthAuthorizationDao {
         return conditions
     }
 
+    fun listUserProjects(
+        dslContext: DSLContext,
+        userId: String
+    ): List<String> {
+        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.select(PROJECT_CODE)
+                .from(this)
+                .where(HANDOVER_FROM.eq(userId))
+                .groupBy(PROJECT_CODE)
+                .fetch().map { it.value1() }
+        }
+    }
+
     fun TAuthResourceAuthorizationRecord.convert(): ResourceAuthorizationResponse {
         return ResourceAuthorizationResponse(
             id = id,

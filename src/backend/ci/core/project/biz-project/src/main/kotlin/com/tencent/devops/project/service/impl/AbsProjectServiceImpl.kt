@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -809,15 +810,29 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         enabled: Boolean?,
         unApproved: Boolean,
         sortType: ProjectSortType?,
-        collation: ProjectCollation?
+        collation: ProjectCollation?,
+        queryAuthorization: Boolean?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
+            // 获取有访问权限的项目
             val projectsWithVisitPermission = getProjectFromAuth(
                 userId = userId,
                 accessToken = accessToken
-            ).toSet()
+            ).toMutableSet()
+            // 获取授权相关项目，主要用于个人视角权限管理
+            if (queryAuthorization == true) {
+                val projectWithAuthorization = try {
+                    client.get(ServiceProjectAuthResource::class).listUserProjects(userId).data ?: emptyList()
+                } catch (ex: Exception) {
+                    emptyList()
+                }
+                projectsWithVisitPermission.apply {
+                    this.addAll(projectWithAuthorization)
+                }
+            }
+
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }

@@ -149,5 +149,4 @@ object AuthMessageCode {
     const val ERROR_HANDOVER_APPROVAL = "2121094" // 由于您不是该交接申请单的审批人，无法进行任何操作
     const val ERROR_HANDOVER_HANDLE = "2121095" // 该交接申请单正在被处理中，请耐心等待
     const val ERROR_HANDOVER_AUTHORIZATION = "2121096" // 交接操作不合法，用户没有对应授权的权限
-
 }

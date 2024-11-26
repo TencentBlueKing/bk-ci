@@ -5,12 +5,13 @@ import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
+import com.tencent.devops.auth.pojo.request.ResourceType2CountOfHandoverQuery
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.PermissionAuthorizationService
-import com.tencent.devops.auth.service.iam.PermissionHandoverService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -23,7 +24,7 @@ import com.tencent.devops.common.web.RestResource
 class UserAuthHandoverResourceImpl(
     private val permissionAuthorizationService: PermissionAuthorizationService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val permissionHandoverService: PermissionHandoverService,
+    private val permissionHandoverApplicationService: PermissionHandoverApplicationService,
     private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthHandoverResource {
     override fun handoverAuthorizationsApplication(
@@ -56,28 +57,28 @@ class UserAuthHandoverResourceImpl(
             )
         }
 
-        return Result(permissionHandoverService.listHandoverOverviews(queryRequest = queryRequest))
+        return Result(permissionHandoverApplicationService.listHandoverOverviews(queryRequest = queryRequest))
     }
 
     override fun getResourceType2CountOfHandover(
         userId: String,
-        flowNo: String
+        queryReq: ResourceType2CountOfHandoverQuery
     ): Result<List<ResourceType2CountVo>> {
-        return Result(permissionHandoverService.getResourceType2CountOfHandover(flowNo = flowNo))
+        return Result(permissionManageFacadeService.getResourceType2CountOfHandover(queryReq = queryReq))
     }
 
     override fun listAuthorizationsOfHandover(
         userId: String,
         queryReq: HandoverDetailsQueryReq
     ): Result<SQLPage<HandoverAuthorizationDetailVo>> {
-        return Result(permissionHandoverService.listAuthorizationsOfHandover(queryReq = queryReq))
+        return Result(permissionManageFacadeService.listAuthorizationsOfHandover(queryReq = queryReq))
     }
 
     override fun listGroupsOfHandover(
         userId: String,
         queryReq: HandoverDetailsQueryReq
     ): Result<SQLPage<HandoverGroupDetailVo>> {
-        return Result(permissionHandoverService.listGroupsOfHandover(queryReq = queryReq))
+        return Result(permissionManageFacadeService.listGroupsOfHandover(queryReq = queryReq))
     }
 
     override fun handleHanoverApplication(userId: String, request: HandoverOverviewUpdateReq): Result<Boolean> {

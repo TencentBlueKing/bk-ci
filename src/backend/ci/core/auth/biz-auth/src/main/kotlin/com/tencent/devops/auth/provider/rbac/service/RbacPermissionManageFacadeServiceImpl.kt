@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.HandoverAction
+import com.tencent.devops.auth.pojo.enum.HandoverQueryChannel
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
 import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.enum.JoinedType
@@ -33,16 +34,20 @@ import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.ResourceType2CountOfHandoverQuery
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
+import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
-import com.tencent.devops.auth.service.iam.PermissionHandoverService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -52,6 +57,7 @@ import com.tencent.devops.auth.service.lock.HandleHandoverApplicationLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.ActionId
@@ -83,9 +89,10 @@ class RbacPermissionManageFacadeServiceImpl(
     private val authAuthorizationDao: AuthAuthorizationDao,
     private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
-    private val permissionHandoverService: PermissionHandoverService,
+    private val permissionHandoverApplicationService: PermissionHandoverApplicationService,
     private val rbacCacheService: RbacCacheService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val authorizationDao: AuthAuthorizationDao
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
@@ -626,114 +633,122 @@ class RbacPermissionManageFacadeServiceImpl(
         memberId: String
     ): InvalidAuthorizationsDTO {
         logger.info("list invalid authorizations after operated groups:$projectCode|$iamGroupIds|$memberId")
-        // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
-        val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
-            projectCode = projectCode,
-            relatedResourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            action = ActionId.PIPELINE_EXECUTE,
-            filterIamGroupIds = iamGroupIds
-        )
-        logger.debug("list operated groups with execute perm:{}", operatedGroupsWithExecutePerm)
-
-        // 2.获取用户退出/交接以上操作的用户组后，还未退出的流水线/项目级别（仅这些类型会包含流水线执行权限）的用户组。
-        val userGroupsJoinedAfterOperatedGroups = listResourceGroupMembers(
-            projectCode = projectCode,
-            memberId = memberId,
-            resourceType = ResourceTypeId.PIPELINE,
-            excludeIamGroupIds = operatedGroupsWithExecutePerm,
-            operateChannel = OperateChannel.PERSONAL
-        ).second.toMutableList().apply {
-            addAll(
-                listResourceGroupMembers(
-                    projectCode = projectCode,
-                    memberId = memberId,
-                    resourceType = ResourceTypeId.PROJECT,
-                    excludeIamGroupIds = operatedGroupsWithExecutePerm,
-                    operateChannel = OperateChannel.PERSONAL
-                ).second
+        val startEpoch = System.currentTimeMillis()
+        try {
+            // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
+            val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
+                projectCode = projectCode,
+                relatedResourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                action = ActionId.PIPELINE_EXECUTE,
+                filterIamGroupIds = iamGroupIds
             )
-        }.map { it.iamGroupId }
-        logger.debug("list user groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
-        // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
-        // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
-        val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
-            projectCode = projectCode,
-            filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
-            action = ActionId.PIPELINE_EXECUTE
-        )
-        logger.debug("has all pipeline execute perm after operate groups:{}", hasAllPipelineExecutePermAfterOperateGroups)
+            logger.debug("list operated groups with execute perm:{}", operatedGroupsWithExecutePerm)
 
-        // 3.1.若用户在未退出的组中拥有整个项目的流水线执行权限，则本次不会对任何的流水线代持人权限造成影响。
-        if (hasAllPipelineExecutePermAfterOperateGroups)
-            return InvalidAuthorizationsDTO(emptyList(), emptyList())
-
-        // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
-        val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
-            projectCode = projectCode,
-            filterIamGroupIds = operatedGroupsWithExecutePerm,
-            action = ActionId.PIPELINE_EXECUTE
-        )
-        logger.debug("has all pipeline execute perm in operate groups:{}", hasAllPipelineExecutePermInOperateGroups)
-
-        val pipelinesWithoutAuthorization = if (hasAllPipelineExecutePermInOperateGroups) {
-            // 3.2.1 如果本次退出/交接的用户组中包含项目级别的流水线执行权限，
-            // 那么查询出用户还有执行流水线权限的流水线，该项目下除了这些流水线，其他的流水线代持人权限都会失效。
-            val userHasExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
+            // 2.获取用户退出/交接以上操作的用户组后，还未退出的流水线/项目级别（仅这些类型会包含流水线执行权限）的用户组。
+            val userGroupsJoinedAfterOperatedGroups = listResourceGroupMembers(
                 projectCode = projectCode,
-                filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
-                relatedResourceType = ResourceTypeId.PIPELINE,
-                action = ActionId.PIPELINE_EXECUTE
-            )[ResourceTypeId.PIPELINE] ?: emptyList()
-            logger.debug("user has execute perm after operated groups:{}", userHasExecutePermAfterOperatedGroups)
-            // 失去代持人权限的流水线
-            authAuthorizationDao.list(
-                dslContext = dslContext,
-                condition = ResourceAuthorizationConditionRequest(
-                    projectCode = projectCode,
-                    resourceType = ResourceTypeId.PIPELINE,
-                    handoverFrom = memberId,
-                    excludeResourceCodes = userHasExecutePermAfterOperatedGroups
+                memberId = memberId,
+                resourceType = ResourceTypeId.PIPELINE,
+                excludeIamGroupIds = operatedGroupsWithExecutePerm,
+                operateChannel = OperateChannel.PERSONAL
+            ).second.toMutableList().apply {
+                addAll(
+                    listResourceGroupMembers(
+                        projectCode = projectCode,
+                        memberId = memberId,
+                        resourceType = ResourceTypeId.PROJECT,
+                        excludeIamGroupIds = operatedGroupsWithExecutePerm,
+                        operateChannel = OperateChannel.PERSONAL
+                    ).second
                 )
-            ).map { it.resourceCode }
-        } else {
-            // 3.2.2 如果本次退出/交接的用户组中不包含整个项目的流水线执行权限。
-            // 通过计算得出，用户本次操作用户组，导致失去流水线执行权限的流水线。
-            // 然后再计算失去这些流水线执行权限后，会导致哪些流水线的代持人权限失效。
-            val pipelinesWithExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
+            }.map { it.iamGroupId }
+            logger.debug("list user groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
+            // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
+            // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
+            val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
                 projectCode = projectCode,
                 filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
-                relatedResourceType = ResourceTypeId.PIPELINE,
                 action = ActionId.PIPELINE_EXECUTE
-            )[ResourceTypeId.PIPELINE] ?: emptyList()
-            logger.debug("pipelines with execute perm after operate groups:{}", pipelinesWithExecutePermAfterOperatedGroups)
+            )
+            logger.debug("has all pipeline execute perm after operate groups:{}", hasAllPipelineExecutePermAfterOperateGroups)
 
-            val pipelinesWithExecutePermInOperateGroups = groupPermissionService.listGroupResourcesWithPermission(
+            // 3.1.若用户在未退出的组中拥有整个项目的流水线执行权限，则本次不会对任何的流水线代持人权限造成影响。
+            if (hasAllPipelineExecutePermAfterOperateGroups)
+                return InvalidAuthorizationsDTO(emptyList(), emptyList())
+
+            // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
+            val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
                 projectCode = projectCode,
                 filterIamGroupIds = operatedGroupsWithExecutePerm,
-                relatedResourceType = ResourceTypeId.PIPELINE,
                 action = ActionId.PIPELINE_EXECUTE
-            )[ResourceTypeId.PIPELINE] ?: emptyList()
-            logger.debug("pipelines with execute perm in operate groups:{}", pipelinesWithExecutePermInOperateGroups)
+            )
+            logger.debug("has all pipeline execute perm in operate groups:{}", hasAllPipelineExecutePermInOperateGroups)
 
-            val pipelineExecutePermLostFromUser = pipelinesWithExecutePermInOperateGroups.filterNot {
-                pipelinesWithExecutePermAfterOperatedGroups.contains(it)
-            }
-            // 失去代持人权限的流水线
-            authAuthorizationDao.list(
-                dslContext = dslContext,
-                condition = ResourceAuthorizationConditionRequest(
+            val pipelinesWithoutAuthorization = if (hasAllPipelineExecutePermInOperateGroups) {
+                // 3.2.1 如果本次退出/交接的用户组中包含项目级别的流水线执行权限，
+                // 那么查询出用户还有执行流水线权限的流水线，该项目下除了这些流水线，其他的流水线代持人权限都会失效。
+                val userHasExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
                     projectCode = projectCode,
-                    resourceType = ResourceTypeId.PIPELINE,
-                    handoverFrom = memberId,
-                    filterResourceCodes = pipelineExecutePermLostFromUser
+                    filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
+                    relatedResourceType = ResourceTypeId.PIPELINE,
+                    action = ActionId.PIPELINE_EXECUTE
+                )[ResourceTypeId.PIPELINE] ?: emptyList()
+                logger.debug("user has execute perm after operated groups:{}", userHasExecutePermAfterOperatedGroups)
+                // 失去代持人权限的流水线
+                authAuthorizationDao.list(
+                    dslContext = dslContext,
+                    condition = ResourceAuthorizationConditionRequest(
+                        projectCode = projectCode,
+                        resourceType = ResourceTypeId.PIPELINE,
+                        handoverFrom = memberId,
+                        excludeResourceCodes = userHasExecutePermAfterOperatedGroups
+                    )
+                ).map { it.resourceCode }
+            } else {
+                // 3.2.2 如果本次退出/交接的用户组中不包含整个项目的流水线执行权限。
+                // 通过计算得出，用户本次操作用户组，导致失去流水线执行权限的流水线。
+                // 然后再计算失去这些流水线执行权限后，会导致哪些流水线的代持人权限失效。
+                val pipelinesWithExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
+                    projectCode = projectCode,
+                    filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
+                    relatedResourceType = ResourceTypeId.PIPELINE,
+                    action = ActionId.PIPELINE_EXECUTE
+                )[ResourceTypeId.PIPELINE] ?: emptyList()
+                logger.debug("pipelines with execute perm after operate groups:{}", pipelinesWithExecutePermAfterOperatedGroups)
+
+                val pipelinesWithExecutePermInOperateGroups = groupPermissionService.listGroupResourcesWithPermission(
+                    projectCode = projectCode,
+                    filterIamGroupIds = operatedGroupsWithExecutePerm,
+                    relatedResourceType = ResourceTypeId.PIPELINE,
+                    action = ActionId.PIPELINE_EXECUTE
+                )[ResourceTypeId.PIPELINE] ?: emptyList()
+                logger.debug("pipelines with execute perm in operate groups:{}", pipelinesWithExecutePermInOperateGroups)
+
+                val pipelineExecutePermLostFromUser = pipelinesWithExecutePermInOperateGroups.filterNot {
+                    pipelinesWithExecutePermAfterOperatedGroups.contains(it)
+                }
+                // 失去代持人权限的流水线
+                authAuthorizationDao.list(
+                    dslContext = dslContext,
+                    condition = ResourceAuthorizationConditionRequest(
+                        projectCode = projectCode,
+                        resourceType = ResourceTypeId.PIPELINE,
+                        handoverFrom = memberId,
+                        filterResourceCodes = pipelineExecutePermLostFromUser
+                    )
+                ).map { it.resourceCode }
+            }
+            logger.debug("pipelines without authorization:{}", pipelinesWithoutAuthorization)
+            if (pipelinesWithoutAuthorization.isNotEmpty()) {
+                return InvalidAuthorizationsDTO(
+                    invalidGroupIds = operatedGroupsWithExecutePerm,
+                    invalidAuthorizations = pipelinesWithoutAuthorization
                 )
-            ).map { it.resourceCode }
-        }
-        logger.debug("pipelines without authorization:{}", pipelinesWithoutAuthorization)
-        if (pipelinesWithoutAuthorization.isNotEmpty()) {
-            return InvalidAuthorizationsDTO(
-                invalidGroupIds = operatedGroupsWithExecutePerm,
-                invalidAuthorizations = pipelinesWithoutAuthorization
+            }
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations after operated groups" +
+                    "|$projectCode|$iamGroupIds|$memberId"
             )
         }
         return InvalidAuthorizationsDTO(emptyList(), emptyList())
@@ -748,6 +763,7 @@ class RbacPermissionManageFacadeServiceImpl(
         val groupId = renewalConditionReq.groupId
         batchOperateGroupMembers(
             projectCode = projectCode,
+            type = BatchOperateType.RENEWAL,
             conditionReq = GroupMemberRenewalConditionReq(
                 groupIds = listOf(groupId),
                 targetMember = renewalConditionReq.targetMember,
@@ -806,6 +822,7 @@ class RbacPermissionManageFacadeServiceImpl(
         logger.info("batch renewal group member $userId|$projectCode|$renewalConditionReq")
         batchOperateGroupMembers(
             projectCode = projectCode,
+            type = BatchOperateType.RENEWAL,
             conditionReq = renewalConditionReq,
             operateGroupMemberTask = ::renewalTask
         )
@@ -823,6 +840,7 @@ class RbacPermissionManageFacadeServiceImpl(
         if (handoverMemberDTO.targetMember.type == MemberType.DEPARTMENT.type) {
             batchOperateGroupMembers(
                 projectCode = projectCode,
+                type = BatchOperateType.HANDOVER,
                 conditionReq = handoverMemberDTO,
                 operateGroupMemberTask = ::handoverTask
             )
@@ -835,6 +853,7 @@ class RbacPermissionManageFacadeServiceImpl(
         // 交接用户组
         batchOperateGroupMembers(
             projectCode = projectCode,
+            type = BatchOperateType.HANDOVER,
             conditionReq = handoverMemberDTO,
             operateGroupMemberTask = ::handoverTask
         )
@@ -892,8 +911,8 @@ class RbacPermissionManageFacadeServiceImpl(
         )
 
         val handoverDetails = mutableListOf<HandoverDetailDTO>()
-        val flowNo = permissionHandoverService.generateFlowNo()
-        val title = permissionHandoverService.generateTitle(
+        val flowNo = permissionHandoverApplicationService.generateFlowNo()
+        val title = permissionHandoverApplicationService.generateTitle(
             groupCount = groupIds.size,
             authorizationCount = invalidPipelines.size
         )
@@ -920,7 +939,7 @@ class RbacPermissionManageFacadeServiceImpl(
             )
         }
         // 创建交接单
-        permissionHandoverService.createHandoverApplication(
+        permissionHandoverApplicationService.createHandoverApplication(
             overview = HandoverOverviewCreateDTO(
                 projectCode = projectCode,
                 flowNo = flowNo,
@@ -946,6 +965,7 @@ class RbacPermissionManageFacadeServiceImpl(
         if (removeMemberDTO.targetMember.type == MemberType.DEPARTMENT.type) {
             batchOperateGroupMembers(
                 projectCode = projectCode,
+                type = BatchOperateType.REMOVE,
                 conditionReq = removeMemberDTO,
                 operateGroupMemberTask = ::deleteTask
             )
@@ -976,6 +996,7 @@ class RbacPermissionManageFacadeServiceImpl(
         // 直接退出的用户组
         batchOperateGroupMembers(
             projectCode = projectCode,
+            type = BatchOperateType.REMOVE,
             conditionReq = GroupMemberRemoveConditionReq(
                 groupIds = toDeleteGroups,
                 targetMember = removeMemberDTO.targetMember
@@ -987,6 +1008,7 @@ class RbacPermissionManageFacadeServiceImpl(
             removeMemberDTO.checkHandoverTo()
             batchOperateGroupMembers(
                 projectCode = projectCode,
+                type = BatchOperateType.HANDOVER,
                 conditionReq = GroupMemberHandoverConditionReq(
                     groupIds = toHandoverGroups,
                     targetMember = removeMemberDTO.targetMember,
@@ -1042,6 +1064,7 @@ class RbacPermissionManageFacadeServiceImpl(
         // 直接退出的用户组
         batchOperateGroupMembers(
             projectCode = projectCode,
+            type = BatchOperateType.REMOVE,
             conditionReq = GroupMemberRemoveConditionReq(
                 groupIds = toDeleteGroups,
                 targetMember = removeMemberDTO.targetMember
@@ -1058,8 +1081,8 @@ class RbacPermissionManageFacadeServiceImpl(
             )
 
             val handoverDetails = mutableListOf<HandoverDetailDTO>()
-            val flowNo = permissionHandoverService.generateFlowNo()
-            val title = permissionHandoverService.generateTitle(
+            val flowNo = permissionHandoverApplicationService.generateFlowNo()
+            val title = permissionHandoverApplicationService.generateTitle(
                 groupCount = groupIds.size,
                 authorizationCount = invalidPipelines.size
             )
@@ -1085,7 +1108,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     )
                 )
             }
-            permissionHandoverService.createHandoverApplication(
+            permissionHandoverApplicationService.createHandoverApplication(
                 overview = HandoverOverviewCreateDTO(
                     projectCode = projectCode,
                     flowNo = flowNo,
@@ -1372,6 +1395,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 )
                 batchOperateGroupMembers(
                     projectCode = projectCode,
+                    type = BatchOperateType.HANDOVER,
                     conditionReq = handoverMemberDTO,
                     operateGroupMemberTask = ::handoverTask
                 )
@@ -1393,6 +1417,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 )
                 batchOperateGroupMembers(
                     projectCode = projectCode,
+                    type = BatchOperateType.REMOVE,
                     conditionReq = removeMemberDTO,
                     operateGroupMemberTask = ::deleteTask
                 )
@@ -1448,7 +1473,7 @@ class RbacPermissionManageFacadeServiceImpl(
     }
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean {
-        val overview = permissionHandoverService.getHandoverOverview(request.flowNo)
+        val overview = permissionHandoverApplicationService.getHandoverOverview(request.flowNo)
         logger.info("revoke hanover application:{}|{} ", request, overview)
         HandleHandoverApplicationLock(redisOperation, request.flowNo).use { lock ->
             if (!lock.tryLock()) {
@@ -1463,7 +1488,7 @@ class RbacPermissionManageFacadeServiceImpl(
                         overview = overview
                     )
                 }
-                permissionHandoverService.updateHandoverApplication(
+                permissionHandoverApplicationService.updateHandoverApplication(
                     overview = request
                 )
             } catch (e: Exception) {
@@ -1472,6 +1497,131 @@ class RbacPermissionManageFacadeServiceImpl(
             }
         }
         return true
+    }
+
+    override fun getResourceType2CountOfHandover(queryReq: ResourceType2CountOfHandoverQuery): List<ResourceType2CountVo> {
+        queryReq.check()
+        return if (queryReq.queryChannel == HandoverQueryChannel.HANDOVER_APPLICATION) {
+            permissionHandoverApplicationService.getResourceType2CountOfHandoverApplication(queryReq.flowNo!!)
+        } else {
+            getResourceType2CountOfHandoverPreview(queryReq)
+        }
+    }
+
+    // 交接预览
+    private fun getResourceType2CountOfHandoverPreview(queryReq: ResourceType2CountOfHandoverQuery): List<ResourceType2CountVo> {
+        val projectCode = queryReq.projectCode!!
+        val iamGroupIds = queryReq.iamGroupIds!!
+        val memberId = queryReq.memberId!!
+        val (invalidGroups, invalidPipelines) = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = iamGroupIds,
+            memberId = memberId
+        )
+        val resourceType2CountOfGroup = authResourceGroupDao.getResourceType2Count(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = invalidGroups.map { it.toString() }
+        )
+        val result = mutableListOf<ResourceType2CountVo>()
+
+        if (resourceType2CountOfGroup.isNotEmpty()) {
+            result.addAll(
+                rbacCacheService.convertResourceType2Count(
+                    resourceType2Count = resourceType2CountOfGroup,
+                    type = HandoverType.GROUP
+                )
+            )
+        }
+        if (invalidPipelines.isNotEmpty()) {
+            result.addAll(
+                rbacCacheService.convertResourceType2Count(
+                    resourceType2Count = mapOf(ResourceTypeId.PIPELINE to invalidPipelines.size.toLong()),
+                    type = HandoverType.AUTHORIZATION
+                )
+            )
+        }
+        return result
+    }
+
+    override fun listAuthorizationsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo> {
+        queryReq.check()
+        return if (queryReq.queryChannel == HandoverQueryChannel.HANDOVER_APPLICATION) {
+            permissionHandoverApplicationService.listAuthorizationsOfHandoverApplication(queryReq)
+        } else {
+            listAuthorizationsOfHandoverPreview(queryReq)
+        }
+    }
+
+    private fun listAuthorizationsOfHandoverPreview(
+        queryReq: HandoverDetailsQueryReq
+    ): SQLPage<HandoverAuthorizationDetailVo> {
+        val projectCode = queryReq.projectCode!!
+        val iamGroupIds = queryReq.iamGroupIds!!
+        val memberId = queryReq.memberId!!
+        val invalidPipelines = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = iamGroupIds,
+            memberId = memberId
+        ).invalidAuthorizations
+        val records = authorizationDao.list(
+            dslContext = dslContext,
+            condition = ResourceAuthorizationConditionRequest(
+                projectCode = projectCode,
+                resourceType = ResourceTypeId.PIPELINE,
+                filterResourceCodes = invalidPipelines,
+                page = queryReq.page,
+                pageSize = queryReq.pageSize
+            )
+        ).map {
+            HandoverAuthorizationDetailVo(
+                resourceCode = it.resourceCode,
+                resourceName = it.resourceName,
+                handoverType = HandoverType.AUTHORIZATION,
+                handoverFrom = it.handoverFrom
+            )
+        }
+        return SQLPage(count = invalidPipelines.size.toLong(), records = records)
+    }
+
+    override fun listGroupsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {
+        queryReq.check()
+        return if (queryReq.queryChannel == HandoverQueryChannel.HANDOVER_APPLICATION) {
+            permissionHandoverApplicationService.listGroupsOfHandoverApplication(queryReq)
+        } else {
+            listGroupsOfHandoverPreview(queryReq)
+        }
+    }
+
+    private fun listGroupsOfHandoverPreview(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {
+        val projectCode = queryReq.projectCode!!
+        val iamGroupIds = queryReq.iamGroupIds!!
+        val memberId = queryReq.memberId!!
+        val invalidGroupIds = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = iamGroupIds,
+            memberId = memberId
+        ).invalidGroupIds
+        val convertPageSizeToSQLLimit = PageUtil.convertPageSizeToSQLLimit(queryReq.page, queryReq.pageSize)
+
+        val records = authResourceGroupDao.listGroupByResourceType(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = queryReq.resourceType,
+            iamGroupIds = invalidGroupIds.map { it.toString() },
+            offset = convertPageSizeToSQLLimit.offset,
+            limit = convertPageSizeToSQLLimit.limit
+        ).map {
+            HandoverGroupDetailVo(
+                projectCode = it.projectCode,
+                iamGroupId = it.relationId,
+                groupName = it.groupName,
+                groupDesc = it.description,
+                resourceCode = it.resourceCode,
+                resourceName = it.resourceName
+            )
+        }
+        return SQLPage(count = invalidGroupIds.size.toLong(), records = records)
     }
 
     private fun handleHanoverCheck(
@@ -1493,7 +1643,7 @@ class RbacPermissionManageFacadeServiceImpl(
         request: HandoverOverviewUpdateReq,
         overview: HandoverOverviewVo
     ) {
-        val handoverDetails = permissionHandoverService.listHandoverDetails(
+        val handoverDetails = permissionHandoverApplicationService.listHandoverDetails(
             projectCode = overview.projectCode,
             flowNo = overview.flowNo
         )
@@ -1520,6 +1670,7 @@ class RbacPermissionManageFacadeServiceImpl(
             )
             batchOperateGroupMembers(
                 projectCode = overview.projectCode,
+                type = BatchOperateType.HANDOVER,
                 conditionReq = groupMemberHandoverConditionReq,
                 operateGroupMemberTask = ::handoverTask
             )
@@ -1551,6 +1702,7 @@ class RbacPermissionManageFacadeServiceImpl(
     private fun <T : GroupMemberCommonConditionReq> batchOperateGroupMembers(
         projectCode: String,
         conditionReq: T,
+        type: BatchOperateType,
         operateGroupMemberTask: (
             projectCode: String,
             groupId: Int,
@@ -1558,51 +1710,54 @@ class RbacPermissionManageFacadeServiceImpl(
             expiredAt: Long
         ) -> Unit
     ): Boolean {
-        // 成员直接加入的组
-        val groupIds = getGroupIdsByGroupMemberCondition(
-            projectCode = projectCode,
-            commonCondition = conditionReq
-        )[MemberType.get(conditionReq.targetMember.type)]
-        if (groupIds.isNullOrEmpty()) {
-            return true
-        }
+        val startEpoch = System.currentTimeMillis()
+        try {
+            // 成员直接加入的组
+            val groupIds = getGroupIdsByGroupMemberCondition(
+                projectCode = projectCode,
+                commonCondition = conditionReq
+            )[MemberType.get(conditionReq.targetMember.type)]
+            if (groupIds.isNullOrEmpty()) {
+                return true
+            }
 
-        val targetMember = conditionReq.targetMember
-        val memberGroupsDetailsList = listMemberGroupsDetails(
-            projectCode = projectCode,
-            memberId = targetMember.id,
-            memberType = targetMember.type,
-            groupIds = groupIds
-        )
-        val outOfSyncGroupIds = mutableListOf<Int>()
-        val futures = groupIds.map { groupId ->
-            CompletableFuture.supplyAsync(
-                {
-                    val memberGroupsDetails = memberGroupsDetailsList.firstOrNull { it.id == groupId }
-                    if (memberGroupsDetails == null) {
-                        logger.warn(
-                            "The data is out of sync, and the record no longer exists in the iam.$groupId"
-                        )
-                        outOfSyncGroupIds.add(groupId)
-                        return@supplyAsync
-                    }
-                    val expiredAt = memberGroupsDetails.expiredAt
-                    RetryUtils.retry(3) {
-                        operateGroupMemberTask.invoke(
-                            projectCode,
-                            groupId,
-                            conditionReq,
-                            expiredAt
-                        )
-                    }
-                }, executorService
+            val targetMember = conditionReq.targetMember
+            val memberGroupsDetailsList = listMemberGroupsDetails(
+                projectCode = projectCode,
+                memberId = targetMember.id,
+                memberType = targetMember.type,
+                groupIds = groupIds
             )
+            val outOfSyncGroupIds = mutableListOf<Int>()
+            val futures = groupIds.map { groupId ->
+                CompletableFuture.supplyAsync(
+                    {
+                        val memberGroupsDetails = memberGroupsDetailsList.firstOrNull { it.id == groupId }
+                        if (memberGroupsDetails == null) {
+                            logger.warn("The data is out of sync, and the record no longer exists in the iam.$groupId")
+                            outOfSyncGroupIds.add(groupId)
+                            return@supplyAsync
+                        }
+                        val expiredAt = memberGroupsDetails.expiredAt
+                        RetryUtils.retry(3) {
+                            operateGroupMemberTask.invoke(
+                                projectCode,
+                                groupId,
+                                conditionReq,
+                                expiredAt
+                            )
+                        }
+                    }, executorService
+                )
+            }
+            handleFutures(
+                projectCode = projectCode,
+                outOfSyncGroupIds = outOfSyncGroupIds,
+                futures = futures
+            )
+        } finally {
+            "It take(${System.currentTimeMillis() - startEpoch})ms to $type group members|$projectCode|$conditionReq"
         }
-        handleFutures(
-            projectCode = projectCode,
-            outOfSyncGroupIds = outOfSyncGroupIds,
-            futures = futures
-        )
         return true
     }
 

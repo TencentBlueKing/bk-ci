@@ -111,6 +111,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) {
         logger.info("start to sync group member expired time|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
+        val startEpoch = System.currentTimeMillis()
         syncExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
@@ -150,6 +151,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 futures.forEach { it.get() }
                 offset += limit
             } while (projectCodes.size == limit)
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync Group Member Expired Time")
         }
     }
 
