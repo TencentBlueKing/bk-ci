@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpSubPipelineRefResource {
 
-    @Operation(summary = "更新Agent流水线引用信息")
+    @Operation(summary = "更新子流水线引用信息")
     @POST
     @Path("/create")
     fun createSubPipelineRef(
