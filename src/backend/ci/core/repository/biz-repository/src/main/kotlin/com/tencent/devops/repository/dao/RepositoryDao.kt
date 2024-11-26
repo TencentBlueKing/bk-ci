@@ -706,7 +706,7 @@ class RepositoryDao {
             t1.IS_DELETED.eq(false),
             t1.TYPE.eq(scmType.name)
         )
-        if (!projectId.isNullOrBlank()){
+        if (!projectId.isNullOrBlank()) {
             conditions.add(t1.PROJECT_ID.eq(projectId))
         }
         val joinConditions: Condition
