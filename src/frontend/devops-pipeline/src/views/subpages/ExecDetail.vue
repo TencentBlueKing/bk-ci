@@ -61,10 +61,10 @@
                         name="default-user"
                         size="24"
                     />
-                    <span v-if="execDetail.lastModifyUser">
+                    <span v-if="execDetail.recordList[executeCount - 1]?.startUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.lastModifyUser,
+                                execDetail.recordList[executeCount - 1]?.startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
@@ -394,6 +394,9 @@
             },
             pipelineModel () {
                 return this.execDetail?.model || {}
+            },
+            executeCount () {
+                return this.execDetail?.executeCount ?? 1
             }
         },
 
