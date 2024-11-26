@@ -27,10 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+
 /**
  * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
  */
 @Suppress("ALL")
+@JsonDeserialize(using = WorkspaceStatusDeserializer::class)
 enum class WorkspaceStatus {
     PREPARING, // 0 准备中
     RUNNING, // 1 运行中
@@ -164,5 +170,16 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY -> "准备后异常"
         WorkspaceStatus.EXCEPTION_CREATE_FAILED -> "创建异常"
         WorkspaceStatus.CLONING -> "克隆中"
+    }
+}
+
+class WorkspaceStatusDeserializer : JsonDeserializer<WorkspaceStatus>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): WorkspaceStatus {
+        val value: String = p.text
+        return try {
+            WorkspaceStatus.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            WorkspaceStatus.EXCEPTION // 默认值
+        }
     }
 }
