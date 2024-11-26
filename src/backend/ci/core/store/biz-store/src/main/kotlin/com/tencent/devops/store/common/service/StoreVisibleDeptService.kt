@@ -29,7 +29,6 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
@@ -47,7 +46,7 @@ interface StoreVisibleDeptService {
     fun getVisibleDept(
         storeCode: String,
         storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
+        deptStatusInfos: String?
     ): Result<StoreVisibleDeptResp?>
 
     /**

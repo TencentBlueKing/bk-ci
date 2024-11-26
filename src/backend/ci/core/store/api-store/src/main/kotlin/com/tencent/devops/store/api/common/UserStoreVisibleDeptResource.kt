@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptReq
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import io.swagger.v3.oas.annotations.Operation
@@ -38,6 +39,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -78,7 +80,11 @@ interface UserStoreVisibleDeptResource {
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
+        storeCode: String,
+        @Parameter(description = "机构状态集合，用\",\"分隔进行拼接（如APPROVING,APPROVED,REJECT）", required = false)
+        @QueryParam("deptStatusInfos")
+        @DefaultValue("APPROVED")
+        deptStatusInfos: String? = DeptStatusEnum.APPROVED.name
     ): Result<StoreVisibleDeptResp?>
 
     @Operation(summary = "删除组件可见范围")

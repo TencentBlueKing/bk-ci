@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
-import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -46,22 +46,26 @@ class StoreDeptRelDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        deptStatus: DeptStatusEnum? = null,
+        deptStatusList: List<Byte>? = null,
         deptIdList: List<Int>? = null
     ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
-            if (null != deptStatus) conditions.add(STATUS.eq(deptStatus.status.toByte()))
-            if (null != deptIdList) conditions.add(DEPT_ID.`in`(deptIdList))
+            if (!deptStatusList.isNullOrEmpty()) conditions.add(STATUS.`in`(deptStatusList))
+            if (!deptIdList.isNullOrEmpty()) conditions.add(DEPT_ID.`in`(deptIdList))
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
         }
     }
 
-    fun batchList(dslContext: DSLContext, storeCodeList: Collection<String?>, storeType: Byte): Result<TStoreDeptRelRecord>? {
+    fun batchList(
+        dslContext: DSLContext,
+        storeCodeList: Collection<String?>,
+        storeType: Byte
+    ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.`in`(storeCodeList))
@@ -80,11 +84,18 @@ class StoreDeptRelDao {
     ) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val addStep = deptInfoList.map {
+                val deptStatus = if (it.status.isNullOrBlank()) {
+                    DeptStatusEnum.APPROVED.status.toByte()
+                } else {
+                    DeptStatusEnum.valueOf(it.status!!).status.toByte()
+                }
                 dslContext.insertInto(this,
                     ID,
                     STORE_CODE,
                     DEPT_ID,
                     DEPT_NAME,
+                    STATUS,
+                    COMMENT,
                     STORE_TYPE,
                     CREATOR,
                     MODIFIER
@@ -94,84 +105,19 @@ class StoreDeptRelDao {
                         storeCode,
                         it.deptId,
                         it.deptName,
+                        deptStatus,
+                        it.comment,
                         storeType,
                         userId,
                         userId
                     )
                     .onDuplicateKeyUpdate()
-                    .set(STATUS, DeptStatusEnum.APPROVING.status.toByte()) // 如果添加的机构之前被审核拒绝过，则会将之前拒绝过的记录更新为待审核状态
-                    .set(COMMENT, "")
+                    .set(STATUS, deptStatus)
+                    .set(COMMENT, it.comment)
                     .set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())
             }
             dslContext.batch(addStep).execute()
-        }
-    }
-
-    fun batchAdd(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        deptInfoList: List<DeptInfo>,
-        status: Byte,
-        comment: String,
-        storeType: Byte
-    ): IntArray? {
-        with(TStoreDeptRel.T_STORE_DEPT_REL) {
-            val addStep = deptInfoList.map {
-                dslContext.insertInto(this,
-                    ID,
-                    STORE_CODE,
-                    DEPT_ID,
-                    DEPT_NAME,
-                    STORE_TYPE,
-                    CREATOR,
-                    MODIFIER,
-                    STATUS,
-                    COMMENT,
-                    UPDATE_TIME
-                )
-                    .values(
-                        UUIDUtil.generate(),
-                        storeCode,
-                        it.deptId,
-                        it.deptName,
-                        storeType,
-                        userId,
-                        userId,
-                        status,
-                        comment,
-                        LocalDateTime.now()
-                    )
-                    .onDuplicateKeyUpdate()
-                    .set(STATUS, status)
-                    .set(COMMENT, comment)
-                    .set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-            }
-            return dslContext.batch(addStep).execute()
-        }
-    }
-
-    fun batchUpdate(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        deptIdList: List<Int>,
-        status: Byte,
-        comment: String,
-        storeType: Byte
-    ) {
-        with(TStoreDeptRel.T_STORE_DEPT_REL) {
-            dslContext.update(this)
-                .set(STATUS, status)
-                .set(COMMENT, comment)
-                .set(MODIFIER, userId)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(STORE_CODE.eq(storeCode))
-                .and(DEPT_ID.`in`(deptIdList))
-                .and(STORE_TYPE.eq(storeType))
-                .execute()
         }
     }
 

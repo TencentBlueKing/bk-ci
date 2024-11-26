@@ -66,14 +66,16 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun getVisibleDept(
         storeCode: String,
         storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
+        deptStatusInfos: String?
     ): Result<StoreVisibleDeptResp?> {
+        val deptStatusList = deptStatusInfos?.split(",")?.map {
+            DeptStatusEnum.valueOf(it).status.toByte()
+        }
         val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType.type.toByte(),
-            deptStatus = deptStatus,
-            deptIdList = null
+            deptStatusList = deptStatusList
         )
         return Result(
             if (storeDeptRelRecords == null) {
@@ -143,7 +145,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deptIdApprovedList = mutableListOf<DeptInfo>()
+        val pendingDeptInfoList = mutableListOf<DeptInfo>()
         deptInfos.forEach forEach@{
             val count = storeDeptRelDao.countByCodeAndDeptId(
                 dslContext = dslContext,
@@ -154,16 +156,13 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             if (count> 0) {
                 return@forEach
             }
-            deptIdApprovedList.add(it)
+            pendingDeptInfoList.add(it)
         }
-        // 可见范围默认审核通过
         storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
-            deptInfoList = deptIdApprovedList,
-            status = DeptStatusEnum.APPROVED.status.toByte(),
-            comment = "AUTO APPROVE",
+            deptInfoList = pendingDeptInfoList,
             storeType = storeType.type.toByte()
         )
         return Result(true)

@@ -35,8 +35,8 @@ data class DeptInfo(
     val deptId: Int,
     @get:Schema(title = "机构名称", required = true)
     val deptName: String,
-    @get:Schema(title = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String? = null,
+    @get:Schema(title = "机构审核状态(APPROVING：待审核 APPROVED：审核通过 REJECT：审核驳回)", required = false)
+    var status: String? = null,
     @get:Schema(title = "批注", required = false)
     val comment: String? = null
 )
