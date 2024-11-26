@@ -1,4 +1,4 @@
-package upgrade
+package third_components
 
 import (
 	"reflect"
@@ -44,7 +44,7 @@ func Test_trimJdkVersionList(t *testing.T) {
 }
 
 func loopTest(t *testing.T, name string, jdkVersionString string, want []string) {
-	tests := trimJdkVersionList(jdkVersionString)
+	tests := trimJdk8VersionList(jdkVersionString)
 	t.Run(name+"|length=3", func(t *testing.T) {
 		if len(tests) != len(want) {
 			t.Fatalf("\nFail: len(%d), want(%d)", len(tests), len(want))
@@ -55,6 +55,36 @@ func loopTest(t *testing.T, name string, jdkVersionString string, want []string)
 		t.Run(name+"|"+tests[i], func(t *testing.T) {
 			if !reflect.DeepEqual(tests[i], want[i]) {
 				t.Fatalf("\nFail: %v \nWant: %v", tests[i], want[i])
+			}
+		})
+	}
+}
+
+func Test_trimJdk17VersionList(t *testing.T) {
+	type args struct {
+		versionOutputString string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "normal",
+			args: args{
+				versionOutputString: "openjdk 17.0.11 2024-04-23 LTS\nOpenJDK Runtime Environment TencentKonaJDK (build 17.0.11+1-LTS)\nOpenJDK 64-Bit Server VM TencentKonaJDK (build 17.0.11+1-LTS, mixed mode, sharing)\n",
+			},
+			want: []string{
+				"openjdk 17.0.11 2024-04-23 LTS",
+				"OpenJDK Runtime Environment TencentKonaJDK (build 17.0.11+1-LTS)",
+				"OpenJDK 64-Bit Server VM TencentKonaJDK (build 17.0.11+1-LTS, mixed mode, sharing)",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimJdk17VersionList(tt.args.versionOutputString); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("trimJdk17VersionList() = %v, want %v", got, tt.want)
 			}
 		})
 	}

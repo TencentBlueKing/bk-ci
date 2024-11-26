@@ -33,8 +33,8 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.TGIT_LINK_DELETE)
-    override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, url: String): Result<Boolean> {
-        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, url))
+    override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, onlyDelete: Boolean?): Result<Boolean> {
+        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, onlyDelete))
     }
 
     override fun getTGitNamespaces(

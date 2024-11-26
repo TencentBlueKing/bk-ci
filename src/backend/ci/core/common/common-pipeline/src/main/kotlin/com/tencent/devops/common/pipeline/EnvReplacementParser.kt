@@ -80,7 +80,7 @@ object EnvReplacementParser {
 
     /**
      * 根据环境变量map进行object处理并保持原类型
-     * 根据方言的配置判断是否能够使用${}或者变量值是否存在
+     * 根据方言的配置判断是否能够使用${}
      */
     fun parse(
         value: Any?,
@@ -92,7 +92,6 @@ object EnvReplacementParser {
     ): String {
         val options = ExprReplacementOptions(
             contextMap = contextMap,
-            contextNotNull = !dialect.supportMissingVar(),
             contextPair = contextPair,
             functions = functions,
             output = output

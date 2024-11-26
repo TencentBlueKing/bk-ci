@@ -36,7 +36,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -69,7 +68,9 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
-	KeyJdkDirPath          = "devops.agent.jdk.dir.path"
+	KeyJdkDirPath = "devops.agent.jdk.dir.path"
+	// KeyJdk17DirPath 最新的 jdk 路径，因为需要一段时间的兼容所以和 KeyJdkDirPath 共存
+	KeyJdk17DirPath        = "devops.agent.jdk17.dir.path"
 	KeyDockerTaskCount     = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild   = "devops.docker.enable"
 	KeyLanguage            = "devops.language"
@@ -95,6 +96,7 @@ type AgentConfig struct {
 	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
+	Jdk17DirPath            string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
 	Language                string
@@ -107,9 +109,10 @@ type AgentEnv struct {
 	OsName           string
 	agentIp          string
 	HostName         string
-	SlaveVersion     string
 	AgentVersion     string
 	AgentInstallPath string
+	// WinTask 启动windows进程的组件如 服务/执行计划
+	WinTask string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -162,8 +165,8 @@ func LoadAgentEnv() {
 
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
-	GAgentEnv.SlaveVersion = DetectWorkerVersion()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
+	GAgentEnv.WinTask = GetWinTaskType()
 }
 
 // DetectAgentVersion 检测Agent版本
@@ -198,130 +201,6 @@ func DetectAgentVersionByDir(workDir string) string {
 	logs.Info("agent version: ", agentVersion)
 
 	return strings.TrimSpace(agentVersion)
-}
-
-// DetectWorkerVersion 检查worker版本
-func DetectWorkerVersion() string {
-	return DetectWorkerVersionByDir(systemutil.GetWorkDir())
-}
-
-// DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
-func DetectWorkerVersionByDir(workDir string) string {
-	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
-	tmpDir, _ := systemutil.MkBuildTmpDir()
-	output, err := command.RunCommand(GetJava(),
-		[]string{"-Djava.io.tmpdir=" + tmpDir, "-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
-		workDir, nil)
-
-	if err != nil {
-		logs.Errorf("detect worker version failed: %s, output: %s", err.Error(), string(output))
-		exitcode.CheckSignalWorkerError(err)
-		GAgentEnv.SlaveVersion = ""
-		return ""
-	}
-
-	detectVersion := parseWorkerVersion(string(output))
-
-	// 更新下 worker 的版本信息
-	if detectVersion == "" {
-		logs.Warn("parseWorkerVersion null")
-	} else {
-		GAgentEnv.SlaveVersion = detectVersion
-	}
-
-	return detectVersion
-}
-
-// parseWorkerVersion 解析worker版本
-func parseWorkerVersion(output string) string {
-	// 用函数匹配正确的版本信息, 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
-	// 兼容旧版本，防止新agent发布后无限升级
-	versionRegexp := regexp.MustCompile(`^v(\d+\.)(\d+\.)(\d+)((-RELEASE)|(-SNAPSHOT)?)$`)
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if !(line == "") && !strings.Contains(line, " ") && !strings.Contains(line, "OPTIONS") {
-			if len(line) > 64 {
-				line = line[:64]
-			}
-			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
-			if matchWorkerVersion(line) {
-				logs.Info("match worker version: ", line)
-				return line
-			} else {
-				if versionRegexp != nil {
-					if versionRegexp.MatchString(line) {
-						logs.Info("regexp worker version: ", line)
-						return line
-					} else {
-						continue
-					}
-				} else {
-					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-					logs.Info("regexp nil worker version: ", line)
-					return line
-				}
-			}
-		}
-	}
-	return ""
-}
-
-// matchWorkerVersion 匹配worker版本信息
-// 版本号为 v数字.数字.数字 || v数字.数字.数字-字符.数字
-// 只匹配以v开头的数字版本即可
-func matchWorkerVersion(line string) bool {
-	if !strings.HasPrefix(line, "v") {
-		logs.Warnf("line %s matchWorkerVersion no start 'v'", line)
-		return false
-	}
-
-	// 去掉v方便后面计算
-	subline := strings.Split(strings.TrimPrefix(line, "v"), ".")
-	sublen := len(subline)
-	if sublen < 3 || sublen > 4 {
-		logs.Warnf("line %s matchWorkerVersion len no match", line)
-		return false
-	}
-
-	// v数字.数字.数字 这种去掉v后应该全是数字
-	if sublen == 3 {
-		return checkNumb(subline, line)
-	}
-
-	// v数字.数字.数字-字符.数字，按照 - 分隔，前面的与len 3一致，后面的两个分别判断，不是数字的是字符，不是字符的是数字
-	fSubline := strings.Split(strings.TrimPrefix(line, "v"), "-")
-	if len(fSubline) != 2 {
-		logs.Warnf("line %s matchWorkerVersion len no match", line)
-		return false
-	}
-
-	if !checkNumb(strings.Split(fSubline[0], "."), line) {
-		return false
-	}
-
-	fSubline2 := strings.Split(fSubline[1], ".")
-	if checkNumb([]string{fSubline2[0]}, line) {
-		logs.Warnf("line %s matchWorkerVersion not char", line)
-		return false
-	}
-
-	if !checkNumb([]string{fSubline2[1]}, line) {
-		return false
-	}
-
-	return true
-}
-
-func checkNumb(subs []string, line string) bool {
-	for _, s := range subs {
-		_, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			logs.Warnf("line %s matchWorkerVersion not numb", line)
-			return false
-		}
-	}
-	return true
 }
 
 // BuildAgentJarPath 生成jar寻址路径
@@ -402,7 +281,15 @@ func LoadAgentConfig() error {
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
 	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
-		jdkDirPath = getJavaDir()
+		workDir := systemutil.GetWorkDir()
+		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
+			jdkDirPath = workDir + "/jre"
+		}
+		jdkDirPath = workDir + "/jdk"
+	}
+	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
+	if jdk17DirPath == "" {
+		jdk17DirPath = systemutil.GetWorkDir() + "/jdk17"
 	}
 
 	// 兼容旧版本 .agent.properties 没有这个键
@@ -481,6 +368,9 @@ func LoadAgentConfig() error {
 	GAgentConfig.JdkDirPath = jdkDirPath
 	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
 
+	GAgentConfig.Jdk17DirPath = jdk17DirPath
+	logs.Info("jdk17DirPath: ", GAgentConfig.Jdk17DirPath)
+
 	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 
@@ -525,6 +415,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
+	content.WriteString(KeyJdk17DirPath + "=" + GAgentConfig.Jdk17DirPath + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
@@ -547,36 +438,6 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 	authHeaderMap[AuthHeaderAgentId] = a.AgentId
 	authHeaderMap[AuthHeaderSecretKey] = a.SecretKey
 	return authHeaderMap
-}
-
-// GetJava 获取本地java命令路径
-func GetJava() string {
-	if systemutil.IsMacos() {
-		return GAgentConfig.JdkDirPath + "/Contents/Home/bin/java"
-	} else {
-		return GAgentConfig.JdkDirPath + "/bin/java"
-	}
-}
-
-func SaveJdkDir(dir string) {
-	if dir == GAgentConfig.JdkDirPath {
-		return
-	}
-	GAgentConfig.JdkDirPath = dir
-	err := GAgentConfig.SaveConfig()
-	if err != nil {
-		logs.Errorf("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
-		return
-	}
-}
-
-// getJavaDir 获取本地java文件夹
-func getJavaDir() string {
-	workDir := systemutil.GetWorkDir()
-	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
-		return workDir + "/jre"
-	}
-	return workDir + "/jdk"
 }
 
 func GetDockerInitFilePath() string {

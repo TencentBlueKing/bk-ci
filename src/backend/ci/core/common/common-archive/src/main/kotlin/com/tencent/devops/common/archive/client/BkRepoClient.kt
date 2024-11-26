@@ -69,8 +69,10 @@ import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
+import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
@@ -158,6 +160,18 @@ class BkRepoClient constructor(
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+    }
+
+    fun enableProject(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("enableProject, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = enabled)))
+        val request = Request.Builder()
+            .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId")
+            .headers(getCommonHeaders(SYSTEM_USER, projectId).toHeaders())
+            .put(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+        return true
     }
 
     private fun createGenericRepo(
@@ -1219,6 +1233,7 @@ class BkRepoClient constructor(
         private const val ERROR_PROJECT_EXISTED = 251005
         private const val ERROR_REPO_EXISTED = 251007
 
+        private const val SYSTEM_USER = "system"
         private const val BKREPO_REALM = "bkrepo"
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
         const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径

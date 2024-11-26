@@ -13,7 +13,6 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
-import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -30,7 +29,7 @@ class TxProjectExtServiceImpl(
     private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper
-) : ProjectExtService {
+) : AbsProjectExtServiceImpl() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectExtServiceImpl::class.java)

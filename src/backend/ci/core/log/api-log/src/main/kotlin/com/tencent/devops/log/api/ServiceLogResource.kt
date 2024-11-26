@@ -34,16 +34,17 @@ import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -101,6 +102,10 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true,
         @Parameter(description = "查询结果是否倒序，默认false", required = false)
         @QueryParam("reverse")
         reverse: Boolean? = false
@@ -157,7 +162,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行前的日志")
@@ -202,7 +211,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")

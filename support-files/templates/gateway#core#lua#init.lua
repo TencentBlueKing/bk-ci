@@ -90,16 +90,17 @@ config = {
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "kubernetes.demo.com",
-        switchAll = false,
+        devnetDomain = "devnet.kubernetes.demo.com",
         codecc = { domain = "kubernetes.demo.com" },
-        useForceHeader = false,
-        tags = {},
-        codeccTags = {},
         api = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""
         },
-        special_domain = {}
+        special_domain = {},
+        recovery = {
+            switchAll = false,
+            domain = "k8s.demo.com"
+        }
     }
 }
 

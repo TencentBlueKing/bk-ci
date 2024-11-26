@@ -158,20 +158,13 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         projectId: String? = null,
-        unionShared: Boolean = true,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
-        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .let {
-                    when (ownerType) {
-                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
-                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
-                    }.and(OWNER_TYPE.eq(ownerType.name))
-                }
+                .where(CREATOR.eq(userId!!))
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
                 .let {
                     if (status.isNullOrEmpty()) {
                         it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
@@ -180,15 +173,6 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .let {
-                    if (unionShared && userId != null) {
-                        it.unionAll(
-                            unionSelect(shared, userId, status, systemType)
-                        )
-                    } else {
-                        it
-                    }
-                }
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -196,15 +180,14 @@ class WorkspaceDao {
     /**
      * 获取正在使用的 workspace
      */
-    fun fetchUserWorkspaceName(
+    fun fetchProjectWorkspaceName(
         dslContext: DSLContext,
-        projectId: String,
-        ownerType: WorkspaceOwnerType
+        projectId: String
     ): Set<String> {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(OWNER_TYPE.eq(ownerType.name))
+                .and(OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .fetch().map { it.name }.toSet()
         }
@@ -246,9 +229,9 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .let {
-                    when (ownerType) {
-                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
-                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
+                    when {
+                        ownerType.projectUse() -> it.where(PROJECT_ID.eq(projectId!!))
+                        else -> it.where(CREATOR.eq(userId!!))
                     }.and(OWNER_TYPE.eq(ownerType.name))
                 }
                 .let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
@@ -324,6 +307,16 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchAllProject4Public(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(PROJECT_ID).from(this).where(
+                OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT_PUBLIC.name)
+            ).groupBy(PROJECT_ID).fetch().map { it.value1() }
+        }
+    }
+
     fun getWorkspaceProject(
         dslContext: DSLContext,
         mountType: WorkspaceMountType? = null,
@@ -374,7 +367,7 @@ class WorkspaceDao {
             .leftJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            .and(t1.OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
             .unionAll(
                 dslContext.selectDistinct(
                     t1.CREATOR.`as`("SHARED_USER")
@@ -449,6 +442,21 @@ class WorkspaceDao {
                 .set(HOST_NAME, hostName)
                 .set(IP, ip)
                 .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceOwnerType(
+        dslContext: DSLContext,
+        workspaceName: String,
+        old: WorkspaceOwnerType,
+        new: WorkspaceOwnerType
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(OWNER_TYPE, new.name)
+                .where(NAME.eq(workspaceName))
+                .and(OWNER_TYPE.eq(old.name))
                 .execute()
         }
     }
@@ -680,7 +688,8 @@ class WorkspaceDao {
                 labels = (record.getOrNull(TWorkspace.T_WORKSPACE.LABELS) as String?)?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<String>
                 },
-                bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?
+                bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
+                nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
             )
         }
 

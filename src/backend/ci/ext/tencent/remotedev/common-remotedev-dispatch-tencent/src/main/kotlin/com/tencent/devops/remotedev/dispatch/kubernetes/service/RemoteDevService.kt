@@ -398,4 +398,17 @@ class RemoteDevService @Autowired constructor(
             pipelineId = orderId
         )
     }
+
+    fun cloneWorkspace(event: WorkspaceOperateEvent) {
+        // 需要生成一个新的 pipelineId 进行操作
+        val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+        remoteDevServiceFactory.loadRemoteDevService(event.mountType).cloneWorkspaceVm(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            pipelineId = orderId,
+            machineType = event.machineType,
+            zoneId = event.zoneId,
+            live = event.live
+        )
+    }
 }

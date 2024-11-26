@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -55,6 +56,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
+import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -85,7 +87,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val bkBaseService: BKBaseService,
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceRecordService: WorkspaceRecordService
+    private val workspaceRecordService: WorkspaceRecordService,
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) : UserProjectWorkspaceResource {
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
@@ -255,6 +258,16 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         upgradeReq: WorkspaceUpgradeReq
     ): Result<Boolean> {
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
+        return Result(true)
+    }
+
+    override fun cloneWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        cloneReq: WorkspaceCloneReq
+    ): Result<Boolean> {
+        cloneWorkspaceHandler.cloneWorkspace(userId, projectId, workspaceName, cloneReq)
         return Result(true)
     }
 

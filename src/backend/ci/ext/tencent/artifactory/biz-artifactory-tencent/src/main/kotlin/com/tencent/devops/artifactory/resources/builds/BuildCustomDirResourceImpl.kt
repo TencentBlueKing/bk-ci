@@ -33,7 +33,9 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoBuildCustomDirService
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -82,7 +84,17 @@ class BuildCustomDirResourceImpl @Autowired constructor(
     }
 
     private fun getLastModifyUser(projectId: String, pipelineId: String): String {
-        return client.get(ServicePipelineResource::class)
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Exception) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom ?: client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 

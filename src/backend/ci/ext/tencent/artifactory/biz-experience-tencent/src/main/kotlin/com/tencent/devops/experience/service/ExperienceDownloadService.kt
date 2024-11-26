@@ -27,15 +27,19 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.pojo.HapJson5Info
+import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -45,6 +49,7 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsDat
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -63,13 +68,13 @@ import com.tencent.devops.experience.pojo.download.DownloadRecordVO
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class ExperienceDownloadService @Autowired constructor(
@@ -184,24 +189,45 @@ class ExperienceDownloadService @Autowired constructor(
         val bundleIdentifier = experienceRecord.bundleIdentifier
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
-        val url = if (path.endsWith(".ipa", true)) {
-            val tail = ttl?.let { "&ttl=$ttl" } ?: ""
-            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                "/$projectId/$artifactoryType/filePlist" +
-                "?experienceHashId=$experienceHashId&path=${
-                    URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
-                }&x-devops-project-id=$projectId$tail"
-        } else {
-            client.get(ServiceArtifactoryResource::class)
-                .externalUrl(
-                    projectId = projectId,
-                    artifactoryType = artifactoryType,
-                    creatorId = experienceRecord.creator,
-                    userId = userId,
-                    path = path,
-                    ttl = ttl ?: (24 * 3600),
-                    directed = false
-                ).data!!.url
+        val url = when (platform) {
+            PlatformEnum.IOS -> {
+                val tail = ttl?.let { "&ttl=$ttl" } ?: ""
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
+                        "/$projectId/$artifactoryType/filePlist" +
+                        "?experienceHashId=$experienceHashId&path=${
+                            URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
+                        }&x-devops-project-id=$projectId$tail"
+            }
+
+            PlatformEnum.HAP -> {
+                val hapJson5InfoJson = JsonUtil.toSortJson(
+                    HapJson5Info(
+                        userId = userId,
+                        ttl = ttl ?: (24 * 3600),
+                        experienceHashId = experienceHashId,
+                        filePath = path,
+                        organization = if (isOuter) ORGANIZATION_OUTER else null
+                    )
+                )
+                val token = client.get(ServiceArtifactoryDownLoadResource::class)
+                    .createTokenForJson(TokenForJsonRequest(hapJson5InfoJson, 60)).data!!
+
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/external/artifactories" +
+                        "/$projectId/$artifactoryType/$token/hapJson5.json5"
+            }
+
+            else -> {
+                client.get(ServiceArtifactoryResource::class)
+                    .externalUrl(
+                        projectId = projectId,
+                        artifactoryType = artifactoryType,
+                        creatorId = experienceRecord.creator,
+                        userId = userId,
+                        path = path,
+                        ttl = ttl ?: (24 * 3600),
+                        directed = false
+                    ).data!!.url
+            }
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class)
             .show(experienceRecord.creator, projectId, artifactoryType, path).data!!
@@ -293,7 +319,7 @@ class ExperienceDownloadService @Autowired constructor(
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
-                "?flag=experienceDetail&experienceId=$experienceHashId"
+                    "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -499,10 +525,10 @@ class ExperienceDownloadService @Autowired constructor(
 
         val scheme = if (platform == "ANDROID") {
             "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
-                HashUtil.encodeLongId(experiencePublicRecord.recordId)
+                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
         } else {
             "bkdevopsapp://app/experience/expDetail/" +
-                HashUtil.encodeLongId(experiencePublicRecord.id)
+                    HashUtil.encodeLongId(experiencePublicRecord.id)
         }
 
         val shortUrlRequest = CreateShortUrlRequest(

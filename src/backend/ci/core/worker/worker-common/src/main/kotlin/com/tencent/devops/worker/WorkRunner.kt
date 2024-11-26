@@ -62,7 +62,7 @@ object WorkRunner {
             ThirdPartyAgentBuildInfoUtils.setBuildInfo(buildInfo)
 
             Runner.run(object : WorkspaceInterface {
-                val workspace = buildInfo.workspace
+                val workspace = buildInfo.workspace.trim()
                 override fun getWorkspaceAndLogDir(
                     variables: Map<String, String>,
                     pipelineId: String

@@ -54,6 +54,14 @@ interface OpAuthResourceGroupSyncResource {
     ): Result<Boolean>
 
     @POST
+    @Path("/syncGroupMemberExpiredTime")
+    @Operation(summary = "按条件同步组成员过期时间")
+    fun syncGroupMemberExpiredTime(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
+    ): Result<Boolean>
+
+    @POST
     @Path("/batchSyncGroupAndMember")
     @Operation(summary = "批量同步所有用户组和成员")
     fun batchSyncGroupAndMember(

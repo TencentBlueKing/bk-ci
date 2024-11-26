@@ -72,18 +72,12 @@
                     :property="'envType'"
                 >
                     <bk-radio-group v-model="createEnvForm.envType">
-                        <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
                         <bk-radio
-                            :value="'DEV'"
-                            v-if="isExtendTx"
+                            v-for="envType in envTypeEnums"
+                            :key="envType"
+                            :value="envType"
                         >
-                            {{ $t('environment.envInfo.devEnvType') }}
-                        </bk-radio>
-                        <bk-radio
-                            :value="'PROD'"
-                            v-if="isExtendTx"
-                        >
-                            {{ $t('environment.envInfo.testEnvType') }}
+                            {{ $t(`environment.envInfo.${envType}EnvType`) }}
                         </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
@@ -92,24 +86,47 @@
                     :required="true"
                     :property="'source'"
                 >
-                    <div class="env-source-content">
-                        <div class="source-type-radio">
-                            <!-- <bk-radio-group v-model="createEnvForm.source">
+                    <div
+                        v-if="previewNodeList.length > 0"
+                        class="source-type-radio"
+                    >
+                        <!-- <bk-radio-group v-model="createEnvForm.source">
                                 <bk-radio :value="'EXISTING'" v-if="createEnvForm.envType !== 'BUILD'">{{ $t('environment.envInfo.existingNode') }}</bk-radio>
                                 <bk-radio :value="'EXISTING'" v-else>{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group> -->
-                            <span
-                                class="preview-node-btn"
-                                v-if="previewNodeList.length > 0"
-                                @click="toShowNodeList"
-                            >
-                                {{ $t('environment.nodeInfo.selectNode') }}
-                            </span>
-                        </div>
-                        <div
-                            class="empty-node-selected"
-                            v-if="previewNodeList.length === 0"
+                        <span
+                            class="preview-node-btn"
+                            @click="toShowNodeList"
                         >
+                            {{ $t('environment.nodeInfo.selectNode') }}
+                        </span>
+                    </div>
+                    <bk-table
+                        :data="previewTableData"
+                    >
+                        <bk-table-column
+                            label="IP"
+                            prop="ip"
+                        />
+                        <bk-table-column
+                            :label="$t('environment.nodeInfo.hostName')"
+                            prop="name"
+                        />
+                        <bk-table-column
+                            :label="$t('environment.nodeInfo.nodeType')"
+                            prop="nodeTypeLabel"
+                        />
+                        <bk-table-column
+                            v-if="isDevxEnv"
+                            :label="$t('environment.nodeInfo.model')"
+                            prop="size"
+                            show-overflow-tooltip
+                        ></bk-table-column>
+                        <bk-table-column
+                            :label="$t('environment.nodeInfo.nodeStatus')"
+                            prop="nodeStatusLabel"
+                        />
+                        <template #empty>
                             <p class="empty-prompt">
                                 {{ $t('environment.nodeInfo.notyetNode') }}，
                                 <span
@@ -123,41 +140,8 @@
                             >
                                 {{ $t('environment.nodeInfo.haveToNeedNode') }}
                             </div>
-                        </div>
-                        <div
-                            class="selected-node-Preview"
-                            v-else
-                        >
-                            <div class="node-table-message">
-                                <div class="table-node-head">
-                                    <div class="table-node-item node-item-ip">IP</div>
-                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
-                                    <div class="table-node-item node-item-type">{{ $t('environment.nodeInfo.nodeType') }}</div>
-                                    <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.nodeStatus') }}</div>
-                                </div>
-                                <div class="table-node-body">
-                                    <div
-                                        class="table-node-row"
-                                        v-for="(row, index) of previewNodeList"
-                                        :key="index"
-                                    >
-                                        <div class="table-node-item node-item-ip">
-                                            <span class="node-ip">{{ row.ip }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-name">
-                                            <span class="node-name">{{ row.name }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-type">
-                                            <span class="node-type">{{ $t('environment.nodeTypeMap')[row.nodeType] }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-status">
-                                            <span class="node-name">{{ $t('environment.nodeStatusMap')[row.nodeStatus] }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        </template>
+                    </bk-table>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button
@@ -178,6 +162,8 @@
             </bk-form>
         </section>
         <node-select
+            is-devx-env
+            :title="nodeSelectTitle"
             :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
@@ -229,9 +215,6 @@
                 },
                 // 节点选择配置
                 selectHandlercConf: {
-                    curTotalCount: 0,
-                    curDisplayCount: 0,
-                    selectedNodeCount: 0,
                     allNodeSelected: false,
                     searchEmpty: false
                 },
@@ -296,6 +279,33 @@
             },
             curUserInfo () {
                 return window.userInfo
+            },
+            envTypeEnums () {
+                return [
+                    'BUILD',
+                    ...(this.isExtendTx
+                        ? [
+                            'DEV',
+                            'PROD',
+                            'DEVX'
+                        ]
+                        : [])
+                ]
+            },
+            isDevxEnv () {
+                return this.createEnvForm.envType === 'DEVX'
+            },
+            previewTableData () {
+                return this.previewNodeList.map(item => ({
+                    ...item,
+                    nodeTypeLabel: this.$t('environment.nodeTypeMap')[item.nodeType],
+                    nodeStatusLabel: this.$t('environment.nodeStatusMap')[item.nodeStatus]
+                }))
+            },
+            nodeSelectTitle () {
+                const typeLabel = `environment.envInfo.${this.createEnvForm.envType}EnvType`
+                
+                return `${this.createEnvForm?.name || this.$t('environment.createEnvTitle')}-导入${this.$t(typeLabel)}`
             }
         },
         watch: {
@@ -305,22 +315,10 @@
             nodeList: {
                 deep: true,
                 handler: function (val) {
-                    let curCount = 0
-                    const isSelected = this.nodeList.some(item => {
-                        return item.isChecked === true
-                    })
+                    const isSelected = this.nodeList.some(item => item.isChecked)
 
-                    if (isSelected) {
-                        this.nodeSelectConf.unselected = false
-                    } else {
-                        this.nodeSelectConf.unselected = true
-                    }
+                    this.nodeSelectConf.unselected = !isSelected
 
-                    this.nodeList.forEach(item => {
-                        if (item.isChecked) curCount++
-                    })
-
-                    this.selectHandlercConf.selectedNodeCount = curCount
                     this.decideToggle()
                 }
             },
@@ -355,43 +353,21 @@
              * 弹窗全选联动
              */
             decideToggle () {
-                let curCount = 0
-                let curCheckCount = 0
-
-                this.nodeList.forEach(item => {
-                    if (item.isDisplay) {
-                        curCount++
-                        if (item.isChecked) curCheckCount++
-                    }
-                })
-
-                this.selectHandlercConf.curDisplayCount = curCount
-
-                if (curCount === curCheckCount) {
-                    this.selectHandlercConf.allNodeSelected = true
-                } else {
-                    this.selectHandlercConf.allNodeSelected = false
-                }
+                this.selectHandlercConf.allNodeSelected = this.nodeList.every(item => item.isChecked)
             },
             /**
              * 节点全选
              */
             toggleAllSelect (data) {
                 this.selectHandlercConf.allNodeSelected = data
-
-                if (this.selectHandlercConf.allNodeSelected) {
-                    this.nodeList.forEach(item => {
-                        if (item.isDisplay) {
-                            item.isChecked = true
-                        }
-                    })
-                } else {
-                    this.nodeList.forEach(item => {
-                        if (item.isDisplay) {
-                            item.isChecked = false
-                        }
-                    })
-                }
+                this.nodeList.forEach(item => {
+                    if (item.isDisplay) {
+                        item.isChecked = this.selectHandlercConf.allNodeSelected
+                    }
+                })
+            },
+            detectNodeType (nodeType) {
+                return ['THIRDPARTY', 'DEVCLOUD'].includes(nodeType)
             },
             /**
              * 搜索节点
@@ -403,10 +379,10 @@
                     })
                     this.nodeList.forEach(item => {
                         const str = item.ip
-
+                        const nodeTypeFlag = this.detectNodeType(item.nodeType)
                         if (this.createEnvForm.envType === 'BUILD') {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str === target[i] && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
+                                if (target[i] && str === target[i] && nodeTypeFlag && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -415,7 +391,7 @@
                             }
                         } else {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str === target[i] && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
+                                if (target[i] && str === target[i] && !(nodeTypeFlag) && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -425,31 +401,18 @@
                         }
                     })
 
-                    const result = this.nodeList.some(element => {
-                        return element.isDisplay
-                    })
-
-                    if (result) {
-                        this.selectHandlercConf.searchEmpty = false
-                    } else {
-                        this.selectHandlercConf.searchEmpty = true
-                    }
+                    this.selectHandlercConf.searchEmpty = !this.nodeList.some(element => element.isDisplay)
                 } else {
                     this.selectHandlercConf.searchEmpty = false
-
-                    if (this.createEnvForm.envType === 'BUILD') {
-                        this.nodeList.forEach(item => {
-                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
-                                item.isDisplay = true
-                            }
-                        })
-                    } else {
-                        this.nodeList.forEach(item => {
-                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
-                                item.isDisplay = true
-                            }
-                        })
-                    }
+                    
+                    this.nodeList.forEach(item => {
+                        const nodeTypeFlag = this.detectNodeType(item.nodeType)
+                        if (this.createEnvForm.envType === 'BUILD') {
+                            item.isDisplay = nodeTypeFlag && item.canUse
+                        } else {
+                            item.isDisplay = !nodeTypeFlag && item.canUse
+                        }
+                    })
                 }
                 this.decideToggle()
             },
@@ -479,14 +442,15 @@
              */
             confirmFn () {
                 const curEnv = this.createEnvForm.envType
-
+                
                 if (curEnv === 'BUILD') {
                     this.nodeList.forEach(item => {
-                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) {
+                        const nodeTypeFlag = this.detectNodeType(item.nodeType)
+                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && nodeTypeFlag) {
                             this.buildNodeList.push(item)
                         }
 
-                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) {
+                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && nodeTypeFlag) {
                             for (let i = this.buildNodeList.length - 1; i >= 0; i--) {
                                 if (this.buildNodeList[i].nodeHashId === item.nodeHashId) {
                                     this.buildNodeList.splice(i, 1)
@@ -498,11 +462,12 @@
                     this.previewNodeList = this.buildNodeList
                 } else {
                     this.nodeList.forEach(item => {
-                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType))) {
+                        const nodeTypeFlag = this.detectNodeType(item.nodeType)
+                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && !nodeTypeFlag) {
                             this.devNodeList.push(item)
                         }
 
-                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType))) {
+                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && !nodeTypeFlag) {
                             for (let i = this.devNodeList.length - 1; i >= 0; i--) {
                                 if (this.devNodeList[i].nodeHashId === item.nodeHashId) {
                                     this.devNodeList.splice(i, 1)
@@ -638,57 +603,32 @@
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: {
-                            page: -1
+                            page: -1,
+                            ...(this.isDevxEnv
+                                ? {
+                                    nodeType: 'DEVX'
+                                }
+                                : {})
                         }
                     })
+                    const selectedNodesMap = this.previewNodeList.reduce((acc, item) => {
+                        acc[item.nodeHashId] = 1
+                        return acc
+                    }, {})
 
-                    this.nodeList.splice(0, this.nodeList.length)
-
-                    res.records.forEach(item => {
-                        item.isChecked = false
+                    this.nodeList = res.records.map(item => {
+                        item.isChecked = !!selectedNodesMap[item.nodeHashId]
+                        const nodeTypeFlag = this.detectNodeType(item.nodeType)
 
                         if (this.createEnvForm.envType === 'BUILD') {
-                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) || !item.canUse) {
-                                item.isDisplay = false
-                            } else {
-                                item.isDisplay = true
-                            }
+                            item.isDisplay = nodeTypeFlag && item.canUse
                         } else {
-                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) || !item.canUse) {
-                                item.isDisplay = false
-                            } else {
-                                item.isDisplay = true
-                            }
+                            item.isDisplay = !nodeTypeFlag && item.canUse
                         }
-
-                        this.nodeList.push(item)
-
-                        this.previewNodeList.forEach(vv => {
-                            this.nodeList.forEach(kk => {
-                                if (vv.nodeHashId === kk.nodeHashId) {
-                                    kk.isChecked = true
-                                }
-                            })
-                        })
+                        return item
                     })
 
-                    let curCount = 0
-
-                    this.nodeList.forEach((item) => {
-                        if (item.isDisplay) curCount++
-                    })
-
-                    this.selectHandlercConf.curTotalCount = curCount
-
-                    const result = this.nodeList.some(element => {
-                        return element.isDisplay
-                    })
-
-                    if (result) {
-                        this.selectHandlercConf.searchEmpty = false
-                    } else {
-                        this.selectHandlercConf.searchEmpty = true
-                    }
+                    this.selectHandlercConf.searchEmpty = !this.nodeList.some(element => element.isDisplay)
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -806,7 +746,6 @@
 
         .empty-prompt {
             display: inline-block;
-            margin-top: 116px;
             color: $fontLighterColor;
         }
 
@@ -821,26 +760,6 @@
             .bk-button {
                 width: 90px;
             }
-        }
-
-        .table-node-body {
-            height: 258px;
-            overflow: auto;
-        }
-
-        .table-node-head,
-        .table-node-row {
-            padding: 0 20px;
-            @extend %flex;
-            height: 43px;
-            font-size: 14px;
-            color: #333C48;
-        }
-
-        .table-node-row {
-            border-top: 1px solid $borderWeightColor;
-            color: $fontWeightColor;
-            font-size: 12px;
         }
 
         .node-item-name {
