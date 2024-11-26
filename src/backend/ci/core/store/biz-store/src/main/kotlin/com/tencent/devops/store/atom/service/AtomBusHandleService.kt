@@ -48,4 +48,9 @@ interface AtomBusHandleService {
      * 处理系统预置指令及用户（task.json.target）设置指令逻辑
      */
     fun handleTarget(reqTarget: String?, target: String): String
+
+    /**
+     * 获取插件默认运行环境版本
+     */
+    fun getDefaultRuntimeVersion(): String?
 }

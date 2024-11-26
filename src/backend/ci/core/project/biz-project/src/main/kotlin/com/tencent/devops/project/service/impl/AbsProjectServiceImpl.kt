@@ -1269,6 +1269,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectId = projectInfo.projectId,
             enabled = enabled
         )
+        try {
+            projectExtService.enableProject(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        } catch (ex: Exception) {
+            logger.warn("enable bkrepo project failed $englishName|$enabled|$ex")
+        }
         projectDispatcher.dispatch(
             ProjectEnableStatusBroadCastEvent(
                 userId = userId ?: "",
