@@ -300,37 +300,42 @@ class ScmOauthService @Autowired constructor(
     override fun addCommitCheck(
         request: CommitCheckRequest
     ) {
-        with(request) {
-            val scm =
-                ScmOauthFactory.getScm(
-                    projectName = projectName,
-                    url = url,
-                    type = type,
-                    branchName = null,
-                    privateKey = privateKey,
-                    passPhrase = passPhrase,
-                    token = token,
-                    region = region,
-                    userName = "",
-                    event = ""
+        val startEpoch = System.currentTimeMillis()
+        try {
+            with(request) {
+                val scm =
+                    ScmOauthFactory.getScm(
+                        projectName = projectName,
+                        url = url,
+                        type = type,
+                        branchName = null,
+                        privateKey = privateKey,
+                        passPhrase = passPhrase,
+                        token = token,
+                        region = region,
+                        userName = "",
+                        event = ""
+                    )
+                scm.addCommitCheck(
+                    commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block,
+                    targetBranch = targetBranch
                 )
-            scm.addCommitCheck(
-                commitId = commitId,
-                state = state,
-                targetUrl = targetUrl,
-                context = context,
-                description = description,
-                block = block,
-                targetBranch = targetBranch
-            )
-            if (mrRequestId != null) {
-                if (reportData.second.isEmpty()) return
-                val comment = QualityUtils.getQualityReport(
-                    titleData = reportData.first,
-                    resultData = reportData.second
-                )
-                scm.addMRComment(mrRequestId!!, comment)
+                if (mrRequestId != null) {
+                    if (reportData.second.isEmpty()) return
+                    val comment = QualityUtils.getQualityReport(
+                        titleData = reportData.first,
+                        resultData = reportData.second
+                    )
+                    scm.addMRComment(mrRequestId!!, comment)
+                }
             }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }
 
