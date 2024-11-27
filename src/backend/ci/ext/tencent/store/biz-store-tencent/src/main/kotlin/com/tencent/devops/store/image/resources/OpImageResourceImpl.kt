@@ -179,8 +179,7 @@ class OpImageResourceImpl @Autowired constructor(
     override fun getVisibleDept(userId: String, imageCode: String): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(
             storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE,
-            deptStatus = null
+            storeType = StoreTypeEnum.IMAGE
         )
     }
 

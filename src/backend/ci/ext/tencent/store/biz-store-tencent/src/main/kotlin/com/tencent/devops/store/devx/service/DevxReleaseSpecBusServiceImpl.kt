@@ -65,6 +65,7 @@ import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
@@ -145,17 +146,25 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     @Value("\${git.devx.nameSpaceId:}")
     private val devxNameSpaceId: String = ""
 
+    @Value("\${git.devopsPrivateToken:}")
+    private val devopsPrivateToken: String = ""
+
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeCode = storeBaseCreateRequest.storeCode
         val baseFeatureInfo = storeBaseCreateRequest.baseFeatureInfo
         val extBaseFeatureInfo = baseFeatureInfo?.extBaseFeatureInfo
         val frameworkCode = extBaseFeatureInfo?.get(KEY_FRAMEWORK_CODE)?.toString()
+        val bkStoreContext = storeCreateRequest.bkStoreContext
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(AUTH_HEADER_USER_ID)
+        )
         if (!frameworkCode.isNullOrBlank() && frameworkCode != FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
             // 如果用户选择的开发模板不是自定义开发框架则平台自动给应用创建带脚手架的代码库
-            val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                userId = storeInnerPipelineConfig.innerPipelineUser,
-                projectCode = storeInnerPipelineConfig.innerPipelineProject,
+            val createGitRepositoryResult = client.getScm(ServiceGitResource::class).createGitCodeRepository(
+                userId = userId,
+                token = devopsPrivateToken,
                 repositoryName = storeCode,
                 sampleProjectPath = storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
@@ -164,7 +173,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 )?.sampleProjectPath,
                 namespaceId = devxNameSpaceId.toInt(),
                 visibilityLevel = VisibilityLevelEnum.LOGIN_PUBLIC,
-                tokenType = TokenTypeEnum.PRIVATE_KEY
+                tokenType = TokenTypeEnum.PRIVATE_KEY,
+                frontendType = null
             )
             if (createGitRepositoryResult.isNotOk()) {
                 throw ErrorCodeException(
@@ -174,15 +184,11 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
             val repositoryInfo = createGitRepositoryResult.data
             repositoryInfo?.let {
-                repositoryInfo.remoteRepoId?.let {
-                    extBaseFeatureInfo[KEY_REPOSITORY_ID] = it
-                }
-                extBaseFeatureInfo[KEY_REPOSITORY_HTTP_URL] = repositoryInfo.url
+                extBaseFeatureInfo[KEY_REPOSITORY_ID] = repositoryInfo.id
+                extBaseFeatureInfo[KEY_REPOSITORY_HTTP_URL] = repositoryInfo.repositoryUrl
             }
         }
         if (baseFeatureInfo?.rdType == RdTypeEnum.SELF_DEVELOPED) {
-            val bkStoreContext = storeCreateRequest.bkStoreContext
-            val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
             extBaseFeatureInfo?.set(KEY_REPOSITORY_AUTHORIZER, userId)
         }
     }

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserMarketTemplateVisibleDeptResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.template.TemplateVisibleDeptReq
@@ -56,6 +57,10 @@ class UserMarketTemplateVisibleDeptResourceImpl @Autowired constructor(
     }
 
     override fun getVisibleDept(templateCode: String): Result<StoreVisibleDeptResp?> {
-        return storeVisibleDeptService.getVisibleDept(templateCode, StoreTypeEnum.TEMPLATE, null)
+        return storeVisibleDeptService.getVisibleDept(
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE,
+            deptStatusInfos = DeptStatusEnum.APPROVED.name
+        )
     }
 }

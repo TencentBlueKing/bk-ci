@@ -59,7 +59,7 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
         val templateDeptInfos = storeVisibleDeptService.getVisibleDept(
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
-            deptStatus = DeptStatusEnum.APPROVED
+            deptStatusInfos = DeptStatusEnum.APPROVED.name
         ).data?.deptInfos
         return templateVisibleDeptService.validateTemplateVisibleDept(
             templateModel = templateModel,

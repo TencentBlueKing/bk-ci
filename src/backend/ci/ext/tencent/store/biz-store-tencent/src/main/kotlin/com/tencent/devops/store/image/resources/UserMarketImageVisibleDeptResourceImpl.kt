@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserMarketImageVisibleDeptResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.image.request.ImageVisibleDeptReq
@@ -62,7 +63,7 @@ class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(
         return storeVisibleDeptService.getVisibleDept(
             storeCode = imageCode,
             storeType = StoreTypeEnum.IMAGE,
-            deptStatus = null
+            deptStatusInfos = DeptStatusEnum.APPROVED.name
         )
     }
 }
