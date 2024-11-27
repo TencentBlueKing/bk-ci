@@ -385,38 +385,33 @@ class ScmService @Autowired constructor(
     override fun addCommitCheck(
         request: CommitCheckRequest
     ) {
-        val startEpoch = System.currentTimeMillis()
-        try {
-            with(request) {
-                val scm = ScmFactory.getScm(
-                    projectName = projectName,
-                    url = url,
-                    type = type,
-                    branchName = null,
-                    privateKey = privateKey,
-                    passPhrase = passPhrase,
-                    token = token,
-                    region = region,
-                    userName = "",
-                    event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-                )
-                scm.addCommitCheck(
-                    commitId = commitId,
-                    state = state,
-                    targetUrl = targetUrl,
-                    context = context,
-                    description = description,
-                    block = block,
-                    targetBranch = targetBranch
-                )
-                if (mrRequestId != null) {
-                    if (reportData.second.isEmpty()) return
-                    val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
-                    scm.addMRComment(mrRequestId!!, comment)
-                }
+        with(request) {
+            val scm = ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = "",
+                event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            )
+            scm.addCommitCheck(
+                commitId = commitId,
+                state = state,
+                targetUrl = targetUrl,
+                context = context,
+                description = description,
+                block = block,
+                targetBranch = targetBranch
+            )
+            if (mrRequestId != null) {
+                if (reportData.second.isEmpty()) return
+                val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
+                scm.addMRComment(mrRequestId!!, comment)
             }
-        } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }
 
