@@ -510,8 +510,6 @@ data class StartBuildContext(
                         key = paramKey,
                         value = paramValue[subKey] ?: ""
                     )
-                    // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
-                    originStartContexts[paramKey] = subParam
                     // 填充下级参数的[variables.]
                     fillContextPrefix(subParam, originStartContexts)
                 }
