@@ -25,46 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.cron
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+enum class MemberType(val type: String) {
+    USER("user"),
 
-/**
- * deng
- * 2019-06-11
- * 周期性清理第三方构建机任务的状态
- */
-@Component@Suppress("ALL")
-class ThirdPartyAgentCleanupJob @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
-) {
+    DEPARTMENT("department"),
 
-    // every 30 minutes
-    @Scheduled(initialDelay = 10 * 60 * 1000, fixedDelay = 30 * 60 * 1000)
-    fun cleanup() {
-        logger.info("Start to clean up the third party agent")
-        try {
-            val expiredBuilds = thirdPartyAgentBuildDao.getExpireBuilds(dslContext)
-            if (expiredBuilds.isEmpty()) {
-                logger.info("Expire build is empty")
-                return
-            }
-            val ids = expiredBuilds.map { it.id }.toSet()
-            logger.info("Get the expire builds - [$expiredBuilds] - [$ids]")
-            val count = thirdPartyAgentBuildDao.updateExpireBuilds(dslContext, ids)
-            logger.info("Update $count expired agent builds")
-        } catch (t: Throwable) {
-            logger.warn("Fail to clean up the third party agent")
-        }
-    }
+    TEMPLATE("template");
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentCleanupJob::class.java)
+        fun get(type: String): MemberType {
+            MemberType.values().forEach {
+                if (type == it.type) return it
+            }
+            throw IllegalArgumentException("No enum for constant $type")
+        }
     }
 }

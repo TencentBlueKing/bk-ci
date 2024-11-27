@@ -120,6 +120,8 @@
             getResponseData (response, dataPath = 'data.records', defaultVal = []) {
                 try {
                     switch (true) {
+                        case Array.isArray(response):
+                            return response
                         case response.data && response.data.resources && Array.isArray(response.data.resources):
                             return response.data.resources
                         case response.data && response.data.record && Array.isArray(response.data.record):

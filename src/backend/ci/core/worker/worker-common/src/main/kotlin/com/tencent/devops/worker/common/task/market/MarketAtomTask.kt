@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.exception.VariableNotFoundException
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -272,7 +271,7 @@ open class MarketAtomTask : ITask() {
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to getJavaFile().absolutePath
+                JAVA_PATH_ENV to AgentEnv.getRuntimeJdkPath()
             )
         ).toMutableMap()
 
@@ -528,15 +527,6 @@ open class MarketAtomTask : ITask() {
                     ).parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }
             }
-        } catch (exception: VariableNotFoundException) {
-            val errMessage = "Variable ${exception.variableKey} not found"
-            LoggerService.addErrorLine(errMessage)
-            throw TaskExecuteException(
-                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: $errMessage",
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_INPUT_INVAILD
-            )
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
             LoggerService.addErrorLine("plugin input illegal! ${e.message}")
@@ -1090,8 +1080,6 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteExceptionDecorator.decorate(t)
         }
     }
-
-    private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
     private fun getContainerVariables(
         buildTask: BuildTask,

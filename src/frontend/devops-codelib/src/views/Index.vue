@@ -319,13 +319,34 @@
                 this.refreshCodelibList(this.projectId, 1)
             },
 
+            extractMajorMinorVersion (version) {
+                let curVersion = version
+                if (curVersion.startsWith('v')) {
+                    curVersion = curVersion.substring(1)
+                }
+                
+                const match = curVersion.match(/^(\d+)\./)
+                
+                if (match) {
+                    return `/${match[1]}.0`
+                }
+                
+                return ''
+            },
+
+            getDocUrl (url) {
+                const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
+                const lang = (languageCodeMatch && languageCodeMatch[0].toUpperCase()) || ''
+                const version = this.extractMajorMinorVersion(window.BK_CI_VERSION)
+                return `/markdown/${lang}/Devops${version}${url}`
+            },
             async createCodelib (typeLabel, isEdit) {
                 const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
                 if (codelibType?.status === 'DEPLOYING') {
                     this.showUndeployDialog({
                         title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
                         desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
-                        link: `${DOCS_URL_PREFIX}${codelibType.docUrl}`
+                        link: `${DOCS_URL_PREFIX}${this.getDocUrl(codelibType.docUrl)}`
                     })
                     return
                 }
