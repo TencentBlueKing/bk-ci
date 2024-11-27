@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
@@ -42,6 +43,7 @@ class DefaultFileHandleService : AbstractFileHandleService {
     /**
      * 处理bk-config.yml文件
      */
+    @Suppress("UNCHECKED_CAST")
     override fun handleFile(
         repositoryName: String,
         fileName: String,
@@ -54,9 +56,12 @@ class DefaultFileHandleService : AbstractFileHandleService {
             val dataMap = YamlUtil.to(fileContent, object : TypeReference<MutableMap<String, Any>>() {})
             val originStoreCode = dataMap[KEY_STORE_CODE].toString()
             dataMap[KEY_STORE_CODE] = repositoryName
-            val packagePath = dataMap[KEY_PACKAGE_PATH]?.toString()
-            if (!packagePath.isNullOrBlank()) {
-                dataMap[KEY_PACKAGE_PATH] = packagePath.replace(originStoreCode, repositoryName)
+            val osInfoList = dataMap[KEY_OS] as? List<MutableMap<String, Any>>
+            osInfoList?.forEach { osInfoMap ->
+                val packagePath = osInfoMap[KEY_PACKAGE_PATH]?.toString()
+                if (!packagePath.isNullOrBlank()) {
+                    osInfoMap[KEY_PACKAGE_PATH] = packagePath.replace(originStoreCode, repositoryName)
+                }
             }
             val deleteFlag = bkConfigFile.delete()
             if (deleteFlag) {
