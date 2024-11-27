@@ -137,10 +137,10 @@ class WorkspaceDao {
         limit: SQLLimit,
         userId: String? = null,
         workspaceName: Set<String>? = null,
-        status: Set<WorkspaceStatus>? = null
+        notStatus: Set<WorkspaceStatus>? = null
     ): List<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceName, status)
+            val condition = mixCondition(userId, workspaceName, notStatus)
             val query = dslContext.selectFrom(this)
 
             if (condition.isNotEmpty()) {
@@ -383,7 +383,7 @@ class WorkspaceDao {
     private fun mixCondition(
         userId: String? = null,
         workspaceName: Set<String>? = null,
-        status: Set<WorkspaceStatus>? = null,
+        notStatus: Set<WorkspaceStatus>? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
@@ -397,8 +397,8 @@ class WorkspaceDao {
             if (workspaceName != null) {
                 condition.add(NAME.`in`(workspaceName))
             }
-            if (status != null) {
-                condition.add(STATUS.`in`(status.map { it.ordinal }))
+            if (notStatus != null) {
+                condition.add(STATUS.notIn(notStatus.map { it.ordinal }))
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))

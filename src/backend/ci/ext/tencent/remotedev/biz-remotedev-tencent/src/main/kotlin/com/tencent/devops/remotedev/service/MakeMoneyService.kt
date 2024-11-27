@@ -102,7 +102,9 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(5).setCellValue(f.elementAtOrNull(i) ?: "")
             row.createCell(6).setCellValue(use.elementAtOrNull(i) ?: "")
         }
-
+        for (i in 0 until 7) {
+            sheet.autoSizeColumn(i)
+        }
         return Response.ok(
             StreamingOutput { output ->
                 workbook.write(output)
@@ -121,7 +123,7 @@ class MakeMoneyService @Autowired constructor(
             val res = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = sqlLimit,
-                status = setOf(WorkspaceStatus.PREPARING, WorkspaceStatus.DELETED, WorkspaceStatus.DELIVERING_FAILED)
+                notStatus = setOf(WorkspaceStatus.PREPARING, WorkspaceStatus.DELETED, WorkspaceStatus.DELIVERING_FAILED)
             )
             if (res.isEmpty()) break
             aMap.putAll(res.associateBy({ it.name }, {
