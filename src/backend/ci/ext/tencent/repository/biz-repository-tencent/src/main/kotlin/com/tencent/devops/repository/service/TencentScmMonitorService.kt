@@ -51,22 +51,20 @@ import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNAUTHORIZED
 import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNPROCESSABLE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-@Primary
 class TencentScmMonitorService @Autowired constructor(
     private val client: Client,
     private val bkTag: BkTag
-) : ScmMonitorService() {
+) {
     companion object {
         private val executorService = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(TencentScmMonitorService::class.java)
     }
 
-    override fun reportCommitCheck(
+    fun reportCommitCheck(
         requestTime: Long,
         responseTime: Long,
         statusCode: Int,
