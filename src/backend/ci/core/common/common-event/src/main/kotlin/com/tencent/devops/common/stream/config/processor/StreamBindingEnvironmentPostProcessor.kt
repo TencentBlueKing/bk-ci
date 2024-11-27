@@ -124,7 +124,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
             // 声明所有扫描结果的函数式声明
             setProperty("spring.cloud.stream.function.definition", definition.joinToString(";"))
-            setProperty("spring.cloud.function.definition", definition.joinToString("|"))
+            setProperty("spring.cloud.function.definition", definition.joinToString(";"))
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
         }
     }
