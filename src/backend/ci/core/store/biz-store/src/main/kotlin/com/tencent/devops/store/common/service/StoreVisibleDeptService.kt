@@ -46,7 +46,7 @@ interface StoreVisibleDeptService {
     fun getVisibleDept(
         storeCode: String,
         storeType: StoreTypeEnum,
-        deptStatusInfos: String?
+        deptStatusInfos: String? = null
     ): Result<StoreVisibleDeptResp?>
 
     /**

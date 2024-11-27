@@ -39,6 +39,7 @@ import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
@@ -101,6 +102,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeReleaseDao: StoreReleaseDao,
+    private val storeDeptRelDao: StoreDeptRelDao,
     private val storeCommonService: StoreCommonService,
     private val storeNotifyService: StoreNotifyService,
     private val storePipelineService: StorePipelineService,
@@ -366,6 +368,14 @@ class StoreReleaseServiceImpl @Autowired constructor(
                     // 清空旧版本LATEST_FLAG
                     storeBaseManageDao.cleanLatestFlag(context, storeCode, storeType)
                 }
+                storeDeptRelDao.updateDeptStatus(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    originStatus = DeptStatusEnum.APPROVING.status.toByte(),
+                    newStatus = DeptStatusEnum.APPROVED.status.toByte(),
+                    userId = userId
+                )
                 storeBaseManageDao.updateStoreBaseInfo(
                     dslContext = context,
                     updateStoreBaseDataPO = UpdateStoreBaseDataPO(

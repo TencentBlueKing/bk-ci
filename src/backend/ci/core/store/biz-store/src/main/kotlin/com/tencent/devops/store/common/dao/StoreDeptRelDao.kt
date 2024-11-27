@@ -158,4 +158,24 @@ class StoreDeptRelDao {
                 .fetchOne(0, Int::class.java)!!
         }
     }
+
+    fun updateDeptStatus(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        originStatus: Byte,
+        newStatus: Byte,
+        userId: String
+    ) {
+        with(TStoreDeptRel.T_STORE_DEPT_REL) {
+            dslContext.update(this)
+                .set(STATUS, newStatus)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .and(STATUS.eq(originStatus))
+                .execute()
+        }
+    }
 }
