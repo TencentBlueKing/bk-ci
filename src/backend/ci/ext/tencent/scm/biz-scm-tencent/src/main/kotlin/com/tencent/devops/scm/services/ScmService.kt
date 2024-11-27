@@ -56,8 +56,7 @@ import org.springframework.stereotype.Service
 class ScmService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val svnConfig: SVNConfig,
-    private val p4Config: P4Config,
-    private val scmMonitorService: ScmMonitorService
+    private val p4Config: P4Config
 ) {
 
     fun getLatestRevision(
