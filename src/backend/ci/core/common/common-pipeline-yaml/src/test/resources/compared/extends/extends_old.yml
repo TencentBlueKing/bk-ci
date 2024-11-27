@@ -327,6 +327,7 @@ stages:
         - "${{ci.actor}}"
       variables: null
       description: null
+      chat-id: null
     gates:
     - name: "gate-1"
       rule:

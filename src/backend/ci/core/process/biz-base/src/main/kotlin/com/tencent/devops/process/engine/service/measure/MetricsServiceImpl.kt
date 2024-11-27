@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.measure
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.BuildEndContainerMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
@@ -45,7 +46,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -58,7 +58,7 @@ import org.springframework.stereotype.Service
 @RefreshScope
 class MetricsServiceImpl constructor(
     private val pipelineInfoDao: PipelineInfoDao,
-    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val measureEventDispatcher: SampleEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineStageTagDao: PipelineStageTagDao
 ) : MetricsService {
@@ -113,6 +113,7 @@ class MetricsServiceImpl constructor(
             pipelineName = pipelineName ?: "",
             buildId = buildId,
             buildNum = buildInfo.buildNum,
+            trigger = buildInfo.trigger,
             repoUrl = webhookInfo?.webhookRepoUrl,
             branch = webhookInfo?.webhookBranch,
             startUser = buildInfo.startUser,
@@ -227,7 +228,7 @@ class MetricsServiceImpl constructor(
         )
         containerMetricsDatas.add(
             BuildEndContainerMetricsData(
-                containerId = container.containerId ?: "",
+                containerId = container.id ?: "",
                 successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
                 costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
                 atomCodes = containerAtomCodes,

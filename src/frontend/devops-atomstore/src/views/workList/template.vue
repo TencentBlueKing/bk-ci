@@ -2,17 +2,25 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <bk-button theme="primary" @click="relateTemplate"> {{ $t('store.关联模板') }} </bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="relateTemplate"
+                >
+                    {{ $t('store.关联模板') }}
+                </bk-button>
             </div>
-            <bk-input :placeholder="$t('store.请输入关键字搜索')"
+            <bk-input
+                :placeholder="$t('store.请输入关键字搜索')"
                 class="search-input"
                 :clearable="true"
                 :right-icon="'bk-icon icon-search'"
-                v-model="searchName">
+                v-model="searchName"
+            >
             </bk-input>
         </div>
         <main class="g-scroll-pagination-table">
-            <bk-table style="margin-top: 15px;"
+            <bk-table
+                style="margin-top: 15px;"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -22,16 +30,32 @@
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.模板名称')" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('store.模板名称')"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
-                        <span class="atom-name" :title="props.row.templateName" @click="routerAtoms(props.row.templateCode)">{{ props.row.templateName }}</span>
+                        <span
+                            class="atom-name"
+                            :title="props.row.templateName"
+                            @click="routerAtoms(props.row.templateCode)"
+                        >{{ props.row.templateName }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.所属项目')" prop="projectName" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
+                <bk-table-column
+                    :label="$t('store.所属项目')"
+                    prop="projectName"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.状态')"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                            v-if="props.row.templateStatus === 'AUDITING'">
+                        <div
+                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                            v-if="props.row.templateStatus === 'AUDITING'"
+                        >
                             <div class="rotate rotate1"></div>
                             <div class="rotate rotate2"></div>
                             <div class="rotate rotate3"></div>
@@ -41,37 +65,76 @@
                             <div class="rotate rotate7"></div>
                             <div class="rotate rotate8"></div>
                         </div>
-                        <span class="atom-status-icon success" v-if="props.row.templateStatus === 'RELEASED'"></span>
-                        <span class="atom-status-icon fail" v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"></span>
-                        <span class="atom-status-icon obtained" v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"></span>
-                        <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.templateStatus === 'INIT'"></span>
+                        <span
+                            class="atom-status-icon success"
+                            v-if="props.row.templateStatus === 'RELEASED'"
+                        ></span>
+                        <span
+                            class="atom-status-icon fail"
+                            v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"
+                        ></span>
+                        <span
+                            class="atom-status-icon obtained"
+                            v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"
+                        ></span>
+                        <span
+                            class="atom-status-icon devops-icon icon-initialize"
+                            v-if="props.row.templateStatus === 'INIT'"
+                        ></span>
                         <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.修改人')" prop="modifier" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
+                <bk-table-column
+                    :label="$t('store.修改人')"
+                    prop="modifier"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.修改时间')"
+                    prop="updateTime"
+                    width="150"
+                    :formatter="timeFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="300"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <span class="shelf-btn"
+                        <span
+                            class="shelf-btn"
                             v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
                                 || props.row.templateStatus === 'GROUNDING_SUSPENSION' || props.row.templateStatus === 'AUDIT_REJECT'"
-                            @click="editHandle(props.row.templateId)"> {{ $t('store.上架') }} </span>
-                        <span class="shelf-btn"
+                            @click="editHandle(props.row.templateId)"
+                        > {{ $t('store.上架') }} </span>
+                        <span
+                            class="shelf-btn"
                             v-if="props.row.templateStatus === 'RELEASED'"
-                            @click="editHandle(props.row.templateId)"> {{ $t('store.升级') }} </span>
-                        <span class="shelf-btn"
+                            @click="editHandle(props.row.templateId)"
+                        > {{ $t('store.升级') }} </span>
+                        <span
+                            class="shelf-btn"
                             v-if="props.row.templateStatus === 'RELEASED'"
-                            @click="installAHandle(props.row.templateCode)"> {{ $t('store.安装') }} </span>
-                        <span class="schedule-btn"
+                            @click="installAHandle(props.row.templateCode)"
+                        > {{ $t('store.安装') }} </span>
+                        <span
+                            class="schedule-btn"
                             v-if="props.row.templateStatus === 'AUDITING'"
-                            @click="toTemplateProgress(props.row.templateId)"> {{ $t('store.进度') }} </span>
-                        <span class="obtained-btn"
+                            @click="toTemplateProgress(props.row.templateId)"
+                        > {{ $t('store.进度') }} </span>
+                        <span
+                            class="obtained-btn"
                             v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'RELEASED' || (props.row.templateStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
                             @click="offline(props.row)"
                         > {{ $t('store.下架') }} </span>
-                        <span @click="deleteTemplate(props.row)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"> {{ $t('store.移除') }} </span>
+                        <span
+                            @click="deleteTemplate(props.row)"
+                            v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"
+                        > {{ $t('store.移除') }} </span>
                         <span style="margin-right:0">
-                            <a target="_blank"
+                            <a
+                                target="_blank"
                                 style="color:#3c96ff;"
                                 :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
                             > {{ $t('store.源模板') }} </a>
@@ -79,7 +142,10 @@
                     </template>
                 </bk-table-column>
                 <template #empty>
-                    <EmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+                    <EmptyTableStatus
+                        :type="searchName ? 'search-empty' : 'empty'"
+                        @clear="searchName = ''"
+                    />
                 </template>
             </bk-table>
         </main>
@@ -91,17 +157,21 @@
                 :title="templatesideConfig.title"
                 :quick-close="templatesideConfig.quickClose"
                 :width="templatesideConfig.width"
-                :before-close="cancelRelateTemplate">
+                :before-close="cancelRelateTemplate"
+            >
                 <template slot="content">
-                    <form class="bk-form relate-template-form"
+                    <form
+                        class="bk-form relate-template-form"
                         v-bkloading="{
                             isLoading: templatesideConfig.isLoading
-                        }">
+                        }"
+                    >
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.所属项目') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <bk-select v-model="relateTemplateForm.projectCode"
+                                    <bk-select
+                                        v-model="relateTemplateForm.projectCode"
                                         searchable
                                         @change="handleChangeProject"
                                         @toggle="toggleProjectList"
@@ -118,16 +188,30 @@
                                             :name="item.projectName"
                                         >
                                         </bk-option>
-                                        <div slot="extension" style="cursor: pointer;">
-                                            <a :href="itemUrl" target="_blank">
+                                        <div
+                                            slot="extension"
+                                            style="cursor: pointer;"
+                                        >
+                                            <a
+                                                :href="itemUrl"
+                                                target="_blank"
+                                            >
                                                 <i class="devops-icon icon-plus-circle" />
                                                 {{ itemText }}
                                             </a>
                                         </div>
                                     </bk-select>
-                                    <div v-if="templateErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
+                                    <div
+                                        v-if="templateErrors.projectError"
+                                        class="error-tips"
+                                    >
+                                        {{ $t('store.项目不能为空') }}
+                                    </div>
                                 </div>
-                                <bk-popover placement="right" class="bk-icon-tooltips">
+                                <bk-popover
+                                    placement="right"
+                                    class="bk-icon-tooltips"
+                                >
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.源模版所属项目') }} </p>
@@ -143,7 +227,8 @@
                                     searchable
                                     @change="handleChangeForm"
                                 >
-                                    <bk-option v-for="(option, index) in templateList"
+                                    <bk-option
+                                        v-for="(option, index) in templateList"
                                         :key="index"
                                         :id="option.templateId"
                                         :name="option.name"
@@ -152,13 +237,21 @@
                                     >
                                     </bk-option>
                                 </bk-select>
-                                <div v-if="templateErrors.tplError" class="error-tips"> {{ $t('store.模板不能为空') }} </div>
+                                <div
+                                    v-if="templateErrors.tplError"
+                                    class="error-tips"
+                                >
+                                    {{ $t('store.模板不能为空') }}
+                                </div>
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.名称') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('store.请输入发布到市场后的模板名称')"
+                                <input
+                                    type="text"
+                                    class="bk-form-input atom-name-input"
+                                    :placeholder="$t('store.请输入发布到市场后的模板名称')"
                                     name="templateName"
                                     v-model="relateTemplateForm.name"
                                     v-validate="{
@@ -166,13 +259,26 @@
                                         max: 20
                                     }"
                                     @input="handleChangeForm"
-                                    :class="{ 'is-danger': errors.has('templateName') }">
+                                    :class="{ 'is-danger': errors.has('templateName') }"
+                                >
                                 <p :class="errors.has('templateName') ? 'error-tips' : 'normal-tips'">{{ errors.first("templateName") }}</p>
                             </div>
                         </div>
                         <div class="form-footer">
-                            <button class="bk-button bk-primary" type="button" @click="submitRelateTemplate()"> {{ $t('store.提交') }} </button>
-                            <button class="bk-button bk-default" type="button" @click="cancelRelateTemplate()"> {{ $t('store.取消') }} </button>
+                            <button
+                                class="bk-button bk-primary"
+                                type="button"
+                                @click="submitRelateTemplate()"
+                            >
+                                {{ $t('store.提交') }}
+                            </button>
+                            <button
+                                class="bk-button bk-default"
+                                type="button"
+                                @click="cancelRelateTemplate()"
+                            >
+                                {{ $t('store.取消') }}
+                            </button>
                         </div>
                     </form>
                 </template>
@@ -185,12 +291,15 @@
                 :is-show.sync="offlineTempConfig.show"
                 :title="offlineTempConfig.title"
                 :quick-close="offlineTempConfig.quickClose"
-                :width="offlineTempConfig.width">
+                :width="offlineTempConfig.width"
+            >
                 <template slot="content">
-                    <form class="bk-form offline-atom-form"
+                    <form
+                        class="bk-form offline-atom-form"
                         v-bkloading="{
                             isLoading: offlineTempConfig.isLoading
-                        }">
+                        }"
+                    >
                         <div class="bk-form-item">
                             <label class="bk-label"> {{ $t('store.名称') }} </label>
                             <div class="bk-form-content">
@@ -200,15 +309,25 @@
                         <div class="bk-form-item">
                             <label class="bk-label"> {{ $t('store.源模板') }} </label>
                             <div class="bk-form-content">
-                                <a target="_blank"
+                                <a
+                                    target="_blank"
                                     style="color:#3c96ff;display:block;"
                                     :href="`/console/pipeline/${curHandlerTemp.projectCode}/template/${curHandlerTemp.templateCode}/edit`"
                                 > {{ $t('store.查看') }} </a>
                             </div>
                         </div>
-                        <form-tips :tips-content="offlineTips" :prompt-list="tempPromptList"></form-tips>
+                        <form-tips
+                            :tips-content="offlineTips"
+                            :prompt-list="tempPromptList"
+                        ></form-tips>
                         <div class="form-footer">
-                            <button class="bk-button bk-primary" type="button" @click="submitofflineTemp"> {{ $t('store.提交') }} </button>
+                            <button
+                                class="bk-button bk-primary"
+                                type="button"
+                                @click="submitofflineTemp"
+                            >
+                                {{ $t('store.提交') }}
+                            </button>
                         </div>
                     </form>
                 </template>
@@ -524,7 +643,7 @@
                     const res = await this.$store.dispatch('store/requestPipelineTemplate', {
                         projectCode: this.relateTemplateForm.projectCode
                     })
-                    this.templateList.splice(0, this.templateList.length, ...res.models || [])
+                    this.templateList = res.models.filter(i => i.canEdit)
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,

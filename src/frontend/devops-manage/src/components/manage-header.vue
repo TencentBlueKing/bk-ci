@@ -44,7 +44,7 @@ const goToManage = () => {
   border-bottom: 1px solid #DCDEE5;
 }
 .manage-header {
-  height: 60px;
+  height: 59px;
   background: #FFFFFF;
   box-shadow: 0 2px 5px 0 rgba(51,60,72,0.03);
   display: flex;
@@ -54,14 +54,12 @@ const goToManage = () => {
   z-index: 100;
 }
 .manage-breadcrumb {
-  position: absolute;
-  max-width: 40%;
+  padding-left: 20px;
   .bk-breadcrumb-item {
     max-width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    display: inline-block;
   }
 }
 .manage-icon {

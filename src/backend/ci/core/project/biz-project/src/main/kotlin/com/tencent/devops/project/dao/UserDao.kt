@@ -29,7 +29,9 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TUserRecord
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -42,18 +44,23 @@ class UserDao {
         }
     }
 
+    fun list(dslContext: DSLContext, userIds: List<String>): Result<TUserRecord> {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this).where(USER_ID.`in`(userIds)).fetch()
+        }
+    }
+
+    fun getPublicType(dslContext: DSLContext, userId: String): TUserRecord? {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId))
+                .and(USER_TYPE.eq(true))
+                .fetchOne()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
-        userId: String,
-        name: String,
-        bgId: Int,
-        bgName: String,
-        deptId: Int,
-        deptName: String,
-        centerId: Int,
-        centerName: String,
-        groupId: Int,
-        groupName: String,
+        userDeptDetail: UserDeptDetail,
         publicAccount: Boolean? = false
     ) {
         val now = LocalDateTime.now()
@@ -64,6 +71,8 @@ class UserDao {
                 NAME,
                 BG_ID,
                 BG_NAME,
+                BUSINESS_LINE_ID,
+                BUSINESS_LINE_NAME,
                 DEPT_ID,
                 DEPT_NAME,
                 CENTER_ID,
@@ -74,16 +83,18 @@ class UserDao {
                 UPDATE_TIME,
                 USER_TYPE
             ).values(
-                userId,
-                name,
-                bgId,
-                bgName,
-                deptId,
-                deptName,
-                centerId,
-                centerName,
-                groupId,
-                groupName,
+                userDeptDetail.userId,
+                userDeptDetail.name,
+                userDeptDetail.bgId.toInt(),
+                userDeptDetail.bgName,
+                userDeptDetail.businessLineId?.toLong(),
+                userDeptDetail.businessLineName,
+                userDeptDetail.deptId.toInt(),
+                userDeptDetail.deptName,
+                userDeptDetail.centerId.toInt(),
+                userDeptDetail.centerName,
+                userDeptDetail.groupId.toInt(),
+                userDeptDetail.groupName,
                 now,
                 now,
                 publicAccount
@@ -93,31 +104,50 @@ class UserDao {
 
     fun update(
         dslContext: DSLContext,
-        userId: String,
-        name: String,
-        bgId: Int,
-        bgName: String,
-        deptId: Int,
-        deptName: String,
-        centerId: Int,
-        centerName: String,
-        groupId: Int,
-        groupName: String
+        userDeptDetail: UserDeptDetail
     ) {
         with(TUser.T_USER) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .set(BG_ID, bgId)
-                .set(BG_NAME, bgName)
-                .set(DEPT_ID, deptId)
-                .set(DEPT_NAME, deptName)
-                .set(CENTER_ID, centerId)
-                .set(CENTER_NAME, centerName)
-                .set(GROYP_ID, groupId)
-                .set(GROUP_NAME, groupName)
+            val baseStep = dslContext.update(this)
+                .set(NAME, userDeptDetail.name)
+                .set(BG_ID, userDeptDetail.bgId.toInt())
+                .set(BG_NAME, userDeptDetail.bgName)
+                .set(DEPT_ID, userDeptDetail.deptId.toInt())
+                .set(DEPT_NAME, userDeptDetail.deptName)
+                .set(CENTER_ID, userDeptDetail.centerId.toInt())
+                .set(CENTER_NAME, userDeptDetail.centerName)
+                .set(GROYP_ID, userDeptDetail.groupId.toInt())
+                .set(GROUP_NAME, userDeptDetail.groupName)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(USER_ID.eq(userId))
-                .execute()
+            userDeptDetail.businessLineId?.let { baseStep.set(BUSINESS_LINE_ID, it.toLong()) }
+            userDeptDetail.businessLineName?.let { baseStep.set(BUSINESS_LINE_NAME, it) }
+            baseStep.where(USER_ID.eq(userDeptDetail.userId)).execute()
+        }
+    }
+
+    fun convertToUserDeptDetail(userRecord: TUserRecord): UserDeptDetail {
+        return UserDeptDetail(
+            bgName = userRecord.bgName,
+            bgId = userRecord.bgId?.toString() ?: "",
+            centerName = userRecord.centerName,
+            centerId = userRecord.centerId?.toString() ?: "",
+            deptName = userRecord.deptName,
+            deptId = userRecord.deptId?.toString() ?: "",
+            groupName = userRecord.groupName ?: "",
+            groupId = userRecord.groypId?.toString() ?: "",
+            businessLineId = userRecord.businessLineId?.toString(),
+            businessLineName = userRecord.businessLineName
+        )
+    }
+
+    fun usernamesByParentId(dslContext: DSLContext, parentId: Int): List<String> {
+        with(TUser.T_USER) {
+            return dslContext.select(USER_ID)
+                .from(this)
+                .where(BG_ID.eq(parentId))
+                .or(DEPT_ID.eq(parentId))
+                .or(CENTER_ID.eq(parentId))
+                .or(GROYP_ID.eq(parentId))
+                .fetch(0, String::class.java)
         }
     }
 }

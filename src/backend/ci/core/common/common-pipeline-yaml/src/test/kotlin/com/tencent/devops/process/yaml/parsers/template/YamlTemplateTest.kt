@@ -267,9 +267,9 @@ variables:
         } else {
             getStrFromResource(
                 "compared/${
-                file.removePrefix("samples")
-                    .replace("_old.yml", ".yml")
-                    .replace(".yml", "_old.yml")
+                    file.removePrefix("samples")
+                        .replace("_old.yml", ".yml")
+                        .replace(".yml", "_old.yml")
                 }"
             )
         }

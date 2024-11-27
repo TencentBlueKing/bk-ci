@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-} from 'vue';
-import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import {
-  useRoute,
-  useRouter,
-} from 'vue-router';
+handleProjectManageNoPermission,
+RESOURCE_ACTION,
+RESOURCE_TYPE,
+} from '@/utils/permission.js';
 import {
-  Message,
-  InfoBox,
-  Popover
+InfoBox,
+Message,
+Popover
 } from 'bkui-vue';
 import {
-  onMounted
-} from '@vue/runtime-core';
+computed,
+onMounted,
+ref,
+watch
+} from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
+useRoute,
+useRouter,
+} from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -39,6 +39,10 @@ const exceptionObj = ref({
   description: '',
   showBtn: false
 })
+const isRbac = computed(() => {
+  return authProvider.value === 'rbac'
+})
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
 const projectList = window.parent?.vuexStore.state.projectList || [];
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -47,7 +51,13 @@ const fetchProjectData = async () => {
       englishName: projectCode,
     })
     .then((res) => {
-      projectData.value = res;
+      projectData.value =  {
+        ...res,
+        properties: {
+          pipelineDialect: 'CLASSIC',
+          ...res.properties,
+        },
+      };
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
@@ -116,7 +126,10 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
-  
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
@@ -377,7 +390,7 @@ onMounted(async () => {
                     <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
                   </div>
                 </bk-form-item>
-                <bk-form-item :label="t('项目性质')" property="authSecrecy">
+                <bk-form-item v-if="isRbac" :label="t('项目性质')" property="authSecrecy">
                   <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
                   <div class="diff-content" v-if="projectData.afterAuthSecrecy">
                     <p class="update-title">
@@ -387,13 +400,13 @@ onMounted(async () => {
                     <div>{{ projectData.afterAuthSecrecy ? t('保密项目') : t('私有项目') }}</div>
                   </div>
                 </bk-form-item>
-                <bk-form-item :label="t('项目最大可授权人员范围')" property="subjectScopes">
+                <bk-form-item v-if="isRbac" :label="t('项目最大可授权人员范围')" property="subjectScopes">
                   <span class="item-value">
                     <bk-tag
                       v-for="(subjectScope, index) in projectData.subjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
                   </span>
                   <div class="diff-content scopes-diff" v-if="projectData.afterSubjectScopes">
@@ -405,8 +418,22 @@ onMounted(async () => {
                       v-for="(subjectScope, index) in projectData.afterSubjectScopes"
                       :key="index"
                     >
-                      {{ subjectScope.name }}
+                      {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
                     </bk-tag>
+                  </div>
+                </bk-form-item>
+                <bk-form-item property="pipelineDialect" v-if="projectData.properties">
+                  <template #label>
+                    <dialect-popover-table />
+                  </template>
+                  <div>
+                    <span>{{ t(projectData.properties.pipelineDialect) }}</span>
+                    <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                    </div>
                   </div>
                 </bk-form-item>
                 <bk-form-item>

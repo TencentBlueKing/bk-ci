@@ -30,17 +30,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: download frontend
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: frontend
         path: src/frontend/frontend
     - name: download agent
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: agent
-        path: src/agent/bin/
+        path: src/agent/agent/bin/
     - name: download backend
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: backend-jar
         path: src/backend/ci/release
@@ -49,7 +49,7 @@ jobs:
         version="$(basename $GITHUB_REF)"
         echo "version=$version" >> $GITHUB_OUTPUT
         ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: bkci-slim
         path: bkci-slim.tar.gz
@@ -61,17 +61,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: download frontend
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: frontend
           path: src/frontend/frontend
       - name: download agent
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: agent
-          path: src/agent/bin/
+          path: src/agent/agent/bin/
       - name: download bkci
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: backend-docker
           path: src/backend/ci/release
@@ -120,7 +120,7 @@ jobs:
         version="$(basename $GITHUB_REF)"
         helm package . --version $version --app-version $version
         mv bk-ci-$version.tgz bk-ci-charts.tgz
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: bkci-chart
         path: helm-charts/core/ci/bk-ci-charts.tgz
@@ -131,12 +131,12 @@ jobs:
     needs: [package-zip, package-helm]
     steps:
     - name: download bkci-slim
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: bkci-slim
         path: ./
     - name: download bkci-chart
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v4.1.7
       with:
         name: bkci-chart
         path: ./

@@ -28,18 +28,22 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService
 ) : ServiceProjectAuthResource {
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectUsers(
         token: String,
         type: String?,
@@ -54,30 +58,38 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectGroupAndUserList(
         token: String,
         projectCode: String
     ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
-            permissionProjectService.getProjectGroupAndUserList(
-                projectCode = projectCode
-            )
+            permissionProjectService.getProjectGroupAndUserList(projectCode = projectCode)
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getUserProjects(token: String, userId: String): Result<List<String>> {
         return Result(permissionProjectService.getUserProjects(userId))
     }
 
-    override fun getUserProjectsByPermission(token: String, userId: String, action: String): Result<List<String>> {
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getUserProjectsByPermission(
+        token: String,
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): Result<List<String>> {
         return Result(
             permissionProjectService.getUserProjectsByPermission(
                 userId = userId,
-                action = action
+                action = action,
+                resourceType = resourceType
             )
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun isProjectUser(
         token: String,
         type: String?,
@@ -94,12 +106,28 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun checkUserInProjectLevelGroup(
+        token: String,
+        userId: String,
+        projectCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.checkUserInProjectLevelGroup(
+                userId = userId,
+                projectCode = projectCode
+            )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkManager(token: String, userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
             permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
         return Result(result)
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkProjectManager(
         token: String,
         type: String?,
@@ -114,6 +142,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun createProjectUser(
         token: String,
         userId: String,
@@ -129,6 +158,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun batchCreateProjectUser(
         token: String,
         userId: String,
@@ -146,6 +176,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectRoles(
         token: String,
         projectCode: String,
@@ -155,6 +186,18 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.getProjectRoles(
                 projectCode = projectCode,
                 projectId = projectId
+            )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getProjectPermissionInfo(
+        token: String,
+        projectCode: String
+    ): Result<ProjectPermissionInfoVO> {
+        return Result(
+            permissionProjectService.getProjectPermissionInfo(
+                projectCode = projectCode
             )
         )
     }

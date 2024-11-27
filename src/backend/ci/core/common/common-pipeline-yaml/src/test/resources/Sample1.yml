@@ -161,4 +161,3 @@ resources:
     - repository: epc-ieg-bk-common
       name: ieg/epc-ieg-bk-common
       ref: refs/tags/v1.0
-

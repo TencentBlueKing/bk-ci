@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
 import com.tencent.devops.model.project.tables.records.TDataSourceRecord
@@ -51,6 +52,7 @@ class DataSourceDao {
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
                 DS_URL,
+                TAG,
                 CREATOR,
                 MODIFIER
             )
@@ -61,10 +63,14 @@ class DataSourceDao {
                     dataSource.dataSourceName,
                     dataSource.fullFlag,
                     dataSource.dsUrl,
+                    dataSource.dataTag,
                     userId,
                     userId
                 ).onDuplicateKeyUpdate()
                 .set(FULL_FLAG, dataSource.fullFlag)
+                .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -97,10 +103,12 @@ class DataSourceDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
         moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
         fullFlag: Boolean? = false,
         dataTag: String? = null
     ): Result<TDataSourceRecord>? {
@@ -108,6 +116,7 @@ class DataSourceDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(CLUSTER_NAME.eq(clusterName))
             conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TYPE.eq(ruleType.name))
             if (fullFlag != null) {
                 conditions.add(FULL_FLAG.eq(fullFlag))
             }
@@ -116,7 +125,7 @@ class DataSourceDao {
             } else {
                 conditions.add(TAG.isNull)
             }
-            dslContext.selectFrom(this).where(conditions).fetch()
+            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
         }
     }
 
@@ -128,6 +137,7 @@ class DataSourceDao {
                 .set(DATA_SOURCE_NAME, dataSource.dataSourceName)
                 .set(FULL_FLAG, dataSource.fullFlag)
                 .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

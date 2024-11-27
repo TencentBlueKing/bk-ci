@@ -29,32 +29,11 @@ package com.tencent.process;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
+import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.NativeLongByReference;
 import com.tencent.process.ProcessTreeRemoting.IOSProcess;
 import com.tencent.process.ProcessTreeRemoting.IProcessTree;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jvnet.winp.WinProcess;
@@ -62,13 +41,42 @@ import org.jvnet.winp.WinpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedMap;
+
+import static com.sun.jna.Pointer.NULL;
+import static com.tencent.process.jna.GNUCLibrary.LIBC;
+
 @SuppressWarnings("all")
 public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>, IProcessTree, Serializable {
     protected final Map<Integer, BkProcessTree.OSProcess> processes;
     private transient volatile List<ProcessKiller> killers;
     private static final boolean IS_LITTLE_ENDIAN = "little".equals(System.getProperty("sun.cpu.endian"));
-    public static boolean enabled = !Boolean.getBoolean(BkProcessTree.class.getName() + ".disable");
-    private static Logger logger = LoggerFactory.getLogger(BkProcessTree.class);
+    private static final Logger logger = LoggerFactory.getLogger(BkProcessTree.class);
 
     private BkProcessTree() {
         this.processes = new HashMap<>();
@@ -122,17 +130,17 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
             }
 
             String os = Util.fixNull(System.getProperty("os.name"));
-            if (os.equals("Linux")) {
-                return new BkProcessTree.Linux();
+            switch (os) {
+                case "Linux":
+                    return new Linux();
+                case "SunOS":
+                    return new Solaris();
+                case "Mac OS X":
+                    return new Darwin();
+                default:
+                    return new Default();
             }
 
-            if (os.equals("SunOS")) {
-                return new BkProcessTree.Solaris();
-            }
-
-            if (os.equals("Mac OS X")) {
-                return new BkProcessTree.Darwin();
-            }
         } catch (Exception var1) {
             log("Failed to load winp. Reverting to the default", var1);
         }
@@ -157,9 +165,8 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                     proc.destroy();
                 }
 
-                public void kill(boolean forceFlag) throws InterruptedException {
+                public void kill0(boolean forceFlag) throws InterruptedException {
                     proc.destroy();
-                    this.killByKiller();
                 }
 
                 public List<String> getArguments() {
@@ -176,74 +183,56 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         }
     }
 
-    private static class Darwin extends BkProcessTree.Unix {
-        private final int sizeOf_kinfo_proc;
-        private static final int sizeOf_kinfo_proc_32 = 492;
-        private static final int sizeOf_kinfo_proc_64 = 648;
-        private final int kinfo_proc_pid_offset;
-        private static final int kinfo_proc_pid_offset_32 = 24;
-        private static final int kinfo_proc_pid_offset_64 = 40;
-        private final int kinfo_proc_ppid_offset;
-        private static final int kinfo_proc_ppid_offset_32 = 416;
-        private static final int kinfo_proc_ppid_offset_64 = 560;
-        private static final int sizeOfInt;
-        private static final int CTL_KERN = 1;
-        private static final int KERN_PROC = 14;
-        private static final int KERN_PROC_ALL = 0;
-        private static final int ENOMEM = 12;
-        private static int[] MIB_PROC_ALL;
-        private static final int KERN_ARGMAX = 8;
-        private static final int KERN_PROCARGS2 = 49;
-
+    private static class Darwin extends Unix {
         Darwin() {
             String arch = System.getProperty("sun.arch.data.model");
+            // local constants
+            int sizeOf_kinfo_proc;
+            int kinfo_proc_pid_offset;
+            int kinfo_proc_ppid_offset;
             if ("64".equals(arch)) {
-                this.sizeOf_kinfo_proc = 648;
-                this.kinfo_proc_pid_offset = 40;
-                this.kinfo_proc_ppid_offset = 560;
+                sizeOf_kinfo_proc = sizeOf_kinfo_proc_64;
+                kinfo_proc_pid_offset = kinfo_proc_pid_offset_64;
+                kinfo_proc_ppid_offset = kinfo_proc_ppid_offset_64;
             } else {
-                this.sizeOf_kinfo_proc = 492;
-                this.kinfo_proc_pid_offset = 24;
-                this.kinfo_proc_ppid_offset = 416;
+                sizeOf_kinfo_proc = sizeOf_kinfo_proc_32;
+                kinfo_proc_pid_offset = kinfo_proc_pid_offset_32;
+                kinfo_proc_ppid_offset = kinfo_proc_ppid_offset_32;
             }
-
             try {
-                IntByReference defaultSize = new IntByReference(sizeOfInt);
-                IntByReference size = new IntByReference(sizeOfInt);
-                int var5 = 0;
+                NativeLongByReference size = new NativeLongByReference(new NativeLong(0));
+                Memory m;
+                int nRetry = 0;
+                while (true) {
+                    // find out how much memory we need to do this
+                    if (LIBC.sysctl(MIB_PROC_ALL, 3, NULL, size, NULL, new NativeLong(0)) != 0)
+                        throw new IOException("Failed to obtain memory requirement: " + LIBC.strerror(Native.getLastError()));
 
-                do {
-                    if (GNUCLibrary.LIBC.sysctl(MIB_PROC_ALL, 3, Pointer.NULL, size, Pointer.NULL, defaultSize) != 0) {
-                        throw new IOException("Failed to obtain memory requirement: " + GNUCLibrary.LIBC.strerror(Native.getLastError()));
+                    // now try the real call
+                    m = new Memory(size.getValue().longValue());
+                    if (LIBC.sysctl(MIB_PROC_ALL, 3, m, size, NULL, new NativeLong(0)) != 0) {
+                        if (Native.getLastError() == ENOMEM && nRetry++ < 16)
+                            continue; // retry
+                        throw new IOException("Failed to call kern.proc.all: " + LIBC.strerror(Native.getLastError()));
                     }
+                    break;
+                }
 
-                    Memory m = new Memory((long)size.getValue());
-                    if (GNUCLibrary.LIBC.sysctl(MIB_PROC_ALL, 3, m, size, Pointer.NULL, defaultSize) == 0) {
-                        int count = size.getValue() / this.sizeOf_kinfo_proc;
-                        log("Found " + count + " processes");
+                int count = size.getValue().intValue() / sizeOf_kinfo_proc;
+                logger.info("Found {} processes", count);
 
-                        for(int base = 0; base < size.getValue(); base += this.sizeOf_kinfo_proc) {
-                            int pid = m.getInt((long)(base + this.kinfo_proc_pid_offset));
-                            int ppid = m.getInt((long)(base + this.kinfo_proc_ppid_offset));
-                            super.processes.put(pid, new BkProcessTree.Darwin.DarwinProcess(pid, ppid));
-                        }
+                for (int base = 0; base < size.getValue().intValue(); base += sizeOf_kinfo_proc) {
+                    int pid = m.getInt(base + kinfo_proc_pid_offset);
+                    int ppid = m.getInt(base + kinfo_proc_ppid_offset);
 
-                        return;
-                    }
-                } while(Native.getLastError() == 12 && var5++ < 16);
-
-                throw new IOException("Failed to call kern.proc.all: " + GNUCLibrary.LIBC.strerror(Native.getLastError()));
-            } catch (IOException var10) {
-                log("Failed to obtain process list", var10);
+                    super.processes.put(pid, new DarwinProcess(pid, ppid));
+                }
+            } catch (IOException e) {
+                logger.warn("Failed to obtain process list", e);
             }
         }
 
-        static {
-            sizeOfInt = Native.getNativeSize(Integer.TYPE);
-            MIB_PROC_ALL = new int[]{1, 14, 0};
-        }
-
-        private class DarwinProcess extends BkProcessTree.UnixProcess {
+        private class DarwinProcess extends UnixProcess {
             private final int ppid;
             private EnvVars envVars;
             private List<String> arguments;
@@ -253,100 +242,172 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 this.ppid = ppid;
             }
 
-            public BkProcessTree.OSProcess getParent() {
-                return Darwin.this.get(this.ppid);
+            @Override
+            public OSProcess getParent() {
+                return get(ppid);
             }
 
+            @Override
             public synchronized EnvVars getEnvironmentVariables() {
-                if (this.envVars == null) {
-                    this.parse();
-                }
-                return this.envVars;
+                if (envVars != null)
+                    return envVars;
+                parse();
+                return envVars;
             }
 
-            public List<String> getArguments() {
-                if (this.arguments == null) {
-                    this.parse();
-                }
-                return this.arguments;
+            @Override
+            public synchronized List<String> getArguments() {
+                if (arguments != null)
+                    return arguments;
+                parse();
+                return arguments;
             }
 
             private void parse() {
                 try {
-                    this.arguments = new ArrayList<>();
-                    this.envVars = new EnvVars();
-                    IntByReference defaultSize = new IntByReference();
+// allocate them first, so that the parse error wil result in empty data
+                    // and avoid retry.
+                    arguments = new ArrayList<>();
+                    envVars = new EnvVars();
+
                     IntByReference argmaxRef = new IntByReference(0);
-                    IntByReference size = new IntByReference(BkProcessTree.Darwin.sizeOfInt);
-                    if (GNUCLibrary.LIBC.sysctl(new int[]{1, 8}, 2, argmaxRef.getPointer(), size, Pointer.NULL, defaultSize) != 0) {
-                        throw new IOException("Failed to get kernl.argmax: " + GNUCLibrary.LIBC.strerror(Native.getLastError()));
-                    }
+                    NativeLongByReference size = new NativeLongByReference(new NativeLong(sizeOfInt));
+
+                    // for some reason, I was never able to get sysctlbyname work.
+//        if (LIBC.sysctlbyname("kern.argmax", argmaxRef.getPointer(), size, NULL, _)!=0)
+                    if (LIBC.sysctl(new int[]{CTL_KERN, KERN_ARGMAX}, 2, argmaxRef.getPointer(), size, NULL, new NativeLong(0)) != 0)
+                        throw new IOException("Failed to get kern.argmax: " + LIBC.strerror(Native.getLastError()));
 
                     int argmax = argmaxRef.getValue();
 
                     class StringArrayMemory extends Memory {
-                        private long offset = 0L;
+                        private long offset = 0;
+                        private long length;
 
                         StringArrayMemory(long l) {
                             super(l);
+                            length = l;
+                        }
+
+                        void setLength(long l) {
+                            length = Math.min(l, size());
                         }
 
                         int readInt() {
-                            int r = this.getInt(this.offset);
-                            this.offset += (long) BkProcessTree.Darwin.sizeOfInt;
+                            if (offset > length - sizeOfInt)
+                                return 0;
+                            int r = getInt(offset);
+                            offset += sizeOfInt;
                             return r;
                         }
 
                         byte peek() {
-                            return this.getByte(this.offset);
+                            if (offset >= length)
+                                return 0;
+                            return getByte(offset);
                         }
 
-                        String readString() {
+                        String readString() throws UnsupportedEncodingException {
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
                             byte ch;
-                            while((ch = this.getByte((long)(this.offset++))) != 0) {
+                            while (offset < length && (ch = getByte(offset++)) != '\0')
                                 baos.write(ch);
-                            }
-
-                            return baos.toString();
+                            return baos.toString(StandardCharsets.UTF_8.name());
                         }
 
                         void skip0() {
-                            while(this.getByte(this.offset) == 0) {
-                                ++this.offset;
-                            }
-
+                            // skip padding '\0's
+                            while (offset < length && getByte(offset) == '\0')
+                                offset++;
                         }
                     }
 
-                    StringArrayMemory m = new StringArrayMemory((long)argmax);
-                    size.setValue(argmax);
-                    if (GNUCLibrary.LIBC.sysctl(new int[]{1, 49, this.pid}, 3, m, size, Pointer.NULL, defaultSize) != 0) {
-                        throw new IOException("Failed to obtain ken.procargs2: " + GNUCLibrary.LIBC.strerror(Native.getLastError()));
-                    }
+                    StringArrayMemory m = new StringArrayMemory(argmax);
+                    m.clear();
+                    size.setValue(new NativeLong(argmax));
+                    if (LIBC.sysctl(new int[]{CTL_KERN, KERN_PROCARGS2, pid}, 3, m, size, NULL, new NativeLong(0)) != 0)
+                        throw new IOException("Failed to obtain ken.procargs2: " + LIBC.strerror(Native.getLastError()));
+                    m.setLength(size.getValue().longValue());
 
+
+                    /*
+                     * Make a sysctl() call to get the raw argument space of the
+                     * process.  The layout is documented in start.s, which is part
+                     * of the Csu project.  In summary, it looks like:
+                     *
+                     * /---------------\ 0x00000000
+                     * :               :
+                     * :               :
+                     * |---------------|
+                     * | argc          |
+                     * |---------------|
+                     * | arg[0]        |
+                     * |---------------|
+                     * :               :
+                     * :               :
+                     * |---------------|
+                     * | arg[argc - 1] |
+                     * |---------------|
+                     * | 0             |
+                     * |---------------|
+                     * | env[0]        |
+                     * |---------------|
+                     * :               :
+                     * :               :
+                     * |---------------|
+                     * | env[n]        |
+                     * |---------------|
+                     * | 0             |
+                     * |---------------| <-- Beginning of data returned by sysctl() is here.
+                     * | argc          |
+                     * |---------------|
+                     * | exec_path     |
+                     * |:::::::::::::::|
+                     * |               |
+                     * | String area.  |
+                     * |               |
+                     * |---------------| <-- Top of stack.
+                     * :               :
+                     * :               :
+                     * \---------------/ 0xffffffff
+                     */
+
+                    // I find the Darwin source code of the 'ps' command helpful in understanding how it does this:
+                    // see https://opensource.apple.com/source/adv_cmds/adv_cmds-176/ps/print.c
                     int argc = m.readInt();
-                    String args0 = m.readString();
+                    String args0 = m.readString(); // exec path
                     m.skip0();
-
                     try {
-                        for(int i = 0; i < argc; ++i) {
-                            this.arguments.add(m.readString());
+                        for (int i = 0; i < argc; i++) {
+                            arguments.add(m.readString());
                         }
-                    } catch (IndexOutOfBoundsException var9) {
-                        throw new IllegalStateException("Failed to parse arguments: pid=" + this.pid + ", arg0=" + args0 + ", arguments=" + this.arguments + ", nargs=" + argc + ". Please run 'ps e " + this.pid + "' and report this to https://issues.jenkins-ci.org/browse/JENKINS-9634", var9);
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new IllegalStateException("Failed to parse arguments: pid=" + pid + ", arg0=" + args0 + ", arguments=" + arguments + ", nargs=" + argc + ". Please see https://www.jenkins.io/redirect/troubleshooting/darwin-failed-to-parse-arguments", e);
                     }
 
-                    while(m.peek() != 0) {
-                        this.envVars.addLine(m.readString());
-                    }
-                } catch (IOException var10) {
-                    log(var10.getMessage());
+                    // read env vars that follow
+                    while (m.peek() != 0)
+                        envVars.addLine(m.readString());
+                } catch (IOException e) {
+                    // this happens with insufficient permissions, so just ignore the problem.
                 }
-
             }
         }
+
+        private static final int sizeOf_kinfo_proc_32 = 492; // on 32bit Mac OS X.
+        private static final int sizeOf_kinfo_proc_64 = 648; // on 64bit Mac OS X.
+        private static final int kinfo_proc_pid_offset_32 = 24;
+        private static final int kinfo_proc_pid_offset_64 = 40;
+        private static final int kinfo_proc_ppid_offset_32 = 416;
+        private static final int kinfo_proc_ppid_offset_64 = 560;
+        private static final int sizeOfInt = Native.getNativeSize(int.class);
+        private static final int CTL_KERN = 1;
+        private static final int KERN_PROC = 14;
+        private static final int KERN_PROC_ALL = 0;
+        private static final int ENOMEM = 12;
+        private static final int[] MIB_PROC_ALL = {CTL_KERN, KERN_PROC, KERN_PROC_ALL};
+        private static final int KERN_ARGMAX = 8;
+        private static final int KERN_PROCARGS2 = 49;
     }
 
     static class Solaris extends BkProcessTree.ProcfsUnix {
@@ -358,7 +419,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         }
 
         private static long to64(int i) {
-            return (long)i & 4294967295L;
+            return (long) i & 4294967295L;
         }
 
         private static int adjust(int i) {
@@ -402,15 +463,12 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 if (this.arguments == null) {
                     this.arguments = new ArrayList<>(this.argc);
 
-                    try {
-
-                        try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            BkProcessTree.log("Reading " + this.getFile("as"));
-                            for (int n = 0; n < this.argc; ++n) {
-                                as.seek(Solaris.to64(this.argp + n * 4));
-                                int p = Solaris.adjust(as.readInt());
-                                this.arguments.add(this.readLine(as, p, "argv[" + n + "]"));
-                            }
+                    try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
+                        BkProcessTree.log("Reading " + this.getFile("as"));
+                        for (int n = 0; n < this.argc; ++n) {
+                            as.seek(Solaris.to64(this.argp + n * 4));
+                            int p = Solaris.adjust(as.readInt());
+                            this.arguments.add(this.readLine(as, p, "argv[" + n + "]"));
                         }
                     } catch (IOException var8) {
                         log(var8.getMessage());
@@ -425,22 +483,19 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 if (this.envVars == null) {
                     this.envVars = new EnvVars();
 
-                    try {
+                    try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
+                        BkProcessTree.log("Reading " + this.getFile("as"));
+                        int n = 0;
 
-                        try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            BkProcessTree.log("Reading " + this.getFile("as"));
-                            int n = 0;
-
-                            while (true) {
-                                as.seek(Solaris.to64(this.envp + n * 4));
-                                int p = Solaris.adjust(as.readInt());
-                                if (p == 0) {
-                                    break;
-                                }
-
-                                this.envVars.addLine(this.readLine(as, p, "env[" + n + "]"));
-                                ++n;
+                        while (true) {
+                            as.seek(Solaris.to64(this.envp + n * 4));
+                            int p = Solaris.adjust(as.readInt());
+                            if (p == 0) {
+                                break;
                             }
+
+                            this.envVars.addLine(this.readLine(as, p, "env[" + n + "]"));
+                            ++n;
                         }
                     } catch (IOException var8) {
                         log(var8.getMessage());
@@ -456,10 +511,10 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
                 int ch;
-                for(int i = 0; (ch = as.read()) > 0; buf.write(ch)) {
+                for (int i = 0; (ch = as.read()) > 0; buf.write(ch)) {
                     ++i;
                     if (i % 100 == 0) {
-                        BkProcessTree.log(prefix + " is so far " + buf.toString());
+                        BkProcessTree.log(prefix + " is so far " + buf);
                     }
                 }
 
@@ -577,9 +632,9 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
         public static void destroy(int pid, boolean forceFlag) throws IllegalAccessException, InvocationTargetException {
             if (isPreJava8()) {
-                DESTROY_PROCESS.invoke((Object)null, pid);
+                DESTROY_PROCESS.invoke((Object) null, pid);
             } else {
-                DESTROY_PROCESS.invoke((Object)null, pid, forceFlag);
+                DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
             }
 
         }
@@ -619,7 +674,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
             return new File(new File("/proc/" + this.getPid()), relativePath);
         }
 
-        public void kill(boolean forceFlag) throws InterruptedException {
+        public void kill0(boolean forceFlag) throws InterruptedException {
             try {
                 int pid = this.getPid();
                 BkProcessTree.log("Killing pid=" + pid);
@@ -630,13 +685,11 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 throw x;
             } catch (InvocationTargetException var4) {
                 if (var4.getTargetException() instanceof Error) {
-                    throw (Error)var4.getTargetException();
+                    throw (Error) var4.getTargetException();
                 }
 
                 BkProcessTree.log("Failed to terminate pid=" + this.getPid(), var4);
             }
-
-            this.killByKiller();
         }
 
         public void killRecursively(boolean forceFlag) throws InterruptedException {
@@ -654,11 +707,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
     abstract static class ProcfsUnix extends BkProcessTree.Unix {
         ProcfsUnix() {
-            File[] processes = (new File("/proc")).listFiles(new FileFilter() {
-                public boolean accept(File f) {
-                    return f.isDirectory();
-                }
-            });
+            File[] processes = (new File("/proc")).listFiles(File::isDirectory);
             if (processes == null) {
                 log("No /proc");
             } else {
@@ -725,13 +774,11 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                         public void killRecursively(boolean forceFlag) throws InterruptedException {
                             BkProcessTree.log("Killing recursively " + this.getPid());
                             p.killRecursively();
-                            this.killByKiller();
                         }
 
-                        public void kill(boolean forceFlag) throws InterruptedException {
+                        public void kill0(boolean forceFlag) throws InterruptedException {
                             BkProcessTree.log("Killing " + this.getPid());
                             p.kill();
-                            this.killByKiller();
                         }
 
                         public synchronized List<String> getArguments() {
@@ -768,7 +815,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         public void killAll(Map<String, String> modelEnvVars, boolean forceFlag) throws InterruptedException {
             Iterator<BkProcessTree.OSProcess> var2 = this.iterator();
 
-            while(true) {
+            while (true) {
                 BkProcessTree.OSProcess p;
                 do {
                     if (!var2.hasNext()) {
@@ -776,7 +823,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                     }
 
                     p = var2.next();
-                } while(p.getPid() < 10);
+                } while (p.getPid() < 10);
 
                 log("Considering to kill " + p.getPid());
 
@@ -815,6 +862,8 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     }
 
     public abstract class OSProcess implements IOSProcess, Serializable {
+        private final Set<Integer> keepAlivePids = new HashSet<>(64);
+
         final int pid;
 
         private OSProcess(int pid) {
@@ -825,39 +874,37 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
             return this.pid;
         }
 
-        public abstract BkProcessTree.OSProcess getParent();
-
-        final BkProcessTree getTree() {
-            return BkProcessTree.this;
+        public final void addKeepAlivePids(Collection<Integer> pids) {
+            keepAlivePids.addAll(pids);
         }
+
+        public abstract BkProcessTree.OSProcess getParent();
 
         public final List<BkProcessTree.OSProcess> getChildren() {
             List<BkProcessTree.OSProcess> r = new ArrayList<>();
 
             for (OSProcess p : BkProcessTree.this) {
                 if (p.getParent() == this) {
-                    r.add(p);
+                    if (keepAlivePids.contains(p.pid)) {
+                        this.keepAlivePids.add(this.pid);
+                    } else {
+                        p.addKeepAlivePids(keepAlivePids);
+                        r.add(p);
+                    }
                 }
             }
 
             return r;
         }
 
-        public abstract void kill(boolean forceFlag) throws InterruptedException;
-
-        void killByKiller() throws InterruptedException {
-
-            for (ProcessKiller killer : BkProcessTree.this.getKillers()) {
-                try {
-                    if (killer.kill(this)) {
-                        break;
-                    }
-                } catch (IOException var4) {
-                    BkProcessTree.log("Failed to kill pid=" + this.getPid(), var4);
-                }
+        public void kill(boolean forceFlag) throws InterruptedException {
+            BkProcessTree.log("pid=" + pid + ", iskeepAlive=" + keepAlivePids.contains(pid));
+            if (!keepAlivePids.contains(pid)) {
+                kill0(forceFlag);
             }
-
         }
+
+        public abstract void kill0(boolean forceFlag) throws InterruptedException;
 
         public abstract void killRecursively(boolean forceFlag) throws InterruptedException;
 

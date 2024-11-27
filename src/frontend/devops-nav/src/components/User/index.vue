@@ -1,10 +1,13 @@
 <template>
-
     <bk-popover
         theme="light navigation-message"
         placement="bottom"
+        trigger="click"
         :arrow="false"
-        ref="popoverRef">
+        ref="popoverRef"
+        :on-hide="handleHide"
+        :on-show="handleShow"
+    >
         <div
             class="user-entry"
         >
@@ -37,7 +40,7 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component, Prop, Watch } from 'vue-property-decorator'
+    import { Component, Prop } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
 
@@ -59,27 +62,21 @@
         @Prop()
         bkpaasUserId: string
 
-        show: boolean = false
-
         @Action togglePopupShow
 
-        toggleUserInfo (show: boolean): void {
-            this.show = !this.show
-        }
-
         hideUserInfo (item): void {
-            this.show = false
             if (item) {
                 if (item.to === this.$route.fullPath) return
                 this.$router.push(item.to)
             }
         }
 
-        @Watch('show')
-        handleShow (show, oldVal) {
-            if (show !== oldVal) {
-                this.togglePopupShow(show)
-            }
+        handleShow () {
+            this.togglePopupShow(true)
+        }
+
+        handleHide () {
+            this.togglePopupShow(false)
         }
 
         get menu (): object[] {
@@ -106,10 +103,10 @@
 
         logout (): void {
             try {
-                const url = new URL(window.getLoginUrl())
-                url.searchParams.append('is_from_logout', '1')
-                console.log(url.href)
-                window.location.href = url.href
+                const loginUrl = new URL(window.getLoginUrl())
+                loginUrl.searchParams.append('is_from_logout', '1')
+                console.log(loginUrl.href)
+                window.location.href = loginUrl.href
             } catch (error) {
                 console.error(error)
             }

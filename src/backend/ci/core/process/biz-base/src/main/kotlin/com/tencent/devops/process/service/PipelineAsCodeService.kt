@@ -27,54 +27,108 @@
 
 package com.tencent.devops.process.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
+import com.tencent.devops.process.dao.PipelineSettingDao
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineAsCodeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineSettingDao: PipelineSettingDao
+    private val pipelineSettingDao: PipelineSettingDao,
+    private val projectCacheService: ProjectCacheService
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineAsCodeService::class.java)
-
-        private const val ENABLE_PIPELINE_AS_CODE_CACHE_MAX_SIZE = 100000L
-        private const val ENABLE_PIPELINE_AS_CODE_EXPIRE_MINUTES = 15L
-        private const val CACHE_KEY_DELIMITER = ":as:code:pipeline:"
-        private fun getPipelineCacheKey(projectId: String, buildId: String) = "$projectId$CACHE_KEY_DELIMITER$buildId"
-        private fun getPipelineIdByCacheKey(cacheKey: String): Pair<String, String> {
-            val split = cacheKey.split(CACHE_KEY_DELIMITER)
-            return Pair(split.first(), split.last())
-        }
-    }
-
-    private val asCodeEnabledCache = Caffeine.newBuilder()
-        .maximumSize(ENABLE_PIPELINE_AS_CODE_CACHE_MAX_SIZE)
-        .expireAfterAccess(ENABLE_PIPELINE_AS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String/*projectAndPipelineId*/, Boolean/*enabled*/> { pipelineKey ->
-            val (projectId, pipelineId) = getPipelineIdByCacheKey(pipelineKey)
-            val result = getPipelineAsCodeSettings(projectId, pipelineId)?.enable == true
-            logger.info("[$projectId][$pipelineId]|setEnabledCache|$pipelineKey=$result")
-            result
-        }
 
     fun asCodeEnabled(
         projectId: String,
         pipelineId: String
-    ) = asCodeEnabledCache.get(getPipelineCacheKey(projectId, pipelineId))
+    ): Boolean? {
+        return getPipelineAsCodeSettings(projectId, pipelineId)?.enable
+    }
 
     fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? {
-        return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            ?.pipelineAsCodeSettings?.let { self ->
-                JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+        val settings = pipelineSettingDao.getPipelineAsCodeSettings(
+            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        )
+        return getPipelineAsCodeSettings(projectId = projectId, asCodeSettings = settings)
+    }
+
+    /**
+     * 前端或者构建机请求时,构造PipelineAsCodeSettings,保证dialect一定有值
+     *
+     * 1. 如果asCodeSettings为空,则使用项目方言
+     * 2. 如果继承项目方言,则查询项目方言
+     */
+    fun getPipelineAsCodeSettings(
+        projectId: String,
+        asCodeSettings: PipelineAsCodeSettings?
+    ): PipelineAsCodeSettings? {
+        return when {
+            asCodeSettings == null -> {
+                val projectDialect =
+                    projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+                PipelineAsCodeSettings(inheritedDialect = true, projectDialect = projectDialect)
             }
+            asCodeSettings.inheritedDialect != false -> {
+                val projectDialect =
+                    projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+                asCodeSettings.copy(projectDialect = projectDialect)
+            }
+            else ->
+                asCodeSettings
+        }
+    }
+
+    /**
+     * 获取项目级方言
+     */
+    fun getProjectDialect(projectId: String): IPipelineDialect {
+        val projectDialect =
+            projectCacheService.getProjectDialect(projectId) ?: PipelineDialectType.CLASSIC.name
+        return PipelineDialectType.valueOf(projectDialect).dialect
+    }
+
+    fun getPipelineDialect(projectId: String, pipelineId: String): IPipelineDialect {
+        val asCodeSettings = getPipelineAsCodeSettings(projectId = projectId, pipelineId = pipelineId)
+        return getPipelineDialect(projectId = projectId, asCodeSettings = asCodeSettings)
+    }
+
+    /**
+     * 获取流水线方言,根据流水线设置
+     */
+    fun getPipelineDialect(projectId: String, asCodeSettings: PipelineAsCodeSettings?): IPipelineDialect {
+        return PipelineDialectUtil.getPipelineDialect(
+            getPipelineAsCodeSettings(
+                projectId = projectId,
+                asCodeSettings = asCodeSettings
+            )
+        )
+    }
+
+    /**
+     * 获取流水线方言,根据流水线设置或者方言设置
+     */
+    fun getPipelineDialect(
+        projectId: String,
+        asCodeSettings: PipelineAsCodeSettings?,
+        inheritedDialectSetting: Boolean?,
+        pipelineDialectSetting: String?
+    ): IPipelineDialect {
+        val projectDialect = projectCacheService.getProjectDialect(projectId = projectId)
+        return if (asCodeSettings != null) {
+            PipelineDialectUtil.getPipelineDialect(
+                asCodeSettings.copy(projectDialect = projectDialect)
+            )
+        } else {
+            PipelineDialectUtil.getPipelineDialect(
+                inheritedDialect = inheritedDialectSetting,
+                projectDialect = projectDialect,
+                pipelineDialect = pipelineDialectSetting
+            )
+        }
     }
 }

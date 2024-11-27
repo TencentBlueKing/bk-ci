@@ -51,7 +51,7 @@ interface PreScriptBuildYamlI {
     var resources: Resources?
     var notices: List<GitNotices>?
     var finally: Map<String, PreJob>?
-    val concurrency: Concurrency?
+    var concurrency: Concurrency?
 }
 
 /**
@@ -74,5 +74,5 @@ data class PreScriptBuildYaml(
     override var resources: Resources?,
     override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
-    override val concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI

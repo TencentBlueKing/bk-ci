@@ -63,7 +63,11 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
         // 兼容历史存量项目没有分配规则的情况，如果没有规则则主动分配规则
         if (tableName.isNullOrBlank()) {
             // 分配DB分片规则
-            shardingRoutingRule = shardingRoutingRuleAssignService.assignDbShardingRoutingRule(moduleCode, routingName)
+            shardingRoutingRule = shardingRoutingRuleAssignService.assignDbShardingRoutingRule(
+                moduleCode = moduleCode,
+                ruleType = ruleType,
+                routingName = routingName
+            )
         } else {
             val clusterName = CommonUtils.getDbClusterName()
             // 获取数据库表分片规则
@@ -74,9 +78,14 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
             )
             tableShardingConfig?.let {
                 // 查找该分片规则对应的数据源
+                val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+                    ShardingRuleTypeEnum.ARCHIVE_DB
+                } else {
+                    ShardingRuleTypeEnum.DB
+                }
                 val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
                     moduleCode = moduleCode,
-                    ruleType = ShardingRuleTypeEnum.DB,
+                    ruleType = dbRuleType,
                     routingName = routingName
                 )
                 if (dbShardingRoutingRule != null) {
@@ -84,7 +93,8 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
                     shardingRoutingRule = shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
                         tableShardingConfig = tableShardingConfig,
                         dataSourceName = dbShardingRoutingRule.dataSourceName,
-                        routingName = routingName
+                        routingName = routingName,
+                        ruleType = ruleType
                     )
                 }
             }

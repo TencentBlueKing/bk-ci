@@ -2,7 +2,7 @@ server:
   port: 8081
 
 mysql:
-  dataSourceName: root:123456@tcp(localhost:3306)/devops_kubernetes_manager?parseTime=true&loc=Local
+  dataSourceName: root:123456@tcp(localhost:3306)/devops_ci_kubernetes_manager?parseTime=true&loc=Local
   connMaxLifetime: 3
   maxOpenConns: 10
   maxIdleConns: 10
@@ -52,18 +52,18 @@ dispatch:
           path: sleep.sh
     hostPath:
       # 数据盘
-      dataHostDir: /data/landun/workspace
+      dataHostDir: /data/devops/workspace
       # 日志盘
-      logsHostDir: /data/landun/logs
+      logsHostDir: /data/devops/logs
     # 应用数据使用cfs
     cfs:
       path: /data/cfs
   volumeMount:
-    dataPath: /data/landun/workspace
+    dataPath: /data/devops/workspace
     logPath: /data/logs
-    builderConfigMapPath: /data/landun/config
+    builderConfigMapPath: /data/devops/config
     cfs:
-      path: /data/bkdevops/apps
+      path: /data/devops/apps
       readOnly: true
   # 一些具有特定属性的机器，例如独特的网络策略
   specialMachine:
@@ -72,6 +72,28 @@ dispatch:
   privateMachine:
     label: bkci.dispatch.kubenetes/private-builder
 
+buildless:
+  enabled: false
+  image: bkci/ci:latest
+  replicas: 2
+  volume:
+    # 构建机脚本
+    builderConfigMap:
+      name: buildless-builder
+      items:
+        # 初始化脚本
+        - key: initsh.properties
+          path: init.sh
+    hostPath:
+      # 数据盘
+      dataHostDir: /data/devops/workspace
+      # 日志盘
+      logsHostDir: /data/devops/logs
+  volumeMount:
+    dataPath: /data/devops/workspace
+    logPath: /data/devops/logs
+    builderConfigMapPath: /data/devops/config
+  
 buildAndPushImage:
   image: gcr.io/kaniko-project/executor:v1.9.0
   # 拉取kaniko需要的凭据，如果不填视为没有
@@ -86,6 +108,9 @@ apiserver:
     apiToken:
       key: Devops-Token
       value: landun
-    rsaPrivateKey: |
-     # 在这里保存私钥用来解密apitoken
-     # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得
+    # 在这里保存私钥用来解密apitoken
+    # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得  
+    rsaPrivateKey: ""
+
+docker:
+  enable: true

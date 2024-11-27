@@ -27,15 +27,14 @@
 
 package com.tencent.devops.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-规则权限")
+@Schema(title = "质量红线-规则权限")
 data class RulePermission(
-    @ApiModelProperty("是否可编辑", required = true)
+    @get:Schema(title = "是否可编辑", required = true)
     val canEdit: Boolean,
-    @ApiModelProperty("是否可删除", required = true)
+    @get:Schema(title = "是否可删除", required = true)
     val canDelete: Boolean,
-    @ApiModelProperty("是否可停用/启用", required = true)
+    @get:Schema(title = "是否可停用/启用", required = true)
     val canEnable: Boolean
 )

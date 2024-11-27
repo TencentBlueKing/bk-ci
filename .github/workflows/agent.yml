@@ -4,11 +4,13 @@ on:
   push:
     branches: [master]
     paths:
-    - 'src/agent/**'
+    - 'src/agent/agent/**'
+    - 'src/agent/common/**'
   pull_request:
     branches: [master, release-*]
     paths:
-    - 'src/agent/**'
+    - 'src/agent/agent/**'
+    - 'src/agent/common/**'
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -30,11 +32,11 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('src/agent/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('src/agent/agent/go.sum') }}
     - run: make BUILD_OUT_TAG=out clean all
-      working-directory: src/agent/
-    - uses: actions/upload-artifact@v3
+      working-directory: src/agent/agent/
+    - uses: actions/upload-artifact@v4
       if: ${{ inputs.upload == 'true'  }}
       with:
         name: agent
-        path: src/agent/bin/
+        path: src/agent/agent/bin/

@@ -36,16 +36,16 @@ import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
 class ProjectApprovalDao {
-
     fun create(
         dslContext: DSLContext,
         userId: String,
@@ -62,6 +62,8 @@ class ProjectApprovalDao {
                 DESCRIPTION,
                 BG_ID,
                 BG_NAME,
+                BUSINESS_LINE_ID,
+                BUSINESS_LINE_NAME,
                 DEPT_ID,
                 DEPT_NAME,
                 CENTER_ID,
@@ -75,13 +77,18 @@ class ProjectApprovalDao {
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
                 TIPS_STATUS,
-                PROJECT_TYPE
+                PROJECT_TYPE,
+                PRODUCT_ID,
+                PRODUCT_NAME,
+                PROPERTIES
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
+                projectCreateInfo.businessLineId,
+                projectCreateInfo.businessLineName,
                 projectCreateInfo.deptId,
                 projectCreateInfo.deptName,
                 projectCreateInfo.centerId,
@@ -95,7 +102,12 @@ class ProjectApprovalDao {
                 JsonUtil.toJson(subjectScopes, false),
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 tipsStatus,
-                projectCreateInfo.projectType
+                projectCreateInfo.projectType,
+                projectCreateInfo.productId,
+                projectCreateInfo.productName,
+                projectCreateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                }
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -113,6 +125,11 @@ class ProjectApprovalDao {
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
                 .set(PROJECT_TYPE, projectCreateInfo.projectType)
+                .set(PRODUCT_ID, projectCreateInfo.productId)
+                .set(PRODUCT_NAME, projectCreateInfo.productName)
+                .set(PROPERTIES, projectCreateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .execute()
         }
     }
@@ -131,6 +148,8 @@ class ProjectApprovalDao {
                 .set(DESCRIPTION, projectUpdateInfo.description)
                 .set(BG_ID, projectUpdateInfo.bgId)
                 .set(BG_NAME, projectUpdateInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectUpdateInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectUpdateInfo.businessLineName)
                 .set(DEPT_ID, projectUpdateInfo.deptId)
                 .set(DEPT_NAME, projectUpdateInfo.deptName)
                 .set(CENTER_ID, projectUpdateInfo.centerId)
@@ -143,6 +162,11 @@ class ProjectApprovalDao {
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
+                .set(PRODUCT_ID, projectUpdateInfo.productId)
+                .set(PRODUCT_NAME, projectUpdateInfo.productName)
+                .set(PROPERTIES, projectUpdateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -158,6 +182,8 @@ class ProjectApprovalDao {
                 .set(DESCRIPTION, projectApprovalInfo.description)
                 .set(BG_ID, projectApprovalInfo.bgId?.toLong())
                 .set(BG_NAME, projectApprovalInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectApprovalInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectApprovalInfo.businessLineName)
                 .set(DEPT_ID, projectApprovalInfo.deptId?.toLong())
                 .set(DEPT_NAME, projectApprovalInfo.deptName)
                 .set(CENTER_ID, projectApprovalInfo.centerId?.toLong())
@@ -170,6 +196,11 @@ class ProjectApprovalDao {
                 .set(UPDATOR, projectApprovalInfo.updator)
                 .set(TIPS_STATUS, projectApprovalInfo.tipsStatus)
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
+                .set(PRODUCT_ID, projectApprovalInfo.productId)
+                .set(PRODUCT_NAME, projectApprovalInfo.productName)
+                .set(PROPERTIES, projectApprovalInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                })
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -249,6 +280,8 @@ class ProjectApprovalDao {
                 description = description,
                 bgId = bgId?.toString(),
                 bgName = bgName,
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toString(),
                 deptName = deptName,
                 centerId = centerId?.toString(),
@@ -266,7 +299,10 @@ class ProjectApprovalDao {
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
                 approver = approver,
                 tipsStatus = tipsStatus,
-                projectType = projectType
+                projectType = projectType,
+                productId = productId,
+                productName = productName,
+                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
             )
         }
     }

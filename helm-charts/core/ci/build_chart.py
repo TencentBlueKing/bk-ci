@@ -44,11 +44,12 @@ include_dict = {
     'bkCiVersion': '{{ .Chart.AppVersion }}',
     'bkCiDispatchKubernetesNs': '{{ .Release.Namespace }}',
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
-    'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}'
+    'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}',
+    'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}'
 }
 
 # 正则匹配 __BK_XXX__
-replace_pattern = re.compile(r'__BK_[A-Z_]*__')
+replace_pattern = re.compile(r'__BK_[A-Z0-9_]*__')
 
 # 驼峰名称集合 (不包括 include 模板)
 camelize_set = set([])
@@ -150,3 +151,7 @@ with open(output_value_yaml, 'w') as value_file:
             default_value = '80'
         value = str(default_value_dict.get(camelize, default_value))
         value_file.write('  '+camelize+': '+value+'\n')
+
+# 更新依赖
+os.system("chmod +x ./dependencyBuild.sh")
+os.system("/bin/bash -c ./dependencyBuild.sh")

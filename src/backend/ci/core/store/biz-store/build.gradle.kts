@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
+    api(project(":core:common:common-audit"))
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
     api(project(":core:process:api-process"))
@@ -41,4 +42,6 @@ dependencies {
     api("net.coobird:thumbnailator")
     api("org.springframework.boot:spring-boot-starter-aop")
     api(project(":core:metrics:api-metrics"))
+    api(project(":core:misc:api-image"))
+    api(project(":core:notify:api-notify"))
 }

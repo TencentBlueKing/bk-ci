@@ -1,12 +1,11 @@
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库项目app安装结果")
+@Schema(title = "代码库项目app安装结果")
 data class AppInstallationResult(
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val status: Boolean,
-    @ApiModelProperty("url地址")
+    @get:Schema(title = "url地址")
     val url: String = ""
 )

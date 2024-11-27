@@ -10,3 +10,11 @@ devops-gitci/src/conf
 .codecc
 .idea
 .vscode
+*.pem
+dist/
+.pnpm-global/
+
+
+
+.nx/cache
+.nx/workspace-data

@@ -203,6 +203,7 @@ class StreamScheduleAction(
             description = description,
             mrId = null,
             reportData = reportData,
+            targetBranch = null,
             addCommitCheck = api::addCommitCheck
         )
     }

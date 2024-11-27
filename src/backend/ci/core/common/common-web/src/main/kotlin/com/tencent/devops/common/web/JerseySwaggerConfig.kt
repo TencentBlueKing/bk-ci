@@ -27,11 +27,13 @@
 
 package com.tencent.devops.common.web
 
-import io.swagger.jaxrs.config.BeanConfig
-import io.swagger.jaxrs.listing.SwaggerSerializers
+import io.swagger.v3.oas.integration.SwaggerConfiguration
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.servers.Server
+import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import javax.annotation.PostConstruct
 
 class JerseySwaggerConfig : JerseyConfig() {
 
@@ -51,33 +53,35 @@ class JerseySwaggerConfig : JerseyConfig() {
     private val swaggerAppendName: String? = null
 
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
+
     @PostConstruct
     fun init() {
         logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName]configSwagger")
-        configSwagger()
-        register(SwaggerSerializers::class.java)
-        register(SwaggerResource::class.java)
+        val swaggerResource = SwaggerResource()
+        swaggerResource.openApiConfiguration(configSwagger())
+        register(swaggerResource)
     }
 
-    private fun configSwagger() {
-        if (packageName != null && packageName.isNotBlank()) {
-            if (swaggerAppendName == "true") {
-                BeanConfig().apply {
-                    title = applicationDesc
-                    version = applicationVersion
-                    resourcePackage = packageName
-                    scan = true
-                    basePath = "/$service/api"
+    private fun configSwagger(): SwaggerConfiguration? {
+        if (!packageName.isNullOrBlank()) {
+            return if (swaggerAppendName == "true") {
+                SwaggerConfiguration().apply {
+                    openAPI = OpenAPI()
+                        .info(Info().title(applicationDesc).version(applicationVersion))
+                        .addServersItem(Server().url("/$service"))
+                    resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             } else {
-                BeanConfig().apply {
-                    title = applicationDesc
-                    version = applicationVersion
-                    resourcePackage = packageName
-                    scan = true
-                    basePath = "/api"
+                SwaggerConfiguration().apply {
+                    openAPI = OpenAPI()
+                        .info(Info().title(applicationDesc).version(applicationVersion))
+                        .addServersItem(Server().url("/"))
+                    resourcePackages = setOf(packageName)
+                    scannerClass = "com.tencent.devops.common.web.swagger.BkJaxrsAnnotationScanner"
                 }
             }
         }
+        return null
     }
 }

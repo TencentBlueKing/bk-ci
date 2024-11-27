@@ -31,12 +31,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,37 +47,52 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STORE_STATISTIC"], description = "研发商店-统计")
+@Tag(name = "SERVICE_STORE_STATISTIC", description = "研发商店-统计")
 @Path("/service/store/statistic")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStoreStatisticResource {
 
-    @ApiOperation("获取store组件统计信息")
+    @Operation(summary = "获取store组件统计信息")
     @Path("/types/{storeType}/codes/{storeCode}")
     @GET
     fun getStatisticByCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreStatistic>
 
-    @ApiOperation("更新使用store组件的流水线数量")
+    @Operation(summary = "更新使用store组件的流水线数量")
     @PUT
     @Path("/types/{storeType}/pipeline/num/update")
     fun updatePipelineNum(
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam(value = "使用store组件流水线数量更新实体对象列表", required = true)
+        @Parameter(description = "使用store组件流水线数量更新实体对象列表", required = true)
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>
+    ): Result<Boolean>
+
+    @Operation(summary = "更新store组件的每日统计信息")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/daily/info/update")
+    fun updateDailyStatisticInfo(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "store组件的每日统计信息", required = true)
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
     ): Result<Boolean>
 }

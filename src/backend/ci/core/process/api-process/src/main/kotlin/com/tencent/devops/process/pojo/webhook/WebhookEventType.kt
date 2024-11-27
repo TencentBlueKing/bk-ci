@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.webhook
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("WEBHOOK-事件类型")
+@Schema(title = "WEBHOOK-事件类型")
 data class WebhookEventType(
-    @ApiModelProperty("eventType", required = true)
+    @get:Schema(title = "eventType", required = true)
     val eventType: String,
-    @ApiModelProperty("eventTypeName", required = true)
+    @get:Schema(title = "eventTypeName", required = true)
     val eventTypeName: String
 )

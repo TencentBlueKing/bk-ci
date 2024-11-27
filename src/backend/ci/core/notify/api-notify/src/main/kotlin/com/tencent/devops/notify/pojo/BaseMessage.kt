@@ -26,21 +26,24 @@
  */
 package com.tencent.devops.notify.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.pojo.IEvent
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("基础消息类型")
-open class BaseMessage {
+@Schema(title = "基础消息类型")
+open class BaseMessage(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : IEvent(delayMills, retryTime) {
 
-    @ApiModelProperty("频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
+    @get:Schema(title = "频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
     var frequencyLimit: Int = 0
 
-    @ApiModelProperty("源系统id")
+    @get:Schema(title = "源系统id")
     var fromSysId: String = ""
 
-    @ApiModelProperty("tof系统id")
+    @get:Schema(title = "tof系统id")
     var tofSysId: String = ""
 
-    @ApiModelProperty("v2版本扩展信息", required = false)
+    @get:Schema(title = "v2版本扩展信息", required = false)
     var v2ExtInfo: String = ""
 }

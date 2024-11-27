@@ -27,8 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
@@ -36,6 +39,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
@@ -47,6 +51,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_RE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
@@ -94,6 +99,27 @@ class TGitReviewTriggerHandler(
 
     override fun getMessage(event: GitReviewEvent): String? {
         return ""
+    }
+
+    override fun getEventDesc(event: GitReviewEvent): String {
+        // 评审状态 to 事件人
+        val (state, eventUser) = if (event.reviewer != null) {
+            event.reviewer!!.state to event.reviewer!!.reviewer.name
+        } else {
+            event.state to getUsername(event)
+        }
+        return I18Variable(
+            code = getI18Code(state),
+            params = listOf(
+                "${event.repository.homepage}/reviews/${event.iid}",
+                event.iid,
+                eventUser
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GitReviewEvent): String {
+        return event.projectId.toString()
     }
 
     @SuppressWarnings("ComplexMethod", "ComplexCondition")
@@ -169,15 +195,18 @@ class TGitReviewTriggerHandler(
         // 兼容stream变量
         startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
         startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
+        startParams[PIPELINE_GIT_ACTION] = event.event
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
                 eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
+            startParams[PIPELINE_WEBHOOK_BRANCH] = defaultBranch ?: ""
 
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
             startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
             startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
+            startParams[PIPELINE_GIT_COMMIT_MESSAGE] = commitInfo?.message ?: ""
         }
 
         return startParams
@@ -206,7 +235,11 @@ class TGitReviewTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "crState",
                 triggerOn = event.state,
-                included = WebhookUtils.convert(includeCrState)
+                included = WebhookUtils.convert(includeCrState),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             val crTypeFilter = ContainsFilter(
                 pipelineId = pipelineId,
@@ -216,5 +249,15 @@ class TGitReviewTriggerHandler(
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter, crTypeFilter)
         }
+    }
+
+    private fun getI18Code(state: String) = when (state) {
+        GitReviewEvent.ACTION_APPROVED -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
+        GitReviewEvent.ACTION_APPROVING -> WebhookI18nConstants.TGIT_REVIEW_APPROVING_EVENT_DESC
+        GitReviewEvent.ACTION_CLOSE -> WebhookI18nConstants.TGIT_REVIEW_CLOSED_EVENT_DESC
+        GitReviewEvent.ACTION_CHANGE_DENIED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
+        GitReviewEvent.ACTION_CHANGE_REQUIRED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
+        GitReviewEvent.ACTION_EMPTY -> WebhookI18nConstants.TGIT_REVIEW_CREATED_EVENT_DESC
+        else -> ""
     }
 }

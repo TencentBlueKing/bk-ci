@@ -29,13 +29,14 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
@@ -47,7 +48,9 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         disposition: FormDataContentDisposition,
         projectCode: String?,
         fileChannelType: FileChannelTypeEnum,
-        logo: Boolean?
+        staticFlag: Boolean?,
+        fileType: FileTypeEnum?,
+        filePath: String?
     ): Result<String?> {
         val url = archiveFileService.uploadFile(
             userId = userId,
@@ -55,7 +58,9 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
             disposition = disposition,
             projectId = projectCode,
             fileChannelType = fileChannelType,
-            logo = logo
+            staticFlag = staticFlag,
+            fileType = fileType,
+            filePath = filePath
         )
         return Result(url)
     }

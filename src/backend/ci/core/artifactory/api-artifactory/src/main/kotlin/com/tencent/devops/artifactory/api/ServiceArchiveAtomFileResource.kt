@@ -31,9 +31,9 @@ import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -44,64 +44,64 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ARTIFACTORY"], description = "仓库-插件")
+@Tag(name = "SERVICE_ARTIFACTORY", description = "仓库-插件")
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceArchiveAtomFileResource {
 
-    @ApiOperation("归档插件包资源")
+    @Operation(summary = "归档插件包资源")
     @POST
     @Path("/archiveAtom")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveAtomFile(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String,
-        @ApiParam("插件版本号", required = true)
+        @Parameter(description = "插件版本号", required = true)
         @QueryParam("version")
         version: String,
-        @ApiParam("发布类型", required = true)
+        @Parameter(description = "发布类型", required = true)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @ApiParam("支持的操作系统", required = true)
+        @Parameter(description = "支持的操作系统", required = true)
         @QueryParam("os")
         os: String
     ): Result<ArchiveAtomResponse?>
 
-    @ApiOperation("上传插件资源文件到指定自定义仓库路径")
+    @Operation(summary = "上传插件资源文件到指定自定义仓库路径")
     @POST
     @Path("/file/uploadToPath")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadToPath(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @QueryParam("userId")
         @BkField(required = true)
         userId: String,
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectId")
         @BkField(required = true)
         projectId: String,
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("path")
         @BkField(required = true)
         path: String,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("fileType")
         @BkField(required = true)
         fileType: String,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

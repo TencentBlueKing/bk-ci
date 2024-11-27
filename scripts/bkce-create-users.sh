@@ -30,6 +30,9 @@ echo "注册 蓝鲸 ESB"
 
 echo "导入 IAMv3 权限模板."
 ./bin/bkiam_migrate.sh -t "$BK_IAM_PRIVATE_URL" -a "$BK_CI_APP_CODE" -s "$BK_CI_APP_TOKEN" "$BK_CI_SRC_DIR"/support-files/bkiam/*.json
+echo "导入 IAM RBAC 权限模板."
+./bin/bkiam_migrate.sh -t "$BK_IAM_PRIVATE_URL" -a "$BK_CI_APP_CODE" -s "$BK_CI_APP_TOKEN" "$BK_CI_SRC_DIR"/support-files/bkiam-rbac/*.json
+
 
 echo "配置数据库访问权限."
 # 中控机配置mysql login-path
@@ -51,7 +54,7 @@ for sub_dir in "$BK_CI_SRC_DIR"/support-files/sql/*
 do
    if [[ -d $sub_dir ]]; then
      echo "import sub_dir $sub_dir/*.sql"
-     ./bin/sql_migrate.sh -n mysql-ci "$sub_dir/*.sql"
+     ./bin/sql_migrate.sh -n mysql-ci $sub_dir/*.sql
    fi
 done
 

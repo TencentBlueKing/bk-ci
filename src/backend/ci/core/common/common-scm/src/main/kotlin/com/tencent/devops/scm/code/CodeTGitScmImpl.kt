@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
@@ -110,8 +111,9 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_TOKEN_EMPTY
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_TGIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -126,9 +128,9 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_SECRET_WRONG
-                ),
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(CommonMessageCode.TGIT_SECRET_WRONG),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -151,7 +153,8 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_TOKEN_EMPTY
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_TGIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -165,7 +168,9 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.TGIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
@@ -298,6 +303,16 @@ class CodeTGitScmImpl constructor(
             host = apiUrl,
             token = token,
             url = url
+        )
+    }
+
+    override fun getLoginSession(): LoginSession? {
+        val url = "session"
+        return gitApi.getGitSession(
+            host = apiUrl,
+            url = url,
+            username = privateKey!!,
+            password = passPhrase!!
         )
     }
 

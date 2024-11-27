@@ -28,23 +28,22 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 interface PermissionResourceGroupService {
     /**
      * 资源关联的组列表
      */
     fun listGroup(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String,
-        page: Int,
-        pageSize: Int
+        userId: String,
+        listGroupConditionDTO: ListGroupConditionDTO
     ): Pagination<IamGroupInfoVo>
 
     /**
@@ -57,42 +56,24 @@ interface PermissionResourceGroupService {
         resourceCode: String
     ): List<IamGroupMemberInfoVo>
 
-    /**
-     * 获取组策略
-     */
-    fun getGroupPolicies(
-        userId: String,
+    fun listIamGroupIdsByGroupName(
         projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo>
-
-    /**
-     * 用户续期
-     */
-    fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean
-
-    fun deleteGroupMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
+        groupName: String
+    ): List<Int>
 
     fun deleteGroup(
-        userId: String,
+        userId: String?,
         projectId: String,
         resourceType: String,
         groupId: Int
     ): Boolean
 
-    fun rename(
+    fun createGroup(
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Int
+
+    fun renameGroup(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -100,11 +81,41 @@ interface PermissionResourceGroupService {
         renameGroupDTO: RenameGroupDTO
     ): Boolean
 
-    fun addGroupMember(
-        userId: String,
-        /*user 或 department*/
-        memberType: String,
-        expiredAt: Long,
-        groupId: Int
+    fun createGroupAndPermissionsByGroupCode(
+        projectId: String,
+        resourceType: String = AuthResourceType.PROJECT.value,
+        resourceCode: String,
+        groupCode: String,
+        groupName: String? = null,
+        groupDesc: String? = null
+    ): Int
+
+    fun syncManagerGroup(
+        projectCode: String,
+        managerId: Int,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
     ): Boolean
+
+    fun deleteManagerDefaultGroup(
+        userId: String,
+        managerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    fun modifyManagerDefaultGroup(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    fun createCustomGroupAndPermissions(
+        projectId: String,
+        customGroupCreateReq: CustomGroupCreateReq
+    ): Int
 }

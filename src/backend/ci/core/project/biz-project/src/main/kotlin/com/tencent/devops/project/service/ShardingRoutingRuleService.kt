@@ -60,6 +60,14 @@ interface ShardingRoutingRuleService {
     fun updateShardingRoutingRule(userId: String, id: String, shardingRoutingRule: ShardingRoutingRule): Boolean
 
     /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
+    fun updateShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
+
+    /**
      * 根据ID查找分片路由规则
      * @param id 规则ID
      * @return 分片路由规则信息
@@ -85,22 +93,26 @@ interface ShardingRoutingRuleService {
      * 获取可用数据源名称
      * @param clusterName db集群名称
      * @param moduleCode 模块代码
+     * @param ruleType 规则类型
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
     fun getValidDataSourceName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
         dataSourceNames: List<String>
     ): String
 
     /**
      * 获取可用数据库表名称
+     * @param ruleType 规则类型
      * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
     fun getValidTableName(
+        ruleType: ShardingRuleTypeEnum,
         dataSourceName: String,
         tableShardingConfig: TableShardingConfig
     ): String

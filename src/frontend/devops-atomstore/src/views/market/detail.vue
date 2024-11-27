@@ -1,14 +1,45 @@
 <template>
-    <article class="detail-home" v-bkloading="{ isLoading }">
-        <bread-crumbs :bread-crumbs="navList" :type="type">
-            <router-link :to="{ name: 'atomWork' }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+    <article
+        class="detail-home"
+        v-bkloading="{ isLoading }"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="type"
+        >
+            <router-link
+                :to="{ name: 'atomWork' }"
+                class="g-title-work"
+            >
+                {{ $t('store.工作台') }}
+            </router-link>
         </bread-crumbs>
 
-        <main class="store-main" v-if="!isLoading">
-            <component :is="`${type}Info`" :detail="detail" class="detail-info" :current-tab.sync="currentTab"></component>
-            <bk-tab type="unborder-card" :active.sync="currentTab" class="detail-tabs">
-                <bk-tab-panel :name="tab.name" :label="tab.label" v-for="(tab, index) in tabList[type].filter(x => !x.hidden)" :key="index">
-                    <component :is="tab.componentName" v-bind="tab.bindData"></component>
+        <main
+            class="store-main"
+            v-if="!isLoading"
+        >
+            <component
+                :is="`${type}Info`"
+                :detail="detail"
+                class="detail-info"
+                :current-tab.sync="currentTab"
+            ></component>
+            <bk-tab
+                type="unborder-card"
+                :active.sync="currentTab"
+                class="detail-tabs"
+            >
+                <bk-tab-panel
+                    :name="tab.name"
+                    :label="tab.label"
+                    v-for="(tab, index) in tabList[type].filter(x => !x.hidden)"
+                    :key="index"
+                >
+                    <component
+                        :is="tab.componentName"
+                        v-bind="tab.bindData"
+                    ></component>
                 </bk-tab-panel>
             </bk-tab>
         </main>

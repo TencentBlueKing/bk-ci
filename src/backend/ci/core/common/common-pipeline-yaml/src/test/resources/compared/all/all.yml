@@ -246,6 +246,7 @@ stages:
           - 4
           description: null
       description: "说明下如何审核\n参数var_1如何取值\n"
+      chat-id: null
     gates:
     - name: "gate-1"
       rule:

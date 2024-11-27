@@ -34,9 +34,9 @@ import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_RESOURCE"], description = "用户态-iam资源映射")
+@Tag(name = "AUTH_RESOURCE", description = "用户态-iam资源映射")
 @Path("/user/auth/resource/{projectId}/{resourceType}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -55,158 +55,161 @@ interface UserAuthResourceResource {
 
     @GET
     @Path("{resourceCode}/hasManagerPermission")
-    @ApiOperation("是否有资源管理操作的权限")
+    @Operation(summary = "是否有资源管理操作的权限")
     fun hasManagerPermission(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 
     @GET
     @Path("{resourceCode}/isEnablePermission")
-    @ApiOperation("是否启用权限管理")
+    @Operation(summary = "是否启用权限管理")
     fun isEnablePermission(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 
     @GET
     @Path("{resourceCode}/listGroup")
-    @ApiOperation("获取用户组列表")
+    @Operation(summary = "获取用户组列表")
     @Suppress("LongParameterList")
     fun listGroup(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String,
-        @ApiParam("第几页")
+        @Parameter(description = "获取所有成员标识")
+        @QueryParam("allProjectMembersGroupFlag")
+        allProjectMembersGroupFlag: Boolean?,
+        @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页多少条")
+        @Parameter(description = "每页多少条")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<IamGroupInfoVo>>
 
     @GET
     @Path("{resourceCode}/groupMember")
-    @ApiOperation("获取用户所属组")
+    @Operation(summary = "获取用户所属组")
     fun listUserBelongGroup(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<List<IamGroupMemberInfoVo>>
 
     @PUT
     @Path("{resourceCode}/enable")
-    @ApiOperation("开启权限管理")
+    @Operation(summary = "开启权限管理")
     fun enable(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 
     @PUT
     @Path("{resourceCode}/disable")
-    @ApiOperation("关闭权限管理")
+    @Operation(summary = "关闭权限管理")
     fun disable(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 
     @GET
     @Path("listResources")
-    @ApiOperation("获取资源列表")
+    @Operation(summary = "获取资源列表")
     @SuppressWarnings("LongParameterList")
     fun listResources(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源名称")
+        @Parameter(description = "资源名称")
         @QueryParam("resourceName")
         resourceName: String?,
-        @ApiParam("第几页")
+        @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页多少条")
+        @Parameter(description = "每页多少条")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<AuthResourceInfo>>
 
     @GET
     @Path("{resourceCode}/getResource")
-    @ApiOperation("获取资源实例信息")
+    @Operation(summary = "获取资源实例信息")
     fun getResource(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<AuthResourceInfo>

@@ -30,12 +30,15 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.ContainerStartInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -45,82 +48,105 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线-任务资源")
+@Tag(name = "SERVICE_PIPELINE", description = "服务-流水线-任务资源")
 @Path("/service/pipelineTasks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineTaskResource {
 
-    @ApiOperation("获取流水线所有插件")
+    @Operation(summary = "获取流水线所有插件")
     @POST
     // @Path("/projects/{projectId}/list")
     @Path("/{projectId}/list")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id集合", required = true)
+        @Parameter(description = "流水线id集合", required = true)
         pipelineIds: Collection<String>
     ): Result<Map<String, List<PipelineModelTask>>>
 
-    @ApiOperation("获取使用指定插件的流水线")
+    @Operation(summary = "获取使用指定插件的流水线")
     @GET
     @Path("/atoms/{atomCode}")
     fun listByAtomCode(
-        @ApiParam("插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("项目标识", required = false)
+        @Parameter(description = "项目标识", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<PipelineProjectRel>>
 
-    @ApiOperation("获取使用插件的流水线数量")
+    @Operation(summary = "获取使用插件的流水线数量")
     @POST
     @Path("/listPipelineNumByAtomCodes")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelineNumByAtomCodes(
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null,
-        @ApiParam("插件标识集合", required = true)
+        @Parameter(description = "插件标识集合", required = true)
         atomCodes: List<String>
     ): Result<Map<String, Int>>
 
-    @ApiOperation("获取流水线指定任务的构建状态")
+    @Operation(summary = "获取流水线指定任务的构建状态")
     @GET
     @Path("/projects/{projectId}/builds/{buildId}/tasks/{taskId}")
     fun getTaskStatus(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<BuildStatus?>
 
-    @ApiOperation("获取流水线指定Job的构建状态")
+    @Operation(summary = "获取流水线指定任务的构建详情")
+    @GET
+    @Path("/projects/{projectId}/builds/{buildId}/task_detail")
+    fun getTaskBuildDetail(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "任务ID", required = false)
+        @QueryParam("taskId")
+        taskId: String?,
+        @Parameter(description = "任务ID", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<PipelineBuildTask?>
+
+    @Operation(summary = "获取流水线指定Job的构建状态")
     @GET
     @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}/tasks/{taskId}")
     fun getContainerStartupInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @PathParam("containerId")
         containerId: String,
-        @ApiParam("任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<ContainerStartInfo?>

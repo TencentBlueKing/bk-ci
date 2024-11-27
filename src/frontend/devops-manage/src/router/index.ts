@@ -12,10 +12,16 @@ const ShowProject = () => import(/* webpackChunkName: "ShowProject" */ '../views
 // 用户组管理
 const UserGroup = () => import(/* webpackChunkName: "UserGroup" */ '../views/manage/group/group-entry.vue');
 const ExpandManage = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/expand/expand-manage.vue');
+// 授权管理
+const Permission = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/permission/permission-manage.vue');
 
 const router = createRouter({
   history: createWebHistory('manage'),
   routes: [
+    {
+      path: '/userManage',
+      component: UserGroup,
+    },
     {
       path: '/',
       component: HomeEntry,
@@ -52,6 +58,11 @@ const router = createRouter({
               component: UserGroup,
             },
             {
+              path: 'permission',
+              name: 'permission',
+              component: Permission,
+            },
+            {
               path: 'expand',
               name: 'expand',
               component: ExpandManage,
@@ -66,7 +77,9 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath);
+  if (!location.search.includes('disableSyncUrl=true')) {
+    window.$syncUrl?.(to.fullPath);
+  }
 });
 
 // 导出默认数据

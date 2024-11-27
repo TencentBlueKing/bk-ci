@@ -32,14 +32,16 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
@@ -58,7 +60,8 @@ class ProjectApprovalService @Autowired constructor(
     private val projectApprovalDao: ProjectApprovalDao,
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
+    private val projectDispatcher: SampleEventDispatcher
 ) {
 
     companion object {
@@ -164,12 +167,6 @@ class ProjectApprovalService @Autowired constructor(
                 logoAddress = logoAddr
             )
         }
-        // 兼容旧版权限中心，如果旧版权限中心创建成功,则使用旧版权限中心projectId
-        val authProjectId = projectExtService.createOldAuthProject(
-            userId = applicant,
-            accessToken = null,
-            projectCreateInfo = projectCreateInfo
-        ) ?: projectInfo.projectId
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -185,14 +182,7 @@ class ProjectApprovalService @Autowired constructor(
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            if (authProjectId.isNotEmpty() && projectInfo.projectId != authProjectId) {
-                projectDao.updateAuthProjectId(
-                    dslContext = context,
-                    englishName = projectId,
-                    projectId = authProjectId
-                )
-            }
-            createExtProjectInfo(applicant, authProjectId, projectCreateInfo, projectInfo, projectId)
+            createExtProjectInfo(applicant, projectInfo.projectId, projectCreateInfo, projectInfo, projectId)
         }
     }
 
@@ -268,6 +258,15 @@ class ProjectApprovalService @Autowired constructor(
                     params = arrayOf(projectId),
                     defaultMessage = "project $projectId is not exist"
                 )
+        // 属性只能变更前端展示的,其他的字段由op变更
+        val projectProperties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+        val updateProjectProperties = if (projectApprovalInfo.properties != null) {
+            projectProperties?.copy(
+                pipelineDialect = projectApprovalInfo.properties!!.pipelineDialect
+            )
+        } else {
+            projectProperties
+        }
         val projectUpdateInfo = with(projectApprovalInfo) {
             ProjectUpdateInfo(
                 projectName = projectName,
@@ -275,6 +274,8 @@ class ProjectApprovalService @Autowired constructor(
                 description = description ?: "",
                 bgId = bgId?.toLong() ?: 0L,
                 bgName = bgName ?: "",
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toLong() ?: 0L,
                 deptName = deptName ?: "",
                 centerId = centerId?.toLong() ?: 0L,
@@ -285,7 +286,9 @@ class ProjectApprovalService @Autowired constructor(
                 ccAppId = projectInfo.ccAppId,
                 ccAppName = projectInfo.ccAppName,
                 kind = projectInfo.kind,
-                projectType = projectType ?: 0
+                projectType = projectType ?: 0,
+                productId = projectApprovalInfo.productId,
+                properties = updateProjectProperties
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress
@@ -305,6 +308,11 @@ class ProjectApprovalService @Autowired constructor(
                 projectUpdateInfo = projectUpdateInfo,
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
                 logoAddress = logoAddress
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.APPROVED.status
             )
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
@@ -354,6 +362,11 @@ class ProjectApprovalService @Autowired constructor(
                 englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.UPDATE_REJECT_OR_REVOKE.status
             )
         }
     }

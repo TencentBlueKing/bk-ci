@@ -37,7 +37,8 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.util.FileCopyUtils
@@ -122,6 +123,21 @@ object OkhttpUtils {
         .hostnameVerifier { _, _ -> true }
         .build()
 
+    private fun getOkHttpClientWithCustomTimeout(
+        connectTimeout: Long,
+        readTimeout: Long,
+        writeTimeout: Long
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .followRedirects(false)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
     @Throws(UnsupportedEncodingException::class)
     fun joinParams(params: Map<String, String>): String {
         val paramItem = ArrayList<String>()
@@ -139,6 +155,10 @@ object OkhttpUtils {
         return doHttp(okHttpClient, request)
     }
 
+    fun doShortGet(url: String, headers: Map<String, String> = mapOf()): Response {
+        return doGet(shortOkHttpClient, url, headers)
+    }
+
     fun doLongGet(url: String, headers: Map<String, String> = mapOf()): Response {
         return doGet(longHttpClient, url, headers)
     }
@@ -149,6 +169,17 @@ object OkhttpUtils {
 
     fun doShortHttp(request: Request): Response {
         return doHttp(shortOkHttpClient, request)
+    }
+
+    fun doShortPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
+        val builder = getBuilder(url, headers)
+        val body = jsonParam.toRequestBody(jsonMediaType)
+        val request = builder.post(body).build()
+        return doShortHttp(request)
+    }
+
+    private fun doCustomClientHttp(customOkHttpClient: OkHttpClient, request: Request): Response {
+        return doHttp(customOkHttpClient, request)
     }
 
     fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R): R {
@@ -176,9 +207,26 @@ object OkhttpUtils {
 
     fun doPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
         val builder = getBuilder(url, headers)
-        val body = RequestBody.create(jsonMediaType, jsonParam)
+        val body = jsonParam.toRequestBody(jsonMediaType)
         val request = builder.post(body).build()
         return doHttp(request)
+    }
+
+    fun doCustomTimeoutPost(
+        connectTimeout: Long,
+        readTimeout: Long,
+        writeTimeout: Long,
+        url: String,
+        jsonParam: String,
+        headers: Map<String, String> = mapOf()
+    ): Response {
+        val builder = getBuilder(url, headers)
+        val body = jsonParam.toRequestBody(jsonMediaType)
+        val request = builder.post(body).build()
+        val customTimeoutOkHttpClient = getOkHttpClientWithCustomTimeout(
+            connectTimeout = connectTimeout, readTimeout = readTimeout, writeTimeout = writeTimeout
+        )
+        return doCustomClientHttp(customTimeoutOkHttpClient, request)
     }
 
     private fun getBuilder(url: String, headers: Map<String, String>? = null): Request.Builder {
@@ -203,7 +251,7 @@ object OkhttpUtils {
         fileFieldName: String = "file",
         fileName: String = uploadFile.name
     ): Response {
-        val fileBody = RequestBody.create(octetStream, uploadFile)
+        val fileBody = uploadFile.asRequestBody(octetStream)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart(fileFieldName, fileName, fileBody)
@@ -297,6 +345,8 @@ object OkhttpUtils {
         if (!httpResponse.isSuccessful) {
             logger.error("FAIL|Download file from $url| message=${httpResponse.message}| code=${httpResponse.code}")
             throw RemoteServiceException(httpResponse.message)
+        } else {
+            logger.info("getFileHttpResponse isSuccessful url:$url")
         }
         return httpResponse
     }

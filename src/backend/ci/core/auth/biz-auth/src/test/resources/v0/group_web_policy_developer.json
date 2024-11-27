@@ -1,0 +1,188 @@
+{
+  "type": "group_web_policy",
+  "project_id": "mht",
+  "subject": {
+    "type": "group",
+    "id": 4,
+    "name": "开发人员"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "pipeline_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-73b497705e2c431cb0bdbef523ba2033",
+                "name": "pipeline_1",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "credential_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "credential",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cert_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cert",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "repertory_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "repertory",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "environment_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "environment",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "env_node_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "env_node",
+          "paths": [
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_download"
+        },
+        {
+          "id": "pipeline_view"
+        },
+        {
+          "id": "pipeline_share"
+        },
+        {
+          "id": "pipeline_list"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-73b497705e2c431cb0bdbef523ba20f5",
+                "name": "pipeline_2",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_download"
+        },
+        {
+          "id": "pipeline_view"
+        },
+        {
+          "id": "pipeline_list"
+        },
+        {
+          "id": "pipeline_execute"
+        },
+        {
+          "id": "pipeline_share"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-463a7de1ecb14ce7bfe298a2dee95099",
+                "name": "pipeline_3",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "type": "user",
+      "id": "5656"
+    }
+  ]
+}

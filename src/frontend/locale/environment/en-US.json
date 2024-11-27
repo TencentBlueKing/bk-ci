@@ -105,7 +105,7 @@
     "mirrorTagRule": "Lower-case letters, numbers, underline and dots only",
     "selectModel": "Select model",
     "confirmInfo": "Confirm information",
-    "setting": "Setting",
+    "setting": "Shared Settings",
     "removeShareEnvProjectSuc": "project {0} removed",
     "shareEnvSuc": "Share Env Successful",
     "removeShareProjectConfirm": "{0} will be removed",
@@ -232,7 +232,8 @@
         "set": "Set",
         "remaining": "Remaining",
         "canApplyCount": "Can apply count",
-        "selectNewNode": "Select new Agent"
+        "selectNewNode": "Select new Agent",
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -266,5 +267,10 @@
         "OTHER": "Other",
         "UNKNOWN": "Unknown"
     },
-    "newPool": "New Pool"
+    "newPool": "New Pool",
+    "启用": "Enable",
+    "停用": "Disable",
+    "启用成功": "Enable successful",
+    "停用成功": "Disable successful",
+    "authManage": "Permission Manage"
 }

@@ -27,20 +27,16 @@
 
 package com.tencent.devops.process.engine.init
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.engine.control.BuildMonitorControl
+import com.tencent.devops.process.engine.control.HeartbeatControl
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildHeartbeatListener
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildMonitorListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -49,91 +45,37 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class BuildMonitorConfiguration {
-
-    @Bean
-    fun pipelineMonitorExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Value("\${queueConcurrency.monitor:2}")
-    private val monitorConcurrency: Int? = null
-
     /**
      * 监控队列--- 并发可小
      */
     @Bean
-    fun pipelineBuildMonitorQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_MONITOR)
+    fun pipelineBuildMonitorListener(
+        @Autowired buildMonitorControl: BuildMonitorControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildMonitorListener(
+        buildMonitorControl = buildMonitorControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
-    @Bean
-    fun pipelineBuildMonitorQueueBind(
-        @Autowired pipelineBuildMonitorQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildMonitorQueue)
-            .to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_MONITOR)
-    }
-
-    @Bean
-    fun pipelineBuildMonitorListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildMonitorQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineBuildMonitorListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildMonitorQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 60000,
-            consecutiveActiveTrigger = 10,
-            concurrency = monitorConcurrency!!,
-            maxConcurrency = 10
-        )
-    }
-
-    @Value("\${queueConcurrency.heartBeat:3}")
-    private val heartBeatConcurrency: Int? = null
+    @EventConsumer
+    fun buildMonitorConsumer(
+        @Autowired buildListener: PipelineBuildMonitorListener
+    ) = ScsConsumerBuilder.build<PipelineBuildMonitorEvent> { buildListener.run(it) }
 
     /**
      * 心跳监听队列--- 并发可小
      */
     @Bean
-    fun pipelineBuildHeartBeatQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_HEART_BEAT)
+    fun pipelineBuildHeartbeatListener(
+        @Autowired heartbeatControl: HeartbeatControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildHeartbeatListener(
+        heartbeatControl = heartbeatControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
-    @Bean
-    fun pipelineBuildHeartBeatQueueBind(
-        @Autowired pipelineBuildHeartBeatQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildHeartBeatQueue)
-            .to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_HEART_BEAT)
-    }
-
-    @Bean
-    fun pipelineBuildHeartBeatListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildHeartBeatQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: PipelineBuildHeartbeatListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildHeartBeatQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 120000,
-            consecutiveActiveTrigger = 10,
-            concurrency = heartBeatConcurrency!!,
-            maxConcurrency = 10
-        )
-    }
+    @EventConsumer
+    fun buildHeartBeatConsumer(
+        @Autowired buildListener: PipelineBuildHeartbeatListener
+    ) = ScsConsumerBuilder.build<PipelineContainerAgentHeartBeatEvent> { buildListener.run(it) }
 }

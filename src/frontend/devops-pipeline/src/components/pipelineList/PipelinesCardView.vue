@@ -7,9 +7,18 @@
             scroll-box-class-name="pipeline-card-view-box"
             v-slot="slotProps"
         >
-            <PipelineListEmpty class="pipeline-card-list-empty-tips" v-if="slotProps.list.length === 0"></PipelineListEmpty>
-            <ul v-else class="pipelines-card-view-list">
-                <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
+            <PipelineListEmpty
+                class="pipeline-card-list-empty-tips"
+                v-if="slotProps.list.length === 0"
+            ></PipelineListEmpty>
+            <ul
+                v-else
+                class="pipelines-card-view-list"
+            >
+                <li
+                    v-for="pipeline of slotProps.list"
+                    :key="pipeline.pipelineId"
+                >
                     <pipeline-card
                         :pipeline="pipeline"
                         :remove-handler="removeHandler"
@@ -19,16 +28,15 @@
                     </pipeline-card>
                 </li>
             </ul>
-
         </infinite-scroll>
     </main>
 </template>
 
 <script>
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import PipelineCard from '@/components/pipelineList/PipelineCard'
     import InfiniteScroll from '@/components/InfiniteScroll'
+    import PipelineCard from '@/components/pipelineList/PipelineCard'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import { isShallowEqual } from '@/utils/util'
 
@@ -73,8 +81,10 @@
                     })
                 }
             },
-            filterParams: function () {
-                this.$refs.infiniteScroll?.updateList?.()
+            filterParams: function (filterMap, oldFilterMap) {
+                if (!isShallowEqual(filterMap, oldFilterMap) && Object.keys(filterMap).length > 0) {
+                    this.$refs.infiniteScroll?.updateList?.()
+                }
             }
         },
         methods: {
@@ -91,7 +101,7 @@
                 this.$refs.infiniteScroll?.updateList?.()
             },
             requestList ({ page }) {
-                return this.fetchList(page)
+                this.$refs.infiniteScroll?.updateList?.()
             }
         }
     }

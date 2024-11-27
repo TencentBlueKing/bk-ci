@@ -37,27 +37,36 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.service.view.PipelineViewGroupCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList")
-class RbacPipelinePermissionService constructor(
+class RbacPipelinePermissionService(
     val authPermissionApi: AuthPermissionApi,
     val authProjectApi: AuthProjectApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
-    val pipelineViewGroupService: PipelineViewGroupService,
-    val authResourceApi: AuthResourceApi
+    val pipelineViewGroupCommonService: PipelineViewGroupCommonService,
+    val authResourceApi: AuthResourceApi,
+    val client: Client,
+    val projectCacheService: ProjectCacheService
 ) : PipelinePermissionService {
 
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
+    ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = authResourceType ?: resourceType,
             permission = permission,
             projectCode = projectId
         )
@@ -67,12 +76,13 @@ class RbacPipelinePermissionService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
-        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission")
+        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$authResourceType")
         val startEpoch = System.currentTimeMillis()
         try {
-            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId)
+            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, authResourceType)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
@@ -83,14 +93,15 @@ class RbacPipelinePermissionService constructor(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                    "$userId|$projectId|$pipelineId|$permission"
+                    "$userId|$projectId|$pipelineId|$permission|$authResourceType"
             )
         }
     }
 
     private fun pipeline2AuthResource(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        authResourceType: AuthResourceType?
     ): AuthResourceInstance {
         val parents = mutableListOf<AuthResourceInstance>()
         val projectInstance = AuthResourceInstance(
@@ -98,7 +109,7 @@ class RbacPipelinePermissionService constructor(
             resourceCode = projectId
         )
         parents.add(projectInstance)
-        pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
+        pipelineViewGroupCommonService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
             parents.add(
                 AuthResourceInstance(
                     resourceType = AuthResourceType.PIPELINE_GROUP.value,
@@ -108,7 +119,7 @@ class RbacPipelinePermissionService constructor(
             )
         }
         return AuthResourceInstance(
-            resourceType = resourceType.value,
+            resourceType = authResourceType?.value ?: resourceType.value,
             resourceCode = pipelineId,
             parents = parents
         )
@@ -118,7 +129,7 @@ class RbacPipelinePermissionService constructor(
         projectId: String,
         pipelineIds: List<String>
     ): List<AuthResourceInstance> {
-        val listViewIdsMap = pipelineViewGroupService.listViewIdsMap(
+        val listViewIdsMap = pipelineViewGroupCommonService.listViewIdsMap(
             projectId = projectId,
             pipelineIds = pipelineIds
         )
@@ -191,10 +202,11 @@ class RbacPipelinePermissionService constructor(
                 // 如果有项目下所有该资源权限,返回项目下流水线列表
                 instanceMap[AuthResourceType.PROJECT.value]?.contains(projectId) == true ->
                     getAllAuthPipelineIds(projectId = projectId)
+
                 else -> {
                     // 获取有权限流水线组下的流水线
                     val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
-                        pipelineViewGroupService.listPipelineIdsByViewIds(projectId, authViewIds)
+                        pipelineViewGroupCommonService.listPipelineIdsByViewIds(projectId, authViewIds)
                     } ?: emptyList()
                     // 获取有权限的流水线列表
                     val authPipelineIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
@@ -286,6 +298,11 @@ class RbacPipelinePermissionService constructor(
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
         return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
+    }
+
+    override fun isControlPipelineListPermission(projectId: String): Boolean {
+        val projectInfo = projectCacheService.getProject(projectId) ?: return false
+        return projectInfo.properties?.pipelineListPermissionControl == true
     }
 
     companion object {

@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.service
 
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 
 interface MetricsDataReportService {
 
@@ -38,5 +39,23 @@ interface MetricsDataReportService {
      */
     fun metricsDataReport(
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData
+    ): Boolean
+
+    /**
+     * 上报dispatch Job度量数据
+     * @param dispatchJobMetricsDataList job度量数据
+     * @return 布尔值
+     */
+    fun saveDispatchJobMetrics(
+        dispatchJobMetricsDataList: List<DispatchJobMetricsData>
+    ): Boolean
+
+    /**
+     * 上报Job并发数据
+     * @param dispatchJobMetricsData job并发数据上报传输对象
+     * @return 布尔值
+     */
+    fun metricsJobDispatchDataReport(
+        dispatchJobMetricsData: DispatchJobMetricsData
     ): Boolean
 }

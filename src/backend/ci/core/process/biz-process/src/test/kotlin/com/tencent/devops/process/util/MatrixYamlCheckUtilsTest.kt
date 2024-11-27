@@ -1,5 +1,6 @@
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
@@ -50,10 +51,11 @@ internal class MatrixYamlCheckUtilsTest {
             """,
             strategy = "\${{fromJSONasd(asd)}}"
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test
@@ -77,10 +79,11 @@ internal class MatrixYamlCheckUtilsTest {
                     var2: [1,2,3]
                 """
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test
@@ -104,17 +107,20 @@ internal class MatrixYamlCheckUtilsTest {
                     var2: [1,2,3]
                 """
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test
     fun checkYaml5() {
-        val yamlstr = JsonUtil.toJson(mapOf(
-            "strategy" to "\${{fromJSONasd(asd)}}"
-        ))
+        val yamlstr = JsonUtil.toJson(
+            mapOf(
+                "strategy" to "\${{fromJSONasd(asd)}}"
+            )
+        )
         val result = try {
             MatrixContextUtils.schemaCheck(yamlstr)
             false
@@ -127,9 +133,11 @@ internal class MatrixYamlCheckUtilsTest {
 
     @Test
     fun checkYaml6() {
-        val yamlstr = JsonUtil.toJson(mapOf(
-            "strategy" to "\${{fromJSON(asd)}}"
-        ))
+        val yamlstr = JsonUtil.toJson(
+            mapOf(
+                "strategy" to "\${{fromJSON(asd)}}"
+            )
+        )
         MatrixContextUtils.schemaCheck(yamlstr)
     }
 
@@ -164,5 +172,18 @@ internal class MatrixYamlCheckUtilsTest {
         Assertions.assertTrue(result.include == null)
         Assertions.assertTrue(result.exclude == null)
         Assertions.assertTrue(result.strategy == null)
+    }
+
+    @Test
+    fun checkYaml9() {
+        val yamlstr = MatrixPipelineInfo(
+            include = "\${{ fromJSON(FTP_DEPLOY_MODULE_LIST) }}",
+            exclude = "",
+            strategy = "\${{ fromJSON(FTP_DEPLOY_MODULE_NAMES) }}"
+        )
+        /*测试并发*/
+        List(1000) { it }.parallelStream().forEach {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 }

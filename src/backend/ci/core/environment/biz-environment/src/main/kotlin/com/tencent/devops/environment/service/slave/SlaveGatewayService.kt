@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
-import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -87,7 +87,10 @@ class SlaveGatewayService @Autowired constructor(
     // @return gateway,filegateway
     private fun getConfigGateway(zoneName: String?): Pair<String, String?> {
         if (zoneName.isNullOrBlank()) {
-            return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
+            return Pair(
+                agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!),
+                agentUrlService.fixGateway(commonConfig.fileDevnetGateway!!)
+            )
         }
         val gateways = getGateway()
         gateways.forEach {
@@ -98,7 +101,10 @@ class SlaveGatewayService @Autowired constructor(
                 )
             }
         }
-        return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
+        return Pair(
+            agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!),
+            agentUrlService.fixGateway(commonConfig.fileDevnetGateway!!)
+        )
     }
 
     fun getGateway(): List<SlaveGateway> {
@@ -106,7 +112,7 @@ class SlaveGatewayService @Autowired constructor(
             synchronized(this) {
                 if (need2Refresh()) {
                     try {
-                        logger.info("Refresh the gateway")
+                        logger.debug("Refresh the gateway")
                         cache.clear()
                         val records = slaveGatewayDao.list(dslContext)
                         if (records.isNotEmpty()) {
@@ -125,7 +131,7 @@ class SlaveGatewayService @Autowired constructor(
                     } finally {
                         lastUpdate = System.currentTimeMillis()
                     }
-                    logger.info("Get the gateway $cache")
+                    logger.debug("Get the gateway $cache")
                 }
             }
         }

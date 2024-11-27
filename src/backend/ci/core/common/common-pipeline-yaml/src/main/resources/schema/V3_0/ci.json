@@ -1,0 +1,2944 @@
+{
+  "comment" : "",
+  "additionalProperties" : false,
+  "required" : [ "version" ],
+  "properties" : {
+    "version" : {
+      "type" : "string",
+      "const" : "v3.0"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "desc" : {
+      "type" : "string"
+    },
+    "label" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "on" : {
+      "oneOf" : [ {
+        "type" : "array",
+        "items" : {
+          "type" : "object",
+          "minProperties" : 1,
+          "additionalProperties" : false,
+          "properties" : {
+            "push" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "branches-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "new-branch", "push-file", "new-branch-and-push-file" ]
+                    },
+                    "additionalItems" : false
+                  },
+                  "path-filter-type" : {
+                    "type" : "string",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                    }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                }
+              } ]
+            },
+            "tag" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "tags" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "tags-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "from-branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "mr" : {
+              "anyOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "target-branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "target-branches-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "source-branches-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "source-branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                    },
+                    "additionalItems" : false
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "report-commit-check" : {
+                    "type" : "boolean"
+                  },
+                  "block-mr" : {
+                    "type" : "boolean"
+                  },
+                  "webhook-queue" : {
+                    "type" : "boolean"
+                  },
+                  "path-filter-type" : {
+                    "type" : "string",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                    }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
+                  }
+                }
+              } ]
+            },
+            "schedules" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "name" : {
+                      "type" : "string"
+                    },
+                    "enable" : {
+                      "type" : "boolean"
+                    },
+                    "cron" : {
+                      "oneOf" : [ {
+                        "type" : "array",
+                        "items" : {
+                          "type" : "string"
+                        }
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "interval" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "week" : {
+                          "type" : "array"
+                        },
+                        "time-points" : {
+                          "type" : "array"
+                        }
+                      }
+                    },
+                    "repo-type" : {
+                      "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                    },
+                    "repo-id" : {
+                      "type" : "string"
+                    },
+                    "repo-name" : {
+                      "type" : "string"
+                    },
+                    "branches" : {
+                      "maxItems" : 3,
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    },
+                    "advance-cron" : {
+                      "type" : "array"
+                    },
+                    "always" : {
+                      "type" : "boolean"
+                    }
+                  }
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "cron" : {
+                    "oneOf" : [ {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    }, {
+                      "type" : "string"
+                    } ]
+                  },
+                  "interval" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "week" : {
+                        "type" : "array"
+                      },
+                      "time-points" : {
+                        "type" : "array"
+                      }
+                    }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                  },
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "repo-name" : {
+                    "type" : "string"
+                  },
+                  "branches" : {
+                    "maxItems" : 3,
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "advance-cron" : {
+                    "type" : "array"
+                  },
+                  "always" : {
+                    "type" : "boolean"
+                  }
+                }
+              } ]
+            },
+            "delete" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "types" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "branch", "tag" ]
+                    },
+                    "additionalItems" : false
+                  }
+                }
+              } ]
+            },
+            "issue" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "open", "close", "reopen", "update" ]
+                    },
+                    "additionalItems" : false
+                  }
+                }
+              } ]
+            },
+            "review" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "types" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "comparison", "merge_request" ]
+                    },
+                    "additionalItems" : false
+                  },
+                  "states" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "approved", "approving", "change_denied", "change_required" ]
+                    },
+                    "additionalItems" : false
+                  }
+                }
+              } ]
+            },
+            "note" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "types" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "commit", "merge_request", "issue" ]
+                    },
+                    "additionalItems" : false
+                  },
+                  "comment" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "manual" : {
+              "oneOf" : [ {
+                "type" : "string",
+                "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "can-skip-step" : {
+                    "type" : "boolean"
+                  },
+                  "use-latest-inputs" : {
+                    "type" : "boolean"
+                  }
+                }
+              } ]
+            },
+            "openapi" : {
+              "type" : "string",
+              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+            },
+            "remote" : {
+              "oneOf" : [ {
+                "type" : "string",
+                "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "string",
+                    "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+                  }
+                }
+              } ]
+            },
+            "repo-name" : {
+              "type" : "string"
+            },
+            "repo-id" : {
+              "type" : "string"
+            },
+            "credentials" : {
+              "type" : "string"
+            },
+            "type" : {
+              "type" : "string",
+              "uniqueItems" : true,
+              "items" : {
+                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+              },
+              "additionalItems" : false
+            },
+            "change-commit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "change-content" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "change-submit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "shelve-commit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "shelve-submit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            }
+          }
+        }
+      }, {
+        "type" : "object",
+        "minProperties" : 1,
+        "additionalProperties" : false,
+        "properties" : {
+          "push" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "branches-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "new-branch", "push-file", "new-branch-and-push-file" ]
+                  },
+                  "additionalItems" : false
+                },
+                "path-filter-type" : {
+                  "type" : "string",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                  }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
+            } ]
+          },
+          "tag" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "tags" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "tags-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "from-branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "mr" : {
+            "anyOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "target-branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "target-branches-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "source-branches-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "source-branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                  },
+                  "additionalItems" : false
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "report-commit-check" : {
+                  "type" : "boolean"
+                },
+                "block-mr" : {
+                  "type" : "boolean"
+                },
+                "webhook-queue" : {
+                  "type" : "boolean"
+                },
+                "path-filter-type" : {
+                  "type" : "string",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                  }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
+                }
+              }
+            } ]
+          },
+          "schedules" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "cron" : {
+                    "oneOf" : [ {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    }, {
+                      "type" : "string"
+                    } ]
+                  },
+                  "interval" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "week" : {
+                        "type" : "array"
+                      },
+                      "time-points" : {
+                        "type" : "array"
+                      }
+                    }
+                  },
+                  "repo-type" : {
+                    "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                  },
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "repo-name" : {
+                    "type" : "string"
+                  },
+                  "branches" : {
+                    "maxItems" : 3,
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "advance-cron" : {
+                    "type" : "array"
+                  },
+                  "always" : {
+                    "type" : "boolean"
+                  }
+                }
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "cron" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "interval" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "week" : {
+                      "type" : "array"
+                    },
+                    "time-points" : {
+                      "type" : "array"
+                    }
+                  }
+                },
+                "repo-type" : {
+                  "enum" : [ "ID", "NAME", "SELF", "NONE" ]
+                },
+                "repo-id" : {
+                  "type" : "string"
+                },
+                "repo-name" : {
+                  "type" : "string"
+                },
+                "branches" : {
+                  "maxItems" : 3,
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "advance-cron" : {
+                  "type" : "array"
+                },
+                "always" : {
+                  "type" : "boolean"
+                }
+              }
+            } ]
+          },
+          "delete" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "types" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "branch", "tag" ]
+                  },
+                  "additionalItems" : false
+                }
+              }
+            } ]
+          },
+          "issue" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "open", "close", "reopen", "update" ]
+                  },
+                  "additionalItems" : false
+                }
+              }
+            } ]
+          },
+          "review" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "types" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "comparison", "merge_request" ]
+                  },
+                  "additionalItems" : false
+                },
+                "states" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "approved", "approving", "change_denied", "change_required" ]
+                  },
+                  "additionalItems" : false
+                }
+              }
+            } ]
+          },
+          "note" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "types" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "commit", "merge_request", "issue" ]
+                  },
+                  "additionalItems" : false
+                },
+                "comment" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "manual" : {
+            "oneOf" : [ {
+              "type" : "string",
+              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "can-skip-step" : {
+                  "type" : "boolean"
+                },
+                "use-latest-inputs" : {
+                  "type" : "boolean"
+                }
+              }
+            } ]
+          },
+          "openapi" : {
+            "type" : "string",
+            "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+          },
+          "remote" : {
+            "oneOf" : [ {
+              "type" : "string",
+              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "string",
+                  "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+                }
+              }
+            } ]
+          },
+          "repo-name" : {
+            "type" : "string"
+          },
+          "repo-id" : {
+            "type" : "string"
+          },
+          "credentials" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "uniqueItems" : true,
+            "items" : {
+              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+            },
+            "additionalItems" : false
+          },
+          "change-commit" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "change-content" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "change-submit" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "shelve-commit" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          },
+          "shelve-submit" : {
+            "oneOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            } ]
+          }
+        }
+      } ]
+    },
+    "variables" : {
+      "type" : "object",
+      "patternProperties" : {
+        "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
+          "anyOf" : [ {
+            "type" : "string"
+          }, {
+            "type" : "number"
+          }, {
+            "type" : "boolean"
+          }, {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "value" ],
+            "properties" : {
+              "value" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              },
+              "readonly" : {
+                "type" : "boolean"
+              },
+              "required" : {
+                "type" : "boolean"
+              },
+              "allow-modify-at-startup" : {
+                "type" : "boolean"
+              },
+              "value-not-empty" : {
+                "type" : "boolean"
+              },
+              "props" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "type" ],
+                "properties" : {
+                  "label" : {
+                    "type" : "string"
+                  },
+                  "type" : {
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips" ]
+                  },
+                  "options" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "required" : [ "id" ],
+                      "properties" : {
+                        "id" : {
+                          "anyOf" : [ {
+                            "type" : "string"
+                          }, {
+                            "type" : "number"
+                          }, {
+                            "type" : "boolean"
+                          } ]
+                        },
+                        "label" : {
+                          "type" : "string"
+                        },
+                        "description" : {
+                          "type" : "string"
+                        }
+                      }
+                    }
+                  },
+                  "datasource" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "url" ],
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "data-path" : {
+                        "type" : "string"
+                      },
+                      "param-id" : {
+                        "type" : "string"
+                      },
+                      "param-name" : {
+                        "type" : "string"
+                      },
+                      "has-add-item" : {
+                        "type" : "boolean"
+                      },
+                      "item-text" : {
+                        "type" : "string"
+                      },
+                      "item-target-url" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "description" : {
+                    "type" : "string"
+                  },
+                  "multiple" : {
+                    "type" : "boolean"
+                  },
+                  "required" : {
+                    "type" : "boolean"
+                  },
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "scm-type" : {
+                    "type" : "string"
+                  },
+                  "container-type" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "build-type" : {
+                        "type" : "string"
+                      },
+                      "os" : {
+                        "enum" : [ "MACOS", "WINDOWS", "LINUX" ]
+                      }
+                    }
+                  },
+                  "filter-rule" : {
+                    "type" : "string"
+                  },
+                  "metadata" : {
+                    "type" : "object"
+                  },
+                  "payload" : {
+                    "type" : "object"
+                  }
+                },
+                "allOf" : [ {
+                  "if" : {
+                    "required" : [ "options" ]
+                  },
+                  "then" : {
+                    "not" : {
+                      "required" : [ "datasource" ]
+                    }
+                  }
+                }, {
+                  "if" : {
+                    "required" : [ "datasource" ]
+                  },
+                  "then" : {
+                    "not" : {
+                      "required" : [ "options" ]
+                    }
+                  }
+                } ]
+              },
+              "name" : {
+                "type" : "string"
+              }
+            }
+          } ]
+        },
+        "^template$" : {
+          "$ref" : "#/definitions/template"
+        },
+        "^[A-Z][A-Z0-9_]{0,63}$" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "value" ],
+          "properties" : {
+            "value" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "readonly" : {
+              "type" : "boolean"
+            },
+            "required" : {
+              "type" : "boolean"
+            },
+            "const" : {
+              "type" : "boolean"
+            },
+            "allow-modify-at-startup" : {
+              "type" : "boolean"
+            },
+            "value-not-empty" : {
+              "type" : "boolean"
+            },
+            "props" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "label" : {
+                  "type" : "string"
+                },
+                "type" : {
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips" ]
+                },
+                "options" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "id" ],
+                    "properties" : {
+                      "id" : {
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
+                      },
+                      "label" : {
+                        "type" : "string"
+                      },
+                      "description" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "datasource" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "data-path" : {
+                      "type" : "string"
+                    },
+                    "param-id" : {
+                      "type" : "string"
+                    },
+                    "param-name" : {
+                      "type" : "string"
+                    },
+                    "has-add-item" : {
+                      "type" : "boolean"
+                    },
+                    "item-text" : {
+                      "type" : "string"
+                    },
+                    "item-target-url" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "description" : {
+                  "type" : "string"
+                },
+                "multiple" : {
+                  "type" : "boolean"
+                },
+                "required" : {
+                  "type" : "boolean"
+                },
+                "repo-id" : {
+                  "type" : "string"
+                },
+                "scm-type" : {
+                  "type" : "string"
+                },
+                "container-type" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "build-type" : {
+                      "type" : "string"
+                    },
+                    "os" : {
+                      "enum" : [ "MACOS", "WINDOWS", "LINUX" ]
+                    }
+                  }
+                },
+                "filter-rule" : {
+                  "type" : "string"
+                },
+                "metadata" : {
+                  "type" : "object"
+                },
+                "payload" : {
+                  "type" : "object"
+                }
+              },
+              "allOf" : [ {
+                "if" : {
+                  "required" : [ "options" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "datasource" ]
+                  }
+                }
+              }, {
+                "if" : {
+                  "required" : [ "datasource" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "options" ]
+                  }
+                }
+              } ]
+            },
+            "name" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "additionalProperties" : false
+    },
+    "stages" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "jobs" ],
+          "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "id" : {
+              "type" : "string"
+            },
+            "label" : {
+              "anyOf" : [ {
+                "enum" : [ "Build", "Test", "Deploy", "Approve" ]
+              }, {
+                "uniqueItems" : true,
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "enum" : [ "Build", "Test", "Deploy", "Approve" ]
+                }
+              } ]
+            },
+            "if" : {
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
+            },
+            "check-in" : {
+              "$ref" : "#/definitions/check-in"
+            },
+            "check-out" : {
+              "$ref" : "#/definitions/check-out"
+            },
+            "fast-kill" : {
+              "type" : "boolean"
+            },
+            "jobs" : {
+              "$ref" : "#/definitions/jobs"
+            },
+            "if-modify" : {
+              "$ref" : "#/definitions/ifModify"
+            }
+          }
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        } ]
+      }
+    },
+    "jobs" : {
+      "$ref" : "#/definitions/jobs"
+    },
+    "steps" : {
+      "$ref" : "#/definitions/steps"
+    },
+    "extends" : {
+      "type" : "object",
+      "required" : [ "template" ],
+      "additionalProperties" : false,
+      "properties" : {
+        "template" : {
+          "type" : "string"
+        },
+        "ref" : {
+          "type" : "string"
+        },
+        "parameters" : {
+          "$ref" : "#/definitions/parameters"
+        }
+      }
+    },
+    "resources" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "repositories" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "repository", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "repository" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "ref" : {
+                "type" : "string"
+              },
+              "credentials" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "personal-access-token" ],
+                "properties" : {
+                  "personal-access-token" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pools" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "from", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "from" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "finally" : {
+      "type" : "object",
+      "properties" : {
+        "template" : {
+          "$ref" : "#/definitions/template"
+        }
+      },
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "required" : [ "steps" ],
+          "additionalProperties" : false,
+          "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "runs-on" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "self-hosted" : {
+                    "type" : "boolean"
+                  },
+                  "pool-name" : {
+                    "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
+                  },
+                  "hw-spec" : {
+                    "type" : "string"
+                  },
+                  "node-name" : {
+                    "type" : "string"
+                  },
+                  "agent-selector" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "container" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "image" : {
+                        "type" : "string",
+                        "pattern" : "\\S+:\\S+|\\$\\{\\{.*\\}\\}"
+                      },
+                      "image-code" : {
+                        "type" : "string"
+                      },
+                      "image-version" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "oneOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "required" : [ "username", "password" ],
+                          "properties" : {
+                            "username" : {
+                              "type" : "string"
+                            },
+                            "password" : {
+                              "type" : "string"
+                            }
+                          }
+                        }, {
+                          "type" : "string"
+                        } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          },
+                          "privileged" : {
+                            "type" : "string"
+                          }
+                        }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
+                      }
+                    }
+                  },
+                  "needs" : {
+                    "$ref" : "#/definitions/buildEnv"
+                  },
+                  "queue-timeout-minutes" : {
+                    "type" : "integer"
+                  },
+                  "workspace" : {
+                    "type" : "string"
+                  },
+                  "xcode" : {
+                    "type" : "string"
+                  }
+                }
+              } ]
+            },
+            "services" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "anyOf" : [ {
+                  "type" : "object",
+                  "properties" : {
+                    "image" : {
+                      "type" : "string"
+                    },
+                    "with" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "password" : {
+                          "type" : "string"
+                        }
+                      }
+                    }
+                  }
+                } ]
+              }
+            },
+            "if" : {
+              "enum" : [ "ALWAYS", "FAILURE", "SUCCESS", "CANCELED" ]
+            },
+            "steps" : {
+              "$ref" : "#/definitions/steps"
+            },
+            "timeout-minutes" : {
+              "oneOf" : [ {
+                "type" : "integer",
+                "maximum" : 10080
+              }, {
+                "type" : "string"
+              } ]
+            },
+            "env" : {
+              "$ref" : "#/definitions/env"
+            },
+            "continue-on-error" : {
+              "type" : "boolean"
+            },
+            "depend-on" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "mutex" : {
+              "$ref" : "#/definitions/resourceExclusiveDeclaration"
+            }
+          }
+        } ]
+      }
+    },
+    "notices" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "required" : [ "type" ],
+        "properties" : {
+          "type" : {
+            "anyOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "array",
+              "items" : {
+                "enum" : [ "email", "wework-message", "wework-chat", "sms", "voice" ]
+              }
+            } ]
+          },
+          "receivers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "groups" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "content" : {
+            "type" : "string"
+          },
+          "chat-id" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "content-format" : {
+            "type" : "string",
+            "pattern" : "(\\bmarkdown\\b|\\btext\\b)"
+          },
+          "attach-build-url" : {
+            "type" : "boolean"
+          },
+          "if" : {
+            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
+          }
+        }
+      }
+    },
+    "concurrency" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "group" : {
+          "type" : "string"
+        },
+        "cancel-in-progress" : {
+          "type" : "boolean"
+        },
+        "queue-length" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 20
+        },
+        "queue-timeout-minutes" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 1440
+        },
+        "max-parallel" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 200
+        }
+      }
+    },
+    "disable-pipeline" : {
+      "type" : "boolean"
+    },
+    "recommended-version" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : "boolean"
+        },
+        "allow-modify-at-startup" : {
+          "type" : "boolean"
+        },
+        "major" : {
+          "type" : "integer"
+        },
+        "minor" : {
+          "type" : "integer"
+        },
+        "fix" : {
+          "type" : "integer"
+        },
+        "build-no" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "initial-value" : {
+              "type" : "integer"
+            },
+            "strategy" : {
+              "type" : "string",
+              "pattern" : "\\bplus1-when-success\\b|\\bplus1-everytime\\b|\\binvariable\\b"
+            }
+          }
+        }
+      }
+    },
+    "custom-build-num" : {
+      "type" : "string"
+    },
+    "syntax-dialect" : {
+      "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
+    }
+  },
+  "definitions" : {
+    "check-in" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "reviews" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "flows" ],
+          "properties" : {
+            "flows" : {
+              "type" : "array",
+              "maxItems" : 5,
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "name" ],
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "reviewers" : {
+                    "anyOf" : [ {
+                      "type" : "string"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  },
+                  "groups" : {
+                    "anyOf" : [ {
+                      "type" : "string"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  }
+                },
+                "allOf" : [ {
+                  "if" : {
+                    "required" : [ "reviewers" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "groups" ]
+                      }
+                    } ]
+                  }
+                }, {
+                  "if" : {
+                    "required" : [ "groups" ]
+                  },
+                  "then" : {
+                    "allOf" : [ {
+                      "not" : {
+                        "required" : [ "reviewers" ]
+                      }
+                    } ]
+                  }
+                } ]
+              }
+            },
+            "variables" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "label" : {
+                    "type" : "string"
+                  },
+                  "type" : {
+                    "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL", "CHECKBOX" ]
+                  },
+                  "default" : {
+                    "anyOf" : [ {
+                      "type" : "string"
+                    }, {
+                      "type" : "number"
+                    }, {
+                      "type" : "boolean"
+                    }, {
+                      "type" : "array"
+                    } ]
+                  },
+                  "values" : {
+                    "type" : "array",
+                    "items" : {
+                      "anyOf" : [ {
+                        "type" : "string"
+                      }, {
+                        "type" : "number"
+                      }, {
+                        "type" : "boolean"
+                      } ]
+                    }
+                  },
+                  "required" : {
+                    "type" : "boolean"
+                  },
+                  "description" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            },
+            "description" : {
+              "type" : "string"
+            },
+            "content-format" : {
+              "enum" : [ "markdown", "text" ]
+            },
+            "notify-type" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "chat-id" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "notify-groups" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "gates" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "template" ],
+            "properties" : {
+              "template" : {
+                "type" : "string"
+              },
+              "parameters" : {
+                "$ref" : "#/definitions/parameters"
+              }
+            }
+          }
+        },
+        "timeout-hours" : {
+          "minimum" : 1,
+          "maximum" : 720,
+          "type" : "integer"
+        }
+      }
+    },
+    "check-out" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "gates" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "template" ],
+            "properties" : {
+              "template" : {
+                "type" : "string"
+              },
+              "parameters" : {
+                "$ref" : "#/definitions/parameters"
+              }
+            }
+          }
+        },
+        "timeout-hours" : {
+          "minimum" : 1,
+          "maximum" : 720,
+          "type" : "integer"
+        }
+      }
+    },
+    "jobs" : {
+      "type" : "object",
+      "properties" : {
+        "template" : {
+          "$ref" : "#/definitions/template"
+        }
+      },
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "required" : [ "steps" ],
+          "additionalProperties" : false,
+          "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "runs-on" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "self-hosted" : {
+                    "type" : "boolean"
+                  },
+                  "pool-name" : {
+                    "type" : "string"
+                  },
+                  "lock-resource-with" : {
+                    "type" : "string"
+                  },
+                  "concurrency-limit-per-node" : {
+                    "type" : "integer"
+                  },
+                  "concurrency-limit-total" : {
+                    "type" : "integer"
+                  },
+                  "hw-spec" : {
+                    "type" : "string"
+                  },
+                  "node-name" : {
+                    "type" : "string"
+                  },
+                  "agent-selector" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "container" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "image" : {
+                        "type" : "string",
+                        "pattern" : "\\S+:\\S+|\\$\\{\\{.*\\}\\}"
+                      },
+                      "image-code" : {
+                        "type" : "string"
+                      },
+                      "image-version" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "oneOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "required" : [ "username", "password" ],
+                          "properties" : {
+                            "username" : {
+                              "type" : "string"
+                            },
+                            "password" : {
+                              "type" : "string"
+                            }
+                          }
+                        }, {
+                          "type" : "string"
+                        } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          },
+                          "privileged" : {
+                            "type" : "string"
+                          }
+                        }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
+                      }
+                    }
+                  },
+                  "needs" : {
+                    "$ref" : "#/definitions/buildEnv"
+                  },
+                  "queue-timeout-minutes" : {
+                    "type" : "integer"
+                  },
+                  "workspace" : {
+                    "type" : "string"
+                  },
+                  "xcode" : {
+                    "type" : "string"
+                  }
+                }
+              } ]
+            },
+            "services" : {
+              "type" : "object",
+              "additionalProperties" : {
+                "anyOf" : [ {
+                  "type" : "object",
+                  "properties" : {
+                    "image" : {
+                      "type" : "string"
+                    },
+                    "with" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "password" : {
+                          "type" : "string"
+                        }
+                      }
+                    }
+                  }
+                } ]
+              }
+            },
+            "if" : {
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
+            },
+            "steps" : {
+              "$ref" : "#/definitions/steps"
+            },
+            "timeout-minutes" : {
+              "oneOf" : [ {
+                "type" : "integer",
+                "maximum" : 10080
+              }, {
+                "type" : "string"
+              } ]
+            },
+            "env" : {
+              "$ref" : "#/definitions/env"
+            },
+            "continue-on-error" : {
+              "type" : "boolean"
+            },
+            "strategy" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "matrix" ],
+              "properties" : {
+                "matrix" : {
+                  "oneOf" : [ {
+                    "type" : "object",
+                    "additionalProperties" : {
+                      "anyOf" : [ {
+                        "type" : "array"
+                      }, {
+                        "type" : "string"
+                      } ]
+                    },
+                    "properties" : {
+                      "include" : {
+                        "oneOf" : [ {
+                          "type" : "array",
+                          "items" : {
+                            "type" : "object",
+                            "additionalProperties" : {
+                              "anyOf" : [ {
+                                "type" : "string"
+                              }, {
+                                "type" : "number"
+                              }, {
+                                "type" : "boolean"
+                              } ]
+                            }
+                          }
+                        }, {
+                          "type" : "string"
+                        } ]
+                      },
+                      "exclude" : {
+                        "oneOf" : [ {
+                          "type" : "array",
+                          "items" : {
+                            "type" : "object"
+                          }
+                        }, {
+                          "type" : "string"
+                        } ]
+                      }
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "fast-kill" : {
+                  "type" : "boolean"
+                },
+                "max-parallel" : {
+                  "type" : "integer",
+                  "minimum" : 0,
+                  "maximum" : 20
+                }
+              }
+            },
+            "depend-on" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "depend-on-type" : {
+              "type" : "string"
+            },
+            "if-modify" : {
+              "$ref" : "#/definitions/ifModify"
+            },
+            "mutex" : {
+              "$ref" : "#/definitions/resourceExclusiveDeclaration"
+            }
+          }
+        } ]
+      }
+    },
+    "steps" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enable" : {
+              "type" : "boolean"
+            },
+            "uses" : {
+              "type" : "string",
+              "pattern" : "^.*@.*$"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "id" : {
+              "type" : "string",
+              "maxLength" : 64
+            },
+            "if" : {
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "mode" : {
+                    "enum" : [ "RUN_WHEN_ALL_PARAMS_MATCH", "NOT_RUN_WHEN_ALL_PARAMS_MATCH" ]
+                  },
+                  "params" : {
+                    "type" : "object"
+                  }
+                }
+              } ]
+            },
+            "with" : {
+              "type" : "object"
+            },
+            "timeout-minutes" : {
+              "oneOf" : [ {
+                "type" : "integer",
+                "maximum" : 10080
+              }, {
+                "type" : "string"
+              } ]
+            },
+            "continue-on-error" : {
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "retry-times" : {
+              "type" : "integer",
+              "minimum" : 0,
+              "maximum" : 5
+            },
+            "env" : {
+              "$ref" : "#/definitions/env"
+            },
+            "run" : {
+              "type" : "string"
+            },
+            "checkout" : {
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "repo-name" : {
+                    "type" : "string"
+                  }
+                }
+              } ]
+            },
+            "if-modify" : {
+              "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "type" : "string"
+            },
+            "can-manually-retry" : {
+              "type" : "boolean"
+            }
+          },
+          "allOf" : [ {
+            "if" : {
+              "required" : [ "uses" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "run" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "check" ]
+                }
+              } ]
+            }
+          }, {
+            "if" : {
+              "required" : [ "run" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "uses" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "check" ]
+                }
+              } ]
+            }
+          }, {
+            "if" : {
+              "required" : [ "checkout" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "run" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "uses" ]
+                }
+              } ]
+            }
+          } ]
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        } ]
+      }
+    },
+    "env" : {
+      "type" : "object",
+      "maxProperties" : 100
+    },
+    "template" : {
+      "anyOf" : [ {
+        "type" : "array",
+        "items" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        }
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "parameters" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "array"
+        } ]
+      }
+    },
+    "buildEnv" : {
+      "type" : "object"
+    },
+    "ifModify" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "resourceExclusiveDeclaration" : {
+      "type" : "object",
+      "required" : [ "label" ],
+      "additionalProperties" : false,
+      "properties" : {
+        "label" : {
+          "type" : "string"
+        },
+        "queue-length" : {
+          "type" : "integer"
+        },
+        "timeout-minutes" : {
+          "oneOf" : [ {
+            "type" : "integer",
+            "maximum" : 480
+          }, {
+            "type" : "string"
+          } ]
+        },
+        "queue-enable" : {
+          "type" : "boolean"
+        }
+      }
+    }
+  },
+  "allOf" : [ {
+    "if" : {
+      "required" : [ "extends" ]
+    },
+    "then" : {
+      "allOf" : [ {
+        "not" : {
+          "required" : [ "stages" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "jobs" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "steps" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "variables" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "notices" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "label" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "finally" ]
+        }
+      } ]
+    }
+  }, {
+    "if" : {
+      "required" : [ "stages" ]
+    },
+    "then" : {
+      "allOf" : [ {
+        "not" : {
+          "required" : [ "steps" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "jobs" ]
+        }
+      } ]
+    }
+  }, {
+    "if" : {
+      "required" : [ "steps" ]
+    },
+    "then" : {
+      "allOf" : [ {
+        "not" : {
+          "required" : [ "stages" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "jobs" ]
+        }
+      } ]
+    }
+  }, {
+    "if" : {
+      "required" : [ "jobs" ]
+    },
+    "then" : {
+      "allOf" : [ {
+        "not" : {
+          "required" : [ "steps" ]
+        }
+      }, {
+        "not" : {
+          "required" : [ "stages" ]
+        }
+      } ]
+    }
+  } ],
+  "$schema" : "http://json-schema.org/draft-07/schema"
+}

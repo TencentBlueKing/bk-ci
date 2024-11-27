@@ -30,6 +30,7 @@ package com.tencent.devops.quality.service.v2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.collect.Maps
 import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
@@ -515,10 +516,15 @@ class QualityIndicatorService @Autowired constructor(
         return convertRecord(record, metadata)
     }
 
-    fun setTestIndicator(userId: String, elementType: String, indicatorUpdateList: Collection<IndicatorUpdate>): Int {
+    fun setTestIndicator(
+        userId: String,
+        elementType: String,
+        tag: String,
+        indicatorUpdateList: Collection<IndicatorUpdate>
+    ): Int {
         logger.info("QUALITY|setTestIndicator userId: $userId, elementType: $elementType")
         val testIndicatorList = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
-            ?.filter { isTestIndicator(it) } ?: listOf()
+            ?.filter { isTestIndicator(tag, it) } ?: listOf()
         val testIndicatorMap = testIndicatorList.map { it.enName to it }.toMap()
         val lastIndicatorName = testIndicatorList.map { it.enName }
         val newIndicatorName = indicatorUpdateList.map { it.enName }
@@ -544,8 +550,8 @@ class QualityIndicatorService @Autowired constructor(
     fun serviceRefreshIndicator(elementType: String, metadataMap: Map<String /* dataId */, String /* id */>): Int {
         logger.info("QUALITY|refreshIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
-        val testData = data?.filter { isTestIndicator(it) } ?: listOf()
-        val prodData = data?.filter { !isTestIndicator(it) } ?: listOf()
+        val testData = data?.filter { isTestIndicator(IN_READY_TEST, it) } ?: listOf()
+        val prodData = data?.filter { !isTestIndicator(IN_READY_TEST, it) } ?: listOf()
         val userId = testData.firstOrNull()?.createUser ?: ""
 
         // 有则update
@@ -615,10 +621,10 @@ class QualityIndicatorService @Autowired constructor(
         return testData.size
     }
 
-    fun serviceDeleteTestIndicator(elementType: String): Int {
+    fun serviceDeleteTestIndicator(elementType: String, extra: String): Int {
         logger.info("QUALITY|deleteTestIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType)
-        val testData = data?.filter { isTestIndicator(it) } ?: listOf()
+        val testData = data?.filter { isTestIndicator(extra, it) } ?: listOf()
         return indicatorDao.delete(testData.map { it.id }, dslContext)
     }
 
@@ -649,8 +655,8 @@ class QualityIndicatorService @Autowired constructor(
         return result.filter { it.enable }
     }
 
-    private fun isTestIndicator(qualityIndicator: TQualityIndicatorRecord): Boolean {
-        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag == "IN_READY_TEST"
+    private fun isTestIndicator(tag: String, qualityIndicator: TQualityIndicatorRecord): Boolean {
+        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag == tag
     }
 
     private fun convertRecord(
@@ -871,5 +877,9 @@ class QualityIndicatorService @Autowired constructor(
             "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_WOODPECKER_SENSITIVE),
             "BKCHECK-CPP" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_CPP),
             "BKCHECK-OC" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_OC))
+    }
+
+    private fun isTestIndicator(qualityIndicator: TQualityIndicatorRecord): Boolean {
+        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag.startsWith(IN_READY_TEST)
     }
 }

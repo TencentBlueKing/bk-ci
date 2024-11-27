@@ -59,5 +59,8 @@ class BkRepoClientConfig {
     val bkRepoStaticPassword: String = ""
 
     @Value("\${bkrepo.bkrepoUrl:}")
-    val bkRepoIdcHost: String? = null
+    val bkRepoIdcHost: String = ""
+
+    @Value("\${bkrepo.devxIdcBkrepoUrl:}")
+    val bkRepoDevxIdcHost: String = ""
 }

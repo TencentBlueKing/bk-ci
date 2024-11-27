@@ -30,15 +30,14 @@ package com.tencent.devops.auth.pojo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.Instance
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(title = "")
 data class PermissionUrlDTO(
-    @ApiModelProperty("权限类型")
+    @get:Schema(title = "权限类型")
     val actionId: AuthPermission,
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceId: AuthResourceType,
-    @ApiModelProperty("实例列表")
+    @get:Schema(title = "实例列表")
     val instanceId: List<Instance>?
 )

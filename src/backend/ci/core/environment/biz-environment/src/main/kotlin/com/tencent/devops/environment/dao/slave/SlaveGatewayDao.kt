@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.dao.slave
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
 import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
@@ -39,7 +40,7 @@ class SlaveGatewayDao {
 
     fun list(dslContext: DSLContext): List<TEnvironmentSlaveGatewayRecord> {
         with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
-            return dslContext.selectFrom(this).fetch()
+            return dslContext.selectFrom(this).skipCheck().fetch()
         }
     }
 

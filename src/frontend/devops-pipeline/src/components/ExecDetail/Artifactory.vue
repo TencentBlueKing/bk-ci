@@ -1,5 +1,8 @@
 <template>
-    <article class="detail-artifactory-home" v-bkloading="{ isLoading }">
+    <article
+        class="detail-artifactory-home"
+        v-bkloading="{ isLoading }"
+    >
         <bk-table
             :data="artifactories"
             :outer-border="false"
@@ -20,8 +23,14 @@
                             name="docker-svgrepo-com"
                             size="30"
                         />
-                        <i v-else :class="['devops-icon', `icon-${props.row.icon}`]"></i>
-                        <span class="ml5" :title="props.row.name">{{ props.row.name }}</span>
+                        <i
+                            v-else
+                            :class="['devops-icon', `icon-${props.row.icon}`]"
+                        ></i>
+                        <span
+                            class="ml5"
+                            :title="props.row.name"
+                        >{{ props.row.name }}</span>
                     </div>
                 </template>
             </bk-table-column>
@@ -29,31 +38,37 @@
                 :label="$t('details.path')"
                 prop="fullName"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+            </bk-table-column>
             <bk-table-column
                 :label="$t('details.filesize')"
                 width="150"
                 prop="size"
-                :formatter="sizeFormatter"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+            </bk-table-column>
             <bk-table-column
                 :label="$t('details.repoType')"
                 width="150"
                 prop="artifactoryType"
                 :formatter="repoTypeFormatter"
                 show-overflow-tooltip
-            ></bk-table-column>
-            <bk-table-column :label="$t('operate')" width="150">
+            >
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('operate')"
+                width="150"
+            >
                 <template slot-scope="props">
                     <artifact-download-button
+                        :output="props.row"
                         :has-permission="hasPermission"
                         v-bind="props.row"
+                        :artifactory-type="props.row.artifactoryType"
                     />
                 </template>
             </bk-table-column>
         </bk-table>
-        
     </article>
 </template>
 
@@ -62,6 +77,7 @@
     import Logo from '@/components/Logo'
     import { extForFile } from '@/utils/pipelineConst'
     import { convertFileSize } from '@/utils/util'
+    import { SET_PLUGIN_HEAD_TAB } from '@/store/modules/atom/constants'
 
     export default {
         components: {
@@ -92,6 +108,7 @@
 
         created () {
             this.initData()
+            this.$store.commit(`atom/${SET_PLUGIN_HEAD_TAB}`, { isGetPluginHeadTab: false })
         },
 
         methods: {
@@ -121,11 +138,15 @@
                         this.artifactories
                             = res.records.map((item) => ({
                                 ...item,
-                                icon: extForFile(item.name)
+                                icon: item.folder ? 'folder' : extForFile(item.name),
+                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
-                        if (this.artifactories.length <= 0) {
-                            this.$emit('hidden')
+                        if (res) {
+                            this.$store.commit(`atom/${SET_PLUGIN_HEAD_TAB}`, { isGetPluginHeadTab: true })
+                        }
+                        if (this.artifactories.length > 0) {
+                            this.$emit('toggle', true)
                         }
                     })
                     .catch((err) => {
@@ -146,8 +167,21 @@
                 return typeMap[cellValue]
             },
 
-            sizeFormatter (row, column, cellValue, index) {
+            sizeFormatter (cellValue) {
                 return (cellValue >= 0 && convertFileSize(cellValue, 'B')) || ''
+            },
+
+            getFolderSize (payload) {
+                if (!payload.folder) return '0'
+                return this.getValuesByKey(payload.properties, 'size')
+            },
+
+            getValuesByKey (data, key) {
+                for (const item of data) {
+                    if (key.includes(item.key)) {
+                        return item.value
+                    }
+                }
             }
         }
     }

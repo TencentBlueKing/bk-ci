@@ -29,9 +29,13 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisLockByValue
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -47,7 +51,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val redisOperation: RedisOperation
 ) : StageCmd {
 
     companion object {
@@ -106,6 +111,7 @@ class StartContainerStageCmd(
 
     private fun sendStageStartCallback(commandContext: StageContext) {
         pipelineEventDispatcher.dispatch(
+            // stage 启动
             PipelineBuildStatusBroadCastEvent(
                 source = "StartContainerStageCmd",
                 projectId = commandContext.stage.projectId,
@@ -113,7 +119,10 @@ class StartContainerStageCmd(
                 userId = commandContext.event.userId,
                 buildId = commandContext.stage.buildId,
                 actionType = ActionType.START,
-                stageId = commandContext.stage.stageId
+                stageId = commandContext.stage.stageId,
+                executeCount = commandContext.executeCount,
+                buildStatus = commandContext.buildStatus.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_START
             )
         )
     }
@@ -150,6 +159,7 @@ class StartContainerStageCmd(
                 commandContext.concurrency += jobCount
                 // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
+                return@forEach
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
                 commandContext.concurrency += jobCount
@@ -159,7 +169,11 @@ class StartContainerStageCmd(
                     "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
                         "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
                 )
+                return@forEach
             }
+
+            // 只要不是正在运行都做reuse逻辑处理
+            commandContext.minAndUnlockAgentReuseMutes(container)
         }
 
         if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
@@ -203,10 +217,42 @@ class StartContainerStageCmd(
                 containerId = container.containerId,
                 containerHashId = container.containerHashId,
                 actionType = actionType,
+                executeCount = container.executeCount,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,
                 reason = commandContext.latestSummary
             )
         )
+    }
+
+    // #10082 如果对应job的endJob都结束就可以解锁了
+    private fun StageContext.minAndUnlockAgentReuseMutes(container: PipelineBuildContainer) {
+        val reuseJobId = container.controlOption.agentReuseMutex?.reUseJobId
+        if (container.controlOption.agentReuseMutex?.endJob != true || reuseJobId.isNullOrBlank()) {
+            return
+        }
+        this.agentReuseMutexEndJob?.set(
+            reuseJobId, this.agentReuseMutexEndJob?.get(reuseJobId)?.minus(1) ?: return
+        ) ?: return
+        if ((this.agentReuseMutexEndJob?.get(reuseJobId) ?: return) <= 0) {
+            // 解锁
+            val agent = this.variables[AgentReuseMutex.genAgentContextKey(reuseJobId)] ?: run {
+                LOG.warn(
+                    "ENGINE|${stage.buildId}|AgentReuseMutex|" +
+                            "${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                            "|var ${AgentReuseMutex.genAgentContextKey(reuseJobId)} is null"
+                )
+                return
+            }
+            val lock = RedisLockByValue(
+                redisOperation = redisOperation,
+                lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(stage.projectId, agent),
+                lockValue = stage.buildId,
+                expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+            )
+            lock.unlock()
+            // 解锁的同时兜底删除 linkTip
+            redisOperation.delete(AgentReuseMutex.genAgentReuseMutexLinkTipKey(stage.buildId))
+        }
     }
 }

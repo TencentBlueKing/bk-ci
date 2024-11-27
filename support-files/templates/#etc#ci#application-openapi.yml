@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_openapi?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_openapi?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
@@ -12,14 +12,9 @@ server:
 # 是否开启apifilter和aspect功能
 api:
   gateway:
-    pub:
-      file:
-       outer: __BK_CI_OPENAPI_API_PUB_OUTER__
-    auth: __BK_CI_OPENAPI_API_AUTH__
-  blueKing:
-    enable: __BK_CI_OPENAPI_API_BLUEKING_ENABLE__
+    auth: false
 
 # 是否开启openAPI 切面内校验path内project的开关。打开后若openAPI接口内没有projectId相关字段，需要对应接口需要加@IgnoreProjectId
 openapi:
   verify:
-    project: __BK_CI_OPENAPI_VERIFY_PROJECT__
+    project: false

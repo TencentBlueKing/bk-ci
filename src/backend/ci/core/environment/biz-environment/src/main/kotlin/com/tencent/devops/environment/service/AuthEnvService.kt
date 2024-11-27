@@ -49,7 +49,6 @@ class AuthEnvService @Autowired constructor(
             envService.listEnvironmentByLimit(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (envInfos?.records == null) {
-            logger.info("There is no environment under the project $projectId ")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

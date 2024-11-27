@@ -1,35 +1,71 @@
 <template>
-    <article v-bkloading="{ isLoading }" class="image-progress-home">
-        <bread-crumbs :bread-crumbs="navList" type="image">
-            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.镜像指引') }} </a>
+    <article
+        v-bkloading="{ isLoading }"
+        class="image-progress-home"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            type="image"
+        >
+            <a
+                class="g-title-work"
+                target="_blank"
+                :href="docsLink"
+            > {{ $t('store.镜像指引') }} </a>
         </bread-crumbs>
-        <main v-if="!isLoading" class="image-progress-main">
+        <main
+            v-if="!isLoading"
+            class="image-progress-main"
+        >
             <section class="image-progress-section">
                 <h3>
                     <span> {{ $t('store.发布进度') }} </span>
-                    <span @click="cancelRelease" :class="[{ disable: !permission }, 'cancel-release']" :title="permissionMsg"> {{ $t('store.取消发布') }} </span>
+                    <span
+                        @click="cancelRelease"
+                        :class="[{ disable: !permission }, 'cancel-release']"
+                        :title="permissionMsg"
+                    > {{ $t('store.取消发布') }} </span>
                 </h3>
                 <div class="progress-step">
                     <div class="step-line-box">
-                        <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
-                            :class="{ 'processing-status': entry.status === 'doing', 'fail-status': entry.status === 'fail', 'success-status': entry.code === 'end' && entry.status === 'success' }">
+                        <div
+                            class="step-card"
+                            v-for="(entry, index) in progressStatus"
+                            :key="index"
+                            :class="{ 'processing-status': entry.status === 'doing', 'fail-status': entry.status === 'fail', 'success-status': entry.code === 'end' && entry.status === 'success' }"
+                        >
                             <div class="card-item">
-                                <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
+                                <i
+                                    class="devops-icon icon-check-1"
+                                    v-if="entry.status === 'success'"
+                                ></i>
                                 <p class="step-label">{{ entry.name }}</p>
                             </div>
                             <div class="retry-bth">
-                                <span :class="[{ disable: !permission }, 'rebuild-btn']"
+                                <span
+                                    :class="[{ disable: !permission }, 'rebuild-btn']"
                                     :title="permissionMsg"
                                     v-if="(entry.code === 'check' && entry.status === 'fail') || (entry.code === 'check' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
                                     @click.stop="reCheck"
                                 > {{ $t('store.重新验证') }} <i class="col-line"></i>
                                 </span>
-                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo'" @click.stop="readLog"> {{ $t('store.日志') }} </span>
-                                <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
-                                    <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
+                                <span
+                                    class="log-btn"
+                                    v-if="entry.code === 'check' && entry.status !== 'undo'"
+                                    @click.stop="readLog"
+                                > {{ $t('store.日志') }} </span>
+                                <span
+                                    class="test-btn"
+                                    v-if="entry.code === 'test' && entry.status === 'doing'"
+                                >
+                                    <a
+                                        target="_blank"
+                                        :href="`/console/pipeline/${imageDetail.projectCode}`"
+                                    > {{ $t('store.测试') }} </a>
                                 </span>
                             </div>
-                            <bk-button class="pass-btn"
+                            <bk-button
+                                class="pass-btn"
                                 theme="primary"
                                 size="small"
                                 v-if="entry.code === 'test'"
@@ -37,22 +73,46 @@
                                 @click.native="passTest"
                                 :loading="isTestLoading"
                                 :title="permissionMsg"
-                            > {{ $t('store.继续') }} </bk-button>
-                            <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
-                                <i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
+                            >
+                                {{ $t('store.继续') }}
+                            </bk-button>
+                            <div
+                                class="audit-tips"
+                                v-if="entry.code === 'approve' && entry.status === 'doing'"
+                            >
+                                <i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-            <section class="image-progress-section" v-if="!isOver">
+            <section
+                class="image-progress-section"
+                v-if="!isOver"
+            >
                 <h3> {{ $t('store.版本详情') }} </h3>
                 <detail-info :detail="imageDetail"></detail-info>
             </section>
-            <div class="released-tips" v-else>
+            <div
+                class="released-tips"
+                v-else
+            >
                 <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
                 <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click.native="toImageList"> {{ $t('store.工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click.native="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
+                    <bk-button
+                        class="bk-button bk-primary"
+                        size="small"
+                        @click.native="toImageList"
+                    >
+                        {{ $t('store.工作台') }}
+                    </bk-button>
+                    <bk-button
+                        class="bk-button bk-default"
+                        size="small"
+                        @click.native="toAtomStore"
+                    >
+                        {{ $t('store.研发商店') }}
+                    </bk-button>
                 </div>
             </div>
         </main>
@@ -62,14 +122,18 @@
             :is-show.sync="sideSliderConfig.show"
             :title="sideSliderConfig.title"
             :quick-close="sideSliderConfig.quickClose"
-            :width="sideSliderConfig.width">
+            :width="sideSliderConfig.width"
+        >
             <template slot="content">
-                <div style="width: 100%; height: 100%"
+                <div
+                    style="width: 100%; height: 100%"
                     v-bkloading="{
                         isLoading: sideSliderConfig.loading.isLoading,
                         title: sideSliderConfig.loading.title
-                    }">
-                    <build-log v-if="currentBuildNo"
+                    }"
+                >
+                    <build-log
+                        v-if="currentBuildNo"
                         :build-no="currentBuildNo"
                         :log-url="`store/api/user/store/logs/types/IMAGE/projects/${currentProjectCode}/pipelines/${currentPipelineId}/builds`"
                     />
@@ -80,10 +144,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import BuildLog from '@/components/Log'
-    import detailInfo from '../components/detailInfo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions } from 'vuex'
+    import detailInfo from '../components/detailInfo'
 
     export default {
         components: {

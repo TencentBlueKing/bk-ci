@@ -15,6 +15,7 @@ import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
@@ -57,7 +58,9 @@ object ParametersExpressionParse {
         templateParameters.forEachIndexed { index, param ->
             if (param.name.contains(".")) {
                 throw error(
-                    Constants.PARAMETER_FORMAT_ERROR.format(path, "parameter name ${param.name} not allow contains '.'")
+                    Constants.PARAMETER_FORMAT_ERROR.format(
+                        path, "parameter name ${param.name} not allow contains '.'"
+                    )
                 )
             }
 
@@ -146,7 +149,9 @@ object ParametersExpressionParse {
         if (!jsonTree.isArray) {
             throw error(
                 Constants.PARAMETER_FORMAT_ERROR.format(
-                    path, "array parameter $parameterName value  [$value] json type [${jsonTree.nodeType}] not array."
+                    path,
+                    "array parameter $parameterName value  [$value] " +
+                        "json type [${jsonTree.nodeType}] not array."
                 )
             )
         }
@@ -394,7 +399,7 @@ object ParametersExpressionParse {
         val (value, isComplete, type) = try {
             ExpressionParser.createSubNameValueEvaluateTree(
                 expression, null, nameValues, functionList, subInfo
-            )?.subNameValueEvaluate(null, context, null, subInfo, null)
+            )?.subNameValueEvaluate(null, context, EvaluationOptions(false), subInfo, null)
                 ?: throw YamlTemplateException("create evaluate tree is null")
         } catch (e: Throwable) {
             throw error(Constants.EXPRESSION_EVALUATE_ERROR.format(path, expression, e.message))

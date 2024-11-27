@@ -27,19 +27,18 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class GroupDTO(
-    @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
+    @get:Schema(title = "用户组编号, 内置用户组编号固定, 自定义组动态生成")
     val groupCode: String,
-    @ApiModelProperty("默认分组类型 true:默认分组, false 非默认分组")
+    @get:Schema(title = "默认分组类型 true:默认分组, false 非默认分组")
     val groupType: Boolean,
-    @ApiModelProperty("用户组名称")
+    @get:Schema(title = "用户组名称")
     val groupName: String,
-    @ApiModelProperty("用户组别名")
+    @get:Schema(title = "用户组别名")
     val displayName: String?,
-    @ApiModelProperty("关联系统Id")
+    @get:Schema(title = "关联系统Id")
     val relationId: String?
 )

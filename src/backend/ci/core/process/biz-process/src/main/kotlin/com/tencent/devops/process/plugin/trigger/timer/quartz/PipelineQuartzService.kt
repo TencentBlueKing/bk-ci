@@ -33,6 +33,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -136,7 +138,8 @@ class PipelineJobBean(
     private val schedulerManager: SchedulerManager,
     private val pipelineTimerService: PipelineTimerService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -151,6 +154,14 @@ class PipelineJobBean(
         val projectId = comboKeys[2]
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
+                logger.warn("Pipeline[$pipelineId] has restricted build permissions,please try again later!")
+                return
+            }
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
+                logger.warn("Project[$projectId] has restricted build permissions,please try again later!")
+                return
+            }
             val pipelineTimer = pipelineTimerService.get(projectId, pipelineId)
             if (null == pipelineTimer) {
                 logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
@@ -173,7 +184,7 @@ class PipelineJobBean(
                 }
             }
             if (!find) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
+                logger.info("[$pipelineId]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
                 schedulerManager.deleteJob(comboKey)
                 return
             }
@@ -184,23 +195,29 @@ class PipelineJobBean(
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineId, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
-                    logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
+                    logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                     watcher.start("dispatch")
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(
-                            source = "timer_trigger", projectId = pipelineTimer.projectId, pipelineId = pipelineId,
-                            userId = pipelineTimer.startUser, channelCode = pipelineTimer.channelCode
+                            source = "timer_trigger",
+                            projectId = pipelineTimer.projectId,
+                            pipelineId = pipelineId,
+                            userId = pipelineRepositoryService.getPipelineOauthUser(
+                                projectId = projectId,
+                                pipelineId = pipelineId
+                            ) ?: pipelineTimer.startUser,
+                            channelCode = pipelineTimer.channelCode
                         )
                     )
                 } catch (ignored: Exception) {
                     logger.error(
-                        "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
+                        "[$pipelineId]||PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
                             "e=$ignored"
                     )
                 }
             } else {
                 logger.info(
-                    "[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
+                    "[$pipelineId]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
                 )
             }
         } finally {

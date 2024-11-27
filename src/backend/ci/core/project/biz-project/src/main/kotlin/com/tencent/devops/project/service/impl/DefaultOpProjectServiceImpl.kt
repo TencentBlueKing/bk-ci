@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
@@ -37,12 +38,12 @@ import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,14 +55,16 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
-    private val projectDispatcher: ProjectDispatcher,
-    private val redisOperation: RedisOperation
+    private val projectDispatcher: SampleEventDispatcher,
+    private val redisOperation: RedisOperation,
+    private val projectService: ProjectService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
     projectLabelRelDao = projectLabelRelDao,
     redisOperation = redisOperation,
-    projectDispatcher = projectDispatcher
+    projectDispatcher = projectDispatcher,
+    projectService = projectService
 ) {
 
     override fun updateProjectFromOp(

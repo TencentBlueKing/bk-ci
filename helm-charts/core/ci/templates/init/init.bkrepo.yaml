@@ -33,7 +33,7 @@ spec:
               REPO_CREATE_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/create"
               REPO_INIT_GENERIC_METADATA_PATH="{{ .Values.config.bkRepoApiUrl }}/generic/"
               create_repo_project_name_init_plugintransfer_project_generic (){
-                  for i in bk-store
+                  for i in bk-store bkcdn
                   do
                       ret=0
                       echo "CI project is $i -------------------------------------------------->"
@@ -89,6 +89,19 @@ spec:
                   curl -s -X PUT $REPO_INIT_GENERIC_METADATA_PATH/bk-store/static/file/$k -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H \"X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}\" -H \"X-BKREPO-OVERWRITE: true\" --upload-file ${k}
                   echo -e ""
               done
+
+              # 打开制品库入口
+              services="project"
+              for service in $services
+              do
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+              done
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}

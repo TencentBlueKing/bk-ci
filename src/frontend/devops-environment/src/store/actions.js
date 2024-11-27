@@ -91,7 +91,7 @@ const actions = {
      * 环境的节点列表
      */
     requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`, { }).then(response => {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`).then(response => {
             return response
         })
     },
@@ -225,8 +225,8 @@ const actions = {
     /**
     * 设置agent构建并发数
     */
-    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, parallelTaskCount }) {
-        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${parallelTaskCount}`).then(response => {
+    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${count}`).then(response => {
             return response
         })
     },
@@ -283,7 +283,19 @@ const actions = {
 
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
+    },
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
+    },
+    /**
+    * 设置docker构建并发数
+    */
+    saveDockerParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
+            return response
+        })
     }
+
 }
 
 export default actions

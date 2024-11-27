@@ -29,6 +29,7 @@ package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
 interface PipelinePermissionService {
@@ -37,12 +38,14 @@ interface PipelinePermissionService {
      * @param userId userId
      * @param projectId projectId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
     fun checkPipelinePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = AuthResourceType.PIPELINE_DEFAULT
     ): Boolean
 
     /**
@@ -51,13 +54,15 @@ interface PipelinePermissionService {
      * @param projectId projectId
      * @param pipelineId pipelineId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
     fun checkPipelinePermission(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = AuthResourceType.PIPELINE_DEFAULT
     ): Boolean
 
     /**
@@ -149,4 +154,10 @@ interface PipelinePermissionService {
         userId: String,
         projectId: String
     ): Boolean
+
+    /**
+     * 判断该项目是否进行列表权限控制
+     * @param projectId projectId
+     */
+    fun isControlPipelineListPermission(projectId: String): Boolean
 }

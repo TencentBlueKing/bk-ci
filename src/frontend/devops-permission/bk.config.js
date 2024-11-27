@@ -7,7 +7,9 @@ module.exports = {
   outputDir: process.env.BK_OUTPUT_DIR,
   cache: true,
   open: false,
-  replaceStatic: false,
+  replaceStatic: {
+    key: process.env.BK_STATIC_URL
+  },
   typescript: true,
   resource: {
     main: {

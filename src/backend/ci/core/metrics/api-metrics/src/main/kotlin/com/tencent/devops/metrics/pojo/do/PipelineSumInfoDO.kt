@@ -27,19 +27,18 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线汇总信息")
+@Schema(title = "流水线汇总信息")
 data class PipelineSumInfoDO(
-    @ApiModelProperty("流水线总执行成功率")
+    @get:Schema(title = "流水线总执行成功率")
     val totalSuccessRate: Double,
-    @ApiModelProperty("流水线总平均执行耗时")
+    @get:Schema(title = "流水线总平均执行耗时")
     val totalAvgCostTime: Double,
-    @ApiModelProperty("流水线成功执行次数")
+    @get:Schema(title = "流水线成功执行次数")
     val successExecuteCount: Long,
-    @ApiModelProperty("流水线总执行次数")
+    @get:Schema(title = "流水线总执行次数")
     val totalExecuteCount: Long,
-    @ApiModelProperty("流水线总执行耗时")
+    @get:Schema(title = "流水线总执行耗时")
     val totalCostTime: Long
 )

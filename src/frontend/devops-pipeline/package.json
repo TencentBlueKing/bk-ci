@@ -5,7 +5,7 @@
     "private": true,
     "author": "",
     "scripts": {
-        "dev": "webpack-cli serve --mode development --progress",
+        "dev": "nx exec -- webpack-cli serve --mode development --progress",
         "dll": "webpack --mode production --config webpack.dll.config.js",
         "public": "npm run dll && webpack --mode production",
         "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -14,35 +14,37 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.0.14",
+        "@blueking/log": "2.2.2",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
-        "@vue/composition-api": "^1.2.4",
-        "axios": "^0.27.2",
-        "bk-magic-vue": "2.4.15-beta.21",
-        "bk-permission": "^0.0.20",
-        "bkui-pipeline": "0.1.34",
+        "axios": "0.28.0",
+        "bk-magic-vue": "2.5.9-beta.41",
+        "bk-permission": "workspace:bk-permission",
+        "bkui-pipeline": "workspace:bk-pipeline",
         "clipboard": "^1.7.1",
+        "dayjs": "^1.11.2",
         "js-base64": "^3.7.2",
         "mavon-editor": "^2.10.4",
-        "moment": "^2.29.2",
-        "monaco-editor": "^0.30.1",
-        "monaco-editor-webpack-plugin": "^6.0.0",
+        "monaco-editor": "^0.40.0",
+        "monaco-editor-webpack-plugin": "^7.1.0",
+        "monaco-yaml": "^5.1.0",
         "portal-vue": "^1.5.1",
         "simplebar-vue": "^2.3.3",
         "sockjs-client": "^1.3.0",
         "stompjs": "^2.3.3",
         "uuid": "^8.1.0",
         "vee-validate": "^2.0.3",
-        "vue": "2.6.12",
-        "vue-i18n": "^8.18.1",
+        "vue": "~2.7.16",
+        "vue-echarts": "^6.0.2",
+        "vue-i18n": "~8.18.1",
         "vue-json-viewer": "^2.2.5",
         "vue-router": "3.6.5",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0",
+        "vuex": "3.6.2",
         "xterm": "^4.15.0",
         "xterm-addon-attach": "^0.6.0",
-        "xterm-addon-fit": "^0.5.0"
+        "xterm-addon-fit": "^0.5.0",
+        "yaml": "^2.3.2"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",
@@ -61,6 +63,7 @@
         "@babel/plugin-transform-runtime": "^7.15.8",
         "@babel/preset-env": "^7.15.8",
         "@babel/preset-react": "^7.16.0",
+        "@babel/runtime": "^7.15.4",
         "@vue/babel-preset-jsx": "^1.2.4",
         "@webpack-cli/serve": "^1.7.0",
         "add-asset-html-webpack-plugin": "^5.0.2",
@@ -68,25 +71,41 @@
         "babel-loader": "^8.2.2",
         "babel-plugin-transform-vue-jsx": "^4.0.1",
         "copy-webpack-plugin": "9.0.1",
+        "cross-env": "^7.0.3",
         "css-loader": "^6.4.0",
         "css-minimizer-webpack-plugin": "^4.2.1",
         "eslint": "^7.3.1",
         "eslint-config-standard": "^16.0.3",
         "eslint-friendly-formatter": "~4.0.1",
+        "eslint-import-resolver-node": "^0.3.9",
         "eslint-loader": "^2.1.2",
         "eslint-plugin-import": "^2.25.3",
-        "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^5.1.1",
         "eslint-plugin-standard": "^5.0.0",
         "eslint-plugin-vue": "^6.2.2",
         "html-webpack-plugin": "^5.3.2",
         "mini-css-extract-plugin": "2.4.2",
+        "nx": "19.5.1",
         "sass": "^1.42.1",
         "sass-loader": "^12.1.0",
         "style-loader": "^3.3.1",
         "terser-webpack-plugin": "^5.3.6",
-        "vue-loader": "15.9.8",
-        "vue-template-compiler": "2.6.12",
-        "webpack": "^5.58.1"
+        "vue-loader": "~15.10.0",
+        "vue-style-loader": "^3.0.3",
+        "webpack": "~5.76.1"
+    },
+    "nx": {
+        "targets": {
+            "public:master": {
+                "inputs": [
+                    "{workspaceRoot}/locale/pipeline/*.json",
+                    "{workspaceRoot}/locale/index.js",
+                    "{projectRoot}"
+                ],
+                "outputs": [
+                    "{workspaceRoot}/frontend/pipeline"
+                ]
+            }
+        }
     }
 }

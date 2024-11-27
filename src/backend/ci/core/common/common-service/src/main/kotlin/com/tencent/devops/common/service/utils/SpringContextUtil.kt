@@ -30,6 +30,7 @@ package com.tencent.devops.common.service.utils
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import org.springframework.core.env.get
 import org.springframework.stereotype.Component
 
 /**
@@ -60,7 +61,7 @@ class SpringContextUtil : ApplicationContextAware {
          * @throws BeansException 异常
         </T> */
         @Throws(BeansException::class)
-        fun <T> getBean(clazz: Class<T>): T {
+        fun <T : Any> getBean(clazz: Class<T>): T {
             return applicationContext!!.getBean(clazz)
         }
 
@@ -99,6 +100,19 @@ class SpringContextUtil : ApplicationContextAware {
         @Throws(BeansException::class)
         fun <T : Any> getBeansWithClass(clazz: Class<T>): List<T> {
             return applicationContext!!.getBeansOfType(clazz).values.toList()
+        }
+
+        fun getValue(key: String): String? {
+            return applicationContext?.environment?.get(key)
+        }
+
+        /**
+         * 根据bean名称判断bean是否存在
+         * @param beanName bean名称
+         * @return 布尔值
+         */
+        fun isBeanExist(beanName: String): Boolean {
+            return applicationContext?.containsBean(beanName) ?: false
         }
     }
 }

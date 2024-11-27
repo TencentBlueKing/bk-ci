@@ -22,31 +22,30 @@
  * @example 路由组件名统一首字母大写
  */
 
+import { getCacheViewId } from '@/utils/util'
 import Vue from 'vue'
 import Router from 'vue-router'
 import pipelines from './router'
 
 Vue.use(Router)
 
-const createRouter = (store) => {
+const createRouter = (store, isInIframe) => {
     const router = new Router({
         mode: 'history',
         routes: pipelines
     })
-
     router.beforeEach((to, from, next) => {
-        next()
-    })
-
-    router.afterEach(route => {
-        const { header = '', icon = '', to } = route.meta
-        store.commit('devops/updateHeaderHook', {
-            icon,
-            text: header,
-            routeInfo: {
-                name: to
-            }
-        })
+        if (to.name === 'PipelineManageList' && !to.params.viewId) {
+            next({
+                ...to,
+                params: {
+                    ...to.params,
+                    viewId: getCacheViewId(to.params.projectId)
+                }
+            })
+        } else {
+            next()
+        }
     })
     return router
 }

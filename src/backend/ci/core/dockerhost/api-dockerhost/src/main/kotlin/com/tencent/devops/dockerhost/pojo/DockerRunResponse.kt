@@ -27,15 +27,14 @@
 
 package com.tencent.devops.dockerhost.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerRunResponse")
+@Schema(title = "DockerRunResponse")
 data class DockerRunResponse(
-    @ApiModelProperty("容器Id", required = true)
+    @get:Schema(title = "容器Id", required = true)
     val containerId: String,
-    @ApiModelProperty("容器启动时间戳", required = true)
+    @get:Schema(title = "容器启动时间戳", required = true)
     val startTimeStamp: Int,
-    @ApiModelProperty("端口绑定列表", required = false)
+    @get:Schema(title = "端口绑定列表", required = false)
     val dockerRunPortBindings: List<DockerRunPortBinding>?
 )

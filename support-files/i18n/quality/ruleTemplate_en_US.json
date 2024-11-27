@@ -59,4 +59,54 @@
   "createTime" : "2019-04-10T11:01:34",
   "updateTime" : "2019-04-10T11:43:06",
   "enable" : true
+},{
+  "id" : 7,
+  "name" : "C++ Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 8,
+  "name" : "Java Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 9,
+  "name" : "Go Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 10,
+  "name" : "Python Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 11,
+  "name" : "JS Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
 } ]

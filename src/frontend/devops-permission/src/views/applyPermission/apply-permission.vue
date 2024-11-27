@@ -159,9 +159,8 @@ const handleSearchProject = (val) => {
   pageInfo.value.page = 1;
   pageInfo.value.projectName = val;
   projectList.value = [];
-  getAllProjectList(val);
+  return getAllProjectList(val);
 }
-
 const getAllProjectList = async (name = '') => {
   if (pageInfo.value.loadEnd || scrollLoading.value) {
     return
@@ -263,7 +262,7 @@ onMounted(async () => {
                     {{ project.projectName }}
                     <i
                       v-if="['v0', 'v3'].includes(project.routerTag)"
-                      v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
+                      v-bk-tooltips="t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
                       class="permission-icon permission-icon-edit edit-icon"
                       @click="handleToProjectManage(project)"
                     >
@@ -288,7 +287,9 @@ onMounted(async () => {
             <span class="empty-group" v-if="!groupList.length">{{ t('请先从上方选择用户组') }}</span>
             <div v-else class="selected-group">
               <span class="group-item" v-for="(group, index) in groupList" :key="group.id">
-                {{ group.name }} 
+                <span>
+                  {{ `${group.resourceTypeName}: ${group.resourceName}-${group.name}` }} 
+                </span>
                 <span @click="handleGroupClear(index)" class="permission-icon permission-icon-close-samll clear-icon"></span>
               </span>
             </div>

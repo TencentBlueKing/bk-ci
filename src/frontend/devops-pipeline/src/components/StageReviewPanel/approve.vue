@@ -19,8 +19,21 @@
         ></params-approve>
 
         <section class="approve-footer">
-            <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="disabled">{{ $t('confirm') }}</bk-button>
-            <bk-button @click="cancelApprove" :disabled="isApproving">{{ $t('cancel') }}</bk-button>
+            <bk-button
+                theme="primary"
+                class="approve-button"
+                @click="confirmApprove"
+                :loading="isApproving"
+                :disabled="disabled"
+            >
+                {{ $t('confirm') }}
+            </bk-button>
+            <bk-button
+                @click="cancelApprove"
+                :disabled="isApproving"
+            >
+                {{ $t('cancel') }}
+            </bk-button>
         </section>
     </section>
 </template>
@@ -96,7 +109,7 @@
                     }).then(() => {
                         this.cancelApprove()
                         this.$emit('approve')
-                        this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc'), limit: 1 })
                     })
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })

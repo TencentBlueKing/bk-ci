@@ -26,5 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:metrics:biz-metrics-sample"))
+    api(project(":core:metrics:biz-metrics"))
 }

@@ -85,19 +85,34 @@ class CallBackData<out T>(
     val data: T
 )
 
+/**
+ *
+ * @see com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+ */
 enum class CallBackEvent {
-    DELETE_PIPELINE,
-    CREATE_PIPELINE,
-    UPDATE_PIPELINE,
-    STREAM_ENABLED,
-    RESTORE_PIPELINE,
-    BUILD_START,
-    BUILD_END,
-    BUILD_TASK_START,
-    BUILD_TASK_END,
-    BUILD_STAGE_START,
-    BUILD_STAGE_END,
-    BUILD_TASK_PAUSE
+    DELETE_PIPELINE,    /*流水线删除*/
+    CREATE_PIPELINE,    /*流水线创建*/
+    UPDATE_PIPELINE,    /*流水线更新，包括model和setting。*/
+    STREAM_ENABLED,     /*stream ci 开启/关闭*/
+    RESTORE_PIPELINE,   /*流水线恢复*/
+
+    BUILD_QUEUE,        /*构建排队，包含并发超限时排队、并发组排队。*/
+    BUILD_START,        /*构建开始，不包含并发超限时排队、并发组排队。*/
+    BUILD_END,          /*构建结束*/
+    BUILD_STAGE_START,  /*stage开始*/
+    BUILD_STAGE_END,    /*stage结束*/
+    BUILD_JOB_QUEUE,    /*job排队，包含互斥组排队、构建机复用互斥排队、最大job并发排队。*/
+    BUILD_JOB_START,    /*job开始，不包含BUILD_JOB_QUEUE。如果job SKIP或没有可执行的插件，就不会有该事件。*/
+    BUILD_JOB_END,      /*job结束，job SKIP或没有可执行的插件时会有该事件。*/
+    BUILD_AGENT_START,  /*构建机启动，现在仅包含第三方构建机*/
+    BUILD_TASK_START,   /*插件开始*/
+    BUILD_TASK_END,     /*插件结束*/
+    BUILD_TASK_PAUSE,   /*插件前置暂停*/
+
+    PROJECT_CREATE,     /*项目创建*/
+    PROJECT_UPDATE,     /*项目更新*/
+    PROJECT_ENABLE,     /*项目启用*/
+    PROJECT_DISABLE     /*项目禁用*/
 }
 
 data class PipelineEvent(
@@ -128,7 +143,9 @@ data class BuildEvent(
     val projectId: String,
     val trigger: String,
     val stageId: String?, // 仅当 BUILD_STAGE_START/BUILD_STAGE_END
-    val taskId: String? // 仅当 BUILD_TASK_START/BUILD_TASK_END
+    val taskId: String?, // 仅当 BUILD_TASK_START/BUILD_TASK_END
+    val buildNo: Int = 0, // 构建序号
+    val debug: Boolean? // 是否为调试构建
 )
 
 data class SimpleModel(
@@ -160,3 +177,15 @@ data class SimpleTask(
     val startTime: Long = 0,
     val endTime: Long = 0
 )
+
+data class ProjectCallbackEvent(
+    val projectId: String,
+    val projectName: String,
+    val enable: Boolean,
+    val userId: String
+)
+
+object CallbackConstants {
+    // 项目级回调标志位
+    const val DEVOPS_ALL_PROJECT = "DEVOPS_ALL_PROJECT"
+}

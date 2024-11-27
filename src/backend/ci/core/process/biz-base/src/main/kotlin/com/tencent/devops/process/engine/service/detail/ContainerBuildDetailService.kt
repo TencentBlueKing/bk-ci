@@ -193,7 +193,7 @@ class ContainerBuildDetailService(
         modelContainer: Container?
     ) {
         logger.info(
-            "[$buildId]|matrix_group|j(${modelContainer?.containerId})|groupId=$matrixGroupId|status=$buildStatus"
+            "[$buildId]|matrix_group|j(${modelContainer?.id})|groupId=$matrixGroupId|status=$buildStatus"
         )
         update(
             projectId = projectId,

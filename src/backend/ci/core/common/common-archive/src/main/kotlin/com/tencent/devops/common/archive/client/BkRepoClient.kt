@@ -46,6 +46,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
+import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
@@ -58,6 +59,7 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -67,10 +69,15 @@ import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
+import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
+import com.tencent.devops.common.archive.pojo.defender.ScanTask
 import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
 import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
 import com.tencent.devops.common.archive.pojo.replica.ReplicaType
@@ -153,6 +160,18 @@ class BkRepoClient constructor(
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+    }
+
+    fun enableProject(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("enableProject, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = enabled)))
+        val request = Request.Builder()
+            .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId")
+            .headers(getCommonHeaders(SYSTEM_USER, projectId).toHeaders())
+            .put(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+        return true
     }
 
     private fun createGenericRepo(
@@ -692,14 +711,22 @@ class BkRepoClient constructor(
         fullPath: String,
         downloadUsers: List<String>,
         downloadIps: List<String>,
-        timeoutInSeconds: Long
+        timeoutInSeconds: Long,
+        bkrepoPrefixUrl: String? = null,
+        userName: String? = null,
+        password: String? = null
     ): String {
         logger.info(
             "createShareUri, creatorId: $creatorId, projectId: $projectId, repoName: $repoName, " +
                     "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
                     "timeoutInSeconds: $timeoutInSeconds"
         )
-        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
+        val repoUrlPrefix = if (bkrepoPrefixUrl.isNullOrBlank()) {
+            "${getGatewayUrl()}/bkrepo/api/service"
+        } else {
+            bkrepoPrefixUrl
+        }
+        val url = "$repoUrlPrefix/repository/api/share/$projectId/$repoName/${
             fullPath.removePrefix("/").replace(
                 "#",
                 "%23"
@@ -711,12 +738,74 @@ class BkRepoClient constructor(
             expireSeconds = timeoutInSeconds
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
+        val header = getCommonHeaders(creatorId, projectId)
+        if (userName != null && password != null) {
+            header[AUTH_HEADER_IAM_TOKEN] = Credentials.basic(userName, password)
+        }
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(creatorId, projectId).toHeaders())
+            .headers(header.toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<ShareRecordInfo>>()!!.data!!.shareUrl
+    }
+
+    fun createTemporaryAccessUrl(
+        temporaryUrlCreateRequest: TemporaryUrlCreateRequest,
+        bkrepoPrefixUrl: String,
+        userName: String,
+        password: String
+    ): List<TemporaryAccessUrl> {
+        val url = "$bkrepoPrefixUrl/generic/temporary/url/create"
+        val requestBody = objectMapper.writeValueAsString(temporaryUrlCreateRequest)
+        val header = mutableMapOf<String, String>()
+        header[AUTH_HEADER_IAM_TOKEN] = Credentials.basic(userName, password)
+        val request = Request.Builder()
+            .url(url)
+            .headers(header.toHeaders())
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<List<TemporaryAccessUrl>>>()!!.data!!
+    }
+
+    fun apkDefender(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        userIds: Collection<String>,
+        batchSize: Int
+    ): ApkDefenderTasks {
+        logger.info(
+            "apkDefender , projectId: $projectId , repoName: $repoName , fullPath: $fullPath , " +
+                    "userIds: $userIds, batchSize: $batchSize"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/ext/apk/defender"
+        val apkDefenderRequest = ApkDefenderRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPath = fullPath,
+            users = userIds,
+            batchSize = batchSize
+        )
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<ApkDefenderTasks>>()!!.data!!
+    }
+
+    fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Boolean {
+        logger.info("checkApkDefenderTask , taskId : $taskId")
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/scan/tasks/$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        val data = doRequest(request).resolveResponse<Response<ScanTask>>()!!.data!!
+        return data.status == "FINISHED"
     }
 
     fun createTemporaryToken(
@@ -1144,6 +1233,7 @@ class BkRepoClient constructor(
         private const val ERROR_PROJECT_EXISTED = 251005
         private const val ERROR_REPO_EXISTED = 251007
 
+        private const val SYSTEM_USER = "system"
         private const val BKREPO_REALM = "bkrepo"
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
         const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径

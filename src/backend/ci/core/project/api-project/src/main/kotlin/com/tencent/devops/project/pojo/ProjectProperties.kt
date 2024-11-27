@@ -28,19 +28,37 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目其他配置")
+@Schema(title = "项目其他配置")
 data class ProjectProperties(
-    @ApiModelProperty("YAML流水线功能设置")
-    val pipelineAsCodeSettings: PipelineAsCodeSettings,
-    @ApiModelProperty("是否启用云研发", required = false)
+    @get:Schema(title = "YAML流水线功能设置")
+    val pipelineAsCodeSettings: PipelineAsCodeSettings = PipelineAsCodeSettings(
+        enable = false
+    ),
+    @get:Schema(title = "是否启用云研发", required = false)
     val remotedev: Boolean? = false,
-    @ApiModelProperty("可申请的云桌面数", required = false)
+    @get:Schema(title = "可申请的云桌面数", required = false)
     val cloudDesktopNum: Int = 0,
-    @ApiModelProperty("云研发管理员，多人用分号分隔", required = false)
+    @get:Schema(title = "云研发管理员，多人用分号分隔", required = false)
     val remotedevManager: String? = null,
-    @ApiModelProperty("数据标签，创建项目时会为该项目分配指定标签的db")
-    val dataTag: String? = null
+    @get:Schema(title = "是否开启流水线模板管理", required = false)
+    var enableTemplatePermissionManage: Boolean? = null,
+    @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
+    val dataTag: String? = null,
+    @get:Schema(title = "当项目不活跃时，是否禁用")
+    var disableWhenInactive: Boolean? = null,
+    @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
+    val buildMetrics: Boolean? = null,
+    @get:Schema(title = "是否控制流水线列表权限", required = false)
+    var pipelineListPermissionControl: Boolean? = null,
+    @get:Schema(title = "插件详情展示顺序", required = false)
+    var pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>? = listOf(
+        PluginDetailsDisplayOrder.LOG,
+        PluginDetailsDisplayOrder.ARTIFACT,
+        PluginDetailsDisplayOrder.CONFIG
+    ),
+    @get:Schema(title = "流水线语法风格")
+    var pipelineDialect: String? = "CLASSIC"
 )

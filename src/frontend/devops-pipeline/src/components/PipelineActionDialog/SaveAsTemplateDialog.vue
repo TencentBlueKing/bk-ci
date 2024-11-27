@@ -32,7 +32,10 @@
                     v-model="model.templateName"
                     :placeholder="$t(`template.${item.placeholder}`)"
                 />
-                <bk-radio-group v-else v-model="model.isCopySetting">
+                <bk-radio-group
+                    v-else
+                    v-model="model.isCopySetting"
+                >
                     <bk-radio
                         v-for="(entry, key) in optionGroups"
                         :key="key"
@@ -86,7 +89,7 @@
                                 message: this.$t('template.nameInputTips')
                             },
                             {
-                                max: 30,
+                                max: 128,
                                 message: this.$t('pipelineNameInputTips')
                             }
                         ]

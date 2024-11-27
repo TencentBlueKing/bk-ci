@@ -90,7 +90,8 @@ interface AuthProjectApi {
         serviceCode: AuthServiceCode,
         userId: String,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?
+        supplier: (() -> List<String>)?,
+        resourceType: String? = null
     ): List<String>
 
     /**

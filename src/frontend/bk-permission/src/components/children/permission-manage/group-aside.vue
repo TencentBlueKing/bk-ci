@@ -15,14 +15,17 @@
           @click="handleChooseGroup(group)"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <img src="../../../svg/user.svg?inline" class="group-icon">
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <img src="../../../svg/organization.svg?inline" class="group-icon">
-            {{ group.departmentCount }}
-          </span>
+          <div class="num-box" v-for="item in groupCountField" :key="item">
+            <i
+              :class="['group-icon', 'manage-icon', {
+                'manage-icon-user-shape': item === 'userCount',
+                'manage-icon-user-template': item === 'templateCount',
+                'manage-icon-organization': item === 'departmentCount',
+                'active': activeTab === group.groupId
+              }]"
+            />
+            <div class="group-num">{{ group[item] }}</div>
+          </div>
           <bk-popover
             v-if="resourceType === 'project'"
             class="group-more-option"
@@ -31,7 +34,7 @@
             :arrow="false"
             offset="15"
             :distance="0">
-            <img src="../../../svg/more.svg?inline" class="more-icon">
+            <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
               <bk-button
                 class="btn"
@@ -69,24 +72,26 @@
       @cancel="handleHiddenCloseManage"
     >
       <template #header>
-        <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
+        <i class="warning-icon header-warning-icon manage-icon manage-icon-more-fill"></i>
         <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
-      <div class="close-tips">
-        <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
-        <p>
-          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('将编辑者、执行者、查看者中的用户移除') }}
-        </p>
-        <p>
-          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('删除对应组内用户继承该组的权限') }}
-        </p>
-        <p>
-          <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ t('删除对应组信息和组权限') }}
-        </p>
-      </div>
+      <template>
+        <div class="close-tips">
+          <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceTypeName]) }}</p>
+          <p>
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
+            {{ closeManageTips || t('将编辑者、执行者、查看者中的用户移除') }}
+          </p>
+          <p>
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
+            {{ t('删除对应组内用户继承该组的权限') }}
+          </p>
+          <p>
+            <i class="warning-icon manage-icon manage-icon-more-fill"></i>
+            {{ t('删除对应组信息和组权限') }}
+          </p>
+        </div>
+      </template>
       <div class="confirm-close">
         <span style="color: #737987; font-size: 14px;">
           {{ t('提交后，再次开启权限管理时对应组内用户将不能恢复,请谨慎操作!') }}
@@ -170,6 +175,32 @@ export default {
       isClosing: false,
       curGroupIndex: -1,
     };
+  },
+  computed: {
+    groupCountField () {
+      if (this.resourceType === 'pipeline') {
+        return ['userCount', 'templateCount', 'departmentCount']
+      }
+      return ['userCount', 'departmentCount']
+    },
+    resourceTypeName () {
+      const nameMap = {
+        'pipeline': this.t('流水线'),
+        'pipeline_group': this.t('流水线组'),
+        'pipeline_template': this.t('流水线模板'),
+        'environment': this.t('环境')
+      };
+      return nameMap[this.resourceType] || this.resourceType;
+    },
+    closeManageTips () {
+      const tipsMap = {
+        'pipeline': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_group': this.t('将编辑者、执行者、查看者中的用户移除'),
+        'pipeline_template': this.t('将编辑者中的用户移除'),
+        'environment': this.t('将拥有者、使用者组中的用户移除')
+      }
+      return tipsMap[this.resourceType];
+    }
   },
   watch: {
     activeIndex(newVal) {
@@ -271,18 +302,62 @@ export default {
             this.handleChooseGroup(this.groupList[0]);
             break;
           case 'add_user_confirm':
+          case 'add_template_confirm':
             this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            this.groupList[this.curGroupIndex].templateCount += data.data.templates.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
           case 'remove_user_confirm':
+          case 'remove_template_confirm': {
             const departments = data.data.members.filter(i => i.type === 'department')
             const users = data.data.members.filter(i => i.type === 'user')
+            const templates = data.data.members.filter(i => i.type === 'template')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
+            this.groupList[this.curGroupIndex].templateCount -= templates.length
+            this.syncGroupIAM(this.groupList[this.curGroupIndex].groupId)
             break;
+          }
           case 'change_group_detail_tab':
             this.$emit('change-group-detail-tab', data.data.tab)
+            break;
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_add_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
+          case 'submit_delete_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
         }
+      }
+    },
+    async syncGroupPermissions(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupPermissions`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
+      }
+    },
+    async syncGroupIAM(groupId){
+      try {
+        await ajax.put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/sync/${this.projectCode}/${groupId}/syncGroupMember`);
+      } catch (error) {
+        Message({
+          theme: 'error',
+          message: error.message
+        });
       }
     },
   },
@@ -298,7 +373,7 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 70px);
   height: auto;
   overflow-y: auto;
   &::-webkit-scrollbar-thumb {
@@ -344,8 +419,15 @@ export default {
     color: #fff;
   }
   .group-icon {
-    filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    color: #A3C5FD;
   }
+}
+.num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: 10px;
 }
 .user-num,
 .group-num {
@@ -385,9 +467,9 @@ export default {
   color: #3A84FF !important;
 }
 .group-icon {
-  height: 12px;
-  width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #C4C6CC;
 }
 .line-split {
   width: 80%;
@@ -412,9 +494,6 @@ export default {
   margin-bottom: 20px;
   text-align: center;
 }
-.small-size {
-  scale: 0.9;
-}
 
 .close-manage-dialog {
     .title-icon {
@@ -437,8 +516,23 @@ export default {
         margin: 15px 0 30px;
     }
     .close-tips {
-        padding: 20px;
-        background: #f5f6fa;
+      padding: 20px;
+      background: #f5f6fa;
+          p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+    }
+    .warning-icon {
+      color: #ff9c01;
+      font-size: 14px;
+      position: relative;
+      top: -1px;
+      margin-right: 4px;
+    }
+    .header-warning-icon {
+      font-size: 42px;
     }
     .option-btns {
         text-align: center;

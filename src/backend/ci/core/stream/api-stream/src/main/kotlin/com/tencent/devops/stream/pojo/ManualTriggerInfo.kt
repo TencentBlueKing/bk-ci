@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.web.form.models.Form
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("手动触发返回给前端的渲染信息")
+@Schema(title = "手动触发返回给前端的渲染信息")
 data class ManualTriggerInfo(
     val enable: Boolean = true,
     val yaml: String?,

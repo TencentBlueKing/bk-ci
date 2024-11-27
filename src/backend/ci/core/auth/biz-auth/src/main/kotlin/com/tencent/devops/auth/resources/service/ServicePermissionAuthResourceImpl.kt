@@ -28,23 +28,23 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
-import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService,
-    val permissionGrantService: PermissionGrantService
+    val permissionExtService: PermissionExtService
 ) : ServicePermissionAuthResource {
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserActionPermission(
         userId: String,
         token: String,
@@ -54,6 +54,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         return Result(permissionService.validateUserActionPermission(userId, action))
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserResourcePermission(
         userId: String,
         token: String,
@@ -65,6 +66,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         return Result(permissionService.validateUserResourcePermission(userId, action, projectCode, resourceCode))
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserResourcePermissionByRelation(
         userId: String,
         token: String,
@@ -87,6 +89,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         token: String,
@@ -105,6 +108,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun batchValidateUserResourcePermissionByRelation(
         userId: String,
         token: String,
@@ -133,6 +137,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         return Result(actionCheckPermission)
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getUserResourceByPermission(
         userId: String,
         token: String,
@@ -151,6 +156,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getUserResourcesByPermissions(
         userId: String,
         token: String,
@@ -169,6 +175,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun filterUserResourcesByPermissions(
         userId: String,
         token: String,
@@ -189,6 +196,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getUserResourceAndParentByPermission(
         userId: String,
         token: String,
@@ -207,6 +215,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun resourceCreateRelation(
         userId: String,
         token: String,
@@ -227,6 +236,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun resourceModifyRelation(
         token: String,
         type: String?,
@@ -245,6 +255,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun resourceDeleteRelation(
         token: String,
         type: String?,
@@ -261,6 +272,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun resourceCancelRelation(
         userId: String,
         token: String,
@@ -275,20 +287,6 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
-            )
-        )
-    }
-
-    override fun grantInstancePermission(
-        userId: String,
-        token: String,
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
-    ): Result<Boolean> {
-        return Result(
-            permissionGrantService.grantInstancePermission(
-                projectId = projectCode,
-                grantInfo = grantInstance
             )
         )
     }

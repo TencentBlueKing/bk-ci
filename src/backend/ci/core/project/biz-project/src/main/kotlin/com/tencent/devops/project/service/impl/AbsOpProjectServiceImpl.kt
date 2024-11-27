@@ -28,22 +28,30 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.OpProjectService
+import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
@@ -53,8 +61,14 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: SampleEventDispatcher,
+    private val projectService: ProjectService
 ) : OpProjectService {
+
+    @Value("\${tag.gray:#{null}}")
+    private val grayTag: String? = null
+    @Value("\${tag.codecc.gray:#{null}}")
+    private val codeccGrayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -67,7 +81,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             logger.warn("The project is not exist : projectId = $projectId")
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PROJECT_NOT_EXIST, language = I18nUtil.getLanguage(userId))
+                    ProjectMessageCode.PROJECT_NOT_EXIST, language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         // 判断项目是不是审核的情况
@@ -140,6 +155,138 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 3 -> 2 // 驳回
                 else -> 0
             }
+        }
+    }
+
+    @Suppress("LongParameterList")
+    override fun getProjectListByFlag(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
+        productId: Int?,
+        channelCode: String?
+    ): Map<String, Any?>? {
+        val dataObj = mutableMapOf<String, Any?>()
+
+        val routerTag = if (grayFlag) grayTag else null
+
+        val otherRouterTagMaps = mutableMapOf<String, String>()
+        if (codeCCGrayFlag && codeccGrayTag != null) {
+            otherRouterTagMaps[SystemEnums.CODECC.name] = codeccGrayTag
+        }
+        if (repoGrayFlag && grayTag != null) {
+            otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
+        }
+
+        val propertiesMaps = mutableMapOf<String, String>()
+        if (remoteDevFlag) {
+            propertiesMaps["remotedev"] = "true"
+        }
+
+        val projectInfos = projectDao.getProjectList(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag,
+            productId = productId,
+            channelCode = channelCode
+        )
+        val totalCount = projectDao.getProjectCount(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag,
+            productId = productId,
+            channelCode = channelCode
+        )
+        val dataList = mutableListOf<ProjectInfoResponse>()
+
+        for (i in projectInfos.indices) {
+            val projectData = projectInfos[i]
+            val projectInfo = getProjectInfoResponse(projectData)
+            dataList.add(projectInfo)
+        }
+        dataObj["projectList"] = dataList
+        dataObj["count"] = totalCount
+        return dataObj
+    }
+
+    private fun getProjectInfoResponse(
+        projectData: TProjectRecord
+    ): ProjectInfoResponse {
+        val otherRouterTagMap = projectData.otherRouterTags?.let {
+            JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
+        } ?: emptyMap()
+
+        val fixProjectOrganization = projectService.fixProjectOrganization(projectData)
+
+        val projectProperties = projectData.properties?.let {
+            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
+        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
+        return with(projectData) {
+            ProjectInfoResponse(
+                projectId = projectId,
+                projectName = projectName,
+                projectEnglishName = englishName,
+                creatorBgName = creatorBgName,
+                creatorDeptName = creatorDeptName,
+                creatorCenterName = creatorCenterName,
+                bgId = fixProjectOrganization.bgId,
+                bgName = fixProjectOrganization.bgName,
+                businessLineId = fixProjectOrganization.businessLineId,
+                businessLineName = fixProjectOrganization.businessLineName,
+                deptId = fixProjectOrganization.deptId,
+                deptName = fixProjectOrganization.deptName,
+                centerId = fixProjectOrganization.centerId,
+                centerName = fixProjectOrganization.centerName,
+                projectType = projectType,
+                approver = approver,
+                approvalTime = approvalTime?.timestampmilli(),
+                approvalStatus = approvalStatus,
+                secrecyFlag = isSecrecy,
+                creator = creator,
+                createdAtTime = createdAt.timestampmilli(),
+                ccAppId = ccAppId,
+                useBk = useBk,
+                offlinedFlag = isOfflined,
+                kind = kind,
+                enabled = enabled ?: true,
+                grayFlag = routerTag == grayTag,
+                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == codeccGrayTag,
+                repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
+                hybridCCAppId = hybridCcAppId,
+                enableExternal = enableExternal,
+                enableIdc = enableIdc,
+                pipelineLimit = pipelineLimit,
+                properties = projectProperties,
+                productId = productId
+            )
         }
     }
 

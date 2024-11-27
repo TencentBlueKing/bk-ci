@@ -12,27 +12,62 @@
                         action: ENV_RESOURCE_ACTION.EDIT
                     }
                 }"
-                theme="primary" @click="importNewNode"
+                theme="primary"
+                @click="importNewNode"
             >
                 {{ $t('environment.import') }}
             </bk-button>
         </div>
 
-        <div class="node-table" v-if="showContent && nodeList.length">
+        <div
+            class="node-table"
+            v-if="showContent && nodeList.length"
+        >
             <bk-table
                 ref="shareDiaglogTable"
-                :data="nodeList"
+                :data="curNodeList"
+                :row-class-name="handleRowClassName"
             >
-                <bk-table-column :label="$t('environment.envInfo.name')" prop="displayName"></bk-table-column>
-                <bk-table-column :width="150" label="IP" prop="ip"></bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`">
+                <bk-table-column
+                    :label="$t('environment.envInfo.name')"
+                    width="150"
+                    prop="displayName"
+                    show-overflow-tooltip
+                >
+                    <template slot-scope="{ row }">
+                        <span
+                            :class="{ 'display-name': row.nodeType !== 'CMDB' }"
+                            @click="handleToNodeDetailPage(row)"
+                        >
+                            {{ row.displayName }}
+                        </span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    :width="150"
+                    label="IP"
+                    prop="ip"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
                         <span class="node-name">{{ props.row.nodeType }}</span>
                         <span>({{ props.row.createdUser }})</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.nodeInfo.gateway')" prop="gateway"></bk-table-column>
+                <bk-table-column
+                    :width="80"
+                    :label="$t('environment.nodeInfo.os')"
+                    prop="osName"
+                ></bk-table-column>
+                <bk-table-column
+                    :width="80"
+                    :label="$t('environment.nodeInfo.gateway')"
+                    prop="gateway"
+                ></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
                         <div
@@ -56,11 +91,31 @@
                         >
                         </span>
 
-                        <span class="node-status">{{ props.row.nodeStatus }}</span>
+                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.operation')">
+                <bk-table-column
+                    :width="180"
+                    :label="$t('environment.operation')"
+                >
                     <template slot-scope="props">
+                        <bk-button
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            v-if="curEnvDetail.envType === 'BUILD'"
+                            text
+                            @click="handleToggleEnable(props.row)"
+                        >
+                            {{ props.row.envEnableNode ? $t('environment.停用') : $t('environment.启用') }}
+                        </bk-button>
                         <span
                             v-perm="{
                                 hasPermission: curEnvDetail.canEdit,
@@ -81,9 +136,12 @@
         </div>
         <bk-exception
             v-if="showContent && !nodeList.length"
-            class="exception-wrap-item exception-part" type="empty" scene="part"
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
         />
-        <node-select :node-select-conf="nodeSelectConf"
+        <node-select
+            :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
             :row-list="importNodeList"
@@ -93,9 +151,9 @@
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
             :cancel-fn="cancelFn"
-            :query="query">
+            :query="query"
+        >
         </node-select>
-        
     </div>
 </template>
 
@@ -166,6 +224,9 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            curNodeList () {
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode)
             }
         },
         watch: {
@@ -207,7 +268,7 @@
                 const params = []
 
                 this.nodeDialogLoading.isLoading = true
-                this.nodeSelectConf.importText = `${this.$t('environment.nodeType.importing')}...`
+                this.nodeSelectConf.importText = `${this.$t('environment.nodeInfo.importing')}...`
 
                 nodeArr.forEach(item => {
                     params.push(item)
@@ -254,7 +315,6 @@
             },
 
             getNodeStatusIcon (nodeStatus) {
-                console.log(nodeStatus)
                 const i18nPrefix = 'environment.nodeInfo'
                 const statusArray = [
                     'abnormal',
@@ -265,7 +325,7 @@
             
                 switch (true) {
                     case nodeStatus === this.$t(`${i18nPrefix}.creating`):
-                        return 'ceating'
+                        return 'creating'
                     case nodeStatus === this.$t(`${i18nPrefix}.normal`):
                         return 'normal'
                     case statusArray.some(status => nodeStatus === this.$t(`${i18nPrefix}.${status}`)):
@@ -628,6 +688,35 @@
                         }
                     }
                 })
+            },
+            handleRowClassName ({ row, rowIndex }) {
+                return row.envEnableNode ? '' : 'useless'
+            },
+            async handleToggleEnable (row) {
+                try {
+                    await this.$store.dispatch('environment/enableNode', {
+                        projectId: this.projectId,
+                        envHashId: this.envHashId,
+                        nodeHashId: row.nodeHashId,
+                        enableNode: !row.envEnableNode
+                    })
+
+                    await this.requestList()
+
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: row.envEnableNode ? this.$t('environment.停用成功') : this.$t('environment.启用成功')
+                    })
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                }
+            },
+            handleToNodeDetailPage (row) {
+                if (row.nodeType === 'CMDB') return
+                window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
             }
         }
     }
@@ -638,5 +727,13 @@
         margin-top: 24px;
         height: calc(95% - 32px);
         overflow: auto;
+        .useless {
+            color: #c3cdd7;
+        }
+    }
+
+    .display-name {
+        color: #3a84ff;
+        cursor: pointer;
     }
 </style>

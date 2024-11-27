@@ -50,6 +50,12 @@ class CommonConfig {
     val devopsHostGateway: String? = null
 
     /**
+     * Devops白名单代理
+     */
+    @Value("\${devopsGateway.whiteProxy:#{null}}")
+    val devopsWhiteProxy: String? = null
+
+    /**
      * DevOps API网关地址
      */
     @Value("\${devopsGateway.api:#{null}}")
@@ -144,4 +150,10 @@ class CommonConfig {
      */
     @Value("\${bkci.supportLanguages:$DEFAULT_LOCALE_LANGUAGE}")
     val devopsSupportLanguages: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * codecc 访问地址
+     */
+    @Value("\${devopsGateway.codeccHostGateway:#{null}}")
+    val codeccHostGateway: String? = null
 }

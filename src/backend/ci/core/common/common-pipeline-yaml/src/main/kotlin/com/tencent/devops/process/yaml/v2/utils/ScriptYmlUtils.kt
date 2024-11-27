@@ -84,10 +84,10 @@ import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.parameter.ParametersType
-import com.tencent.devops.process.yaml.v2.stageCheck.Flow
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import com.tencent.devops.process.yaml.v2.check.Flow
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.StageCheck
+import com.tencent.devops.process.yaml.v2.check.StageReviews
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
@@ -95,7 +95,7 @@ import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 
-@Suppress("MaximumLineLength", "ComplexCondition")
+@Suppress("MaximumLineLength", "ComplexCondition", "ComplexMethod")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
@@ -516,7 +516,8 @@ object ScriptYmlUtils {
                         )
                     },
                     variables = preCheck.reviews.variables,
-                    description = preCheck.reviews.description
+                    description = preCheck.reviews.description,
+                    notifyGroups = preCheck.reviews.notifyGroups
                 )
             } else {
                 null

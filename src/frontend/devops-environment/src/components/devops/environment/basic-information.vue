@@ -20,16 +20,27 @@
             <div class="item-content">
                 <div class="item-label">{{ $t('environment.nodeInfo.maxParallelTaskCount') }}</div>
                 <div class="item-value">
-                    <div class="display-item" v-if="isEditCount">
-                        <input type="number" class="bk-form-input parallelTaskCount-input"
+                    <div
+                        class="display-item"
+                        v-if="isEditCount"
+                    >
+                        <input
+                            type="number"
+                            class="bk-form-input parallelTaskCount-input"
                             ref="parallelTaskCount"
                             name="parallelTaskCount"
                             :placeholder="$t('environment.nodeInfo.parallelTaskCountTips')"
                             v-validate.initial="`required|between:0,100|decimal:0`"
                             v-model="parallelTaskCount"
-                            :class="{ 'is-danger': errors.has('parallelTaskCount') }">
+                            :class="{ 'is-danger': errors.has('parallelTaskCount') }"
+                        >
                     </div>
-                    <div class="editing-item" v-else>{{ nodeDetails.parallelTaskCount || '--' }}</div>
+                    <div
+                        class="editing-item"
+                        v-else
+                    >
+                        {{ nodeDetails.parallelTaskCount || '--' }}
+                    </div>
                 </div>
                 <div class="handle-btn">
                     <div v-if="isEditCount">
@@ -54,8 +65,58 @@
                 </div>
             </div>
             <div class="item-content">
+                <div class="item-label">{{ $t('environment.nodeInfo.dockerMaxConcurrency') }}</div>
+                <div class="item-value">
+                    <div
+                        class="display-item"
+                        v-if="isEditDockerCount"
+                    >
+                        <input
+                            type="number"
+                            class="bk-form-input parallelTaskCount-input"
+                            ref="dockerParallelTaskCount"
+                            name="dockerParallelTaskCount"
+                            :placeholder="$t('environment.nodeInfo.parallelTaskCountTips')"
+                            v-validate.initial="`required|between:0,100|decimal:0`"
+                            v-model="dockerParallelTaskCount"
+                            :class="{ 'is-danger': errors.has('dockerParallelTaskCount') }"
+                        >
+                    </div>
+                    <div
+                        class="editing-item"
+                        v-else
+                    >
+                        {{ nodeDetails.dockerParallelTaskCount || '--' }}
+                    </div>
+                </div>
+                <div class="handle-btn">
+                    <div v-if="isEditDockerCount">
+                        <span @click="saveHandle('dockerParallelTaskCount')">{{ $t('environment.save') }}</span>
+                        <span @click="editHandle('dockerParallelTaskCount', false)">{{ $t('environment.cancel') }}</span>
+                    </div>
+                    <div
+                        v-else
+                        v-perm="{
+                            hasPermission: nodeDetails.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: nodeHashId,
+                                action: NODE_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        <span @click="editHandle('dockerParallelTaskCount', true)">{{ $t('environment.edit') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="item-content">
                 <div class="item-label">{{ $t('environment.status') }}</div>
-                <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
+                <div
+                    class="item-value"
+                    :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'"
+                >
                     {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                 </div>
             </div>
@@ -69,10 +130,21 @@
             </div>
             <div class="item-content">
                 <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.downloadLink') : $t('environment.nodeInfo.installCommand') }}</div>
-                <div class="item-value" :title="agentLink">{{ agentLink }}</div>
+                <div
+                    class="item-value"
+                    :title="agentLink"
+                >
+                    {{ agentLink }}
+                </div>
                 <div class="handle-btn">
-                    <span class="agent-url" @click="copyHandle">{{ $t('environment.copy') }}</span>
-                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">{{ $t('environment.download') }}</span>
+                    <span
+                        class="agent-url"
+                        @click="copyHandle"
+                    >{{ $t('environment.copy') }}</span>
+                    <span
+                        @click="downloadHandle"
+                        v-if="nodeDetails.os === 'WINDOWS'"
+                    >{{ $t('environment.download') }}</span>
                 </div>
             </div>
         </div>
@@ -91,9 +163,11 @@
                 isEditCount: false,
                 isEditCreatedUser: false,
                 isEditNoticeType: false,
+                isEditDockerCount: false,
                 workspace: '',
                 createdUser: '',
                 parallelTaskCount: 0,
+                dockerParallelTaskCount: 0,
                 noticeTypeList: [
                     { name: 'work-wechat', value: 'RTX', isChecked: true },
                     { name: 'wechat', value: 'WECHAT', isChecked: false },
@@ -156,24 +230,46 @@
                     case 'noticeType':
                         this.isEditNoticeType = isOpen
                         break
+                    case 'dockerParallelTaskCount':
+                        this.isEditDockerCount = isOpen
+                        if (isOpen) {
+                            this.dockerParallelTaskCount = this.nodeDetails.dockerParallelTaskCount
+                            this.$nextTick(() => {
+                                this.$refs.dockerParallelTaskCount.focus()
+                            })
+                        }
+                        break
                     default:
                         break
                 }
             },
-            async saveHandle () {
+            async saveHandle (type) {
                 const valid = await this.$validator.validate()
-                if (valid) {
-                    this.saveParallelTaskCount(this.parallelTaskCount)
+                if (!valid) return
+                switch (type) {
+                    case 'parallelTaskCount':
+                        this.saveParallelTaskCount(this.parallelTaskCount, 'parallelTaskCount')
+                        break
+                    case 'dockerParallelTaskCount':
+                        this.saveParallelTaskCount(this.dockerParallelTaskCount, 'dockerParallelTaskCount')
+                        break
+                    default:
+                        break
                 }
             },
-            async saveParallelTaskCount (parallelTaskCount) {
+            async saveParallelTaskCount (count, type) {
                 let message, theme
+                const fn = type === 'dockerParallelTaskCount'
+                    ? 'environment/saveDockerParallelTaskCount'
+                    : 'environment/saveParallelTaskCount'
+                const params = {
+                    projectId: this.projectId,
+                    nodeHashId: this.nodeHashId,
+                    count: count
+                }
+
                 try {
-                    await this.$store.dispatch('environment/saveParallelTaskCount', {
-                        projectId: this.projectId,
-                        nodeHashId: this.nodeHashId,
-                        parallelTaskCount
-                    })
+                    await this.$store.dispatch(fn, params)
                     message = this.$t('environment.successfullySaved')
                     theme = 'success'
                     this.requestNodeDetail()
@@ -181,6 +277,8 @@
                     message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
+                    this.isEditCount = false
+                    this.isEditDockerCount = false
                     this.$bkMessage({
                         message,
                         theme
@@ -194,7 +292,6 @@
                         nodeHashId: this.nodeHashId
                     })
                     this.$store.commit('environment/updateNodeDetail', { res })
-                    this.isEditCount = false
                 } catch (e) {
                     this.handleError(
                         e,
@@ -235,7 +332,7 @@
             align-items: center;
             border-bottom: 1px solid #DDE4EB;
             .item-label {
-                width: 180px;
+                width: 188px;
                 padding: 12px 20px;
                 border-right: 1px solid #DDE4EB;
             }

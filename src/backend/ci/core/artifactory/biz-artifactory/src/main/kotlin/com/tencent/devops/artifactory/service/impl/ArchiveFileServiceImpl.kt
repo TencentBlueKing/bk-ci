@@ -39,12 +39,12 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("MagicNumber")
 abstract class ArchiveFileServiceImpl : ArchiveFileService {
@@ -78,7 +78,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        logo: Boolean?
+        staticFlag: Boolean?
     ): String {
         val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
         val file = DefaultPathUtils.randomFile(fileName)
@@ -93,7 +93,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 fileType = fileType,
                 props = props,
                 fileChannelType = fileChannelType,
-                logo = logo
+                staticFlag = staticFlag
             )
         } finally {
             file.delete()
