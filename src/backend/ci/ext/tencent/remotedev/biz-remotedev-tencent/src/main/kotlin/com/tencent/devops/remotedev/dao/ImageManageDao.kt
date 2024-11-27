@@ -17,13 +17,17 @@ class ImageManageDao {
     fun queryImageList(
         projectId: String,
         dslContext: DSLContext,
-        imageId: String?
+        imageId: String?,
+        imageCosfile: String? = null
     ): Result<TProjectImagesRecord> {
         return with(TProjectImages.T_PROJECT_IMAGES) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .let {
                     if (imageId != null) it.and(IMAGE_ID.eq(imageId)) else it
+                }
+                .let {
+                    if (imageCosfile != null) it.and(IMAGE_COS_FILE.eq(imageCosfile)) else it
                 }
                 .and(STATUS.notEqual(ImageStatus.DELETED.ordinal))
                 .orderBy(CREATE_TIME.desc())

@@ -153,7 +153,6 @@ class WhiteListService @Autowired constructor(
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
                 userId = userId,
-                unionShared = false,
                 status = WorkspaceStatus.Types.USING.status(),
                 systemType = WorkspaceSystemType.WINDOWS_GPU
             ) + count

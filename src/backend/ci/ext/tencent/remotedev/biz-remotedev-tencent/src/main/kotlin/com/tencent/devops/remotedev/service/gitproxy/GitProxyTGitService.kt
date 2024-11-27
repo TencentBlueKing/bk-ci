@@ -13,6 +13,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -34,7 +35,6 @@ import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.gitproxy.OffshoreTGitApiClient.Companion.LOG_UPDATE_TGIT_ACL_TAG
-import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import java.time.Duration
 import org.jooq.DSLContext
@@ -475,33 +475,79 @@ class GitProxyTGitService @Autowired constructor(
         userId: String,
         projectId: String,
         repoId: Long,
-        url: String
+        onlyDelete: Boolean?
     ): Boolean {
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
-        // TODO: 删除需要一个新单子评审下
-        val tokenR = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
-            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
-            params = arrayOf(userId, tGitConfig.tGitUrl)
+        if (onlyDelete == true) {
+            projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
+            return true
+        }
+
+        try {
+            return doUnbindingTGitLink(userId, projectId, repoId)
+        } catch (e: Exception) {
+            // 解绑失败仍然删除蓝盾的绑定
+            projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
+            throw e
+        }
+    }
+
+    // 单独抽出，方便做绑定失败的相关操作
+    private fun doUnbindingTGitLink(
+        userId: String,
+        projectId: String,
+        repoId: Long
+    ): Boolean {
+        val linkRecord = projectTGitLinkDao.fetchAny(dslContext, projectId, repoId) ?: return true
+        val tokenType = TGitCredType.fromStringDefault(linkRecord.credType)
+        val tokenBox = TokenBox(client = client, save = false, throwE = false, logE = true)
+        val token = tokenBox.get(
+            projectId = projectId,
+            credType = tokenType,
+            cred = when (tokenType) {
+                TGitCredType.OAUTH_USER -> userId
+                TGitCredType.CRED_ACCESS_TOKEN_ID -> {
+                    if (linkRecord.cred == null) {
+                        throw ErrorCodeException(
+                            errorCode = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorCode,
+                            errorType = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorType,
+                            params = arrayOf("cred is null")
+                        )
+                    }
+                    linkRecord.cred
+                }
+            }
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorCode,
+            errorType = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorType,
+            params = arrayOf(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+                    params = arrayOf(userId, tGitConfig.tGitUrl)
+                )
+            )
         )
-        val token = TGitToken(tokenR.accessToken, false)
-        // TODO: 关于svn的判断方式和新单子一起改下从数据库拿
-        val isSvn = url.removeHttpPrefix().startsWith(tGitConfig.tSvnUrl.removeHttpPrefix())
 
         // 校验下是否有删除的权限，svn项目用户在根目录下是否是审批人，git项目校验是否有master及以上权限
-        if (isSvn) {
+        if (linkRecord.gitType == TGitProjectType.SVN.name) {
             val svnRs = offshoreTGitApiClient.getSvnProjectAuth(
                 token = token,
                 projectId = repoId.toString()
             )
             if (svnRs?.approverUsers?.any { it.username == userId } != true) {
                 throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
-                    params = arrayOf(userId)
+                    errorCode = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorCode,
+                    errorType = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorType,
+                    params = arrayOf(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
+                            params = arrayOf(userId)
+                        )
+                    )
                 )
             }
         } else {
@@ -515,15 +561,19 @@ class GitProxyTGitService @Autowired constructor(
                 } != true
             ) {
                 throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
-                    params = arrayOf(userId)
+                    errorCode = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorCode,
+                    errorType = ErrorCodeEnum.REMOVE_TGIT_LINK_ERROR.errorType,
+                    params = arrayOf(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
+                            params = arrayOf(userId)
+                        )
+                    )
                 )
             }
         }
 
-        // TODO: 这里可能需要一把锁（操作频率很低），和删除的单子一起看看
         // 取消关联时如果当前项目是最后一个关联的项目，那么就直接清空
-        // 如果还剩余其他关联项目，那么就拿其他关联项目取并集更新
         val otherProjects = projectTGitLinkDao.fetchByTGitId(
             dslContext = dslContext,
             tgitId = repoId,
@@ -535,12 +585,11 @@ class GitProxyTGitService @Autowired constructor(
                 token = token,
                 tGitProjectId = repoId.toString()
             )
-            if (ok) {
-                projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
-            }
+            projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
             return ok
         }
 
+        // 如果还剩余其他关联项目，那么就拿其他关联项目取并集更新
         val ips = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
             projectIds = otherProjects,
@@ -560,9 +609,8 @@ class GitProxyTGitService @Autowired constructor(
             specUsers = users,
             rewrite = true
         )
-        if (ok) {
-            projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
-        }
+
+        projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
 
         return ok
     }

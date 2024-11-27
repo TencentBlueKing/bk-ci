@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.cron
 
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
+import com.tencent.devops.auth.service.lock.CronSyncGroupMembersExpiredTimeLock
 import com.tencent.devops.auth.service.lock.CronSyncGroupPermissionsLock
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
@@ -65,6 +66,31 @@ class AuthCronSyncGroupAndMember(
                 logger.info("sync members of apply regularly | finish")
             } catch (e: Exception) {
                 logger.warn("sync members of apply regularly | error", e)
+            }
+        }
+    }
+
+    /**
+     * 1小时同步一次用户过期时间
+     * */
+    @Scheduled(initialDelay = 1000, fixedRate = 3600000)
+    fun syncGroupMemberExpiredTimeRegularly() {
+        if (!enable) {
+            return
+        }
+        CronSyncGroupMembersExpiredTimeLock(redisOperation).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("sync group member expired time regularly | running")
+                return@use
+            }
+            try {
+                logger.info("sync group member expired time regularly | start")
+                permissionResourceGroupSyncService.syncGroupMemberExpiredTime(
+                    ProjectConditionDTO(enabled = true)
+                )
+                logger.info("sync group member expired time regularly | finish")
+            } catch (e: Exception) {
+                logger.warn("sync group member expired time regularly| error", e)
             }
         }
     }

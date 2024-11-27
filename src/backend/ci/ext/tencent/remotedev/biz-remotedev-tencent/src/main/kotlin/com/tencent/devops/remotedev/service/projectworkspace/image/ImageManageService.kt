@@ -122,4 +122,19 @@ class ImageManageService @Autowired constructor(
     fun updateImageName(id: Long, imageName: String) {
         imageManageDao.updateImageName(dslContext, id, imageName)
     }
+
+    // 校验是否基础镜像
+    fun checkBaseImage(imageCosFile: String): Boolean {
+        return getVmStandardImages().any { it.cosFile == imageCosFile }
+    }
+
+    // 校验项目下是否有该镜像:true表示存在；false表示不存在
+    fun checkProjectImage(projectId: String, imageCosFile: String): Boolean {
+        return imageManageDao.queryImageList(
+            projectId = projectId,
+            dslContext = dslContext,
+            imageId = null,
+            imageCosfile = imageCosFile
+        ).isNotEmpty
+    }
 }

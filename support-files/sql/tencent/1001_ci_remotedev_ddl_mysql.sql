@@ -52,10 +52,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `CUR_LAUNCH_ID` int(11) NULL COMMENT '根据项目区分的计费id',
     `REGION_ID` int(11) NULL COMMENT '云区域ID',
     `ENABLE_RECORD_USER` varchar(1024) NULL COMMENT '开启云桌面录屏的人，有值等同于开启云桌面',
+    `NODE_HASH_ID`       varchar(64) NULL COMMENT '环境管理节点哈希ID',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
-    KEY `imageKey`(`IMAGE_ID`)
+    KEY `ipKey`(`HOST_IP`),
+    KEY `nodeKey`(`NODE_HASH_ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 -- ----------------------------
@@ -305,6 +307,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `MACHINE_TYPE` varchar(16) NOT NULL COMMENT '机型',
 	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
 	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    `INFO` json NULL COMMENT '一些单据的补充信息',
     PRIMARY KEY (`ID`),
     KEY `idx_project_id` (`PROJECT_ID`),
     KEY `idx_host_ip` (`HOST_IP`),

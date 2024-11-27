@@ -1,7 +1,4 @@
 #!/bin/bash
-workspace=`pwd`
-user=${USER}
-
 function isPidExists()
 {
   for i in `ps aux | grep -v grep | awk '{print $2}'`;do
@@ -18,7 +15,7 @@ function stop()
   if [[ -f "${workspace}/runtime/daemon.pid" ]]; then
     pid=`cat "${workspace}/runtime/daemon.pid"`
   fi
-  if isPidExists ${pid}; then
+  if isPidExists $pid; then
     echo "stop daemon process"
     kill -9 "$pid"
     echo "daemon is stopped"
@@ -30,7 +27,7 @@ function stop()
   if [[ -f "${workspace}/runtime/agent.pid" ]]; then
     pid=`cat "${workspace}/runtime/agent.pid"`
   fi
-  if isPidExists ${pid}; then
+  if isPidExists $pid; then
     echo "stop agent process"
     kill -9 "$pid"
     echo "agent is stopped"
@@ -38,5 +35,10 @@ function stop()
     echo "agent is not running, skip"
   fi
 }
+
+# ----------------------------------
+
+workspace=`pwd`
+user=${USER}
 
 stop

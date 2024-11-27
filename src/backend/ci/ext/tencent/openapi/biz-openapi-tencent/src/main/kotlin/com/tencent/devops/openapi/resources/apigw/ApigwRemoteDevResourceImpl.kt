@@ -14,9 +14,12 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -224,6 +227,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    override fun workspaceClone(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        return client.get(ServiceRemoteDevResource::class).workspaceClone(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            req = req
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
@@ -251,6 +269,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 records = records
             )
         )
+    }
+
+    override fun getExpertSupRecord(appCode: String?, apigwType: String?, id: Long): Result<SupRecordData?> {
+        logger.info("getExpertSupRecord $id")
+        return client.get(ServiceRemoteDevResource::class).fetchExpertSupRecordAny(id)
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
@@ -434,5 +457,33 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<ExpandDiskValidateResp?> {
         logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
+    }
+
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$projectId|$upgradeReq")
+        return client.get(ServiceRemoteDevResource::class).upgradeWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            upgradeReq = upgradeReq
+        )
+    }
+
+    override fun removeUserPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        removeUser: String
+    ): Result<Boolean> {
+        logger.info("removeUserPermission $appCode|$userId|$removeUser")
+        return client.get(ServiceRemoteDevResource::class).removeUserPermission(
+            userId = userId,
+            removeUser = removeUser
+        )
     }
 }

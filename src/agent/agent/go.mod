@@ -129,6 +129,7 @@ require (
 )
 
 require (
+	// 非稳定库，目前只在windows升级中简单使用且主要做对go-ole的封装简化，大规模使用前需要评估
 	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
 	github.com/docker/cli v23.0.1+incompatible
 	github.com/docker/go-connections v0.4.0

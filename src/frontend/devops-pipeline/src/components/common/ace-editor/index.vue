@@ -78,7 +78,7 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), this.getLang(newVal))
                 }
             },
 
@@ -157,7 +157,10 @@
             getLang (lang) {
                 const langMap = {
                     sh: 'shell',
-                    batchfile: 'bat'
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell'
                 }
 
                 return langMap[lang] || lang

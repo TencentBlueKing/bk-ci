@@ -25,46 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.cron
+package com.tencent.devops.environment.resources
 
-import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
+import com.tencent.devops.environment.service.devx.DEVXService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2019-06-11
- * 周期性清理第三方构建机任务的状态
- */
-@Component@Suppress("ALL")
-class ThirdPartyAgentCleanupJob @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
-) {
+@RestResource
+class ServiceDEVXResourceImpl @Autowired constructor(
+    private val devxService: DEVXService
+) : ServiceDEVXResource {
 
-    // every 30 minutes
-    @Scheduled(initialDelay = 10 * 60 * 1000, fixedDelay = 30 * 60 * 1000)
-    fun cleanup() {
-        logger.info("Start to clean up the third party agent")
-        try {
-            val expiredBuilds = thirdPartyAgentBuildDao.getExpireBuilds(dslContext)
-            if (expiredBuilds.isEmpty()) {
-                logger.info("Expire build is empty")
-                return
-            }
-            val ids = expiredBuilds.map { it.id }.toSet()
-            logger.info("Get the expire builds - [$expiredBuilds] - [$ids]")
-            val count = thirdPartyAgentBuildDao.updateExpireBuilds(dslContext, ids)
-            logger.info("Update $count expired agent builds")
-        } catch (t: Throwable) {
-            logger.warn("Fail to clean up the third party agent")
-        }
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ip: String,
+        size: String
+    ): Result<Long> {
+        return Result(
+            devxService.createNode(
+                userId = userId,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                ip = ip,
+                size = size
+            )
+        )
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentCleanupJob::class.java)
+    override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<List<EnvWithNodeCount>> {
+        return Result(devxService.getUserDEVXEnv(userId, projectIds))
     }
 }
