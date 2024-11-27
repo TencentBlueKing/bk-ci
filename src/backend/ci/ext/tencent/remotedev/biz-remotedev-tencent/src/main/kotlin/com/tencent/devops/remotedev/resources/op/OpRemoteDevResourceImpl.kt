@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
+import com.tencent.devops.remotedev.service.MakeMoneyService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -21,6 +22,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -34,7 +36,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val makeMoneyService: MakeMoneyService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
@@ -166,5 +169,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             }
             page += 1
         }
+    }
+
+    override fun makeMoneyLastDay(userId: String): Response {
+        return makeMoneyService.makeMoneyLastDay()
     }
 }

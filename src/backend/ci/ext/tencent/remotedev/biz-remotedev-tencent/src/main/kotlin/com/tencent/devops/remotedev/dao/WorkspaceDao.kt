@@ -136,10 +136,11 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         userId: String? = null,
-        workspaceName: String? = null
+        workspaceName: Set<String>? = null,
+        status: Set<WorkspaceStatus>? = null
     ): List<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceName)
+            val condition = mixCondition(userId, workspaceName, status)
             val query = dslContext.selectFrom(this)
 
             if (condition.isNotEmpty()) {
@@ -282,8 +283,8 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
-                workspaceName = workspaceName,
-                status = status,
+                workspaceName = workspaceName?.let { setOf(workspaceName) },
+                status = status?.let { setOf(status) },
                 mountType = mountType
             )
 
@@ -381,8 +382,8 @@ class WorkspaceDao {
 
     private fun mixCondition(
         userId: String? = null,
-        workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
+        workspaceName: Set<String>? = null,
+        status: Set<WorkspaceStatus>? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
@@ -393,11 +394,11 @@ class WorkspaceDao {
             if (!userId.isNullOrBlank()) {
                 condition.add(CREATOR.eq(userId))
             }
-            if (!workspaceName.isNullOrBlank()) {
-                condition.add(NAME.eq(workspaceName))
+            if (workspaceName != null) {
+                condition.add(NAME.`in`(workspaceName))
             }
             if (status != null) {
-                condition.add(STATUS.eq(status.ordinal))
+                condition.add(STATUS.`in`(status.map { it.ordinal }))
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))

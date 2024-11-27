@@ -25,37 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.remotedev.dao
 
-enum class WorkspaceAction {
-    CREATE, // 0
-    START, // 1
-    SLEEP, // 2
-    DELETE, // 3
-    SHARE, // 4
-    STOP,
-    RESTART,
-    PREPARING,
-    STARTING,
-    SLEEPING,
-    DELETING,
-    COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
-    NEED_RENEWAL,
-    SYSTEM_CHANGES,
-    STOPPING,
-    RESTARTING,
-    MAKE_IMAGE,
-    NOTIFY,
-    ASSIGN,
-    REBUILD,
-    REBUILDING,
-    EXPAND_DISK,
-    // 升级配置
-    UPGRADE,
-    UPGRADING,
-    // 克隆
-    CLONE,
-    CLONING,
-    CREATE_SUCCESS, // 交付成功
-    DELETE_IN_INITIALIZING // 交付时删除
+import com.tencent.devops.model.remotedev.tables.TWorkspaceUseSnapshots
+import com.tencent.devops.remotedev.service.MakeMoneyService
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class WorkspaceUseSnapshotsDao {
+
+    fun createWorkspaceHistory(
+        dslContext: DSLContext,
+        data: Map<String, MakeMoneyService.SaveData>,
+        date: LocalDateTime
+    ) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formattedDate = date.format(formatter)
+        dslContext.batch(data.map {
+            with(TWorkspaceUseSnapshots.T_WORKSPACE_USE_SNAPSHOTS) {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    PROJECT_NAME,
+                    WORKSPACE_NAME,
+                    STATUS,
+                    DATE
+                ).values(
+                    it.value.projectId,
+                    it.value.projectName,
+                    it.key,
+                    it.value.status.name,
+                    formattedDate
+                ).onDuplicateKeyUpdate()
+                    .set(STATUS, it.value.status.name)
+            }
+        }).execute()
+    }
+
 }

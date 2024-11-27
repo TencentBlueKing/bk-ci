@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspaceOpHis
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import java.time.LocalDateTime
+import java.time.LocalTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -83,6 +85,21 @@ class WorkspaceOpHistoryDao {
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .orderBy(CREATED_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset).fetch()
+        }
+    }
+
+    fun fetchHistoryByData(
+        dslContext: DSLContext,
+        action: WorkspaceAction,
+        dateTime: LocalDateTime
+    ): List<TWorkspaceOpHisRecord> {
+        with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
+            return dslContext.selectFrom(this)
+                .where(ACTION.eq(action.ordinal))
+                .and(CREATED_TIME.ge(dateTime.toLocalDate().atStartOfDay()))
+                .and(CREATED_TIME.lessThan(dateTime.toLocalDate().atTime(LocalTime.MAX)))
+                .orderBy(CREATED_TIME.desc(), ID.desc())
+                .fetch()
         }
     }
 
