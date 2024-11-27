@@ -61,10 +61,10 @@
                         name="default-user"
                         size="24"
                     />
-                    <span v-if="execDetail.recordList[executeCount - 1]?.startUser">
+                    <span v-if="startUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.recordList[executeCount - 1]?.startUser,
+                                startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
@@ -397,6 +397,19 @@
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
+            },
+            recordList () {
+                const list = this.execDetail?.recordList.reverse() || []
+                return (
+                    list.map((record, index) => ({
+                        id: index + 1,
+                        user: record.startUser
+                    })) ?? []
+                )
+            },
+            startUser () {
+                console.log(this.recordList, 24)
+                return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             }
         },
 
