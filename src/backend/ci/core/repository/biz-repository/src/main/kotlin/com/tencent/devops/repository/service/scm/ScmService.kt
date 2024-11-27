@@ -28,11 +28,7 @@
 package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.repository.service.ScmMonitorService
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
@@ -41,8 +37,6 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.exception.GitApiException
-import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -64,8 +58,7 @@ import org.springframework.stereotype.Service
 class ScmService @Autowired constructor(
     private val svnConfig: SVNConfig,
     private val gitConfig: GitConfig,
-    private val p4Config: P4Config,
-    private val scmMonitorService: ScmMonitorService
+    private val p4Config: P4Config
 ) : IScmService {
 
     override fun getLatestRevision(
@@ -393,10 +386,6 @@ class ScmService @Autowired constructor(
         request: CommitCheckRequest
     ) {
         val startEpoch = System.currentTimeMillis()
-        var requestTime = System.currentTimeMillis()
-        var responseTime = System.currentTimeMillis()
-        var statusCode: Int = HTTP_200
-        var statusMessage: String? = "OK"
         try {
             with(request) {
                 val scm = ScmFactory.getScm(
@@ -411,7 +400,6 @@ class ScmService @Autowired constructor(
                     userName = "",
                     event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
-                requestTime = System.currentTimeMillis()
                 scm.addCommitCheck(
                     commitId = commitId,
                     state = state,
@@ -427,25 +415,7 @@ class ScmService @Autowired constructor(
                     scm.addMRComment(mrRequestId!!, comment)
                 }
             }
-        } catch (e: GitApiException) {
-            responseTime = System.currentTimeMillis()
-            statusCode = e.code
-            statusMessage = e.message
-            throw ScmException(
-                e.message ?: I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
-                ScmType.CODE_GIT.name
-            )
         } finally {
-            scmMonitorService.reportCommitCheck(
-                requestTime = requestTime,
-                responseTime = responseTime,
-                statusCode = statusCode,
-                statusMessage = statusMessage,
-                projectName = request.projectName,
-                commitId = request.commitId,
-                block = request.block,
-                targetUrl = request.targetUrl
-            )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }
