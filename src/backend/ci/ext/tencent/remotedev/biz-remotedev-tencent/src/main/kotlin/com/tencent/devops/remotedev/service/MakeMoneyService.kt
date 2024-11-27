@@ -103,6 +103,7 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(6).setCellValue(use.elementAtOrNull(i) ?: "")
         }
         for (i in 0 until 7) {
+            sheet.trackAllColumnsForAutoSizing()
             sheet.autoSizeColumn(i)
         }
         return Response.ok(
