@@ -385,63 +385,33 @@ class ScmService @Autowired constructor(
     fun addCommitCheck(
         request: CommitCheckRequest
     ) {
-        val startEpoch = System.currentTimeMillis()
-        var requestTime = System.currentTimeMillis()
-        var responseTime = System.currentTimeMillis()
-        var statusCode: Int = HTTP_200
-        var statusMessage: String? = null
-        try {
-            with(request) {
-                val scm = ScmFactory.getScm(
-                    projectName = projectName,
-                    url = url,
-                    type = type,
-                    branchName = null,
-                    privateKey = privateKey,
-                    passPhrase = passPhrase,
-                    token = token,
-                    region = region,
-                    userName = "",
-                    event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-                )
-                requestTime = System.currentTimeMillis()
-                scm.addCommitCheck(
-                    commitId = commitId,
-                    state = state,
-                    targetUrl = targetUrl,
-                    context = context,
-                    description = description,
-                    block = block,
-                    targetBranch = targetBranch
-                )
-                responseTime = System.currentTimeMillis()
-                if (mrRequestId != null) {
-                    if (reportData.second.isEmpty()) return
-                    val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
-                    scm.addMRComment(mrRequestId!!, comment)
-                }
+        with(request) {
+            val scm = ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = "",
+                event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            )
+            scm.addCommitCheck(
+                commitId = commitId,
+                state = state,
+                targetUrl = targetUrl,
+                context = context,
+                description = description,
+                block = block,
+                targetBranch = targetBranch
+            )
+            if (mrRequestId != null) {
+                if (reportData.second.isEmpty()) return
+                val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
+                scm.addMRComment(mrRequestId!!, comment)
             }
-        } catch (e: GitApiException) {
-            responseTime = System.currentTimeMillis()
-            statusCode = e.code
-            statusMessage = e.message
-            throw ScmException(
-                e.message ?: I18nUtil.getCodeLanMessage(
-                    messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
-                ScmType.CODE_GIT.name
-            )
-        } finally {
-            scmMonitorService.reportCommitCheck(
-                requestTime = requestTime,
-                responseTime = responseTime,
-                statusCode = statusCode,
-                statusMessage = statusMessage,
-                projectName = request.projectName,
-                commitId = request.commitId,
-                block = request.block,
-                targetUrl = request.targetUrl
-            )
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }
 

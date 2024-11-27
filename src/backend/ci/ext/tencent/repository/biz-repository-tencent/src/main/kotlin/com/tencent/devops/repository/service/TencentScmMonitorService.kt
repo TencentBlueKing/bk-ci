@@ -80,7 +80,7 @@ class TencentScmMonitorService @Autowired constructor(
         execute {
             try {
                 val (errorType, errorCode) = getErrorCode(statusCode)
-                client.getGateway(StatusReportResource::class, GatewayType.DEVNET_PROXY)
+                client.get(StatusReportResource::class)
                     .scmCommitCheck(
                         AddCommitCheckStatus(
                             requestTime = requestTime,
