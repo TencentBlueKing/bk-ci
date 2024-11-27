@@ -123,7 +123,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             splitChunks: {
                 cacheGroups: {
                     vendor: {
-                        test: /[\\/]node_modules[\\/](bk-magic-vue)[\\/]/, // 指定要单独打包的依赖
+                        test: /[\\/]node_modules[\\/]/, // 指定要单独打包的依赖
                         name: 'vendors', // chunk 的名字
                         chunks: 'all' // 可能的值 'async', 'initial', 'all'
                     },

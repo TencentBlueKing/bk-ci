@@ -23,8 +23,8 @@
 
 import Vue from 'vue'
 import App from './App'
-import enClass from './directives/focus/en-class'
-import enStyle from './directives/focus/en-style'
+import enClass from './directives/en-class'
+import enStyle from './directives/en-style'
 import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'

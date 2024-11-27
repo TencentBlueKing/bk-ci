@@ -92,7 +92,6 @@ module.exports = (env = {}, argv) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
-            new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,
                 name: 'lib',
