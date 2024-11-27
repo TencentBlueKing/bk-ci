@@ -277,14 +277,12 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null
     ): WorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
                 workspaceName = workspaceName?.let { setOf(workspaceName) },
-                status = status?.let { setOf(status) },
                 mountType = mountType
             )
 
