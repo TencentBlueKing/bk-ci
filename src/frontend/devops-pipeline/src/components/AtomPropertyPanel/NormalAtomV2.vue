@@ -6,35 +6,16 @@
         <template v-if="!paramsGroupSort.length">
             <template v-for="(group, groupKey) in paramsGroupMap">
                 <template v-if="groupKey === 'rootProps'">
-                    <template v-for="(obj, key) in group.props">
-                        <form-field
-                            v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
-                            :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
-                            :key="key"
-                            :desc="obj.desc"
-                            :desc-link="obj.descLink"
-                            :desc-link-text="obj.descLinkText"
-                            :required="obj.required"
-                            :label="obj.label"
-                            :is-error="errors.has(key)"
-                            :error-msg="errors.first(key)"
-                        >
-                            <component
-                                :is="obj.type"
-                                :container="container"
-                                :atom-value="atomValue"
-                                :disabled="disabled"
-                                :name="key"
-                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
-                                :handle-change="handleUpdateAtomInput"
-                                :value="atomValue[key]"
-                                v-bind="obj"
-                                :get-atom-key-modal="getAtomKeyModal"
-                                :placeholder="getPlaceholder(obj, atomValue)"
-                            />
-                            <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
-                        </form-field>
-                    </template>
+                    <atom-param-row
+                        v-for="(obj, key) in group.props"
+                        :param="obj"
+                        :key="key"
+                        :param-key="key"
+                        :full-atom-value="atomValue"
+                        :get-atom-key-modal="getAtomKeyModal"
+                        :container="container"
+                        :element="element"
+                    />
                 </template>
                 <accordion
                     v-else
@@ -53,33 +34,16 @@
                         ></i>
                     </header>
                     <div slot="content">
-                        <template v-for="(obj, key) in group.props">
-                            <form-field
-                                v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
-                                :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
-                                :key="key"
-                                :desc="obj.desc"
-                                :desc-link="obj.descLink"
-                                :desc-link-text="obj.descLinkText"
-                                :required="obj.required"
-                                :label="obj.label"
-                                :is-error="errors.has(key)"
-                                :error-msg="errors.first(key)"
-                            >
-                                <component
-                                    :is="obj.type"
-                                    :container="container"
-                                    :atom-value="atomValue"
-                                    :name="key"
-                                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
-                                    :handle-change="handleUpdateAtomInput"
-                                    :value="atomValue[key]"
-                                    v-bind="obj"
-                                    :placeholder="getPlaceholder(obj, atomValue)"
-                                />
-                                <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
-                            </form-field>
-                        </template>
+                        <atom-param-row
+                            v-for="(obj, key) in group.props"
+                            :param="obj"
+                            :key="key"
+                            :param-key="key"
+                            :full-atom-value="atomValue"
+                            :get-atom-key-modal="getAtomKeyModal"
+                            :container="container"
+                            :element="element"
+                        />
                     </div>
                 </accordion>
             </template>
@@ -103,63 +67,28 @@
                         ></i>
                     </header>
                     <div slot="content">
-                        <template v-for="(obj, key) in group.props">
-                            <form-field
-                                v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
-                                :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
-                                :key="key"
-                                :desc="obj.desc"
-                                :desc-link="obj.descLink"
-                                :desc-link-text="obj.descLinkText"
-                                :required="obj.required"
-                                :label="obj.label"
-                                :is-error="errors.has(groupKey)"
-                                :error-msg="errors.first(groupKey)"
-                            >
-                                <component
-                                    :is="obj.type"
-                                    :container="container"
-                                    :atom-value="atomValue"
-                                    :name="key"
-                                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
-                                    :handle-change="handleUpdateAtomInput"
-                                    :value="atomValue[key]"
-                                    v-bind="obj"
-                                    :placeholder="getPlaceholder(obj, atomValue)"
-                                />
-                                <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
-                            </form-field>
-                        </template>
+                        <atom-param-row
+                            v-for="(obj, key) in group.props"
+                            :param="obj"
+                            :key="key"
+                            :param-key="key"
+                            :full-atom-value="atomValue"
+                            :get-atom-key-modal="getAtomKeyModal"
+                            :container="container"
+                            :element="element"
+                        />
                     </div>
                 </accordion>
                 <template v-else>
-                    <form-field
-                        v-if="!isHidden(group, atomValue) && rely(group, atomValue)"
-                        :class="{ 'changed-prop': atomVersionChangedKeys.includes(groupKey) }"
+                    <atom-param-row
+                        :param="group"
                         :key="groupKey"
-                        :desc="group.desc"
-                        :desc-link="group.descLink"
-                        :desc-link-text="group.descLinkText"
-                        :required="group.required"
-                        :label="group.label"
-                        :is-error="errors.has(groupKey)"
-                        :error-msg="errors.first(groupKey)"
-                    >
-                        <component
-                            :is="group.type"
-                            :container="container"
-                            :atom-value="atomValue"
-                            :disabled="disabled"
-                            :name="groupKey"
-                            v-validate.initial="Object.assign({}, { max: getMaxLengthByType(group.type) }, group.rule, { required: !!group.required })"
-                            :handle-change="handleUpdateAtomInput"
-                            :value="atomValue[groupKey]"
-                            v-bind="group"
-                            :get-atom-key-modal="getAtomKeyModal"
-                            :placeholder="getPlaceholder(group, atomValue)"
-                        />
-                        <route-tips v-bind="getComponentTips(group, atomValue)"></route-tips>
-                    </form-field>
+                        :param-key="groupKey"
+                        :full-atom-value="atomValue"
+                        :get-atom-key-modal="getAtomKeyModal"
+                        :container="container"
+                        :element="element"
+                    />
                 </template>
             </template>
         </template>
@@ -174,37 +103,29 @@
 </template>
 
 <script>
-    import AppId from '@/components/AtomFormComponent/AppId'
-    import CcAppId from '@/components/AtomFormComponent/CcAppId'
-    import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
-    import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
-    import Parameter from '@/components/AtomFormComponent/Parameter'
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
-    import Tips from '@/components/AtomFormComponent/Tips'
-    import Accordion from '@/components/atomFormField/Accordion'
-    import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
+    import AtomParamRow from './AtomParamRow'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
-    import Selector from '../AtomFormComponent/Selector'
-    import validMixins from '../validMixins'
     import AtomOutput from './AtomOutput'
-    import atomMixin from './atomMixin'
+    import Accordion from '@/components/atomFormField/Accordion'
 
     export default {
         name: 'normal-atom-v2',
         components: {
-            Selector,
-            Accordion,
-            CcAppId,
-            AppId,
-            TimePicker,
-            Parameter,
-            Tips,
-            NameSpaceVar,
-            DynamicParameter,
-            DynamicParameterSimple,
-            AtomOutput
+            AtomOutput,
+            AtomParamRow,
+            Accordion
         },
-        mixins: [atomMixin, validMixins],
+        props: {
+            elementIndex: Number,
+            containerIndex: Number,
+            stageIndex: Number,
+            element: Object,
+            container: Object,
+            stage: Object,
+            atomPropsModel: Object,
+            setAtomValidate: Function,
+            disabled: Boolean
+        },
         computed: {
             appIdProps () {
                 let appIdProps
@@ -318,17 +239,11 @@
                         }
                         return res
                     }, this.element.data.input)
-                    console.log(1111, atomDefaultValue, this.atomPropsModel, atomValue)
                     return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)
                     return {}
                 }
-            }
-        },
-        updated () {
-            if (this.appIdPropsKey && this.atomValue[this.appIdPropsName] !== this.appId) {
-                // this.handleUpdateAtomInput(this.appIdPropsName, this.appId)
             }
         },
         methods: {

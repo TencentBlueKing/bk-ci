@@ -43,6 +43,10 @@
                 type: String,
                 default: 'text'
             },
+            aceLangMap: {
+                type: Object,
+                default: () => ({})
+            },
             readOnly: {
                 type: Boolean,
                 default: false
@@ -65,6 +69,18 @@
                 editor: null,
                 isLoading: false,
                 monaco: null
+            }
+        },
+        computed: {
+            langMap () {
+                return {
+                    sh: 'shell',
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell',
+                    ...(this.aceLangMap ?? {})
+                }
             }
         },
         watch: {
@@ -116,8 +132,8 @@
                     // 接入方版本号
                     version: '1.0.0'
                 },
-                // env: ReleaseChannel.INSIDER,
-                env: ReleaseChannel.PRODUCTION,
+                env: ReleaseChannel.INSIDER,
+                // env: ReleaseChannel.PRODUCTION,
                 forceAuthentication: false
                 // forceAuthentication: false,
                 // authenticatedSession: {
@@ -155,15 +171,7 @@
         },
         methods: {
             getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    bash: 'shell',
-                    batchfile: 'bat',
-                    cmd: 'bat',
-                    pwsh: 'powershell'
-                }
-
-                return langMap[lang] || lang
+                return this.langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()

@@ -69,6 +69,7 @@ import {
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
+    SET_PLUGIN_HEAD_TAB,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -77,7 +78,6 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
-    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -331,7 +331,10 @@ export default {
         try {
             for (const key in newParam) {
                 if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data.input, key, newParam[key])
+                    Vue.set(atom.data, 'input', {
+                        ...atom.data.input,
+                        ...newParam
+                    })
                 }
             }
         } catch (e) {
