@@ -27,13 +27,20 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.service.ScmMonitorService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.exception.GitApiException
+import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -47,7 +54,10 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
-class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthService: IScmOauthService) :
+class ServiceScmOauthResourceImpl @Autowired constructor(
+    private val scmOauthService: IScmOauthService,
+    private val scmMonitorService: ScmMonitorService
+) :
     ServiceScmOauthResource {
 
     override fun getLatestRevision(
@@ -189,7 +199,40 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
 
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
         logger.info("Start to add the commit check of request(${JsonUtil.skipLogFields(request)})")
-        scmOauthService.addCommitCheck(request)
+        val startEpoch = System.currentTimeMillis()
+        var requestTime = System.currentTimeMillis()
+        var responseTime = System.currentTimeMillis()
+        var statusCode: Int = HTTP_200
+        var statusMessage: String? = "OK"
+        try {
+            requestTime = System.currentTimeMillis() // 请求时间
+            scmOauthService.addCommitCheck(request)
+            responseTime = System.currentTimeMillis() // 响应时间
+        } catch (ignored: Exception) {
+            responseTime = System.currentTimeMillis() // 异常响应时间
+            statusMessage = ignored.message
+            statusCode = when (ignored) {
+                is GitApiException -> ignored.code
+                is RemoteServiceException -> ignored.errorCode ?: 400
+                else -> 400
+            }
+            throw ScmException(
+                ignored.message ?: I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_GIT.name
+            )
+        } finally {
+            scmMonitorService.reportCommitCheck(
+                requestTime = requestTime,
+                responseTime = responseTime,
+                statusCode = statusCode,
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
+            )
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
+        }
         return Result(true)
     }
 
