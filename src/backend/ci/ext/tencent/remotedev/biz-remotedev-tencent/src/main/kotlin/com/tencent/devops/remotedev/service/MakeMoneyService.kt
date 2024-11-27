@@ -90,9 +90,8 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(6).setCellValue("昨天在使用的实例(快照结果)")
         }
 
-
-        for (i in 1 until maxRows + 1) {
-            val row = sheet.createRow(i)
+        for (i in 0 until maxRows) {
+            val row = sheet.createRow(i + 1)
 
             row.createCell(0).setCellValue(a.elementAtOrNull(i) ?: "")
             row.createCell(1).setCellValue(b.elementAtOrNull(i) ?: "")
