@@ -399,16 +399,15 @@
                 return this.execDetail?.executeCount ?? 1
             },
             recordList () {
-                const list = this.execDetail?.recordList.reverse() || []
+                const list = [...this.execDetail?.recordList]
                 return (
-                    list.map((record, index) => ({
+                    list.reverse().map((record, index) => ({
                         id: index + 1,
                         user: record.startUser
                     })) ?? []
                 )
             },
             startUser () {
-                console.log(this.recordList, 24)
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             }
         },
