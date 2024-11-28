@@ -25,44 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.environment.dao.devx
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.environment.pojo.DEVXHook
-import com.tencent.devops.environment.pojo.EnvWithNodeCount
-import com.tencent.devops.environment.service.devx.DEVXService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.model.environment.tables.TDevxHook
+import com.tencent.devops.model.environment.tables.records.TDevxHookRecord
+import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@RestResource
-class ServiceDEVXResourceImpl @Autowired constructor(
-    private val devxService: DEVXService
-) : ServiceDEVXResource {
-
-    override fun createNode(
-        userId: String,
+@Repository
+class DEVXHookDao {
+    fun insertOrUpdateHook(
+        dslContext: DSLContext,
         projectId: String,
-        workspaceName: String,
-        ip: String,
-        size: String
-    ): Result<Long> {
-        return Result(
-            devxService.createNode(
-                userId = userId,
-                projectId = projectId,
-                workspaceName = workspaceName,
-                ip = ip,
-                size = size
-            )
-        )
+        envHashId: String,
+        hooks: List<DEVXHook>
+    ) {
+        val now = LocalDateTime.now()
+        dslContext.batch(hooks.map { hook ->
+            with(TDevxHook.T_DEVX_HOOK) {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    ENV_HASH_ID,
+                    HOOK_TYPE,
+                    EXECUTION_TYPE,
+                    ENABLE
+                ).values(
+                    projectId,
+                    envHashId,
+                    hook.hookType.name,
+                    hook.executionType.name,
+                    ByteUtils.bool2Byte(hook.enable)
+                ).onDuplicateKeyUpdate()
+                    .set(ENABLE, ByteUtils.bool2Byte(hook.enable))
+                    .set(UPDATED_TIME, now)
+            }
+        }).execute()
     }
 
-    override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<List<EnvWithNodeCount>> {
-        return Result(devxService.getUserDEVXEnv(userId, projectIds))
-    }
-
-    override fun getEnvHook(userId: String, projectId: String, envHashId: String): Result<List<DEVXHook>> {
-        return Result(devxService.getEnvHook(userId, projectId, envHashId))
+    fun fetchEnvHooks(dslContext: DSLContext, envHashId: String): List<TDevxHookRecord> {
+        with(TDevxHook.T_DEVX_HOOK) {
+            return dslContext.selectFrom(this)
+                .where(ENV_HASH_ID.eq(envHashId))
+                .fetch()
+        }
     }
 }

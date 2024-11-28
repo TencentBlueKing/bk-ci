@@ -601,4 +601,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("removeUser")
         removeUser: String
     ): Result<Boolean>
+
+    @Operation(summary = "重新装载云桌面环境hook配置")
+    @POST
+    @Path("/reload_env_hook")
+    fun reloadEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境env hash id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String
+    )
 }

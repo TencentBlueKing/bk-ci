@@ -701,4 +701,8 @@ class ServiceRemoteDevResourceImpl(
         workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
         return Result(true)
     }
+
+    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String) {
+
+    }
 }
