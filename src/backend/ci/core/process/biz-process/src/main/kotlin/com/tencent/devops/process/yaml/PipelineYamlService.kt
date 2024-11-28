@@ -299,17 +299,6 @@ class PipelineYamlService(
         }
     }
 
-    fun listEnablePacPipelineMap(
-        projectId: String,
-        pipelineIds: List<String>
-    ): List<PipelineYamlInfo> {
-        return pipelineYamlInfoDao.listByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        )
-    }
-
     /**
      * 获取当前分支或blob_id对应的最新的版本
      */
@@ -410,12 +399,14 @@ class PipelineYamlService(
 
     fun countPipelineYaml(
         projectId: String,
-        repoHashId: String
+        repoHashId: String,
+        directory: String? = null
     ): Long {
         return pipelineYamlInfoDao.countYamlPipeline(
             dslContext = dslContext,
             projectId = projectId,
-            repoHashId = repoHashId
+            repoHashId = repoHashId,
+            directory = directory
         )
     }
 
@@ -512,21 +503,6 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId,
             branch = branch
-        )
-    }
-
-    fun getBranchFilePath(
-        projectId: String,
-        repoHashId: String,
-        branch: String,
-        filePath: String
-    ): TPipelineYamlBranchFileRecord? {
-        return pipelineYamlBranchFileDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            branch = branch,
-            filePath = filePath
         )
     }
 }
