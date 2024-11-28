@@ -55,7 +55,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
         return Promise.reject(errorMsg)
     }
 
-    return originalResponse ? response : data
+    return originalResponse ? response.data : data
 }, errorHandler)
 
 Vue.prototype.$ajax = request
