@@ -34,6 +34,8 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -62,6 +64,19 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
             userId = userId,
             storeCode = storeCode,
             storeType = storeType
+        )
+    }
+
+    override fun deleteComponentCodeRepository(
+        userId: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).deleteGitProject(
+            id = repositoryId,
+            token = token,
+            tokenType = tokenType
         )
     }
 

@@ -271,7 +271,7 @@ class TencentGitServiceImpl @Autowired constructor(
 
     override fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
         return client.getScm(ServiceGitResource::class).deleteGitProject(
-            repositorySpaceName = repoName,
+            id = repoName,
             token = token,
             tokenType = tokenType
         )

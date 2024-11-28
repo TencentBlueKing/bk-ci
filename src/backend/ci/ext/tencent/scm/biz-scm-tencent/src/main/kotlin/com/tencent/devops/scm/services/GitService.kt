@@ -1376,10 +1376,10 @@ class GitService @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operation", "delete_project_member_info"], value = "bk_tgit_api_time")
-    fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
-        logger.info("deleteGitProject repoName is:$repoName,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
+    fun deleteGitProject(id: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+        logger.info("deleteGitProject id is:$id,tokenType is:$tokenType")
+        val encodeId = URLEncoder.encode(id, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeId")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
@@ -1388,10 +1388,10 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
             logger.info("deleteGitProject response>> $data")
-            if (!StringUtils.isEmpty(data)) {
+            if (data.isNotBlank()) {
                 val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (!StringUtils.isEmpty(message)) {
+                val message = dataMap["message"]?.toString()
+                if (!message.isNullOrBlank()) {
                     val validateResult: Result<String?> =
                         I18nUtil.generateResponseDataObject(
                             messageCode = USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
