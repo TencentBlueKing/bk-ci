@@ -80,10 +80,6 @@ data class GSEAgentService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GSEAgentService::class.java)
 
-        private val mapper = jacksonObjectMapper().apply {
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
-
         private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
 
         // 节点管理预发布/正式环境 apId均固定为1
@@ -106,10 +102,9 @@ data class GSEAgentService @Autowired constructor(
     fun installAgent(
         userId: String,
         keyFile: InputStream?,
-        installAgentReqString: String
+        installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName(::installAgent.name)
-        val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
         val hostIdList = installAgentReq.hosts.mapNotNull { it.bkHostId }
         val hostIdToBizIdMap = buildHostToBizIdMap(hostIdList)
         val installAgentRequest = AgentInstallAgentReq(

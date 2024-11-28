@@ -33,7 +33,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
-import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.*
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -54,6 +56,8 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResul
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
+import com.tencent.devops.environment.service.gseagent.GSEAgentService
+import com.tencent.devops.environment.service.gseagent.InstallTaskService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
@@ -71,7 +75,9 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val permissionManageService: PermissionManageService,
     private val updateCmdbNodeService: UpdateCmdbNodeService,
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
-    private val tencentStockDataUpdateService: TencentStockDataUpdateService
+    private val tencentStockDataUpdateService: TencentStockDataUpdateService,
+    private val gseAgentService: GSEAgentService,
+    private val installTaskService: InstallTaskService
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
@@ -225,6 +231,35 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     override fun writeServerId(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
         tencentStockDataUpdateService.writeServerIdOnce()
+    }
+
+    override fun installAgent(
+        userId: String,
+        projectId: String,
+        installAgentReq: InstallAgentReq
+    ): AgentResult<InstallAgentResult> {
+        checkParamBlank(userId, projectId)
+        return gseAgentService.installAgent(userId, null, installAgentReq)
+    }
+
+    override fun queryAgentTaskStatus(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+    ): AgentResult<QueryAgentTaskStatusResult> {
+        checkParamBlank(userId, projectId)
+        return installTaskService.queryAgentInstallTaskStatus(jobId, queryAgentTaskStatusReq)
+    }
+
+    override fun obtainManualInstallationCommand(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult> {
+        checkParamBlank(userId, projectId)
+        return gseAgentService.obtainManualInstallationCommand(jobId, hostId)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

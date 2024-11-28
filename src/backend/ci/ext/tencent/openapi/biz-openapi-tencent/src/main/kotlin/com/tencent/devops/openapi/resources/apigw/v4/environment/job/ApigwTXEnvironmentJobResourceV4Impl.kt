@@ -3,7 +3,9 @@ package com.tencent.devops.openapi.resources.apigw.v4.environment.job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
-import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.*
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -25,11 +27,13 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusRes
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import com.tencent.devops.openapi.api.apigw.v4.environment.job.ApigwTXEnvironmentJobResourceV4
+import com.tencent.devops.openapi.resources.apigw.v2.ApigwCallBackResourceV2Impl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    private val apigwCallBackResourceV2Impl: ApigwCallBackResourceV2Impl
 ) : ApigwTXEnvironmentJobResourceV4 {
 
     override fun executeScript(
@@ -190,4 +194,34 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     override fun writeServerId(userId: String) {
         client.get(TencentServiceJobResource::class).writeServerId(userId)
     }
+
+    override fun installAgent(
+        userId: String,
+        projectId: String,
+        installAgentReq: InstallAgentReq
+    ): AgentResult<InstallAgentResult> {
+        return client.get(TencentServiceJobResource::class).installAgent(userId, projectId, installAgentReq)
+    }
+
+    override fun queryAgentTaskStatus(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+    ): AgentResult<QueryAgentTaskStatusResult> {
+        return client.get(TencentServiceJobResource::class)
+            .queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+    }
+
+    override fun obtainManualInstallationCommand(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult> {
+        return client.get(TencentServiceJobResource::class)
+            .obtainManualInstallationCommand(userId, projectId, jobId, hostId)
+    }
+
+
 }

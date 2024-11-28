@@ -6,7 +6,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.*
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -365,4 +367,53 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
+
+    @Operation(summary = "在指定节点上安装GSE Agent", tags = ["v4_app_job_install_agent"])
+    @POST
+    @Path("/{projectId}/install_agent")
+    fun installAgent(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "安装agent的请求信息", required = true)
+        installAgentReq: InstallAgentReq
+    ): AgentResult<InstallAgentResult>
+
+    @Operation(summary = "查询节点的agent安装任务的状态", tags = ["v4_app_job_query_agent_task_status"])
+    @POST
+    @Path("/{projectId}/{jobId}/query_agent_task_status")
+    fun queryAgentTaskStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("jobId")
+        jobId: Int,
+        @Parameter(description = "查询agent任务状态的请求信息", required = true)
+        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+    ):AgentResult<QueryAgentTaskStatusResult>
+
+    @Operation(summary = "获取手动安装agent的命令", tags = ["v4_app_job_obtain_manual_installation_command"])
+    @GET
+    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
+    fun obtainManualInstallationCommand(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("jobId")
+        jobId: Int,
+        @Parameter(description = "HOST ID", required = true)
+        @QueryParam("hostId")
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult>
 }
