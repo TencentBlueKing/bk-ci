@@ -42,14 +42,12 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.BusinessConfigDao
@@ -60,6 +58,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
@@ -95,13 +94,13 @@ import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.time.LocalDateTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.LocalDateTime
-import java.util.Base64
 
 @Suppress("ALL")
 abstract class ImageReleaseService {
@@ -161,6 +160,9 @@ abstract class ImageReleaseService {
 
     @Autowired
     lateinit var imageNotifyService: ImageNotifyService
+
+    @Autowired
+    lateinit var storePipelineService: StorePipelineService
 
     @Autowired
     lateinit var client: Client
@@ -677,93 +679,55 @@ abstract class ImageReleaseService {
         userName?.let { startParams["registryUser"] = it }
         password?.let { startParams["registryPwd"] = it }
         imageRepoUrl?.let { startParams["registryHost"] = it }
+        val pipelineId: String?
         if (null == imagePipelineRelRecord) {
-            val pipelineModelConfig = businessConfigDao.get(
+            pipelineId = storePipelineService.creatStorePipeline(
+                userId = storeInnerPipelineConfig.innerPipelineUser,
+                storeType = StoreTypeEnum.IMAGE,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject
+            )
+            storePipelineRelDao.add(
                 dslContext = context,
-                business = StoreTypeEnum.IMAGE.name,
-                feature = "initBuildPipeline",
-                businessValue = "PIPELINE_MODEL"
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE,
+                pipelineId = pipelineId,
+                projectCode = storeInnerPipelineConfig.innerPipelineProject
             )
-            var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$imageCode-${UUIDUtil.generate()}"
-            val paramMap = mapOf("pipelineName" to pipelineName)
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
-            val storeInitPipelineReq = StoreInitPipelineReq(
-                pipelineModel = pipelineModel,
-                startParams = startParams
-            )
-            val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(
-                    userId = storeInnerPipelineConfig.innerPipelineUser,
-                    projectId = storeInnerPipelineConfig.innerPipelineProject,
-                    storeInitPipelineReq = storeInitPipelineReq
-                ).data
-            logger.info("runCheckImagePipeline storeInitPipelineResp is:$storeInitPipelineResp")
-            if (null != storeInitPipelineResp) {
-                storePipelineRelDao.add(
-                    dslContext = context,
-                    storeCode = imageCode,
-                    storeType = StoreTypeEnum.IMAGE,
-                    pipelineId = storeInitPipelineResp.pipelineId,
-                    projectCode = storeInnerPipelineConfig.innerPipelineProject
-                )
-                val buildId = storeInitPipelineResp.buildId
-                val imageStatus = if (buildId.isNullOrBlank()) {
-                    ImageStatusEnum.CHECK_FAIL
-                } else {
-                    storePipelineBuildRelDao.add(
-                        dslContext = context,
-                        storeId = imageId,
-                        pipelineId = storeInitPipelineResp.pipelineId,
-                        buildId = buildId
-                    )
-                    ImageStatusEnum.CHECKING
-                }
-                marketImageDao.updateImageStatusById(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = imageStatus.status.toByte(),
-                    userId = userId,
-                    msg = null
-                )
-            }
         } else {
-            // 触发执行流水线
-            val startProjectCode = if (imagePipelineRelRecord.projectCode.isNullOrBlank()) {
-                projectCode
-            } else {
-                imagePipelineRelRecord.projectCode
-            }
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            pipelineId = imagePipelineRelRecord.pipelineId
+        }
+        // 触发执行流水线
+        val startProjectCode = if (imagePipelineRelRecord == null) {
+            storeInnerPipelineConfig.innerPipelineProject
+        } else {
+            imagePipelineRelRecord.projectCode
+        }
+        val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            userId = if (imagePipelineRelRecord != null) userId else storeInnerPipelineConfig.innerPipelineUser,
+            projectId = startProjectCode,
+            pipelineId = pipelineId!!,
+            values = startParams,
+            channelCode = ChannelCode.AM,
+            startType = StartType.SERVICE
+        ).data
+        logger.info("the buildIdObj is:$buildIdObj")
+        if (null != buildIdObj) {
+            storePipelineBuildRelDao.add(context, imageId, pipelineId, buildIdObj.id)
+            marketImageDao.updateImageStatusById(
+                dslContext = context,
+                imageId = imageId,
+                imageStatus = ImageStatusEnum.CHECKING.status.toByte(),
                 userId = userId,
-                projectId = startProjectCode,
-                pipelineId = imagePipelineRelRecord.pipelineId,
-                values = startParams,
-                channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE
-            ).data
-            logger.info("the buildIdObj is:$buildIdObj")
-            if (null != buildIdObj) {
-                storePipelineBuildRelDao.add(context, imageId, imagePipelineRelRecord.pipelineId, buildIdObj.id)
-                marketImageDao.updateImageStatusById(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = ImageStatusEnum.CHECKING.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 验证中
-            } else {
-                marketImageDao.updateImageStatusById(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 验证失败
-            }
+                msg = null
+            ) // 验证中
+        } else {
+            marketImageDao.updateImageStatusById(
+                dslContext = context,
+                imageId = imageId,
+                imageStatus = ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                userId = userId,
+                msg = null
+            ) // 验证失败
         }
     }
 

@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -51,7 +50,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
@@ -219,62 +217,24 @@ class StorePipelineServiceImpl @Autowired constructor(
         )
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
+        val pipelineId: String
         // 生成流水线启动参数
         val startParams = storeReleaseSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
         if (null == storePipelineRelRecord) {
-            val pipelineModelConfig = businessConfigDao.get(
+            pipelineId = creatStorePipeline(
+                userId = innerPipelineUser,
+                storeType = storeType,
+                projectCode = innerPipelineProject
+            )
+            storePipelineRelDao.add(
                 dslContext = dslContext,
-                business = storeType.name,
-                feature = "initBuildPipeline",
-                businessValue = "PIPELINE_MODEL"
+                storeCode = storeCode,
+                storeType = storeType,
+                pipelineId = pipelineId,
+                projectCode = innerPipelineProject
             )
-            var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$storeType-$storeCode-${UUIDUtil.generate()}"
-            val paramMap = mapOf(
-                KEY_PIPELINE_NAME to pipelineName
-            )
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
-            val storeInitPipelineReq = StoreInitPipelineReq(
-                pipelineModel = pipelineModel,
-                startParams = startParams
-            )
-            val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(innerPipelineUser, innerPipelineProject, storeInitPipelineReq).data
-            logger.info("runStorePipeline storeInitPipelineResp is:$storeInitPipelineResp")
-            if (null != storeInitPipelineResp) {
-                val pipelineId = storeInitPipelineResp.pipelineId
-                storePipelineRelDao.add(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    pipelineId = pipelineId,
-                    projectCode = innerPipelineProject
-                )
-                val buildId = storeInitPipelineResp.buildId
-                if (!buildId.isNullOrBlank()) {
-                    storePipelineBuildRelDao.add(
-                        dslContext = dslContext,
-                        storeId = storeId,
-                        pipelineId = pipelineId,
-                        buildId = buildId
-                    )
-                }
-                val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
-                storeStatus?.let {
-                    storeBaseManageDao.updateStoreBaseInfo(
-                        dslContext = dslContext,
-                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
-                            id = storeId,
-                            status = storeStatus,
-                            modifier = userId
-                        )
-                    )
-                }
-            }
         } else {
+            pipelineId = storePipelineRelRecord.pipelineId
             val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
@@ -298,39 +258,91 @@ class StorePipelineServiceImpl @Autowired constructor(
                     )
                 }
             }
-            // 触发执行流水线
-            val pipelineId = storePipelineRelRecord.pipelineId
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
-                userId = innerPipelineUser,
-                projectId = innerPipelineProject,
+        }
+        // 触发执行流水线
+        val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            userId = if (storePipelineRelRecord == null) innerPipelineUser else userId,
+            projectId = storePipelineRelRecord?.projectCode ?: innerPipelineProject,
+            pipelineId = pipelineId,
+            values = startParams,
+            channelCode = ChannelCode.AM,
+            startType = StartType.SERVICE
+        ).data
+        var buildId: String? = null
+        if (null != buildIdObj) {
+            buildId = buildIdObj.id
+            storePipelineBuildRelDao.add(
+                dslContext = dslContext,
+                storeId = storeId,
                 pipelineId = pipelineId,
-                values = startParams,
-                channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE
-            ).data
-            var buildId: String? = null
-            if (null != buildIdObj) {
-                buildId = buildIdObj.id
-                storePipelineBuildRelDao.add(
-                    dslContext = dslContext,
-                    storeId = storeId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
+                buildId = buildId
+            )
+        }
+        val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
+        storeStatus?.let {
+            storeBaseManageDao.updateStoreBaseInfo(
+                dslContext = dslContext,
+                updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                    id = storeId,
+                    status = storeStatus,
+                    modifier = userId
                 )
-            }
-            val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
-            storeStatus?.let {
-                storeBaseManageDao.updateStoreBaseInfo(
-                    dslContext = dslContext,
-                    updateStoreBaseDataPO = UpdateStoreBaseDataPO(
-                        id = storeId,
-                        status = storeStatus,
-                        modifier = userId
-                    )
-                )
-            }
+            )
         }
         return true
+    }
+
+    override fun creatStorePipeline(
+        userId: String,
+        storeType: StoreTypeEnum,
+        projectCode: String
+    ): String {
+        var pipelineId: String?
+        val lock =
+            RedisLock(redisOperation, "CREAT_${storeType.name}_PIPELINE-$projectCode", 60L)
+        val pipelineName = "${storeType.name}-PIPELINE-BUILD:PUBLIC"
+        try {
+            lock.lock()
+            pipelineId = redisOperation.get(pipelineName)
+            if (pipelineId.isNullOrBlank()) {
+                val pipelineList = client.get(ServicePipelineResource::class).searchByName(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineName = pipelineName
+                ).data
+                pipelineList?.forEach {
+                    if (it.pipelineName == pipelineName) {
+                        pipelineId = it.pipelineId
+                    }
+                }
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                return pipelineId!!
+            }
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = storeType.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            val pipelineModel =
+                pipelineModelConfig!!.configValue.replace("#{$KEY_PIPELINE_NAME}", pipelineName)
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+            pipelineId = client.get(ServicePipelineResource::class).create(
+                userId = userId,
+                projectId = projectCode,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            redisOperation.set(
+                key = pipelineName,
+                value = pipelineId!!,
+                expired = false
+            )
+            return pipelineId!!
+        } finally {
+            lock.unlock()
+        }
     }
 
     override fun deleteStoreInnerPipeline(
@@ -533,7 +545,9 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeType: String,
         grayFlag: Boolean
     ): String {
-        var key = "creatStorePipeline-$storeType"
+        val suffix = storeCode ?: "PUBLIC"
+        var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
+        var key = "CREAT_$pipelineName"
         if (grayFlag) {
             key = "gray-$key"
         }
@@ -541,8 +555,6 @@ class StorePipelineServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, key, 60L)
         try {
             lock.lock()
-            val suffix = storeCode ?: "PUBLIC"
-            var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
             if (grayFlag) {
                 pipelineName = "GRAY-$pipelineName"
             }
