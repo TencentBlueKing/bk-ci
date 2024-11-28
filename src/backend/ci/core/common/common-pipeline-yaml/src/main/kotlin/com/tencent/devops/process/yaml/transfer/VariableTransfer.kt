@@ -140,7 +140,7 @@ class VariableTransfer {
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
-                    it.defaultValue as Map<String, String>
+                    CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
                 } else {
                     it.defaultValue.toString()
                 },

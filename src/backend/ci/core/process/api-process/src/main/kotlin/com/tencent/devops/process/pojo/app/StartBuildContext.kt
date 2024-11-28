@@ -27,10 +27,8 @@
 
 package com.tencent.devops.process.pojo.app
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
@@ -487,19 +485,7 @@ data class StartBuildContext(
         ): List<BuildParameters> {
             val originStartParams = mutableListOf<BuildParameters>()
             val key = param.key
-            val paramValue = try {
-                if (param.value is String) {
-                    JsonUtil.to(
-                        json = param.value as String,
-                        typeReference = object : TypeReference<Map<String, String>>() {}
-                    )
-                } else {
-                    param.value as Map<String, String>
-                }
-            } catch (ignored: Exception) {
-                logger.warn("parse repo ref error, key: $key, param: $param")
-                return originStartParams
-            }
+            val paramValue = CascadePropertyUtils.parseDefaultValue(key, param.value, param.valueType)
             val cascadeParam = param.copy(value = paramValue)
             originStartParams.add(cascadeParam)
             // 填充下级参数的[variables.]
