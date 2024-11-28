@@ -83,6 +83,7 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
             val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
                 ?: throw NotFoundException("cannot found access token for user($userId)")
             getStoreManagementExtraService(storeType).addComponentRepositoryUser(
+                memberType = storeMemberReq.type,
                 members = storeMemberReq.member,
                 repositoryId = repositoryId,
                 token = gitToken.accessToken,
