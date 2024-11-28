@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreManagementExtraService {
@@ -57,6 +58,7 @@ interface StoreManagementExtraService {
      * 添加组件代码库成员
      */
     fun addComponentRepositoryUser(
+        memberType: StoreMemberTypeEnum,
         members: List<String>,
         repositoryId: String,
         token: String,
