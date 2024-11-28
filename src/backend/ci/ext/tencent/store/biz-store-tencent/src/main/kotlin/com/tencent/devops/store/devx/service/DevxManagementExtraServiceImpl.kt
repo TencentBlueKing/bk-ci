@@ -36,9 +36,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,6 +77,41 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         return client.getScm(ServiceGitResource::class).deleteGitProject(
             id = repositoryId,
+            token = token,
+            tokenType = tokenType
+        )
+    }
+
+    override fun addComponentRepositoryUser(
+        memberType: StoreMemberTypeEnum,
+        members: List<String>,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val gitAccessLevel = if (memberType == StoreMemberTypeEnum.ADMIN) {
+            GitAccessLevelEnum.MASTER
+        } else {
+            GitAccessLevelEnum.DEVELOPER
+        }
+        return client.getScm(ServiceGitResource::class).addGitProjectMember(
+            userIdList = members,
+            repositorySpaceName = repositoryId,
+            gitAccessLevel = gitAccessLevel,
+            token = token,
+            tokenType = tokenType
+        )
+    }
+
+    override fun deleteComponentRepositoryUser(
+        member: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).deleteGitProjectMember(
+            userIdList = listOf(member),
+            repositorySpaceName = repositoryId,
             token = token,
             tokenType = tokenType
         )
