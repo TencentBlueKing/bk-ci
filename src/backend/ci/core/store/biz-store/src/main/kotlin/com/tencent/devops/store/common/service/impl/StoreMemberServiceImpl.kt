@@ -196,18 +196,12 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     ): Result<Boolean> {
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
-        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
-                language = I18nUtil.getLanguage(userId),
-                params = arrayOf(storeCode)
-            )
-        }
+        checkUserPermission(
+            checkPermissionFlag = checkPermissionFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
         val receivers = mutableSetOf<String>()
         for (item in storeMemberReq.member) {
             if (storeMemberDao.isStoreMember(dslContext, item, storeCode, storeType.type.toByte())) {
@@ -258,6 +252,23 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         return Result(true)
     }
 
+    protected fun checkUserPermission(
+        checkPermissionFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(errorCode = NO_COMPONENT_ADMIN_PERMISSION, params = arrayOf(storeCode))
+        }
+    }
+
     /**
      * 删除store组件成员
      */
@@ -269,19 +280,12 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         checkPermissionFlag: Boolean
     ): Result<Boolean> {
         logger.info("deleteMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag")
-        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )
-        ) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
-                language = I18nUtil.getLanguage(userId),
-                params = arrayOf(storeCode)
-            )
-        }
+        checkUserPermission(
+            checkPermissionFlag = checkPermissionFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
         val record = storeMemberDao.getById(dslContext, id)
         if (record != null) {
             if ((record.type).toInt() == 0) {
@@ -392,10 +396,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun isStoreHasAdmins(storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
         val adminCount = storeMemberDao.countAdmin(dslContext, storeCode, storeType.type.toByte())
         if (adminCount <= 1) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_COMPONENT_ADMIN_COUNT_ERROR,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_COMPONENT_ADMIN_COUNT_ERROR)
         }
         return Result(true)
     }

@@ -54,6 +54,26 @@ interface StoreManagementExtraService {
     ): Result<Boolean>
 
     /**
+     * 添加组件代码库成员
+     */
+    fun addComponentRepositoryUser(
+        members: List<String>,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 删除组件代码库成员
+     */
+    fun deleteComponentRepositoryUser(
+        member: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
      * 检查卸载组件请求合法性
      */
     fun uninstallComponentCheck(
