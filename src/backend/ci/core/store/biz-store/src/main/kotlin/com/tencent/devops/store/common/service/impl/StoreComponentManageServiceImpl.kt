@@ -51,6 +51,7 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
+import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
@@ -107,6 +108,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler
+
+    @Autowired
+    lateinit var storeDeleteCodeRepositoryHandler: StoreDeleteCodeRepositoryHandler
 
     @Autowired
     lateinit var storeDeleteDataPersistHandler: StoreDeleteDataPersistHandler
@@ -360,6 +364,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val handlerList = mutableListOf(
             storeDeleteCheckHandler,
             storeDeleteRepoFileHandler,
+            storeDeleteCodeRepositoryHandler,
+            storeDeleteCodeRepositoryHandler,
             storeDeleteDataPersistHandler
         )
         val bkStoreContext = handlerRequest.bkStoreContext

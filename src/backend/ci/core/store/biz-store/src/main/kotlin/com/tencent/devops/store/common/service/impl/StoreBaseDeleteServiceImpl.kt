@@ -30,7 +30,12 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.constant.RepositoryConstants.KEY_REPOSITORY_ID
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreBaseDeleteService
@@ -45,13 +50,16 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 class StoreBaseDeleteServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeMemberDao: StoreMemberDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeCommonService: StoreCommonService
+    private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
+    private val storeCommonService: StoreCommonService,
+    private val client: Client
 ) : StoreBaseDeleteService {
 
     companion object {
@@ -105,6 +113,36 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         )
         if (deleteStorePkgResult.isNotOk()) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_COMPONENT_REPO_FILE_DELETE_FAIL)
+        }
+    }
+
+    override fun deleteComponentCodeRepository(handlerRequest: StoreDeleteRequest) {
+        val storeCode = handlerRequest.storeCode
+        val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+        val repositoryId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_REPOSITORY_ID
+        )?.fieldValue
+        if (!repositoryId.isNullOrBlank()) {
+            val bkStoreContext = handlerRequest.bkStoreContext
+            val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+            val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                ?: throw NotFoundException("cannot found access token for user($userId)")
+            val deleteRepositoryResult = getStoreManagementExtraService(storeType).deleteComponentCodeRepository(
+                userId = userId,
+                repositoryId = repositoryId,
+                token = gitToken.accessToken,
+                tokenType = TokenTypeEnum.OAUTH
+            )
+            if (deleteRepositoryResult.isNotOk()) {
+                logger.info(
+                    "deleteComponentCodeRepository storeType:$storeType|storeCode:$storeCode|" +
+                            "result:$deleteRepositoryResult"
+                )
+                throw ErrorCodeException(
+                    errorCode = deleteRepositoryResult.status.toString(),
+                    defaultMessage = deleteRepositoryResult.message
+                )
+            }
         }
     }
 
