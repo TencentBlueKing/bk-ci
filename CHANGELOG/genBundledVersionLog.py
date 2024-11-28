@@ -6,7 +6,7 @@ import re
 import sys
 
 VERSION_LOG_PATH = os.environ.get("VERSION_LOG_PATH", os.getcwd())
-VERSION_LOG_DIALOG_VISIBLE =  os.environ.get("VERSION_LOG_DIALOG_VISIBLE", True)
+VERSION_LOG_DIALOG_VISIBLE =  os.environ.get("VERSION_LOG_DIALOG_VISIBLE", 'True').lower() in ('true', '1')
 
 # data元素格式
 '''
