@@ -34,8 +34,6 @@ data class StoreInitPipelineReq(
     @get:Schema(title = "流水线模型", required = true)
     val pipelineModel: String,
     @get:Schema(title = "流水线启动参数", required = true)
-    val startParams: Map<String, String>,
-    @get:Schema(title = "流水线名称", required = true)
-    val pipelineName: String
+    val startParams: Map<String, String>
 )
 
