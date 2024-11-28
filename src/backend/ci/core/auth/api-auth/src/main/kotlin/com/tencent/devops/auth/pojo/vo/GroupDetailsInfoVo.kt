@@ -20,7 +20,7 @@ data class GroupDetailsInfoVo(
     val groupDesc: String? = null,
     @get:Schema(title = "有效期，天")
     val expiredAtDisplay: String,
-    @get:Schema(title = "过期时间戳，秒")
+    @get:Schema(title = "过期时间戳，毫秒")
     val expiredAt: Long,
     @get:Schema(title = "加入时间")
     val joinedTime: Long,

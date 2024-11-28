@@ -56,6 +56,8 @@
   "success": "Success",
   "creator": "Creator",
   "created": "Created on",
+  "creatorDetail": "Creator/Time",
+  "modificationDetail": "Modifier/Time",
   "editSuc": "Edited successfully",
   "saveSuc": "Saved successfully",
   "releaseSuc": "Released successfully",
@@ -293,7 +295,8 @@
     "noRelatedPipeline": "No linked pipeline yet",
     "all": "All",
     "installedAt": "Installed at",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "systemPlugin": "System plugin"
   },
   "settings": {
     "baseInfo": "Basic Information",
@@ -457,7 +460,9 @@
       "desc": "You do not have permission to view the pipeline template, please apply for permission",
       "apply": "Apply"
     },
-    "editStoreTemplateTips": "The development store template does not support editing"
+    "editStoreTemplateTips": "The development store template does not support editing",
+    "lastModifiedDate": "Last Modified on",
+    "lastModifiedBy": "Updater"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -755,7 +760,11 @@
     "directoryName": "Folder Name",
     "directoryPath": "Folder Path",
     "include": "Include",
-    "fileAndFolder": "{0} files, {1} folders"
+    "fileAndFolder": "{0} files, {1} folders",
+    "triggerResult": "Trigger Result",
+    "triggerSuc": "Trigger successful",
+    "triggerFail": "Trigger failed",
+    "triggerMismatch": "Trigger mismatch"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",
@@ -1044,7 +1053,12 @@
     "alwaysPull": "Always pull on each run",
     "ifNotPresent": "Pull only if not present locally",
     "enableDockerTips": "When using this feature, please ensure that the build machine has Docker installed, and that the user running the third-party build agent has the necessary permissions to operate Docker.",
-    "enabledPrivileged": "Enable Privileged Mode"
+    "enabledPrivileged": "Enable Privileged Mode",
+    "batchAddTit": "Batch Add",
+    "lineBreak": "Separate multiple options with line breaks",
+    "noEnglishCommas": "Each option cannot contain English commas",
+    "formatSupport": "Similar to the HTML select tag, options support value=name / value formats",
+    "batchCopy": "One-click Copy"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1057,6 +1071,7 @@
     "bool": "Boolean",
     "enum": "Radio",
     "multiple": "Checkbox",
+    "checkbox": "Checkbox Confirmation Box",
     "svntag": "SVN branch or TAG",
     "gitref": "GIT branch or TAG",
     "codelib": "Code repository",
@@ -1133,7 +1148,7 @@
     "mutualTimeout": "Mutex Queue Timeout  (In minutes)",
     "mutualTimeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "queueLabel": " Mutex Queue Length",
-    "queuePlaceholder": " Please fill in an integer between 1 and 10",
+    "queuePlaceholder": " Please fill in an integer between 1 and 50",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",
@@ -1146,7 +1161,8 @@
     "singleNodeConcurrencyPlaceholder": "Default is the maximum concurrency set on the node",
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
-    "minutes": "Minutes"
+    "minutes": "Minutes",
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1305,7 +1321,7 @@
   "dynamicGroupTips": "Dynamic matching based on the name, tag and other attributes",
   "lastModify": "Last Modified at",
   "projectedGroupDisableTips": "Only project administrators can create pipeline groups that are visible to the project",
-  "groupEditDisableTips": "Only administrators or CI administrators can add or remove pipelines to or from project pipeline groups",
+  "groupEditDisableTips": "Only administrators can add or remove pipelines to or from project pipeline groups",
   "pacGroupDisableTips": "Automatically created by enabling PAC mode, not support manually add/remove pipeline",
   "noDeletePipelines": "No pipeline to delete",
   "deleted": "Deleted",
@@ -1595,6 +1611,33 @@
   },
   "debugHint": "Debugging and execution do not share build numbers, but they share concurrency control. Debug records are only valid during the draft version debugging period and will be automatically cleared after the version is released.",
   "templateRollbackBackTips": "The current pipeline is in constraint mode (template instance). You need to jump to the template to roll back the version.",
+  "namingConvention": "Naming Convention",
+  "inheritedProject": "Inherited Project Settings",
+  "CLASSIC": "Traditional Style",
+  "CONSTRAINED": "Constraint Style",
+  "grammaticalDifferences": "Grammatical Differences",
+  "differenceItem": "Difference Item",
+
+  "expressionFormat": "Expression Format",
+  "traditionalFormat": "Single or Double Curly Braces",
+  "traditionalFormatExample": "e.g., ${var}, ${{var}}",
+  "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
+  "constraintFormatExample": "e.g., ${{variables.var}}",
+
+  "expressionFunction": "Expression Functions",
+  "expressionFunctionTip": "e.g., contains, join, fromJSON...",
+  "traditionalFunctionFormat": "Can only be used in the flow control option {0} settings",
+  "customExpressionsSatisfyRun": "custom expressions satisfy run",
+  "constraintFunctionFormat": "Functions can be used in pipeline configurations such as flow control options, plugin parameters, and Job settings",
+  "constraintFunctionFormatExample": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo \"a.node is ${{fromJSON(a).node}}\"",
+
+  "variableValueTooLong": "Variable Value Too Long",
+  "traditionalValueTooLongMode": "Only Warning without Error",
+  "constraintReadOnlyMode": "It will cause errors and the run will fail",
+
+  "variableStandard": "Variable ID Standard",
+  "traditionalStandardMode": "No Restriction",
+  "constraintStandardMode": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",
   "versionNotMatch": "The current version is not the latest version and cannot be executed",
   "buildNoBaseline": {
     "buildNoBaseline": "Build Number Baseline",

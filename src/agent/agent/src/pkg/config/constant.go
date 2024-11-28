@@ -67,7 +67,8 @@ const (
 
 	WorkAgentFile = "worker-agent.jar"
 
-	JdkClientFile = "jdk.zip"
+	JdkClientFile   = "jdk.zip"
+	Jdk17ClientFile = "jdk17.zip"
 
 	DockerInitFile = "agent_docker_init.sh"
 )

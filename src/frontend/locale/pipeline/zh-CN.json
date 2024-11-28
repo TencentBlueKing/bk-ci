@@ -56,6 +56,8 @@
   "success": "成功",
   "creator": "创建人",
   "created": "创建时间",
+  "creatorDetail": "创建人/时间",
+  "modificationDetail": "修改人/时间",
   "editSuc": "编辑成功",
   "saveSuc": "保存成功",
   "releaseSuc": "发布成功",
@@ -292,7 +294,8 @@
     "noRelatedPipeline": "暂无关联流水线",
     "all": "所有",
     "installedAt": "安装于",
-    "createdAt": "创建于"
+    "createdAt": "创建于",
+    "systemPlugin": "系统插件"
   },
   "settings": {
     "baseInfo": "基本信息",
@@ -456,7 +459,9 @@
       "desc": "你没有该模板查看权限，请申请权限",
       "apply": "申请加入"
     },
-    "editStoreTemplateTips": "研发商店模板不支持编辑"
+    "editStoreTemplateTips": "研发商店模板不支持编辑",
+    "lastModifiedDate": "更新时间",
+    "lastModifiedBy": "更新人"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -754,7 +759,11 @@
     "directoryName": "目录名称",
     "directoryPath": "目录路径",
     "include": "包含",
-    "fileAndFolder": "{0} 个文件，{1} 个目录"
+    "fileAndFolder": "{0} 个文件，{1} 个目录",
+    "triggerResult": "触发结果",
+    "triggerSuc": "触发成功",
+    "triggerFail": "触发失败",
+    "triggerMismatch": "触发器不匹配"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
@@ -1043,7 +1052,12 @@
     "alwaysPull": "每次运行时拉取",
     "ifNotPresent": "当本地不存在时才拉取",
     "enableDockerTips": "使用此功能时，请确保构建机已经安装Docker运行环境，且第三方构建机Agent的启动用户拥有Docker的操作权限",
-    "enabledPrivileged": "是否开启特权模式"
+    "enabledPrivileged": "是否开启特权模式",
+    "batchAddTit": "批量添加",
+    "lineBreak": "多个选项用换行符分隔",
+    "noEnglishCommas": "每个选项不能包含英文逗号",
+    "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式",
+    "batchCopy": "一键复制"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1056,6 +1070,7 @@
     "bool": "布尔值",
     "enum": "单选框",
     "multiple": "复选框",
+    "checkbox": "Checkbox确认框",
     "svntag": "SVN分支或TAG",
     "gitref": "GIT分支或TAG",
     "codelib": "代码库",
@@ -1132,7 +1147,7 @@
     "mutualTimeout": "最长等待时间（单位分钟）",
     "mutualTimeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "queueLabel": "队列最大任务数",
-    "queuePlaceholder": "请填写1-10之间的整数",
+    "queuePlaceholder": "请填写1-50之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",
@@ -1145,7 +1160,8 @@
     "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
-    "minutes": "分钟"
+    "minutes": "分钟",
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1305,7 +1321,7 @@
   "dynamicGroupTips": "组内所包含的流水线根据设置的流水线名称\\标签等属性去动态匹配",
   "lastModify": "最近修改时间",
   "projectedGroupDisableTips": "仅项目管理员可以创建项目可见的流水线组",
-  "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
+  "groupEditDisableTips": "只有管理员可以对项目流水线组添加\\移出流水线",
   "pacGroupDisableTips": "由开启 PAC 模式自动创建，不支持手动添加/移除流水线",
   "noDeletePipelines": "删除流水线列表为空",
   "deleted": "已删除",
@@ -1597,6 +1613,33 @@
   },
   "debugHint": "调试和执行不共享构建号，但共享并发控制。调试记录仅在草稿版本调试期间有效，版本发布后将自动清理。",
   "templateRollbackBackTips": "当前流水线为约束模式（模板实例），需要跳转到模板进行版本回滚。",
+  "namingConvention": "变量语法风格",
+  "inheritedProject": "继承项目设置",
+  "CLASSIC": "传统风格",
+  "CONSTRAINED": "制约风格",
+  "grammaticalDifferences": "语法差异",
+  "differenceItem": "差异项",
+
+  "expressionFormat": "表达式格式",
+  "traditionalFormat": "单花括号或双花括号",
+  "traditionalFormatExample": "如：${var}、${{var}}",
+  "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
+  "constraintFormatExample": "如：${{variables.var}}",
+
+  "expressionFunction": "表达式函数",
+  "expressionFunctionTip": "如contains、join、fromJSON等",
+  "traditionalFunctionFormat": "仅在流程控制选项 {0} 设置中可以使用",
+  "customExpressionsSatisfyRun": "自定义表达式满足时运行",
+  "constraintFunctionFormat": "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数",
+  "constraintFunctionFormatExample": "如变量 a 值为 Json 字符串，则 bash 脚本中，可以使用 fromJSON 读取 echo \"a.node is ${{fromJSON(a).node}}\"",
+
+  "variableValueTooLong": "变量值超长",
+  "traditionalValueTooLongMode": "仅警告未报错",
+  "constraintReadOnlyMode": "将报错，运行失败",
+
+  "variableStandard": "变量 ID 规范",
+  "traditionalStandardMode": "未限制",
+  "constraintStandardMode": "不支持中文 ID，减少不同构建环境下的兼容问题",
   "versionNotMatch": "当前版本非最新版本，无法执行",
   "buildNoBaseline": {
     "buildNoBaseline": "构建号基线",

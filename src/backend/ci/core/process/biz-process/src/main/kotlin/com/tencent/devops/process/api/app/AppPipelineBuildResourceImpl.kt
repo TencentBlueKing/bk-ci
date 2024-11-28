@@ -280,7 +280,10 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 channelCode = channelCode
-            )
+            ).apply {
+                // TODO app暂时无法同步特性，临时方案为buildNo覆盖为currentBuildNo
+                buildNo?.currentBuildNo?.let { buildNo?.buildNo = it }
+            }
         )
     }
 

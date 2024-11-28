@@ -157,6 +157,8 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         ).data ?: false
     }
 
+    override fun isControlPipelineListPermission(projectId: String) = false
+
     private fun getProjectAllInstance(projectId: String): List<String> {
         return pipelineInfoDao.searchByProject(dslContext, projectId)?.map { it.pipelineId } ?: emptyList()
     }

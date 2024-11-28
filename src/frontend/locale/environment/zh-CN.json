@@ -105,7 +105,7 @@
     "mirrorTagRule": "只允许包含大小写英文，数字，下划线和点",
     "selectModel": "选择机型",
     "confirmInfo": "确认信息",
-    "setting": "设置",
+    "setting": "共享设置",
     "removeShareEnvProjectSuc": "项目 {0} 移除成功",
     "shareEnvSuc": "共享环境成功",
     "removeShareProjectConfirm": "是否移除项目 {0}",
@@ -266,5 +266,6 @@
     "启用": "启用",
     "停用": "停用",
     "启用成功": "启用成功",
-    "停用成功": "停用成功"
+    "停用成功": "停用成功",
+    "authManage": "权限管理"
 }

@@ -61,6 +61,7 @@ object AgentEnv {
     const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
     const val BK_TAG = "devops_bk_tag"
+    const val AGENT_JDK_PATH = "DEVOPS_AGENT_JDK_%s_PATH"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -286,4 +287,16 @@ object AgentEnv {
     fun getLocaleLanguage(): String {
         return System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
     }
+
+    fun getRuntimeJdkVersion(): String {
+        val javaVersion = System.getProperty("java.version").substringBefore(".")
+        // 在 Java 8 及之前的版本中的版本格式都是1.xxx.xxx，蓝盾只会使用java8及其以后的版本，故只需对java8环境做兼容处理
+        return if (javaVersion.toInt() > 1) {
+            javaVersion
+        } else {
+            "8"
+        }
+    }
+
+    fun getRuntimeJdkPath(): String = File(System.getProperty("java.home"), "/bin/java").absolutePath
 }

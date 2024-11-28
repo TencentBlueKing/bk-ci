@@ -1,53 +1,75 @@
-version: v2.0
-name: log_download代码质量扫描
+---
+version: "v2.0"
+name: "log_download代码质量扫描"
 label: []
-on:
+triggerOn:
   push:
     branches:
-    - master
+    - "master"
   mr:
     target-branches:
-    - master
+    - "master"
 stages:
-- name: 腾讯代码质量扫描
+- name: "腾讯代码质量扫描"
   label: []
+  if: null
   fast-kill: false
   jobs:
-  - id: job_tcoder_codecc_new
-    name: 腾讯代码质量扫描
+  - id: "job_tcoder_codecc_new"
+    name: "腾讯代码质量扫描"
+    mutex: null
     runs-on:
       self-hosted: false
-      pool-name: docker
+      pool-name: "docker"
       container:
-        image: mirrors.tencent.com/ci/tlinux3_ci:latest
+        image: "mirrors.tencent.com/ci/tlinux3_ci:latest"
+        credentials: null
+        options: null
+        image-pull-policy: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
     services: []
+    if: null
     steps:
-    - name: 代码拉取
-      id: step-1
+    - name: "代码拉取"
+      id: "step-1"
+      if: null
+      if-modify: null
+      uses: null
       with:
-        strategy: FRESH_CHECKOUT
+        strategy: "FRESH_CHECKOUT"
         enableVirtualMergeBranch: true
         enableSubmodule: true
         enableSubmoduleRecursive: true
-      runAdditionalOptions: {}
-      checkout: self
-    - name: 腾讯代码分析(官方-代码分析工作组)
-      id: check
-      if: (false == true)
-      uses: CodeccCheckAtomDebug@4.*
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: null
+      runAdditionalOptions:
+        shell: null
+      checkout: "self"
+    - name: "腾讯代码分析(官方-代码分析工作组)"
+      id: "check"
+      if: "(false == true)"
+      if-modify: null
+      uses: "CodeccCheckAtomDebug@4.*"
       with:
         beAutoLang: false
-        checkerSetType: normal
+        checkerSetType: "normal"
         toolScanType: "1"
         languages:
-        - C_CPP
+        - "C_CPP"
         tools: ""
         languageRuleSetMap:
           C_CPP_RULE:
-          - standard_cpp
-          - codecc_fast_cpp
-          - pecker_cpp
-          - codecc_default_coverity_cpp
+          - "standard_cpp"
+          - "codecc_fast_cpp"
+          - "pecker_cpp"
+          - "codecc_default_coverity_cpp"
           JAVA_RULE: []
           C_SHARP_RULE: []
           JS_RULE: []
@@ -63,33 +85,52 @@ stages:
           LUA_RULE: []
           DART_RULE: []
           SOLIDITY_RULE: []
-        pyVersion: py3
+        pyVersion: "py3"
         goPath: ""
-        scriptType: SHELL
-        script: |-
-          cd src
-          mkdir build
-          cd build
-          cmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..
-          make -j`nproc`
-          echo "213123123 ${{ ci.actor }}"
-          echo '123123123 ${{ ci.actor }}'
-        newDefectJudgeFromDate: 2021-11-01
+        scriptType: "SHELL"
+        script: "cd src\nmkdir build\ncd build\ncmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..\nmake -j`nproc`\necho \"213123123 ${{ ci.actor }}\"\necho '123123123 ${{ ci.actor }}'"
+        newDefectJudgeFromDate: "2021-11-01"
         rtxReceiverType: 4
         rtxReceiverList: []
         instantReportStatus: 1
         emailReceiverType: 4
         emailReceiverList: []
         emailCCReceiverList: []
-      runAdditionalOptions: {}
-    - id: 123123123
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: null
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: "123123123"
       if: "('[\"${{ variables.xxx }}\",\"JS\"]' == fromJSON('[\"PYTHON\"]'))"
-      run: |
-        echo ${{ (join('[\"${{ variables.xxx }}\",\"JS\"]') == join(fromJSON('["JAVA", "JS"]'))) }}
-      runAdditionalOptions: {}
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo ${{ (join('[\"${{ variables.xxx }}\",\"JS\"]') == join(fromJSON('[\"JAVA\", \"JS\"]'))) }}\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
 resource:
   repositories:
-  - repository: sissicchen/log_download
-    name: tcoder
-    ref: refs/heads/master
+  - repository: "sissicchen/log_download"
+    name: "tcoder"
+    ref: "refs/heads/master"
+    credentials: null
 finally: []

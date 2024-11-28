@@ -92,6 +92,8 @@ import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -120,6 +122,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
@@ -178,7 +181,8 @@ class TemplateFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val templateCommonService: TemplateCommonService,
-    private val templateSettingService: TemplateSettingService
+    private val templateSettingService: TemplateSettingService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -689,6 +693,8 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int? = null,
         pageSize: Int? = null,
         keywords: String? = null
@@ -702,6 +708,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
+            orderBy = orderBy,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             templateIds = null
@@ -745,6 +753,8 @@ class TemplateFacadeService @Autowired constructor(
         storeFlag: Boolean?,
         hasManagerPermission: Boolean?,
         checkPermission: Boolean = true,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int?,
         pageSize: Int?,
         includePublicFlag: Boolean? = null,
@@ -759,6 +769,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 hasManagerPermission = hasManagerPermission,
@@ -781,6 +793,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 templatesByPermissionMap = templatesByPermissionMap
@@ -793,6 +807,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         hasManagerPermission: Boolean?,
@@ -806,6 +822,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templateIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -837,6 +855,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         templatesByPermissionMap: Map<AuthPermission, List<String>>
@@ -868,6 +888,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templatesWithListPermIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -989,7 +1011,9 @@ class TemplateFacadeService @Autowired constructor(
                         hasPermission = hasManagerPermission,
                         canView = templateWithPermission.templatesWithViewPermIds?.contains(templateId),
                         canDelete = templateWithPermission.templatesWithDeletePermIds?.contains(templateId),
-                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId)
+                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId),
+                        creator = record[tTemplate.CREATOR],
+                        updateTime = record[tTemplate.UPDATE_TIME].timestampmilli()
                     )
                 )
             }
@@ -2299,11 +2323,14 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
+        // 模版先都统一使用项目配置
+        val projectDialect = projectId?.let { pipelineAsCodeService.getProjectDialect(projectId = it) }
         modelCheckPlugin.checkModelIntegrity(
             model = template,
             projectId = projectId,
             userId = userId,
-            isTemplate = true
+            isTemplate = true,
+            pipelineDialect = projectDialect
         )
         checkPipelineParam(template)
     }

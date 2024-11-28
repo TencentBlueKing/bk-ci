@@ -92,7 +92,8 @@ class PipelineSettingDao {
                 CLEAN_VARIABLES_WHEN_RETRY,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
-                VERSION
+                VERSION,
+                PIPELINE_AS_CODE_SETTINGS
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -126,7 +127,8 @@ class PipelineSettingDao {
                 setting.cleanVariablesWhenRetry,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
-                setting.version
+                setting.version,
+                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) }
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)

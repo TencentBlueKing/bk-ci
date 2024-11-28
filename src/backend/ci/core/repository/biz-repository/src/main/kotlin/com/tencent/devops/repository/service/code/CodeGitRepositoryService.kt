@@ -175,7 +175,7 @@ class CodeGitRepositoryService @Autowired constructor(
         ).url
         var gitProjectId: Long? = null
         // 需要更新gitProjectId
-        if (sourceUrl != repository.url) {
+        if (sourceUrl != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] targetUrl=[${repository.url}]"
             )
@@ -418,6 +418,15 @@ class CodeGitRepositoryService @Autowired constructor(
             userName = userId,
             event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
         )
+        // 修复历史数据
+        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
+            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
+            repositoryCodeGitDao.updateGitProjectId(
+                dslContext = dslContext,
+                id = repositoryId,
+                gitProjectId = gitProjectInfo.id
+            )
+        }
     }
 
     override fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo> {
