@@ -25,33 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.handler
 
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import org.springframework.stereotype.Service
 
-interface StoreBaseDeleteService {
+@Service
+class StoreDeleteCodeRepositoryHandler(
+    private val storeBaseDeleteService: StoreBaseDeleteService
+) : Handler<StoreDeleteRequest> {
 
-    /**
-     * 检查删除组件请求参数合法性
-     * @param handlerRequest 删除组件请求报文体
-     */
-    fun deleteComponentCheck(handlerRequest: StoreDeleteRequest)
+    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
 
-    /**
-     * 删除组件关联仓库文件
-     * @param handlerRequest 删除组件请求报文体
-     */
-    fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest)
+        return when (handlerRequest.storeType) {
+            StoreTypeEnum.TEMPLATE.name, StoreTypeEnum.IMAGE.name -> false
+            else -> true
+        }
+    }
 
-    /**
-     * 删除组件代码库
-     * @param handlerRequest 删除组件请求报文体
-     */
-    fun deleteComponentCodeRepository(handlerRequest: StoreDeleteRequest)
-
-    /**
-     * 持久化删除组件数据
-     * @param handlerRequest 删除组件请求报文体
-     */
-    fun doStoreDeleteDataPersistent(handlerRequest: StoreDeleteRequest)
+    override fun execute(handlerRequest: StoreDeleteRequest) {
+        // 删除组件代码库
+        storeBaseDeleteService.deleteComponentCodeRepository(handlerRequest)
+    }
 }

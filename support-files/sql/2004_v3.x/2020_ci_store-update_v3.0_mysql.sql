@@ -30,6 +30,15 @@ BEGIN
         `INX_TSPR_TYPE_PROJECT_TYPE_INSTANCE` (`STORE_TYPE`,`PROJECT_CODE`,`TYPE`,`INSTANCE_ID`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                     AND INDEX_NAME = 'INX_TSPR_TYPE_CODE_TYPE') THEN
+    ALTER TABLE `T_STORE_PROJECT_REL` ADD INDEX
+        `INX_TSPR_TYPE_CODE_TYPE` (`STORE_TYPE`,`STORE_CODE`,`TYPE`);
+    END IF;
+
     IF EXISTS(SELECT 1
                  FROM information_schema.statistics
                  WHERE TABLE_SCHEMA = db
