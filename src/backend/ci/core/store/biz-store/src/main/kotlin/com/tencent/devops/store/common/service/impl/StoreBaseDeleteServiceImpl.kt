@@ -29,9 +29,11 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.constant.RepositoryConstants.KEY_REPOSITORY_ID
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -127,20 +129,25 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
             val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
             val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
                 ?: throw NotFoundException("cannot found access token for user($userId)")
-            val deleteRepositoryResult = getStoreManagementExtraService(storeType).deleteComponentCodeRepository(
-                userId = userId,
-                repositoryId = repositoryId,
-                token = gitToken.accessToken,
-                tokenType = TokenTypeEnum.OAUTH
-            )
-            if (deleteRepositoryResult.isNotOk()) {
-                logger.info(
-                    "deleteComponentCodeRepository storeType:$storeType|storeCode:$storeCode|" +
-                            "result:$deleteRepositoryResult"
+            try {
+                val deleteRepositoryResult = getStoreManagementExtraService(storeType).deleteComponentCodeRepository(
+                    userId = userId,
+                    repositoryId = repositoryId,
+                    token = gitToken.accessToken,
+                    tokenType = TokenTypeEnum.OAUTH
                 )
-                throw ErrorCodeException(
-                    errorCode = deleteRepositoryResult.status.toString(),
-                    defaultMessage = deleteRepositoryResult.message
+                if (deleteRepositoryResult.isNotOk()) {
+                    bkStoreContext[MESSAGE] = I18nUtil.getCodeLanMessage(
+                        messageCode = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL,
+                        params = arrayOf(deleteRepositoryResult.message ?: "")
+                    )
+                }
+            } catch (ignored: Throwable) {
+                // 组件删除代码库失败不终止删除流程，在接口返回报文给出提示信息
+                logger.warn("deleteAtomRepository deleteComponentCodeRepository!", ignored)
+                bkStoreContext[MESSAGE] = I18nUtil.getCodeLanMessage(
+                    messageCode = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL,
+                    params = arrayOf(ignored.message ?: "")
                 )
             }
         }
