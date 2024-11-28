@@ -457,10 +457,21 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeCode: String? = null,
         grayFlag: Boolean
     ) {
+        val str = "#{$KEY_PIPELINE_NAME}"
+        var model = pipelineModel
+        val suffix = storeCode ?: "PUBLIC"
+        var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
         val projectCode = if (!grayFlag) {
             storeInnerPipelineConfig.innerPipelineProject
         } else {
+            pipelineName = "GRAY-$pipelineName"
             storeInnerPipelineConfig.innerPipelineGrayProject
+        }
+        if (pipelineModel.contains(str)) {
+            model = pipelineModel.replace(
+                "#{$KEY_PIPELINE_NAME}",
+                pipelineName
+            )
         }
         var publicPipelineId = redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
         if (publicPipelineId.isNullOrBlank()) {
@@ -531,7 +542,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                                 projectId = projectCode,
                                 pipelineId = pipelineId,
                                 creator = storeInnerPipelineConfig.innerPipelineUser,
-                                model = pipelineModel
+                                model = model
                             )
                         )
                     )
@@ -547,9 +558,9 @@ class StorePipelineServiceImpl @Autowired constructor(
     ): String {
         val suffix = storeCode ?: "PUBLIC"
         var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
-        var key = "CREAT_$pipelineName"
+        var key = "CREAT-$pipelineName"
         if (grayFlag) {
-            key = "gray-$key"
+            key = "GRAY-$key"
         }
         storeCode?.let { key += "-$storeCode" }
         val lock = RedisLock(redisOperation, key, 60L)
