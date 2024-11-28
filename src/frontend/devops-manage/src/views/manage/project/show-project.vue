@@ -454,7 +454,9 @@ onMounted(async () => {
                     :label="t('命名规范提示')"
                     property="pipelineNameFormat"
                   >
-                    <span class="item-value">{{ projectData.properties.pipelineNameFormat || '--' }}</span>
+                    <span class="item-value">
+                      {{ projectData.properties.enablePipelineNameTips ? (projectData.properties.pipelineNameFormat || '--') : t('未开启') }}
+                    </span>
                     <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
                       <p class="update-title">
                         {{ t('本次更新：') }}

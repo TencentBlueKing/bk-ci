@@ -299,5 +299,6 @@
     "权限": "Permissions",
     "命名规范提示": "Naming Convention Tip",
     "开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。": "Once enabled, you need to provide a naming convention tip for pipelines. This tip will be displayed on the 'Create Pipeline' page.",
-    "请输入流水线命名规范提示说明": "Please enter the naming convention tip for pipelines. Eg: Please follow the pipeline naming convention using the format “ModuleName(one/multiple/scenario, etc.)_TriggerMechanism(premerge/trunk/daily, etc.)_TestAspect(UT/canary/DIFF, etc."
+    "请输入流水线命名规范提示说明": "Please enter the naming convention tip for pipelines. Eg: Please follow the pipeline naming convention using the format “ModuleName(one/multiple/scenario, etc.)_TriggerMechanism(premerge/trunk/daily, etc.)_TestAspect(UT/canary/DIFF, etc.",
+    "未开启": "Not Enabled"
 }
