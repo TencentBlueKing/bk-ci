@@ -242,7 +242,14 @@
         "installMethod": "安装方式",
         "remoteInstall": "远程安装",
         "manualInstall": "手动安装",
-        "dockerMaxConcurrency": "docker构建最大并发数"
+        "dockerMaxConcurrency": "docker构建最大并发数",
+        "cloudLoginHook": "云桌面登录钩子",
+        "cloudLogoutHook": "云桌面退出钩子",
+        "loginHookTips": "登录云桌面，将执行如下已勾选的操作",
+        "logoutHookTips": "退出云桌面，将执行如下已勾选的操作",
+        "cleanCredentialsLabel": "清理凭据，包括 Git/SNV 凭据、浏览器缓存器凭据 (Chrome、Microsoft Edge)",
+        "ioaLoginLabel": "登录IOA",
+        "ioaLogoutLabel": "IOA注销登录"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -440,5 +447,7 @@
     "正在生成手动安装命令": "正在生成手动安装命令",
     "已加载X条": "已加载{0}条",
     "共X个节点": "共{0}个节点",
-    "authManage": "权限管理"
+    "authManage": "权限管理",
+    "advancedSetting": "高级设置",
+    "saveChange": "保存变更"
 }
