@@ -365,7 +365,6 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             storeDeleteCheckHandler,
             storeDeleteRepoFileHandler,
             storeDeleteCodeRepositoryHandler,
-            storeDeleteCodeRepositoryHandler,
             storeDeleteDataPersistHandler
         )
         val bkStoreContext = handlerRequest.bkStoreContext
