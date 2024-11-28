@@ -113,7 +113,9 @@
 </script>
 <style lang='scss'>
     .system-log-dialog {
-        margin-top: 15% !important;
+        .bk-dialog {
+            top: 15% !important;
+        }
         .bk-dialog-tool,
         .bk-dialog-header {
             display: none;
