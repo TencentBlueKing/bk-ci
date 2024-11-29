@@ -984,6 +984,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 name = record[tStoreBase.NAME],
                 code = storeCode,
                 version = version,
+                status = record[tStoreBase.STATUS],
                 type = StoreTypeEnum.getStoreType(record[tStoreBase.STORE_TYPE].toInt()),
                 rdType = record[tStoreBaseFeature.RD_TYPE],
                 classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],

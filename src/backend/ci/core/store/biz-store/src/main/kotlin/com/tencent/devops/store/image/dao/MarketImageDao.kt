@@ -58,6 +58,7 @@ import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_REPO_NAME
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_REPO_URL
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SIZE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SOURCE_TYPE
+import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_VERSION
@@ -86,6 +87,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record18
+import org.jooq.Record19
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
@@ -222,11 +224,8 @@ class MarketImageDao @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<
-        Record18<String, String, String, Byte,
-            String, String, String, String,
-            String, String, Boolean, Boolean, String,
-            LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
+    ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
+            Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
             imageSourceType = imageSourceType,
@@ -245,6 +244,7 @@ class MarketImageDao @Autowired constructor() {
             tImage.CLASSIFY_ID.`as`(KEY_CLASSIFY_ID),
             tImage.LOGO_URL.`as`(KEY_IMAGE_LOGO_URL),
             tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+            tImage.IMAGE_STATUS.`as`(KEY_IMAGE_STATUS),
             tImage.SUMMARY.`as`(KEY_IMAGE_SUMMARY),
             tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG),
             tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
