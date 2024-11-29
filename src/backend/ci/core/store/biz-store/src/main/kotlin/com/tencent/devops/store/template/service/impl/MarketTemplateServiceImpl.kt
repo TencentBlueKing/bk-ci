@@ -333,6 +333,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         name = it[tTemplate.TEMPLATE_NAME] as String,
                         code = code,
                         version = it[tTemplate.VERSION] as String,
+                        status = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt()),
                         type = "",
                         rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
