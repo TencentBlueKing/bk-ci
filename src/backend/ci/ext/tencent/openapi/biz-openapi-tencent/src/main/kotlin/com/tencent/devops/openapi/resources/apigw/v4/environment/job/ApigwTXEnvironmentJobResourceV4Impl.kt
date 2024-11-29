@@ -226,6 +226,4 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         return client.get(TencentServiceJobResource::class)
             .obtainManualInstallationCommand(userId, projectId, jobId, hostId)
     }
-
-
 }

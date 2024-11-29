@@ -59,7 +59,6 @@ import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.glassfish.jersey.media.multipart.FormDataParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -333,7 +332,6 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "安装agent的请求信息", required = true)
-        @FormDataParam("installAgentReq")
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult>
 
@@ -352,12 +350,11 @@ interface TencentServiceJobResource {
         jobId: Int,
         @Parameter(description = "查询agent任务状态的请求信息", required = true)
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
-    ):AgentResult<QueryAgentTaskStatusResult>
-
+    ): AgentResult<QueryAgentTaskStatusResult>
 
     @Operation(summary = "获取手动安装agent的命令")
     @GET
-    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
+    @Path("/{projectId}/obtain_manual_installation_command")
     fun obtainManualInstallationCommand(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -366,7 +363,7 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "任务ID", required = true)
-        @PathParam("jobId")
+        @QueryParam("jobId")
         jobId: Int,
         @Parameter(description = "HOST ID", required = true)
         @QueryParam("hostId")
