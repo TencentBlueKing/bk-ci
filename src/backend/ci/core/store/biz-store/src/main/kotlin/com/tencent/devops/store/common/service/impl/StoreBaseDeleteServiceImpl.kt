@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.MESSAGE
+import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -137,20 +138,25 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
                     tokenType = TokenTypeEnum.OAUTH
                 )
                 if (deleteRepositoryResult.isNotOk()) {
-                    bkStoreContext[MESSAGE] = I18nUtil.getCodeLanMessage(
-                        messageCode = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL,
-                        params = arrayOf(deleteRepositoryResult.message ?: "")
-                    )
+                    setDeleteCodeRepositoryMsg(bkStoreContext, deleteRepositoryResult.message)
                 }
             } catch (ignored: Throwable) {
                 // 组件删除代码库失败不终止删除流程，在接口返回报文给出提示信息
                 logger.warn("deleteAtomRepository deleteComponentCodeRepository!", ignored)
-                bkStoreContext[MESSAGE] = I18nUtil.getCodeLanMessage(
-                    messageCode = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL,
-                    params = arrayOf(ignored.message ?: "")
-                )
+                setDeleteCodeRepositoryMsg(bkStoreContext, ignored.message)
             }
         }
+    }
+
+    private fun setDeleteCodeRepositoryMsg(
+        bkStoreContext: MutableMap<String, Any>,
+        message: String?
+    ) {
+        bkStoreContext[STATUS] = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL
+        bkStoreContext[MESSAGE] = I18nUtil.getCodeLanMessage(
+            messageCode = StoreMessageCode.STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL,
+            params = arrayOf(message ?: "")
+        )
     }
 
     override fun doStoreDeleteDataPersistent(handlerRequest: StoreDeleteRequest) {
