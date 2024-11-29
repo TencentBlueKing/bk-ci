@@ -7,5 +7,7 @@ data class InvalidAuthorizationsDTO(
     @get:Schema(title = "引起代持人权限失效的用户组")
     val invalidGroupIds: List<Int>,
     @get:Schema(title = "引起代持人权限失效的流水线")
-    val invalidAuthorizations: List<String>
+    val invalidPipelineIds: List<String>,
+    @get:Schema(title = "引起oauth失效的代码库")
+    val invalidRepertoryIds: List<String> = emptyList()
 )

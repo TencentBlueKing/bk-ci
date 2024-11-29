@@ -29,5 +29,7 @@ data class GroupDetailsInfoVo(
     @get:Schema(title = "加入方式")
     val joinedType: JoinedType,
     @get:Schema(title = "操作人")
-    val operator: String
+    val operator: String,
+    @get:Schema(title = "是否正在交接")
+    val beingHandedOver: Boolean? = null
 )

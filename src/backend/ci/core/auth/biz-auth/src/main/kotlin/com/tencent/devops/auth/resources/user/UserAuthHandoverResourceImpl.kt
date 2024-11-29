@@ -51,7 +51,7 @@ class UserAuthHandoverResourceImpl(
         userId: String,
         queryRequest: HandoverOverviewQueryReq
     ): Result<SQLPage<HandoverOverviewVo>> {
-        if (userId != queryRequest.memberID) {
+        if (userId != queryRequest.memberId) {
             throw PermissionForbiddenException(
                 message = "You have not permission to view other people's handover details!"
             )

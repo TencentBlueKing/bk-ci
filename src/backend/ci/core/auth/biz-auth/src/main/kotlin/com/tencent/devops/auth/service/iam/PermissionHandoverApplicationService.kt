@@ -54,6 +54,15 @@ interface PermissionHandoverApplicationService {
     ): List<HandoverDetailDTO>
 
     /**
+     * 获取用户在项目下正在交接的组/授权
+     * */
+    fun listMemberHandoverDetails(
+        projectCode: String,
+        memberId: String,
+        handoverType: HandoverType
+    ): List<HandoverDetailDTO>
+
+    /**
      * 获取交接单中授权相关
      * */
     fun listAuthorizationsOfHandoverApplication(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo>

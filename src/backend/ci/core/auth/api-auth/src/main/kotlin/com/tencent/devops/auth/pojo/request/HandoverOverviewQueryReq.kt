@@ -1,13 +1,12 @@
 package com.tencent.devops.auth.pojo.request
 
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
-import com.tencent.devops.auth.pojo.enum.HandoverType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "权限交接总览查询")
 data class HandoverOverviewQueryReq(
     @get:Schema(title = "成员ID")
-    val memberID: String,
+    val memberId: String,
     @get:Schema(title = "项目ID")
     val projectCode: String? = null,
     @get:Schema(title = "项目ID")
@@ -24,8 +23,6 @@ data class HandoverOverviewQueryReq(
     val minCreatedTime: Long? = null,
     @get:Schema(title = "最打提单时间")
     val maxCreatedTime: Long? = null,
-    @get:Schema(title = "交接类型")
-    val handoverType: HandoverType? = null,
     @get:Schema(title = "页数")
     val page: Int? = null,
     @get:Schema(title = "页大小")

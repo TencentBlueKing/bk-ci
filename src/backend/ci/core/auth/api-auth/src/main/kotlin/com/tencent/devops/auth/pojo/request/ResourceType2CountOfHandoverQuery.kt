@@ -1,19 +1,20 @@
 package com.tencent.devops.auth.pojo.request
 
+import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.HandoverQueryChannel
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ResourceType2CountOfHandoverQuery(
+    @get:Schema(title = "项目ID")
+    val projectCode: String,
     @get:Schema(title = "渠道")
     val queryChannel: HandoverQueryChannel,
     @get:Schema(title = "流程单号")
     val flowNo: String?,
-    @get:Schema(title = "项目ID")
-    val projectCode: String?,
-    @get:Schema(title = "操作的组ID")
-    val iamGroupIds: List<Int>?,
-    @get:Schema(title = "用户ID")
-    val memberId: String?
+    @get:Schema(title = "交接预览请求条件")
+    val previewConditionReq: GroupMemberCommonConditionReq?,
+    @get:Schema(title = "批量操作动作")
+    val batchOperateType: BatchOperateType?
 ) {
     fun check() {
         when (queryChannel) {
@@ -24,8 +25,8 @@ data class ResourceType2CountOfHandoverQuery(
             }
 
             else -> {
-                if (projectCode == null || iamGroupIds == null || memberId == null) {
-                    throw IllegalArgumentException("projectCode or iamGroupIds or memberId cannot  be null!")
+                if (previewConditionReq == null || batchOperateType == null) {
+                    throw IllegalArgumentException("previewConditionReq or batchOperateType can not be null!")
                 }
             }
         }

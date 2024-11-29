@@ -38,7 +38,7 @@ class AuthHandoverDetailDao {
     fun list(
         dslContext: DSLContext,
         projectCode: String,
-        flowNo: String,
+        flowNos: List<String>,
         resourceType: String?,
         handoverType: HandoverType?
     ): List<HandoverDetailDTO> {
@@ -47,7 +47,7 @@ class AuthHandoverDetailDao {
                 .where(
                     buildQueryConditions(
                         projectCode = projectCode,
-                        flowNo = flowNo,
+                        flowNos = flowNos,
                         resourceType = resourceType,
                         handoverType = handoverType
                     )
@@ -58,7 +58,7 @@ class AuthHandoverDetailDao {
     fun count(
         dslContext: DSLContext,
         projectCode: String,
-        flowNo: String,
+        flowNos: List<String>,
         resourceType: String?,
         handoverType: HandoverType?
     ): Long {
@@ -67,7 +67,7 @@ class AuthHandoverDetailDao {
                 .where(
                     buildQueryConditions(
                         projectCode = projectCode,
-                        flowNo = flowNo,
+                        flowNos = flowNos,
                         resourceType = resourceType,
                         handoverType = handoverType
                     )
@@ -87,7 +87,7 @@ class AuthHandoverDetailDao {
                 .where(
                     buildQueryConditions(
                         projectCode = projectCode,
-                        flowNo = flowNo,
+                        flowNos = listOf(flowNo),
                         resourceType = null,
                         handoverType = handoverType
                     )
@@ -98,14 +98,14 @@ class AuthHandoverDetailDao {
 
     private fun buildQueryConditions(
         projectCode: String,
-        flowNo: String,
+        flowNos: List<String>,
         resourceType: String?,
         handoverType: HandoverType?
     ): List<Condition> {
         with(TAuthHandoverDetail.T_AUTH_HANDOVER_DETAIL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_CODE.eq(projectCode))
-            conditions.add(FLOW_NO.eq(flowNo))
+            conditions.add(FLOW_NO.`in`(flowNos))
             resourceType?.let {
                 conditions.add(RESOURCE_TYPE.eq(resourceType))
             }
