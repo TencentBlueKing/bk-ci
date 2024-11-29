@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.constant.MESSAGE
+import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -371,7 +372,11 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
         StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
-        return Result(data = true, message = bkStoreContext[MESSAGE]?.toString())
+        return Result(
+            status = bkStoreContext[STATUS]?.toString()?.toInt() ?: 0,
+            data = true,
+            message = bkStoreContext[MESSAGE]?.toString()
+        )
     }
 
     override fun validateComponentDownloadPermission(
