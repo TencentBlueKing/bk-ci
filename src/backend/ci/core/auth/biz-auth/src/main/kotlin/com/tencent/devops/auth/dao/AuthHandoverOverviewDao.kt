@@ -87,7 +87,7 @@ class AuthHandoverOverviewDao {
                     } else {
                         it
                     }
-                }.fetch().map { it.convert(queryRequest.memberID) }
+                }.fetch().map { it.convert(queryRequest.memberId) }
         }
     }
 
@@ -107,7 +107,7 @@ class AuthHandoverOverviewDao {
     ): List<Condition> {
         with(TAuthHandoverOverview.T_AUTH_HANDOVER_OVERVIEW) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(APPROVER.eq(queryRequest.memberID).or(APPLICANT.eq(queryRequest.memberID)))
+            conditions.add(APPROVER.eq(queryRequest.memberId).or(APPLICANT.eq(queryRequest.memberId)))
             queryRequest.projectCode?.let { conditions.add(PROJECT_CODE.eq(queryRequest.projectCode)) }
             queryRequest.title?.let { conditions.add(TITLE.like("%${queryRequest.title}%")) }
             queryRequest.flowNo?.let { conditions.add(FLOW_NO.eq(queryRequest.flowNo)) }

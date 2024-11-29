@@ -106,10 +106,11 @@ interface PermissionManageFacadeService {
     ): SQLPage<ResourceMemberInfo>
 
     /**
-     * 为了避免流水线代持人权限失效，需要对用户退出/交接用户组进行检查。
+     * 为了避免流水线代持人/代码库oauth权限失效，需要对用户退出/交接用户组进行检查。
      * 返回结果：
      * 1、引起代持人权限失效的用户组。
      * 2、引起代持人权限失效的流水线。
+     * 3、引起代码库oauth失效的代码库（当用户操作完组后，不再拥有项目访问权限时，会代码库oauth引起失效）
      **/
     fun listInvalidAuthorizationsAfterOperatedGroups(
         projectCode: String,

@@ -17,6 +17,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
@@ -322,6 +323,35 @@ class PermissionAuthorizationServiceImpl(
             }
         }
         return result
+    }
+
+    override fun checkRepertoryAuthorizationsHanover(
+        operator: String,
+        projectCode: String,
+        repertoryIds: List<String>,
+        handoverFrom: String,
+        handoverTo: String
+    ) {
+        val canHandoverRepertory = resetResourceAuthorizationByResourceType(
+            operator = operator,
+            projectCode = projectCode,
+            condition = ResourceAuthorizationHandoverConditionRequest(
+                projectCode = projectCode,
+                resourceType = ResourceTypeId.REPERTORY,
+                fullSelection = true,
+                filterResourceCodes = repertoryIds,
+                handoverChannel = HandoverChannelCode.MANAGER,
+                handoverFrom = handoverFrom,
+                handoverTo = handoverTo,
+                checkPermission = false,
+                preCheck = true
+            )
+        )[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()
+        if (!canHandoverRepertory) {
+            throw ErrorCodeException(
+                errorCode = ERROR_HANDOVER_AUTHORIZATION
+            )
+        }
     }
 
     private fun addHandoverFromCnName(

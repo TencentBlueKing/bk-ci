@@ -145,4 +145,12 @@ interface PermissionAuthorizationService {
         projectCode: String,
         condition: ResetAllResourceAuthorizationReq
     ): List<ResourceTypeInfoVo>
+
+    fun checkRepertoryAuthorizationsHanover(
+        operator: String,
+        projectCode: String,
+        repertoryIds: List<String>,
+        handoverFrom: String,
+        handoverTo: String
+    )
 }

@@ -8,6 +8,7 @@ import com.tencent.devops.auth.dao.AuthHandoverOverviewDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
+import com.tencent.devops.auth.pojo.enum.HandoverStatus
 import com.tencent.devops.auth.pojo.enum.HandoverType
 import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
@@ -139,14 +140,14 @@ class RbacPermissionHandoverApplicationService(
         val resourceCodes = handoverDetailDao.list(
             dslContext = dslContext,
             projectCode = overview.projectCode,
-            flowNo = flowNo,
+            flowNos = listOf(flowNo),
             resourceType = queryReq.resourceType,
             handoverType = HandoverType.AUTHORIZATION
         ).map { it.itemId }
         val count = handoverDetailDao.count(
             dslContext = dslContext,
             projectCode = overview.projectCode,
-            flowNo = flowNo,
+            flowNos = listOf(flowNo),
             resourceType = queryReq.resourceType,
             handoverType = HandoverType.AUTHORIZATION
         )
@@ -253,8 +254,30 @@ class RbacPermissionHandoverApplicationService(
         return handoverDetailDao.list(
             dslContext = dslContext,
             projectCode = projectCode,
-            flowNo = flowNo,
+            flowNos = listOf(flowNo),
             resourceType = resourceType,
+            handoverType = handoverType
+        )
+    }
+
+    override fun listMemberHandoverDetails(
+        projectCode: String,
+        memberId: String,
+        handoverType: HandoverType
+    ): List<HandoverDetailDTO> {
+        val flowNos = listHandoverOverviews(
+            queryRequest = HandoverOverviewQueryReq(
+                memberId = memberId,
+                projectCode = projectCode,
+                applicant = memberId,
+                handoverStatus = HandoverStatus.PENDING
+            )
+        ).records.map { it.flowNo }
+        return handoverDetailDao.list(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            flowNos = flowNos,
+            resourceType = null,
             handoverType = handoverType
         )
     }
