@@ -35,24 +35,14 @@ enum class NodeType(val typeName: String) {
     UNKNOWN("未知");
 
     companion object {
+        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
+
         fun getTypeName(nodeType: String): String {
-            return when (nodeType) {
-                CMDB.name -> CMDB.typeName
-                DEVCLOUD.name -> DEVCLOUD.typeName
-                THIRDPARTY.name -> THIRDPARTY.typeName
-                OTHER.name -> OTHER.typeName
-                else -> UNKNOWN.typeName
-            }
+            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
         }
 
         fun parseByTypeName(typeName: String): NodeType {
-            return when (typeName) {
-                CMDB.typeName -> CMDB
-                DEVCLOUD.typeName -> DEVCLOUD
-                THIRDPARTY.typeName -> THIRDPARTY
-                OTHER.typeName -> OTHER
-                else -> UNKNOWN
-            }
+            return values().find { it.typeName == typeName } ?: UNKNOWN
         }
     }
 }

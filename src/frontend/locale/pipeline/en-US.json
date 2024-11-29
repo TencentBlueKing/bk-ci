@@ -1321,7 +1321,7 @@
   "dynamicGroupTips": "Dynamic matching based on the name, tag and other attributes",
   "lastModify": "Last Modified at",
   "projectedGroupDisableTips": "Only project administrators can create pipeline groups that are visible to the project",
-  "groupEditDisableTips": "Only administrators or CI administrators can add or remove pipelines to or from project pipeline groups",
+  "groupEditDisableTips": "Only administrators can add or remove pipelines to or from project pipeline groups",
   "pacGroupDisableTips": "Automatically created by enabling PAC mode, not support manually add/remove pipeline",
   "noDeletePipelines": "No pipeline to delete",
   "deleted": "Deleted",
@@ -1664,5 +1664,6 @@
   "sureDeleteDraft": "Are you sure you want to delete this draft?",
   "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
   "noDraft": "No drafts available for deletion",
-  "pipelineNameConventions": "Pipeline Naming Conventions:"
+  "pipelineNameConventions": "Pipeline Naming Conventions:",
+  "addLabels": "Add Label"
 }

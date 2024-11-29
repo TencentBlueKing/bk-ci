@@ -1,11 +1,10 @@
-package config
+package third_components
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"os"
 	"reflect"
 	"testing"
-
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func Test_parseWorkerVersion(t *testing.T) {
@@ -88,10 +87,12 @@ func Test_parseWorkerVersion(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	logs.UNTestDebugInit()
+	_ = initOb()
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			version := parseWorkerVersion(tt.lines)
+			version := Worker.parseWorkerVersion(tt.lines)
 			if !reflect.DeepEqual(version, tt.want) {
 				t.Fatalf("Fail: %v = %v, want %v", tt.name, version, tt.want)
 			}
@@ -117,10 +118,13 @@ func Test_matchWorkerVersion(t *testing.T) {
 			want: true,
 		},
 	}
+
 	logs.UNTestDebugInit()
+	_ = initOb()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := matchWorkerVersion(tt.args.line); got != tt.want {
+			if got := Worker.matchWorkerVersion(tt.args.line); got != tt.want {
 				t.Errorf("matchWorkerVersion() = %v, want %v", got, tt.want)
 			}
 		})

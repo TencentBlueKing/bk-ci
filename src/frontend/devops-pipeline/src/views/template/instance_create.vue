@@ -366,7 +366,7 @@
         },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
-            if (this.$route.query.useTemplateSettings === 'true') {
+            if (this.$route.query.useTemplateSettings) {
                 this.isTemplateSetting = true
             }
             if (this.curVersionId) {

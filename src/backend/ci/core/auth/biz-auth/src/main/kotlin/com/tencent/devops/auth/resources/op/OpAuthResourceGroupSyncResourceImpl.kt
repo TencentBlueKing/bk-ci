@@ -44,6 +44,11 @@ class OpAuthResourceGroupSyncResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionResourceGroupSyncService.syncGroupMemberExpiredTime(projectConditionDTO)
+        return Result(true)
+    }
+
     override fun batchSyncGroupAndMember(projectIds: List<String>): Result<Boolean> {
         permissionResourceGroupSyncService.batchSyncGroupAndMember(projectIds)
         return Result(true)

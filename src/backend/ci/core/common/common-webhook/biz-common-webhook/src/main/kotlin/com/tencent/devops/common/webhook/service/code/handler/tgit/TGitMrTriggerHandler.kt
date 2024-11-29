@@ -318,7 +318,8 @@ class TGitMrTriggerHandler(
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
-                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr()
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
+                eventType = getEventType().name
             )
             return listOf(
                 wipFilter, userFilter, targetBranchFilter,
