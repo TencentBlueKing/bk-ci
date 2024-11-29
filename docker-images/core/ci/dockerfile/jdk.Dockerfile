@@ -1,4 +1,4 @@
-FROM bkci/os:0.0.1
+FROM bkci/os:0.0.2
 
 LABEL maintainer="Tencent BlueKing Devops"
 
@@ -13,12 +13,12 @@ ENV PATH=${JAVA_HOME}/bin:$PATH
 ENV CLASSPATH=.:${JAVA_HOME}/lib
 
 # 安装软件
-RUN yum update -y &&\
-    yum install -y epel-release &&\
-    yum install -y mysql &&\
-    yum install -y redis &&\
-    yum install -y python3 &&\
-    pip3 install requests 
+RUN dnf makecache &&\
+    dnf install -y mysql &&\
+    dnf install -y redis &&\
+    dnf install -y python3 &&\
+    dnf install -y pip3 &&\
+    pip install requests
 
 # 安装Java工具
 RUN mkdir -p /data/tools && \
@@ -26,8 +26,8 @@ RUN mkdir -p /data/tools && \
     curl -o /data/tools/ot-agent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar -L
 
 # 安装第三方构建机JRE
-RUN wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
-    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
-    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
-    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
-    wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos_arm64/jre.zip" -P /data/workspace/agent-package/jre/macos_arm64/ 
+RUN wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
+    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
+    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
+    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
+    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/macos_arm64/
