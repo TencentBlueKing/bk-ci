@@ -23,6 +23,11 @@
                 </bk-breadcrumb-item>
             </bk-breadcrumb>
         </pipeline-header>
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
         <div
             v-bkloading="{ isLoading }"
             class="pipeline-template-box"
@@ -263,6 +268,7 @@
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import AlertTips from '@/components/AlertTips.vue'
     import PipelineLabelSelector from '@/components/PipelineLabelSelector/'
 
     export default {
@@ -271,6 +277,7 @@
             PipelineTemplatePreview,
             Logo,
             SyntaxStyleConfiguration,
+            AlertTips,
             PipelineLabelSelector
         },
         data () {
@@ -307,6 +314,12 @@
             ]),
             curProject () {
                 return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
             },
             defaultPipelineDialect () {
                 return this.curProject?.properties?.pipelineDialect
