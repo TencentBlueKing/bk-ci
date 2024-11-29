@@ -89,6 +89,14 @@ class PipelineYamlSyncService @Autowired constructor(
         )
     }
 
+    fun initPacFailed(projectId: String, repoHashId: String) {
+        client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            syncStatus = RepoYamlSyncStatusEnum.FAILED.name
+        )
+    }
+
     /**
      * 同步成功
      */

@@ -116,40 +116,45 @@ class PipelineYamlFacadeService @Autowired constructor(
             logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
             return
         }
-        // 创建yaml流水线组
-        pipelineYamlViewService.createYamlViewIfAbsent(
-            userId = action.data.getUserId(),
-            projectId = projectId,
-            repoHashId = repoHashId,
-            gitProjectName = action.data.setting.projectName,
-            directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
-        )
-        val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
-            dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
-        ).associate {
-            it.filePath to YamlTriggerPipeline(
-                projectId = it.projectId,
-                repoHashId = it.repoHashId,
-                filePath = it.filePath,
-                pipelineId = it.pipelineId,
-                userId = userId
+        try {
+            // 创建yaml流水线组
+            pipelineYamlViewService.createYamlViewIfAbsent(
+                userId = action.data.getUserId(),
+                projectId = projectId,
+                repoHashId = repoHashId,
+                gitProjectName = action.data.setting.projectName,
+                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
-        }
-        yamlPathList.forEach {
-            action.data.context.pipeline = path2PipelineExists[it.yamlPath]
-            action.data.context.yamlFile = it
-            pipelineEventDispatcher.dispatch(
-                PipelineYamlEnableEvent(
-                    projectId = projectId,
-                    yamlPath = it.yamlPath,
-                    userId = userId,
-                    eventStr = objectMapper.writeValueAsString(event),
-                    metaData = action.metaData,
-                    actionCommonData = action.data.eventCommon,
-                    actionContext = action.data.context,
-                    actionSetting = action.data.setting
+            val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
+                dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
+            ).associate {
+                it.filePath to YamlTriggerPipeline(
+                    projectId = it.projectId,
+                    repoHashId = it.repoHashId,
+                    filePath = it.filePath,
+                    pipelineId = it.pipelineId,
+                    userId = userId
                 )
-            )
+            }
+            yamlPathList.forEach {
+                action.data.context.pipeline = path2PipelineExists[it.yamlPath]
+                action.data.context.yamlFile = it
+                pipelineEventDispatcher.dispatch(
+                    PipelineYamlEnableEvent(
+                        projectId = projectId,
+                        yamlPath = it.yamlPath,
+                        userId = userId,
+                        eventStr = objectMapper.writeValueAsString(event),
+                        metaData = action.metaData,
+                        actionCommonData = action.data.eventCommon,
+                        actionContext = action.data.context,
+                        actionSetting = action.data.setting
+                    )
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.error("Failed to enable pac|projectId:$projectId|repoHashId:$repoHashId", ignored)
+            pipelineYamlSyncService.initPacFailed(projectId = projectId, repoHashId = repoHashId)
         }
     }
 
