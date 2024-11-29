@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.services
+package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -56,13 +55,13 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-class ScmMonitorService @Autowired constructor(
+class TencentScmMonitorService @Autowired constructor(
     private val client: Client,
     private val bkTag: BkTag
 ) {
     companion object {
         private val executorService = Executors.newFixedThreadPool(5)
-        private val logger = LoggerFactory.getLogger(ScmMonitorService::class.java)
+        private val logger = LoggerFactory.getLogger(TencentScmMonitorService::class.java)
     }
 
     fun reportCommitCheck(
@@ -78,7 +77,7 @@ class ScmMonitorService @Autowired constructor(
         execute {
             try {
                 val (errorType, errorCode) = getErrorCode(statusCode)
-                client.getGateway(StatusReportResource::class, GatewayType.DEVNET_PROXY)
+                client.get(StatusReportResource::class)
                     .scmCommitCheck(
                         AddCommitCheckStatus(
                             requestTime = requestTime,
@@ -134,9 +133,11 @@ class ScmMonitorService @Autowired constructor(
             consulTag.contains("stream") -> {
                 ChannelCode.GIT
             }
+
             consulTag.contains("auto") -> {
                 ChannelCode.GONGFENGSCAN
             }
+
             else -> {
                 ChannelCode.BS
             }
