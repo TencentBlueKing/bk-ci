@@ -57,8 +57,8 @@ class OpPipelineTimerResourceImpl @Autowired constructor(
             try {
                 timerUpgradeService.upgrade(
                     userId = userId,
-                    targetPipelineId = projectId,
-                    targetProjectId = pipelineId
+                    targetPipelineId = pipelineId,
+                    targetProjectId = projectId
                 )
             } catch (ignored: Exception) {
                 logger.warn("Failed to update pipeline timer", ignored)
