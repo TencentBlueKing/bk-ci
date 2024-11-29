@@ -51,7 +51,8 @@ open class PipelineTimerDao {
         repoHashId: String?,
         branchs: String?,
         noScm: Boolean?,
-        startParam: String?
+        startParam: String?,
+        taskId: String
     ): Int {
         return with(T_PIPELINE_TIMER) {
             dslContext.insertInto(
@@ -65,7 +66,8 @@ open class PipelineTimerDao {
                 REPO_HASH_ID,
                 BRANCHS,
                 NO_SCM,
-                START_PARAM
+                START_PARAM,
+                TASK_ID
             ).values(
                 projectId,
                 pipelineId,
@@ -76,9 +78,11 @@ open class PipelineTimerDao {
                 repoHashId,
                 branchs,
                 noScm,
-                startParam
+                startParam,
+                taskId
             )
                 .onDuplicateKeyUpdate()
+                .set(TASK_ID, taskId)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(CREATOR, userId)
                 .set(CRONTAB, crontabExpression)

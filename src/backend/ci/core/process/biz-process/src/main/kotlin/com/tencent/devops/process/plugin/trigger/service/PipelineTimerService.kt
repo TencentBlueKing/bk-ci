@@ -88,7 +88,8 @@ open class PipelineTimerService @Autowired constructor(
                 repoHashId,
                 branchs?.let { JsonUtil.toJson(it) },
                 noScm,
-                startParam?.let { JsonUtil.toJson(it) }
+                startParam?.let { JsonUtil.toJson(it) },
+                taskId
             )
         ) {
             pipelineEventDispatcher.dispatch(
