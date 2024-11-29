@@ -14,7 +14,7 @@
             <section class="component-row">
                 <component
                     :is="param.component"
-                    v-validate="{ required: param.required }"
+                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
@@ -49,6 +49,7 @@
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
+    import { isObject } from '@/utils/util'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
@@ -181,6 +182,7 @@
             }
         },
         methods: {
+            isObject,
             getBranchOption,
             getParamComponentType (param) {
                 if (isRemoteType(param)) {

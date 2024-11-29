@@ -44,7 +44,7 @@
             :label="$t('editPage.repoName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.repo-name }}'])"
             :required="true"
-            :is-error="errors.has(`pipelineParam.defaultValue`)"
+            :is-error="!param.defaultValue['repo-name']"
             :error-msg="errors.first(`pipelineParam.defaultValue`)"
         >
             <request-selector
@@ -66,7 +66,7 @@
             :label="$t('editPage.branchName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.branch }}'])"
             :required="true"
-            :is-error="errors.has(`pipelineParam.defaultValue`)"
+            :is-error="!param.defaultValue.branch"
             :error-msg="errors.first(`pipelineParam.defaultValue`)"
             :key="param.defaultValue['repo-name']"
         >

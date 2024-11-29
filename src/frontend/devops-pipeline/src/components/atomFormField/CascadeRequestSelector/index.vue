@@ -6,6 +6,7 @@
             }"
             @toggle="toggleVisible"
             @selected="onChange"
+            @clear="onClear"
             v-bind="selectProps"
         >
             <bk-option
@@ -186,6 +187,12 @@
             }
         },
         methods: {
+            onClear () {
+                this.handleChange(this.name, {
+                    [this.parentKey]: '',
+                    [this.childrenKey]: ''
+                })
+            },
             onChange (val, oldVal) {
                 if (val !== oldVal) {
                     this.initRequest = true

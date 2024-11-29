@@ -271,7 +271,7 @@
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getParamsValuesMap, isObject } from '@/utils/util'
 
     export default {
         components: {
@@ -511,8 +511,10 @@
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.paramValues[name] = value
-                        item.params.forEach((val) => {
-                            val.defaultValue = value
+                        item.params.forEach((i) => {
+                            if (i.id === name) {
+                                i.defaultValue = value
+                            }
                         })
                     }
                 })
@@ -606,7 +608,7 @@
                     })
                 } else {
                     const params = []
-                    let message, theme
+                    let message, theme, isEmptyValue
                     const { $store, loading } = this
 
                     this.pipelineNameList.forEach(pipeline => {
@@ -616,8 +618,21 @@
                             buildNo: pipeline.buildParams || undefined,
                             param: pipeline.params
                         })
+                        isEmptyValue = pipeline.params.some(item => {
+                            return isObject(item.defaultValue)
+                                ? Object.values(item.defaultValue).every(val => !val)
+                                : !item.defaultValue
+                        })
                     })
+                    if (isEmptyValue) {
+                        this.$showTips({
+                            message: this.$t('newlist.paramsErr'),
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
+                 
                     if (isRequired) {
                         this.$showTips({
                             message: this.$t('template.buildNumErrTips'),
@@ -637,6 +652,7 @@
                             useTemplateSettings: this.isTemplateSetting,
                             params
                         }
+                  
                         if (this.hashVal) {
                             res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
                             if (res) {
