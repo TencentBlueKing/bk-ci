@@ -336,8 +336,8 @@ interface TencentServiceJobResource {
     ): AgentResult<InstallAgentResult>
 
     @Operation(summary = "查询节点的agent安装状态")
-    @POST
-    @Path("/{projectId}/{jobId}/query_agent_task_status")
+    @GET
+    @Path("/{projectId}/query_agent_task_status")
     fun queryAgentTaskStatus(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -346,7 +346,7 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "任务ID", required = true)
-        @PathParam("jobId")
+        @QueryParam("jobId")
         jobId: Int,
         @Parameter(description = "查询agent任务状态的请求信息", required = true)
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
