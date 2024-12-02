@@ -695,7 +695,7 @@ interface ApigwRemoteDevResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取实例操作记录", tags = ["v4_app_workspace_detail_timeline"])
-    @POST
+    @GET
     @Path("/detail_timeline")
     fun getWorkspaceTimeline(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
