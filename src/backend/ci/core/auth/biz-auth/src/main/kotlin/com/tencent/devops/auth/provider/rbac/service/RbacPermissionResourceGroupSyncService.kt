@@ -108,9 +108,10 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) {
-        logger.info("start to sync group member expired time|$projectConditionDTO")
-        val traceId = MDC.get(TraceTag.BIZID)
-        syncExecutorService.submit {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            logger.info("start to sync group member expired time|$projectConditionDTO")
+            val traceId = MDC.get(TraceTag.BIZID)
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
@@ -121,37 +122,44 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     offset = offset
                 ).data?.map { it.englishName } ?: break
                 val futures = projectCodes.map { projectCode ->
-                    syncMemberExpiredExecutorService.submit(Callable {
-                        logger.info("start to sync project group member expired time|$projectCode")
-                        val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
-                            dslContext = dslContext,
-                            projectCode = projectCode,
-                            maxExpiredTime = LocalDateTime.now()
-                        )
-                        val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
-                        memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
-                            val verifyResults = iamV2ManagerService.verifyGroupValidMember(
-                                memberId,
-                                groupInfos.joinToString(",") { it.iamGroupId.toString() }
+                    CompletableFuture.supplyAsync(
+                        {
+                            MDC.put(TraceTag.BIZID, traceId)
+                            logger.info("start to sync project group member expired time|$projectCode")
+                            val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
+                                dslContext = dslContext,
+                                projectCode = projectCode,
+                                maxExpiredTime = LocalDateTime.now()
                             )
-                            verifyResults.forEach { (groupId, verifyResult) ->
-                                if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
-                                    logger.info("The member of group needs to have been renewed:$projectCode|$groupId|$memberId")
-                                    authResourceGroupMemberDao.update(
-                                        dslContext = dslContext,
-                                        projectCode = projectCode,
-                                        iamGroupId = groupId,
-                                        expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
-                                        memberId = memberId
-                                    )
+                            val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
+                            memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
+                                val verifyResults = iamV2ManagerService.verifyGroupValidMember(
+                                    memberId,
+                                    groupInfos.joinToString(",") { it.iamGroupId.toString() }
+                                )
+                                verifyResults.forEach { (groupId, verifyResult) ->
+                                    if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
+                                        logger.info("The member of group needs to have been renewed:$projectCode|$groupId|$memberId")
+                                        authResourceGroupMemberDao.update(
+                                            dslContext = dslContext,
+                                            projectCode = projectCode,
+                                            iamGroupId = groupId,
+                                            expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
+                                            memberId = memberId
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    })
+
+                        },
+                        syncMemberExpiredExecutorService
+                    )
                 }
-                futures.forEach { it.get() }
+                CompletableFuture.allOf(*futures.toTypedArray()).join()
                 offset += limit
             } while (projectCodes.size == limit)
+        } finally {
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync group member expired time")
         }
     }
 
