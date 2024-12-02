@@ -301,7 +301,7 @@ interface UserStoreComponentQueryResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
-    ): Result<List<StoreTestItem>>
+    ): Result<Set<StoreTestItem>>
 
     @Operation(summary = "获取组件媒体信息")
     @Path("/types/{storeType}/codes/{storeCode}/component/media/info/get")

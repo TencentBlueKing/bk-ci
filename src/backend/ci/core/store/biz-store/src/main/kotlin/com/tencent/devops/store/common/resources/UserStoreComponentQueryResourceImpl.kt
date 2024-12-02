@@ -206,7 +206,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String
-    ): Result<List<StoreTestItem>> {
+    ): Result<Set<StoreTestItem>> {
         return Result(
             storeProjectService.getStoreTestInfo(userId = userId, storeType = storeType, storeCode = storeCode)
         )
