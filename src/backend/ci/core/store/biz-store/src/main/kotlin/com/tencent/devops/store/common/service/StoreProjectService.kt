@@ -128,5 +128,5 @@ interface StoreProjectService {
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String
-    ): List<StoreTestItem>
+    ): Set<StoreTestItem>
 }

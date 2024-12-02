@@ -219,7 +219,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                         projectCode = testProjectCode,
                         storeProjectType = StoreProjectTypeEnum.TEST
                     )
-                } else if (null != collaborationFlag && !collaborationFlag) {
+                } else if (collaborationFlag != true && storeType != StoreTypeEnum.DEVX) {
                     // 协作申请方式，添加成员时无需再添加调试项目
                     storeProjectRelDao.addStoreProjectRel(
                         dslContext = context,

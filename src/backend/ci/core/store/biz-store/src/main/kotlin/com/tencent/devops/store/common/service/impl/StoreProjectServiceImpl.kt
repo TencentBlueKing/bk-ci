@@ -80,7 +80,6 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
-    private val SstoreMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService,
     private val redisOperation: RedisOperation,
     private val storePipelineRelDao: StorePipelineRelDao,
@@ -484,7 +483,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun getStoreTestInfo(userId: String, storeType: StoreTypeEnum, storeCode: String): List<StoreTestItem> {
+    override fun getStoreTestInfo(userId: String, storeType: StoreTypeEnum, storeCode: String): Set<StoreTestItem> {
         val memberFlag = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
@@ -503,7 +502,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             storeProjectType = StoreProjectTypeEnum.TEST
         )
-        val storeTestItems = mutableListOf<StoreTestItem>()
+        val storeTestItems = mutableSetOf<StoreTestItem>()
         testProjectInfos?.forEach { testProjectInfo ->
             storeTestItems.add(
                 StoreTestItem(testProjectInfo.projectCode, testProjectInfo.instanceId)
