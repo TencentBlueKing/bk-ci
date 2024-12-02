@@ -354,7 +354,7 @@ interface TencentServiceJobResource {
 
     @Operation(summary = "获取手动安装agent的命令")
     @GET
-    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
+    @Path("/{projectId}/obtain_manual_installation_command")
     fun obtainManualInstallationCommand(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -363,7 +363,7 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "任务ID", required = true)
-        @PathParam("jobId")
+        @QueryParam("jobId")
         jobId: Int,
         @Parameter(description = "主机内网ip", required = true)
         @QueryParam("innerIp")
