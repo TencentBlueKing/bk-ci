@@ -150,6 +150,7 @@ class WorkspaceJoinDao {
         sips: Set<String>? = null,
         owners: Set<String>? = null,
         notStatus: Set<WorkspaceStatus>? = null,
+        nodeHashId: Set<String>? = null,
         checkField: List<Field<*>>? = null
     ): List<WorkspaceRecordWithWindows> {
         with(TWorkspace.T_WORKSPACE) {
@@ -165,7 +166,8 @@ class WorkspaceJoinDao {
                     owner = owners?.toList(),
                     notStatus = notStatus?.toList(),
                     projectId = projectIds?.toList(),
-                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                    nodeHashIds = nodeHashId?.toList()
                 ),
                 checkField = checkField ?: windowsFullFields
             ).orderBy(CREATE_TIME.desc(), ID.desc())
@@ -355,6 +357,10 @@ class WorkspaceJoinDao {
                 TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.`in`(ids)
             }
             conditions.add(sql)
+        }
+
+        search.nodeHashIds?.ifEmpty { null }?.let { hashIds ->
+            conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID.`in`(hashIds))
         }
 
         return dslContext.selectDistinct(checkField)

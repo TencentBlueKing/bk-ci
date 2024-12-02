@@ -208,7 +208,7 @@ class DEVXService @Autowired constructor(
         }
         logger.info("pushEnvHook|$userId|$projectId|$envHashId|$hooks")
         devxHookDao.insertOrUpdateHook(dslContext, projectId, envHashId, hooks)
-        client.get(ServiceRemoteDevResource::class).reloadEnvHook(userId, projectId, envHashId)
+        client.get(ServiceRemoteDevResource::class).reloadEnvHook(userId, projectId, envHashId, null)
     }
 
     companion object {

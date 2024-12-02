@@ -75,7 +75,7 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import org.jooq.DSLContext
@@ -101,7 +101,7 @@ class WorkspaceCommon @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val profile: Profile,
     @Lazy
     private val startControl: StartControl,

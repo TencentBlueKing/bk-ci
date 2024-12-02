@@ -50,6 +50,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceHookService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -102,7 +103,8 @@ class ServiceRemoteDevResourceImpl(
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val workspaceRecordService: WorkspaceRecordService,
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
-    private val cloneWorkspaceHandler: CloneWorkspaceHandler
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler,
+    private val workspaceHookService: WorkspaceHookService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -702,7 +704,11 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String) {
+    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String, nodeHashId: List<String>?) {
+        workspaceHookService.hookLoad(userId, projectId, envHashId, nodeHashId)
+    }
 
+    override fun deleteEnvHook(userId: String, projectId: String, envHashId: String, nodeHashId: List<String>?) {
+        workspaceHookService.hookDelete(userId, projectId, envHashId, nodeHashId)
     }
 }

@@ -634,7 +634,8 @@ class WorkspaceDao {
                     labels = labels?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
                     },
-                    bakWorkspaceName = bakName
+                    bakWorkspaceName = bakName,
+                    ip = ip
                 )
             }
         }
@@ -688,6 +689,7 @@ class WorkspaceDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<String>
                 },
                 bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
+                ip = record.getOrNull(TWorkspace.T_WORKSPACE.IP) as String?,
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
             )
         }

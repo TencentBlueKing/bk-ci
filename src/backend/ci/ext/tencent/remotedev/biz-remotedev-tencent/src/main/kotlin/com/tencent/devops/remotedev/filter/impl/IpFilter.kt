@@ -5,7 +5,7 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_IP_LIST_KEY
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 @PreMatching
 @RequestFilter
 class IpFilter constructor(
-    private val cacheService: RedisCacheService
+    private val cacheService: ConfigCacheService
 ) : ApiFilter {
 
     enum class ApiType(val path: String) {

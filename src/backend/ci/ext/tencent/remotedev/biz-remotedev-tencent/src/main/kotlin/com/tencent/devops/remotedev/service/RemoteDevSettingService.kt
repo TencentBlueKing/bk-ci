@@ -38,7 +38,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -52,7 +52,7 @@ class RemoteDevSettingService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisCacheService: RedisCacheService,
+    private val configCacheService: ConfigCacheService,
     private val whiteListService: WhiteListService,
     private val taiClient: TaiClient
 ) {
@@ -145,7 +145,7 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun startCloudExperienceDuration(userId: String): Int {
         return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId).startCloudExperienceDuration
-            ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
+            ?: configCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
 
     fun getAllUserSetting4Op(queryUser: String?, page: Int?, pageSize: Int?): Page<RemoteDevUserSettings> {

@@ -81,7 +81,7 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
@@ -105,7 +105,7 @@ class CreateControl @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceResourceTypeDao: WindowsResourceTypeDao,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val whiteListService: WhiteListService,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,

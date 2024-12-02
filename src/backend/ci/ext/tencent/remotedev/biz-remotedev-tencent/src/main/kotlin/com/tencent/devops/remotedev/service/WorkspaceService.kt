@@ -105,7 +105,7 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
@@ -142,7 +142,7 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,

@@ -614,6 +614,27 @@ interface ServiceRemoteDevResource {
         projectId: String,
         @Parameter(description = "环境env hash id", required = true)
         @QueryParam("envHashId")
-        envHashId: String
+        envHashId: String,
+        @Parameter(description = "节点 hash id, 为null时将对环境下所有节点重载hook", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: List<String>?
+    )
+
+    @Operation(summary = "重新装载云桌面环境hook配置")
+    @POST
+    @Path("/delete_env_hook")
+    fun deleteEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境env hash id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String,
+        @Parameter(description = "节点 hash id, 为null时将对环境下所有节点重载hook", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: List<String>?
     )
 }

@@ -15,7 +15,7 @@ import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Value
 @PreMatching
 @RequestFilter
 class ClientVersionFilter constructor(
-    private val cacheService: RedisCacheService,
+    private val cacheService: ConfigCacheService,
     private val clientVersionDao: ClientVersionDao,
     private val dslContext: DSLContext,
     private val notifyControl: NotifyControl,
