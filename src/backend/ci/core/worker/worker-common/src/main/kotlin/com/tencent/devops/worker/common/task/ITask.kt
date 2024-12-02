@@ -62,7 +62,7 @@ abstract class ITask {
 
     companion object {
         // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
-        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.-]*"
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9.-]*"
     }
 
     fun run(

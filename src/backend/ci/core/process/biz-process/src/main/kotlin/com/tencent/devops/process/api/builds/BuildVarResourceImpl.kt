@@ -95,7 +95,9 @@ class BuildVarResourceImpl @Autowired constructor(
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
-        val userId = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser ?: ""
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)?.takeIf { it.isNotBlank() }
+            ?: pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser ?: ""
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
