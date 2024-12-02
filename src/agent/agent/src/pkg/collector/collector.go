@@ -79,11 +79,6 @@ func Collect() {
 }
 
 func doAgentCollect(ctx context.Context) {
-	if config.GAgentConfig.CollectorOn == false {
-		logs.Info("agent collector off")
-		return
-	}
-
 	configContent, err := genTelegrafConfig()
 	if err != nil {
 		logs.WithError(err).Error("genTelegrafConfig error")

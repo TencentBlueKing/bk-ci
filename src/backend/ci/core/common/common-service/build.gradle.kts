@@ -33,7 +33,6 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-consul-discovery")
     api("org.springframework.boot:spring-boot-starter-aop")
     api("io.github.openfeign:feign-okhttp")
-    api("org.jolokia:jolokia-core")
     api("jakarta.servlet:jakarta.servlet-api")
     api("org.springframework:spring-web")
     api("org.apache.commons:commons-lang3")

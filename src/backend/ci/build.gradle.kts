@@ -72,7 +72,6 @@ allprojects {
             dependency("commons-io:commons-io:${Versions.CommonIo}")
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
-            dependency("org.jolokia:jolokia-core:${Versions.jolokia}")
             dependency("org.apache.shardingsphere:shardingsphere-jdbc:${Versions.ShardingSphere}")
             dependency("org.apache.shardingsphere:shardingsphere-infra-algorithm-core:${Versions.ShardingSphere}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {

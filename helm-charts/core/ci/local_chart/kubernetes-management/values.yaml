@@ -171,7 +171,7 @@ kubernetesManager:
   docker:
     enable: false
     image: 
-      registry: ""
+      registry: "docker.io"
       repository: docker
       tag: 24.0.1-dind
     resources:
