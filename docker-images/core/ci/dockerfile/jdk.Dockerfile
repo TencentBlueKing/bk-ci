@@ -26,11 +26,11 @@ RUN mkdir -p /data/tools && \
     curl -o /data/tools/ot-agent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar -L
 
 # 安装第三方构建机JRE
-RUN wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
-    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
-    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
-    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
-    wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/macos_arm64/
+RUN wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/linux/jdk17.zip" -P /data/workspace/agent-package/jre/linux/ &&\
+    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/windows/jdk17.zip" -P /data/workspace/agent-package/jre/windows/ &&\
+    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos/jdk17.zip" -P /data/workspace/agent-package/jre/macos/ &&\
+    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/linux_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
+    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/macos_arm64/ 
 
 # 开源版统一升级到JDK17
 RUN find /data/workspace/agent-package/jre/ -type f -name "jre.zip" -execdir ln -s jre.zip jdk17.zip \;

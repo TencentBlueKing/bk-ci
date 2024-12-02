@@ -78,6 +78,9 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.certFilePath:#{null}}")
     private val certFilePath: String? = null
 
+    @Value("\${environment.jdkCompatibility:true}")
+    private val jdkCompatibility = true
+
     fun downloadInstallScript(agentId: String, isWinDownload: Boolean): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
@@ -217,10 +220,14 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
-        // #10586 现阶段保持 8 和 17并行，直到没有 8 的使用
-        val jreFile = getJreZipFile(os, arch, JDK8_FILENAME)
         val jdk17File = getJreZipFile(os, arch, JDK17_FILENAME)
-        return listOf(agentJar, jreFile, jdk17File)
+        if (jdkCompatibility) {
+            // #10586 现阶段保持 8 和 17并行，直到没有 8 的使用
+            val jreFile = getJreZipFile(os, arch, JDK8_FILENAME)
+            return listOf(agentJar, jreFile, jdk17File)
+        } else {
+            return listOf(agentJar, jdk17File)
+        }
     }
 
     private fun getGoFile(os: String, fileName: String, arch: AgentArchType?): File {
