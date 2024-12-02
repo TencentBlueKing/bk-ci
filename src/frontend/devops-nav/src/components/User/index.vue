@@ -91,7 +91,7 @@
                         label: this.$t('accessCenter')
                     },
                     {
-                        to: 'console/permission/auth/oauth',
+                        to: '/console/permission/auth/oauth',
                         label: this.$t('oauthManage')
                     },
                     {
