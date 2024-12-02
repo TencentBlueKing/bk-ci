@@ -79,7 +79,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 val lastModifyUser = pipelineInfo.lastModifyUser
                 when {
                     // 功能发布后，添加了多个定时触发器
-                    timerList.size > 1 -> {
+                    timerTriggerElements.size > 1 -> {
                         val containsEmptyTaskId = timerList.any { it.taskId.isNullOrBlank() }
                         // 存在空的taskId，则删掉重新添加定时任务
                         if (containsEmptyTaskId) {
