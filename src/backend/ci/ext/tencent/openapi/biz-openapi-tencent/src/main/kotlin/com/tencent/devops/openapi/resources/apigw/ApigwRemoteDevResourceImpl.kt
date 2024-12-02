@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -484,6 +485,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).removeUserPermission(
             userId = userId,
             removeUser = removeUser
+        )
+    }
+
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
+        logger.info("getWorkspaceTimeline $workspaceName|$workspaceName|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceTimeline(
+            userId = userId,
+            workspaceName = workspaceName,
+            page = page,
+            pageSize = pageSize
         )
     }
 }
