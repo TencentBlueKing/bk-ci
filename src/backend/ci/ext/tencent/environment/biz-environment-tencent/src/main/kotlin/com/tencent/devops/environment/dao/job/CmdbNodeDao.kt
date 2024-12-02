@@ -835,4 +835,19 @@ class CmdbNodeDao @Autowired constructor(
             }
         }
     }
+
+    fun getNodeHostIdByCloudIp(projectId: String?, cloudAreaId: Int, ip: String): List<Long> {
+        with(TNode.T_NODE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(NODE_IP.eq(ip))
+            conditions.add(CLOUD_AREA_ID.eq(cloudAreaId.toLong()))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            val records = defaultDSLContext.select(HOST_ID).from(this).where(conditions).fetch()
+            return records.map { record ->
+                record.getValue(HOST_ID)
+            }
+        }
+    }
 }

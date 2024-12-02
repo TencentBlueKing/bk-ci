@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
@@ -148,6 +149,13 @@ class PermissionManageService @Autowired constructor(
                     }
                 )
             )
+        }
+    }
+
+    fun checkInstallPermission(projectId: String, cloudAreaId: Int, ip: String) {
+        val nodeResult = cmdbNodeDao.getNodeHostIdByCloudIp(projectId, cloudAreaId, ip)
+        if (nodeResult.isEmpty()) {
+            throw ResourceNotMatchException("ip $cloudAreaId:$ip does not belong to project $projectId")
         }
     }
 }

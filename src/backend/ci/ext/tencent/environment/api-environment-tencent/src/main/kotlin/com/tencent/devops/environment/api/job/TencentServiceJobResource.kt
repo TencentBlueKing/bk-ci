@@ -29,7 +29,7 @@ package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -332,7 +332,7 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "安装agent的请求信息", required = true)
-        installAgentReq: InstallAgentReq
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult>
 
     @Operation(summary = "查询节点的agent安装状态")
@@ -354,7 +354,7 @@ interface TencentServiceJobResource {
 
     @Operation(summary = "获取手动安装agent的命令")
     @GET
-    @Path("/{projectId}/obtain_manual_installation_command")
+    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
     fun obtainManualInstallationCommand(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -363,10 +363,13 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "任务ID", required = true)
-        @QueryParam("jobId")
+        @PathParam("jobId")
         jobId: Int,
-        @Parameter(description = "HOST ID", required = true)
-        @QueryParam("hostId")
-        hostId: Long
+        @Parameter(description = "主机内网ip", required = true)
+        @QueryParam("innerIp")
+        innerIp: String,
+        @Parameter(description = "主机云区域ID", required = true)
+        @QueryParam("bkCloudId")
+        bkCloudId: Int = 0
     ): AgentResult<ObtainManualCommandResult>
 }

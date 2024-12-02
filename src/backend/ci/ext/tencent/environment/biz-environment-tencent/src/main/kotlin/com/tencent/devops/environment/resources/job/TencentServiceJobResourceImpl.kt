@@ -28,11 +28,14 @@
 package com.tencent.devops.environment.resources.job
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -62,6 +65,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.gseagent.InstallTaskService
+import com.tencent.devops.environment.service.job.ApiGwAgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
@@ -81,7 +85,8 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService,
     private val gseAgentService: GSEAgentService,
-    private val installTaskService: InstallTaskService
+    private val installTaskService: InstallTaskService,
+    private val apiGwAgentService: ApiGwAgentService
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
@@ -240,9 +245,41 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     override fun installAgent(
         userId: String,
         projectId: String,
-        installAgentReq: InstallAgentReq
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
+        checkCloudIpIsValid(apiGwInstallAgentReq.bkCloudId, apiGwInstallAgentReq.innerIp)
+        checkInstallPermission(projectId, apiGwInstallAgentReq.bkCloudId!!, apiGwInstallAgentReq.innerIp!!)
+
+        val installAgentReq = apiGwInstallAgentReq.let {
+            InstallAgentReq(
+                hosts = listOf(
+                    HostForInstallAgent(
+                        bkHostId = null,
+                        bkCloudId = it.bkCloudId,
+                        bkAddressing = null,
+                        isAutoChooseInstallChannelId = it.isAutoChooseInstallChannelId,
+                        apId = null,
+                        installChannelId = null,
+                        innerIp = it.innerIp,
+                        loginIp = null,
+                        innerIpv6 = null,
+                        osType = it.osType,
+                        authType = null,
+                        account = null,
+                        password = null,
+                        key = null,
+                        port = null,
+                        isManual = true,
+                        peerExchangeSwitchForAgent = null,
+                        enableCompression = null,
+                    )
+                ),
+                replaceHostId = null,
+                isInstallLatestPlugins = null,
+            )
+        }
+
         return gseAgentService.installAgent(userId, null, installAgentReq)
     }
 
@@ -260,10 +297,12 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        hostId: Long
+        innerIp: String,
+        bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
-        return gseAgentService.obtainManualInstallationCommand(jobId, hostId)
+        checkCloudIpIsValid(bkCloudId, innerIp)
+        return apiGwAgentService.getInstallCommand(jobId, bkCloudId, innerIp)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
@@ -286,5 +325,27 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     private fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
         permissionManageService.recordJobInsToProj(projectId, jobInstanceId, createUser)
+    }
+
+    private fun checkCloudIpIsValid(cloudAreaId: Int?, ip: String?) {
+        if (null == cloudAreaId) {
+            throw ParamBlankException("cloudAreaId is null.")
+        }
+        if (ip.isNullOrBlank()) {
+            throw ParamBlankException("ip is blank.")
+        }
+        val pattern = Regex(
+            "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        )
+        if (!pattern.matches(ip)) {
+            throw InvalidParamException("$ip is invalid ip address")
+        }
+    }
+
+    /*
+    * 判断待安装 GSE Agent 的主机是否属于当前项目
+     */
+    private fun checkInstallPermission(projectId: String, cloudAreaId: Int, ip: String) {
+        permissionManageService.checkInstallPermission(projectId, cloudAreaId, ip)
     }
 }

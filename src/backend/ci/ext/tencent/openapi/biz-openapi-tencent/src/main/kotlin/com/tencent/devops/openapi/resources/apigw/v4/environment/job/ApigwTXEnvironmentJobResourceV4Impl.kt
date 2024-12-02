@@ -3,7 +3,7 @@ package com.tencent.devops.openapi.resources.apigw.v4.environment.job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -31,13 +31,11 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusRes
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import com.tencent.devops.openapi.api.apigw.v4.environment.job.ApigwTXEnvironmentJobResourceV4
-import com.tencent.devops.openapi.resources.apigw.v2.ApigwCallBackResourceV2Impl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     val client: Client,
-    private val apigwCallBackResourceV2Impl: ApigwCallBackResourceV2Impl
 ) : ApigwTXEnvironmentJobResourceV4 {
 
     override fun executeScript(
@@ -202,17 +200,22 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     override fun installAgent(
         userId: String,
         projectId: String,
-        installAgentReq: InstallAgentReq
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult> {
-        return client.get(TencentServiceJobResource::class).installAgent(userId, projectId, installAgentReq)
+        return client.get(TencentServiceJobResource::class).installAgent(userId, projectId, apiGwInstallAgentReq)
     }
 
     override fun queryAgentTaskStatus(
         userId: String,
         projectId: String,
         jobId: Int,
-        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+        page: Int,
+        pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult> {
+        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+            page = page,
+            pageSize = pageSize
+        )
         return client.get(TencentServiceJobResource::class)
             .queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
     }
@@ -221,9 +224,10 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        hostId: Long
+        innerIp: String,
+        bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult> {
         return client.get(TencentServiceJobResource::class)
-            .obtainManualInstallationCommand(userId, projectId, jobId, hostId)
+            .obtainManualInstallationCommand(userId, projectId, jobId, innerIp, bkCloudId)
     }
 }
