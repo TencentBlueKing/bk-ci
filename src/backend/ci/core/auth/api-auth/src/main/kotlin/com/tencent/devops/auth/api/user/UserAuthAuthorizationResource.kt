@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -68,6 +69,9 @@ interface UserAuthAuthorizationResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "操作渠道", required = true)
+        @QueryParam("operateChannel")
+        operateChannel: OperateChannel?,
         @Parameter(description = "查询条件", required = true)
         condition: ResourceAuthorizationConditionRequest
     ): Result<SQLPage<ResourceAuthorizationResponse>>

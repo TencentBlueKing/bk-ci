@@ -150,8 +150,16 @@ class RbacPermissionManageFacadeServiceImpl(
             resourceGroupMembers = resourceGroupMembers,
             operateChannel = operateChannel
         )
-        // 获取用户正在交接的用户组
-
+        // 获取用户正在交接的用户组，仅用于个人视角
+        val groupsBeingHandover = if (operateChannel == OperateChannel.PERSONAL) {
+            permissionHandoverApplicationService.listMemberHandoverDetails(
+                projectCode = projectId,
+                memberId = memberId,
+                handoverType = HandoverType.GROUP
+            ).map { it.itemId.toInt() }.distinct()
+        } else {
+            emptyList()
+        }
         val records = mutableListOf<GroupDetailsInfoVo>()
         resourceGroupMembers.forEach {
             val resourceGroup = resourceGroupMap[it.iamGroupId.toString()]!!
@@ -162,7 +170,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     groupMemberDetail = groupMemberDetail,
                     uniqueManagerGroups = uniqueManagerGroups,
                     authResourceGroupMember = it,
-                    operateChannel = operateChannel
+                    operateChannel = operateChannel,
+                    groupsBeingHandover = groupsBeingHandover
                 )
             )
         }
@@ -245,7 +254,8 @@ class RbacPermissionManageFacadeServiceImpl(
         groupMemberDetail: MemberGroupDetailsResponse?,
         uniqueManagerGroups: List<Int>,
         authResourceGroupMember: AuthResourceGroupMember,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        groupsBeingHandover: List<Int>
     ): GroupDetailsInfoVo {
         // 如果用户离职，查询权限中心接口会报错，因此从数据库直接取数据，而不去调用权限中心接口。
         val (expiredAt, joinedTime) = if (groupMemberDetail != null) {
@@ -260,11 +270,12 @@ class RbacPermissionManageFacadeServiceImpl(
             )
         }
         val between = expiredAt - System.currentTimeMillis()
+        val groupId = resourceGroup.relationId.toInt()
         return GroupDetailsInfoVo(
             resourceCode = resourceGroup.resourceCode,
             resourceName = resourceGroup.resourceName,
             resourceType = resourceGroup.resourceType,
-            groupId = resourceGroup.relationId.toInt(),
+            groupId = groupId,
             groupName = resourceGroup.groupName,
             groupDesc = resourceGroup.description,
             expiredAtDisplay = when {
@@ -307,7 +318,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
                 else -> JoinedType.DIRECT
             },
-            operator = ""
+            operator = "",
+            beingHandedOver = groupsBeingHandover.contains(groupId)
         )
     }
 

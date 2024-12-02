@@ -9,6 +9,7 @@ import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
 import com.tencent.devops.auth.pojo.enum.HandoverType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
@@ -129,13 +130,28 @@ class PermissionAuthorizationServiceImpl(
     }
 
     override fun listResourceAuthorizations(
-        condition: ResourceAuthorizationConditionRequest
+        condition: ResourceAuthorizationConditionRequest,
+        operateChannel: OperateChannel?
     ): SQLPage<ResourceAuthorizationResponse> {
         logger.info("list resource authorizations:$condition")
+        // 获取用户正在交接的授权，仅用于个人视角
+        val beingHandoverMap = if (operateChannel == OperateChannel.PERSONAL) {
+            permissionHandoverApplicationService.listMemberHandoverDetails(
+                projectCode = condition.projectCode,
+                memberId = condition.handoverFrom!!,
+                handoverType = HandoverType.AUTHORIZATION
+            )
+        } else {
+            emptyList()
+        }.associateBy { it.resourceType to it.itemId }
         val record = authAuthorizationDao.list(
             dslContext = dslContext,
             condition = condition
-        )
+        ).map { authRecord ->
+            authRecord.copy(
+                beingHandover = beingHandoverMap.containsKey(authRecord.resourceType to authRecord.resourceCode)
+            )
+        }
         val count = authAuthorizationDao.count(
             dslContext = dslContext,
             condition = condition
