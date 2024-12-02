@@ -846,7 +846,7 @@ class CmdbNodeDao @Autowired constructor(
             }
             val records = defaultDSLContext.select(HOST_ID).from(this).where(conditions).fetch()
             return records.map { record ->
-                record.getValue(HOST_ID)
+                record.get(HOST_ID)
             }
         }
     }
