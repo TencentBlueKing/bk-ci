@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
@@ -77,7 +78,8 @@ interface PermissionAuthorizationService {
      * 获取项目资源授予记录--根据条件
      */
     fun listResourceAuthorizations(
-        condition: ResourceAuthorizationConditionRequest
+        condition: ResourceAuthorizationConditionRequest,
+        operateChannel: OperateChannel? = OperateChannel.MANAGER,
     ): SQLPage<ResourceAuthorizationResponse>
 
     /**
@@ -146,6 +148,9 @@ interface PermissionAuthorizationService {
         condition: ResetAllResourceAuthorizationReq
     ): List<ResourceTypeInfoVo>
 
+    /**
+     * 检查交接人是否有代码库授权权限
+     */
     fun checkRepertoryAuthorizationsHanover(
         operator: String,
         projectCode: String,

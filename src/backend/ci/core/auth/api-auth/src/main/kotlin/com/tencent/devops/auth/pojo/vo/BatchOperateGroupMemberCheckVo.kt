@@ -7,15 +7,15 @@ data class BatchOperateGroupMemberCheckVo(
     @get:Schema(title = "总数")
     val totalCount: Int,
     @get:Schema(title = "可操作的数量")
-    val operableCount: Int? = null,
+    val operableCount: Int? = 0,
     @get:Schema(title = "无法操作的数量")
-    val inoperableCount: Int? = null,
+    val inoperableCount: Int? = 0,
     @get:Schema(title = "唯一管理员组的数量")
-    val uniqueManagerCount: Int? = null,
+    val uniqueManagerCount: Int? = 0,
     @get:Schema(title = "导致代持人失效的用户组")
-    val invalidGroupCount: Int? = null,
+    val invalidGroupCount: Int? = 0,
     @get:Schema(title = "无效的流水线授权数量")
-    val invalidPipelineAuthorizationCount: Int? = null,
+    val invalidPipelineAuthorizationCount: Int? = 0,
     @get:Schema(title = "无效的代码库授权数量")
-    val invalidRepositoryAuthorizationCount: Int? = null
+    val invalidRepositoryAuthorizationCount: Int? = 0
 )

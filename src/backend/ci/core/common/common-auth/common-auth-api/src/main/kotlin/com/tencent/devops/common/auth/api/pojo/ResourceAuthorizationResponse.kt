@@ -22,5 +22,7 @@ data class ResourceAuthorizationResponse(
     @get:Schema(title = "授予人中文名称")
     val handoverFromCnName: String? = null,
     @get:Schema(title = "是否有执行权限")
-    val executePermission: Boolean? = null
+    val executePermission: Boolean? = null,
+    @get:Schema(title = "是否正在交接，用于我的授权界面")
+    val beingHandover: Boolean? = null
 )
