@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -13,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -601,4 +603,23 @@ interface ServiceRemoteDevResource {
         @QueryParam("removeUser")
         removeUser: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取用户工作空间列表")
+    @POST
+    @Path("/workspaces_search")
+    fun getWorkspaceListNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
 }
