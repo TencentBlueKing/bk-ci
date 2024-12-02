@@ -31,3 +31,6 @@ RUN wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/li
     wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
     wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
     wget "https://bkdevops.qq.com/bkrepo/api/staticfile/bkdevops/app-icon/jre/linux_arm64/jre.zip" -P /data/workspace/agent-package/jre/macos_arm64/
+
+# 开源版统一升级到JDK17
+RUN find /data/workspace/agent-package/jre/ -type f -name "jre.zip" -execdir ln -s jre.zip jdk17.zip \;
