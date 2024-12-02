@@ -776,6 +776,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     ) {
         val projectCode = storeInfoQuery.projectCode!!
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+        val queryTestFlag = storeInfoQuery.queryTestFlag
         // 查询项目下已安装的组件版本信息
         val installComponentMap = storeProjectService.getProjectComponents(
             projectCode = projectCode,
@@ -785,38 +786,50 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             ),
             instanceId = storeInfoQuery.instanceId
         ) ?: emptyMap()
-        // 查询项目下可调试的组件版本信息
-        val testComponentMap = storeProjectService.getProjectComponents(
-            projectCode = projectCode,
-            storeType = storeType.type.toByte(),
-            storeProjectTypes = listOf(
-                StoreProjectTypeEnum.TEST.type.toByte()
-            ),
-            instanceId = storeInfoQuery.instanceId
-        ) ?: emptyMap()
-        val testStoreCodes = testComponentMap.keys
         val tStoreBase = TStoreBase.T_STORE_BASE
-        // 查询测试或者审核中组件最新版本信息
-        val testComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
-            dslContext = dslContext,
-            storeCodes = testStoreCodes,
-            storeType = storeType,
-            testComponentFlag = true
-        ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
-        // 查询非测试或者审核中组件最新发布版本信息
-        val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
-        val normalStoreCodes = installComponentMap.keys.plus(publicComponentList).toMutableSet()
-        normalStoreCodes.removeAll(testStoreCodes)
-        val componentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
-            dslContext = dslContext,
-            storeCodes = normalStoreCodes,
-            storeType = storeType,
-            testComponentFlag = false
-        ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
-        componentVersionMap.putAll(testComponentVersionMap)
+        var testStoreCodes = emptySet<String>()
+        var testComponentVersionMap: Map<String, String>? = null
+        if (queryTestFlag != false) {
+            // 查询项目下可调试的组件版本信息
+            val testComponentMap = storeProjectService.getProjectComponents(
+                projectCode = projectCode,
+                storeType = storeType.type.toByte(),
+                storeProjectTypes = listOf(
+                    StoreProjectTypeEnum.TEST.type.toByte()
+                ),
+                instanceId = storeInfoQuery.instanceId
+            ) ?: emptyMap()
+            testStoreCodes = testComponentMap.keys
+            // 查询测试或者审核中组件最新版本信息
+            testComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+                dslContext = dslContext,
+                storeCodes = testStoreCodes,
+                storeType = storeType,
+                testComponentFlag = true
+            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
+        }
+        val componentVersionMap = if (queryTestFlag != true) {
+            // 查询非测试或者审核中组件最新发布版本信息
+            val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
+            val normalStoreCodes = installComponentMap.keys.plus(publicComponentList).toMutableSet()
+            normalStoreCodes.removeAll(testStoreCodes)
+            val normalComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+                dslContext = dslContext,
+                storeCodes = normalStoreCodes,
+                storeType = storeType,
+                testComponentFlag = false
+            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
+            testComponentVersionMap?.let {
+                normalComponentVersionMap += it
+            }
+            normalComponentVersionMap
+        } else {
+            testComponentVersionMap
+        }
+
         val finalNormalStoreCodes = mutableSetOf<String>()
         val finalTestStoreCodes = mutableSetOf<String>()
-        componentVersionMap.forEach {
+        componentVersionMap?.forEach {
             val storeCode = it.key
             val version = it.value
             val updateFlag = storeInfoQuery.updateFlag

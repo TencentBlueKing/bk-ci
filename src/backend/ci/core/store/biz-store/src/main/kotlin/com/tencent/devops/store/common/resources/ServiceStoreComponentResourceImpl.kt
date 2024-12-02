@@ -126,6 +126,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         instanceId: String?,
+        queryTestFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<Page<MarketItem>> {
@@ -145,6 +146,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
                     queryProjectComponentFlag = queryProjectComponentFlag,
                     sortType = sortType,
                     instanceId = instanceId,
+                    queryTestFlag = queryTestFlag,
                     page = page,
                     pageSize = pageSize,
                     installed = installed,
