@@ -178,6 +178,6 @@ interface PermissionResourceMemberService {
 
     fun isProjectMember(
         projectCode: String,
-        memberId: String
+        userId: String
     ): Boolean
 }

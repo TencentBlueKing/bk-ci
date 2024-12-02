@@ -366,14 +366,26 @@ class RbacPermissionResourceMemberService(
 
     override fun isProjectMember(
         projectCode: String,
-        memberId: String
+        userId: String
     ): Boolean {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = userId
+        )
+        val memberDeptInfos = deptService.getUserInfo(
+            userId = "admin",
+            name = userId
+        )?.deptInfo?.map { it.name!! }
+
         return authResourceGroupMemberDao.isMemberInProject(
             dslContext = dslContext,
             projectCode = projectCode,
-            memberId = memberId
+            userId = userId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
         ) || rbacCacheService.validateUserProjectPermission(
-            userId = memberId,
+            userId = userId,
             projectCode = projectCode,
             permission = AuthPermission.VISIT
         )

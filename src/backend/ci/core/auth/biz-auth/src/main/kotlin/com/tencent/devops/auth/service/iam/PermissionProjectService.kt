@@ -56,6 +56,9 @@ interface PermissionProjectService {
      * */
     fun isProjectMember(userId: String, projectCode: String): Boolean
 
+    /**
+     * 是否加入项目级的组
+     * */
     fun checkUserInProjectLevelGroup(
         userId: String,
         projectCode: String

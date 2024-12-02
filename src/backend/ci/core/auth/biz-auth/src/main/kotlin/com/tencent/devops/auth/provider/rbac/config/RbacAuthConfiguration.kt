@@ -261,7 +261,7 @@ class RbacAuthConfiguration {
         deptService: DeptService,
         rbacCacheService: RbacCacheService,
         permissionAuthorizationService: PermissionAuthorizationService,
-        syncIamGroupMemberService: PermissionResourceGroupSyncService,
+        syncIamGroupMemberService: PermissionResourceGroupSyncService
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
