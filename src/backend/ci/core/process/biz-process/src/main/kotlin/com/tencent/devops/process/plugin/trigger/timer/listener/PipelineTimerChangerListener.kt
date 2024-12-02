@@ -64,7 +64,6 @@ class PipelineTimerChangerListener @Autowired constructor(
         try {
             crontabExpressions.forEach { crontab ->
                 val md5 = DigestUtils.md5Hex(crontab)
-                listOf(pipelineId, md5, event.projectId, event.taskId)
                 // 旧的定时任务Key,功能发布后残留的job
                 val comboKey = "${pipelineId}_${md5}_${event.projectId}"
                 if (schedulerManager.checkExists(comboKey)) {

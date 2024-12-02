@@ -260,20 +260,38 @@ open class PipelineTimerService @Autowired constructor(
         )
     }
 
+    /**
+     * 修改定时任务record，并更新quartz定时任务
+     */
     fun updateTimer(
         projectId: String,
         pipelineId: String,
         taskId: String,
-        startParam: Map<String, String>?
-    ): Int {
-        return pipelineTimerDao.update(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            taskId = taskId,
-            startParam = startParam?.let {
-                JsonUtil.toJson(it, false)
-            }
-        )
+        userId: String,
+        startParam: Map<String, String>?,
+        crontabExpressionJson: String
+    ): Result<Boolean> {
+        return if (pipelineTimerDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = taskId,
+                startParam = startParam?.let {
+                    JsonUtil.toJson(it, false)
+                }
+            ) > 0
+        ) {
+            pipelineEventDispatcher.dispatch(
+                PipelineTimerChangeEvent(
+                    source = "saveTimer",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = taskId,
+                    userId = userId,
+                    crontabExpressionJson = crontabExpressionJson
+                )
+            )
+            return Result(true)
+        } else Result(false)
     }
 }

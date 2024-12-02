@@ -109,9 +109,14 @@ class PipelineQuartzService @Autowired constructor(
     fun addJob(projectId: String, pipelineId: String, crontab: String, taskId: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = "${pipelineId}_${md5}_${projectId}_$taskId"
+            val comboKey = "${pipelineId}_${md5}_${projectId}"
+            val taskComboKey = "${pipelineId}_${md5}_${projectId}_$taskId"
+            // 移除旧的定时任务key
+            if (schedulerManager.checkExists(comboKey)) {
+                schedulerManager.deleteJob(comboKey)
+            }
             schedulerManager.addJob(
-                comboKey, crontab,
+                taskComboKey, crontab,
                 jobBeanClass
             )
         } catch (ignore: Exception) {

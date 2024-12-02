@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin.trigger.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -71,8 +72,11 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     logger.warn("pipeline info is null|projectId=$projectId|pipelineId=$pipelineId")
                     return@parseModel
                 }
+                // 默认参数
+                val params = timerTriggerTaskService.getParams(model)
                 // 没有禁用的触发器
                 val timerTriggerElements = getTimerTriggerConfig(model)
+                val lastModifyUser = pipelineInfo.lastModifyUser
                 when {
                     // 功能发布后，添加了多个定时触发器
                     timerList.size > 1 -> {
@@ -85,7 +89,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                     projectId = projectId,
                                     pipelineId = pipelineId,
                                     taskId = it.taskId,
-                                    userId = userId
+                                    userId = lastModifyUser
                                 )
                                 if (result.data != true) {
                                     logger.error(
@@ -96,16 +100,46 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                             }
                         }
                         // 重新添加定时任务
-                        saveTimer(timerTriggerElements, model, projectId, pipelineId, pipelineInfo)
+                        saveTimer(
+                            timerTriggerElements= timerTriggerElements,
+                            params = params,
+                            latestVersion = model.latestVersion,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            pipelineInfo = pipelineInfo
+                        )
                     }
 
                     // 正常情况
-                    timerList.size == 1 -> {
-                        // 重新添加定时任务
-                        saveTimer(timerTriggerElements, model, projectId, pipelineId, pipelineInfo)
+                    timerList.size == 1 && timerTriggerElements.size == 1 -> {
+                        val timerRecord = timerList[0]
+                        val timerTriggerElement = timerTriggerElements[0]
+                        val crontab = JsonUtil.toJson(
+                            timerTriggerTaskService.getCrontabExpressions(
+                                params = params,
+                                element = timerTriggerElement
+                            ),
+                            false
+                        )
+                        // 填充taskId 和 startParam
+                        if (timerRecord.taskId.isNullOrBlank() && timerRecord.crontab == crontab) {
+                            // 更新定时任务
+                            pipelineTimerService.updateTimer(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                taskId = timerTriggerElement.id ?: "",
+                                userId = lastModifyUser,
+                                startParam = timerTriggerElement.startParam,
+                                crontabExpressionJson = crontab
+                            )
+                        }
                     }
 
                     else -> {
+                        logger.warn(
+                            "skip upgrade|projectId=$projectId|pipelineId=$pipelineId|" +
+                                    "timerCount[${timerList.size}]|timerTriggerCount[${timerTriggerElements.size}]"
+                        )
                         return@parseModel
                     }
                 }
@@ -117,13 +151,13 @@ open class PipelineTimerUpgradeService @Autowired constructor(
 
     private fun saveTimer(
         timerTriggerElements: List<TimerTriggerElement>,
-        model: Model,
+        params: Map<String, String>,
+        latestVersion: Int,
         projectId: String,
         pipelineId: String,
         pipelineInfo: PipelineInfo
     ) {
         timerTriggerElements.forEach { element ->
-            val params = timerTriggerTaskService.getParams(model)
             val crontabExpressions = timerTriggerTaskService.getCrontabExpressions(
                 params = params,
                 element = element
@@ -133,7 +167,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 pipelineId = pipelineId,
                 element = element,
                 params = params,
-                latestVersion = model.latestVersion
+                latestVersion = latestVersion
             )
             pipelineTimerService.saveTimer(
                 projectId = projectId,
