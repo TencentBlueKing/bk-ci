@@ -63,6 +63,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -214,14 +215,12 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         userId: String
     ) {
         // 获取组件配置文件
-        val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+        val remoteRepoId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
-            fieldNames = setOf(KEY_REPOSITORY_ID, KEY_REPOSITORY_AUTHORIZER)
-        )
-        val remoteRepoId =
-            extFeatures.filter { it.fieldName == KEY_REPOSITORY_ID }.getOrNull(0)?.fieldValue ?: ""
+            fieldName = RepositoryConstants.KEY_REPOSITORY_ID
+        )?.fieldValue ?: return
         val configFileContent = client.get(ServiceGitRepositoryResource::class).getFileContent(
             remoteRepoId = remoteRepoId, filePath = CONFIG_YML_NAME, branch = MASTER
         ).data
@@ -487,30 +486,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
             return storePkgEnvInfos
         }
-        val bkConfigInfo = YamlUtil.to(configFileContent, object : TypeReference<BkConfigInfo>() {})
-        val osDefaultEnvNumMap = mutableMapOf<String, Int>()
-        bkConfigInfo.os.forEach { osConfigInfo ->
-            storePkgEnvInfos.add(createStorePkgEnvInfoFromConfig(storeCode, version, osConfigInfo))
-            // 统计每种操作系统默认环境配置数量
-            val defaultFlag = osConfigInfo.defaultFlag
-            val configOsName = osConfigInfo.osName
-            val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
-            if (osDefaultEnvNumMap.containsKey(configOsName)) {
-                osDefaultEnvNumMap[configOsName] = osDefaultEnvNumMap[configOsName]!! + increaseDefaultEnvNum
-            } else {
-                osDefaultEnvNumMap[configOsName] = increaseDefaultEnvNum
-            }
-        }
-        osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
-            // 判断每种操作系统默认环境配置是否有且只有1个
-            if (defaultEnvNum != 1) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
-                    params = arrayOf(CONFIG_YML_NAME, osName, defaultEnvNum.toString())
-                )
-            }
-        }
-        return storePkgEnvInfos
+        return generateStorePkgEnvInfos(storeCode, version, configFileContent)
     }
 
     private fun generateStorePkgEnvInfos(
