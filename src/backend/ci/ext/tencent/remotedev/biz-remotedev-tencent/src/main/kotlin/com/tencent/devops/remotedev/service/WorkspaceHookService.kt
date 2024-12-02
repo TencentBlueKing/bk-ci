@@ -144,13 +144,15 @@ class WorkspaceHookService @Autowired constructor(
     }
 
     fun hookLoad(userId: String, projectId: String, envHashId: String, ip: List<String>?) {
+        logger.info("hookLoad|$userId|$projectId|$envHashId|$ip")
         val load = client.get(ServiceDEVXResource::class)
             .getEnvHook(userId = userId, projectId = projectId, envHashId = envHashId).data!!
-        installHook(ip?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId), load)
+        installHook(ip?.ifEmpty { null }?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId), load)
     }
 
     fun hookDelete(userId: String, projectId: String, envHashId: String, ip: List<String>?) {
-        uninstallHook(ip?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId))
+        logger.info("hookDelete|$userId|$projectId|$envHashId|$ip")
+        uninstallHook(ip?.ifEmpty { null }?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId))
     }
 
     private fun installHook(ip: Set<String>, hooks: List<DEVXHook>) {
