@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "0.28.0",
-    "bkui-vue": "0.0.1-beta.456",
+    "bkui-vue": "2.0.1-beta.42",
     "dayjs": "^1.11.2",
     "lodash": "^4.17.21",
     "pinia": "^2.0.23",
