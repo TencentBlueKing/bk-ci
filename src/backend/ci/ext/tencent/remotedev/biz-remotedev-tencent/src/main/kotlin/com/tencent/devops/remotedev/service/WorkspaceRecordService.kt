@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
