@@ -199,6 +199,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
 
     override fun installAgent(
         userId: String,
+        apigwType: String?,
         projectId: String,
         apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult> {
@@ -207,6 +208,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
 
     override fun queryAgentTaskStatus(
         userId: String,
+        apigwType: String?,
         projectId: String,
         jobId: Int,
         page: Int,
@@ -222,6 +224,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
 
     override fun obtainManualInstallationCommand(
         userId: String,
+        apigwType: String?,
         projectId: String,
         jobId: Int,
         innerIp: String,

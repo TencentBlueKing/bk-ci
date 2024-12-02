@@ -378,6 +378,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -392,6 +395,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -413,6 +419,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
