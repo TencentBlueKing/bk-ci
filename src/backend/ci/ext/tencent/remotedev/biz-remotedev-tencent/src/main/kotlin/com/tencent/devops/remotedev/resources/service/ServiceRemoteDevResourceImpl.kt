@@ -24,6 +24,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -700,5 +701,16 @@ class ServiceRemoteDevResourceImpl(
     override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
         workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
         return Result(true)
+    }
+
+    override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
+        return Result(
+            workspaceService.getWorkspaceTimeline(
+                userId = userId,
+                workspaceName = workspaceName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }
