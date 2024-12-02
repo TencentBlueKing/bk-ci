@@ -30,7 +30,6 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
@@ -348,8 +347,12 @@ interface TencentServiceJobResource {
         @Parameter(description = "任务ID", required = true)
         @QueryParam("jobId")
         jobId: Int,
-        @Parameter(description = "查询agent任务状态的请求信息", required = true)
-        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+        @Parameter(description = "查询agent任务状态的页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "查询agent任务状态的页码", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
     ): AgentResult<QueryAgentTaskStatusResult>
 
     @Operation(summary = "获取手动安装agent的命令")

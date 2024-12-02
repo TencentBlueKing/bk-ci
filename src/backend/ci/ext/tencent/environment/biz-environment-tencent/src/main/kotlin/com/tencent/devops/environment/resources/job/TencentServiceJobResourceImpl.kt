@@ -253,9 +253,14 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+        page: Int,
+        pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
+        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+            page = page,
+            pageSize = pageSize
+        )
         return installTaskService.queryAgentInstallTaskStatus(jobId, queryAgentTaskStatusReq)
     }
 

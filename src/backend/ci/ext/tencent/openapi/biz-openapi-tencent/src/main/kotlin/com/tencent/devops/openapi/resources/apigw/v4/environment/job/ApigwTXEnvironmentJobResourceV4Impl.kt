@@ -4,7 +4,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
@@ -214,12 +213,8 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult> {
-        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
-            page = page,
-            pageSize = pageSize
-        )
         return client.get(TencentServiceJobResource::class)
-            .queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+            .queryAgentTaskStatus(userId, projectId, jobId, page, pageSize)
     }
 
     override fun obtainManualInstallationCommand(
