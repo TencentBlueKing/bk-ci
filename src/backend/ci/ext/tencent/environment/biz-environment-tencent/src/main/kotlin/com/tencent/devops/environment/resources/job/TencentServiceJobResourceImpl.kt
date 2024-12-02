@@ -35,8 +35,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -63,7 +61,6 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResul
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
-import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.gseagent.InstallTaskService
 import com.tencent.devops.environment.service.job.ApiGwAgentService
 import com.tencent.devops.environment.service.job.JobService
@@ -84,7 +81,6 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val updateCmdbNodeService: UpdateCmdbNodeService,
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService,
-    private val gseAgentService: GSEAgentService,
     private val installTaskService: InstallTaskService,
     private val apiGwAgentService: ApiGwAgentService
 ) : TencentServiceJobResource {
@@ -250,37 +246,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         checkParamBlank(userId, projectId)
         checkCloudIpIsValid(apiGwInstallAgentReq.bkCloudId, apiGwInstallAgentReq.innerIp)
         checkInstallPermission(projectId, apiGwInstallAgentReq.bkCloudId!!, apiGwInstallAgentReq.innerIp!!)
-
-        val installAgentReq = apiGwInstallAgentReq.let {
-            InstallAgentReq(
-                hosts = listOf(
-                    HostForInstallAgent(
-                        bkHostId = null,
-                        bkCloudId = it.bkCloudId,
-                        bkAddressing = null,
-                        isAutoChooseInstallChannelId = it.isAutoChooseInstallChannelId,
-                        apId = null,
-                        installChannelId = null,
-                        innerIp = it.innerIp,
-                        loginIp = null,
-                        innerIpv6 = null,
-                        osType = it.osType,
-                        authType = null,
-                        account = null,
-                        password = null,
-                        key = null,
-                        port = null,
-                        isManual = true,
-                        peerExchangeSwitchForAgent = null,
-                        enableCompression = null,
-                    )
-                ),
-                replaceHostId = null,
-                isInstallLatestPlugins = null,
-            )
-        }
-
-        return gseAgentService.installAgent(userId, null, installAgentReq)
+        return apiGwAgentService.installAgent(userId, projectId, apiGwInstallAgentReq)
     }
 
     override fun queryAgentTaskStatus(

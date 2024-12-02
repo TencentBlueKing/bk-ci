@@ -29,7 +29,11 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,13 +45,55 @@ class ApiGwAgentService @Autowired constructor(
     private val gseAgentService: GSEAgentService
 ) {
 
+    fun installAgent(
+        userId: String,
+        projectId: String,
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
+    ): AgentResult<InstallAgentResult> {
+        val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(
+            projectId,
+            apiGwInstallAgentReq.bkCloudId!!,
+            apiGwInstallAgentReq.innerIp!!
+        )
+
+        val installAgentReq = apiGwInstallAgentReq.let {
+            InstallAgentReq(
+                hosts = listOf(
+                    HostForInstallAgent(
+                        bkHostId = hostList[0].toInt(),
+                        bkCloudId = it.bkCloudId,
+                        bkAddressing = null,
+                        isAutoChooseInstallChannelId = it.isAutoChooseInstallChannelId,
+                        apId = null,
+                        installChannelId = null,
+                        innerIp = it.innerIp,
+                        loginIp = null,
+                        innerIpv6 = null,
+                        osType = it.osType,
+                        authType = null,
+                        account = null,
+                        password = null,
+                        key = null,
+                        port = null,
+                        isManual = true,
+                        peerExchangeSwitchForAgent = null,
+                        enableCompression = null,
+                    )
+                ),
+                replaceHostId = null,
+                isInstallLatestPlugins = null,
+            )
+        }
+        return gseAgentService.installAgent(userId, null, installAgentReq)
+    }
+
     fun getInstallCommand(
         jobId: Int,
         cloudAreaId: Int,
         innerIp: String
     ): AgentResult<ObtainManualCommandResult> {
         val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
-        if (hostList.isEmpty()){
+        if (hostList.isEmpty()) {
             throw InvalidParamException("ip $innerIp is not added as a node")
         }
         return gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
