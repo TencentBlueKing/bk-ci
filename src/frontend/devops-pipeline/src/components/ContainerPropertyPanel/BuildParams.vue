@@ -42,9 +42,10 @@
                         >
                             <accordion
                                 v-for="(param, index) in globalParams"
-                                condition
                                 :key="param.paramIdKey"
-                                :is-error="errors.any(`param-${param.id}`)"
+                                :is-error="errors.any(`param-${param.id}`)
+                                    || errors.any(`param-${param.id}-repo-name`)
+                                    || errors.any(`param-${param.id}-branch`)"
                             >
                                 <header
                                     class="param-header"
@@ -53,16 +54,29 @@
                                     <span>
                                         <bk-popover
                                             style="vertical-align: middle"
-                                            v-if="errors.all(`param-${param.id}`).length"
+                                            v-if="(errors.all(`param-${param.id}`).length || errors.all(`param-${param.id}-repo-name`).length || errors.all(`param-${param.id}-branch`).length)"
                                             placement="top"
                                         >
                                             <i class="bk-icon icon-info-circle-shape"></i>
                                             <div slot="content">
                                                 <p
-                                                    v-for="error in errors.all(`param-${param.id}`)"
+                                                    v-for="error in (errors.all(`param-${param.id}`))"
                                                     :key="error"
                                                 >
                                                     {{ error }}</p>
+                                                <p
+                                                    v-for="error in (errors.all(`param-${param.id}-repo-name`))"
+                                                    :key="error"
+                                                >
+                                                    {{ error }}</p>
+                                                    
+                                                <template v-if="!errors.all(`param-${param.id}-repo-name`).length">
+                                                    <p
+                                                        v-for="error in (errors.all(`param-${param.id}-branch`))"
+                                                        :key="error"
+                                                    >
+                                                        {{ error }}</p>
+                                                </template>
                                             </div>
                                         </bk-popover>
                                         {{ param.id }}
@@ -335,7 +349,7 @@
                                             v-if="isRepoParam(param.type)"
                                             :label="$t('editPage.repoName')"
                                             required
-                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :is-error="!param.defaultValue['repo-name']"
                                             :error-msg="errors.first(`param-${param.id}.defaultValue`)"
                                         >
                                             <request-selector
@@ -344,7 +358,7 @@
                                                 name="defaultValue"
                                                 :value="param.defaultValue['repo-name']"
                                                 :handle-change="(name, value) => handleChangeCodeRepo(name, value, index)"
-                                                :data-vv-scope="`param-${param.id}`"
+                                                :data-vv-scope="`param-${param.id}-repo-name`"
                                                 v-validate.initial="'required'"
                                                 replace-key="{keyword}"
                                                 :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN')"
@@ -355,7 +369,7 @@
                                             v-if="isRepoParam(param.type)"
                                             :label="$t('editPage.branchName')"
                                             required
-                                            :is-error="errors.has(`param-${param.id}.defaultValue`)"
+                                            :is-error="!param.defaultValue.branch"
                                             :error-msg="errors.first(`param-${param.id}.defaultValue`)"
                                             :key="param.defaultValue['repo-name']"
                                         >
@@ -365,7 +379,7 @@
                                                 name="defaultValue"
                                                 :value="param.defaultValue.branch"
                                                 :handle-change="(name, value) => handleChangeBranch(name, value, index)"
-                                                :data-vv-scope="`param-${param.id}`"
+                                                :data-vv-scope="`param-${param.id}-branch`"
                                                 v-validate.initial="'required'"
                                                 replace-key="{keyword}"
                                                 :search-url="getSearchBranchUrl(param)"
