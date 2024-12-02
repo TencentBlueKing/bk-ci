@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
@@ -94,7 +94,7 @@ class ApiGwAgentService @Autowired constructor(
     ): AgentResult<ObtainManualCommandResult> {
         val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
         if (hostList.isEmpty()) {
-            throw InvalidParamException("ip $innerIp is not added as a node")
+            throw ResourceNotMatchException("ip $innerIp is not added as a node")
         }
         return gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
     }

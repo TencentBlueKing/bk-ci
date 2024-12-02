@@ -27,10 +27,4 @@
 
 package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
-
-class ResourceNotMatchException(
-    message: String?,
-    errorCode: String = ERROR_CLIENT_REST_ERROR,
-    params: Array<String>? = null
-) : ErrorCodeException(errorCode = errorCode, params = params, defaultMessage = message)
+class ResourceNotMatchException(message: String) : RuntimeException(message)
