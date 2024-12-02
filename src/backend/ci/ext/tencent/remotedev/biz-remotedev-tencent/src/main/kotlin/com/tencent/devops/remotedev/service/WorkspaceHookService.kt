@@ -63,7 +63,7 @@ class WorkspaceHookService @Autowired constructor(
 ) {
 
     private data class Actions(
-        val action: List<Action>
+        val actions: List<Action>
     ) {
         data class Action(
             val type: String,
