@@ -66,7 +66,7 @@ class WorkspaceHookService @Autowired constructor(
         val action: List<Action>
     ) {
         data class Action(
-            val type: Type,
+            val type: String,
             val executables: List<String>
         )
 
@@ -162,11 +162,11 @@ class WorkspaceHookService @Autowired constructor(
         val actions = hooks.groupBy { it.executionType }.map { (executionType, group) ->
             val executables = group.map { it.executableCommand() }
             Actions.Action(
-                type = Actions.Type.load(executionType),
+                type = Actions.Type.load(executionType).name.lowercase(),
                 executables = executables
             )
         }
-        val actionString = JsonUtil.toJson(actions, false)
+        val actionString = JsonUtil.toJson(Actions(actions), false)
         val req = RequestBody(
             name = "钩子安装",
             constants = mapOf(
