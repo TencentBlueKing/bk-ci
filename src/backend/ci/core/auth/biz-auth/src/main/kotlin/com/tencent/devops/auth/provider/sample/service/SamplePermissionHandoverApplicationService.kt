@@ -63,7 +63,8 @@ class SamplePermissionHandoverApplicationService : PermissionHandoverApplication
     override fun listMemberHandoverDetails(
         projectCode: String,
         memberId: String,
-        handoverType: HandoverType
+        handoverType: HandoverType,
+        resourceType: String?
     ): List<HandoverDetailDTO> {
         return emptyList()
     }
