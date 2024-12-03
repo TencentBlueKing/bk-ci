@@ -29,7 +29,8 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.config.EnvironmentProperties
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
@@ -38,12 +39,14 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("ApiGwAgentService")
 class ApiGwAgentService @Autowired constructor(
     private val cmdbNodeDao: CmdbNodeDao,
+    private val environmentProperties: EnvironmentProperties,
     private val gseAgentService: GSEAgentService
 ) {
 
@@ -94,15 +97,43 @@ class ApiGwAgentService @Autowired constructor(
         val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
         if (hostList.isEmpty()) {
             throw ResourceNotMatchException(
-                errorCode = ERROR_NODE_NOT_EXISTS,
-                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_EXISTS),
-                params = arrayOf("[$projectId]$cloudAreaId:$innerIp")
+                errorCode = ERROR_NODE_NOT_BELONG_TO_PROJECT,
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_BELONG_TO_PROJECT),
+                params = arrayOf("$cloudAreaId:$innerIp", projectId)
             )
         }
-        return gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
+        val agentResult = gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
+        // agent未就绪的状态也统一成PENDING
+        if (agentResult.code == NODEMAN_COMMAND_NOT_READY_CODE){
+            logger.info("Agent is not ready, pending...")
+            return AgentResult(
+                code = OPENAPI_NORMAL_STATUS_CODE,
+                result = true,
+                message = null,
+                errors = null,
+                data = ObtainManualCommandResult(
+                    status = NODEMAN_GET_JOB_COMMAND_PENDING_STATUS,
+                    networkPolicyDocLink = getNetworkPolicyDocLink()
+                )
+            )
+        }
+
+        return agentResult
     }
 
     fun getNodeHostIdByCloudIp(projectId: String?, cloudAreaId: Int, ip: String): List<Long> {
         return cmdbNodeDao.getNodeHostIdByCloudIp(projectId, cloudAreaId, ip)
+    }
+
+    private fun getNetworkPolicyDocLink(): String? {
+        return environmentProperties.nodeman.networkPolicyDocLink
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApiGwAgentService::class.java)
+
+        const val OPENAPI_NORMAL_STATUS_CODE = 0
+        const val NODEMAN_COMMAND_NOT_READY_CODE = 3800015
+        const val NODEMAN_GET_JOB_COMMAND_PENDING_STATUS = "PENDING"
     }
 }

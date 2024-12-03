@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -348,9 +348,9 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     ) {
         if (hostList.isEmpty()) {
             throw ResourceNotMatchException(
-                errorCode = ERROR_NODE_NOT_EXISTS,
-                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_EXISTS),
-                params = arrayOf("[$projectId]$cloudAreaId:$ip")
+                errorCode = ERROR_NODE_NOT_BELONG_TO_PROJECT,
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_BELONG_TO_PROJECT),
+                params = arrayOf("$cloudAreaId:$ip", projectId)
             )
         }
     }
