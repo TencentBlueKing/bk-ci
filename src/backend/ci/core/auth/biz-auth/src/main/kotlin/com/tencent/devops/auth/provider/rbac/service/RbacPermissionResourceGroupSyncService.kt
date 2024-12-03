@@ -144,6 +144,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     private fun syncGroupMemberExpiredTime(projectCode: String) {
         logger.info("start to sync project group member expired time|$projectCode")
         val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
