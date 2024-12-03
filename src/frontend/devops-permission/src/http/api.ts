@@ -3,6 +3,7 @@ import fetch from './fetch';
 const apiPerfix = '/api';
 const applyFix = 'ms/auth/api/user/auth/apply';
 const IAM_PERFIX = '/ms/auth/api/user/auth/resource';
+const AUTH_PERFIX = '/ms/auth/api/user/auth';
 const projectPerfix = 'ms/project/api/user'
 export default {
   getUser() {
@@ -113,5 +114,23 @@ export default {
    */
   async renewal(projectId: string, resourceType: string, groupId: number, params: any) {
     return fetch.put(`${IAM_PERFIX}/group/${projectId}/${resourceType}/${groupId}/member/renewal`, params);
+  },
+  /**
+   * 获取资源授权管理数量
+   */
+  getResourceType2CountOfHandover(params: any) {
+    return fetch.post(`${AUTH_PERFIX}/handover/getResourceType2CountOfHandover`, params);
+  },
+  /**
+   * 获取交接单中授权相关
+   */
+  listAuthorizationsOfHandover(params: any) {
+    return fetch.post(`${AUTH_PERFIX}/handover/listAuthorizationsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  listGroupsOfHandover(params: any) {
+    return fetch.post(`${AUTH_PERFIX}/handover/listGroupsOfHandover`, params);
   },
 }

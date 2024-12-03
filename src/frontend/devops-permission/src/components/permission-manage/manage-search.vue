@@ -5,12 +5,12 @@
       :clearable="false"
       v-model="projectValue"
       :prefix="t('所属项目')"
-      @change="projectChange"
+      @change="handleProjectChange"
     >
       <bk-option
-        v-for="(item, index) in projectList"
+        v-for="item in projectList"
+        :key="item.englishName"
         :id="item.englishName"
-        :key="index"
         :name="item.projectName"
       />
     </bk-select>
@@ -20,16 +20,16 @@
       v-model="serviceValue"
       :prefix="t('所属服务')"
       :disabled="!projectValue"
-      @change="serviceChange"
+      @change="handleServiceChange"
     >
       <bk-option
-        v-for="(item, index) in serviceList"
+        v-for="item in serviceList"
+        :key="item.resourceType"
         :id="item.resourceType"
-        :key="index"
         :name="item.name"
       />
     </bk-select>
-  
+
     <bk-select
       class="search-select"
       v-model="resourceValue"
@@ -38,31 +38,31 @@
       :input-search="false"
       :disabled="isAllowSearch"
       :scroll-loading="resourceScrollLoading"
-      @scroll-end="resourceScrollEnd"
-      :remote-method="getSearchResource"
-      >
+      @scroll-end="handleResourceScrollEnd"
+      :remote-method="fetchSearchResource"
+    >
       <bk-option
-        v-for="(item, index) in resourceList"
+        v-for="item in resourceList"
+        :key="item.resourceCode"
         :id="item.resourceCode"
-        :key="index"
         :name="item.resourceName"
       />
     </bk-select>
-  
+
     <bk-select
       class="search-select"
       v-model="actionValue"
       :prefix="t('操作')"
       :disabled="isAllowSearch"
-      >
+    >
       <bk-option
-        v-for="(item, index) in actionList"
+        v-for="item in actionList"
+        :key="item.action"
         :id="item.action"
-        :key="index"
         :name="item.actionName"
       />
     </bk-select>
-  
+
     <div class="search-expired">
       <p class="search-terms">{{ t('过期时间') }}</p>
       <date-picker
@@ -80,7 +80,7 @@
       value-behavior="need-key"
       :placeholder="filterTips"
       :get-menu-list="getMenuList"
-      @search="handleSearch(searchValue)"
+      @search="handleSearch"
     />
   </div>
 </template>
@@ -91,7 +91,6 @@ import DatePicker from '@blueking/date-picker';
 import '@blueking/date-picker/vue3/vue3.css';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-
 
 const { t } = useI18n();
 const projectValue = ref('');
@@ -107,31 +106,14 @@ const resourceScrollLoading = ref(false);
 const resourcePage = ref(1);
 const hasNextPage = ref(false);
 const searchExpiredAt = ref([]);
-const expiredAtList = ref([])
+const expiredAtList = ref([]);
 const searchValue = ref([]);
-const searchResourceName=ref();
-const filterTips = computed(() => {
-return searchData.value.map(item => item.name).join(' / ');
-});
-const searchData = computed(() => {
-const data = [
-  {
-    name: t('用户组名'),
-    id: 'groupName',
-  },
-  // {
-  //   name: t('用户组ID'),
-  //   id: 'department',
-  // },
-  // {
-  //   name: t('用户组描述'),
-  //   id: 'groupName',
-  // },
-]
-return data.filter(data => {
-  return !searchValue.value.find(val => val.id === data.id)
-})
-});
+const searchResourceName = ref('');
+const filterTips = computed(() => searchData.value.map(item => item.name).join(' / '));
+const searchData = computed(() => [
+  { name: t('用户组名'), id: 'groupName' }
+].filter(data => !searchValue.value.find(val => val.id === data.id)));
+
 const commonUseList = ref([
   {
     id: ['now', 'now+24h'],
@@ -183,36 +165,27 @@ const searchGroup = computed(() => ({
 }));
 const emit = defineEmits(['searchInit']);
 
-watch(searchGroup, () => {
-  emit('searchInit', projectValue.value, searchGroup.value)
-});
-
-watch(projectValue, () => {
-  emit('searchInit', projectValue.value, searchGroup.value)
+watch([searchGroup, projectValue], () => {
+  emit('searchInit', projectValue.value, searchGroup.value);
 });
 
 watch(serviceValue, (newValue) => {
+  isAllowSearch.value = !newValue;
   if (newValue) {
-    isAllowSearch.value = false;
-    getListResource();
-    getListActions();
-  } else {
-    isAllowSearch.value = true;
+    fetchResourceList();
+    fetchActionList();
   }
-})
+});
 
-onMounted(()=>{
-  getListResourceTypes()
-})
+onMounted(() => {
+  fetchResourceTypes();
+});
 
 defineExpose({
   clearSearch,
 });
 
-/**
- * 获取所属项目和所属服务列表数据
- */
-async function getListResourceTypes () {
+async function fetchResourceTypes() {
   try {
     const [projects, resourceTypes] = await Promise.all([
       http.getProjectsList(),
@@ -224,92 +197,87 @@ async function getListResourceTypes () {
       projectValue.value = projects[0].englishName;
     }
   } catch (error) {
-    console.error(error);
+    console.log(error);
   }
 }
-/**
- * 所属项目下拉
- */
-function projectChange (value) {
+
+function handleProjectChange(value) {
   projectValue.value = value;
-  resourcePage.value = 1;
   serviceValue.value = '';
-  resourceValue.value = '';
-  actionValue.value = '';
-  resourceList.value = [];
-  actionList.value = [];
+  resetSelections();
 }
-/**
- * 所属服务下拉选择
- */
-function serviceChange (value) {
+
+function handleServiceChange(value) {
   serviceValue.value = value;
+  resetSelections();
+}
+
+function resetSelections() {
   resourcePage.value = 1;
   resourceValue.value = '';
   actionValue.value = '';
   resourceList.value = [];
   actionList.value = [];
 }
-/**
- * 获取资源列表
- */
-async function getListResource () {
+
+async function fetchResourceList() {
   try {
     resourceScrollLoading.value = true;
     const query = {
       page: resourcePage.value,
       pageSize: 10,
-      ...(searchResourceName.value && {resourceName: searchResourceName.value}),
+      ...(searchResourceName.value && { resourceName: searchResourceName.value })
     };
     const res = await http.getListResource(projectValue.value, serviceValue.value, query);
     hasNextPage.value = res.hasNext;
     resourceList.value.push(...res.records);
-    resourceScrollLoading.value = false;
   } catch (error) {
-    console.error(error);
+    console.log(error);
+  } finally {
+    resourceScrollLoading.value = false;
   }
 }
-/**
- * 远程搜索资源列表
- */
- function getSearchResource (val) {
+
+function fetchSearchResource(val) {
   searchResourceName.value = val;
-  resourceList.value =[]
-  getListResource();
+  resourceList.value = [];
+  fetchResourceList();
 }
-/**
- * 	资源列表滚动到底部时触发
- */
- async function resourceScrollEnd () {
-  if (!hasNextPage.value) return;
-  resourcePage.value ++;
-  getListResource();
+
+async function handleResourceScrollEnd() {
+  if (hasNextPage.value) {
+    resourcePage.value++;
+    fetchResourceList();
+  }
 }
-/**
- * 获取操作列表
- */
-async function getListActions () {
+
+async function fetchActionList() {
   try {
     const res = await http.getListActions(serviceValue.value);
     actionList.value = res;
   } catch (error) {
-    console.error(error);
+    console.log(error);
   }
 }
-/**
- * 过期时间搜索
- */
-function handleValueChange (value, info) {
+
+function handleValueChange(value, info) {
   searchExpiredAt.value = value;
   expiredAtList.value = info;
 }
-/**
- * 下拉搜索点击搜索按钮搜索
- */
-function handleSearch (value) {
-  if(!value.length) return;
-  searchValue.value = value;
-  emit('searchInit', projectValue.value, searchGroup.value)
+
+function handleSearch(value) {
+  if (value.length) {
+    searchValue.value = value;
+    emit('searchInit', projectValue.value, searchGroup.value);
+  }
+}
+
+function clearSearch() {
+  searchValue.value = [];
+  searchExpiredAt.value = [];
+  expiredAtList.value = [];
+  serviceValue.value = '';
+  resetSelections();
 }
 /**
  * 下拉搜索获取列表数据
@@ -339,19 +307,7 @@ function handleSearch (value) {
   //   })
   // }
 // }
-/**
- * 清空搜索条件
- */
-function clearSearch () {
-  searchValue.value = [];
-  searchExpiredAt.value = [];
-  expiredAtList.value = [];
-  serviceValue.value = '';
-  resourceValue.value = '';
-  actionValue.value = '';
-}
 </script>
-
 <style lang="less" scoped>
 .search{ 
   display: flex;
