@@ -25,11 +25,13 @@ class ThirdFilter(
     private val thirdSecretToken: String? = null,
     private val gitScmService: GitScmService,
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?,
-    private val failedReason: String = ""
+    private val failedReason: String = "",
+    private val eventType: String
 ) : WebhookFilter {
 
     companion object {
         private const val FILTER_TOKEN_HEADER = "X-DEVOPS-FILTER-TOKEN"
+        private const val FILTER_EVENT_TYPE_HEADER = "X-DEVOPS-EVENT-TYPE"
         private const val MAX_RETRY_COUNT = 3
         private val logger = LoggerFactory.getLogger(ThirdFilter::class.java)
     }
@@ -63,7 +65,8 @@ class ThirdFilter(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event,
-                changeFiles = changeFiles
+                changeFiles = changeFiles,
+                eventType = eventType
             )
         )
         val builder = Request.Builder()
@@ -77,6 +80,7 @@ class ThirdFilter(
                 credentialId = thirdSecretToken
             )
             builder.addHeader(FILTER_TOKEN_HEADER, thirdSecretTokenValue)
+            builder.addHeader(FILTER_EVENT_TYPE_HEADER, eventType)
         }
         return HttpRetryUtils.retry(MAX_RETRY_COUNT) {
             OkhttpUtils.doShortHttp(request = builder.build()).use { response ->
