@@ -149,7 +149,6 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                                     }
                                 }
                             }
-
                         },
                         syncMemberExpiredExecutorService
                     )
