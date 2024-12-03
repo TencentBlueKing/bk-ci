@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.ci.UserUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
@@ -38,21 +40,16 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
-import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val configCacheService: ConfigCacheService,
     private val whiteListService: WhiteListService,
     private val taiClient: TaiClient
 ) {
