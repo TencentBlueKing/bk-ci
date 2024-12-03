@@ -59,7 +59,8 @@ interface PermissionHandoverApplicationService {
     fun listMemberHandoverDetails(
         projectCode: String,
         memberId: String,
-        handoverType: HandoverType
+        handoverType: HandoverType,
+        resourceType: String? = null
     ): List<HandoverDetailDTO>
 
     /**

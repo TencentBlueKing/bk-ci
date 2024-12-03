@@ -133,33 +133,48 @@ class PermissionAuthorizationServiceImpl(
         condition: ResourceAuthorizationConditionRequest,
         operateChannel: OperateChannel?
     ): SQLPage<ResourceAuthorizationResponse> {
-        logger.info("list resource authorizations:$condition")
-        // 获取用户正在交接的授权，仅用于个人视角
-        val beingHandoverMap = if (operateChannel == OperateChannel.PERSONAL) {
-            permissionHandoverApplicationService.listMemberHandoverDetails(
+        logger.info("list resource authorizations:$condition|$operateChannel")
+        val (records, count) = if (operateChannel == OperateChannel.PERSONAL) {
+            val beingHandoverDetails = permissionHandoverApplicationService.listMemberHandoverDetails(
                 projectCode = condition.projectCode,
                 memberId = condition.handoverFrom!!,
-                handoverType = HandoverType.AUTHORIZATION
+                handoverType = HandoverType.AUTHORIZATION,
+                resourceType = condition.resourceType!!
             )
+            val beingHandoverResourceCodes = beingHandoverDetails.map { it.itemId }.distinct()
+            val finalCondition = condition.apply {
+                when (this.queryHandover) {
+                    true -> this.filterResourceCodes = beingHandoverResourceCodes
+                    false -> this.excludeResourceCodes = beingHandoverResourceCodes
+                    else -> {}
+                }
+            }
+            val records = authAuthorizationDao.list(
+                dslContext = dslContext,
+                condition = finalCondition
+            ).map {
+                it.copy(
+                    beingHandover = beingHandoverResourceCodes.contains(it.resourceCode),
+                    approver = beingHandoverDetails.find { details -> details.itemId == it.resourceCode }?.approver
+                )
+            }
+            val count = authAuthorizationDao.count(
+                dslContext = dslContext,
+                condition = finalCondition
+            )
+            Pair(records, count)
         } else {
-            emptyList()
-        }.associateBy { it.resourceType to it.itemId }
-        val record = authAuthorizationDao.list(
-            dslContext = dslContext,
-            condition = condition
-        ).map { authRecord ->
-            authRecord.copy(
-                beingHandover = beingHandoverMap.containsKey(authRecord.resourceType to authRecord.resourceCode)
+            val records = authAuthorizationDao.list(
+                dslContext = dslContext,
+                condition = condition
             )
+            val count = authAuthorizationDao.count(
+                dslContext = dslContext,
+                condition = condition
+            )
+            Pair(records, count)
         }
-        val count = authAuthorizationDao.count(
-            dslContext = dslContext,
-            condition = condition
-        )
-        return SQLPage(
-            count = count.toLong(),
-            records = record
-        )
+        return SQLPage(count = count.toLong(), records = records)
     }
 
     override fun listUserProjects(userId: String): List<String> {

@@ -263,23 +263,26 @@ class RbacPermissionHandoverApplicationService(
     override fun listMemberHandoverDetails(
         projectCode: String,
         memberId: String,
-        handoverType: HandoverType
+        handoverType: HandoverType,
+        resourceType: String?
     ): List<HandoverDetailDTO> {
-        val flowNos = listHandoverOverviews(
+        val handoverOverviews = listHandoverOverviews(
             queryRequest = HandoverOverviewQueryReq(
                 memberId = memberId,
                 projectCode = projectCode,
                 applicant = memberId,
                 handoverStatus = HandoverStatus.PENDING
             )
-        ).records.map { it.flowNo }
+        ).records
+        val flowNos = handoverOverviews.map { it.flowNo }
+        val flowNo2Approver = handoverOverviews.associate { Pair(it.flowNo, it.approver) }
         return handoverDetailDao.list(
             dslContext = dslContext,
             projectCode = projectCode,
             flowNos = flowNos,
-            resourceType = null,
+            resourceType = resourceType,
             handoverType = handoverType
-        )
+        ).map { it.copy(approver = flowNo2Approver[it.flowNo]) }
     }
 
     companion object {

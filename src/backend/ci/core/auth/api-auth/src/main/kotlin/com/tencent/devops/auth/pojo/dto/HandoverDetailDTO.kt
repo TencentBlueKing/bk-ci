@@ -14,5 +14,7 @@ data class HandoverDetailDTO(
     @get:Schema(title = "组/授权资源关联的资源类型")
     val resourceType: String,
     @get:Schema(title = "交接类型")
-    val handoverType: HandoverType
+    val handoverType: HandoverType,
+    @get:Schema(title = "审批人")
+    var approver: String? = null
 )
