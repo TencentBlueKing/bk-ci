@@ -157,7 +157,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
         memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
             try {
-                if (deptService.isUserDeparted(memberId)){
+                if (deptService.isUserDeparted(memberId)) {
                     return@forEach
                 }
                 val verifyResults = iamV2ManagerService.verifyGroupValidMember(
