@@ -145,7 +145,7 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun startCloudExperienceDuration(userId: String): Int {
         return remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId).startCloudExperienceDuration
-            ?: configCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
+            ?: 1
     }
 
     fun getAllUserSetting4Op(queryUser: String?, page: Int?, pageSize: Int?): Page<RemoteDevUserSettings> {

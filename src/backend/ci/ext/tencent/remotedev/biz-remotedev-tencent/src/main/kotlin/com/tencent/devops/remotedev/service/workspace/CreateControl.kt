@@ -82,7 +82,6 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import java.time.LocalDateTime
@@ -165,7 +164,10 @@ class CreateControl @Autowired constructor(
 
         // 校验传入的镜像是否该项目自定义镜像，禁止跨项目使用
         val notProjectImage = workspaceCreate.imageCosFile.isNotBlank() &&
-            (!imageManageService.checkBaseImage(workspaceCreate.imageCosFile) && !imageManageService.checkProjectImage(projectId, workspaceCreate.imageCosFile))
+            (!imageManageService.checkBaseImage(workspaceCreate.imageCosFile) && !imageManageService.checkProjectImage(
+                projectId,
+                workspaceCreate.imageCosFile
+            ))
         if (notProjectImage) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.IMAGE_NOT_FOUND_ERROR.errorCode,
@@ -181,9 +183,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 检查项目配额
-        val projectLimit = projectInfo.properties?.cloudDesktopNum
-            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
-            ?: 20
+        val projectLimit = projectInfo.properties?.cloudDesktopNum ?: 1
         val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
             dslContext = dslContext,
             projectId = projectInfo.englishName

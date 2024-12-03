@@ -27,7 +27,7 @@ class ConfigCacheService @Autowired constructor(
     }
 
     private val redisCache = Caffeine.newBuilder()
-        .maximumSize(100)
+        .maximumSize(200)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, String?> { key -> configDao.fetchConfig(dslContext, key) ?: redisOperation.get(key) }
 

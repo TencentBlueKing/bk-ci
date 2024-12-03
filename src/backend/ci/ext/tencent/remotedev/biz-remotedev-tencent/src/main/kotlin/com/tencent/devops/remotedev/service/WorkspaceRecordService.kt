@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkRepoRegion
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
@@ -19,6 +18,8 @@ import com.tencent.devops.remotedev.service.client.NodeSearchRule
 import com.tencent.devops.remotedev.service.client.NodeSearchRulesItem
 import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service
 @Service
 class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val bkRepoConfig: RemoteDevBkRepoConfig,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
@@ -35,7 +35,8 @@ class WorkspaceRecordService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
     private val bkItsmService: BKItsmService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val configCacheService: ConfigCacheService
 ) {
 
     fun enableRecord(
@@ -151,7 +152,7 @@ class WorkspaceRecordService @Autowired constructor(
             dslContext = dslContext,
             workspaceName = workspaceName,
             user = userId,
-            expiredDays = redisOperation.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
+            expiredDays = configCacheService.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
         )
     }
 
@@ -228,7 +229,7 @@ class WorkspaceRecordService @Autowired constructor(
         val data = resp.records.map {
             WorkspaceRecordMetadata(
                 link = bkRepoConfig.getRegionConfig(region).webUrl +
-                        "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}",
+                    "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime
             )
@@ -242,8 +243,6 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     companion object {
-        private const val REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS =
-            "remotedev:worksapce.user.approval.expiredDays"
 
         private const val BKREPO_WORKSPACE_REPONAME_PREFIX = "REMOTEDEV_"
 
