@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -291,7 +292,12 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
         checkIpIsValid(innerIp)
-        return apiGwAgentService.getInstallCommand(jobId, bkCloudId, innerIp)
+        return apiGwAgentService.getInstallCommand(
+            projectId = projectId,
+            jobId = jobId,
+            cloudAreaId = bkCloudId,
+            innerIp = innerIp
+        )
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
@@ -324,7 +330,10 @@ class TencentServiceJobResourceImpl @Autowired constructor(
             "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
         )
         if (!pattern.matches(ip)) {
-            throw InvalidParamException("$ip is invalid ip address")
+            throw InvalidParamException(
+                message = "$ip is invalid ip address",
+                params = arrayOf(ip)
+            )
         }
     }
 
@@ -338,7 +347,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         hostList: List<Long>
     ) {
         if (hostList.isEmpty()) {
-            throw ResourceNotMatchException("ip $cloudAreaId:$ip does not belong to project $projectId")
+            throw ResourceNotMatchException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_EXISTS),
+                params = arrayOf("[$projectId]$cloudAreaId:$ip")
+            )
         }
     }
 }

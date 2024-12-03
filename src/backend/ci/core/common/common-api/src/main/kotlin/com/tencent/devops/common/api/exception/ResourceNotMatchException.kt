@@ -27,4 +27,10 @@
 
 package com.tencent.devops.common.api.exception
 
-class ResourceNotMatchException(message: String) : RuntimeException(message)
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
+
+class ResourceNotMatchException(
+    message: String,
+    errorCode: String = PARAMETER_IS_INVALID,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ResourceNotMatchException
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.HostForInstallAgent
@@ -84,13 +86,18 @@ class ApiGwAgentService @Autowired constructor(
     }
 
     fun getInstallCommand(
+        projectId: String,
         jobId: Int,
         cloudAreaId: Int,
         innerIp: String
     ): AgentResult<ObtainManualCommandResult> {
         val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
         if (hostList.isEmpty()) {
-            throw ResourceNotMatchException("ip $cloudAreaId:$innerIp is not added as a node")
+            throw ResourceNotMatchException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_EXISTS),
+                params = arrayOf("[$projectId]$cloudAreaId:$innerIp")
+            )
         }
         return gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
     }
