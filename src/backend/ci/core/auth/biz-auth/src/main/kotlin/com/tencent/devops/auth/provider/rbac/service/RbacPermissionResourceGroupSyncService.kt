@@ -155,7 +155,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             )
             verifyResults.forEach { (groupId, verifyResult) ->
                 if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
-                    logger.info("The member of group needs to been renewed:$projectCode|$groupId|$memberId")
+                    logger.info("The member of group needs to be renewed:$projectCode|$groupId|$memberId")
                     authResourceGroupMemberDao.update(
                         dslContext = dslContext,
                         projectCode = projectCode,
