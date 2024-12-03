@@ -618,10 +618,10 @@
                             buildNo: pipeline.buildParams || undefined,
                             param: pipeline.params
                         })
-                        isEmptyValue = pipeline.params.some(item => {
+                        isEmptyValue = pipeline?.params?.some(item => {
                             return isObject(item.defaultValue)
                                 ? Object.values(item.defaultValue).every(val => !val)
-                                : !item.defaultValue
+                                : false
                         })
                     })
                     if (isEmptyValue) {
