@@ -30,30 +30,51 @@ yarn public
 
 ### 系统要求
 
-- Golang 1.12
+- Golang 1.19
 - agent 使用 golang 编写，目前支持 linux/windows/macos 三种系统，其他系统没有做编译验证。编译时需要3种系统下用go编译器编译。
 
 ### 编译
 
-- 不要使用交叉编译生成 agent 程序。
-- 安装好golang后，将 `bk-ci/src/agent` 加入 `GOPATH` 环境变量。
-- Linux版本编译： build_linux.sh 
-- Windows版本编译： build_windows.bat
-- MacOS 版本编译： build_macos.sh
-- 输出在agent/bin目录下以下文件（安装包）：
+备注：编译macos平台可执行文件时，若不开启cgo，则会影响采集cpu和diskio数据，这是因为Telegraf 的 cpu和diskio 插件采集使用的 shirou 包需要开启cgo才可以在darwin情况下采集成功
 
-```
-    |- devopsAgent.exe
-    |- devopsAgent_linux
-    |- devopsAgent_macos
-    |- devopsDaemon.exe
-    |- devopsDaemon_linux
-    |- devopsDaemon_macos
-    |- upgrader.exe
-    |- upgrader_linux
-    |- upgrader_linux
-```
+前置条件：进入agent根目录 -> `cd bk-ci/src/agent`
 
+- linux平台 & mac平台编译
+  - 交叉编译多平台可执行文件(无cgo)：make all
+  - 编译linux平台可执行文件(无cgo)：make linux
+  - 编译win平台可执行文件(无cgo)：make windows
+  - 编译mac平台可执行文件(无cgo)：make macos_no_cgo
+  - 编译mac平台可执行文件(cgo)：make macos_cgo
+- windows平台编译
+  - 编译win平台可执行文件(无cgo)：build_windows.bat
+- 可执行文件统一输出在agent/bin目录下：
+```shell
+.
+├── devopsAgent.exe
+├── devopsAgent_linux
+├── devopsAgent_linux_arm64
+├── devopsAgent_linux_mips64
+├── devopsAgent_macos
+├── devopsAgent_macos_arm64
+├── devopsDaemon.exe
+├── devopsDaemon_linux
+├── devopsDaemon_linux_arm64
+├── devopsDaemon_linux_mips64
+├── devopsDaemon_macos
+├── devopsDaemon_macos_arm64
+├── installer.exe
+├── installer_linux
+├── installer_linux_arm64
+├── installer_linux_mips64
+├── installer_macos
+├── installer_macos_arm64
+├── upgrader.exe
+├── upgrader_linux
+├── upgrader_linux_arm64
+├── upgrader_linux_mips64
+├── upgrader_macos
+└── upgrader_macos_arm64
+```
 
 
 ## backend后端微服务编译(kotlin)
