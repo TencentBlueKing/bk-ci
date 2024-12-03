@@ -47,7 +47,7 @@ onMounted(() => {
     <div class="menu-item-submenu">
       <div class="submenu-header" @click="handleShowMenu">
         <div>
-          <i class="permission-icon permission-icon-oauth" />
+          <i class="permission-icon permission-icon-permission" />
           <span>{{ t('我的授权') }}</span>
         </div>
         <angle-down :class="{ 'angle-down is-show': !showMenu }" />

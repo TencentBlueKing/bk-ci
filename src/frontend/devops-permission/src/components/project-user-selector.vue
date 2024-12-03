@@ -22,18 +22,20 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import http from '@/http/api';
-  
+  const props = defineProps({
+    projectId: String,
+  });
+
   const { t } = useI18n();
   const route = useRoute();
   const emits = defineEmits(['change', 'removeAll']);
   const userList = ref([]);
   const tagInputRef = ref(null);
-  const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
   const searchKeyArr = computed(() => ['id', 'name']);
   const searchValue = ref();
   
   async function fetchProjectMembers (query) {
-    const res = await http.getProjectMembers(projectId.value, query)
+    const res = await http.getProjectMembers(props.projectId, query)
     userList.value = res.records.map(i => {
       return {
         ...i,
@@ -72,4 +74,3 @@
     emits('removeAll', val)
   }
   </script>
-  

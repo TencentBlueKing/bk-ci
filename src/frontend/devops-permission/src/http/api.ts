@@ -57,6 +57,29 @@ export default {
    * 获取（代码库、流水线、部署节点）授权列表
    */
   getResourceAuthList (projectId: string, params: any) {
-    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization`, params);
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
+  },
+  /**
+   * 获取项目下全体成员(简单查询)
+   */
+  async getProjectMembers(projectId: string, params?: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/listProjectMembers?${query}`, {
+      globalError: false
+    });
+  },
+  /**
+   * 获取用户已加入的项目列表
+   */
+  fetchProjectList () {
+    return fetch.get(`${projectPerfix}/projects`)
+  },
+  /**
+   * 重置授权（代码库、流水线、部署节点） 
+   */
+  resetAuthorization (projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
   },
 }

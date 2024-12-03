@@ -3,9 +3,22 @@
       <div class="permission-wrapper">
         <div class="content">
           <div class="content-btn">
-            {{ projectId }}
             <bk-button @click="handleReset">{{ t('申请批量重置') }}</bk-button>
             <div class="filter-bar">
+              <bk-select
+                v-model="projectId"
+                class="project-select"
+                :prefix="t('所属项目')"
+                filterable
+                @change="handleChangeProject"
+              >
+                <bk-option
+                  v-for="(item, index) in projectList"
+                  :id="item.englishName"
+                  :key="index"
+                  :name="item.projectName"
+                />
+              </bk-select>
               <bk-date-picker
                 v-model="dateTimeRange"
                 type="datetimerange"
@@ -22,7 +35,6 @@
                 class="content-btn-search"
                 :placeholder="filterTips"
                 :key="searchName"
-                :get-menu-list="getMenuList"
                 value-behavior="need-key"
               />
             </div>
@@ -35,9 +47,10 @@
               height="100%"
               max-height="100%"
               show-overflow-tooltip
-              :key="resourceType"
+              :key="`${projectId}-${resourceType}`"
               :pagination="pagination"
               remote-pagination
+              :is-row-select-enable="disabledRowSelect"
               @select-all="handleSelectAll"
               @selection-change="handleSelectionChange"
               @page-value-change="handlePageChange"
@@ -101,9 +114,10 @@
               labelWidth=""
             >
               <project-user-selector
+                :project-id="projectId"
+                :key="showResetDialog"
                 @change="handleChangeName"
                 @removeAll="handleClearName"
-                :key="showResetDialog"
               >
               </project-user-selector>
             </bk-form-item>
@@ -115,7 +129,7 @@
           </div>
           <div v-else-if="isResetFailure" class="check-failure">
             <div class="failed-tips">
-              <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
+              <div class="permission-icon permission-icon-warning-circle-fill warning-icon"></div>
               <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
                 <span class="tips-count">
                   {{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
@@ -196,9 +210,10 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import { convertTime } from '@/utils/util'
-  import { Message } from 'bkui-vue';
-  import { Success, Spinner } from 'bkui-vue/lib/icon';
+  import { InfoBox } from 'bkui-vue';
+  import { Success, Spinner  } from 'bkui-vue/lib/icon';
   import ProjectUserSelector from '@/components/project-user-selector'
+  import normalIcon from '@/css/svg/normal.svg'
 
   const { t } = useI18n();
   const route = useRoute();
@@ -221,8 +236,9 @@
   const isResetSuccess = ref(false);
   const isChecking = ref(false);
   const canLoading = ref(true);
-  const projectId = computed(() => route?.params.projectCode || route?.query.projectCode || route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
-  const userId = computed(() => route.query?.userId);
+  const defaultProjectId = computed(() => route?.params.projectCode || route?.query.projectCode || route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
+  const projectId = ref('');
+  const userId = computed(() => window.top.userInfo.username);
   const resourceType = computed(() => route.name || 'repertory');
   const isSelectAll = ref(false);  // 选择全量数据
   const dateTimeRange = ref(['', '']);
@@ -234,6 +250,14 @@
     limit: 20,
     current: 1,
   });
+  const projectList = ref([]);
+  const projectPageInfo = ref({
+    page: 1,
+    pageSize: 30,
+    projectName: '',
+    loadEnd: false,
+    scrollLoading: false
+  })
   const searchName = computed(() => {
     const nameMap = {
       'pipeline': t('流水线执行授权'),
@@ -319,15 +343,38 @@
         );
       },
     },
+    {
+      label: t('状态'),
+      field: "beingHandover",
+      render ({ cell, row }) {
+        return h('div', { style: { 'display': 'flex' } }, cell 
+          ? [
+            h(Spinner, { style: { color: '#3A84FF', marginRight: '5px'} }),
+            h('span', t('移交中，待X确认', [row.approver]))
+          ]
+          : [
+            h('img', { src: normalIcon, style: { width: '14px', marginRight: '3px' } }),
+            h('span', t('正常'))
+          ]
+        )
+      }
+    },
   ])
   const resetFormData = ref({
     name: ''
   })
   const filterQuery = computed(() => {
-    return searchValue.value.reduce((query, item) => {
-        query[item.id] = item.values?.map(value => value.id).join(',');
+    const query = searchValue.value.reduce((query, item) => {
+        query[item.id] = item.values?.map(value => value.id);
+        if (typeof(query[item.id][0]) === 'boolean') {
+          query[item.id] = query[item.id][0]
+        } else {
+          query[item.id] = query[item.id]?.join(',')
+        }
         return query;
     }, {})
+    if (query)
+    return query
   });
   
   const searchData = computed(() => {
@@ -339,7 +386,11 @@
       },
       {
         name: t('状态'),
-        id: 'status',
+        id: 'queryHandover',
+        children: [
+          { name: t('移交中'), id: true },
+          { name: t('正常'), id: false }
+        ]
       },
     ]
     return data.filter(data => {
@@ -347,7 +398,8 @@
     })
   });
   const isEmpty = computed(() => !(searchValue.value.length || dateTimeRange.value.length));
-  watch(() => searchValue.value, (val, oldVal) => {
+ 
+  watch(() => [searchValue.value, resourceType.value], () => {
     pagination.value.current = 1;
     isSelectAll.value = false;
     refTable.value?.clearSelection();
@@ -355,39 +407,55 @@
     getTableList();
   });
   
-  onMounted(() => {
+  onMounted(async () => {
     init();
+    await fetchProjectList();
+    await getTableList();
   });
   
-  function init () {
+  const init = () => {
     pagination.value.current = 1;
     tableData.value = [];
     isSelectAll.value = false;
     selectList.value = [];
     dateTimeRange.value = [];
-    if (userId.value) {
-      searchValue.value = [
-        {
-          id: 'handoverFrom',
-          name: t('授权人'),
-          values: [
-            { id: userId.value, name: userId.value }
-          ]
-        },
-      ]
-    } else {
-      searchValue.value = [];
-    }
   };
-  function clearSearchValue(){
+  /**
+   * 获取项目列表
+   */
+  const fetchProjectList = async () => {
+    try {
+      projectList.value = await http.fetchProjectList()
+      if (defaultProjectId.value) {
+        const curProject = projectList.value.find(i => i.englishName === defaultProjectId.value);
+        projectId.value = curProject?.englishName || projectList.value[0].englishName;
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleChangeProject = (val) => {
+    projectId.value = val;
+    init();
+    getTableList();
+  }
+
+  const disabledRowSelect = ({ row, index, isCheckAll }) => {
+    return !row.beingHandover
+  }
+
+  const clearSearchValue = () => {
     searchValue.value = [];
     dateTimeRange.value = [];
   }
+
   /**
    * 获取列表数据
    */
-  async function getTableList () {
+  const getTableList = async () => {
     try {
+      if (!projectId.value) return
       isLoading.value = true;
       const res = await http.getResourceAuthList(projectId.value, {
         page: pagination.value.current,
@@ -397,6 +465,7 @@
         ...filterQuery.value,
         greaterThanHandoverTime: dateTimeRange.value[0],
         lessThanHandoverTime: dateTimeRange.value[1],
+        handoverFrom: userId.value,
       });
       tableData.value = res.records;
       pagination.value.count = res.count;
@@ -527,9 +596,20 @@
         dialogLoading.value = false;
         showResetDialog.value = false;
         canLoading.value = true;
-        Message({
-          theme: 'success',
-          message: t('授权已成功重置', [searchName.value]),
+        InfoBox({
+          type: 'success',
+          title: t('重置授权申请提交成功'),
+          content: h(
+            'div',
+            {
+              style: {
+                padding: '12px',
+                background: '#F5F6FA',
+                color: '#4D4F56'
+              },
+            },
+            t('已成功提交「重置授权」申请，等待交接人确认。可在“我的交接”中查看进度。'),
+          ),
         });
   
         await getTableList();
@@ -579,26 +659,6 @@
     getTableList();
   }
   
-  async function getMenuList (item, keyword) {
-    if (item.id !== 'handoverFrom') return []
-    const query = {
-      memberType: 'user',
-      page: 1,
-      pageSize: 400
-    }
-    if (item.id === 'handoverFrom' && keyword) {
-      query.userName = keyword
-    }
-    const res = await http.getProjectMembers(projectId.value, query)
-    return res.records.map(i => {
-      return {
-        ...i,
-        displayName: i.name || i.id,
-        name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
-      }
-    })
-  }
-  
   function handleChangeName ({ list }) {
     if (!list) {
       handleClearName()
@@ -633,6 +693,9 @@
         &-search {
           width: 500px;
           margin-left: 10px;
+        }
+        .project-select {
+          margin-right: 10px;
         }
         .filter-bar {
           display: flex;

@@ -98,3 +98,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-tishi:before {
 	content: "\e119";
 }
+.permission-icon-permission:before {
+	content: "\e11a";
+}
+.permission-icon-normal:before {
+	content: "\e11b";
+}
