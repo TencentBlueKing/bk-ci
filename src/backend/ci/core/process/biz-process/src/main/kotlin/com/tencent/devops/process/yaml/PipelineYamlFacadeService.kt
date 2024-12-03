@@ -55,7 +55,6 @@ import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.common.Constansts
-import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -153,15 +152,13 @@ class PipelineYamlFacadeService @Autowired constructor(
                     )
                 )
             }
-        } catch (ignored: Exception) {
-            logger.error("Failed to enable pac|projectId:$projectId|repoHashId:$repoHashId", ignored)
-            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(ignored)
-            pipelineYamlSyncService.initPacFailed(
+        } catch (exception: Exception) {
+            logger.error("Failed to enable pac|projectId:$projectId|repoHashId:$repoHashId", exception)
+            pipelineYamlSyncService.enablePacFailed(
                 projectId = projectId,
-                repoHashId = repoHashId,
-                reason = reason,
-                reasonDetail = reasonDetail
+                repoHashId = repoHashId
             )
+            throw exception
         }
     }
 

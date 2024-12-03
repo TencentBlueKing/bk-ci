@@ -35,7 +35,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
-import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
@@ -90,27 +89,10 @@ class PipelineYamlSyncService @Autowired constructor(
         )
     }
 
-    fun initPacFailed(
+    fun enablePacFailed(
         projectId: String,
-        repoHashId: String,
-        reason: String,
-        reasonDetail: PipelineTriggerReasonDetail
+        repoHashId: String
     ) {
-        val syncFileInfoList = listOf(
-            PipelineYamlSyncInfo(
-                filePath = Constansts.ciFileDirectoryName,
-                fileUrl = "",
-                syncStatus = RepoYamlSyncStatusEnum.FAILED,
-                reason = reason,
-                reasonDetail = JsonUtil.toJson(reasonDetail)
-            )
-        )
-        pipelineYamlSyncDao.batchAdd(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            syncFileInfoList = syncFileInfoList
-        )
         client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
             projectId = projectId,
             repoHashId = repoHashId,
