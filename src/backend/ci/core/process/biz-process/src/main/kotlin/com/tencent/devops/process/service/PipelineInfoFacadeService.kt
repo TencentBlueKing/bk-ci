@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
