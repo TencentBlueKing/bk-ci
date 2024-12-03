@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
@@ -77,7 +78,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val authResourceSyncDao: AuthResourceSyncDao,
     private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
-    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+    private val deptService: DeptService
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -155,6 +157,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
         memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
             try {
+                if (deptService.isUserDeparted(memberId)){
+                    return@forEach
+                }
                 val verifyResults = iamV2ManagerService.verifyGroupValidMember(
                     memberId,
                     groupInfos.joinToString(",") { it.iamGroupId.toString() }
