@@ -19,7 +19,7 @@ data class SupRecordInfo(
     val cdsStatus: String?,
     @get:Schema(title = "CDS端口号")
     val cdsPort: String?,
-    @get:Schema(title = "agent状态")
+    @get:Schema(title = "agent状态, NOT_ALIVE = 0, ALIVE = 1, TERMINATED = 2, NOT_INSTALLED = 3")
     val agentStatus: String?,
     @get:Schema(title = "拥有者")
     val owner: String?,
