@@ -107,7 +107,7 @@ class TimerTriggerElementBizPlugin constructor(
                 branchs = element.branches?.toSet(),
                 noScm = element.noScm,
                 taskId = element.id ?: "",
-                startParam = element.startParam
+                startParam = element.startParams
             )
             logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
             if (result.isNotOk()) {

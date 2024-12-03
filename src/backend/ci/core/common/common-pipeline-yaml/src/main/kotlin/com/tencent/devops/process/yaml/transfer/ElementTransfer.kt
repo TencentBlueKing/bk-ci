@@ -183,7 +183,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.elementEnabled().nullIfDefault(true),
-                        startParam = element.startParam
+                        startParams = element.startParams
                     )
                 )
                 return@forEach

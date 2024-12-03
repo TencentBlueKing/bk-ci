@@ -62,7 +62,8 @@ data class SchedulesRule(
     var newExpression: List<String>? = null,
     @JsonIgnore
     var advanceExpression: List<String>? = null,
-    val startParam: Map<String, String>? = null
+    @get:Schema(title = "start-params")
+    val startParams: Map<String, String>? = null
 ) {
     data class Interval(
         val week: List<String>,

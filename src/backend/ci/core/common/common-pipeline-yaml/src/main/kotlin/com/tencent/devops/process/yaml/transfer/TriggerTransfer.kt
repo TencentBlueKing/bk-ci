@@ -737,7 +737,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
                         noScm = timer.always != true,
-                        startParam = timer.startParam
+                        startParams = timer.startParams
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
