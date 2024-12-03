@@ -96,6 +96,34 @@ BEGIN
         ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。';
     END IF;
 
+
+  IF EXISTS(SELECT 1
+              FROM information_schema.statistics
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                AND INDEX_NAME = 'IDX_PIPELINE_ID') THEN
+        ALTER TABLE T_PIPELINE_TIMER DROP INDEX `IDX_PIPELINE_ID`;
+  END IF;
+
+  IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                  AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                  AND COLUMN_NAME = 'TASK_ID') THEN
+    ALTER TABLE `T_PIPELINE_TIMER`
+      ADD COLUMN `TASK_ID` varchar(64) DEFAULT '' COMMENT '插件ID' AFTER PIPELINE_ID,
+        DROP PRIMARY KEY, ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`);
+    END IF;
+
+  IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                  AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                  AND COLUMN_NAME = 'START_PARAM') THEN
+  ALTER TABLE `T_PIPELINE_TIMER`
+      ADD COLUMN `START_PARAM` text NULL COMMENT '插件启动参数';
+  END IF;
+
 COMMIT;
 
 END <CI_UBF>
