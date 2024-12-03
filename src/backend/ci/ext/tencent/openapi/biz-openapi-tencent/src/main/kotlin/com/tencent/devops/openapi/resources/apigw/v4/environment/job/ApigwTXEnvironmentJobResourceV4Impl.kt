@@ -214,7 +214,13 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult> {
         return client.get(TencentServiceJobResource::class)
-            .queryAgentTaskStatus(userId, projectId, jobId, page, pageSize)
+            .queryAgentTaskStatus(
+                userId = userId,
+                projectId = projectId,
+                jobId = jobId,
+                page = page,
+                pageSize = pageSize
+            )
     }
 
     override fun obtainManualInstallationCommand(
@@ -226,6 +232,12 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult> {
         return client.get(TencentServiceJobResource::class)
-            .obtainManualInstallationCommand(userId, projectId, jobId, innerIp, bkCloudId)
+            .obtainManualInstallationCommand(
+                userId = userId,
+                projectId = projectId,
+                jobId = jobId,
+                innerIp = innerIp,
+                bkCloudId = bkCloudId
+            )
     }
 }

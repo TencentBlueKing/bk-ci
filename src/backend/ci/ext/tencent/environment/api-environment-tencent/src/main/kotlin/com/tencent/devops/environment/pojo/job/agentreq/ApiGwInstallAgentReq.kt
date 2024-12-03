@@ -32,11 +32,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "安装agent的请求信息")
 data class ApiGwInstallAgentReq (
     @get:Schema(title = "待安装的主机ip", required = true)
-    val innerIp: String?,
+    val innerIp: String,
     @get:Schema(title = "操作系统类型 1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS", required = true)
-    val osType: String?,
+    val osType: String,
     @get:Schema(title = "主机云区域ID，默认为公共区域，云区域ID为0")
-    val bkCloudId: Int? = 0,
+    val bkCloudId: Int = 0,
     @get:Schema(title = "是否自动选择安装通道，默认为true")
     val isAutoChooseInstallChannelId: Boolean = true,
 )

@@ -371,7 +371,7 @@ interface TencentServiceJobResource {
         @Parameter(description = "主机内网ip", required = true)
         @QueryParam("innerIp")
         innerIp: String,
-        @Parameter(description = "主机云区域ID", required = true)
+        @Parameter(description = "主机云区域ID，默认为公共区域，云区域ID为0")
         @QueryParam("bkCloudId")
         bkCloudId: Int = 0
     ): AgentResult<ObtainManualCommandResult>

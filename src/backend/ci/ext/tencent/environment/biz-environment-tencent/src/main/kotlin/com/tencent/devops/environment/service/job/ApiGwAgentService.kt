@@ -48,13 +48,9 @@ class ApiGwAgentService @Autowired constructor(
     fun installAgent(
         userId: String,
         projectId: String,
-        apiGwInstallAgentReq: ApiGwInstallAgentReq
+        apiGwInstallAgentReq: ApiGwInstallAgentReq,
+        hostList: List<Long>
     ): AgentResult<InstallAgentResult> {
-        val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(
-            projectId,
-            apiGwInstallAgentReq.bkCloudId!!,
-            apiGwInstallAgentReq.innerIp!!
-        )
 
         val installAgentReq = apiGwInstallAgentReq.let {
             InstallAgentReq(
@@ -94,8 +90,12 @@ class ApiGwAgentService @Autowired constructor(
     ): AgentResult<ObtainManualCommandResult> {
         val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
         if (hostList.isEmpty()) {
-            throw ResourceNotMatchException("ip $innerIp is not added as a node")
+            throw ResourceNotMatchException("ip $cloudAreaId:$innerIp is not added as a node")
         }
         return gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
+    }
+
+    fun getNodeHostIdByCloudIp(projectId: String?, cloudAreaId: Int, ip: String): List<Long> {
+        return cmdbNodeDao.getNodeHostIdByCloudIp(projectId, cloudAreaId, ip)
     }
 }

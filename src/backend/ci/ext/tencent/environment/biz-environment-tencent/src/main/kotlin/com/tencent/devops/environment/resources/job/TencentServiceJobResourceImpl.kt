@@ -30,6 +30,7 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
@@ -244,9 +245,26 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        checkCloudIpIsValid(apiGwInstallAgentReq.bkCloudId, apiGwInstallAgentReq.innerIp)
-        checkInstallPermission(projectId, apiGwInstallAgentReq.bkCloudId!!, apiGwInstallAgentReq.innerIp!!)
-        return apiGwAgentService.installAgent(userId, projectId, apiGwInstallAgentReq)
+        checkIpIsValid(apiGwInstallAgentReq.innerIp)
+
+        val hostList = apiGwAgentService.getNodeHostIdByCloudIp(
+            projectId = projectId,
+            cloudAreaId = apiGwInstallAgentReq.bkCloudId,
+            ip = apiGwInstallAgentReq.innerIp
+        )
+
+        checkInstallPermission(
+            projectId = projectId,
+            cloudAreaId = apiGwInstallAgentReq.bkCloudId,
+            ip = apiGwInstallAgentReq.innerIp,
+            hostList = hostList,
+        )
+        return apiGwAgentService.installAgent(
+            userId = userId,
+            projectId = projectId,
+            apiGwInstallAgentReq = apiGwInstallAgentReq,
+            hostList = hostList
+        )
     }
 
     override fun queryAgentTaskStatus(
@@ -272,7 +290,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
-        checkCloudIpIsValid(bkCloudId, innerIp)
+        checkIpIsValid(innerIp)
         return apiGwAgentService.getInstallCommand(jobId, bkCloudId, innerIp)
     }
 
@@ -298,11 +316,8 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         permissionManageService.recordJobInsToProj(projectId, jobInstanceId, createUser)
     }
 
-    private fun checkCloudIpIsValid(cloudAreaId: Int?, ip: String?) {
-        if (null == cloudAreaId) {
-            throw ParamBlankException("cloudAreaId is null.")
-        }
-        if (ip.isNullOrBlank()) {
+    private fun checkIpIsValid(ip: String) {
+        if (ip.isBlank()) {
             throw ParamBlankException("ip is blank.")
         }
         val pattern = Regex(
@@ -316,7 +331,14 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     /*
     * 判断待安装 GSE Agent 的主机是否属于当前项目
      */
-    private fun checkInstallPermission(projectId: String, cloudAreaId: Int, ip: String) {
-        permissionManageService.checkInstallPermission(projectId, cloudAreaId, ip)
+    private fun checkInstallPermission(
+        projectId: String,
+        cloudAreaId: Int,
+        ip: String,
+        hostList: List<Long>
+    ) {
+        if (hostList.isEmpty()) {
+            throw ResourceNotMatchException("ip $cloudAreaId:$ip does not belong to project $projectId")
+        }
     }
 }
