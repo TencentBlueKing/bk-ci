@@ -155,10 +155,19 @@ echo "OS: $os"
 arch1=`uname -m`
 echo "ARCH: $arch1"
 
-echo "check java17 version"
-jdk17/Contents/Home/bin/java -version
-echo "check java version"
-jdk/Contents/Home/bin/java -version
+if [ -d "./jdk17" ]; then
+  echo "check java17 version"
+  jdk17/Contents/Home/bin/java -version
+else
+  echo "jdk17 folder is not exist"
+fi
+
+if [ -d "./jdk" ]; then
+  echo "check java version"
+  jdk/Contents/Home/bin/java -version
+else
+  echo "jdk folder is not exist"
+fi
 
 echo "check if write ssh config"
 writeSSHConfig

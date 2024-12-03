@@ -31,6 +31,3 @@ RUN wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/he
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos/jdk17.zip" -P /data/workspace/agent-package/jre/macos/ &&\
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/linux_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/macos_arm64/ 
-
-# 开源版统一升级到JDK17
-RUN find /data/workspace/agent-package/jre/ -type f -name "jre.zip" -execdir ln -s jre.zip jdk17.zip \;
