@@ -497,7 +497,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            targetBuildNo = buildNo.currentBuildNo
+            buildNo = buildNo
         )
         return Result(true)
     }

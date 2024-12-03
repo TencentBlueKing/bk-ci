@@ -44,7 +44,5 @@ data class TemplateInstanceUpdate(
     @get:Schema(title = "构建版本号", required = false)
     val buildNo: BuildNo?,
     @get:Schema(title = "流水线变量列表, 建议先通过v4_app_template_get获取，再按需修改。", required = false)
-    val param: List<BuildFormProperty>?,
-    @get:Schema(title = "重置实例推荐版本为基准值", required = false)
-    val resetBuildNo: Boolean? = null
+    val param: List<BuildFormProperty>?
 )

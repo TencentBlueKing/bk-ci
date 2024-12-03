@@ -1216,7 +1216,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        targetBuildNo: Int
+        buildNo: BuildNoUpdateReq
     ) {
         operationLogService.addOperationLog(
             userId = userId,
@@ -1224,14 +1224,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = 0,
             operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
-            params = targetBuildNo.toString(),
+            params = buildNo.currentBuildNo.toString(),
             description = null
         )
         pipelineBuildSummaryDao.updateBuildNo(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildNo = targetBuildNo,
+            buildNo = buildNo.currentBuildNo,
             debug = false
         )
     }
