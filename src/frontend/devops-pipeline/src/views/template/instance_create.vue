@@ -277,6 +277,7 @@
     import AlertTips from '@/components/AlertTips.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
+    import { getParamsValuesMap, isObject } from '@/utils/util'
 
     export default {
         components: {
@@ -436,15 +437,9 @@
             },
             handleParams (stages) {
                 this.paramList = stages[0].containers[0].params || []
-                this.paramValues = this.paramList.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
+                this.paramValues = getParamsValuesMap(this.paramList)
                 this.templateParamList = stages[0].containers[0].templateParams || []
-                this.templateParamValues = this.templateParamList.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
+                this.templateParamValues = getParamsValuesMap(this.templateParamList)
                 if (stages[0].containers[0].buildNo) {
                     this.buildParams = stages[0].containers[0].buildNo
                 } else {
@@ -480,10 +475,7 @@
                         pipelineItem.buildParams = item.buildNo
                     }
                     if (item.param.length) {
-                        const paramValues = item.param.reduce((values, param) => {
-                            values[param.id] = param.defaultValue
-                            return values
-                        }, {})
+                        const paramValues = getParamsValuesMap(item.param)
                         pipelineItem.params = this.deepCopyParams(item.param)
                         pipelineItem.pipelineParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) === -1)
                         pipelineItem.versionParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) > -1)
@@ -535,9 +527,9 @@
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.paramValues[name] = value
-                        item.params.forEach(val => {
-                            if (val.id === name) {
-                                val.defaultValue = value
+                        item.params.forEach((i) => {
+                            if (i.id === name) {
+                                i.defaultValue = value
                             }
                         })
                     }
@@ -632,7 +624,7 @@
                     })
                 } else {
                     const params = []
-                    let message, theme
+                    let message, theme, isEmptyValue
                     const { $store, loading } = this
 
                     this.pipelineNameList.forEach(pipeline => {
@@ -642,8 +634,21 @@
                             buildNo: pipeline.buildParams || undefined,
                             param: pipeline.params
                         })
+                        isEmptyValue = pipeline?.params?.some(item => {
+                            return isObject(item.defaultValue)
+                                ? Object.values(item.defaultValue).every(val => !val)
+                                : false
+                        })
                     })
+                    if (isEmptyValue) {
+                        this.$showTips({
+                            message: this.$t('newlist.paramsErr'),
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
+                 
                     if (isRequired) {
                         this.$showTips({
                             message: this.$t('template.buildNumErrTips'),
@@ -663,6 +668,7 @@
                             useTemplateSettings: this.isTemplateSetting,
                             params
                         }
+                  
                         if (this.hashVal) {
                             res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
                             if (res) {

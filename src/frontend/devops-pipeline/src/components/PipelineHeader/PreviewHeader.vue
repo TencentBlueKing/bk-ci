@@ -34,16 +34,6 @@
 
             <bk-button
                 :disabled="executeStatus"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
                 @click="goBack"
             >
                 {{ $t("cancel") }}

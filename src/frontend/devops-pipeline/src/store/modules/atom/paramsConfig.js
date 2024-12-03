@@ -30,6 +30,7 @@ export const CONTAINER_TYPE = 'CONTAINER_TYPE'
 export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
 export const CUSTOM_FILE = 'CUSTOM_FILE'
+export const REPO_REF = 'REPO_REF'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -133,6 +134,20 @@ export const DEFAULT_PARAM = {
         options: [],
         type: GIT_REF,
         typeDesc: 'gitref',
+        required: true,
+        readOnly: false
+    },
+    [REPO_REF]: {
+        id: 'reporef',
+        name: 'reporef',
+        defaultValue: {
+            'repo-name': '',
+            branch: ''
+        },
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        type: REPO_REF,
+        typeDesc: 'reporef',
         required: true,
         readOnly: false
     },
@@ -256,7 +271,8 @@ export const ParamComponentMap = {
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
-    [CUSTOM_FILE]: 'FileParamInput'
+    [CUSTOM_FILE]: 'FileParamInput',
+    [REPO_REF]: 'CascadeRequestSelector'
 }
 
 export const BOOLEAN_LIST = [
@@ -270,13 +286,25 @@ export const BOOLEAN_LIST = [
     }
 ]
 
-export function getRepoOption (type = 'CODE_SVN') {
+export function getRepoOption (type = 'CODE_SVN', paramId = 'repositoryHashId') {
     return {
         url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`,
-        paramId: 'repositoryHashId',
+        paramId,
         paramName: 'aliasName',
         searchable: true,
         hasAddItem: true
+    }
+}
+
+export function getBranchOption (name) {
+    if (!name) return {}
+    return {
+        url: `/process/api/user/buildParam/{projectId}/repository/refs?repositoryType=NAME&repositoryId=${name}`,
+        paramId: 'key',
+        paramName: 'value',
+        searchable: true,
+        settingKey: 'key',
+        displayKey: 'value'
     }
 }
 
@@ -321,6 +349,7 @@ export const isMultipleParam = paramType(MULTIPLE)
 export const isCheakboxParam = paramType(CHECKBOX)
 export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
+export const isRepoParam = paramType(REPO_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)

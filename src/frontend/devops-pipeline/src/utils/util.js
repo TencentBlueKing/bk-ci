@@ -701,6 +701,10 @@ export function bkVarWrapper (name) {
     return '${{' + name + '}}'
 }
 
+export function bkVarRepoRefWrapper (name) {
+    return '${{variables.' + name + '.repo-name}}@${{variables.' + name + '.branch}}'
+}
+
 export const toolbars = {
     bold: false, // 粗体
     italic: false, // 斜体
