@@ -799,14 +799,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 ),
                 instanceId = storeInfoQuery.instanceId
             ) ?: emptyMap()
-            testStoreCodes = testComponentMap.keys
             // 查询测试或者审核中组件最新版本信息
             testComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
                 dslContext = dslContext,
-                storeCodes = testStoreCodes,
+                storeCodes = testComponentMap.keys,
                 storeType = storeType,
                 testComponentFlag = true
             ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
+            testStoreCodes = testComponentVersionMap.keys
         }
         val componentVersionMap = if (queryTestFlag != true) {
             // 查询非测试或者审核中组件最新发布版本信息
@@ -935,16 +935,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         // 获取项目下已安装组件
         watcher.start("getInstalledComponents")
         val installedInfoMap = projectCode?.let {
-            if (storeInfoQuery.installed != null || storeInfoQuery.updateFlag != null) {
-                storeProjectService.getProjectComponents(
-                    projectCode = it,
-                    storeType = storeTypeEnum.type.toByte(),
-                    storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
-                    instanceId = storeInfoQuery.instanceId
-                )
-            } else {
-                null
-            }
+            storeProjectService.getProjectComponents(
+                projectCode = it,
+                storeType = storeTypeEnum.type.toByte(),
+                storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
+                instanceId = storeInfoQuery.instanceId
+            )
         }
         // 获取分类
         watcher.start("getAllClassify")
