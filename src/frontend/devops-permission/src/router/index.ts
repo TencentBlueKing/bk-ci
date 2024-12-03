@@ -13,9 +13,7 @@ const MyProject = () => import(/* webpackChunkName: "Permission" */ '../views/my
 const GroupDetail = () => import(/* webpackChunkName: "Permission" */ '../components/itsm-group-detail.vue');
 const AuthEntry = () => import(/* webpackChunkName: "Permission" */ '../views/auth/auth-entry.vue');
 const OauthHome = () => import(/* webpackChunkName: "Permission" */ '../views/auth/oauth/oauth-home.vue');
-const pipelineAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/pipelineAuth.vue');
-const nodeAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/nodeAuth.vue');
-const codelibAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/codelibAuth.vue');
+const MyAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/my-auth.vue');
 const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
@@ -65,19 +63,19 @@ const router = createRouter({
               component: OauthHome,
             },
             {
-              path: 'codelib',
-              name: 'codelib',
-              component: codelibAuth,
+              path: 'repertory',
+              name: 'repertory',
+              component: MyAuth,
             },
             {
               path: 'pipeline',
               name: 'pipeline',
-              component: pipelineAuth,
+              component: MyAuth,
             },
             {
-              path: 'node',
-              name: 'node',
-              component: nodeAuth,
+              path: 'envNode',
+              name: 'envNode',
+              component: MyAuth,
             }
           ]
         }

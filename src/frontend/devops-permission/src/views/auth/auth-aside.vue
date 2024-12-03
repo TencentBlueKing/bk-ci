@@ -15,9 +15,9 @@ const routeName = computed(() => route.name);
 const curActive = ref('oauth');
 const permissionMenus = computed(() => {
   return [
-    { key: t('代码库授权'), value: 'codelib' },
-    { key: t('流水线执行权限'), value: 'pipeline' },
-    { key: t('部署节点授权'), value: 'node' },
+    { key: t('代码库授权'), value: 'repertory' },
+    { key: t('流水线执行授权'), value: 'pipeline' },
+    { key: t('部署节点授权'), value: 'envNode' },
   ]
 })
 

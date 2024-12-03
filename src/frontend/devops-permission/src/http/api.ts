@@ -52,5 +52,11 @@ export default {
   },
   refreshOauth(oauthType: any, redirectUrl: any) {
     return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
-  }
+  },
+  /**
+   * 获取（代码库、流水线、部署节点）授权列表
+   */
+  getResourceAuthList (projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization`, params);
+  },
 }
