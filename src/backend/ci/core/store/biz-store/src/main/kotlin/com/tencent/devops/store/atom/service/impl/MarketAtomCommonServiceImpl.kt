@@ -391,7 +391,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     } else {
                         throw ErrorCodeException(
                             errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                            params = arrayOf(KEY_LANGUAGE)
+                            params = arrayOf(KEY_LANGUAGE, supportedLanguages.joinToString(separator = ","))
                         )
                     }
                 }
