@@ -7,15 +7,15 @@
 
 > 以下命令请在本目录执行
 
-linux系统，执行命令 `make clean build_linux`
+linux系统，执行命令 `make build_linux`
 
-macos系统，执行命令 `make clean build_macos`
+macos系统，执行命令 `make build_macos`
 
 windows编译，执行脚本 `build_windows.bat`
 
 执行以上编译脚本或命令后，会在 `bin` 目录下生成对应的可执行文件。
 
-比如执行 `make clean build_linux` 命令会在 `bin` 目录下生成 `devopsDaemon_linux`、`devopsAgent_linux`、`upgrader_linux`
+比如执行 `make build_linux` 命令会在 `bin` 目录下生成 `devopsDaemon_linux`、`devopsAgent_linux`、`upgrader_linux`
 文件，其他系统依此类推。
 
 - devopsDaemon: 用于守护agent进程，监控和拉起agent进程
