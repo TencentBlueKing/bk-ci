@@ -58,6 +58,11 @@ const (
 
 func Collect() {
 	logs.Debug("do Collect")
+	if config.GAgentConfig.CollectorOn == false {
+		logs.Info("agent collector off")
+		return
+	}
+
 	ipChan := config.EBus.Subscribe(config.IpEvent, eBusId, 1)
 
 	defer func() {
@@ -79,11 +84,6 @@ func Collect() {
 }
 
 func doAgentCollect(ctx context.Context) {
-	if config.GAgentConfig.CollectorOn == false {
-		logs.Info("agent collector off")
-		return
-	}
-
 	configContent, err := genTelegrafConfig()
 	if err != nil {
 		logs.WithError(err).Error("genTelegrafConfig error")
