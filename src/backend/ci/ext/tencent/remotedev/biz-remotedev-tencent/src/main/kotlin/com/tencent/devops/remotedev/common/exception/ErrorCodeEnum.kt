@@ -214,12 +214,12 @@ enum class ErrorCodeEnum(
     ),
     REMOVE_TGIT_LINK_ERROR(
         errorType = ErrorType.USER,
-        errorCode = "2132050",
+        errorCode = "2132051",
         formatErrorMessage = "unbinding TGIT failed: {0}, directly delete the binding information"
     ),
     FACE_RECOGNITION_ERROR(
         errorType = ErrorType.USER,
-        errorCode = "2132051",
+        errorCode = "2132052",
         formatErrorMessage = "user face recognition error: {0}"
     );
 
