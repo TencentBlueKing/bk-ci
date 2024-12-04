@@ -278,18 +278,28 @@ class PermissionAuthorizationServiceImpl(
         projectCode: String,
         condition: ResourceAuthorizationHandoverConditionRequest
     ): Boolean {
+        val beingHandoverDetails = permissionHandoverApplicationService.listMemberHandoverDetails(
+            projectCode = condition.projectCode,
+            memberId = condition.handoverFrom!!,
+            handoverType = HandoverType.AUTHORIZATION,
+            resourceType = condition.resourceType
+        ).map { it.itemId }.distinct()
+
+        val finalCondition = condition.copy(
+            preCheck = true,
+            checkPermission = false,
+            excludeResourceCodes = beingHandoverDetails
+        )
+
         val handoverResult = resetResourceAuthorizationByResourceType(
             operator = operator,
             projectCode = projectCode,
-            condition = condition.copy(
-                preCheck = true,
-                checkPermission = false
-            )
+            condition = finalCondition
         )
         if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = ERROR_HANDOVER_AUTHORIZATION)
         }
-        val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
+        val resourceAuthorizationList = getResourceAuthorizationList(condition = finalCondition)
         val authorizationCount = resourceAuthorizationList.size
         val flowNo = permissionHandoverApplicationService.generateFlowNo()
         val title = permissionHandoverApplicationService.generateTitle(
