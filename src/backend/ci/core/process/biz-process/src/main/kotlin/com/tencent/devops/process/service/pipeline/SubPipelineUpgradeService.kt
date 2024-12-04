@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import org.jooq.DSLContext

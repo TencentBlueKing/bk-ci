@@ -35,7 +35,7 @@ class SubPipelineTaskService @Autowired constructor(
     private val pipelineResDao: PipelineResourceDao,
     @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val subPipelineRefDao: SubPipelineRefDao
+    private val subPipelineRefService: SubPipelineRefService
 ) {
     /**
      * 支持的元素
@@ -233,9 +233,7 @@ class SubPipelineTaskService @Autowired constructor(
     ): List<SubPipelineRef> {
         val subPipelineRefList = mutableListOf<SubPipelineRef>()
         modelTasks.filter {
-            val elementEnable = (it.stageEnable && it.containerEnable && it.additionalOptions?.enable ?: true)
-            val supportElement = supportAtomCode(it.atomCode) || it.atomCode == SubPipelineCallElement.TASK_ATOM
-            elementEnable && supportElement
+            it.taskEnable()
         }.forEach {
             val subPipelineTaskParam = getSubPipelineParam(
                 projectId = it.projectId,
@@ -268,8 +266,8 @@ class SubPipelineTaskService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ) {
-        subPipelineRefDao.deleteAll(
-            dslContext = dslContext,
+        subPipelineRefService.deleteAll(
+            transaction = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
@@ -281,14 +279,37 @@ class SubPipelineTaskService @Autowired constructor(
         channel: String,
         modelTasks: List<PipelineModelTask>
     ) {
-        subPipelineRefDao.batchAdd(
-            dslContext = dslContext,
+        subPipelineRefService.batchAdd(
+            transaction = dslContext,
             subPipelineRefList = modelTaskConvertSubPipelineRef(
                 model = model,
                 channel = channel,
                 modelTasks = modelTasks
             )
         )
+    }
+
+    fun cleanUpInvalidRefs(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        modelTasks: List<PipelineModelTask>
+    ) {
+        subPipelineRefService.cleanUpInvalidRefs(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            existsTaskIds = modelTasks.filter { it.taskEnable() }.map { it.taskId }.toSet()
+        )
+    }
+
+    /**
+     * 校验是否为子流水线插件, 同时校验启用状态
+     */
+    private fun PipelineModelTask.taskEnable(): Boolean {
+        val elementEnable = (this.stageEnable && this.containerEnable && this.additionalOptions?.enable ?: true)
+        val supportElement = supportAtomCode(this.atomCode) || this.atomCode == SubPipelineCallElement.TASK_ATOM
+        return elementEnable && supportElement
     }
 
     companion object {

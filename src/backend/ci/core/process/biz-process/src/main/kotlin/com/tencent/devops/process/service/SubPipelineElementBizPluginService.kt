@@ -42,7 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMEN
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
-import com.tencent.devops.process.service.pipeline.SubPipelineRefService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

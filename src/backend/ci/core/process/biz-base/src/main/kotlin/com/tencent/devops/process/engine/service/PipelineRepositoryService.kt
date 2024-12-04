@@ -1136,6 +1136,13 @@ class PipelineRepositoryService constructor(
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
                         watcher.start("updateSubPipelineRef")
+                        // 禁用态的插件需要被删除
+                        subPipelineTaskService.cleanUpInvalidRefs(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            modelTasks = modelTasks.toList()
+                        )
                         subPipelineTaskService.batchAdd(
                             dslContext = transactionContext,
                             model = model,

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.pipeline
+package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
 import com.tencent.devops.process.engine.dao.SubPipelineRefDao
@@ -46,13 +46,13 @@ class SubPipelineRefService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SubPipelineRefService::class.java)
     }
 
-    fun deleteAll(userId: String, projectId: String, pipelineId: String) {
+    fun deleteAll(transaction: DSLContext? = null, projectId: String, pipelineId: String) {
         val changeCount = subPipelineRefDao.deleteAll(
-            dslContext = dslContext,
+            dslContext = transaction ?: dslContext,
             pipelineId = pipelineId,
             projectId = projectId
         )
-        logger.info("user[$userId] delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
+        logger.info("delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
     }
 
     fun list(transaction: DSLContext? = null, projectId: String, pipelineId: String): Result<TPipelineSubRefRecord> {
@@ -84,6 +84,26 @@ class SubPipelineRefService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             taskId = taskId
+        )
+    }
+
+    fun cleanUpInvalidRefs(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        existsTaskIds: Set<String>
+    ) {
+        val taskIdRecords = subPipelineRefDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).map { it.taskId }
+        val needDelInfos = taskIdRecords.filter { !existsTaskIds.contains(it) }.map {
+            Triple(projectId, pipelineId, it)
+        }
+        batchDelete(
+            transaction = dslContext,
+            infos = needDelInfos
         )
     }
 }
