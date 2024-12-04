@@ -174,7 +174,7 @@ class SubPipelineCheckService @Autowired constructor(
         subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
-        val rootPipelineKey = "${projectId}|$pipelineId"
+        val rootPipelineKey = "$projectId|$pipelineId"
         subPipelineElementMap.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
