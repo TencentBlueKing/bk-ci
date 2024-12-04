@@ -1,11 +1,14 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -15,6 +18,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.FetchRemoteDevData
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.UserAuthApplyDao
 import com.tencent.devops.remotedev.pojo.UserAuthInfo
@@ -32,6 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 
 @Service
@@ -70,8 +75,28 @@ class UserInfoCertService @Autowired constructor(
 
     fun faceRecognition(data: FaceRecognitionData): FaceRecognitionResult {
         try {
-            return taiClient.faceCheck(data.username, FaceCheckData(data.base64FaceData))
+            val result = taiClient.faceCheck(data.username, FaceCheckData(data.base64FaceData))
+            if (result.data != null) {
+                return result.data
+            }
+            if (result.error == null) {
+                logger.error("$USER_CERT_LOG_PREFIX|faceCheck data is null")
+                return FaceRecognitionResult.noCheck()
+            }
+            // error exist
+            val checkError = result.error.details?.filter { it.code in loadFaceRecognitionErrorCodeCache() }
+            if (!checkError.isNullOrEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FACE_RECOGNITION_ERROR.errorCode,
+                    params = arrayOf("${result.error.code}|${result.error.message}|$checkError")
+                )
+            }
+            logger.error("$USER_CERT_LOG_PREFIX|faceCheck error ${result.error}")
+            return FaceRecognitionResult.noCheck()
         } catch (e: Exception) {
+            if (e is ErrorCodeException && e.errorCode == ErrorCodeEnum.FACE_RECOGNITION_ERROR.errorCode) {
+                throw e
+            }
             logger.error("$USER_CERT_LOG_PREFIX|faceCheck error", e)
             return FaceRecognitionResult.noCheck()
         }
@@ -198,10 +223,22 @@ class UserInfoCertService @Autowired constructor(
         userAuthApplyDao.updateStatus(dslContext, recordId, UserAuthRecordStatus.SUCCESS)
     }
 
+    private fun loadFaceRecognitionErrorCodeCache(): Set<String> {
+        return faceRecognitionErrorCodeCache.get(REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY) ?: setOf()
+    }
+
+    private val faceRecognitionErrorCodeCache: LoadingCache<String, Set<String>> = Caffeine.newBuilder()
+        .maximumSize(100L)
+        .expireAfterWrite(Duration.ofMinutes(10))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = false)?.split(";")?.toSet() ?: setOf() }
+
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
         private const val TICKET_EXPIRT_DAYS = 15L
         private const val USER_CERT_LOG_PREFIX = "USER_CERT_LOG"
         private const val REMOTEDEV_USER_ATUCH_CHECK_REDIS_KEY_PREFIX = "remotedev:user_auth_check"
+
+        // 保存人脸识别错误的校验错误码，;进行分割
+        private const val REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY = "remotedev:user_face_recognition:error_code"
     }
 }

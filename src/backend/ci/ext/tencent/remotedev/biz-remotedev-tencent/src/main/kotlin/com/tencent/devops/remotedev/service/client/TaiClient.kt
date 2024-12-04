@@ -55,7 +55,7 @@ class TaiClient @Autowired constructor(
         return res.data
     }
 
-    fun faceCheck(userId: String, data: FaceCheckData): FaceRecognitionResult {
+    fun faceCheck(userId: String, data: FaceCheckData): TaiResponseWithError<FaceRecognitionResult> {
         val url = "$apiUrl/prod/api/v1/open/odc/users/$userId/face-check/"
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = data, formatted = false)
@@ -64,28 +64,29 @@ class TaiClient @Autowired constructor(
             .header("X-Bkapi-Authorization", authorization)
             .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponse<FaceRecognitionResult>>()
-        return res.data
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiResponseWithError<FaceRecognitionResult>>()
+        return res
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
-
             logger.info("taihu request: ${this.request.url} resp: $responseContent")
-
-            if (!this.isSuccessful) {
-                throw RemoteServiceException(
-                    "request api[${this.request.url.toUrl()}] error|$responseContent",
-                    this.code
-                )
-            }
-
             val responseData = try {
                 objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             } catch (e: Exception) {
                 logger.error("TaiClient resolveResponse fail|${e.message}", e)
-                throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
+                if (!this.isSuccessful) {
+                    throw RemoteServiceException(
+                        "request api[${this.request.url.toUrl()}] error|$responseContent",
+                        this.code
+                    )
+                } else {
+                    throw RemoteServiceException(
+                        "parse api[${this.request.url.toUrl()}] resp $responseContent",
+                        this.code
+                    )
+                }
             }
 
             return responseData
@@ -101,6 +102,27 @@ data class TaiUserInfoRequest(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaiResponse<T>(
     val data: T
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiResponseWithError<T>(
+    val data: T?,
+    val error: TaiResponseError?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiResponseError(
+    val code: String?,
+    val message: String?,
+    val system: String?,
+    val details: List<TaiResponseErrorDetail>?,
+    val data: Any?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiResponseErrorDetail(
+    val code: String?,
+    val message: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

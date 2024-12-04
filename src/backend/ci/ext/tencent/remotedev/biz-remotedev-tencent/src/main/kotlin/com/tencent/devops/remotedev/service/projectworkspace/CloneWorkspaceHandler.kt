@@ -212,7 +212,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 projectId = ws.projectId,
                 workspaceName = workspaceName,
                 workspaceProperty = WorkspaceProperty(
-                    "[克隆]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
+                    "[备用机]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
                 )
             )
         }

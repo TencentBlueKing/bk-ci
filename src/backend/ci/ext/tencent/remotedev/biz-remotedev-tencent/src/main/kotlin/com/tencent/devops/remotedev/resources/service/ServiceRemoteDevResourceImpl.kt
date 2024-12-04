@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -61,6 +62,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHan
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -99,6 +101,7 @@ class ServiceRemoteDevResourceImpl(
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val workspaceRecordService: WorkspaceRecordService,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val cloneWorkspaceHandler: CloneWorkspaceHandler
 ) : ServiceRemoteDevResource {
     companion object {
@@ -399,12 +402,17 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
+    @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     override fun fetchExpertSupRecord(
         userId: String,
         workspaceName: String,
         createLaterTimestamp: Long
     ): Result<List<SupRecordData>> {
         return Result(expertSupportService.fetchSupRecord(workspaceName, createLaterTimestamp))
+    }
+
+    override fun fetchExpertSupRecordAny(id: Long): Result<SupRecordData?> {
+        return Result(expertSupportService.fetchSupRecordAny(id))
     }
 
     override fun getProjectWorkspace(
@@ -682,6 +690,11 @@ class ServiceRemoteDevResourceImpl(
                 message = data.message
             )
         )
+    }
+
+    override fun upgradeWorkspace(userId: String, projectId: String, workspaceName: String, upgradeReq: WorkspaceUpgradeReq): Result<Boolean> {
+        upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
+        return Result(true)
     }
 
     override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {

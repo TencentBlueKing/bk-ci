@@ -661,8 +661,7 @@ class WorkspaceDao {
                     ?: "NO_CHECK",
                 creatorGroupName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_GROUP_NAME) as String?
                     ?: "NO_CHECK",
-                status = WorkspaceStatus.values()[
-                    record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1],
+                status = WorkspaceStatus.load(record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1),
                 createTime = record.getOrNull(TWorkspace.T_WORKSPACE.CREATE_TIME) as LocalDateTime?
                     ?: LocalDateTime.now(),
                 updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?

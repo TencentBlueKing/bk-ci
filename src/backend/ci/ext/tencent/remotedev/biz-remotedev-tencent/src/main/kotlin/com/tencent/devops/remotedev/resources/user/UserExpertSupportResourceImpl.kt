@@ -16,9 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserExpertSupportResourceImpl @Autowired constructor(
     private val expertSupportService: ExpertSupportService
 ) : UserExpertSupportResource {
+    @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
     override fun addExpertSup(userId: String, data: CreateSupportData): Result<Boolean> {
         expertSupportService.createSupport(userId, data)
         return Result(true)
+    }
+
+    override fun addExpertSupNew(userId: String, data: CreateSupportData): Result<Long> {
+        return Result(expertSupportService.createSupportNew(userId, data))
     }
 
     override fun fetchExpertSup(userId: String): Result<List<String>> {

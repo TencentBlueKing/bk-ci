@@ -1,0 +1,130 @@
+#scm Deployment
+{{ if .Values.scm.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-scm
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: scm
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: scm
+  {{- if not .Values.scm.autoscaling.enabled }}
+  replicas: {{ .Values.scm.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.scm.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.scm.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: scm
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.scm.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.scm.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.scm.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.scm.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.scm.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.scm.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.scm.nodeAffinityPreset.type "key" .Values.scm.nodeAffinityPreset.key "values" .Values.scm.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.scm.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.scm.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.scm.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.scm.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.scm.priorityClassName }}
+      priorityClassName: {{ .Values.scm.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.scm.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.scm.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: scm
+          image: {{ include "bkci-backend.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.scm.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.scm.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.scm.resources }}
+          resources: {{- toYaml .Values.scm.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: scm
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.scm.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.scm.jvm.heapPct }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/scm
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: {{ .Values.scm.jvm.initSecs }}
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: {{ .Values.scm.jvm.initSecs }}
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          {{ if .Values.scm.hostPath.enabled -}}
+          volumeMounts:
+          - mountPath: /data/workspace/scm/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+          {{- end }}
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - sleep 10
+      {{ if .Values.scm.hostPath.enabled -}}
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+      {{- end }}
+{{- end -}}

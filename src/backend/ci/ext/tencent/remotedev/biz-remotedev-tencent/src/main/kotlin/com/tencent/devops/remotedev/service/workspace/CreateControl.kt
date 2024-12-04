@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.Devfile
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
@@ -112,7 +113,8 @@ class CreateControl @Autowired constructor(
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val softwareManageService: SoftwareManageService
+    private val softwareManageService: SoftwareManageService,
+    private val imageManageService: ImageManageService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
@@ -160,6 +162,17 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(workspaceCreate.windowsZone)
             )
         }
+
+        // 校验传入的镜像是否该项目自定义镜像，禁止跨项目使用
+        val notProjectImage = workspaceCreate.imageCosFile.isNotBlank() &&
+            (!imageManageService.checkBaseImage(workspaceCreate.imageCosFile) && !imageManageService.checkProjectImage(projectId, workspaceCreate.imageCosFile))
+        if (notProjectImage) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.IMAGE_NOT_FOUND_ERROR.errorCode,
+                params = arrayOf(workspaceCreate.imageCosFile, projectId)
+            )
+        }
+
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }

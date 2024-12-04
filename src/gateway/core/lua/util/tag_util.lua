@@ -18,12 +18,6 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
-    -- 特殊处理json5到灰度, 后续发完正式可以删除
-    if ngx.var.uri:sub(-#("hapJson5.json5")) == "hapJson5.json5" then
-        ngx.log(ngx.ERR , "use special logic")
-        return "kubernetes-rbac-gray"
-    end
-
     local gateway_project = ngx.var.project
     local devops_service = ngx.var.service
     local devops_project_id = ngx.var.project_id
@@ -110,6 +104,15 @@ function _M:get_tag(ns_config)
     -- 容器化切换已经完成
     if type(tag) == "string" and not string.find(tag, '^kubernetes-') then
         tag = "kubernetes-" .. tag
+    end
+
+    -- DEVNET区域对tag的转换
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+        if string.find(tag, '^kubernetes-') then
+            tag = string.sub(tag, 12)
+        end
+        tag = 'ieg-codeccsvr-bkci-' .. tag
     end
 
     -- 设置tag到http请求头
