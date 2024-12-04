@@ -211,7 +211,10 @@ class WorkspaceHookService @Autowired constructor(
     }
 
     private fun headers() = mapOf(
-        "X-Bkapi-Authorization" to """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
+        "X-Bkapi-Authorization" to
+            "{\"bk_app_code\":\"${bkConfig.appCode}\"," +
+            "\"bk_app_secret\":\"${bkConfig.appSecret}\"," +
+            "\"bk_username\":\"${bkConfig.ccUserName}\"}"
     ).toHeaders()
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
