@@ -27,14 +27,7 @@
 
 package com.tencent.devops.store.atom.service.impl
 
-import com.tencent.devops.common.api.constant.COMPONENT
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.constant.KEY_OS
-import com.tencent.devops.common.api.constant.KEY_OS_ARCH
-import com.tencent.devops.common.api.constant.KEY_OS_NAME
-import com.tencent.devops.common.api.constant.REQUIRED
-import com.tencent.devops.common.api.constant.TYPE
+import com.tencent.devops.common.api.constant.*
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -389,19 +382,20 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         //pref:完善研发商店组件配置文件参数校验 #11269
-        val atomLanguage = marketAtomEnvInfoDao.getAtomLanguage(dslContext, atomCode, version)
+        val supportedLanguages = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         val language = executionInfoMap[KEY_LANGUAGE]?.let { language ->
             when (language) {
                 is String -> {
-                    if (StringUtils.equals(atomLanguage, language)) {
+                    if (language in supportedLanguages) {
                         language
                     } else {
                         throw ErrorCodeException(
-                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH,
+                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
                             params = arrayOf(KEY_LANGUAGE)
                         )
                     }
                 }
+
                 else -> throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                     params = arrayOf(KEY_LANGUAGE)
