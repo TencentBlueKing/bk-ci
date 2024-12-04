@@ -62,6 +62,7 @@ onMounted(() => {
             'active': menu.value === curActive
           }"
           :key="menu.value"
+          :title="menu.key"
           @click="handleChangeMenu(menu.value)"
         >
           <i class="default-icon" />
@@ -81,7 +82,7 @@ onMounted(() => {
   box-shadow: 1px 0 0 0 #DCDEE5;
 }
 .menu-item {
-  display: flex;
+  display: inline-block;
   align-items: center;
   width: 240px;
   height: 40px;
@@ -89,6 +90,9 @@ onMounted(() => {
   padding-left: 25px;
   line-height: 40px;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   &.active {
     background: #E1ECFF;
     color: #3A84FF;
@@ -133,7 +137,9 @@ onMounted(() => {
     height: 3px;
     background-color: #979BA5;
     border-radius: 50%;
-    margin: 0 18px 0 5px;
+    margin: 0 13px 0 5px;
+    position: relative;
+    top: -3px;
   }
 }
 </style>

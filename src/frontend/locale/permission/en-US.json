@@ -112,5 +112,7 @@
     "状态": "Status",
     "移交中": "In transfer",
     "正常": "Normal",
-    "重置授权申请提交成功": "Reset authorization request submitted successfully"
+    "重置授权申请提交成功": "Reset authorization request submitted successfully",
+    "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting the keywords or {0}",
+    "清空筛选条件": "Clear filter conditions"
 }

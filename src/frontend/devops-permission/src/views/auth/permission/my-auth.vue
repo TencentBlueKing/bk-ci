@@ -210,7 +210,7 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import { convertTime } from '@/utils/util'
-  import { InfoBox } from 'bkui-vue';
+  import { InfoBox, Message } from 'bkui-vue';
   import { Success, Spinner  } from 'bkui-vue/lib/icon';
   import ProjectUserSelector from '@/components/project-user-selector'
   import normalIcon from '@/css/svg/normal.svg'
@@ -285,7 +285,9 @@
       projectCode: projectId.value,
       resourceType: resourceType.value,
       fullSelection: isSelectAll.value,
-      handoverChannel: 'MANAGER',
+      handoverChannel: 'OTHER',
+      handoverFrom: userId.value,
+      handoverTo: resetFormData.value.name,
       resourceAuthorizationHandoverList: isSelectAll.value ? [] : resourceAuthorizationHandoverList,
     }
     if (isSelectAll.value) {
@@ -480,7 +482,7 @@
   /**
    * 批量重置
    */
-  function handleReset() {
+  const handleReset = () => {
     if(!selectList.value.length) {
       Message({
         theme: 'error',
@@ -497,21 +499,21 @@
   /**
    * 当前页全选事件
    */
-  function handleSelectAll(){
+  const handleSelectAll = () => {
     selectList.value = refTable.value.getSelection();
   }
   /**
    * 多选事件
    * @param val
    */
-  function handleSelectionChange() {
+  const handleSelectionChange = () => {
     isSelectAll.value = false;
     selectList.value = refTable.value.getSelection();
   };
   /**
    * 全量数据选择
    */
-  function handleSelectAllData() {
+  const handleSelectAllData = () => {
     if (!isSelectAll.value && selectList.value.length !== tableData.value.length) {
       refTable.value.toggleAllSelection();
     }
@@ -520,7 +522,7 @@
   /**
    * 清除选择
    */
-  function handleClear() {
+  const handleClear = () => {
     refTable.value?.clearSelection();
     isSelectAll.value = false;
     selectList.value = [];
@@ -528,7 +530,7 @@
   /**
    * 弹窗关闭
    */
-  function dialogClose() {
+  const dialogClose = () => {
     showResetDialog.value = false;
     canLoading.value = true;
     isResetFailure.value = false;
@@ -539,7 +541,7 @@
     formRef.value?.clearValidate();
   }
   
-  function handleClearName () {
+  const handleClearName = () => {
     canLoading.value = true;
     isResetFailure.value = false;
     isResetSuccess.value = false;
@@ -548,7 +550,7 @@
     failedCount.value = 0;
   }
   
-  async function handleCheckReset () {
+  const handleCheckReset = async () => {
     if (!resetFormData.value.name) return
     if (canLoading.value) {
       isChecking.value = true;
@@ -556,8 +558,7 @@
     }
     try {
       const res = await http.resetAuthorization(projectId.value, {
-        ...resetParams.value,
-        preCheck: true
+        ...resetParams.value
       })
   
       if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
@@ -587,7 +588,7 @@
   /**
    * 弹窗提交
    */
-  function confirmReset() {
+  const confirmReset = () => {
     if (canLoading.value) dialogLoading.value = true;
     formRef.value?.validate().then(async () => {
       try {
@@ -626,23 +627,23 @@
     })
   };
   
-  function handleChangeDaterange (date) {
+  const handleChangeDaterange = (date) => {
     const startTime = new Date(date[0]).getTime() || ''
     const endTime = new Date(date[1]).getTime() || ''
     daterangeCache.value = [startTime, endTime]
   }
-  function handleClearDaterange () {
+  const handleClearDaterange = () => {
     dateTimeRange.value = ['', '']
     pagination.value.current = 1;
     getTableList();
   }
-  function handlePickSuccess () {
+  const handlePickSuccess = () => {
     dateTimeRange.value = daterangeCache.value;
     pagination.value.current = 1;
     getTableList();
   }
   
-  function handlePageChange (page) {
+  const handlePageChange = (page) => {
     refTable.value?.clearSelection();
     isSelectAll.value = false;
     selectList.value = [];
@@ -650,7 +651,7 @@
     getTableList();
   }
   
-  function handlePageLimitChange (limit) {
+  const handlePageLimitChange = (limit) => {
     refTable.value?.clearSelection();
     isSelectAll.value = false;
     selectList.value = [];
@@ -659,7 +660,7 @@
     getTableList();
   }
   
-  function handleChangeName ({ list }) {
+  const handleChangeName  = ({ list }) => {
     if (!list) {
       handleClearName()
     } else {

@@ -80,6 +80,6 @@ export default {
    * 重置授权（代码库、流水线、部署节点） 
    */
   resetAuthorization (projectId: string, params: any) {
-    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
+    return fetch.post(`${apiPerfix}/auth/handover/${projectId}/handoverAuthorizationsApplication`, params)
   },
 }
