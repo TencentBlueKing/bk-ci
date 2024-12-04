@@ -131,4 +131,17 @@ class CommitDao {
                 .fetch()
         }
     }
+
+    fun list(
+        dslContext: DSLContext,
+        buildId: String,
+        pipelineId: String,
+        elementId: String
+    ): Result<TRepositoryCommitRecord> {
+        with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(BUILD_ID.eq(buildId)))
+                .fetch()
+        }
+    }
 }
