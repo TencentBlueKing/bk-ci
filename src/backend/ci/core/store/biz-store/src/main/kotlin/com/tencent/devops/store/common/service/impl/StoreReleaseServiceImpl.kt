@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
@@ -95,6 +97,7 @@ import java.time.LocalDateTime
 class StoreReleaseServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseManageDao: StoreBaseManageDao,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
@@ -502,19 +505,25 @@ class StoreReleaseServiceImpl @Autowired constructor(
             StoreReleaseSpecBusService::class.java, StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         val status = storeReleaseSpecBusService.getStoreRunPipelineStatus(startFlag = false)
-        status?.let {
-            checkStoreVersionOptRight(userId, storeId, status)
+        val lock = RedisLock(redisOperation, "store:$storeId:rebuild", 30)
+        try {
+            lock.lock()
+            status?.let {
+                checkStoreVersionOptRight(userId, storeId, status)
+            }
+            val storeCode = record.storeCode
+            val version = record.version
+            // 处理环境信息逻辑
+            storeReleaseSpecBusService.doStoreEnvBus(
+                storeCode = storeCode, storeType = storeType, version = version, userId = userId
+            )
+            val storeRunPipelineParam = StoreRunPipelineParam(
+                userId = userId, storeId = storeId
+            )
+            storePipelineService.runPipeline(storeRunPipelineParam)
+        } finally {
+            lock.unlock()
         }
-        val storeCode = record.storeCode
-        val version = record.version
-        // 处理环境信息逻辑
-        storeReleaseSpecBusService.doStoreEnvBus(
-            storeCode = storeCode, storeType = storeType, version = version, userId = userId
-        )
-        val storeRunPipelineParam = StoreRunPipelineParam(
-            userId = userId, storeId = storeId
-        )
-        storePipelineService.runPipeline(storeRunPipelineParam)
         return true
     }
 
