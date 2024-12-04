@@ -13,6 +13,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
@@ -33,7 +34,8 @@ class SubPipelineTaskService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
     @Lazy
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val subPipelineRefDao: SubPipelineRefDao
 ) {
     /**
      * 支持的元素
@@ -231,8 +233,9 @@ class SubPipelineTaskService @Autowired constructor(
     ): List<SubPipelineRef> {
         val subPipelineRefList = mutableListOf<SubPipelineRef>()
         modelTasks.filter {
-            val element = JsonUtil.mapTo(it.taskParams, Element::class.java)
-            supportElement(element) && element.elementEnabled()
+            val elementEnable = (it.stageEnable && it.containerEnable && it.additionalOptions?.enable ?: true)
+            val supportElement = supportAtomCode(it.atomCode) || it.atomCode == SubPipelineCallElement.TASK_ATOM
+            elementEnable && supportElement
         }.forEach {
             val subPipelineTaskParam = getSubPipelineParam(
                 projectId = it.projectId,
@@ -258,6 +261,34 @@ class SubPipelineTaskService @Autowired constructor(
             )
         }
         return subPipelineRefList
+    }
+
+    fun batchDelete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        subPipelineRefDao.deleteAll(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun batchAdd(
+        dslContext: DSLContext,
+        model: Model,
+        channel: String,
+        modelTasks: List<PipelineModelTask>
+    ) {
+        subPipelineRefDao.batchAdd(
+            dslContext = dslContext,
+            subPipelineRefList = modelTaskConvertSubPipelineRef(
+                model = model,
+                channel = channel,
+                modelTasks = modelTasks
+            )
+        )
     }
 
     companion object {

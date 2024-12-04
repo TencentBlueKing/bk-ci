@@ -87,7 +87,6 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.dao.SubPipelineRefDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -166,7 +165,6 @@ class PipelineRepositoryService constructor(
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val subPipelineRefDao: SubPipelineRefDao,
     private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
@@ -599,7 +597,9 @@ class PipelineRepositoryService constructor(
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
                         additionalOptions = e.additionalOptions,
-                        taskPosition = "$stageIndex-${containerIndex + 1}-$taskSeq"
+                        taskPosition = "$stageIndex-${containerIndex + 1}-$taskSeq",
+                        containerEnable = c.containerEnabled(),
+                        stageEnable = stage.stageEnabled()
                     )
                 )
             }
@@ -842,13 +842,12 @@ class PipelineRepositoryService constructor(
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
-                subPipelineRefDao.batchAdd(
+                // 初始化子流水线关联关系
+                subPipelineTaskService.batchAdd(
                     dslContext = transactionContext,
-                    subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
-                        model = model,
-                        channel = channelCode.name,
-                        modelTasks = modelTasks.toList()
-                    )
+                    model = model,
+                    channel = channelCode.name,
+                    modelTasks = modelTasks.toList()
                 )
             }
         } finally {
@@ -1148,18 +1147,11 @@ class PipelineRepositoryService constructor(
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
                         watcher.start("updateSubPipelineRef")
-                        subPipelineRefDao.deleteAll(
+                        subPipelineTaskService.batchAdd(
                             dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId
-                        )
-                        subPipelineRefDao.batchAdd(
-                            dslContext = transactionContext,
-                            subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
-                                model = model,
-                                channel = channelCode.name,
-                                modelTasks = modelTasks.toList()
-                            )
+                            model = model,
+                            channel = channelCode.name,
+                            modelTasks = modelTasks.toList()
                         )
                     }
                 }
@@ -1580,7 +1572,7 @@ class PipelineRepositoryService constructor(
 
                 pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                 pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-                subPipelineRefDao.deleteAll(transactionContext, projectId, pipelineId)
+                subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
                 pipelineEventDispatcher.dispatch(
                     PipelineDeleteEvent(
                         source = "delete_pipeline",
@@ -1902,13 +1894,11 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
-            subPipelineRefDao.batchAdd(
+            subPipelineTaskService.batchAdd(
                 dslContext = transactionContext,
-                subPipelineRefList = subPipelineTaskService.modelTaskConvertSubPipelineRef(
-                    model = existModel,
-                    channel = channelCode.name,
-                    modelTasks = tasks.toList()
-                )
+                model = existModel,
+                channel = channelCode.name,
+                modelTasks = tasks
             )
         }
 
