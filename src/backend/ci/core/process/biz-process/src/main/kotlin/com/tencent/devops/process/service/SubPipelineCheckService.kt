@@ -250,7 +250,7 @@ class SubPipelineCheckService @Autowired constructor(
                     taskProjectId = it.taskProjectId,
                     taskPipelineType = SubPipelineType.valueOf(it.taskPipelineType),
                     taskPipelineId = it.taskPipelineId,
-                    taskPipelineName = it.taskPipelineName,
+                    taskPipelineName = it.taskPipelineName
                 )
             }
             logger.info("check circular dependency|subRefList[$subRefList]")
