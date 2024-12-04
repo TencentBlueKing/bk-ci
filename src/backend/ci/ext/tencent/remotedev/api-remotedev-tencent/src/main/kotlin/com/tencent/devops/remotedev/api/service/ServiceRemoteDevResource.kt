@@ -28,6 +28,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -623,6 +626,35 @@ interface ServiceRemoteDevResource {
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "查询录屏权限相关信息")
+    @GET
+    @Path("/get_user_workspace_record_permission_info")
+    fun getUserWorkspaceRecordPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo>
+
+    @Operation(summary = "录屏权限续期")
+    @POST
+    @Path("/update_user_workspace_record_permission_info")
+    fun updateUserWorkspaceRecordPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "查看当前工作空间录屏元数据")
+    @POST
+    @Path("/get_user_workspace_record_metadata")
+    fun getViewRecordMetadata(
+        data: FetchMetaDataParam
+    ): Result<Page<WorkspaceRecordMetadata>>
 
     @Operation(summary = "获取指定工作空间详情时间线")
     @GET

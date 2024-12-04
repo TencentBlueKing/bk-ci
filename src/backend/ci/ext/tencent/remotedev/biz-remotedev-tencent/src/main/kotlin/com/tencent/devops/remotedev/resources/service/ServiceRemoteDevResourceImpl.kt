@@ -44,6 +44,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -670,6 +673,7 @@ class ServiceRemoteDevResourceImpl(
         ip: String
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
+            userId = userId,
             appId = appId,
             ip = ip
         )
@@ -714,6 +718,32 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Page<ProjectWorkspace>> {
         permissionService.checkUserManager(userId, projectId)
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
+    }
+
+    override fun getUserWorkspaceRecordPermission(
+        userId: String,
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo> {
+        return Result(workspaceRecordService.getUserWorkspaceRecordPermission(userId, workspaceName))
+    }
+
+    override fun updateUserWorkspaceRecordPermission(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceRecordService.updateApprovalRecordViewPermission(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun getViewRecordMetadata(data: FetchMetaDataParam): Result<Page<WorkspaceRecordMetadata>> {
+        return Result(
+            workspaceRecordService.getWorkspaceRecordMetadata(
+                projectId = data.projectId,
+                userId = data.userId,
+                workspaceName = data.workspaceName,
+                page = data.page,
+                pageSize = data.pageSize,
+                startTime = data.startTime,
+                stopTime = data.stopTime
+            )
+        )
     }
 
     override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
