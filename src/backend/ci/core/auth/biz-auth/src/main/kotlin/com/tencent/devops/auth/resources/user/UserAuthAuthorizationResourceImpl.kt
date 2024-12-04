@@ -35,7 +35,8 @@ class UserAuthAuthorizationResourceImpl(
         )
         return Result(
             permissionAuthorizationService.listResourceAuthorizations(
-                condition = condition
+                condition = condition,
+                operateChannel = operateChannel
             )
         )
     }
