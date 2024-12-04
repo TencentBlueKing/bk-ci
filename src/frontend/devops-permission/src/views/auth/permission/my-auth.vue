@@ -557,8 +557,10 @@
       disabledResetBtn.value = true;
     }
     try {
-      const res = await http.resetAuthorization(projectId.value, {
-        ...resetParams.value
+      const res = await http.checkAuthorization(projectId.value, {
+        ...resetParams.value,
+        preCheck: true,
+        checkPermission: false
       })
   
       if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件

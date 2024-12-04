@@ -82,4 +82,10 @@ export default {
   resetAuthorization (projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/handover/${projectId}/handoverAuthorizationsApplication`, params)
   },
+  /**
+   * 校验是否可交接
+   */
+  checkAuthorization (projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
+  }
 }
