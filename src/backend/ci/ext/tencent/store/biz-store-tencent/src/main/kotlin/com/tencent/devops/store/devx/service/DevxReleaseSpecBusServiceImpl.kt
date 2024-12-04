@@ -273,12 +273,6 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 params = arrayOf(KEY_MIN_PEAK_BAND_WIDTH)
             )
         }
-        if (maxPeakBandwidth.toString().toDouble() - minPeakBandwidth.toString().toDouble() < 0) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                params = arrayOf("$KEY_MIN_PEAK_BAND_WIDTH,$KEY_MAX_PEAK_BAND_WIDTH")
-            )
-        }
         netPolicyInfo[KEY_NEED_VISITED_SITE_INFOS] ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf(KEY_NEED_VISITED_SITE_INFOS)
