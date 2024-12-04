@@ -220,8 +220,8 @@ importers:
   bk-permission:
     dependencies:
       axios:
-        specifier: '>=1.7.4'
-        version: 1.7.7
+        specifier: 0.28.0
+        version: 0.28.0
       vue:
         specifier: ~2.7.16
         version: 2.7.16
@@ -606,8 +606,8 @@ importers:
         specifier: ^1.11.2
         version: 1.11.11
       js-cookie:
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: ^3.0.5
+        version: 3.0.5
       mavon-editor:
         specifier: ^2.10.4
         version: 2.10.4
@@ -1238,7 +1238,7 @@ importers:
         specifier: ^3.5.1
         version: 3.7.2
       js-cookie:
-        specifier: ^3.0.1
+        specifier: ^3.0.5
         version: 3.0.5
       markdown-it:
         specifier: ^14.1.0
@@ -2389,13 +2389,16 @@ importers:
         version: 0.28.0
       bk-magic-vue:
         specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@3.4.31(typescript@5.4.5))
+        version: 2.5.9-beta.41(vue@2.7.16)
       js-cookie:
-        specifier: ^3.0.1
-        version: 3.0.1
+        specifier: ^3.0.5
+        version: 3.0.5
+      vue:
+        specifier: ~2.7.16
+        version: 2.7.16
       vue-i18n:
         specifier: ~8.18.1
-        version: 8.18.2(vue@3.4.31(typescript@5.4.5))
+        version: 8.18.2(vue@2.7.16)
     devDependencies:
       '@babel/core':
         specifier: ^7.15.8
@@ -2450,7 +2453,7 @@ importers:
         version: 7.24.7
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
-        version: 1.4.0(@babel/core@7.24.6)(vue@3.4.31(typescript@5.4.5))
+        version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
       '@webpack-cli/serve':
         specifier: ^1.7.0
         version: 1.7.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.96.1))
@@ -3522,7 +3525,7 @@ packages:
     resolution: {integrity: sha512-iKYZlIs6JsNT7NKyRjyIyezTCHLh4L4BBB3F5Nx7Dc4Z/QmBgX+YJFuUSar8IM6KclGiAUFGomXFdYxAwJydlA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
-      postcss: '>=8.4.31'
+      postcss: ^8.4
 
   '@csstools/postcss-gradients-interpolation-method@3.0.6':
     resolution: {integrity: sha512-rBOBTat/YMmB0G8VHwKqDEx+RZ4KCU9j42K8LwS0IpZnyThalZZF7BCSsZ6TFlZhcRZKlZy3LLFI2pLqjNVGGA==}
@@ -3718,7 +3721,7 @@ packages:
     resolution: {integrity: sha512-tAgvZQe/t2mlvpNosA4+CkMiZ2azISW5WPAcdSalZlEjQvUfghHxfQcrCiK/7/CrfAWVxyM88kGFYO82heIGDg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
-      postcss: '>=8.4.31'
+      postcss: ^8.4
 
   '@dabh/diagnostics@2.0.3':
     resolution: {integrity: sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA==}
@@ -10167,10 +10170,6 @@ packages:
     resolution: {integrity: sha512-JeDD0yiiSt80fXzAVa/crrS0JDPQljyBG/RpOtaSbyDq03VHa9szJWMaWOYU/bcTn412uMN2MxApXq8v79cUiQ==}
     engines: {node: ^10.14.2 || >=12.0.0}
 
-  js-cookie@3.0.1:
-    resolution: {integrity: sha512-+0rgsUXZu4ncpPxRL+lNEptWMOWl9etvPHc/koSRp6MPwpRYAhmk0dUG00J4bxVV3r9uUzfo24wW0knS07SKSw==}
-    engines: {node: '>=12'}
-
   js-cookie@3.0.5:
     resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
     engines: {node: '>=14'}
@@ -12189,7 +12188,7 @@ packages:
     resolution: {integrity: sha512-yX7TJK3cNiBLzjT0Psmk0mWjD8+v/FbcBOJ5mg5JX2+8uIjI7zewPgkGOocYzE81+aBHWXrw+BSstsp3Bl3UaA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
-      postcss: '>=8.4.31'
+      postcss: ^8.1.0
 
   postcss-font-variant@5.0.0:
     resolution: {integrity: sha512-1fmkBaCALD72CK2a9i468mA/+tr9/1cBxRRMXOUaZqO43oWPR5imcyPjXwuv7PXbCid4ndlP5zWhidQVVa3hmA==}
@@ -12714,7 +12713,7 @@ packages:
     resolution: {integrity: sha512-Bihxo+FsyVNjsRADiYYnj9Ez0WBSWSSHAe8WvxoMlqrw8H8m6gK9E0MkDd7P6ForoikRIF3I8grGg/pFM6ECRQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
-      postcss: '>=8.4.31'
+      postcss: ^8.4
 
   postcss-property-lookup@2.0.0:
     resolution: {integrity: sha512-KUb53a7UZWDMVb0SRODOonc4H1wlbgQ0VfYwmJaR1xWPorhariEz0U7x0ri3W/imFs6HqLYWP7hl2yMvi5Ty+w==}
@@ -16931,7 +16930,7 @@ snapshots:
     dependencies:
       bk-magic-vue: 2.4.15-beta.21(vue@2.6.12)
       core-js: 3.37.1
-      js-cookie: 3.0.1
+      js-cookie: 3.0.5
       lodash: 4.17.21
       tippy.js: 6.3.7
       vue: 2.6.12
@@ -19867,20 +19866,6 @@ snapshots:
     optionalDependencies:
       vue: 3.4.31(typescript@4.9.5)
 
-  '@vue/babel-preset-jsx@1.4.0(@babel/core@7.24.6)(vue@3.4.31(typescript@5.4.5))':
-    dependencies:
-      '@babel/core': 7.24.6
-      '@vue/babel-helper-vue-jsx-merge-props': 1.4.0
-      '@vue/babel-plugin-transform-vue-jsx': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-composition-api-inject-h': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-composition-api-render-instance': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-functional-vue': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-inject-h': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-v-model': 1.4.0(@babel/core@7.24.6)
-      '@vue/babel-sugar-v-on': 1.4.0(@babel/core@7.24.6)
-    optionalDependencies:
-      vue: 3.4.31(typescript@5.4.5)
-
   '@vue/babel-sugar-composition-api-inject-h@1.4.0(@babel/core@7.24.6)':
     dependencies:
       '@babel/core': 7.24.6
@@ -20705,7 +20690,7 @@ snapshots:
   '@vue/eslint-config-standard@8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@8.57.0))(eslint@8.57.0)':
     dependencies:
       eslint: 8.57.0
-      eslint-config-standard: 17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@15.7.0(eslint@8.57.0))(eslint-plugin-promise@6.2.0(eslint@7.32.0))(eslint@8.57.0)
+      eslint-config-standard: 17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@15.7.0(eslint@8.57.0))(eslint-plugin-promise@6.2.0(eslint@8.57.0))(eslint@8.57.0)
       eslint-import-resolver-custom-alias: 1.3.2(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))
       eslint-import-resolver-node: 0.3.9
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@4.9.5))(eslint@7.32.0)
@@ -20779,12 +20764,6 @@ snapshots:
       '@vue/compiler-ssr': 3.4.31
       '@vue/shared': 3.4.31
       vue: 3.4.31(typescript@4.9.5)
-
-  '@vue/server-renderer@3.4.31(vue@3.4.31(typescript@5.4.5))':
-    dependencies:
-      '@vue/compiler-ssr': 3.4.31
-      '@vue/shared': 3.4.31
-      vue: 3.4.31(typescript@5.4.5)
 
   '@vue/shared@3.4.27': {}
 
@@ -21708,16 +21687,6 @@ snapshots:
       spark-md5: 3.0.2
       tinycolor2: 1.6.0
       vue: 2.7.16
-
-  bk-magic-vue@2.5.9-beta.41(vue@3.4.31(typescript@5.4.5)):
-    dependencies:
-      clipboard: 2.0.11
-      highlight.js: 10.7.3
-      json-formatter-js: 2.5.11
-      marked: 4.2.12
-      spark-md5: 3.0.2
-      tinycolor2: 1.6.0
-      vue: 3.4.31(typescript@5.4.5)
 
   bk-magic-vue@2.5.9-beta.9(vue@2.7.16):
     dependencies:
@@ -23939,7 +23908,7 @@ snapshots:
       eslint-plugin-node: 11.1.0(eslint@8.57.0)
       eslint-plugin-promise: 6.0.1(eslint@8.57.0)
 
-  eslint-config-standard@17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@15.7.0(eslint@8.57.0))(eslint-plugin-promise@6.2.0(eslint@7.32.0))(eslint@8.57.0):
+  eslint-config-standard@17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@15.7.0(eslint@8.57.0))(eslint-plugin-promise@6.2.0(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@4.9.5))(eslint@7.32.0)
@@ -26383,8 +26352,6 @@ snapshots:
       magic-string: 0.25.9
       perf-regexes: 1.0.1
       skip-regex: 1.0.2
-
-  js-cookie@3.0.1: {}
 
   js-cookie@3.0.5: {}
 
@@ -32763,10 +32730,6 @@ snapshots:
     dependencies:
       vue: 2.7.16
 
-  vue-i18n@8.18.2(vue@3.4.31(typescript@5.4.5)):
-    dependencies:
-      vue: 3.4.31(typescript@5.4.5)
-
   vue-i18n@9.1.10(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@intlify/core-base': 9.1.10
@@ -33343,16 +33306,6 @@ snapshots:
     optionalDependencies:
       typescript: 4.9.5
 
-  vue@3.4.31(typescript@5.4.5):
-    dependencies:
-      '@vue/compiler-dom': 3.4.31
-      '@vue/compiler-sfc': 3.4.31
-      '@vue/runtime-dom': 3.4.31
-      '@vue/server-renderer': 3.4.31(vue@3.4.31(typescript@5.4.5))
-      '@vue/shared': 3.4.31
-    optionalDependencies:
-      typescript: 5.4.5
-
   vuedraggable@2.24.3:
     dependencies:
       sortablejs: 1.10.2
@@ -33878,7 +33831,7 @@ snapshots:
       watchpack: 2.4.1
       webpack-sources: 3.2.3
     optionalDependencies:
-      webpack-cli: 4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@4.10.0)(webpack@5.96.1))(webpack@5.96.1)
+      webpack-cli: 4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild

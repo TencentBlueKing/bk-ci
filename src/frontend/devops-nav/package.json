@@ -75,7 +75,7 @@
     "bk-magic-vue": "2.5.9-beta.41",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
-    "js-cookie": "^3.0.1",
+    "js-cookie": "^3.0.5",
     "sockjs-client": "1.3.0",
     "stompjs": "2.3.3",
     "vee-validate": "^2.0.3",

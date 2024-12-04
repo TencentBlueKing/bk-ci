@@ -27,6 +27,7 @@ module.exports = (env = {}, argv) => {
             'axios',
             'vee-validate',
             'vue-i18n',
+            'js-cookie',
             'dayjs'
         ],
         output: {

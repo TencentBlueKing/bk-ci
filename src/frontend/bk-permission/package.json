@@ -48,9 +48,7 @@
     "webpack": "~5.76.1"
   },
   "peerDependencies": {
-    "vue": "~2.7.16"
-  },
-  "dependencies": {
-    "axios": "^1.7.2"
+    "vue": "~2.7.16",
+    "axios": "0.28.0"
   }
 }
