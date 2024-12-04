@@ -1055,7 +1055,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 englishName = it.englishName,
                 permission = true,
                 routerTag = buildRouterTag(it.routerTag),
-                bgId = it.bgId
+                bgId = it.bgId,
+                remotedevManager = it.properties?.let { properties ->
+                    JsonUtil.to(
+                        properties, ProjectProperties::class.java
+                    )
+                }?.remotedevManager
             )
         }
     }
