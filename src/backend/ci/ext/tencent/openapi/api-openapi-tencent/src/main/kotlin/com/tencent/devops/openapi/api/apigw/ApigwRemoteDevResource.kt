@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -17,8 +18,11 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -362,6 +366,21 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<SupRecordDataResp>
 
+    @Operation(summary = "获取专家协助单据", tags = ["v4_app_remotedev_expertsup_record"])
+    @GET
+    @Path("/expertsup/record")
+    fun getExpertSupRecord(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "单据ID", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<SupRecordData?>
+
     @Operation(summary = "获取windows空闲资源数据", tags = ["v4_app_remotedev_win_quota"])
     @GET
     @Path("/get_all_windows_resource_quota")
@@ -644,6 +663,23 @@ interface ApigwRemoteDevResource {
         size: String
     ): Result<ExpandDiskValidateResp?>
 
+    @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
+    @POST
+    @Path("/workspace/upgrade")
+    fun upgradeWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean>
+
     @Operation(summary = "剔除当前用户所有云桌面相关权限", tags = ["v4_app_remotedev_remove_user_permission"])
     @POST
     @Path("/remove_user_permission")
@@ -661,6 +697,31 @@ interface ApigwRemoteDevResource {
         @QueryParam("removeUser")
         removeUser: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取用户工作空间列表", tags = ["v4_app_remotedev_workspaces_search"])
+    @POST
+    @Path("/workspaces_search")
+    fun getWorkspaceListNew(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "查询录屏权限相关信息", tags = ["v4_app_get_user_workspace_record_permission_info"])
     @GET

@@ -100,6 +100,7 @@ object ProjectMessageCode {
     const val ERROR_PROJECT_NOT_RELATED_PRODUCT = "2119052" // 项目未关联产品ID
     const val ERROR_PRODUCT_NOT_EXIST = "2119053" // 运营产品不存在
     const val ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY = "2119054" // 组织架构不允许为空
+    const val ERROR_PIPELINE_NAME_FORMAT_TOO_LONG = "2119055" // 流水线命名规范不能超过200个字符
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

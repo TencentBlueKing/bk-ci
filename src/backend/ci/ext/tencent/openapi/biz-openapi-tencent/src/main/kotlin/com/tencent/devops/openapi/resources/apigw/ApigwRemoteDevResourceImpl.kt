@@ -9,6 +9,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -16,8 +17,11 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -272,6 +276,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    override fun getExpertSupRecord(appCode: String?, apigwType: String?, id: Long): Result<SupRecordData?> {
+        logger.info("getExpertSupRecord $id")
+        return client.get(ServiceRemoteDevResource::class).fetchExpertSupRecordAny(id)
+    }
+
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
         logger.info("getWindowsQuota $userId|$type")
         return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
@@ -455,6 +464,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
     }
 
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$projectId|$upgradeReq")
+        return client.get(ServiceRemoteDevResource::class).upgradeWorkspace(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            upgradeReq = upgradeReq
+        )
+    }
+
     override fun removeUserPermission(
         appCode: String?,
         apigwType: String?,
@@ -465,6 +489,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).removeUserPermission(
             userId = userId,
             removeUser = removeUser
+        )
+    }
+
+    override fun getWorkspaceListNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>> {
+        logger.info("getWorkspaceListNew $appCode|$userId|$projectId|$page|$pageSize|$search")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceListNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            search = search
         )
     }
 
