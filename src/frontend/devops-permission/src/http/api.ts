@@ -9,7 +9,9 @@ export default {
   getAllProjectList(params) {
     return fetch.get(`${projectPerfix}/projects/listProjectsForApply`, params)
   },
-  // 获取资源类型列表
+  /**
+   * 获取资源类型列表
+   */
   getResourceTypesList() {
     return fetch.get(`${apiPerfix}/auth/apply/listResourceTypes`);
   },
@@ -87,5 +89,44 @@ export default {
    */
   checkAuthorization (projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
-  }
+  },
+  /**
+   * 展示动作列表
+   */
+  getListActions(resourceType: string) {
+    return fetch.get(`${apiPerfix}/auth/apply/listActions?resourceType=${resourceType}`);
+  },
+  /**
+   * 获取资源列表
+   */
+  getListResource(projectId: string, resourceType: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return fetch.get(`${apiPerfix}/auth/resource/${projectId}/${resourceType}/listResources?${query}`);
+  },
+  /**
+   * 单条续期
+   */
+  async renewal(projectId: string, resourceType: string, groupId: number, params: any) {
+    return fetch.put(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/member/renewal`, params);
+  },
+  /**
+   * 获取资源授权管理数量
+   */
+  getResourceType2CountOfHandover(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/getResourceType2CountOfHandover`, params);
+  },
+  /**
+   * 获取交接单中授权相关
+   */
+  listAuthorizationsOfHandover(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/listAuthorizationsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  listGroupsOfHandover(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/listGroupsOfHandover`, params);
+  },
 }
