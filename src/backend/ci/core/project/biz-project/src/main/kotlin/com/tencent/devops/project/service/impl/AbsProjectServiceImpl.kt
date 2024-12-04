@@ -1044,6 +1044,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         limit: Int,
         offset: Int
     ): List<ProjectByConditionDTO> {
+        logger.info("list projects by condition:$projectConditionDTO|$limit|$offset")
         return projectDao.listProjectsByCondition(
             dslContext = dslContext,
             projectConditionDTO = projectConditionDTO,
