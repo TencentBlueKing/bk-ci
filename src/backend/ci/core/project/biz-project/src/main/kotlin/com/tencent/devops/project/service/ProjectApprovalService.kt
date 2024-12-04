@@ -260,13 +260,7 @@ class ProjectApprovalService @Autowired constructor(
                 )
         // 属性只能变更前端展示的,其他的字段由op变更
         val projectProperties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
-        val updateProjectProperties = if (projectApprovalInfo.properties != null) {
-            projectProperties?.copy(
-                pipelineDialect = projectApprovalInfo.properties!!.pipelineDialect
-            )
-        } else {
-            projectProperties
-        }
+        val updateProjectProperties = projectApprovalInfo.properties?.let { projectProperties?.userCopy(it) }
         val projectUpdateInfo = with(projectApprovalInfo) {
             ProjectUpdateInfo(
                 projectName = projectName,

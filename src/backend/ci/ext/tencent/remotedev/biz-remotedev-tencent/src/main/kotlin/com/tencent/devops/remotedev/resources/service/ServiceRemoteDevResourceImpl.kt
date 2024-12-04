@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -25,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -715,5 +717,16 @@ class ServiceRemoteDevResourceImpl(
 
     override fun deleteEnvHook(userId: String, projectId: String, envHashId: String, nodeHashId: List<String>?) {
         workspaceHookService.hookDelete(userId, projectId, envHashId, nodeHashId)
+    }
+
+    override fun getWorkspaceListNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>> {
+        permissionService.checkUserManager(userId, projectId)
+        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
     }
 }

@@ -61,10 +61,10 @@
                         name="default-user"
                         size="24"
                     />
-                    <span v-if="execDetail.triggerUser">
+                    <span v-if="startUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.triggerUser,
+                                startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
@@ -394,6 +394,21 @@
             },
             pipelineModel () {
                 return this.execDetail?.model || {}
+            },
+            executeCount () {
+                return this.execDetail?.executeCount ?? 1
+            },
+            recordList () {
+                const list = [...this.execDetail?.recordList]
+                return (
+                    list.reverse().map((record, index) => ({
+                        id: index + 1,
+                        user: record.startUser
+                    })) ?? []
+                )
+            },
+            startUser () {
+                return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             }
         },
 

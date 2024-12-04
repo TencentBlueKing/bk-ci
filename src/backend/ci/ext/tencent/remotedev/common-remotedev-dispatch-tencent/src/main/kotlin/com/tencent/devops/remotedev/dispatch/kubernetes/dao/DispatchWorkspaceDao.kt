@@ -29,15 +29,9 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.dao
 
 import com.tencent.devops.model.remotedev.tables.TDispatchWorkspace
 import com.tencent.devops.model.remotedev.tables.records.TDispatchWorkspaceRecord
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.DatePart
-import org.jooq.Field
-import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -49,7 +43,6 @@ class DispatchWorkspaceDao {
         environmentUid: String,
         regionId: Int,
         taskId: String? = "",
-        status: EnvStatusEnum,
         dslContext: DSLContext
     ): Long {
         return with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
@@ -59,7 +52,7 @@ class DispatchWorkspaceDao {
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
-                STATUS,
+                STATUS, /*废弃此表的STATUS*/
                 REGION_ID,
                 TASK_ID
             )
@@ -68,7 +61,7 @@ class DispatchWorkspaceDao {
                     event.projectId,
                     event.workspaceName,
                     environmentUid,
-                    status.ordinal,
+                    -1,
                     regionId,
                     taskId
                 )
@@ -77,30 +70,14 @@ class DispatchWorkspaceDao {
         }
     }
 
-    fun updateWorkspaceStatus(
-        workspaceName: String,
-        status: EnvStatusEnum,
-        dslContext: DSLContext
-    ) {
-        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
-            dslContext.update(this)
-                .set(STATUS, status.ordinal)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
     fun updateWorkspace(
         workspaceName: String,
         envId: String,
         regionId: Int,
-        status: EnvStatusEnum,
         dslContext: DSLContext
     ) {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.update(this)
-                .set(STATUS, status.ordinal)
                 .set(ENVIRONMENT_UID, envId)
                 .set(REGION_ID, regionId)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -131,31 +108,5 @@ class DispatchWorkspaceDao {
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .fetchOne()
         }
-    }
-
-    fun getStartCloudWorkspaceInfo(
-        dslContext: DSLContext
-    ): Result<TDispatchWorkspaceRecord> {
-        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
-            return dslContext.selectFrom(this)
-                .where(REGION_ID.notEqual(0))
-                .fetch()
-        }
-    }
-
-    fun getNoUseIdleWorkspace(dslContext: DSLContext): Result<TDispatchWorkspaceRecord> {
-        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
-            return dslContext.selectFrom(this)
-                .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(7))
-                .and(STATUS.eq(0))
-                .fetch()
-        }
-    }
-
-    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-        return DSL.field(
-            "timestampdiff({0}, {1}, NOW())",
-            Int::class.java, DSL.keyword(part.toSQL()), t1
-        )
     }
 }
