@@ -112,6 +112,21 @@ interface ServiceRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevProject>>
 
+    @Operation(summary = "获取开启云桌面的项目列表")
+    @GET
+    @Path("/project/list/new")
+    fun getRemotedevProjectsNew(
+        @Parameter(description = "project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<RemotedevProject>>
+
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
     @Path("/checkWorkspaceProject")

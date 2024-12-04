@@ -126,6 +126,21 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevProject>>
 
+    @Operation(summary = "获取开启云桌面的项目列表", tags = ["v4_app_remotedev_project_list"])
+    @GET
+    @Path("/project/list")
+    fun queryWorkspaceProjects(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<List<RemotedevProject>>
+
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET
     @Path("/check/cgs/permission")

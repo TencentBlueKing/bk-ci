@@ -170,6 +170,10 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
+    override fun getRemotedevProjectsNew(projectId: String?, page: Int, pageSize: Int): Result<List<RemotedevProject>> {
+        TODO("Not yet implemented")
+    }
+
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
         return Result(desktopWorkspaceService.checkWorkspaceProject(projectId, ip))
     }
