@@ -319,7 +319,8 @@ class RbacPermissionManageFacadeServiceImpl(
                 else -> JoinedType.DIRECT
             },
             operator = "",
-            beingHandedOver = groupsBeingHandover.contains(groupId)
+            beingHandedOver = authResourceGroupMember.memberType == MemberType.USER.type
+                && groupsBeingHandover.contains(groupId)
         )
     }
 
