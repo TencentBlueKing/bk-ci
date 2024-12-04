@@ -142,10 +142,10 @@ interface ApigwRemoteDevResource {
         projectId: String?,
         @Parameter(description = "page", required = true)
         @QueryParam("page")
-        page: Int = 1,
+        page: Int,
         @Parameter(description = "pageSize", required = true)
         @QueryParam("pageSize")
-        pageSize: Int = 20
+        pageSize: Int
     ): Result<List<RemotedevProjectNew>>
 
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
