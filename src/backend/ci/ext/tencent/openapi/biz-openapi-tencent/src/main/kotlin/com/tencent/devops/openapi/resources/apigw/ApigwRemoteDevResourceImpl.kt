@@ -30,6 +30,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -506,5 +509,40 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             pageSize = pageSize,
             search = search
         )
+    }
+
+    override fun getUserWorkspaceRecordPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo> {
+        logger.info("getUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getUserWorkspaceRecordPermission(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+    }
+
+    override fun updateUserWorkspaceRecordPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("updateUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).updateUserWorkspaceRecordPermission(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+    }
+
+    override fun getViewRecordMetadata(
+        appCode: String?,
+        apigwType: String?,
+        data: FetchMetaDataParam
+    ): Result<Page<WorkspaceRecordMetadata>> {
+        logger.info("getViewRecordMetadata $appCode|$data")
+        return client.get(ServiceRemoteDevResource::class).getViewRecordMetadata(data)
     }
 }
