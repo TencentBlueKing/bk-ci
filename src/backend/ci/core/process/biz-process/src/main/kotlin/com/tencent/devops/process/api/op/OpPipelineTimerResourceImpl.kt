@@ -70,7 +70,6 @@ class OpPipelineTimerResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(OpPipelineTimerResourceImpl::class.java)
     }

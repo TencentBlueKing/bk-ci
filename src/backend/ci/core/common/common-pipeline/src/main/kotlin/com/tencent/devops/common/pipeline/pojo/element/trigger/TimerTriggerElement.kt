@@ -64,7 +64,7 @@ data class TimerTriggerElement(
     @get:Schema(title = "指定代码库别名", required = false)
     val repoName: String? = null,
     @get:Schema(title = "定时启动参数", required = false)
-    val startParams: Map<String,String>? = null
+    val startParams: Map<String, String>? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"

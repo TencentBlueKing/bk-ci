@@ -101,7 +101,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                         }
                         // 重新添加定时任务
                         saveTimer(
-                            timerTriggerElements= timerTriggerElements,
+                            timerTriggerElements = timerTriggerElements,
                             params = params,
                             latestVersion = model.latestVersion,
                             projectId = projectId,

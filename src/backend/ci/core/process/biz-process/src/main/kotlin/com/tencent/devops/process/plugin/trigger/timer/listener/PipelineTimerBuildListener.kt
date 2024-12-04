@@ -152,7 +152,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     return
                 }
                 // 填充触发器启动参数
-                val startParams = mutableMapOf<String,String>()
+                val startParams = mutableMapOf<String, String>()
                 event.startParam?.let {
                     startParams.putAll(it)
                 }

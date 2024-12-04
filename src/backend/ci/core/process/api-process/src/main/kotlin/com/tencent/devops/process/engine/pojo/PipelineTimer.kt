@@ -39,5 +39,5 @@ data class PipelineTimer(
     val branchs: List<String>?,
     val noScm: Boolean?,
     val taskId: String,
-    val startParam: Map<String,String>?
+    val startParam: Map<String, String>?
 )
