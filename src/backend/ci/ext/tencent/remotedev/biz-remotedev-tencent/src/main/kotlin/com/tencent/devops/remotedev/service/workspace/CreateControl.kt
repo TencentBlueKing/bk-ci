@@ -162,19 +162,6 @@ class CreateControl @Autowired constructor(
             )
         }
 
-        // 校验传入的镜像是否该项目自定义镜像，禁止跨项目使用
-        val notProjectImage = workspaceCreate.imageCosFile.isNotBlank() &&
-            (!imageManageService.checkBaseImage(workspaceCreate.imageCosFile) && !imageManageService.checkProjectImage(
-                projectId,
-                workspaceCreate.imageCosFile
-            ))
-        if (notProjectImage) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.IMAGE_NOT_FOUND_ERROR.errorCode,
-                params = arrayOf(workspaceCreate.imageCosFile, projectId)
-            )
-        }
-
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }

@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -27,6 +28,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -658,4 +662,51 @@ interface ServiceRemoteDevResource {
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "查询录屏权限相关信息")
+    @GET
+    @Path("/get_user_workspace_record_permission_info")
+    fun getUserWorkspaceRecordPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo>
+
+    @Operation(summary = "录屏权限续期")
+    @POST
+    @Path("/update_user_workspace_record_permission_info")
+    fun updateUserWorkspaceRecordPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "查看当前工作空间录屏元数据")
+    @POST
+    @Path("/get_user_workspace_record_metadata")
+    fun getViewRecordMetadata(
+        data: FetchMetaDataParam
+    ): Result<Page<WorkspaceRecordMetadata>>
+
+    @Operation(summary = "获取指定工作空间详情时间线")
+    @GET
+    @Path("/detail_timeline")
+    fun getWorkspaceTimeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>>
 }
