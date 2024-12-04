@@ -28,6 +28,7 @@ import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -126,20 +127,26 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevProject>>
 
-    @Operation(summary = "获取开启云桌面的项目列表", tags = ["v4_app_remotedev_project_list"])
+    @Operation(summary = "获取开启云桌面的项目列表", tags = ["v4_app_remotedev_project_list_new"])
     @GET
-    @Path("/project/list")
-    fun queryWorkspaceProjects(
+    @Path("/project/list_new")
+    fun queryWorkspaceProjectsNew(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(description = "project_id", required = false)
         @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevProject>>
+        projectId: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<RemotedevProjectNew>>
 
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET

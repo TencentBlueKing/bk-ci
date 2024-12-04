@@ -33,6 +33,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
@@ -736,12 +737,16 @@ class WorkspaceService @Autowired constructor(
             offset = limit.offset
         ).data ?: return emptyList()
 
+        val projectAndBizs = client.get(ServiceMonitorSpaceResource::class).listMonitorSpaceBizIds(
+            projects.map { it.englishName }
+        ).data ?: emptyMap()
+
         return projects.map {
             RemotedevProjectNew(
                 projectId = it.englishName,
                 projectName = it.projectName,
-                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: "",
-                monitorUrl = "$projectMonitorUrl?orgName={bizid}"
+                remotedevManager = it.remotedevManager ?: "",
+                monitorUrl = "$projectMonitorUrl?orgName=${projectAndBizs[it.englishName] ?: ""}"
             )
         }
     }

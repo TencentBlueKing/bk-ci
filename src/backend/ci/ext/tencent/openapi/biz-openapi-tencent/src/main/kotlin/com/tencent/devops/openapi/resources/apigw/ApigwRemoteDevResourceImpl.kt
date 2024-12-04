@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -94,6 +95,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
+    }
+
+    override fun queryWorkspaceProjectsNew(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>> {
+        logger.info("Get  workspace projects new $projectId|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).getRemotedevProjectsNew(projectId, page, pageSize)
     }
 
     override fun checkUserCgsPermission(
