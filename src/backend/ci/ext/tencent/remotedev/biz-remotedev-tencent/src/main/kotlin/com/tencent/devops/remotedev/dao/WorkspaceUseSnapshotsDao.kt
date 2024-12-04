@@ -29,8 +29,8 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWorkspaceUseSnapshots
 import com.tencent.devops.remotedev.service.MakeMoneyService
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -42,8 +42,6 @@ class WorkspaceUseSnapshotsDao {
         data: Map<String, MakeMoneyService.SaveData>,
         date: LocalDateTime
     ) {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val formattedDate = date.format(formatter)
         dslContext.batch(data.map {
             with(TWorkspaceUseSnapshots.T_WORKSPACE_USE_SNAPSHOTS) {
                 dslContext.insertInto(
@@ -58,11 +56,22 @@ class WorkspaceUseSnapshotsDao {
                     it.value.projectName,
                     it.key,
                     it.value.status.name,
-                    formattedDate
+                    date.toLocalDate()
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.value.status.name)
             }
         }).execute()
     }
 
+    fun fetchWorkspaceNameDaily(
+        dslContext: DSLContext,
+        date: LocalDate
+    ): List<String> {
+        with(TWorkspaceUseSnapshots.T_WORKSPACE_USE_SNAPSHOTS) {
+            return dslContext.select(WORKSPACE_NAME)
+                .from(this)
+                .where(DATE.eq(date))
+                .fetch(WORKSPACE_NAME)
+        }
+    }
 }

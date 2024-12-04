@@ -174,4 +174,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun makeMoneyLastDay(userId: String): Response {
         return makeMoneyService.makeMoneyLastDay()
     }
+
+    override fun bills(userId: String, year: Int, month: Int, push: Boolean): Response {
+        return makeMoneyService.bills(year, month, push)
+    }
 }

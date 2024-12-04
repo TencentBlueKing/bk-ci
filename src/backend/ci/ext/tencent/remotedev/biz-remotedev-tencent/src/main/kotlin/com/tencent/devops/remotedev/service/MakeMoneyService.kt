@@ -1,12 +1,18 @@
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceUseSnapshotsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import java.lang.Long.bitCount
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -26,7 +32,8 @@ class MakeMoneyService @Autowired constructor(
     data class SaveData(
         val projectId: String,
         val projectName: String,
-        val status: WorkspaceStatus
+        val status: WorkspaceStatus,
+        val ip: String
     )
 
     companion object {
@@ -64,10 +71,10 @@ class MakeMoneyService @Autowired constructor(
         val use = a + c - d - b + e - f
 
         save(use, a, aMap, lastDay)
-        return output(a, b, c, d, e, f, use)
+        return makeMoneyLastDayOutput(a, b, c, d, e, f, use)
     }
 
-    private fun output(
+    private fun makeMoneyLastDayOutput(
         a: Set<String>,
         b: Set<String>,
         c: Set<String>,
@@ -111,7 +118,7 @@ class MakeMoneyService @Autowired constructor(
                 workbook.dispose()
             },
             MediaType.APPLICATION_OCTET_STREAM
-        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
+        ).header("Content-disposition", "attachment;filename=makeMoneyLastDay.xlsx")
             .build()
     }
 
@@ -128,7 +135,7 @@ class MakeMoneyService @Autowired constructor(
             if (res.isEmpty()) break
             aMap.putAll(res.associateBy({ it.name }, {
                 SaveData(
-                    it.projectId, it.projectName, WorkspaceStatus.load(it.status)
+                    it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip
                 )
             }))
             page += 1
@@ -148,7 +155,9 @@ class MakeMoneyService @Autowired constructor(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = filter.toSet()
-            ).associateBy({ it.name }, { SaveData(it.projectId, it.projectName, WorkspaceStatus.load(it.status)) })
+            ).associateBy({ it.name }, {
+                SaveData(it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip)
+            })
             // 快照昨天在使用的实例
             aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
@@ -158,5 +167,147 @@ class MakeMoneyService @Autowired constructor(
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
             }
         }
+    }
+
+    data class Bills(
+        @JsonProperty("cost_date")
+        val costDate: String,
+        @JsonProperty("project_id")
+        val projectId: String,
+        val name: String,
+        @JsonProperty("service_type")
+        val serviceType: String,
+        val kind: String,
+        @JsonProperty("res_id")
+        val resId: String,
+        val ip: String,
+        val usage: Int,
+        @JsonProperty("daydetail")
+        val dayDetail: Map<String, Int>
+    )
+
+    fun bills(year: Int, month: Int, push: Boolean): Response {
+        val bills = makeMoneyMonthly(year, month)
+        if (push) {
+            // todo 上报
+        }
+        return makeMoneyMonthlyOutput(bills)
+    }
+
+    private fun makeMoneyMonthly(year: Int, month: Int): List<Bills> {
+        val end = LocalDate.of(year, month, 14)
+        val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
+        val start = end.plusMonths(-1).plusDays(1)
+        val daysBetween = ChronoUnit.DAYS.between(start, end)
+        val total = mutableMapOf<String, Long>()
+        // 避免数据量太大，一天一天处理
+        for (dayIndex in 0 until daysBetween) {
+            val date = start.plusDays(dayIndex)
+            val workspaces = snapshotsDao.fetchWorkspaceNameDaily(dslContext, date)
+            workspaces.forEach { name ->
+                total[name] = (total[name] ?: 0L) + 1L shl dayIndex.toInt()
+            }
+        }
+        val dateList = getDateList(start, end)
+        val res = mutableListOf<Bills>()
+        // 分块处理减少性能压力
+        total.keys.chunked(99).forEach { chunk ->
+            val workspaceInfo = workspaceDao.limitFetchWorkspace(
+                dslContext = dslContext,
+                limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
+                workspaceName = chunk.toSet()
+            ).associateBy({ it.name }, {
+                SaveData(it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip)
+            })
+            chunk.forEach { name ->
+                val workspace = workspaceInfo[name]
+                val usage = bitCount(checkNotNull(total[name]))
+                val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
+                res.add(
+                    Bills(
+                        costDate = costData,
+                        projectId = workspace?.projectId ?: "ERROR",
+                        name = workspace?.projectName ?: "ERROR",
+                        serviceType = "云桌面服务",
+                        kind = "CLOUD_DESKTOP",
+                        resId = name,
+                        ip = workspace?.ip ?: "ERROR",
+                        usage = usage,
+                        dayDetail = dayDetail
+                    )
+                )
+            }
+        }
+        return res
+    }
+
+    private fun getDateList(start: LocalDate, end: LocalDate): List<String> {
+        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        return generateSequence(start) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(end) }
+            .map { it.format(formatter) }
+            .toList()
+    }
+
+    /*
+    * 返回数据格式参照: {"20241215": 1, "20241216": 1, "20241217": 1, "20241218": 1, "20241219": 1,
+    * "20241220": 1, "20241221": 1, "20241222": 1, "20241223": 1, "20241224": 1, "20241225": 1,
+    * "20241226": 1, "20241227": 1, "20241228": 1, "20241229": 1, "20241230": 1, "20241231": 1,
+    * "20250101": 1, "20250102": 1, "20250103": 1, "20250104": 0, "20250105": 0, "20250106": 0,
+    * "20250107": 0, "20250108": 0, "20250109": 0, "20250110": 0, "20250111": 1, "20250112": 0,
+    * "20250113": 0, "20250114": 0}
+    * */
+    private fun dayDetail(number: Long, dataList: List<String>): Map<String, Int> {
+        return generateSequence(number) { it shr 1 }
+            .takeWhile { it > 0 }
+            .mapIndexed { index, value ->
+                if (value and 1 == 1L) dataList[index] to 1 else dataList[index] to 0
+            }
+            .toMap()
+    }
+
+    private fun makeMoneyMonthlyOutput(
+        bills: List<Bills>
+    ): Response {
+        val workbook = SXSSFWorkbook()
+        val sheet = workbook.createSheet("Data")
+
+        sheet.createRow(0).let { row ->
+            row.createCell(0).setCellValue("cost_date 账单周期（月）")
+            row.createCell(1).setCellValue("project_id 项目id")
+            row.createCell(2).setCellValue("name 项目名称")
+            row.createCell(3).setCellValue("service_type 服务类型")
+            row.createCell(4).setCellValue("kind 指标名称")
+            row.createCell(5).setCellValue("res_id 资源ID")
+            row.createCell(6).setCellValue("ip 主机IP")
+            row.createCell(7).setCellValue("usage 使用天数")
+            row.createCell(8).setCellValue("daydetail 日明细数据")
+        }
+
+        bills.forEachIndexed { index, bill ->
+            val row = sheet.createRow(index + 1)
+
+            row.createCell(0).setCellValue(bill.costDate)
+            row.createCell(1).setCellValue(bill.projectId)
+            row.createCell(2).setCellValue(bill.name)
+            row.createCell(3).setCellValue(bill.serviceType)
+            row.createCell(4).setCellValue(bill.kind)
+            row.createCell(5).setCellValue(bill.resId)
+            row.createCell(6).setCellValue(bill.ip)
+            row.createCell(7).setCellValue(bill.usage.toString())
+            row.createCell(8).setCellValue(JsonUtil.toJson(bill.dayDetail, formatted = false))
+        }
+        for (i in 0 until 8) {
+            sheet.trackAllColumnsForAutoSizing()
+            sheet.autoSizeColumn(i)
+        }
+        return Response.ok(
+            StreamingOutput { output ->
+                workbook.write(output)
+                workbook.dispose()
+            },
+            MediaType.APPLICATION_OCTET_STREAM
+        ).header("Content-disposition", "attachment;filename=makeMoneyMonthly.xlsx")
+            .build()
     }
 }

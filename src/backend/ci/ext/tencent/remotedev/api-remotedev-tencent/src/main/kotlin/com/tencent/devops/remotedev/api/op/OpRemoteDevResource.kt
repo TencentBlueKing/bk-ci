@@ -216,4 +216,19 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Response
+
+    @Operation(summary = "对某一周期计算账单")
+    @GET
+    @Path("/bills")
+    fun bills(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("year")
+        year: Int,
+        @QueryParam("month")
+        month: Int,
+        @QueryParam("push")
+        push: Boolean
+    ): Response
 }

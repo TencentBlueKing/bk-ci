@@ -545,5 +545,19 @@ CREATE TABLE IF NOT EXISTS `T_USER_AUTH_APPLY` (
     KEY `IDX_RECORD_STATUS` USING BTREE (`PROJECT_ID`, `USER_ID`, `STATUS`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '用户权限申请记录表';
 
+CREATE TABLE IF NOT EXISTS T_WORKSPACE_USE_SNAPSHOTS
+(
+    ID             bigint auto_increment
+        primary key,
+    PROJECT_ID     varchar(64)                         not null comment '项目ID',
+    PROJECT_NAME            varchar(64) charset utf8mb4 default ''                not null comment '项目名称',
+    WORKSPACE_NAME varchar(128)                        not null comment '工作空间名称，唯一性',
+    STATUS         varchar(32)                         not null comment '工作空间状态',
+    DATE           date                         not null comment '快照时间',
+    CREATED_TIME   timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    constraint uindex
+        unique (WORKSPACE_NAME, DATE)
+)
+    comment '在使用中的工作空间快照表';
 
 SET FOREIGN_KEY_CHECKS = 1;
