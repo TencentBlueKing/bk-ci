@@ -198,14 +198,14 @@ class MakeMoneyService @Autowired constructor(
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
         val start = end.plusMonths(-1).plusDays(1)
-        val daysBetween = ChronoUnit.DAYS.between(start, end)
+        val daysBetween = ChronoUnit.DAYS.between(start, end) + 1
         val total = mutableMapOf<String, Long>()
         // 避免数据量太大，一天一天处理
         for (dayIndex in 0 until daysBetween) {
             val date = start.plusDays(dayIndex)
             val workspaces = snapshotsDao.fetchWorkspaceNameDaily(dslContext, date)
             workspaces.forEach { name ->
-                total[name] = (total[name] ?: 0L) + 1L shl dayIndex.toInt()
+                total[name] = (total[name] ?: 0L) + (1L shl dayIndex.toInt())
             }
         }
         val dateList = getDateList(start, end)
