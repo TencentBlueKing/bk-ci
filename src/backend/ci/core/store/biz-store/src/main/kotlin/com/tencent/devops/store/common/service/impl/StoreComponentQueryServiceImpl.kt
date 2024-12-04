@@ -836,8 +836,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val installed = storeInfoQuery.installed
             installed?.let {
                 // 根据是否安装条件筛选组件
-                if ((installed && !installComponentMap.contains(storeCode)) ||
-                    (!installed && installComponentMap.contains(storeCode))) {
+                if (installed != installComponentMap.containsKey(storeCode)) {
                     return@forEach
                 }
             }
