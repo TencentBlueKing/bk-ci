@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -108,6 +107,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
@@ -165,7 +165,8 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     companion object {
@@ -226,7 +227,6 @@ class PipelineRepositoryService constructor(
         yaml: YamlWithVersion? = null,
         baseVersion: Int? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
@@ -234,15 +234,21 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        inheritedDialectSetting: Boolean? = null,
-        pipelineDialectSetting: String? = null,
-        pipelineDialect: IPipelineDialect? = null
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
         val pipelineId = signPipelineId ?: pipelineIdGenerator.getNextId()
 
+        val pipelineSetting = if (!create) {
+            setting ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+        } else {
+            setting
+        }
+        val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+            projectId = projectId,
+            asCodeSettings = pipelineSetting?.pipelineAsCodeSettings
+        )
         val modelTasks = initModel(
             model = model,
             projectId = projectId,
@@ -276,8 +282,6 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
-            val pipelineSetting = setting
-                ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
             val result = update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -303,7 +307,7 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     model = model,
-                    customSetting = setting,
+                    customSetting = pipelineSetting,
                     yaml = yaml,
                     userId = userId,
                     channelCode = channelCode,
@@ -312,15 +316,12 @@ class PipelineRepositoryService constructor(
                     buildNo = buildNo,
                     modelTasks = modelTasks,
                     useSubscriptionSettings = useSubscriptionSettings,
-                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     templateId = templateId,
                     versionStatus = versionStatus,
                     branchName = branchName,
                     description = description,
-                    baseVersion = baseVersion,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting
+                    baseVersion = baseVersion
                 )
             }
             operationLogService.addOperationLog(
@@ -627,6 +628,45 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    /**
+     * 初始化默认的流水线setting
+     */
+    fun createDefaultSetting(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        // 空白流水线设置初始化
+        val maxPipelineResNum = if (
+            channelCode.name in versionConfigure.specChannels.split(",")
+        ) {
+            versionConfigure.specChannelMaxKeepNum
+        } else {
+            versionConfigure.maxKeepNum
+        }
+        val notifyTypes = if (channelCode == ChannelCode.BS) {
+            pipelineInfoExtService.failNotifyChannel()
+        } else {
+            ""
+        }
+        val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failSubscription = Subscription(
+            types = failType,
+            groups = emptySet(),
+            users = "\${{ci.actor}}",
+            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+        ).takeIf { failType.isNotEmpty() }
+        return PipelineSetting.defaultSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            maxPipelineResNum = maxPipelineResNum,
+            failSubscription = failSubscription
+        )
+    }
+
     private fun create(
         projectId: String,
         pipelineId: String,
@@ -641,14 +681,11 @@ class PipelineRepositoryService constructor(
         modelTasks: Collection<PipelineModelTask>,
         baseVersion: Int?,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String?,
-        description: String?,
-        inheritedDialectSetting: Boolean? = true,
-        pipelineDialectSetting: String? = null
+        description: String?
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
         val modelVersion = 1
@@ -692,35 +729,11 @@ class PipelineRepositoryService constructor(
                     pipelineName = model.name,
                     desc = model.desc ?: ""
                 ) ?: run {
-                    // 空白流水线设置初始化
-                    val maxPipelineResNum = if (
-                        channelCode.name in versionConfigure.specChannels.split(",")
-                    ) {
-                        versionConfigure.specChannelMaxKeepNum
-                    } else {
-                        versionConfigure.maxKeepNum
-                    }
-                    val notifyTypes = if (channelCode == ChannelCode.BS) {
-                        pipelineInfoExtService.failNotifyChannel()
-                    } else {
-                        ""
-                    }
-                    val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
-                        .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                    val failSubscription = Subscription(
-                        types = failType,
-                        groups = emptySet(),
-                        users = "\${{ci.actor}}",
-                        content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-                    ).takeIf { failType.isNotEmpty() }
-                    PipelineSetting.defaultSetting(
+                    createDefaultSetting(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
-                        maxPipelineResNum = maxPipelineResNum,
-                        failSubscription = failSubscription,
-                        inheritedDialectSetting = inheritedDialectSetting,
-                        pipelineDialectSetting = pipelineDialectSetting
+                        channelCode = channelCode
                     )
                 }
 
@@ -729,42 +742,19 @@ class PipelineRepositoryService constructor(
                         if (useTemplateSettings(
                                 templateId = templateId,
                                 useSubscriptionSettings = useSubscriptionSettings,
-                                useLabelSettings = useLabelSettings,
                                 useConcurrencyGroup = useConcurrencyGroup
                             )
                         ) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId!!)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
-                            setting.pipelineId = pipelineId
-                            setting.pipelineName = model.name
                             setting.version = settingVersion
-                            if (useSubscriptionSettings != true) {
-                                setting.successSubscription = null
-                                setting.successSubscriptionList = null
-                                setting.failSubscription = null
-                                setting.failSubscriptionList = newSetting.failSubscriptionList
+                            if (useSubscriptionSettings == true) {
+                                newSetting.copySubscriptionSettings(setting)
                             }
-                            if (useConcurrencyGroup != true) {
-                                setting.concurrencyGroup = null
-                                setting.concurrencyCancelInProgress = false
-                                setting.maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                            if (useConcurrencyGroup == true) {
+                                newSetting.copyConcurrencyGroup(setting)
                             }
-                            if (useLabelSettings != true) {
-                                setting.labels = listOf()
-                            } else {
-                                val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-                                val labels = ArrayList<String>()
-                                groups.forEach {
-                                    labels.addAll(it.labels)
-                                }
-                                setting.labels = labels
-                            }
-                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
-                                inheritedDialect = inheritedDialectSetting,
-                                pipelineDialect = pipelineDialectSetting
-                            )
-                            newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
                         pipelineSettingDao.saveSetting(transactionContext, newSetting)
@@ -878,11 +868,10 @@ class PipelineRepositoryService constructor(
     private fun useTemplateSettings(
         templateId: String? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false
     ): Boolean {
         return templateId != null &&
-                (useSubscriptionSettings == true || useConcurrencyGroup == true || useLabelSettings == true)
+                (useSubscriptionSettings == true || useConcurrencyGroup == true)
     }
 
     private fun update(
