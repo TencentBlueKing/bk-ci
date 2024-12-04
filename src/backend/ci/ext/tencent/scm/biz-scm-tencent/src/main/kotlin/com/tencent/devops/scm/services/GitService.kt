@@ -1109,8 +1109,8 @@ class GitService @Autowired constructor(
             val data = response.body!!.string()
             logger.info("createGitRepository response>> $data")
             val dataMap = JsonUtil.toMap(data)
-            val repositoryUrl = dataMap["http_url_to_repo"]
-            if (StringUtils.isEmpty(repositoryUrl)) {
+            val repositoryUrl = dataMap["https_url_to_repo"]
+            if (repositoryUrl == null || repositoryUrl.toString().isBlank()) {
                 val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                     messageCode = USER_CREATE_GIT_CODE_REPOSITORY_FAIL,
                     language = I18nUtil.getLanguage(userId)
