@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -544,5 +545,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<WorkspaceRecordMetadata>> {
         logger.info("getViewRecordMetadata $appCode|$data")
         return client.get(ServiceRemoteDevResource::class).getViewRecordMetadata(data)
+    }
+
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
+        logger.info("getWorkspaceTimeline $workspaceName|$workspaceName|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceTimeline(
+            userId = userId,
+            workspaceName = workspaceName,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }
