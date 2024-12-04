@@ -809,7 +809,7 @@ class WorkspaceService @Autowired constructor(
         it: WorkspaceRecordInf,
         userId: String
     ): WorkspaceStatus {
-        if (it.status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
+        if (it.status.notOk2doNextAction() && Duration.between(
                 it.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds > DEFAULT_WAIT_TIME
