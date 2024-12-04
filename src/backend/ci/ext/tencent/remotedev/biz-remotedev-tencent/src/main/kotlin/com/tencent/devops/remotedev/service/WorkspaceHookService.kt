@@ -217,8 +217,8 @@ class WorkspaceHookService @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
+            logger.info("request api[${this.request.url.toUrl()}] code: ${this.code}, body: $responseContent")
             if (!this.isSuccessful) {
-                logger.error("request api[${this.request.url.toUrl()}] error: ${this.code}, body: $responseContent")
                 throw RemoteServiceException("request api[${this.request.url.toUrl()}] error", this.code)
             }
 
