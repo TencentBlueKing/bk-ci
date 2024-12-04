@@ -134,7 +134,17 @@ class PermissionAuthorizationServiceImpl(
         operateChannel: OperateChannel?
     ): SQLPage<ResourceAuthorizationResponse> {
         logger.info("list resource authorizations:$condition|$operateChannel")
-        val (records, count) = if (operateChannel == OperateChannel.PERSONAL) {
+        val (records, count) = if (operateChannel != OperateChannel.PERSONAL) {
+            val records = authAuthorizationDao.list(
+                dslContext = dslContext,
+                condition = condition
+            )
+            val count = authAuthorizationDao.count(
+                dslContext = dslContext,
+                condition = condition
+            )
+            Pair(records, count)
+        } else {
             val beingHandoverDetails = permissionHandoverApplicationService.listMemberHandoverDetails(
                 projectCode = condition.projectCode,
                 memberId = condition.handoverFrom!!,
@@ -142,37 +152,31 @@ class PermissionAuthorizationServiceImpl(
                 resourceType = condition.resourceType!!
             )
             val beingHandoverResourceCodes = beingHandoverDetails.map { it.itemId }.distinct()
-            val finalCondition = condition.apply {
-                when (this.queryHandover) {
-                    true -> this.filterResourceCodes = beingHandoverResourceCodes
-                    false -> this.excludeResourceCodes = beingHandoverResourceCodes
-                    else -> {}
+            if (condition.queryHandover == true && beingHandoverResourceCodes.isEmpty()) {
+                Pair(emptyList(), 0L)
+            } else {
+                val finalCondition = condition.apply {
+                    when (this.queryHandover) {
+                        true -> this.filterResourceCodes = beingHandoverResourceCodes
+                        false -> this.excludeResourceCodes = beingHandoverResourceCodes
+                        else -> {}
+                    }
                 }
-            }
-            val records = authAuthorizationDao.list(
-                dslContext = dslContext,
-                condition = finalCondition
-            ).map {
-                it.copy(
-                    beingHandover = beingHandoverResourceCodes.contains(it.resourceCode),
-                    approver = beingHandoverDetails.find { details -> details.itemId == it.resourceCode }?.approver
+                val records = authAuthorizationDao.list(
+                    dslContext = dslContext,
+                    condition = finalCondition
+                ).map {
+                    it.copy(
+                        beingHandover = beingHandoverResourceCodes.contains(it.resourceCode),
+                        approver = beingHandoverDetails.find { details -> details.itemId == it.resourceCode }?.approver
+                    )
+                }
+                val count = authAuthorizationDao.count(
+                    dslContext = dslContext,
+                    condition = finalCondition
                 )
+                Pair(records, count)
             }
-            val count = authAuthorizationDao.count(
-                dslContext = dslContext,
-                condition = finalCondition
-            )
-            Pair(records, count)
-        } else {
-            val records = authAuthorizationDao.list(
-                dslContext = dslContext,
-                condition = condition
-            )
-            val count = authAuthorizationDao.count(
-                dslContext = dslContext,
-                condition = condition
-            )
-            Pair(records, count)
         }
         return SQLPage(count = count.toLong(), records = records)
     }
