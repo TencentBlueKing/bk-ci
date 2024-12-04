@@ -104,3 +104,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-normal:before {
 	content: "\e11b";
 }
+.permission-icon-handover:before {
+	content: "\e11c";
+}
+.permission-icon-info:before {
+	content: "\e11d";
+}

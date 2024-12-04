@@ -188,7 +188,7 @@ defineExpose({
 async function fetchResourceTypes() {
   try {
     const [projects, resourceTypes] = await Promise.all([
-      http.getProjectsList(),
+      http.fetchProjectList(),
       http.getResourceTypesList()
     ]);
     serviceList.value = resourceTypes;

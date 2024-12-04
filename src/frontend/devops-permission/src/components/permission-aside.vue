@@ -28,6 +28,11 @@ const menuList = [
     icon: 'permission-icon-quanxianshenqing',
   },
   {
+    name: t('我的交接'),
+    code: 'my-handover',
+    icon: 'permission-icon-handover'
+  },
+  {
     name: t('我的项目'),
     code: 'my-project',
     icon: 'permission-icon-wodexiangmu',

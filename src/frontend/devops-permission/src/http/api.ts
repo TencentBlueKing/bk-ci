@@ -62,6 +62,42 @@ export default {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
   },
   /**
+   * 批量交接用户组成员
+   */
+  batchHandover(projectId: string, params?: any) {
+    return fetch.put(`${apiPerfix}/auth/resource/member/${projectId}/batch/personal/handover`, params);
+  },
+  /**
+   * 批量移除用户组成员
+   */
+  batchRemove(projectId: string, params?: any) {
+    return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/batch/personal/remove`, params);
+  },
+  /**
+   * 重置资源授权管理
+   */
+  batchOperateCheck(projectId: string, batchOperateType: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/resource/member/${projectId}/batch/${batchOperateType}/check`, params);
+  },
+  /**
+   * 获取项目成员有权限的用户组数量
+   */
+    getMemberGroups(projectId: string, params: any) {
+      const query = new URLSearchParams({
+        ...params,
+      }).toString();
+      return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/getMemberGroupCount?${query}`);
+    },
+  /**
+   * 获取项目成员有权限的用户组
+   */
+  getMemberGroupsDetails(projectId: string, resourceType: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/getMemberGroupsDetails?${query}`);
+  },
+  /**
    * 获取项目下全体成员(简单查询)
    */
   async getProjectMembers(projectId: string, params?: any) {
