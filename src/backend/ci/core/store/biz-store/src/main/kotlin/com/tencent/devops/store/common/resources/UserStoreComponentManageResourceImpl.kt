@@ -105,7 +105,7 @@ class UserStoreComponentManageResourceImpl(
         storeCode: String,
         storeTestRequest: StoreTestRequest
     ): Result<Boolean> {
-        return  Result(
+        return Result(
             storeProjectService.saveStoreTestInfo(
                 userId = userId,
                 storeType = storeType,

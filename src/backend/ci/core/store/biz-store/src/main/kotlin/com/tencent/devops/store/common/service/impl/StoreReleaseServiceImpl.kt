@@ -505,7 +505,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             StoreReleaseSpecBusService::class.java, StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         val status = storeReleaseSpecBusService.getStoreRunPipelineStatus(startFlag = false)
-        val lock = RedisLock(redisOperation, "store:$storeId:rebuild", 30)
+        val lock = RedisLock(redisOperation, "store:$storeId:build", 30)
         try {
             lock.lock()
             status?.let {
