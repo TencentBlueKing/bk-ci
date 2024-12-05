@@ -79,7 +79,7 @@ interface PermissionAuthorizationService {
      */
     fun listResourceAuthorizations(
         condition: ResourceAuthorizationConditionRequest,
-        operateChannel: OperateChannel? = OperateChannel.MANAGER,
+        operateChannel: OperateChannel? = OperateChannel.MANAGER
     ): SQLPage<ResourceAuthorizationResponse>
 
     /**

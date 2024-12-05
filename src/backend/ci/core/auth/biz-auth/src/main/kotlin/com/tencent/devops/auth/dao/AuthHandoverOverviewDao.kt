@@ -7,6 +7,7 @@ import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthHandoverOverview
 import com.tencent.devops.model.auth.tables.records.TAuthHandoverOverviewRecord
 import org.jooq.Condition
@@ -87,7 +88,9 @@ class AuthHandoverOverviewDao {
                     } else {
                         it
                     }
-                }.fetch().map { it.convert(queryRequest.memberId) }
+                }.skipCheck()
+                .fetch()
+                .map { it.convert(queryRequest.memberId) }
         }
     }
 
