@@ -113,7 +113,11 @@ class WorkspaceHookService @Autowired constructor(
         val nodeHashIds = client.get(ServiceEnvironmentResource::class).listNodesByEnvIds(
             userId, projectId, listOf(envHashId)
         ).data?.map { it.nodeHashId }?.toSet() ?: return setOf()
+        return getIpByNodeHashId(projectId, nodeHashIds) ?: emptySet()
+    }
 
+    private fun getIpByNodeHashId(projectId: String, nodeHashIds: Set<String>?): Set<String>? {
+        if (nodeHashIds.isNullOrEmpty()) return null
         val workspaces = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
             nodeHashId = nodeHashIds,
@@ -144,16 +148,29 @@ class WorkspaceHookService @Autowired constructor(
         return ips
     }
 
-    fun hookLoad(userId: String, projectId: String, envHashId: String, ip: List<String>?) {
-        logger.info("hookLoad|$userId|$projectId|$envHashId|$ip")
+    fun hookLoad(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
+        logger.info("hookLoad|$userId|$projectId|$envHashId|$nodeHashIds")
         val load = client.get(ServiceDEVXResource::class)
             .getEnvHook(userId = userId, projectId = projectId, envHashId = envHashId).data!!
-        installHook(ip?.ifEmpty { null }?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId), load)
+        installHook(
+            ip = getIpByNodeHashId(projectId = projectId, nodeHashIds = nodeHashIds?.toSet()) ?: getEnvAllIp(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId
+            ),
+            hooks = load
+        )
     }
 
-    fun hookDelete(userId: String, projectId: String, envHashId: String, ip: List<String>?) {
-        logger.info("hookDelete|$userId|$projectId|$envHashId|$ip")
-        uninstallHook(ip?.ifEmpty { null }?.let { ip.toSet() } ?: getEnvAllIp(userId, projectId, envHashId))
+    fun hookDelete(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
+        logger.info("hookDelete|$userId|$projectId|$envHashId|$nodeHashIds")
+        uninstallHook(
+            ip = getIpByNodeHashId(projectId = projectId, nodeHashIds = nodeHashIds?.toSet()) ?: getEnvAllIp(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId
+            )
+        )
     }
 
     private fun installHook(ip: Set<String>, hooks: List<DEVXHook>) {
