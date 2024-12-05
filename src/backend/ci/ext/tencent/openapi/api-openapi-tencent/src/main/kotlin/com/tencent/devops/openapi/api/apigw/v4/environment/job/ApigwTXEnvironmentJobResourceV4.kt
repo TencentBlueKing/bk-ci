@@ -377,7 +377,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         summary = "在指定节点上安装GSE Agent",
         tags = ["v4_app_job_install_agent"]
     )
-    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Successful Operation")])
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Successful Operation")
+    )
     @POST
     @Path("/{projectId}/install_agent")
     fun installAgent(
@@ -398,7 +400,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         summary = "查询节点的agent安装任务的状态",
         tags = ["v4_app_job_query_agent_task_status"]
     )
-    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Successful Operation")])
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Successful Operation")
+    )
     @GET
     @Path("/{projectId}/query_agent_task_status")
     fun queryAgentTaskStatus(
@@ -426,7 +430,9 @@ interface ApigwTXEnvironmentJobResourceV4 {
         summary = "获取手动安装agent的命令",
         tags = ["v4_app_job_obtain_manual_installation_command"]
     )
-    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Successful Operation")])
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Successful Operation")
+    )
     @GET
     @Path("/{projectId}/obtain_manual_installation_command")
     fun obtainManualInstallationCommand(
