@@ -34,10 +34,6 @@ import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -379,20 +375,6 @@ interface ApigwTXEnvironmentJobResourceV4 {
         summary = "在指定节点上安装GSE Agent",
         tags = ["v4_app_job_install_agent"]
     )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Successful Response",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                        schema = Schema(implementation = AgentResult::class)
-                    )
-                ]
-            )
-        ]
-    )
     @POST
     @Path("/{projectId}/install_agent")
     fun installAgent(
@@ -412,20 +394,6 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @Operation(
         summary = "查询节点的agent安装任务的状态",
         tags = ["v4_app_job_query_agent_task_status"]
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Successful Response",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                        schema = Schema(implementation = AgentResult::class)
-                    )
-                ]
-            )
-        ]
     )
     @GET
     @Path("/{projectId}/query_agent_task_status")
@@ -453,20 +421,6 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @Operation(
         summary = "获取手动安装agent的命令",
         tags = ["v4_app_job_obtain_manual_installation_command"]
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Successful Response",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                        schema = Schema(implementation = AgentResult::class)
-                    )
-                ]
-            )
-        ]
     )
     @GET
     @Path("/{projectId}/obtain_manual_installation_command")
