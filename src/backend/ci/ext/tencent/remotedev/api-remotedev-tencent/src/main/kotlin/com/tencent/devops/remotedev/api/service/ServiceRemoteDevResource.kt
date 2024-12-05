@@ -622,8 +622,8 @@ interface ServiceRemoteDevResource {
         @QueryParam("envHashId")
         envHashId: String,
         @Parameter(description = "节点 hash id, 为null时将对环境下所有节点重载hook", required = true)
-        @QueryParam("nodeHashId")
-        nodeHashId: List<String>?
+        @QueryParam("nodeHashIds")
+        nodeHashIds: List<String>?
     )
 
     @Operation(summary = "重新装载云桌面环境hook配置")
@@ -640,8 +640,8 @@ interface ServiceRemoteDevResource {
         @QueryParam("envHashId")
         envHashId: String,
         @Parameter(description = "节点 hash id, 为null时将对环境下所有节点重载hook", required = true)
-        @QueryParam("nodeHashId")
-        nodeHashId: List<String>?
+        @QueryParam("nodeHashIds")
+        nodeHashIds: List<String>?
     )
 
     @Operation(summary = "获取用户工作空间列表")

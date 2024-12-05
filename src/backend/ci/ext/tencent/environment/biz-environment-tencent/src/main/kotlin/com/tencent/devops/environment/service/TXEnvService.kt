@@ -122,7 +122,7 @@ class TXEnvService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     envHashId = envHashId.hashId,
-                    nodeHashId = null
+                    nodeHashIds = null
                 )
             }
         }
@@ -160,7 +160,7 @@ class TXEnvService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 envHashId = envHashId,
-                nodeHashId = nodeHashIds
+                nodeHashIds = nodeHashIds
             )
         }
     }
@@ -187,7 +187,7 @@ class TXEnvService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 envHashId = envHashId,
-                nodeHashId = null
+                nodeHashIds = null
             )
         }
         super.deleteEnvironment(userId, projectId, envHashId)
@@ -216,7 +216,7 @@ class TXEnvService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 envHashId = envHashId,
-                nodeHashId = nodeHashIds
+                nodeHashIds = nodeHashIds
             )
         }
         super.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)

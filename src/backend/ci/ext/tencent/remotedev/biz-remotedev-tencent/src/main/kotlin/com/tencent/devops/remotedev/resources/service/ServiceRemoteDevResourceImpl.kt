@@ -716,21 +716,21 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String, nodeHashId: List<String>?) {
+    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
         workspaceHookService.hookLoad(
             userId = userId,
             projectId = projectId,
             envHashId = envHashId,
-            nodeHashId = nodeHashId
+            nodeHashIds = nodeHashIds
         )
     }
 
-    override fun deleteEnvHook(userId: String, projectId: String, envHashId: String, nodeHashId: List<String>?) {
+    override fun deleteEnvHook(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
         workspaceHookService.hookDelete(
             userId = userId,
             projectId = projectId,
             envHashId = envHashId,
-            nodeHashId = nodeHashId
+            nodeHashIds = nodeHashIds
         )
     }
 
