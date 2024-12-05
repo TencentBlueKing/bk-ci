@@ -259,7 +259,7 @@ class MakeMoneyService @Autowired constructor(
     * */
     private fun dayDetail(number: Long, dataList: List<String>): Map<String, Int> {
         return generateSequence(number) { it shr 1 }
-            .takeWhile { it > 0 }
+            .take(dataList.size)
             .mapIndexed { index, value ->
                 if (value and 1 == 1L) dataList[index] to 1 else dataList[index] to 0
             }
