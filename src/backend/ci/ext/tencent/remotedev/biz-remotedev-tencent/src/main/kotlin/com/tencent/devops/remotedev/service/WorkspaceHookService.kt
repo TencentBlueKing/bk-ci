@@ -166,11 +166,12 @@ class WorkspaceHookService @Autowired constructor(
                 executables = executables
             )
         }
+        val vmIp = ip.joinToString(",")
         val actionString = JsonUtil.toJson(Actions(actions), false)
         val req = RequestBody(
-            name = "钩子安装",
+            name = "【云桌面】钩子安装 $vmIp",
             constants = mapOf(
-                "\${vm_ip}" to ip.joinToString(","),
+                "\${vm_ip}" to vmIp,
                 "\${operation_type}" to "install",
                 "\${base64EncodedString}" to Base64.getEncoder().encodeToString(actionString.toByteArray())
             )
@@ -185,16 +186,31 @@ class WorkspaceHookService @Autowired constructor(
 
         val resp = OkhttpUtils.doHttp(request).resolveResponse<Response>()
         logger.info("installHook|task status: ${resp.result}|task url: ${resp.data?.taskUrl}")
+        if (resp.data?.taskId != null) {
+            startTask(resp.data.taskId)
+        }
+    }
+
+    private fun startTask(taskId: Int) {
+        val url = bkConfig.bksopsStartTask.replace("{taskId}", "$taskId")
+        logger.info("startTask|request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(headers())
+            .post("{\"scope\":\"project\"}".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        OkhttpUtils.doHttp(request).resolveResponse<Any>()
     }
 
     fun uninstallHook(ip: Set<String>) {
         if (ip.isEmpty()) {
             logger.warn("uninstallHook|ip: $ip")
         }
+        val vmIp = ip.joinToString(",")
         val req = RequestBody(
-            name = "钩子卸载",
+            name = "【云桌面】钩子卸载 $vmIp",
             constants = mapOf(
-                "\${vm_ip}" to ip.joinToString(","),
+                "\${vm_ip}" to vmIp,
                 "\${operation_type}" to "uninstall"
             )
         )
@@ -208,6 +224,9 @@ class WorkspaceHookService @Autowired constructor(
 
         val resp = OkhttpUtils.doHttp(request).resolveResponse<Response>()
         logger.info("uninstallHook|task status: ${resp.result}|task url: ${resp.data?.taskUrl}")
+        if (resp.data?.taskId != null) {
+            startTask(resp.data.taskId)
+        }
     }
 
     private fun headers() = mapOf(
