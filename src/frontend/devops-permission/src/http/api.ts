@@ -61,6 +61,26 @@ export default {
   getResourceAuthList (projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
   },
+  // 获取oauth授权列表
+  getOauthResource() {
+    return fetch.get(`${apiPerfix}/oauth/resource`)
+  },
+  // 删除oauth授权
+  deleteOauth(type: any) {
+    return fetch.delete(`${apiPerfix}/oauth/resource/delete?oauthType=${type}`)
+  },
+  getOauthRelSource(type: any, page: Number, pageSize: Number) {
+    return fetch.get(`${apiPerfix}/oauth/resource/relSource?oauthType=${type}&page=${page}&pageSize=${pageSize}`)
+  },
+  refreshOauth(oauthType: any, redirectUrl: any) {
+    return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
+  },
+  /**
+   * 获取（代码库、流水线、部署节点）授权列表
+   */
+  getResourceAuthList(projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
+  },
   /**
    * 批量交接用户组成员
    */
@@ -82,12 +102,12 @@ export default {
   /**
    * 获取项目成员有权限的用户组数量
    */
-    getMemberGroups(projectId: string, params: any) {
-      const query = new URLSearchParams({
-        ...params,
-      }).toString();
-      return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/getMemberGroupCount?${query}`);
-    },
+  getMemberGroups(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/etMemberGroupCount?${query}g`);
+  },
   /**
    * 获取项目成员有权限的用户组
    */
@@ -164,5 +184,11 @@ export default {
    */
   listGroupsOfHandover(params: any) {
     return fetch.post(`${apiPerfix}/auth/handover/listGroupsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  getMemberGroupDetails(projectId: string, resourceType: string, groupId: number) {
+    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails`);
   },
 }

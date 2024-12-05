@@ -1,43 +1,37 @@
 <template>
-  <bk-loading :loading="groupTableStore.isLoading" :zIndex="100" class="group-tab">
-    <div class="manage-content-project" v-if="projectTable">
-      <p class="project-group">{{t("项目级用户组")}}</p>
-      <div class="project-group-table">
-        <bk-collapse-panel v-model="projectTable.activeFlag">
+  <bk-loading :loading="detailGroupTable.isLoading" :zIndex="100" class="group-tab">
+    <div class="manage-content-project" v-if="projectTable.length">
+      <p class="project-group">
+        <span>{{t("流水线权限代持")}}</span>
+        <i18n-t class="describe" keypath="你是以下X条流水线权限代持人，直接退出将导致流水线运行失败，需先移交" tag="div">
+          <span class="text-blue">{{ 3 }}</span>
+        </i18n-t>
+      </p>
+      <div class="project-group-table" v-for="item in projectTable" :key="item.resourceType">
+        <bk-collapse-panel v-model="item.activeFlag" :item-click="(type) => collapseClick(type, 'AUTHORIZATION')" :name="item.resourceType">
           <template #header>
             <p class="group-title">
               <i :class="{
-                'manage-icon manage-icon-down-shape': projectTable.activeFlag,
-                'manage-icon manage-icon-right-shape': !projectTable.activeFlag,
+                'manage-icon manage-icon-down-shape': item.activeFlag,
+                'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
-              <span class="group-num">{{projectTable.count}}</span>
+              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              {{item.resourceTypeName}} ({{ item.resourceType }})
+              <span class="group-num">{{item.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
-              v-if="projectTable.tableData?.length"
-              :is-show-operation="isShowOperation"
-              :data="projectTable.tableData"
-              :resource-name="projectTable.resourceTypeName"
-              :resource-type="projectTable.resourceType"
-              :group-total="projectTable.count"
-              :limit="projectTable.limit"
-              :pagination="projectTable.pagination"
-              :current="projectTable.current"
-              :selected-data="selectedData"
-              :has-next="projectTable.hasNext"
-              :group-name="t('用户组')"
-              :scroll-loading="projectTable.scrollLoading"
-              :batch-flag="batchFlag"
-              @handle-renewal="handleRenewal"
-              @handle-hand-over="handleHandOver"
-              @handle-remove="handleRemove"
-              @get-select-list="getSelectList"
-              @handle-select-all-data="handleSelectAllData"
-              @handle-load-more="handleLoadMore"
-              @handle-clear="handleClear"
+              v-if="item.tableData"
+              :data="item.tableData"
+              :isAuthorizations="true"
+              :pagination="item.pagination"
+              :resource-type="item.resourceType"
+              :resource-name="item.resourceTypeName"
+              :loading="item.tableLoading"
+              :group-name="item.resourceTypeName"
+              :type="'AUTHORIZATION'"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
@@ -46,9 +40,14 @@
       </div>
     </div>
     <div class="manage-content-resource" v-if="sourceTable.length">
-      <p class="project-group">{{t("资源级用户组")}}</p>
+      <p class="project-group">
+        <span>{{t("唯一拥有者资源")}}</span>
+        <!-- <i18n-t class="describe" keypath="你是以下X个用户组的唯一管理员，直接退出将导致对应资源无管理人，需先移交" tag="div">
+          <span class="text-blue">{{ 3 }}</span>
+        </i18n-t> -->
+      </p>
       <div class="project-group-table" v-for="item in sourceTable" :key="item.resourceType">
-        <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.resourceType">
+        <bk-collapse-panel v-model="item.activeFlag" :item-click="(type) => collapseClick(type, 'GROUP')" :name="item.resourceType">
           <template #header>
             <p class="group-title">
               <i :class="{
@@ -56,34 +55,21 @@
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              <img v-if="item.resourceType" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
-              :is-show-operation="isShowOperation"
+              v-if="item.tableData"
               :data="item.tableData"
-              :resource-name="item.resourceTypeName"
-              :resource-type="item.resourceType"
-              :group-total="item.count"
               :pagination="item.pagination"
-              :limit="item.limit"
-              :current="item.current"
-              :selected-data="selectedData"
-              :has-next="item.hasNext"
+              :resource-type="item.resourceType"
+              :resource-name="item.resourceTypeName"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
-              :scroll-loading="item.scrollLoading"
-              :batch-flag="batchFlag"
-              @handle-renewal="handleRenewal"
-              @handle-hand-over="handleHandOver"
-              @handle-remove="handleRemove"
-              @get-select-list="getSelectList"
-              @handle-select-all-data="handleSelectAllData"
-              @handle-load-more="handleLoadMore"
-              @handle-clear="handleClear"
+              :type="'GROUP'"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
@@ -97,8 +83,8 @@
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
 import { defineProps, defineEmits, computed } from 'vue';
-import userGroupTable from '@/store/userGroupTable';
-import TabTable from './tab-table.vue';
+import userDetailGroupTable from '@/store/userDetailGroupTable';
+import TabTable from './detail-tab-table.vue';
 import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
 import codelibIcon from '@/css/svg/color-logo-codelib.svg';
 import codeccIcon from '@/css/svg/color-logo-codecc.svg';
@@ -106,12 +92,26 @@ import environmentIcon from '@/css/svg/color-logo-environment.svg';
 import experienceIcon from '@/css/svg/color-logo-experience.svg';
 import qualityIcon from '@/css/svg/color-logo-quality.svg';
 import ticketIcon from '@/css/svg/color-logo-ticket.svg';
-import turboIcon from '@/css/svg/color-logo-turbo.svg';
+import turboIcon from '@/css/svg/color-logo-turbo.svg';  // 编译加速
 
+const props = defineProps({
+  sourceList: {
+    type: Array,
+    default: () => [],
+  },
+  pageLimitChange: {
+    type: Function,
+    default: () => {},
+  },
+  pageValueChange: {
+    type: Function,
+    default: () => {},
+  },
+});
 const { t } = useI18n();
-const groupTableStore = userGroupTable();
-const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));
-const sourceTable= computed(() => props.sourceList.filter(item => item.resourceType != 'project'));
+const detailGroupTable = userDetailGroupTable();
+const projectTable = computed(() => props.sourceList.filter(item => item.type === "AUTHORIZATION"));
+const sourceTable= computed(() => props.sourceList.filter(item => item.type === "GROUP"));
 
 const getServiceIcon = (type) => {
   const iconMap = {
@@ -134,69 +134,14 @@ const getServiceIcon = (type) => {
   return iconMap[type]
 }
 
-const props = defineProps({
-  isShowOperation: {
-    type: Boolean,
-    default: true,
-  },
-  selectedData: {
-    type: Object,
-    default: () => ({})
-  },
-  sourceList: {
-    type: Array,
-    default: () => [],
-  },
-  asideItem: {
-    type: Object,
-    default: () => ({})
-  },
-  batchFlag: String,
-  handleRenewal: {
-    type: Function,
-    default: () => {},
-  },
-  handleHandOver: {
-    type: Function,
-    default: () => {},
-  },
-  handleRemove: {
-    type: Function,
-    default: () => {},
-  },
-  getSelectList: {
-    type: Function,
-    default: () => {},
-  },
-  handleLoadMore: {
-    type: Function,
-    default: () => {},
-  },
-  handleSelectAllData: {
-    type: Function,
-    default: () => {},
-  },
-  handleClear: {
-    type: Function,
-    default: () => {},
-  },
-  pageLimitChange: {
-    type: Function,
-    default: () => {},
-  },
-  pageValueChange: {
-    type: Function,
-    default: () => {},
-  },
-});
 const emit = defineEmits(['collapseClick']);
 
 /**
  * 折叠面板点击事件
  * @param id 折叠面板唯一标志
  */
-function collapseClick(resourceType) {
-  emit('collapseClick', resourceType.name);
+function collapseClick(resourceType, flag) {
+  emit('collapseClick', resourceType.name, flag);
 }
 </script>
 
@@ -225,7 +170,6 @@ function collapseClick(resourceType) {
     box-shadow: 0 2px 4px 0 #1919290d;
   }
   .manage-content-project {
-    max-height: 630px;
     margin-bottom: 15px;
     .manage-content-common();
   }
@@ -235,6 +179,7 @@ function collapseClick(resourceType) {
   }
   
   .project-group {
+    
     font-family: MicrosoftYaHei-Bold;
     font-weight: 700;
     font-size: 14px;
@@ -242,12 +187,28 @@ function collapseClick(resourceType) {
     margin-bottom: 16px;
     letter-spacing: 0;
     line-height: 22px;
+
+    .describe {
+      display: inline-block;
+      margin-left: 24px;
+      font-size: 12px;
+      color: #4D4F56;
+      font-weight: 500;
+    }
+
+    .text-blue{
+      color: #699DF4;
+    }
   }
   
   .project-group-table {
     width: 100%;
     height: 100%;
     margin-bottom: 16px;
+
+    .permission {
+      margin-bottom: 10px;
+    }
   
     .bk-table {
       border: 1px solid #dcdee5;
