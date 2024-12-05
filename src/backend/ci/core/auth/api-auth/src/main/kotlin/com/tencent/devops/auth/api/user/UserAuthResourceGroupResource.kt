@@ -122,6 +122,24 @@ interface UserAuthResourceGroupResource {
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>>
 
+    @GET
+    @Path("{groupId}/getMemberGroupDetails/")
+    @Operation(summary = "获取用户加入单个组的详情")
+    fun getMemberGroupDetails(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int,
+        @QueryParam("memberId")
+        @Parameter(description = "组织ID/成员ID")
+        memberId: String
+    ): Result<GroupDetailsInfoVo>
+
     @PUT
     @Path("{groupId}/member/renewal")
     @Operation(summary = "用户续期")
