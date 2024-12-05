@@ -739,6 +739,7 @@
     margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
+    height: calc(100% - 205px);
     &.is-outputs-panel {
         overflow: hidden;
     }
