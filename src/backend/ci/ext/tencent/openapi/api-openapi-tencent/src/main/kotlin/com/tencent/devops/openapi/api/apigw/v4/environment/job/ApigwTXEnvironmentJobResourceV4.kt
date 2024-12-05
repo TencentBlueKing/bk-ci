@@ -34,6 +34,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -378,7 +379,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
         tags = ["v4_app_job_install_agent"]
     )
     @ApiResponses(
-        ApiResponse(responseCode = "200", description = "Successful Operation")
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Successful Response",
+                content = [(Content(mediaType = "application/json"))]
+            )
+        ]
     )
     @POST
     @Path("/{projectId}/install_agent")
@@ -399,9 +406,6 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @Operation(
         summary = "查询节点的agent安装任务的状态",
         tags = ["v4_app_job_query_agent_task_status"]
-    )
-    @ApiResponses(
-        ApiResponse(responseCode = "200", description = "Successful Operation")
     )
     @GET
     @Path("/{projectId}/query_agent_task_status")
@@ -429,9 +433,6 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @Operation(
         summary = "获取手动安装agent的命令",
         tags = ["v4_app_job_obtain_manual_installation_command"]
-    )
-    @ApiResponses(
-        ApiResponse(responseCode = "200", description = "Successful Operation")
     )
     @GET
     @Path("/{projectId}/obtain_manual_installation_command")
