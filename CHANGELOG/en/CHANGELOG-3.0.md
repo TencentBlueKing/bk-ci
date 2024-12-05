@@ -1,7 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
-- [v3.0.0](#v3002024-09-10)
+- [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
-- [v3.0.0-rc.1](#v300-rc12024-09-10)
+- [v3.0.0-rc.1](#v300-rc1)
   - [Changelog since v2.1.0](#changelog-since-v210)
 
 <!-- END MUNGE: GENERATED_TOC -->
@@ -9,8 +9,9 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
-# v3.0.0(2024-09-10)
-## Changelog since v2.1.0
+# v3.0.0
+## 2024-09-10
+### Changelog since v2.1.0
 #### New
 ##### Pipeline
 - Pipeline as code
@@ -224,8 +225,9 @@
 - [Fix] Synchronize difference code [link](http://github.com/TencentBlueKing/bk-ci/issues/10319)
 - [Fix] Fix npm dependency vulnerability [link](http://github.com/TencentBlueKing/bk-ci/issues/10604)
 
-# v3.0.0-rc.1(2024-09-10)
-## Changelog since v2.1.0
+# v3.0.0-rc.1
+## 2024-09-10
+### Changelog since v2.1.0
 #### New
 ##### Pipeline
 - Pipeline as code

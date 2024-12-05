@@ -2,9 +2,9 @@
 - [v3.0.11](#v3011)
    - [Changelog since v3.0.0](#changelog-since-v300)
 
-- [v3.0.0](#v3002024-09-10)
+- [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
-- [v3.0.0-rc.1](#v300-rc12024-09-10)
+- [v3.0.0-rc.1](#v300-rc1)
   - [Changelog since v2.1.0](#changelog-since-v210)
 
 <!-- END MUNGE: GENERATED_TOC -->
@@ -38,8 +38,9 @@
 ##### 未分类
 - [修复] fix UnreachableCode [链接](http://github.com/TencentBlueKing/bk-ci/issues/11172)
 
-# v3.0.0(2024-09-10)
-## Changelog since v2.1.0
+# v3.0.0
+## 2024-09-10
+### Changelog since v2.1.0
 #### 新增
 ##### 流水线
 - pipeline as code
@@ -253,8 +254,9 @@
 - [修复] 同步差异代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10319)
 - [修复] 修复npm依赖漏洞 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10604)
 
-# v3.0.0-rc.1(2024-09-10)
-## Changelog since v2.1.0
+# v3.0.0-rc.1
+## 2024-09-10
+### Changelog since v2.1.0
 #### 新增
 ##### 流水线
 - pipeline as code

@@ -1,32 +1,32 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
-- [v2.1.3](#v2132024-05-28)
+- [v2.1.3](#v213)
   - [Changelog since v2.1.2](#changelog-since-v212)
 
-- [v2.1.2](#v2122024-05-20)
+- [v2.1.2](#v212)
   - [Changelog since v2.1.1](#changelog-since-v211)
 
-- [v2.1.1](#v2112024-04-26)
+- [v2.1.1](#v211)
   - [Changelog since v2.1.0](#changelog-since-v210)
 
-- [v2.1.0](#v2102024-04-22)
+- [v2.1.0](#v210)
   - [Changelog since v2.0.0](#changelog-since-v200)
 
-- [v2.1.0-rc.6](#v210-rc62024-04-19)
+- [v2.1.0-rc.6](#v210-rc6)
   - [Changelog since v2.1.0-rc.5](#changelog-since-v210-rc5)
 
-- [v2.1.0-rc.5](#v210-rc52024-04-10)
+- [v2.1.0-rc.5](#v210-rc5)
   - [Changelog since v2.1.0-rc.4](#changelog-since-v210-rc4)
 
-- [v2.1.0-rc.4](#v210-rc42024-03-22)
+- [v2.1.0-rc.4](#v210-rc4)
   - [Changelog since v2.1.0-rc.3](#changelog-since-v210-rc3)
 
-- [v2.1.0-rc.3](#v210-rc32024-03-07)
+- [v2.1.0-rc.3](#v210-rc3)
   - [Changelog since v2.1.0-rc.2](#changelog-since-v210-rc2)
 
-- [v2.1.0-rc.2](#v210-rc22024-02-22)
+- [v2.1.0-rc.2](#v210-rc2)
   - [Changelog since v2.1.0-rc.1](#changelog-since-v210-rc1)
 
-- [v2.1.0-rc.1](#v210-rc12024-01-16)
+- [v2.1.0-rc.1](#v210-rc1)
   - [Changelog since v2.0.0](#changelog-since-v200)
 
 <!-- END MUNGE: GENERATED_TOC -->
@@ -34,26 +34,30 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
-# v2.1.3(2024-05-28)
-## Changelog since v2.1.2
+# v2.1.3
+## 2024-05-28
+### Changelog since v2.1.2
 #### New
 - [New] Modification of the login failure pop-up window specification [link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 
 #### Fixes
 - [Fix] Open source community, the open source version of the project management interface needs to be authorized [ link ](http://github.com/TencentBlueKing/bk-ci/issues/10382)
 
-# v2.1.2(2024-05-20)
-## Changelog since v2.1.1
+# v2.1.2
+## 2024-05-20
+### Changelog since v2.1.1
 #### Fixes
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 
-# v2.1.1(2024-04-26)
-## Changelog since v2.1.0
+# v2.1.1
+## 2024-04-26
+### Changelog since v2.1.0
 #### Fixes
 - [Fix] Failed to start the process service in version 2.1 [link](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 
-# v2.1.0(2024-04-22)
-## Changelog since v2.0.0
+# v2.1.0
+## 2024-04-22
+### Changelog since v2.0.0
 #### New
 - [New] Docker build machine supports extended resource scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [New] Link between operational products and organizational structure [link](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -325,8 +329,9 @@
 - [Fix] DevCloud login debugging, window size cannot adapt [link](http://github.com/TencentBlueKing/bk-ci/issues/9418)
 - [Fix] Shared credentials do not need to rely on plugin sensitive interface permission verification [link](http://github.com/TencentBlueKing/bk-ci/issues/9398)
 
-# v2.1.0-rc.6(2024-04-19)
-## Changelog since v2.1.0-rc.5
+# v2.1.0-rc.6
+## 2024-04-19
+### Changelog since v2.1.0-rc.5
 #### New
 - [New] Docker build machine supports extended resource scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [New] Link between operational products and organizational structure [link](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -351,8 +356,9 @@
 - [Fix] Under the stream pipeline, refreshing the page loads the full list [link](http://github.com/TencentBlueKing/bk-ci/issues/10152)
 - [Fix] Fix the special symbol escape problem in permission application jump [link](http://github.com/TencentBlueKing/bk-ci/issues/10188)
 
-# v2.1.0-rc.5(2024-04-10)
-## Changelog since v2.1.0-rc.4
+# v2.1.0-rc.5
+## 2024-04-10
+### Changelog since v2.1.0-rc.4
 #### New
 - [New] Create/edit project openapi and add mandatory check for operational products [link](http://github.com/TencentBlueKing/bk-ci/issues/10088)
 - [New] Support customizing project-level user groups through the interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10025)
@@ -382,8 +388,9 @@
 - [Fix] Fix the issue of code base permission loss [link](http://github.com/TencentBlueKing/bk-ci/issues/10131)
 - [Fix] Bug in full transfer permissions [link](http://github.com/TencentBlueKing/bk- ci/issues/10117)
 
-# v2.1.0-rc.4(2024-03-22)
-## Changelog since v2.1.0-rc.3
+# v2.1.0-rc.4
+## 2024-03-22
+### Changelog since v2.1.0-rc.3
 #### New
 - [New] Public build machine supports persistent build container scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/9269)
 - [New] Enable or disable broadcast notifications for the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10080)
@@ -406,8 +413,9 @@
 - [Fix] When deleting a pipeline, the code base association is not deleted [link](http://github.com/TencentBlueKing/bk-ci/issues/10111)
 - [Fix] When the scheduled trigger plug-in checks the latest version of the SVN code base, there is no need to call the session interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10096)
 
-# v2.1.0-rc.3(2024-03-07)
-## Changelog since v2.1.0-rc.2
+# v2.1.0-rc.3
+## 2024-03-07
+### Changelog since v2.1.0-rc.2
 #### New
 - [New] SVN webhook interface switch [link](http://github.com/TencentBlueKing/bk-ci/issues/9302)
 - [New] Pipeline build history table, drag table column width memory function [link](http://github.com/TencentBlueKing/bk-ci/issues/10065)
@@ -440,8 +448,9 @@
 - [Fix] Fix openapi startup error [link](http://github.com/TencentBlueKing/bk-ci/issues/9997)
 - [Fix] After renaming the code base, using the old alias to associate the code base will result in an error [link](http://github.com/TencentBlueKing/bk-ci/issues/9984)
 
-# v2.1.0-rc.2(2024-02-22)
-## Changelog since v2.1.0-rc.1
+# v2.1.0-rc.2
+## 2024-02-22
+### Changelog since v2.1.0-rc.1
 #### New
 - [New] Migration logic optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10014)
 - [New] User group member addition optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/9909)
@@ -467,8 +476,9 @@
 - [Fix] Matrix variables are not replaced after opening new expression [link](http://github.com/TencentBlueKing/bk-ci/issues/9914)
 - [Fix] The plugin pauses and the dependent redis cache fails to function properly [link](http://github.com/TencentBlueKing/bk-ci/issues/9913)
 
-# v2.1.0-rc.1(2024-01-16)
-## Changelog since v2.0.0
+# v2.1.0-rc.1
+## 2024-01-16
+### Changelog since v2.0.0
 #### New
 - [New] Pipeline archive [link](http://github.com/TencentBlueKing/bk-ci/issues/9397)
 - [New] Support adding pipeline permissions to a group of users [link](http://github.com/TencentBlueKing/bk-ci/issues/9690)
