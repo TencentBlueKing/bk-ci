@@ -94,6 +94,7 @@ class CopilotOpenTokenService @Autowired constructor(
             Request.Builder()
                 .post(bodyJsonStr.toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
                 .url(URL(copilotConfig.authUrl))
+                .header("Content-Type", APPLICATION_FORM_URLENCODED)
                 .build()
         )
         if (!response.isSuccessful) {
@@ -118,6 +119,7 @@ class CopilotOpenTokenService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CopilotOpenTokenService::class.java)
-        val MEDIA_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded".toMediaTypeOrNull()
+        private const val APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
+        private val MEDIA_TYPE_FORM_URLENCODED = APPLICATION_FORM_URLENCODED.toMediaTypeOrNull()
     }
 }
