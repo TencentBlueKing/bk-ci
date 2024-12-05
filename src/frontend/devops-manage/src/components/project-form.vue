@@ -509,7 +509,7 @@ onBeforeUnmount(() => {
     cursor: pointer;
   }
   .member-iframe {
-    height: 100%;
+    height: 600px;
   }
   .bk-dropdown-box {
     width: 200px;
