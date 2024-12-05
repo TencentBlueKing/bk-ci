@@ -1,18 +1,40 @@
 <template>
-    <div class="biz-container pipeline-subpages create-instance-wrapper"
+    <div
+        class="biz-container pipeline-subpages create-instance-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <inner-header>
-            <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
+            <div
+                class="instance-header"
+                slot="left"
+            >
+                <span
+                    class="inner-header-title"
+                    slot="left"
+                ><i
+                    class="devops-icon icon-angle-left"
+                    @click="toInstanceManage()"
+                ></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
-        <div class="sub-view-port" v-if="showContent">
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
+        <div
+            class="sub-view-port"
+            v-if="showContent"
+        >
             <div class="template-information">
                 <div class="template-introduction">
-                    <logo name="pipeline" class="template-logo"></logo>
+                    <logo
+                        name="pipeline"
+                        class="template-logo"
+                    ></logo>
                     <div class="template-name">{{ template.templateName }}</div>
                     <div class="template-creator"><span>{{ $t('creator') }}：</span>{{ template.creator }}</div>
                     <div class="template-brief">
@@ -29,35 +51,53 @@
                                 @change="changeVersion"
                                 style="width: 320px"
                             >
-                                <bk-option v-for="option in versionList" :key="option.version" :id="option.version" :name="option.versionName">
+                                <bk-option
+                                    v-for="option in versionList"
+                                    :key="option.version"
+                                    :id="option.version"
+                                    :name="option.versionName"
+                                >
                                 </bk-option>
                             </bk-select>
                             <label class="bk-form-checkbox template-setting-checkbox">
                                 <bk-checkbox
-                                    v-model="isTemplateSetting">
+                                    v-model="isTemplateSetting"
+                                >
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
                                     <i class="devops-icon icon-info-circle"></i>
-                                    <div slot="content" style="white-space: pre-wrap; min-width: 200px">
+                                    <div
+                                        slot="content"
+                                        style="white-space: pre-wrap; min-width: 200px"
+                                    >
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>
                                 </bk-popover>
                             </label>
                         </div>
-                        <div v-if="!instanceVersion" class="error-tips">{{ $t('template.templateVersionErrTips') }}</div>
+                        <div
+                            v-if="!instanceVersion"
+                            class="error-tips"
+                        >
+                            {{ $t('template.templateVersionErrTips') }}
+                        </div>
                     </div>
                     <div class="cut-line"></div>
                     <div class="instance-pipeline">
                         <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
-                            <div :class="{
-                                     'pipeline-item': !entry.isEditing,
-                                     'active-item': entry.selected && !entry.isEditing,
-                                     'unselect-hover': !entry.selected,
-                                     'edit-item': entry.isEditing
-                                 }"
-                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastClickPipeline(index)">
+                            <div
+                                :class="{
+                                    'pipeline-item': !entry.isEditing,
+                                    'active-item': entry.selected && !entry.isEditing,
+                                    'unselect-hover': !entry.selected,
+                                    'edit-item': entry.isEditing
+                                }"
+                                v-for="(entry, index) in pipelineNameList"
+                                :key="index"
+                                @click="lastClickPipeline(index)"
+                            >
                                 <div v-show="entry.isEditing">
                                     <bk-input
                                         ref="pipelineNameInput"
@@ -80,7 +120,10 @@
                                     </div>
                                 </div>
                                 <div v-show="!entry.isEditing">
-                                    <div class="pipeline-name" v-bk-overflow-tips>
+                                    <div
+                                        class="pipeline-name"
+                                        v-bk-overflow-tips
+                                    >
                                         {{ entry.pipelineName }}
                                     </div>
                                     <bk-icon
@@ -98,7 +141,11 @@
                                     />
                                 </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal && !isCopyInstance">
+                            <div
+                                class="pipeline-item add-item"
+                                @click="addPipelineName"
+                                v-if="!hashVal && !isCopyInstance"
+                            >
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -107,12 +154,24 @@
                 </div>
             </div>
 
-            <div class="pipeline-instance-conf" v-if="pipelineNameList.length && instanceVersion ">
-                <section v-for="(param, index) in pipelineNameList" :key="index">
+            <div
+                class="pipeline-instance-conf"
+                v-if="pipelineNameList.length && instanceVersion "
+            >
+                <section
+                    v-for="(param, index) in pipelineNameList"
+                    :key="index"
+                >
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
-                        <section class="params-item" v-if="param.buildParams">
+                        <section
+                            class="params-item"
+                            v-if="param.buildParams"
+                        >
                             <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('versionNum') }}</div>
-                            <div v-if="param.buildParams" class="build-params-content">
+                            <div
+                                v-if="param.buildParams"
+                                class="build-params-content"
+                            >
                                 <pipeline-versions-form
                                     :ref="`paramsForm${index}`"
                                     :build-no="param.buildParams"
@@ -123,25 +182,33 @@
                                 ></pipeline-versions-form>
                             </div>
                         </section>
-                        <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
+                        <section
+                            class="params-item"
+                            v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length"
+                        >
                             <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.pipelineVar') }}</div>
                             <div class="pipeline-params-content">
                                 <pipeline-params-form
                                     :ref="`paramsForm${index}`"
                                     :param-values="param.paramValues"
                                     :handle-param-change="handleParamChange"
-                                    :params="param.pipelineParams">
+                                    :params="param.pipelineParams"
+                                >
                                 </pipeline-params-form>
                             </div>
                         </section>
-                        <section class="params-item" v-if="templateParamList.length">
+                        <section
+                            class="params-item"
+                            v-if="templateParamList.length"
+                        >
                             <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.templateConst') }}</div>
                             <div class="pipeline-params-content template-params-content">
                                 <pipeline-params-form
                                     :disabled="true"
                                     :ref="`paramsForm${index}`"
                                     :param-values="templateParamValues"
-                                    :params="templateParamList">
+                                    :params="templateParamList"
+                                >
                                 </pipeline-params-form>
                             </div>
                         </section>
@@ -149,31 +216,49 @@
                 </section>
             </div>
             <div class="create-instance-footer">
-                <bk-button theme="primary" size="normal" @click="submit()"><span>{{ $t('template.instantiate') }}</span></bk-button>
-                <span class="cancel-btn" @click="toInstanceManage()">{{ $t('cancel') }}</span>
+                <bk-button
+                    theme="primary"
+                    size="normal"
+                    @click="submit()"
+                >
+                    <span>{{ $t('template.instantiate') }}</span>
+                </bk-button>
+                <span
+                    class="cancel-btn"
+                    @click="toInstanceManage()"
+                >{{ $t('cancel') }}</span>
             </div>
         </div>
         <instance-pipeline-name
             :show-instance-create="showInstanceCreate"
             @confirm="confirmHandler"
-            @cancel="cancelHandler">
+            @cancel="cancelHandler"
+        >
         </instance-pipeline-name>
         <instance-message
             :show-instance-message="showInstanceMessage"
             :success-list="successList"
             :fail-list="failList"
             :fail-message="failMessage"
-            @cancel="cancelMessage">
+            @cancel="cancelMessage"
+        >
         </instance-message>
         <bk-dialog
             v-model="showUpdateDialog"
             :close-icon="false"
             header-position="left"
-            :title="$t('template.updateDialogTitle')">
+            :title="$t('template.updateDialogTitle')"
+        >
             <div style="padding: 10px 0px 20px">{{ $t('template.updateDialogContent') }}</div>
-            <div slot="footer" class="container-footer">
+            <div
+                slot="footer"
+                class="container-footer"
+            >
                 <div class="footer-wrapper">
-                    <bk-button theme="primary" @click="toInstanceManage(true)">
+                    <bk-button
+                        theme="primary"
+                        @click="toInstanceManage(true)"
+                    >
                         {{ $t('confirm') }}
                     </bk-button>
                 </div>
@@ -184,13 +269,14 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
+    import AlertTips from '@/components/AlertTips.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
 
     export default {
         components: {
@@ -199,7 +285,8 @@
             instancePipelineName,
             instanceMessage,
             Logo,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            AlertTips
         },
         data () {
             return {
@@ -266,11 +353,20 @@
             },
             isCopyInstance () {
                 return !!(this.copyPipelineName && this.queryPipelineId)
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
             }
         },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
-            if (this.$route.query.useTemplateSettings === 'true') {
+            if (this.$route.query.useTemplateSettings) {
                 this.isTemplateSetting = true
             }
             if (this.curVersionId) {

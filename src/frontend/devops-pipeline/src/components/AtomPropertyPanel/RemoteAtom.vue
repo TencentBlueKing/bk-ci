@@ -11,7 +11,11 @@
                 @load="onLoad"
             />
         </div>
-        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
+        <atom-output
+            :element="element"
+            :atom-props-model="atomPropsModel"
+            :set-parent-validate="() => {}"
+        ></atom-output>
     </section>
 </template>
 
@@ -64,11 +68,11 @@
                 'getAtomEnvConfig'
             ]),
             async onLoad () {
-                const { baseOS, dispatchType } = this.container
-                const containerInfo = { baseOS, dispatchType }
+                const containerInfo = { ...this.container }
                 const currentUserInfo = this.$userInfo || {}
                 const atomDisabled = this.disabled || false
                 const envConf = await this.getEnvConf()
+                const query = this.$route.query || {}
                 this.loading = false
                 const iframe = document.getElementById('atom-iframe').contentWindow
                 iframe.postMessage({
@@ -81,7 +85,8 @@
                     atomDisabled,
                     hostInfo: {
                         ...this.$route.params
-                    }
+                    },
+                    query
                 }, '*')
             },
             receiveMsgFromIframe (e) {

@@ -40,11 +40,13 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -58,6 +60,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -73,14 +76,15 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val rbacCacheService: RbacCacheService,
     private val redisOperation: RedisOperation,
     private val authResourceSyncDao: AuthResourceSyncDao,
-    private val authResourceGroupApplyDao: AuthResourceGroupApplyDao
+    private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
+        private val syncMemberExpiredExecutorService = Executors.newFixedThreadPool(5)
         private val syncResourceMemberExecutorService = Executors.newFixedThreadPool(50)
-        private const val MAX_NUMBER_OF_CHECKS = 120
     }
 
     override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) {
@@ -97,6 +101,50 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     offset = offset
                 ).data ?: break
                 batchSyncGroupAndMember(projectCodes = projectCodes.map { it.englishName })
+                offset += limit
+            } while (projectCodes.size == limit)
+        }
+    }
+
+    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) {
+        logger.info("start to sync group member expired time|$projectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
+            do {
+                val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
+                    limit = limit,
+                    offset = offset
+                ).data?.map { it.englishName } ?: break
+                projectCodes.forEach { projectCode ->
+                    syncMemberExpiredExecutorService.submit {
+                        logger.info("start to sync project group member expired time|$projectCode")
+                        val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
+                            dslContext = dslContext,
+                            projectCode = projectCode,
+                            maxExpiredTime = LocalDateTime.now()
+                        )
+                        val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
+                        memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
+                            val verifyResults = iamV2ManagerService.verifyGroupValidMember(
+                                memberId,
+                                groupInfos.joinToString(",") { it.iamGroupId.toString() }
+                            )
+                            verifyResults.forEach { (groupId, verifyResult) ->
+                                if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
+                                    logger.info("The member of group needs to have been renewed:$projectCode|$groupId|$memberId")
+                                    syncIamGroupMember(
+                                        projectCode = projectCode,
+                                        iamGroupId = groupId
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 offset += limit
             } while (projectCodes.size == limit)
         }
@@ -176,20 +224,18 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             val limit = 100
             var offset = 0
             val startEpoch = System.currentTimeMillis()
-            val finalRecordIdsOfTimeOut = mutableListOf<Long>()
             val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
             val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
             do {
                 logger.info("sync members of apply | start")
+                // 获取7天内未审批单据
                 val records = authResourceGroupApplyDao.list(
                     dslContext = dslContext,
+                    day = 7,
                     limit = limit,
                     offset = offset
                 )
-                val recordIdsOfTimeOut = records.filter { it.numberOfChecks >= MAX_NUMBER_OF_CHECKS }.map { it.id }
-                val (recordsOfSuccess, recordsOfPending) = records.filterNot {
-                    recordIdsOfTimeOut.contains(it.id)
-                }.partition {
+                val (recordsOfSuccess, recordsOfPending) = records.partition {
                     try {
                         val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
                             it.memberId,
@@ -198,21 +244,14 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         isMemberJoinedToGroup
                     } catch (ignore: Exception) {
                         logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                        authResourceGroupApplyDao.delete(dslContext, it.id)
                         false
                     }
                 }
-                finalRecordIdsOfTimeOut.addAll(recordIdsOfTimeOut)
                 finalRecordsOfPending.addAll(recordsOfPending)
                 finalRecordsOfSuccess.addAll(recordsOfSuccess)
                 offset += limit
             } while (records.size == limit)
-            if (finalRecordIdsOfTimeOut.isNotEmpty()) {
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordIdsOfTimeOut,
-                    applyToGroupStatus = ApplyToGroupStatus.TIME_OUT
-                )
-            }
             if (finalRecordsOfPending.isNotEmpty()) {
                 authResourceGroupApplyDao.batchUpdate(
                     dslContext = dslContext,
@@ -299,12 +338,15 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             is IamException -> {
                 exception.errorMsg
             }
+
             is ErrorCodeException -> {
                 exception.defaultMessage
             }
+
             is CompletionException -> {
                 exception.cause?.message ?: exception.message
             }
+
             else -> {
                 exception.toString()
             }
@@ -320,7 +362,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-    private fun syncProjectGroup(projectCode: String) {
+    override fun syncProjectGroup(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to sync project group :$projectCode")
         try {
@@ -408,6 +450,20 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 authResourceGroupDao.deleteByIds(transactionContext, toDeleteGroups.map { it.id!! })
                 authResourceGroupDao.batchCreate(transactionContext, toAddGroups)
                 authResourceGroupDao.batchUpdate(transactionContext, toUpdateGroups)
+            }
+            if (toDeleteGroups.isNotEmpty()) {
+                resourceGroupPermissionService.deleteByGroupIds(
+                    projectCode = projectCode,
+                    iamGroupIds = toDeleteGroups.map { it.relationId }
+                )
+            }
+            if (toAddGroups.isNotEmpty()) {
+                toAddGroups.forEach {
+                    resourceGroupPermissionService.syncGroupPermissions(
+                        projectCode = projectCode,
+                        iamGroupId = it.relationId
+                    )
+                }
             }
         } finally {
             logger.info(

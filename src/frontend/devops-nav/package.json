@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "dll": "webpack --config webpack.dll.config.js --mode production",
     "public": "npm run dll && webpack --mode production",
     "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -32,6 +32,9 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
+    "@types/node": "^20.12.12",
+    "@types/webpack-env": "^1.18.5",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
     "@vue/babel-preset-jsx": "^1.2.4",
@@ -40,6 +43,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "copy-webpack-plugin": "^9.0.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
@@ -60,27 +64,43 @@
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^4.1.0",
     "typescript": "3.4.5",
-    "vue-loader": "^15.10.0",
-    "webpack": "^5.58.1"
+    "vue-loader": "~15.10.0",
+    "webpack": "~5.76.1"
   },
   "dependencies": {
+    "@blueking/login-modal": "1.0.4",
+    "@blueking/platform-config": "^1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
-    "@types/webpack-env": "^1.15.2",
-    "axios": "^0.28.0",
+    "axios": "0.28.0",
     "bk-magic-vue": "2.5.9-beta.9",
-    "bk-permission": "^0.1.0",
+    "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
+    "sockjs-client": "1.3.0",
+    "stompjs": "2.3.3",
+    "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-class-component": "^6.2.0",
+    "vue-i18n": "~8.18.1",
     "vue-property-decorator": "^6.0.0",
-    "vue-i18n": "^8.18.1",
     "vue-router": "3.6.5",
     "vuex": "3.6.2",
     "vuex-class": "^0.3.0",
     "vuex-typescript-interface": "^1.0.3",
-    "@blueking/login-modal": "1.0.4",
-    "@blueking/platform-config": "^1.0.4",
     "markdown-it": "^14.1.0"
+  },
+  "nx": {
+    "targets": {
+      "inputs": [
+        "{workspaceRoot}/locale/console/*.json",
+        "{workspaceRoot}/locale/index.js",
+        "{projectRoot}"
+      ],
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/console"
+        ]
+      }
+    }
   }
 }

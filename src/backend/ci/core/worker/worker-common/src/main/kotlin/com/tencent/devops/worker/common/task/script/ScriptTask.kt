@@ -78,6 +78,7 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
+        val enableArchiveFile = taskParams["enableArchiveFile"]?.toBooleanStrictOrNull()
         val script = URLDecoder.decode(
             taskParams["script"]
                 ?: throw TaskExecuteException(
@@ -118,12 +119,11 @@ open class ScriptTask : ITask() {
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
                 charsetType = charsetType,
-                taskId = buildTask.taskId,
-                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+                taskId = buildTask.taskId
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
-            if (!archiveFileIfExecFail.isNullOrBlank()) {
+            if (enableArchiveFile == true && !archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addErrorLine(
                     MessageUtil.getMessageByLocale(
                         SCRIPT_EXECUTION_FAIL,

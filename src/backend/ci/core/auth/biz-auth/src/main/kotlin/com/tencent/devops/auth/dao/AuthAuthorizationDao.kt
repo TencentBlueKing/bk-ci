@@ -20,29 +20,27 @@ class AuthAuthorizationDao {
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
         with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
-            dslContext.batch(
-                resourceAuthorizationList.map { resourceAuthorizationDto ->
-                    val handoverDateTime = Timestamp(resourceAuthorizationDto.handoverTime!!).toLocalDateTime()
-                    dslContext.insertInto(
-                        this,
-                        PROJECT_CODE,
-                        RESOURCE_TYPE,
-                        RESOURCE_CODE,
-                        RESOURCE_NAME,
-                        HANDOVER_FROM,
-                        HANDOVER_FROM_CN_NAME,
-                        HANDOVER_TIME
-                    ).values(
-                        resourceAuthorizationDto.projectCode,
-                        resourceAuthorizationDto.resourceType,
-                        resourceAuthorizationDto.resourceCode,
-                        resourceAuthorizationDto.resourceName,
-                        resourceAuthorizationDto.handoverFrom,
-                        resourceAuthorizationDto.handoverFromCnName,
-                        handoverDateTime
-                    )
-                }
-            ).execute()
+            resourceAuthorizationList.forEach { resourceAuthorizationDto ->
+                val handoverDateTime = Timestamp(resourceAuthorizationDto.handoverTime!!).toLocalDateTime()
+                dslContext.insertInto(
+                    this,
+                    PROJECT_CODE,
+                    RESOURCE_TYPE,
+                    RESOURCE_CODE,
+                    RESOURCE_NAME,
+                    HANDOVER_FROM,
+                    HANDOVER_FROM_CN_NAME,
+                    HANDOVER_TIME
+                ).values(
+                    resourceAuthorizationDto.projectCode,
+                    resourceAuthorizationDto.resourceType,
+                    resourceAuthorizationDto.resourceCode,
+                    resourceAuthorizationDto.resourceName,
+                    resourceAuthorizationDto.handoverFrom,
+                    resourceAuthorizationDto.handoverFromCnName,
+                    handoverDateTime
+                ).execute()
+            }
         }
     }
 
@@ -51,61 +49,60 @@ class AuthAuthorizationDao {
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
         with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
-            dslContext.batch(
-                resourceAuthorizationList.map { resourceAuthorizationDto ->
-                    val handoverDateTime = Timestamp(resourceAuthorizationDto.handoverTime!!).toLocalDateTime()
-                    dslContext.insertInto(
-                        this,
-                        PROJECT_CODE,
-                        RESOURCE_TYPE,
-                        RESOURCE_CODE,
-                        RESOURCE_NAME,
-                        HANDOVER_FROM,
-                        HANDOVER_FROM_CN_NAME,
-                        HANDOVER_TIME
-                    ).values(
-                        resourceAuthorizationDto.projectCode,
-                        resourceAuthorizationDto.resourceType,
-                        resourceAuthorizationDto.resourceCode,
-                        resourceAuthorizationDto.resourceName,
-                        resourceAuthorizationDto.handoverFrom,
-                        resourceAuthorizationDto.handoverFromCnName,
-                        handoverDateTime
-                    ).onDuplicateKeyUpdate()
-                        .set(HANDOVER_FROM, resourceAuthorizationDto.handoverFrom)
-                        .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverFromCnName)
-                        .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
-                        .set(HANDOVER_TIME, handoverDateTime)
-                        .where(CREATE_TIME.eq(UPDATE_TIME))
-                }
-            ).execute()
+            resourceAuthorizationList.forEach { resourceAuthorizationDto ->
+                val handoverDateTime = Timestamp(resourceAuthorizationDto.handoverTime!!).toLocalDateTime()
+                dslContext.insertInto(
+                    this,
+                    PROJECT_CODE,
+                    RESOURCE_TYPE,
+                    RESOURCE_CODE,
+                    RESOURCE_NAME,
+                    HANDOVER_FROM,
+                    HANDOVER_FROM_CN_NAME,
+                    HANDOVER_TIME
+                ).values(
+                    resourceAuthorizationDto.projectCode,
+                    resourceAuthorizationDto.resourceType,
+                    resourceAuthorizationDto.resourceCode,
+                    resourceAuthorizationDto.resourceName,
+                    resourceAuthorizationDto.handoverFrom,
+                    resourceAuthorizationDto.handoverFromCnName,
+                    handoverDateTime
+                ).onDuplicateKeyUpdate()
+                    .set(HANDOVER_FROM, resourceAuthorizationDto.handoverFrom)
+                    .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverFromCnName)
+                    .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
+                    .set(HANDOVER_TIME, handoverDateTime)
+                    .where(CREATE_TIME.eq(UPDATE_TIME))
+                    .execute()
+            }
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun batchUpdate(
         dslContext: DSLContext,
         resourceAuthorizationHandoverList: List<ResourceAuthorizationDTO>
     ) {
         with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
-            dslContext.batch(
-                resourceAuthorizationHandoverList.map { resourceAuthorizationDto ->
-                    dslContext.update(this)
-                        .let {
-                            if (resourceAuthorizationDto is ResourceAuthorizationHandoverDTO) {
-                                it.set(HANDOVER_FROM, resourceAuthorizationDto.handoverTo)
-                                    .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverToCnName)
-                                    .set(HANDOVER_TIME, LocalDateTime.now())
-                            } else {
-                                it
-                            }
+            resourceAuthorizationHandoverList.forEach { resourceAuthorizationDto ->
+                dslContext.update(this)
+                    .let {
+                        if (resourceAuthorizationDto is ResourceAuthorizationHandoverDTO) {
+                            it.set(HANDOVER_FROM, resourceAuthorizationDto.handoverTo)
+                                .set(HANDOVER_FROM_CN_NAME, resourceAuthorizationDto.handoverToCnName)
+                                .set(HANDOVER_TIME, LocalDateTime.now())
+                        } else {
+                            it.set(HANDOVER_TIME, HANDOVER_TIME)
                         }
-                        .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
-                        .set(UPDATE_TIME, LocalDateTime.now())
-                        .where(PROJECT_CODE.eq(resourceAuthorizationDto.projectCode))
-                        .and(RESOURCE_TYPE.eq(resourceAuthorizationDto.resourceType))
-                        .and(RESOURCE_CODE.eq(resourceAuthorizationDto.resourceCode))
-                }
-            ).execute()
+                    }
+                    .set(RESOURCE_NAME, resourceAuthorizationDto.resourceName)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(PROJECT_CODE.eq(resourceAuthorizationDto.projectCode))
+                    .and(RESOURCE_TYPE.eq(resourceAuthorizationDto.resourceType))
+                    .and(RESOURCE_CODE.eq(resourceAuthorizationDto.resourceCode))
+                    .execute()
+            }
         }
     }
 

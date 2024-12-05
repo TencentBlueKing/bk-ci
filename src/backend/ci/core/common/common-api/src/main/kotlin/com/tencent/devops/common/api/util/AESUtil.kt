@@ -28,16 +28,18 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.EncryptException
+import java.security.SecureRandom
+import java.security.Security
+import java.util.Base64
+import javax.crypto.KeyGenerator
+import org.bouncycastle.crypto.CipherParameters
 import org.bouncycastle.crypto.engines.AESEngine
 import org.bouncycastle.crypto.modes.CBCBlockCipher
 import org.bouncycastle.crypto.paddings.PKCS7Padding
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher
 import org.bouncycastle.crypto.params.KeyParameter
+import org.bouncycastle.crypto.params.ParametersWithIV
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.SecureRandom
-import java.security.Security
-import java.util.Base64
-import javax.crypto.KeyGenerator
 
 object AESUtil {
 
@@ -66,7 +68,7 @@ object AESUtil {
         return KeyParameter(encoded)
     }
 
-    private fun processData(encrypt: Boolean, keyParameter: KeyParameter, bytes: ByteArray): ByteArray {
+    private fun processData(encrypt: Boolean, keyParameter: CipherParameters, bytes: ByteArray): ByteArray {
         val blockCipherPadding = PKCS7Padding()
         val blockCipher = CBCBlockCipher(AESEngine())
         val paddedBufferedBlockCipher = PaddedBufferedBlockCipher(blockCipher, blockCipherPadding)
@@ -100,5 +102,11 @@ object AESUtil {
     fun decrypt(key: String, content: ByteArray): ByteArray {
         val keyParameter = generateKeyParameter(key)
         return processData(false, keyParameter, content)
+    }
+    fun decryptWithIV(key: String, iv: String, content: String): String {
+        val bytes = Base64.getDecoder().decode(content)
+        val keyParameter = KeyParameter(key.toByteArray())
+        val output = processData(false, ParametersWithIV(keyParameter, iv.toByteArray()), bytes)
+        return output.toString(charset(UTF8))
     }
 }

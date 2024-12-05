@@ -28,10 +28,16 @@
             </search-select>
         </header>
         <div class="trigger-event-timeline">
-            <trigger-event-timeline v-if="list.length > 0 || isLoadingMore" :list="list" />
-            <empty-exception v-else :type="emptyType" @clear="clearFilter(queryList)" />
+            <trigger-event-timeline
+                v-if="list.length > 0 || isLoadingMore"
+                :list="list"
+            />
+            <empty-exception
+                v-else
+                :type="emptyType"
+                @clear="clearFilter(queryList)"
+            />
         </div>
-
     </InfiniteScroll>
 </template>
 
@@ -85,6 +91,24 @@
                     {
                         name: this.$t('details.trigger'),
                         id: 'triggerUser'
+                    },
+                    {
+                        name: this.$t('details.triggerResult'),
+                        id: 'reason',
+                        children: [
+                            {
+                                id: 'TRIGGER_SUCCESS',
+                                name: this.$t('details.triggerSuc')
+                            },
+                            {
+                                id: 'TRIGGER_FAILED',
+                                name: this.$t('details.triggerFail')
+                            },
+                            {
+                                id: 'TRIGGER_NOT_MATCH',
+                                name: this.$t('details.triggerMismatch')
+                            }
+                        ]
                     }
                 ]
             },

@@ -317,6 +317,7 @@ class StreamBasicSettingDao {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val conf = dslContext.selectFrom(this)
                 .where(PATH_WITH_NAME_SPACE.eq(pathWithNamespace))
+                .orderBy(ID.desc())
                 .fetchAny()
             if (conf == null) {
                 return null

@@ -27,11 +27,15 @@
 
 package com.tencent.devops.log.lucene
 
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.IndexService
-import com.tencent.devops.common.log.constant.Constants
+import java.io.File
+import java.sql.Date
+import java.text.SimpleDateFormat
+import javax.ws.rs.core.StreamingOutput
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.IntPoint
 import org.apache.lucene.document.NumericDocValuesField
@@ -50,10 +54,6 @@ import org.apache.lucene.search.TermQuery
 import org.apache.lucene.store.Directory
 import org.apache.lucene.store.FSDirectory
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.sql.Date
-import java.text.SimpleDateFormat
-import javax.ws.rs.core.StreamingOutput
 
 @Suppress("LongParameterList", "TooManyFunctions", "MagicNumber")
 class LuceneClient constructor(
@@ -88,7 +88,8 @@ class LuceneClient constructor(
         executeCount: Int?,
         size: Int? = null,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): MutableList<LogLine> {
         val lineNum = size ?: Constants.SCROLL_MAX_LINES
         val query = prepareQueryBuilder(
@@ -103,7 +104,7 @@ class LuceneClient constructor(
             stepId = stepId
         ).build()
         logger.info("[$buildId] fetchInitLogs with query: $query")
-        return doQueryLogsInSize(buildId, query, lineNum)
+        return doQueryLogsInSize(buildId = buildId, query = query, size = lineNum, reverse = reverse)
     }
 
     fun fetchLogs(
@@ -137,7 +138,7 @@ class LuceneClient constructor(
             .add(NumericDocValuesField.newSlowRangeQuery("lineNo", lower, upper), BooleanClause.Occur.MUST)
             .build()
         logger.info("[$buildId] fetchLogsInRange with query: $query")
-        return doQueryLogsInSize(buildId, query, logSize)
+        return doQueryLogsInSize(buildId = buildId, query = query, size = logSize, reverse = false)
     }
 
     fun fetchLogsCount(
@@ -298,10 +299,15 @@ class LuceneClient constructor(
         }
     }
 
-    private fun doQueryLogsInSize(buildId: String, query: BooleanQuery, size: Int): MutableList<LogLine> {
+    private fun doQueryLogsInSize(
+        buildId: String,
+        query: BooleanQuery,
+        size: Int,
+        reverse: Boolean?
+    ): MutableList<LogLine> {
         val searcher = prepareSearcher(buildId)
         try {
-            val topDocs = searcher.search(query, size, getQuerySort())
+            val topDocs = searcher.search(query, size, getQuerySort(reverse))
             return topDocs.scoreDocs.map {
                 val hit = searcher.doc(it.doc)
                 genLogLine(hit)
@@ -411,8 +417,8 @@ class LuceneClient constructor(
         )
     }
 
-    private fun getQuerySort(): Sort {
-        return Sort(SortedNumericSortField("timestamp", SortField.Type.LONG, false))
+    private fun getQuerySort(reverse: Boolean? = null): Sort {
+        return Sort(SortedNumericSortField("timestamp", SortField.Type.LONG, reverse ?: false))
     }
 
     companion object {

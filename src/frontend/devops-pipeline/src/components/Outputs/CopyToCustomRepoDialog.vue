@@ -11,7 +11,10 @@
         @confirm="copyToCustom"
         @cancel="hide"
     >
-        <p class="copy-to-custom-repo-dialog-header" v-html="title"></p>
+        <p
+            class="copy-to-custom-repo-dialog-header"
+            v-html="title"
+        ></p>
         <bk-input
             class="copy-to-custom-repo-search"
             right-icon="bk-icon icon-search"

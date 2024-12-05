@@ -1,7 +1,14 @@
 <template>
     <div>
-        <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
-            <bk-icon type="angle-double-right" class="angle-double-right-icon" />
+        <div
+            class="expand-btn"
+            v-if="isListFlod"
+            @click="handleExpandList"
+        >
+            <bk-icon
+                type="angle-double-right"
+                class="angle-double-right-icon"
+            />
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -48,7 +55,10 @@
                             }
                         }"
                     >
-                        <div v-if="isListFlod" class="mask"></div>
+                        <div
+                            v-if="isListFlod"
+                            class="mask"
+                        ></div>
                         <Icon
                             class="codelib-logo"
                             :name="codelibIconMap[props.row.type]"
@@ -69,7 +79,11 @@
                             v-if="props.row.enablePac"
                             class="pac-icon"
                         >
-                            <Icon name="PACcode" size="22" class="pac-code-icon" />
+                            <Icon
+                                name="PACcode"
+                                size="22"
+                                class="pac-code-icon"
+                            />
                             PAC
                         </span>
                     </div>
@@ -161,10 +175,12 @@
                     >
                         {{ $t('codelib.去开启PAC') }}
                     </bk-button>
-                    <span v-bk-tooltips="{
-                        content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
-                        disabled: !props.row.enablePac
-                    }">
+                    <span
+                        v-bk-tooltips="{
+                            content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                            disabled: !props.row.enablePac
+                        }"
+                    >
                         <bk-button
                             theme="primary"
                             text
@@ -194,10 +210,14 @@
                     :fields="tableColumn"
                     :selected="selectedTableColumn"
                     :size="tableSize"
-                    @setting-change="handleSettingChange" />
+                    @setting-change="handleSettingChange"
+                />
             </bk-table-column>
             <template #empty>
-                <EmptyTableStatus :type="aliasName ? 'search-empty' : 'empty'" @clear="resetFilter" />
+                <EmptyTableStatus
+                    :type="aliasName ? 'search-empty' : 'empty'"
+                    @clear="resetFilter"
+                />
             </template>
         </bk-table>
         <UsingPipelinesDialog
@@ -403,7 +423,7 @@
                 authType: 200,
                 updatedUser: 200,
                 updatedTime: 200,
-                operation: 80
+                operation: 150
             }
         },
 

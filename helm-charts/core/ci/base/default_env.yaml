@@ -54,3 +54,4 @@ bkCiSm4Enabled: false
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
+bkCiMqDefaultBinder: core-rabbit

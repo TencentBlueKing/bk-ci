@@ -98,7 +98,7 @@ class TransferCreatorImpl @Autowired constructor(
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.ID
             }
 
-            step.checkout?.url?.startsWith("http") == true -> {
+            step.checkout?.url != null -> {
                 inputMap[CheckoutAtomParam::repositoryUrl.name] = step.checkout?.url!!
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.URL
             }

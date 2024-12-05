@@ -364,6 +364,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
@@ -434,6 +435,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
@@ -705,7 +707,8 @@ class EnvService @Autowired constructor(
                 bakOperator = it.bakOperator,
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                size = it.size
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()
@@ -774,6 +777,7 @@ class EnvService @Autowired constructor(
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
         val serverNodeTypes = listOf(NodeType.CMDB.name)
+        val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
 
         toAddNodeIds.forEach {
             if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
@@ -782,7 +786,7 @@ class EnvService @Autowired constructor(
                     params = arrayOf(HashUtil.encodeLongId(it))
                 )
             }
-            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType !in serverNodeTypes) {
+            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType in buildNodeType) {
                 throw ErrorCodeException(
                     errorCode = ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT,
                     params = arrayOf(HashUtil.encodeLongId(it))

@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
@@ -33,6 +34,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         return System.getProperty("java.io.tmpdir")
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun handleArchiveFile(
         disposition: FormDataContentDisposition,
         inputStream: InputStream,
@@ -48,6 +50,11 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             version = version
         )
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
+        val bkConfigJsonFile = File(storeArchivePath, CONFIG_JSON_NAME)
+        if (bkConfigJsonFile.exists()) {
+            // 删除原压缩包
+            File(storeArchivePath, disposition.fileName).deleteRecursively()
+        }
         directoryIteration(
             directoryFile = File(storeArchivePath),
             prefix = "${getStoreArchiveBasePath()}/${getPkgFileTypeDir(storeType)}",
@@ -74,29 +81,25 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         repoName: String,
         storeType: StoreTypeEnum
     ) {
-        directoryFile.walk().filter { it.path != directoryPath }.forEach {
-            if (it.isDirectory) {
+        directoryFile.walk().filter { it.path != directoryPath }.forEach { file ->
+            if (file.isDirectory) {
                 directoryIteration(
-                    directoryFile = it,
+                    directoryFile = file,
                     prefix = prefix,
-                    directoryPath = it.path,
+                    directoryPath = file.path,
                     repoName = repoName,
                     storeType = storeType
                 )
             } else {
-                val path = it.path.removePrefix(prefix)
-                logger.debug("uploadLocalFile fileName=${it.name}|path=$path")
-                val uploadRepoName = if (storeType == StoreTypeEnum.DEVX) {
-                    "$repoName-tmp"
-                } else {
-                    repoName
-                }
+                val path = file.path.removePrefix(prefix)
+                logger.debug("uploadLocalFile fileName=${file.name}|path=$path")
+                val uploadRepoName = getUploadRepoName(repoName, storeType)
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
                     projectId = getBkRepoProjectId(storeType),
                     repoName = uploadRepoName,
                     path = path,
-                    file = it,
+                    file = file,
                     gatewayFlag = false,
                     bkrepoApiUrl = "${bkRepoClientConfig.bkRepoIdcHost}/api/generic",
                     userName = bkRepoStoreConfig.bkrepoStoreUserName,
@@ -106,13 +109,25 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         }
     }
 
-    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
+    private fun getUploadRepoName(
+        repoName: String,
+        storeType: StoreTypeEnum
+    ): String {
+        return if (storeType == StoreTypeEnum.DEVX) {
+            // devx应用的文件先上传到临时仓库，待签名完成后再上传到正式仓库
+            "$repoName-tmp"
+        } else {
+            repoName
+        }
+    }
+
+    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {
         val tmpFile = DefaultPathUtils.randomFile()
         return try {
             bkRepoClient.downloadFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = getBkRepoProjectId(storeType),
-                repoName = getBkRepoName(storeType),
+                repoName = repoName ?: getBkRepoName(storeType),
                 fullPath = filePath,
                 destFile = tmpFile
             )

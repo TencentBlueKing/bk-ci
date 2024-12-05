@@ -1,4 +1,10 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.0.5](#v205)
+    - [Changelog since v2.0.4](#changelog-since-v204)
+
+- [v2.0.4](#v204)
+    - [Changelog since v2.0.3](#changelog-since-v203)
+
 - [v2.0.3](#v203)
    - [Changelog since v2.0.2](#changelog-since-v202)
 
@@ -16,6 +22,18 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.0.5
+## 2024-10-29
+## Changelog since v2.0.4
+#### 新增
+- [新增] 最大可授权范围更改无效修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11153)
+
+# v2.0.4
+## 2024-10-18
+## Changelog since v2.0.3
+#### 修复
+- [修复] 归档报告插件创建token没有实现 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10693)
+
 # v2.0.3
 ## 2024-05-28
 ### Changelog since v2.0.2

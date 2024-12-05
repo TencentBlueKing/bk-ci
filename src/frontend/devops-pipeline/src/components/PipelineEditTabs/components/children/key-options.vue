@@ -1,35 +1,80 @@
 <template>
     <section>
         <batch-add-options :submit-batch-add="handleBatchInput" />
-        <div class="Key-value-nomal" style="margin-top: 16px;">
-            <form-field :hide-colon="true" :label="$t('editPage.optionSetting')">
+        <div
+            class="Key-value-nomal"
+            style="margin-top: 16px;"
+        >
+            <p
+                v-if="list.length"
+                class="batch-copy"
+                @click.stop="handleCopy"
+            >
+                <i class="bk-icon icon-copy"></i>
+                {{ $t('editPage.batchCopy') }}
+            </p>
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.optionSetting')"
+            >
                 <template v-if="list.length">
-                    <li class="param-item" v-for="(param, index) in list" :key="index">
-                        <form-field :is-error="keyErrs[index]" :error-msg="keyErrs[index]">
-                            <vuex-input
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleEdit(name, value, index)"
-                                name="key"
-                                :placeholder="$t('editPage.optionValTips')"
-                                :value="param.key" />
-                        </form-field>
-                        <form-field :is-error="valueErrs[index]" :error-msg="valueErrs[index]">
-                            <vuex-input
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleEdit(name, value, index)"
-                                name="value"
-                                :placeholder="$t('editPage.optionNameTips')"
-                                :value="param.value" />
-                        </form-field>
-                        <div class="operate-icon-div" v-if="!disabled">
-                            <i @click.stop.prevent="handleAdd(index)" class="bk-icon icon-plus-circle-shape" />
-                            <i @click.stop.prevent="handleDelete(index)" class="bk-icon icon-minus-circle-shape" />
-                        </div>
-                    </li>
+                    <draggable
+                        v-model="list"
+                        @end="onDragEnd"
+                    >
+                        <li
+                            class="param-item"
+                            v-for="(param, index) in list"
+                            :key="index"
+                        >
+                            <i class="devops-icon icon-drag column-drag-icon"></i>
+                            <form-field
+                                :is-error="keyErrs[index]"
+                                :error-msg="keyErrs[index]"
+                            >
+                                <vuex-input
+                                    :disabled="disabled"
+                                    :handle-change="(name, value) => handleEdit(name, value, index)"
+                                    name="key"
+                                    :placeholder="$t('editPage.optionValTips')"
+                                    :value="param.key"
+                                />
+                            </form-field>
+                            <form-field
+                                :is-error="valueErrs[index]"
+                                :error-msg="valueErrs[index]"
+                            >
+                                <vuex-input
+                                    :disabled="disabled"
+                                    :handle-change="(name, value) => handleEdit(name, value, index)"
+                                    name="value"
+                                    :placeholder="$t('editPage.optionNameTips')"
+                                    :value="param.value"
+                                />
+                            </form-field>
+                            <div
+                                class="operate-icon-div"
+                                v-if="!disabled"
+                            >
+                                <i
+                                    @click.stop.prevent="handleAdd(index)"
+                                    class="bk-icon icon-plus-circle-shape"
+                                />
+                                <i
+                                    @click.stop.prevent="handleDelete(index)"
+                                    class="bk-icon icon-minus-circle-shape"
+                                />
+                            </div>
+                        </li>
+                    </draggable>
                 </template>
-                <a :class="['text-link', 'hover-click']" v-if="!disabled && list.length === 0" @click.stop.prevent="handleAdd">
+                <a
+                    :class="['text-link', 'hover-click']"
+                    v-if="!disabled && list.length === 0"
+                    @click.stop.prevent="handleAdd"
+                >
                     <i class="devops-icon icon-plus-circle" />
-                    <span>{{$t('newui.pipelineParam.addItem')}}</span>
+                    <span>{{ $t('newui.pipelineParam.addItem') }}</span>
                 </a>
             </form-field>
         </div>
@@ -42,11 +87,14 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
     import BatchAddOptions from './batch-add-options'
+    import { copyToClipboard } from '@/utils/util'
+    import draggable from 'vuedraggable'
     export default {
         components: {
             VuexInput,
             FormField,
-            BatchAddOptions
+            BatchAddOptions,
+            draggable
         },
         mixins: [atomFieldMixin, validMixins],
         props: {
@@ -74,10 +122,32 @@
             this.list = this.options || []
         },
         methods: {
+            handleCopy () {
+                const uniqueItemsMap = new Map()
+                this.list.forEach(item => {
+                    const identifier = `${item.key}=${item.value}`
+                    if (!uniqueItemsMap.has(identifier)) {
+                        uniqueItemsMap.set(identifier, item)
+                    }
+                })
+                const uniqueItems = Array.from(uniqueItemsMap.values())
+
+                const copyText = uniqueItems.map(item => {
+                    return item.key + (item.value !== item.key ? `=${item.value}` : '')
+                }).join('\n')
+
+                copyToClipboard(copyText)
+                this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('copySuc'),
+                    limit: 1
+                })
+            },
             // 批量增加
             handleBatchInput (batchStr) {
                 if (!batchStr) return
                 let opts = []
+                const existingPairs = new Set(this.list.map(item => `${item.key}=${item.value}`))
                 if (batchStr && typeof batchStr === 'string') {
                     opts = batchStr.split('\n').map(opt => {
                         const v = opt.trim()
@@ -89,6 +159,14 @@
                         return {
                             key,
                             value
+                        }
+                    }).filter(({ key, value }) => {
+                        const identifier = `${key}=${value}`
+                        if (existingPairs.has(identifier)) {
+                            return false
+                        } else {
+                            existingPairs.add(identifier)
+                            return true
                         }
                     })
                 }
@@ -149,6 +227,9 @@
                     }
                 }
                 return result
+            },
+            onDragEnd () {
+                this.handleChangeOptions('options', this.list)
             }
         }
     }
@@ -201,6 +282,25 @@
         color: #3A84FF;
         i {
             margin-right: 6px;
+        }
+    }
+    .Key-value-nomal {
+        position: relative;
+        .batch-copy {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 12px;
+            color: #3A84FF;
+            line-height: 20px;
+            cursor: pointer;
+        }
+    }
+    .param-item {
+        .column-drag-icon {
+            margin: 8px;
+            cursor: move;
+            color: #C4C6CC;
         }
     }
 </style>

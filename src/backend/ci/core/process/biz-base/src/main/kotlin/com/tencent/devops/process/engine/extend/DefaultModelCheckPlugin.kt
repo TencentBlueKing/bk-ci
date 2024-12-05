@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
@@ -90,7 +91,8 @@ open class DefaultModelCheckPlugin constructor(
         projectId: String?,
         userId: String,
         isTemplate: Boolean,
-        oauthUser: String?
+        oauthUser: String?,
+        pipelineDialect: IPipelineDialect?
     ): Int {
         var metaSize = 0
         // 检查流水线名称
@@ -122,7 +124,10 @@ open class DefaultModelCheckPlugin constructor(
         val trigger = stages.getOrNull(0)
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
         // 检查触发容器
-        val paramsMap = checkTriggerContainer(trigger)
+        val paramsMap = checkTriggerContainer(
+            trigger = trigger,
+            supportChineseVarName = pipelineDialect?.supportChineseVarName()
+        )
         val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
@@ -233,7 +238,7 @@ open class DefaultModelCheckPlugin constructor(
             )
         }
         checkIn?.reviewGroups?.forEach { group ->
-            if (group.reviewers.isEmpty()) throw ErrorCodeException(
+            if (group.reviewers.isEmpty() && group.groups.isEmpty()) throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(name!!, group.name)
             )
@@ -474,7 +479,10 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    open fun checkTriggerContainer(trigger: Stage): Map<String /* 流水线变量名 */, BuildFormProperty> {
+    open fun checkTriggerContainer(
+        trigger: Stage,
+        supportChineseVarName: Boolean?
+    ): Map<String /* 流水线变量名 */, BuildFormProperty> {
         if (trigger.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
             throw ErrorCodeException(
@@ -484,7 +492,11 @@ open class DefaultModelCheckPlugin constructor(
         val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
-        return PipelineUtils.checkPipelineParams(triggerContainer.params)
+        return if (supportChineseVarName != false) {
+            triggerContainer.params.associateBy { it.id }
+        } else {
+            PipelineUtils.checkPipelineParams(triggerContainer.params)
+        }
     }
 
     companion object {

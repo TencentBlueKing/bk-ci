@@ -351,14 +351,9 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        val resourceTypeList = cacheService.listResourceTypes()
-            .filterNot { it.resourceType == AuthResourceType.PROJECT.value }
-        resourceTypeList.forEach {
-            handoverPermissions(
-                permissionHandoverDTO.copy(
-                    resourceType = it.resourceType
-                )
-            )
+        logger.info("handover all permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverAllPermissions(permissionHandoverDTO = permissionHandoverDTO)
         }
         return true
     }
@@ -616,7 +611,10 @@ class RbacPermissionMigrateService constructor(
         )
     }
 
-    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Boolean {
+    override fun autoRenewal(
+        validExpiredDay: Int,
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
@@ -634,7 +632,8 @@ class RbacPermissionMigrateService constructor(
                     migrateProjectsExecutorService.submit {
                         MDC.put(TraceTag.BIZID, traceId)
                         autoRenewal(
-                            projectCode = migrateProject.englishName
+                            projectCode = migrateProject.englishName,
+                            validExpiredDay = validExpiredDay
                         )
                     }
                 }
@@ -644,7 +643,10 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    private fun autoRenewal(projectCode: String) {
+    private fun autoRenewal(
+        projectCode: String,
+        validExpiredDay: Int
+    ) {
         var offset = 0
         val limit = 100
         val startTime = System.currentTimeMillis()
@@ -666,7 +668,8 @@ class RbacPermissionMigrateService constructor(
                     permissionResourceMemberService.autoRenewal(
                         projectCode = projectCode,
                         resourceType = resourceType,
-                        resourceCode = resourceCode
+                        resourceCode = resourceCode,
+                        validExpiredDay = validExpiredDay
                     )
                 } catch (ignored: Throwable) {
                     logger.error("Failed to auto renewal|$projectCode|$resourceType|$resourceCode")
@@ -692,6 +695,17 @@ class RbacPermissionMigrateService constructor(
             migrateResourceGroupService.fixResourceGroups(
                 projectCode = it
             )
+        }
+        return true
+    }
+
+    override fun enablePipelineListPermissionControl(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            val projectInfo = client.get(ServiceProjectResource::class).get(it).data!!
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pipelineListPermissionControl = true
+            logger.info("update project($it) properties|$properties")
+            client.get(ServiceProjectResource::class).updateProjectProperties(it, properties)
         }
         return true
     }

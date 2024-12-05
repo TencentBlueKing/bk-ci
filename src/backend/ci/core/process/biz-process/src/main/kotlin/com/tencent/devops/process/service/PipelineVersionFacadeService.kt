@@ -105,7 +105,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     companion object {
@@ -319,7 +320,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                 create = false,
                 versionStatus = VersionStatus.RELEASED,
                 channelCode = pipeline.channelCode,
-                yamlInfo = request.yamlInfo
+                yamlInfo = request.yamlInfo,
+                pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+                    projectId = projectId,
+                    asCodeSettings = originSetting.pipelineAsCodeSettings
+                )
             )
             val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
             // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -329,7 +334,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             // 根据项目PAC状态进行接口调用
             val enabled = originYaml != null || request.enablePac
             val targetSettings = originSetting.copy(
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
+                pipelineAsCodeSettings = originSetting.pipelineAsCodeSettings?.copy(enable = enabled)
             )
             val (versionStatus, branchName) = if (
                 enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
@@ -471,7 +476,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 }
             }
-            pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
+            // 查询编排中的基准值，并把调试的版本号刷为基准值
+            val debugBuildNo = draftVersion.model.getTriggerContainer()
+                .buildNo?.buildNo ?: 0
+            pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId, debugBuildNo)
             pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
 
             var targetUrl: String? = null
@@ -503,7 +511,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 versionNum = result.versionNum,
                 versionName = result.versionName,
                 targetUrl = targetUrl,
-                yamlInfo = yamlInfo
+                yamlInfo = yamlInfo,
+                updateBuildNo = result.updateBuildNo
             )
         }
     }
@@ -551,6 +560,20 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = request.templateVersion
             ).template
         }
+        val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
+            inheritedDialect = request.inheritedDialect,
+            pipelineDialect = request.pipelineDialect
+        )
+        val setting = pipelineRepositoryService.createDefaultSetting(
+            projectId = projectId,
+            pipelineId = "",
+            pipelineName = request.pipelineName,
+            channelCode = ChannelCode.BS
+        ).copy(
+            pipelineAsCodeSettings = pipelineAsCodeSettings,
+            labels = request.labels
+        )
+
         return pipelineInfoFacadeService.createPipeline(
             userId = userId,
             projectId = projectId,
@@ -558,14 +581,15 @@ class PipelineVersionFacadeService @Autowired constructor(
                 name = request.pipelineName,
                 templateId = request.templateId,
                 instanceFromTemplate = false,
-                staticViews = request.staticViews
+                staticViews = request.staticViews,
+                labels = request.labels
             ),
             channelCode = ChannelCode.BS,
+            setting = setting,
             checkPermission = true,
             instanceType = request.instanceType,
             versionStatus = VersionStatus.COMMITTING,
             useSubscriptionSettings = request.useSubscriptionSettings,
-            useLabelSettings = request.useLabelSettings,
             useConcurrencyGroup = request.useConcurrencyGroup
         )
     }
@@ -640,7 +664,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             baseVersion = resource.baseVersion,
             baseVersionName = baseResource?.versionName,
             yamlSupported = yamlSupported,
-            yamlInvalidMsg = msg
+            yamlInvalidMsg = msg,
+            updater = resource.updater ?: resource.creator,
+            updateTime = resource.updateTime?.timestampmilli()
         )
     }
 
@@ -845,6 +871,21 @@ class PipelineVersionFacadeService @Autowired constructor(
 
         val offset = slqLimit?.offset ?: 0
         var limit = slqLimit?.limit ?: -1
+        val result = mutableListOf<PipelineVersionSimple>()
+        // 如果有草稿版本需要提到第一页，单独查出来放在第一页并顶置
+        val draftResource = if (includeDraft != false && page == 1) {
+            limit -= 1
+            pipelineRepositoryService.getDraftVersionResource(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.toSimple()?.apply {
+                baseVersionName = baseVersion?.let {
+                    repositoryVersionService.getPipelineVersionSimple(
+                        projectId, pipelineId, it
+                    )?.versionName
+                }
+            }
+        } else null
         // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
         val fromResource = if (fromVersion != null && page == 1) {
             limit -= 1
@@ -855,24 +896,31 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         } else null
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+        var (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description,
             versionName = versionName,
-            includeDraft = includeDraft,
             excludeVersion = fromVersion,
             offset = offset,
             limit = limit
         )
-        fromResource?.let { pipelines.add(it) }
+        draftResource?.let {
+            size++
+            result.add(it)
+        }
+        result.addAll(pipelines)
+        fromResource?.let {
+            size++
+            result.add(it)
+        }
         return Page(
             page = page,
             pageSize = pageSize,
             count = size.toLong(),
-            records = pipelines
+            records = result
         )
     }
 

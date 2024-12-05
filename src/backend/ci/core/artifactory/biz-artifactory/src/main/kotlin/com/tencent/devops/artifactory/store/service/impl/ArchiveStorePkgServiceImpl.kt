@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -42,11 +43,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.CONFIG_JSON_NAME
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
-import org.apache.commons.codec.digest.DigestUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -108,12 +109,20 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 version = version
             )
             val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
-            storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
-                userId = userId,
-                storeType = storeType,
-                storeCode = storeCode,
-                version = version
-            ).data
+            val bkConfigJsonFile = File(storeArchivePath, CONFIG_JSON_NAME)
+            storePkgEnvInfos = if (bkConfigJsonFile.exists()) {
+                client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+                    userId = userId,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    version = version,
+                    queryComponentPkgEnvInfoParam = QueryComponentPkgEnvInfoParam(
+                        configFileContent = bkConfigJsonFile.readText()
+                    )
+                ).data
+            } else {
+                listOf(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
+            }
             storePkgEnvInfos?.forEach { storePkgEnvInfo ->
                 var pkgLocalPath = storePkgEnvInfo.pkgLocalPath
                 if (storeType == StoreTypeEnum.ATOM && storePkgEnvInfo.target.isNullOrBlank() &&
@@ -144,14 +153,6 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(storeType, storeCode, version)
         }
-        val finalStoreId = if (releaseType == ReleaseTypeEnum.NEW ||
-            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE
-        ) {
-            archiveStorePkgRequest.storeId
-        } else {
-            // 普通发布类型会重新生成一条版本记录
-            DigestUtils.md5Hex("$storeType-$storeCode-$version")
-        }
         storePkgEnvInfos?.let {
             val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
                 storeType = storeType,
@@ -161,7 +162,6 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             )
             val updateComponentPkgInfoResult = client.get(ServiceStoreArchiveResource::class).updateComponentPkgInfo(
                 userId = userId,
-                storeId = finalStoreId,
                 storePkgInfoUpdateRequest = storePkgInfoUpdateRequest
             )
             if (updateComponentPkgInfoResult.isNotOk()) {
@@ -216,7 +216,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        if (storeType != StoreTypeEnum.DEVX) {
+        if (fileName.endsWith(".zip")) {
             // 解压到指定目录
             ZipUtil.unZipFile(file, storeArchivePath, false)
         }
