@@ -676,10 +676,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
             listOf(StoreStatusEnum.BUILDING, StoreStatusEnum.CHECKING, StoreStatusEnum.EDITING)
         }
         val releasedValidPreviousStatuses = if (isNormalUpgrade == true) {
-            // 普通升级可以由测试中的状态直接发布
-            listOf(StoreStatusEnum.EDITING)
+            // 普通升级可以由测试中或者审核中的状态直接发布
+            listOf(StoreStatusEnum.TESTING, StoreStatusEnum.EDITING)
         } else {
-            listOf(StoreStatusEnum.EDITING, StoreStatusEnum.AUDITING)
+            listOf(StoreStatusEnum.TESTING, StoreStatusEnum.EDITING, StoreStatusEnum.AUDITING)
         }
         val cancelValidPreviousStatuses = StoreStatusEnum.values().toMutableList()
         cancelValidPreviousStatuses.remove(StoreStatusEnum.RELEASED)
