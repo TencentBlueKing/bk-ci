@@ -35,6 +35,7 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
@@ -130,7 +131,7 @@ class WorkspaceCommon @Autowired constructor(
     @Value("\${spring.kafka.topics.cgsInfoTopic:#{null}}")
     val buildCommitsTopic: String? = null
 
-    fun getOpHistory(key: OpHistoryCopyWriting) = key.default
+    fun getOpHistory(key: OpHistoryCopyWriting) = I18nUtil.getCodeLanMessage(key.default)
 
     fun updateWorkspaceWinDetail(
         ws: WorkspaceRecord?,
