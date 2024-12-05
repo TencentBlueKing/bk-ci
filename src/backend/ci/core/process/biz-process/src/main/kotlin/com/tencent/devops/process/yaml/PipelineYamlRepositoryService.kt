@@ -674,6 +674,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 directory = directory
             )
             if (yamlPipelineCnt == 0L) {
+                logger.info("delete pipeline yaml view|$projectId|$repoHashId|$directory")
                 pipelineYamlViewService.getPipelineYamlView(
                     projectId = projectId,
                     repoHashId = repoHashId,

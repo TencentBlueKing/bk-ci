@@ -237,7 +237,7 @@ class BuildLogPrinter(
                         tag = tag,
                         subTag = subTag,
                         containerHashId = containerHashId,
-                        logType = LogType.DEBUG,
+                        logType = LogType.WARN,
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
