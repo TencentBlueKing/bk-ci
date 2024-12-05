@@ -2,6 +2,7 @@ package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "权限交接总览返回体")
 data class HandoverOverviewVo(
@@ -23,6 +24,8 @@ data class HandoverOverviewVo(
     val groupCount: Int,
     @get:Schema(title = "授权个数")
     val authorizationCount: Int,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
     @get:Schema(title = "最后修改人")
     val lastOperator: String? = null,
     @get:Schema(title = "是否可以撤销，提单为当前用户并且单据处于审批中")
