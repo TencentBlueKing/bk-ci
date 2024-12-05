@@ -36,7 +36,7 @@
 <!-- NEW RELEASE NOTES ENTRY -->
 # v2.1.3
 ## 2024-05-28
-## Changelog since v2.1.2
+### Changelog since v2.1.2
 #### New
 - [New] Modification of the login failure pop-up window specification [link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 
@@ -45,19 +45,19 @@
 
 # v2.1.2
 ## 2024-05-20
-## Changelog since v2.1.1
+### Changelog since v2.1.1
 #### Fixes
 - [Fix] [Community] Listing failure & white screen issue on pipeline execution page [v2.1.0+] [Link](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 
 # v2.1.1
 ## 2024-04-26
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### Fixes
 - [Fix] Failed to start the process service in version 2.1 [link](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 
 # v2.1.0
 ## 2024-04-22
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### New
 - [New] Docker build machine supports extended resource scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [New] Link between operational products and organizational structure [link](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -331,7 +331,7 @@
 
 # v2.1.0-rc.6
 ## 2024-04-19
-## Changelog since v2.1.0-rc.5
+### Changelog since v2.1.0-rc.5
 #### New
 - [New] Docker build machine supports extended resource scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [New] Link between operational products and organizational structure [link](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -358,7 +358,7 @@
 
 # v2.1.0-rc.5
 ## 2024-04-10
-## Changelog since v2.1.0-rc.4
+### Changelog since v2.1.0-rc.4
 #### New
 - [New] Create/edit project openapi and add mandatory check for operational products [link](http://github.com/TencentBlueKing/bk-ci/issues/10088)
 - [New] Support customizing project-level user groups through the interface [link](http://github.com/TencentBlueKing/bk-ci/issues/10025)
@@ -390,7 +390,7 @@
 
 # v2.1.0-rc.4
 ## 2024-03-22
-## Changelog since v2.1.0-rc.3
+### Changelog since v2.1.0-rc.3
 #### New
 - [New] Public build machine supports persistent build container scheduling [link](http://github.com/TencentBlueKing/bk-ci/issues/9269)
 - [New] Enable or disable broadcast notifications for the project [link](http://github.com/TencentBlueKing/bk-ci/issues/10080)
@@ -415,7 +415,7 @@
 
 # v2.1.0-rc.3
 ## 2024-03-07
-## Changelog since v2.1.0-rc.2
+### Changelog since v2.1.0-rc.2
 #### New
 - [New] SVN webhook interface switch [link](http://github.com/TencentBlueKing/bk-ci/issues/9302)
 - [New] Pipeline build history table, drag table column width memory function [link](http://github.com/TencentBlueKing/bk-ci/issues/10065)
@@ -450,7 +450,7 @@
 
 # v2.1.0-rc.2
 ## 2024-02-22
-## Changelog since v2.1.0-rc.1
+### Changelog since v2.1.0-rc.1
 #### New
 - [New] Migration logic optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/10014)
 - [New] User group member addition optimization [link](http://github.com/TencentBlueKing/bk-ci/issues/9909)
@@ -478,7 +478,7 @@
 
 # v2.1.0-rc.1
 ## 2024-01-16
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### New
 - [New] Pipeline archive [link](http://github.com/TencentBlueKing/bk-ci/issues/9397)
 - [New] Support adding pipeline permissions to a group of users [link](http://github.com/TencentBlueKing/bk-ci/issues/9690)
