@@ -1125,7 +1125,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 projectCode = projectCode,
                 repertoryIds = invalidRepertoryIds,
                 handoverFrom = removeMemberDTO.targetMember.id,
-                handoverTo = removeMemberDTO.handoverTo!!.id,
+                handoverTo = removeMemberDTO.handoverTo!!.id
             )
         }
         // 获取唯一管理员组
