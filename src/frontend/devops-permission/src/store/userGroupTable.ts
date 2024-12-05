@@ -18,6 +18,7 @@ interface GroupTableType {
   operateSource: string;
   operator: string;
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
+  beingHandedOver: Boolean;
 };
 interface Pagination {
   limit: number;
@@ -36,6 +37,7 @@ interface SourceType {
   tableLoading?: boolean;
   scrollLoading?: boolean;
   tableData: GroupTableType[];
+  allSelectData?: GroupTableType[];
 }
 interface SelectedDataType {
   [key: string]: GroupTableType[];
@@ -62,7 +64,6 @@ interface SearchParamsType {
 
 export default defineStore('userGroupTable', () => {
   const { t } = useI18n();
-  const route = useRoute();
   const isLoading = ref(true);
   const projectId = ref();
   const paginations = ref({})
@@ -280,9 +281,16 @@ export default defineStore('userGroupTable', () => {
       const params = {
         expiredAt: paramTimestamp
       };
-      await http.renewal(projectId.value, selectedRow.value!.resourceType, selectedRow.value!.groupId, params)
-      delete selectedData[selectedTableGroupType.value];
-      currentTableRef.value.clearSelection();
+      const res = await http.renewal(projectId.value, selectedRow.value!.resourceType, selectedRow.value!.groupId, params)
+      if (res) {
+        // 替换当前行的数据 or api.getMemberGroupDetails()
+        let item = sourceList.value.find((item: SourceType) => item.resourceType == selectedRow.value!.resourceType)?.tableData.find(item => item.groupId === selectedRow.value!.groupId);
+        if (item) {
+          item.beingHandedOver = true
+        }
+        delete selectedData[selectedTableGroupType.value];
+        currentTableRef.value.clearSelection();
+      }
     } catch (error) {
       console.log(error);
     }
@@ -331,7 +339,9 @@ export default defineStore('userGroupTable', () => {
           },
           ...sourceItem,
           tableData: tableData.slice(0, 11),
-          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) })
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) }),
+          ...(!sourceItem.isAll && { count: tableData.length }),
+          ...(!sourceItem.isAll && { allSelectData: tableData })
         };
       });
   }
@@ -403,18 +413,24 @@ export default defineStore('userGroupTable', () => {
    * 切换表格每页显示条数时
    */
   async function pageLimitChange(limit: number, resourceType: string) {
-    paginations.value[resourceType][1] = limit;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
       if (item) {
         item.tableLoading = true;
-        const res = await getGroupList(resourceType, searchObj.value)
+        if (item.isAll) {
+          paginations.value[resourceType][1] = limit;
+          paginations.value[resourceType][0] = 1;
+          const res = await getGroupList(resourceType, searchObj.value)
+          item.tableData = res.records;
+          item.tableLoading = false;
+        } else {
+          item.tableData = [];
+          item.tableData = item.allSelectData!.slice(0, limit + 1);
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
       console.log(error);
-
     }
   }
   /**

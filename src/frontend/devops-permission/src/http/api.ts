@@ -1,9 +1,6 @@
 import fetch from './fetch';
 
-const apiPerfix = '/api';
-const applyFix = 'ms/auth/api/user/auth/apply';
-const IAM_PERFIX = '/ms/auth/api/user/auth/resource';
-const AUTH_PERFIX = '/ms/auth/api/user/auth';
+const apiPerfix = '/ms/auth/api/user';
 const projectPerfix = 'ms/project/api/user'
 export default {
   getUser() {
@@ -16,16 +13,16 @@ export default {
    * 获取资源类型列表
    */
   getResourceTypesList() {
-    return fetch.get(`${applyFix}/listResourceTypes`);
+    return fetch.get(`${apiPerfix}/auth/apply/listResourceTypes`);
   },
   // 获取动作列表
   getActionsList(resourceType: any) {
-    return fetch.get(`${applyFix}/listActions?resourceType=${resourceType}`);
+    return fetch.get(`${apiPerfix}/auth/apply/listActions?resourceType=${resourceType}`);
   },
   // 获取资源列表
   getResourceList(params: any, pageInfo: any) {
     const { projectId, resourceType, resourceName } = params;
-    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources`, {
+    return fetch.get(`${apiPerfix}/auth/resource/${projectId}/${resourceType}/listResources`, {
       ...pageInfo,
       resourceName
     })
@@ -34,36 +31,56 @@ export default {
   getUserGroupList(params: any) {
     const { projectId } = params;
     delete params.projectId;
-    return fetch.post(`${applyFix}/${projectId}/listGroups`, params);
+    return fetch.post(`${apiPerfix}/auth/apply/${projectId}/listGroups`, params);
   },
   // 申请加入用户组实体
   applyToJoinGroup(params: any) {
-    return fetch.post(`${applyFix}/applyToJoinGroup`, params);
+    return fetch.post(`${apiPerfix}/auth/apply/applyToJoinGroup`, params);
   },
   // 查询用户组权限详情
   getGroupPermissionDetail(groupId: any) {
-    return fetch.get(`${applyFix}/${groupId}/getGroupPermissionDetail`)
+    return fetch.get(`${apiPerfix}/auth/apply/${groupId}/getGroupPermissionDetail`)
   },
   getProjectsList() {
     return fetch.get(`${projectPerfix}/projects?queryAuthorization=true`)
+  },
+  // 获取oauth授权列表
+  getOauthResource() {
+    return fetch.get(`${apiPerfix}/oauth/resource`)
+  },
+  // 删除oauth授权
+  deleteOauth(type: any) {
+    return fetch.delete(`${apiPerfix}/oauth/resource/delete?oauthType=${type}`)
+  },
+  getOauthRelSource(type: any, page: Number, pageSize: Number) {
+    return fetch.get(`${apiPerfix}/oauth/resource/relSource?oauthType=${type}&page=${page}&pageSize=${pageSize}`)
+  },
+  refreshOauth(oauthType: any, redirectUrl: any) {
+    return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
+  },
+  /**
+   * 获取（代码库、流水线、部署节点）授权列表
+   */
+  getResourceAuthList(projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
   },
   /**
    * 批量交接用户组成员
    */
   batchHandover(projectId: string, params?: any) {
-    return fetch.put(`${IAM_PERFIX}/member/${projectId}/batch/personal/handover`, params);
+    return fetch.put(`${apiPerfix}/auth/resource/member/${projectId}/batch/personal/handover`, params);
   },
   /**
    * 批量移除用户组成员
    */
   batchRemove(projectId: string, params?: any) {
-    return fetch.DELETE(`${IAM_PERFIX}/member/${projectId}/batch/personal/remove`, params);
+    return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/batch/personal/remove`, params);
   },
   /**
    * 重置资源授权管理
    */
   batchOperateCheck(projectId: string, batchOperateType: string, params: any) {
-    return fetch.post(`${IAM_PERFIX}/member/${projectId}/batch/${batchOperateType}/check`, params);
+    return fetch.post(`${apiPerfix}/auth/resource/member/${projectId}/batch/${batchOperateType}/check`, params);
   },
   /**
    * 获取项目成员有权限的用户组数量
@@ -72,7 +89,7 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${IAM_PERFIX}/member/${projectId}/getMemberGroupCount?${query}`);
+    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/getMemberGroupCount?${query}`);
   },
   /**
    * 获取项目成员有权限的用户组
@@ -81,24 +98,42 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsDetails?${query}`);
+    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/getMemberGroupsDetails?${query}`);
   },
   /**
    * 获取项目下全体成员(简单查询)
    */
-  getProjectMembers(projectId: string, params?: any) {
+  async getProjectMembers(projectId: string, params?: any) {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`, {
+    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/listProjectMembers?${query}`, {
       globalError: false
     });
+  },
+  /**
+   * 获取用户已加入的项目列表
+   */
+  fetchProjectList() {
+    return fetch.get(`${projectPerfix}/projects`)
+  },
+  /**
+   * 重置授权（代码库、流水线、部署节点） 
+   */
+  resetAuthorization(projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/${projectId}/handoverAuthorizationsApplication`, params)
+  },
+  /**
+   * 校验是否可交接
+   */
+  checkAuthorization(projectId: string, params: any) {
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
   },
   /**
    * 展示动作列表
    */
   getListActions(resourceType: string) {
-    return fetch.get(`${applyFix}/listActions?resourceType=${resourceType}`);
+    return fetch.get(`${apiPerfix}/auth/apply/listActions?resourceType=${resourceType}`);
   },
   /**
    * 获取资源列表
@@ -107,30 +142,36 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources?${query}`);
+    return fetch.get(`${apiPerfix}/auth/resource/${projectId}/${resourceType}/listResources?${query}`);
   },
   /**
    * 单条续期
    */
   async renewal(projectId: string, resourceType: string, groupId: number, params: any) {
-    return fetch.put(`${IAM_PERFIX}/group/${projectId}/${resourceType}/${groupId}/member/renewal`, params);
+    return fetch.put(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/member/renewal`, params);
   },
   /**
    * 获取资源授权管理数量
    */
   getResourceType2CountOfHandover(params: any) {
-    return fetch.post(`${AUTH_PERFIX}/handover/getResourceType2CountOfHandover`, params);
+    return fetch.post(`${apiPerfix}/auth/handover/getResourceType2CountOfHandover`, params);
   },
   /**
    * 获取交接单中授权相关
    */
   listAuthorizationsOfHandover(params: any) {
-    return fetch.post(`${AUTH_PERFIX}/handover/listAuthorizationsOfHandover`, params);
+    return fetch.post(`${apiPerfix}/auth/handover/listAuthorizationsOfHandover`, params);
   },
   /**
    * 获取交接单中用户组相关
    */
   listGroupsOfHandover(params: any) {
-    return fetch.post(`${AUTH_PERFIX}/handover/listGroupsOfHandover`, params);
+    return fetch.post(`${apiPerfix}/auth/handover/listGroupsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  getMemberGroupDetails(projectId: string, resourceType: string, groupId: number) {
+    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails`);
   },
 }

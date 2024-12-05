@@ -105,6 +105,11 @@
                 text
                 theme="primary"
                 @click="handleRenewal(row)"
+                :disabled="row.beingHandedOver || row.removeMemberButtonControl === 'DEPARTMENT'"
+                v-bk-tooltips="{
+                  content: row.beingHandedOver ? t('等待审核中') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : '',
+                  disabled: !row.beingHandedOver && row.removeMemberButtonControl !== 'DEPARTMENT'
+                }"
               >
                 {{t("续期")}}
               </bk-button>
@@ -113,11 +118,10 @@
                 theme="primary"
                 class="operation-btn"
                 @click="handleHandOver(row, index)"
-                :disabled="row.isExpired && row.removeMemberButtonControl === 'OTHER'"
+                :disabled="row.isExpired || row.removeMemberButtonControl === 'DEPARTMENT'"
                 v-bk-tooltips="{
-                  content: t('已过期，无需移交'),
-                  placement: 'top',
-                  disabled: row.removeMemberButtonControl !== 'OTHER' || !row.isExpired
+                  content: row.isExpired ? t('已过期，无需移交') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : '',
+                  disabled: !row.isExpired && row.removeMemberButtonControl !== 'DEPARTMENT'
                 }"
               >
                 {{t("移交")}}
@@ -197,13 +201,14 @@ const remainingCount = computed(()=> props.groupTotal - props.data.length);
 const TOOLTIPS_CONTENT = {
   UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
   UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
-  TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
+  TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组'),
+  DEPARTMENT: t('通过组织加入的 不允许 续期/移出/移交')
 }
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
-    isExpired: item.expiredAt < Date.now() && item.removeMemberButtonControl === 'OTHER'
+    isExpired: item.expiredAt < Date.now()
   }))
 );
 const border = ['row', 'outer'];
@@ -337,9 +342,10 @@ function handleToResourcePage (row) {
 </script>
 
 <style lang="less" scoped>
-.resource-table{
+.resource-table {
   margin-top: 4px;
   border: 1px solid #DCDEE5;
+
   .prepend {
     width: 100%;
     height: 42px;
@@ -347,9 +353,11 @@ function handleToResourcePage (row) {
     background: #F0F1F5;
     text-align: center;
     box-shadow: 0 -1px 0 0 #DCDEE5;
+
     .prepend-line {
       padding: 0 4px;
     }
+
     span {
       font-family: MicrosoftYaHei;
       font-size: 12px;
@@ -359,23 +367,9 @@ function handleToResourcePage (row) {
       cursor: pointer;
     }
   }
-  .operation-btn{
+
+  .operation-btn {
     margin: 0 8px;
-  }
-  .appendLastRow{
-    background-color: #fff;
-  }
-  .overlay{
-    position: absolute;
-    left: 0;
-    transform: translateY(-42px);
-    width: 100%;
-    height: 42px;
-    background: rgba(255, 232, 195, .7);
-    font-family: MicrosoftYaHei;
-    font-size: 12px;
-    color: #63656E;
-    text-align: center;
   }
   .hover-link {
     cursor: pointer;
@@ -384,10 +378,12 @@ function handleToResourcePage (row) {
     }
   }
 }
-.appendLastRow{
+
+.appendLastRow {
   background-color: #fff;
 }
-.overlay{
+
+.overlay {
   position: absolute;
   left: 0;
   transform: translateY(-42px);
@@ -399,7 +395,7 @@ function handleToResourcePage (row) {
   color: #63656E;
   text-align: center;
 }
-.text-blue{
+.text-blue {
   cursor: pointer;
   color: #699DF4;
 }

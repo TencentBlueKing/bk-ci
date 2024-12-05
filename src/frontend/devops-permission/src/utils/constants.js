@@ -24,3 +24,8 @@ export const batchTitle = {
   handover: "批量移交",
   remove: "批量退出"
 }
+export const unableText = {
+  renewal: '无法续期',
+  handover: '无法移交',
+  remove: '无法移出',
+}
