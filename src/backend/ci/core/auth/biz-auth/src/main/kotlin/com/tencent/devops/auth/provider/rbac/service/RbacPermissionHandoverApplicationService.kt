@@ -118,6 +118,7 @@ class RbacPermissionHandoverApplicationService(
     override fun listHandoverOverviews(
         queryRequest: HandoverOverviewQueryReq
     ): SQLPage<HandoverOverviewVo> {
+        logger.info("list handover overviews :$queryRequest")
         val records = handoverOverviewDao.list(
             dslContext = dslContext,
             queryRequest = queryRequest
@@ -135,6 +136,7 @@ class RbacPermissionHandoverApplicationService(
     override fun listAuthorizationsOfHandoverApplication(
         queryReq: HandoverDetailsQueryReq
     ): SQLPage<HandoverAuthorizationDetailVo> {
+        logger.info("list authorizations of handover application :$queryReq")
         val flowNo = queryReq.flowNo!!
         val overview = getHandoverOverview(flowNo)
         val resourceCodes = handoverDetailDao.list(
@@ -174,6 +176,7 @@ class RbacPermissionHandoverApplicationService(
     override fun listGroupsOfHandoverApplication(
         queryReq: HandoverDetailsQueryReq
     ): SQLPage<HandoverGroupDetailVo> {
+        logger.info("list groups of handover application :$queryReq")
         val flowNo = queryReq.flowNo!!
         val handoverOverview = getHandoverOverview(flowNo)
         val iamGroupIdsByHandover = listHandoverDetails(
@@ -212,6 +215,7 @@ class RbacPermissionHandoverApplicationService(
     }
 
     override fun getResourceType2CountOfHandoverApplication(flowNo: String): List<ResourceType2CountVo> {
+        logger.info("get resource type count of handover application:$flowNo")
         val handoverOverview = getHandoverOverview(flowNo)
         val resourceType2CountWithGroup = handoverDetailDao.countWithResourceType(
             dslContext = dslContext,
@@ -266,6 +270,7 @@ class RbacPermissionHandoverApplicationService(
         handoverType: HandoverType,
         resourceType: String?
     ): List<HandoverDetailDTO> {
+        logger.info("list member handover details:$projectCode|$memberId|$handoverType|$resourceType")
         val handoverOverviews = listHandoverOverviews(
             queryRequest = HandoverOverviewQueryReq(
                 memberId = memberId,

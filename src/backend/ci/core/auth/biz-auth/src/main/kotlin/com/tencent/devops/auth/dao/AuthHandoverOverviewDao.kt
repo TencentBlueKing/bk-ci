@@ -135,6 +135,7 @@ class AuthHandoverOverviewDao {
             groupCount = groupCount,
             authorizationCount = authorizationCount,
             lastOperator = lastOperator,
+            createTime = createTime,
             canRevoke = memberId?.let { memberId == applicant && status == HandoverStatus.PENDING.value },
             canApproval = memberId?.let { memberId == approver && status == HandoverStatus.PENDING.value },
             remark = remark
