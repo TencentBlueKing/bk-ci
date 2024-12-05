@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URL
+import java.net.URLEncoder
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
@@ -88,7 +89,7 @@ class CopilotOpenTokenService @Autowired constructor(
         val verify = generateVerify(JsonUtil.toJson(body, false))
         val encryptedBytes = Base64.getDecoder().decode(verify)
         val encryptedBase64Str = Base64.getEncoder().encodeToString(encryptedBytes)
-        body["verify"] = encryptedBase64Str
+        body["verify"] = URLEncoder.encode(encryptedBase64Str, Charsets.UTF_8.name())
         val response = OkhttpUtils.doHttp(
             Request.Builder()
                 .post(OkhttpUtils.joinParams(body).toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
