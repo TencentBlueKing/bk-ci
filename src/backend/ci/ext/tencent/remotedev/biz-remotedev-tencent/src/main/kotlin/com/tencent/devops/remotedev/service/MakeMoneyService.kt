@@ -1,13 +1,17 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceUseSnapshotsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import io.swagger.v3.oas.annotations.media.Schema
 import java.lang.Long.bitCount
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,9 +31,10 @@ class MakeMoneyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val historyDao: WorkspaceOpHistoryDao,
     private val workspaceDao: WorkspaceDao,
-    private val snapshotsDao: WorkspaceUseSnapshotsDao
+    private val snapshotsDao: WorkspaceUseSnapshotsDao,
+    private val bkConfig: BkConfig
 ) {
-    data class SaveData(
+    private data class SaveData(
         val projectId: String,
         val projectName: String,
         val status: WorkspaceStatus,
@@ -169,32 +174,73 @@ class MakeMoneyService @Autowired constructor(
         }
     }
 
-    data class Bills(
-        @JsonProperty("cost_date")
-        val costDate: String,
-        @JsonProperty("project_id")
-        val projectId: String,
-        val name: String,
-        @JsonProperty("service_type")
-        val serviceType: String,
-        val kind: String,
-        @JsonProperty("res_id")
-        val resId: String,
-        val ip: String,
-        val usage: Int,
-        @JsonProperty("daydetail")
-        val dayDetail: Map<String, Int>
-    )
+    @Schema(title = "云研发货币化数据")
+    private data class Bill(
+        @get:Schema(title = "数据源名称")
+        @JsonProperty(value = "data_source_bills", required = true)
+        val dataSourceBills: SourceBills
+    ) {
+        @Schema(title = "云研发数据源货币化数据")
+        data class SourceBills(
+            @get:Schema(title = "数据源名称")
+            @JsonProperty(value = "data_source_name", required = true)
+            val dataSourceName: String = "云研发服务货币化",
+            @get:Schema(title = "货币化数据")
+            val bills: List<BillDetail>
+        )
+
+        data class BillDetail(
+            @JsonProperty("cost_date")
+            @get:Schema(title = "账单周期（月）")
+            val costDate: String,
+            @JsonProperty("project_id")
+            @get:Schema(title = "项目id")
+            val projectId: String,
+            @get:Schema(title = "项目名称")
+            val name: String,
+            @JsonProperty("service_type")
+            @get:Schema(title = "服务类型")
+            val serviceType: String,
+            @get:Schema(title = "指标名称")
+            val kind: String,
+            @JsonProperty("res_id")
+            @get:Schema(title = "资源ID")
+            val resId: String,
+            @get:Schema(title = "主机IP")
+            val ip: String,
+            @get:Schema(title = "使用天数")
+            val usage: Int,
+            @JsonProperty("daydetail")
+            @get:Schema(title = "日明细数据")
+            val dayDetail: Map<String, Int>
+        )
+    }
+
 
     fun bills(year: Int, month: Int, push: Boolean): Response {
         val bills = makeMoneyMonthly(year, month)
         if (push) {
-            // todo 上报
+            pushBills(bills)
         }
         return makeMoneyMonthlyOutput(bills)
     }
 
-    private fun makeMoneyMonthly(year: Int, month: Int): List<Bills> {
+    private fun pushBills(bills: List<Bill.BillDetail>) {
+        val requestBody = JsonUtil.toJson(Bill(Bill.SourceBills(bills = bills)))
+        OkhttpUtils.doPost(
+            url = bkConfig.billsPushUrl,
+            jsonParam = requestBody,
+            headers = mapOf("Platform-Key" to bkConfig.billsPlatformKey)
+        ).use {
+            if (!it.isSuccessful) {
+                logger.warn("push bills data failed|code: ${it.code}|response: ${it.body}")
+                throw RemoteServiceException("request bill data failed code: ${it.code},response: ${it.body}")
+            }
+            logger.info("push bills|code: ${it.code}|response: ${it.body}")
+        }
+    }
+
+    private fun makeMoneyMonthly(year: Int, month: Int): List<Bill.BillDetail> {
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
         val start = end.plusMonths(-1).plusDays(1)
@@ -209,7 +255,7 @@ class MakeMoneyService @Autowired constructor(
             }
         }
         val dateList = getDateList(start, end)
-        val res = mutableListOf<Bills>()
+        val res = mutableListOf<Bill.BillDetail>()
         // 分块处理减少性能压力
         total.keys.chunked(99).forEach { chunk ->
             val workspaceInfo = workspaceDao.limitFetchWorkspace(
@@ -224,7 +270,7 @@ class MakeMoneyService @Autowired constructor(
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
                 res.add(
-                    Bills(
+                    Bill.BillDetail(
                         costDate = costData,
                         projectId = workspace?.projectId ?: "ERROR",
                         name = workspace?.projectName ?: "ERROR",
@@ -267,7 +313,7 @@ class MakeMoneyService @Autowired constructor(
     }
 
     private fun makeMoneyMonthlyOutput(
-        bills: List<Bills>
+        bills: List<Bill.BillDetail>
     ): Response {
         val workbook = SXSSFWorkbook()
         val sheet = workbook.createSheet("Data")
