@@ -27,7 +27,18 @@
 
 package com.tencent.devops.store.atom.service.impl
 
-import com.tencent.devops.common.api.constant.*
+import com.tencent.devops.common.api.constant.COMPONENT
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.GOLANG
+import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.JAVA
+import com.tencent.devops.common.api.constant.KEY_OS
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
+import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -87,13 +98,12 @@ import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.apache.commons.lang3.StringUtils
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -381,7 +391,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_EXECUTION)
             )
         }
-        //pref:完善研发商店组件配置文件参数校验 #11269
+        // pref:完善研发商店组件配置文件参数校验 #11269
         val supportedLanguages = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         val language = executionInfoMap[KEY_LANGUAGE]?.let { language ->
             when (language) {
