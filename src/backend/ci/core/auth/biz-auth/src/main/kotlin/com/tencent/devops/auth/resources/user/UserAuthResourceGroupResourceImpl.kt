@@ -116,6 +116,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
     override fun getMemberGroupDetails(
         userId: String,
         projectId: String,
+        resourceType: String,
         groupId: Int,
         memberId: String
     ): Result<GroupDetailsInfoVo> {
@@ -129,8 +130,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
             permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 memberId = memberId,
+                resourceType = resourceType,
                 iamGroupIds = listOf(groupId)
-            ).records.first { it.groupId == groupId || it.joinedType == JoinedType.DIRECT  }
+            ).records.first { it.groupId == groupId || it.joinedType == JoinedType.DIRECT }
         )
     }
 

@@ -132,6 +132,9 @@ interface UserAuthResourceGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
         @Parameter(description = "用户组Id")
         @PathParam("groupId")
         groupId: Int,
