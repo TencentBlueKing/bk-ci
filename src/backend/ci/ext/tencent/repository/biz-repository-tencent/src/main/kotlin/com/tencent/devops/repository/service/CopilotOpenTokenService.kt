@@ -89,16 +89,15 @@ class CopilotOpenTokenService @Autowired constructor(
         val encryptedBytes = Base64.getDecoder().decode(verify)
         val encryptedBase64Str = Base64.getEncoder().encodeToString(encryptedBytes)
         body["verify"] = encryptedBase64Str
-        val bodyJsonStr = JsonUtil.toJson(body, false)
         val response = OkhttpUtils.doHttp(
             Request.Builder()
-                .post(bodyJsonStr.toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
+                .post(OkhttpUtils.joinParams(body).toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
                 .url(URL(copilotConfig.authUrl))
                 .header("Content-Type", APPLICATION_FORM_URLENCODED)
                 .build()
         )
         if (!response.isSuccessful) {
-            logger.warn("fail to get copilot access token|${response.code}|${response.body}")
+            logger.warn("fail to get copilot access token|${response.code}|${response.body?.string()}")
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.FAIL_TO_GET_OPEN_COPILOT_TOKEN,
                 params = arrayOf(response.body?.string() ?: response.code.toString())
