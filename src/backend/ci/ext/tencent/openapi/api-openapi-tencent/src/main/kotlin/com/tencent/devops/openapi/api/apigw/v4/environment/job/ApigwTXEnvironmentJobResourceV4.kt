@@ -34,7 +34,6 @@ import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -388,7 +387,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
                 content = [
                     Content(
                         mediaType = "application/json",
-                        array = ArraySchema(schema = Schema(implementation = AgentResult::class))
+                        schema = Schema(implementation = AgentResult::class)
                     )
                 ]
             )
@@ -422,7 +421,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
                 content = [
                     Content(
                         mediaType = "application/json",
-                        array = ArraySchema(schema = Schema(implementation = AgentResult::class))
+                        schema = Schema(implementation = AgentResult::class)
                     )
                 ]
             )
@@ -463,7 +462,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
                 content = [
                     Content(
                         mediaType = "application/json",
-                        array = ArraySchema(schema = Schema(implementation = AgentResult::class))
+                        schema = Schema(implementation = AgentResult::class)
                     )
                 ]
             )
