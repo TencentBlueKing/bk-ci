@@ -34,7 +34,7 @@ class MakeMoneyService @Autowired constructor(
     private val snapshotsDao: WorkspaceUseSnapshotsDao,
     private val bkConfig: BkConfig
 ) {
-    private data class SaveData(
+    data class SaveData(
         val projectId: String,
         val projectName: String,
         val status: WorkspaceStatus,
