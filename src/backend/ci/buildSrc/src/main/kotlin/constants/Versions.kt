@@ -43,7 +43,7 @@ object Versions {
     const val mockk = "1.12.2"
     const val Resilience4j = "2.2.0"
     const val jgit = "5.13.3.202401111512-r"
-    const val iam = "1.0.7"
+    const val iam = "2.0.0-SNAPSHOT"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
     const val audit = "2.0.1-SNAPSHOT"
