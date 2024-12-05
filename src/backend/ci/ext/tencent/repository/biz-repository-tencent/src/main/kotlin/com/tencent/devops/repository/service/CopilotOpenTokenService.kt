@@ -14,11 +14,15 @@ import com.tencent.devops.repository.pojo.CodeGitCopilotOauthResponse
 import com.tencent.devops.repository.pojo.OauthInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
@@ -85,9 +89,12 @@ class CopilotOpenTokenService @Autowired constructor(
         val encryptedBytes = Base64.getDecoder().decode(verify)
         val encryptedBase64Str = Base64.getEncoder().encodeToString(encryptedBytes)
         body["verify"] = encryptedBase64Str
-        val response = OkhttpUtils.doPost(
-            url = copilotConfig.authUrl, jsonParam = JsonUtil.toJson(body, false), headers =
-            mapOf("Content-Type" to "application/x-www-form-urlencoded")
+        val bodyJsonStr = JsonUtil.toJson(body, false)
+        val response = OkhttpUtils.doHttp(
+            Request.Builder()
+                .post(bodyJsonStr.toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
+                .url(URL(copilotConfig.authUrl))
+                .build()
         )
         if (!response.isSuccessful) {
             logger.warn("fail to get copilot access token|${response.code}|${response.body}")
@@ -111,5 +118,6 @@ class CopilotOpenTokenService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CopilotOpenTokenService::class.java)
+        val MEDIA_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded".toMediaTypeOrNull()
     }
 }
