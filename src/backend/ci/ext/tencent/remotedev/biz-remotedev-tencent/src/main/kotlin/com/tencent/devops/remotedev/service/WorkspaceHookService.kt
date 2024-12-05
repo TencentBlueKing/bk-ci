@@ -85,7 +85,8 @@ class WorkspaceHookService @Autowired constructor(
 
     private data class RequestBody(
         val name: String,
-        val constants: Map<String, String>
+        val constants: Map<String, String>,
+        val scope: String = "project"
     )
 
     private data class Response(
