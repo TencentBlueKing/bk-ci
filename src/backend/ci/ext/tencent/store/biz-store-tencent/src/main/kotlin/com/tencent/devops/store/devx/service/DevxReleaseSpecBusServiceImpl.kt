@@ -71,7 +71,6 @@ import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
-import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreArchiveService
@@ -83,7 +82,6 @@ import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
-import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -104,7 +102,9 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
+import com.tencent.devops.store.pojo.devx.constants.KEY_SOURCE_TYPE
 import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
+import com.tencent.devops.store.pojo.devx.enums.SourceCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -118,7 +118,6 @@ import java.io.File
 class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao,
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
@@ -189,8 +188,9 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 extBaseFeatureInfo[KEY_REPOSITORY_HTTP_URL] = repositoryInfo.repositoryUrl
             }
         }
-        if (baseFeatureInfo?.rdType == RdTypeEnum.SELF_DEVELOPED) {
-            extBaseFeatureInfo?.set(KEY_REPOSITORY_AUTHORIZER, userId)
+        val sourceType = extBaseFeatureInfo?.get(KEY_SOURCE_TYPE)?.toString()
+        if (sourceType == SourceCodeEnum.OFFICIAL_HOSTING.name) {
+            extBaseFeatureInfo[KEY_REPOSITORY_AUTHORIZER] = userId
         }
     }
 
@@ -198,8 +198,13 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val storeBaseCreateRequest = storeUpdateRequest.baseInfo
         val storeCode = storeBaseCreateRequest.storeCode
         val storeType = storeBaseCreateRequest.storeType
-        val rdType = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.rdType
-        if (rdType == RdTypeEnum.SELF_DEVELOPED.name) {
+        val sourceType = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            fieldName = KEY_SOURCE_TYPE
+        )?.fieldValue
+        if (sourceType == SourceCodeEnum.OFFICIAL_HOSTING.name) {
             val bkStoreContext = storeUpdateRequest.bkStoreContext
             val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
             val versionInfo = storeBaseCreateRequest.versionInfo

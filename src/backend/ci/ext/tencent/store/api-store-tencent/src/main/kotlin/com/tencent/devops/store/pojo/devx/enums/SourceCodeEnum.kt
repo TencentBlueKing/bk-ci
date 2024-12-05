@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.devx.constants
+package com.tencent.devops.store.pojo.devx.enums
 
-const val KEY_NET_POLICY_INFO = "netPolicyInfo"
-const val KEY_MAX_PEAK_BAND_WIDTH = "maxPeakBandwidth"
-const val KEY_MIN_PEAK_BAND_WIDTH = "minPeakBandwidth"
-const val KEY_NEED_VISITED_SITE_INFOS = "needVisitedSiteInfos"
-const val KEY_FRAMEWORK_CODE = "frameworkCode"
-const val KEY_REPOSITORY_ID = "repositoryId"
-const val KEY_REPOSITORY_HTTP_URL = "repositoryHttpUrl"
-const val KEY_BUILD_DIR = "buildDir"
-const val KEY_SOURCE_TYPE = "sourceType"
+enum class SourceCodeEnum {
+    SELF_UPLOAD, // 自行上传
+    OFFICIAL_HOSTING; // 官方托管
+}
