@@ -105,7 +105,7 @@ class ApiGwAgentService @Autowired constructor(
         val agentResult = gseAgentService.obtainManualInstallationCommand(jobId, hostList[0])
         // agent未就绪的状态也统一成PENDING
         if (agentResult.code == NODEMAN_COMMAND_NOT_READY_CODE){
-            logger.info("Agent is not ready, pending...")
+            logger.info("[InstallAgent] Agent is not ready, pending...")
             return AgentResult(
                 code = OPENAPI_NORMAL_STATUS_CODE,
                 result = true,
