@@ -841,7 +841,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 }
             }
             val installedVersion = installComponentMap[storeCode]
-            if (testStoreCodes.contains(storeCode)) {
+            if (testStoreCodes.contains(storeCode) && updateFlag != false) {
                 finalTestStoreCodes.add(storeCode)
             } else {
                 // 比较当前安装的版本与组件最新版本
@@ -992,7 +992,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 name = record[tStoreBase.NAME],
                 code = storeCode,
                 version = version,
-                status = record[tStoreBase.STATUS],
+                status = status,
                 type = StoreTypeEnum.getStoreType(record[tStoreBase.STORE_TYPE].toInt()),
                 rdType = record[tStoreBaseFeature.RD_TYPE],
                 classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],
