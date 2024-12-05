@@ -14,7 +14,7 @@ const GroupDetail = () => import(/* webpackChunkName: "Permission" */ '../compon
 const AuthEntry = () => import(/* webpackChunkName: "Permission" */ '../views/auth/auth-entry.vue');
 const OauthHome = () => import(/* webpackChunkName: "Permission" */ '../views/auth/oauth/oauth-home.vue');
 const MyAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/my-auth.vue');
-const MyHandover = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-handover.vue');
+const MyHandover = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-handover/index.vue');
 const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
