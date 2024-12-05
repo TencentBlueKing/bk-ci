@@ -32,6 +32,7 @@ import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -109,6 +110,27 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 start = start,
                 limit = limit
             )
+        )
+    }
+
+    override fun getMemberGroupDetails(
+        userId: String,
+        projectId: String,
+        groupId: Int,
+        memberId: String
+    ): Result<GroupDetailsInfoVo> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = memberId
+        )
+        return Result(
+            permissionManageFacadeService.getMemberGroupsDetails(
+                projectId = projectId,
+                memberId = memberId,
+                iamGroupIds = listOf(groupId)
+            ).records.first { it.groupId == groupId || it.joinedType == JoinedType.DIRECT  }
         )
     }
 
