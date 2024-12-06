@@ -34,9 +34,9 @@ BEGIN
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
                      AND TABLE_NAME = 'T_STORE_PROJECT_REL'
-                     AND INDEX_NAME = 'INX_TSPR_PROJECT_TYPE') THEN
+                     AND INDEX_NAME = 'INX_TSPR_TYPE_CODE_TYPE') THEN
     ALTER TABLE `T_STORE_PROJECT_REL` ADD INDEX
-        `INX_TSPR_PROJECT_TYPE` (`PROJECT_CODE`,`TYPE`);
+         `INX_TSPR_TYPE_CODE_TYPE` (`STORE_TYPE`,`STORE_CODE`,`TYPE`);
     END IF;
 
     IF EXISTS(SELECT 1
