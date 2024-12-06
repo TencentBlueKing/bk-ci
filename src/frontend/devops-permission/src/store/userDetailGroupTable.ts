@@ -1,6 +1,14 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
+import codelibIcon from '@/css/svg/color-logo-codelib.svg';
+import codeccIcon from '@/css/svg/color-logo-codecc.svg';
+import environmentIcon from '@/css/svg/color-logo-environment.svg';
+import experienceIcon from '@/css/svg/color-logo-experience.svg';
+import qualityIcon from '@/css/svg/color-logo-quality.svg';
+import ticketIcon from '@/css/svg/color-logo-ticket.svg';
+import turboIcon from '@/css/svg/color-logo-turbo.svg';
 
 enum HandoverType {
   AUTHORIZATION = 'AUTHORIZATION',
@@ -48,7 +56,8 @@ interface DetailParams {
   previewConditionReq?: String;
   queryChannel?: String;
   page?: Number,
-  pageSize?: Number
+  pageSize?: Number,
+  flowNo?: String
 }
 
 export default defineStore('userDetailGroupTable', () => {
@@ -196,6 +205,27 @@ export default defineStore('userDetailGroupTable', () => {
     }
   }
 
+  function getServiceIcon (type: string) {
+    const iconMap = {
+      'pipeline': pipelineIcon,
+      'pipeline_group': pipelineIcon,
+      'repertory': codelibIcon,
+      'credential': ticketIcon,
+      'cert': ticketIcon,
+      'environment': environmentIcon,
+      'env_node': pipelineIcon,
+      'codecc_task': codeccIcon,
+      'codecc_rule_set': codeccIcon,
+      'codecc_ignore_type': codeccIcon,
+      'experience_task': experienceIcon,
+      'experience_group': experienceIcon,
+      'rule': qualityIcon,
+      'quality_group': qualityIcon,
+      'pipeline_template': pipelineIcon,
+    }
+    return iconMap[type]
+  }
+
   return {
     isLoading,
     detailSourceList,
@@ -204,5 +234,6 @@ export default defineStore('userDetailGroupTable', () => {
     detailCollapseClick,
     detailPageLimitChange,
     detailPageValueChange,
+    getServiceIcon,
   };
 });

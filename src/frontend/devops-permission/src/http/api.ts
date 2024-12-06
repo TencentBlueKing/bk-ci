@@ -106,7 +106,7 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/etMemberGroupCount?${query}g`);
+    return fetch.get(`${apiPerfix}/auth/resource/member/${projectId}/getMemberGroupCount?${query}`);
   },
   /**
    * 获取项目成员有权限的用户组
@@ -191,4 +191,16 @@ export default {
   getMemberGroupDetails(projectId: string, resourceType: string, groupId: number) {
     return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails`);
   },
+  /**
+   * 获取交接单列表
+   */
+  fetchHandoverOverviewList(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/listHandoverOverviews`, params);
+  },
+  /**
+   * 处理交接审批单
+   */
+  handleHanoverApplication(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/handleHanoverApplication`, params);
+  }
 }
