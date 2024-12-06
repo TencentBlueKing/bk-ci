@@ -233,10 +233,10 @@ class MakeMoneyService @Autowired constructor(
             headers = mapOf("Platform-Key" to bkConfig.billsPlatformKey)
         ).use {
             if (!it.isSuccessful) {
-                logger.warn("push bills data failed|code: ${it.code}|response: ${it.body}")
-                throw RemoteServiceException("request bill data failed code: ${it.code},response: ${it.body}")
+                logger.warn("push bills data failed|code: ${it.code}|response: ${it.body?.string()}")
+                throw RemoteServiceException("request bill data failed code: ${it.code},response: ${it.body?.string()}")
             }
-            logger.info("push bills|code: ${it.code}|response: ${it.body}")
+            logger.info("push bills|code: ${it.code}|response: ${it.body?.string()}")
         }
     }
 
