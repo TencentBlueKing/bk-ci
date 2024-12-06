@@ -1181,11 +1181,11 @@ class WorkspaceService @Autowired constructor(
 
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
-            records = result.map {
+            records = result.mapNotNull {
                 WorkspaceOpHistory(
                     createdTime = it.createdTime.timestamp(),
                     operator = it.operator,
-                    action = WorkspaceAction.values()[it.action],
+                    action = WorkspaceAction.values().getOrNull(it.action) ?: return@mapNotNull null,
                     actionMessage = it.actionMsg
                 )
             }
