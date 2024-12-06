@@ -148,6 +148,8 @@ allprojects {
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
             dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
+            // TODO 等undertow升级上来之后可以去掉
+            dependency("io.undertow:undertow-core:2.2.37.Final")
         }
     }
 
