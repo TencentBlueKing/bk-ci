@@ -261,7 +261,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         }
         // 触发执行流水线
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
-            userId = if (storePipelineRelRecord == null) innerPipelineUser else userId,
+            userId = innerPipelineUser,
             projectId = storePipelineRelRecord?.projectCode ?: innerPipelineProject,
             pipelineId = pipelineId,
             values = startParams,
