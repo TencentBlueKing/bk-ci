@@ -76,11 +76,11 @@ function setLsLocale (locale) {
     }
 }
 
-function getLanguageCode(lang) {
-    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/);
+function getLanguageCode (lang) {
+    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/)
     
     if (languageCodeMatch) {
-        return languageCodeMatch[0].toUpperCase();
+        return languageCodeMatch[0].toUpperCase()
     }
 
     return 'ZH'

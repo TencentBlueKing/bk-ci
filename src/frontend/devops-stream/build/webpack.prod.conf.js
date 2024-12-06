@@ -112,8 +112,13 @@ const prodConf = merge(baseConf, {
                     {
                         loader: 'postcss-loader',
                         options: {
-                            config: {
-                                path: resolve(__dirname, '..', 'postcss.config.js')
+                            postcssOptions: {
+                                plugins: [
+                                    [
+                                        'postcss-preset-env'
+                                    ]
+                                ]
+                                
                             }
                         }
                     }

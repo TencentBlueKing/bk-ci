@@ -1,7 +1,7 @@
 const { src, dest, parallel, series, task } = require('gulp')
 const fs = require('fs')
 const path = require('path')
-const htmlmin = require('gulp-htmlmin')
+const htmlmin = require('gulp-html-minifier-terser')
 const svgSprite = require('gulp-svg-sprite')
 const inject = require('gulp-inject')
 const rename = require('gulp-rename')

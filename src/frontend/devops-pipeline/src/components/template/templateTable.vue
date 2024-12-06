@@ -266,13 +266,13 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import dayjs from 'dayjs'
     import ExtMenu from './extMenu'
-    import { navConfirm } from '@/utils/util'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import moment from 'moment'
+    import { navConfirm } from '@/utils/util'
 
     export default {
         components: {
@@ -367,7 +367,7 @@
                         this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
-                            x.updateTime = moment(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
+                            x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                             x.templateActions = [
                                 {
                                     text: this.$t('clone'),

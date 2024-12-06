@@ -10,7 +10,14 @@
                 class="input-label"
                 :title="label"
             >
-                {{ label }}：
+                <label>
+                    {{ label }}
+                </label>
+                <i
+                    v-if="desc"
+                    class="bk-icon icon-info-circle label-desc"
+                    v-bk-tooltips.top="{ content: desc, allowHTML: false }"
+                />
             </p>
             <bk-input
                 class="input-main"
@@ -62,6 +69,9 @@
 
         props: {
             label: {
+                type: String
+            },
+            desc: {
                 type: String
             },
             type: {
@@ -189,28 +199,22 @@
                 this.displayValue = value
             },
 
-            handleBlur (value) {
-                const findItemId = (name) => {
-                    let item = this.paramList.find(x => x.name === name)
-                    if (!item) {
-                        if (name.isBkVar()) item = name
-                        else item = ''
-                    } else {
-                        item = item.id
-                    }
-                    return item
-                }
+            findItemId (name) {
+                if (name.isBkVar()) return name
+                return this.paramList.find(x => x.name === name)?.id ?? ''
+            },
 
-                const res = []
+            handleBlur (value) {
                 if (this.isMultiple) {
+                    const res = [];
                     (String(value || '').split(',') || []).forEach((val) => {
-                        const tempId = findItemId(val)
+                        const tempId = this.findItemId(val)
                         if (tempId !== '') res.push(tempId)
                     })
+                    this.$emit('update-value', res.join(','))
                 } else {
-                    res.push(findItemId(value))
+                    this.$emit('update-value', this.findItemId(value))
                 }
-                this.$emit('update-value', res.join(','))
             },
 
             isActive (id) {
@@ -255,10 +259,20 @@
     .parameter-input {
         flex: 1;
         .input-label {
-            max-width: 100%;
+            display: flex;
+            align-items: center;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 12px;
+            > label {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            > i {
+                flex-shrink: 0;
+                margin-left: 8px;
+            }
         }
         .input-main {
             flex: 1;
@@ -280,6 +294,7 @@
             color: #63656e;
             overflow: auto;
             max-height: 216px;
+            min-width: 120px;
             z-index: 2;
             li {
                 padding: 0 16px;

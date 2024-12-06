@@ -365,7 +365,7 @@
     import {
         hashID
     } from '@/utils/util'
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import { mapActions, mapGetters, mapState } from 'vuex'
     const defaultFilter = {
         '@type': NAME_FILTER_TYPE,
@@ -861,7 +861,7 @@
                         pipelineIds: Array.from(this.model.pipelineIds)
                     })
                     this.preview = data
-                    this.previewTime = moment().format('HH:mm:ss')
+                    this.previewTime = dayjs().format('HH:mm:ss')
                     this.isFilterChange = false
                 } catch (error) {
                     console.log(error)
