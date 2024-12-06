@@ -185,7 +185,11 @@
             },
             async getAccessToken (refresh = true) {
                 try {
+                    const tokenKey = '__GONGFENG_COPILOT_TOKEN__'
+                    const token = localStorage.getItem(tokenKey)
+                    if (token) return token
                     const res = await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/getCopilotOpenToken?refresh=${refresh}`)
+                    localStorage.setItem(tokenKey, res.data)
                     return res.data
                 } catch (e) {
                     this.$showTips({
