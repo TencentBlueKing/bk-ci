@@ -211,7 +211,7 @@ class UserInfoCertService @Autowired constructor(
                             id = record.userId,
                             type = "user"
                         ),
-                        renewalDuration = 30
+                        renewalDuration = 365
                     )
                 )
             }
