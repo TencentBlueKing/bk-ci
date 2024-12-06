@@ -138,6 +138,26 @@ interface UserAuthResourceMemberResource {
         removeMemberDTO: GroupMemberRemoveConditionReq
     ): Result<Boolean>
 
+    @DELETE
+    @Path("/single/{groupId}/{operateChannel}/remove")
+    @Operation(summary = "退出单个组")
+    fun deleteResourceGroupMembers(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "组ID", required = true)
+        @PathParam("groupId")
+        groupId: Int,
+        @Parameter(description = "操作渠道", required = true)
+        @PathParam("operateChannel")
+        operateChannel: OperateChannel,
+        @Parameter(description = "操作对象", required = true)
+        targetMember: ResourceMemberInfo
+    ): Result<Boolean>
+
     @PUT
     @Path("/batch/handover")
     @Operation(summary = "批量交接用户组成员--管理员视角")
