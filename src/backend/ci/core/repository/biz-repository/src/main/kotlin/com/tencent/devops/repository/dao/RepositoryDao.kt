@@ -426,10 +426,11 @@ class RepositoryDao {
 
     fun getByName(dslContext: DSLContext, projectId: String, repositoryName: String): TRepositoryRecord {
         with(TRepository.T_REPOSITORY) {
-            return dslContext.selectFrom(this)
-                .where(ALIAS_NAME.eq(repositoryName))
-                .and(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
+            val query = dslContext.selectFrom(this).where(ALIAS_NAME.eq(repositoryName))
+            if (projectId.isNotBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            return query.and(IS_DELETED.eq(false))
                 .fetchAny() ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryName))
             )

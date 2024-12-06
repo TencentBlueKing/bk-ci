@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
@@ -115,6 +116,21 @@ interface UserStoreReleaseResource {
         storeId: String
     ): Result<Boolean>
 
+    @Operation(summary = "填写信息")
+    @PUT
+    @Path("/components/{storeId}/release/info/edit")
+    fun editReleaseInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeId", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "填写信息请求报文体", required = true)
+        @Valid
+        storeReleaseInfoUpdateRequest: StoreReleaseInfoUpdateRequest
+    ): Result<Boolean>
+
     @Operation(summary = "下架组件")
     @PUT
     @Path("/component/offline")
@@ -131,6 +147,18 @@ interface UserStoreReleaseResource {
     @PUT
     @Path("/components/{storeId}/rebuild")
     fun rebuild(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件Id", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "返回上一步")
+    @PUT
+    @Path("/components/{storeId}/step/back")
+    fun back(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
