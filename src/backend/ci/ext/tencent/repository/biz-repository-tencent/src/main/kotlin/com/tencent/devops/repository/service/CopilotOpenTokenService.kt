@@ -2,7 +2,6 @@ package com.tencent.devops.repository.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URL
-import java.net.URLEncoder
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
@@ -71,7 +69,7 @@ class CopilotOpenTokenService @Autowired constructor(
             dslContext = dslContext,
             userId = userId,
             token = GitToken(
-                accessToken = AESUtil.decrypt(aesKey, oauthInfo.accessToken),
+                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, oauthInfo.accessToken),
                 tokenType = TokenTypeEnum.COPILOT_TOKEN.name,
                 createTime = LocalDateTime.now().timestampmilli()
             )
