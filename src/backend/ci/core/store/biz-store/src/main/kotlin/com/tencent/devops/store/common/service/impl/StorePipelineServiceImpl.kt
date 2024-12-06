@@ -35,20 +35,22 @@ import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineInitResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -79,12 +81,12 @@ import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -118,7 +120,6 @@ class StorePipelineServiceImpl @Autowired constructor(
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {
-        val taskId = UUIDUtil.generate()
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
@@ -144,37 +145,39 @@ class StorePipelineServiceImpl @Autowired constructor(
             pipelineModel = updatePipelineModel
             grayPipelineModel = updatePipelineModel
         }
+        val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
+        val innerPipelineGrayUser = storeInnerPipelineConfig.innerPipelineGrayUser
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
-                handleStorePipelineModel(
+                handleStorePublicPipelineModel(
                     storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
-                    pipelineModel = grayPipelineModel,
-                    grayFlag = true
-                )
-                handleStorePipelineModel(
-                    storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
+                    storeCode = null,
+                    userId = innerPipelineUser,
                     pipelineModel = pipelineModel,
                     grayFlag = false
                 )
+                handleStorePublicPipelineModel(
+                    storeType = storeType,
+                    storeCode = null,
+                    userId = innerPipelineGrayUser,
+                    pipelineModel = grayPipelineModel,
+                    grayFlag = true
+                )
             }
             ScopeTypeEnum.GRAY.name -> {
-                handleStorePipelineModel(
+                handleStorePublicPipelineModel(
                     storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
+                    storeCode = null,
+                    userId = innerPipelineGrayUser,
                     pipelineModel = grayPipelineModel,
                     grayFlag = true
                 )
             }
             ScopeTypeEnum.NO_GRAY.name -> {
-                handleStorePipelineModel(
+                handleStorePublicPipelineModel(
                     storeType = storeType,
-                    taskId = taskId,
-                    userId = userId,
+                    storeCode = null,
+                    userId = innerPipelineUser,
                     pipelineModel = pipelineModel,
                     grayFlag = false
                 )
@@ -187,15 +190,15 @@ class StorePipelineServiceImpl @Autowired constructor(
                         language = I18nUtil.getLanguage(userId)
                     )
                 }
-                updatePipelineModel(
-                    storeType = storeType,
-                    storeCodeList = storeCodeList,
-                    userId = userId,
-                    taskId = taskId,
-                    defaultPipelineModel = pipelineModel,
-                    checkGrayFlag = true,
-                    grayPipelineModel = grayPipelineModel
-                )
+                storeCodeList.forEach {
+                    handleStorePublicPipelineModel(
+                        storeType = storeType,
+                        storeCode = it,
+                        userId = storeInnerPipelineConfig.innerPipelineUser,
+                        pipelineModel = pipelineModel,
+                        grayFlag = false
+                    )
+                }
             }
         }
         return Result(true)
@@ -214,62 +217,24 @@ class StorePipelineServiceImpl @Autowired constructor(
         )
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
+        val pipelineId: String
         // 生成流水线启动参数
         val startParams = storeReleaseSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
         if (null == storePipelineRelRecord) {
-            val pipelineModelConfig = businessConfigDao.get(
+            pipelineId = creatStorePipeline(
+                userId = innerPipelineUser,
+                storeType = storeType,
+                projectCode = innerPipelineProject
+            )
+            storePipelineRelDao.add(
                 dslContext = dslContext,
-                business = storeType.name,
-                feature = "initBuildPipeline",
-                businessValue = "PIPELINE_MODEL"
+                storeCode = storeCode,
+                storeType = storeType,
+                pipelineId = pipelineId,
+                projectCode = innerPipelineProject
             )
-            var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$storeType-$storeCode-${UUIDUtil.generate()}"
-            val paramMap = mapOf(
-                KEY_PIPELINE_NAME to pipelineName
-            )
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
-            val storeInitPipelineReq = StoreInitPipelineReq(
-                pipelineModel = pipelineModel,
-                startParams = startParams
-            )
-            val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(innerPipelineUser, innerPipelineProject, storeInitPipelineReq).data
-            logger.info("runStorePipeline storeInitPipelineResp is:$storeInitPipelineResp")
-            if (null != storeInitPipelineResp) {
-                val pipelineId = storeInitPipelineResp.pipelineId
-                storePipelineRelDao.add(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    pipelineId = pipelineId,
-                    projectCode = innerPipelineProject
-                )
-                val buildId = storeInitPipelineResp.buildId
-                if (!buildId.isNullOrBlank()) {
-                    storePipelineBuildRelDao.add(
-                        dslContext = dslContext,
-                        storeId = storeId,
-                        pipelineId = pipelineId,
-                        buildId = buildId
-                    )
-                }
-                val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
-                storeStatus?.let {
-                    storeBaseManageDao.updateStoreBaseInfo(
-                        dslContext = dslContext,
-                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
-                            id = storeId,
-                            status = storeStatus,
-                            modifier = userId
-                        )
-                    )
-                }
-            }
         } else {
+            pipelineId = storePipelineRelRecord.pipelineId
             val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
@@ -293,37 +258,141 @@ class StorePipelineServiceImpl @Autowired constructor(
                     )
                 }
             }
-            // 触发执行流水线
-            val pipelineId = storePipelineRelRecord.pipelineId
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
-                userId = innerPipelineUser,
-                projectId = innerPipelineProject,
+        }
+        // 触发执行流水线
+        val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            userId = innerPipelineUser,
+            projectId = storePipelineRelRecord?.projectCode ?: innerPipelineProject,
+            pipelineId = pipelineId,
+            values = startParams,
+            channelCode = ChannelCode.AM,
+            startType = StartType.SERVICE
+        ).data
+        var buildId: String? = null
+        if (null != buildIdObj) {
+            buildId = buildIdObj.id
+            storePipelineBuildRelDao.add(
+                dslContext = dslContext,
+                storeId = storeId,
                 pipelineId = pipelineId,
-                values = startParams,
-                channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE
-            ).data
-            var buildId: String? = null
-            if (null != buildIdObj) {
-                buildId = buildIdObj.id
-                storePipelineBuildRelDao.add(
-                    dslContext = dslContext,
-                    storeId = storeId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
+                buildId = buildId
+            )
+        }
+        val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
+        storeStatus?.let {
+            storeBaseManageDao.updateStoreBaseInfo(
+                dslContext = dslContext,
+                updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                    id = storeId,
+                    status = storeStatus,
+                    modifier = userId
                 )
+            )
+        }
+        return true
+    }
+
+    override fun creatStorePipeline(
+        userId: String,
+        storeType: StoreTypeEnum,
+        projectCode: String
+    ): String {
+        var pipelineId: String?
+        val lock =
+            RedisLock(redisOperation, "CREAT_${storeType.name}_PIPELINE-$projectCode", 60L)
+        val pipelineName = "${storeType.name}-PIPELINE-BUILD:PUBLIC"
+        try {
+            lock.lock()
+            pipelineId = redisOperation.get(pipelineName)
+            if (pipelineId.isNullOrBlank()) {
+                val pipelineList = client.get(ServicePipelineResource::class).searchByName(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineName = pipelineName
+                ).data
+                pipelineList?.forEach {
+                    if (it.pipelineName == pipelineName) {
+                        pipelineId = it.pipelineId
+                    }
+                }
             }
-            val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
-            storeStatus?.let {
-                storeBaseManageDao.updateStoreBaseInfo(
+            if (!pipelineId.isNullOrBlank()) {
+                return pipelineId!!
+            }
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = storeType.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            val pipelineModel =
+                pipelineModelConfig!!.configValue.replace("#{$KEY_PIPELINE_NAME}", pipelineName)
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+            pipelineId = client.get(ServicePipelineResource::class).create(
+                userId = userId,
+                projectId = projectCode,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            redisOperation.set(
+                key = pipelineName,
+                value = pipelineId!!,
+                expired = false
+            )
+            return pipelineId!!
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun deleteStoreInnerPipeline(
+        userId: String,
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?
+    ): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin deleteStoreInnerPipeline!!")
+            var offset = 0
+            do {
+                // 查询组件内置流水线信息记录
+                val storePipelineRelRecords = storePipelineRelDao.getStorePipelineRelRecords(
                     dslContext = dslContext,
-                    updateStoreBaseDataPO = UpdateStoreBaseDataPO(
-                        id = storeId,
-                        status = storeStatus,
-                        modifier = userId
+                    offset = offset,
+                    limit = pageSize,
+                    storeType = storeType,
+                    storeCode = storeCode
+                )
+                storePipelineRelRecords?.forEach { storePipelineRelRecord ->
+                    var initProjectCode = storePipelineRelRecord.projectCode
+                    if (excludeProjectCode == initProjectCode) {
+                        // 如果内置流水线的项目属于要排除的项目，则不删除该内置流水线
+                        return@forEach
+                    }
+                    storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(
+                        dslContext,
+                        storePipelineRelRecord.pipelineId
                     )
-                )
-            }
+                    storePipelineRelDao.deleteStorePipelineRelById(dslContext, storePipelineRelRecord.id)
+                    if (initProjectCode.isNullOrBlank()) {
+                        initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                            dslContext = dslContext,
+                            storeCode = storePipelineRelRecord.storeCode,
+                            storeType = storePipelineRelRecord.storeType
+                        )
+                    }
+                    // 调接口删除内置流水线
+                    client.get(ServicePipelineResource::class).delete(
+                        userId = userId,
+                        pipelineId = storePipelineRelRecord.pipelineId,
+                        channelCode = ChannelCode.AM,
+                        projectId = initProjectCode,
+                        checkFlag = false
+                    )
+                }
+                offset += pageSize
+            } while (storePipelineRelRecords?.size == pageSize)
+            logger.info("end deleteStoreInnerPipeline!!")
         }
         return true
     }
@@ -378,6 +447,175 @@ class StorePipelineServiceImpl @Autowired constructor(
                     break@loop
                 }
             }
+        }
+    }
+
+    private fun handleStorePublicPipelineModel(
+        storeType: String,
+        userId: String,
+        pipelineModel: String,
+        storeCode: String? = null,
+        grayFlag: Boolean
+    ) {
+        val str = "#{$KEY_PIPELINE_NAME}"
+        var model = pipelineModel
+        val suffix = storeCode ?: "PUBLIC"
+        var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
+        val projectCode = if (!grayFlag) {
+            storeInnerPipelineConfig.innerPipelineProject
+        } else {
+            pipelineName = "GRAY-$pipelineName"
+            storeInnerPipelineConfig.innerPipelineGrayProject
+        }
+        if (pipelineModel.contains(str)) {
+            model = pipelineModel.replace(
+                "#{$KEY_PIPELINE_NAME}",
+                pipelineName
+            )
+        }
+        var publicPipelineId = redisOperation.get("$storeType-PIPELINE-BUILD:PUBLIC")
+        if (publicPipelineId.isNullOrBlank()) {
+            publicPipelineId = creatStorePipelineByStoreCode(
+                dslContext = dslContext,
+                storeType = storeType,
+                grayFlag = grayFlag
+            )
+        }
+        var pipelineId = if (storeCode != null) {
+            storePipelineRelDao.getStorePipelineRelByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType)
+            )?.pipelineId
+        } else {
+            publicPipelineId
+        }
+        pipelineId ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+            params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
+        )
+        logger.info("handleStorePublicPipelineModel pipelineId:$pipelineId|publicPipelineId:$publicPipelineId")
+        if (storeCode != null && pipelineId == publicPipelineId) {
+            pipelineId = creatStorePipelineByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                grayFlag = grayFlag
+            )
+
+            val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType)
+            )
+            if (pipelineRelRecord == null) {
+                storePipelineRelDao.add(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.valueOf(storeType),
+                    pipelineId = pipelineId,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            } else {
+                storePipelineRelDao.updateStorePipelineProject(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.valueOf(storeType),
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                    pipelineId = pipelineId
+                )
+            }
+        }
+        val flag = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = projectCode,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.AM
+        ).data != null
+        // 公共项目直接更新
+        if (flag) {
+            client.get(ServicePipelineSettingResource::class)
+                .updatePipelineModel(
+                    userId = userId,
+                    updatePipelineModelRequest = UpdatePipelineModelRequest(
+                        pipelineModelVersionList = listOf(
+                            PipelineModelVersion(
+                                projectId = projectCode,
+                                pipelineId = pipelineId,
+                                creator = storeInnerPipelineConfig.innerPipelineUser,
+                                model = model
+                            )
+                        )
+                    )
+                )
+        }
+    }
+
+    fun creatStorePipelineByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String? = null,
+        storeType: String,
+        grayFlag: Boolean
+    ): String {
+        val suffix = storeCode ?: "PUBLIC"
+        var pipelineName = "$storeType-PIPELINE-BUILD:$suffix"
+        var key = "CREAT-$pipelineName"
+        if (grayFlag) {
+            key = "GRAY-$key"
+        }
+        storeCode?.let { key += "-$storeCode" }
+        val lock = RedisLock(redisOperation, key, 60L)
+        try {
+            lock.lock()
+            if (grayFlag) {
+                pipelineName = "GRAY-$pipelineName"
+            }
+            val innerPipelineUser = if (!grayFlag) {
+                storeInnerPipelineConfig.innerPipelineUser
+            } else {
+                storeInnerPipelineConfig.innerPipelineGrayUser
+            }
+            val innerPipelineProject = if (!grayFlag) {
+                storeInnerPipelineConfig.innerPipelineProject
+            } else {
+                storeInnerPipelineConfig.innerPipelineGrayProject
+            }
+            val pipelineList = client.get(ServicePipelineResource::class).searchByName(
+                userId = innerPipelineUser,
+                projectId = innerPipelineProject,
+                pipelineName = pipelineName
+            ).data
+            pipelineList?.forEach {
+                if (it.pipelineName == pipelineName) {
+                    return it.pipelineId
+                }
+            }
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = StoreTypeEnum.valueOf(storeType).name,
+                feature = "initBuildPipeline",
+                businessValue = if (!grayFlag) "PIPELINE_MODEL" else "GRAY_PIPELINE_MODEL"
+            )
+            val pipelineModel = pipelineModelConfig!!.configValue.replace(
+                "#{$KEY_PIPELINE_NAME}",
+                pipelineName
+            )
+            val model = JsonUtil.to(pipelineModel, Model::class.java)
+             val pipelineId = client.get(ServicePipelineResource::class).create(
+                userId = innerPipelineUser,
+                projectId = innerPipelineProject,
+                pipeline = model,
+                channelCode = ChannelCode.AM
+            ).data!!.id
+            if (storeCode == null) {
+                redisOperation.set(
+                    key = pipelineName,
+                    value = pipelineId,
+                    expired = false
+                )
+            }
+            return pipelineId
+        } finally {
+            lock.unlock()
         }
     }
 
