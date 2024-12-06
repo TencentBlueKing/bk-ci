@@ -131,8 +131,9 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 projectId = projectId,
                 memberId = memberId,
                 resourceType = resourceType,
-                iamGroupIds = listOf(groupId)
-            ).records.first { it.groupId == groupId || it.joinedType == JoinedType.DIRECT }
+                iamGroupIds = listOf(groupId),
+                operateChannel = OperateChannel.PERSONAL
+            ).records.first { it.groupId == groupId && it.joinedType == JoinedType.DIRECT }
         )
     }
 
