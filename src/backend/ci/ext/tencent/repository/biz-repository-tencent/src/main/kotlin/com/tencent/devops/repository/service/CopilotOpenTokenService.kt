@@ -53,7 +53,6 @@ class CopilotOpenTokenService @Autowired constructor(
             // 不存在copilot token, 开始授权
             logger.warn("copilot token is not exist")
             val oauthInfo = getCopilotAccessToken(userId)
-            logger.info("get copilot token|oauthInfo=$oauthInfo")
             saveCopilotToken(userId, oauthInfo)
             oauthInfo.accessToken
         } else {
