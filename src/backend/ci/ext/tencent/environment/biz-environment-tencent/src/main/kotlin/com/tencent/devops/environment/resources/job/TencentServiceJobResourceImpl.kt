@@ -264,7 +264,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             apiGwInstallAgentReq = apiGwInstallAgentReq,
-            hostList = hostList
+            bkHostId = hostList[0].toInt()
         )
     }
 

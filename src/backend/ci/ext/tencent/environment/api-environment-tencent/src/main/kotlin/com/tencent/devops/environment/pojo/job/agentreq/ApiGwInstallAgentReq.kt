@@ -30,13 +30,15 @@ package com.tencent.devops.environment.pojo.job.agentreq
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装agent的请求信息")
-data class ApiGwInstallAgentReq (
+data class ApiGwInstallAgentReq(
     @get:Schema(title = "待安装的主机ip", required = true)
     val innerIp: String,
-    @get:Schema(title = "操作系统类型 1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS", required = true)
+    @get:Schema(title = "操作系统类型: LINUX/WINDOWS/AIX/SOLARIS", required = true)
     val osType: String,
-    @get:Schema(title = "主机云区域ID，默认为公共区域，云区域ID为0")
+    @get:Schema(title = "主机管控区域ID，可在蓝鲸配置平台搜索主机信息查看，默认值为0，表示公司内部区域")
     val bkCloudId: Int = 0,
     @get:Schema(title = "是否自动选择安装通道，默认为true")
     val isAutoChooseInstallChannelId: Boolean = true,
+    @get:Schema(title = "安装通道ID，默认为自动选择安装通道。若需要手动选择安装通道，可到蓝盾【环境管理-节点-安装Agent】打开F12 查看安装通道对应的id，isAutoChooseInstallChannelId为false时必填")
+    val installChannelId: Int?,
 )

@@ -29,7 +29,6 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.config.EnvironmentProperties
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
@@ -46,7 +45,6 @@ import org.springframework.stereotype.Service
 @Service("ApiGwAgentService")
 class ApiGwAgentService @Autowired constructor(
     private val cmdbNodeDao: CmdbNodeDao,
-    private val environmentProperties: EnvironmentProperties,
     private val gseAgentService: GSEAgentService
 ) {
 
@@ -54,19 +52,19 @@ class ApiGwAgentService @Autowired constructor(
         userId: String,
         projectId: String,
         apiGwInstallAgentReq: ApiGwInstallAgentReq,
-        hostList: List<Long>
+        bkHostId: Int
     ): AgentResult<InstallAgentResult> {
 
         val installAgentReq = apiGwInstallAgentReq.let {
             InstallAgentReq(
                 hosts = listOf(
                     HostForInstallAgent(
-                        bkHostId = hostList[0].toInt(),
+                        bkHostId = bkHostId,
                         bkCloudId = it.bkCloudId,
                         bkAddressing = null,
                         isAutoChooseInstallChannelId = it.isAutoChooseInstallChannelId,
                         apId = null,
-                        installChannelId = null,
+                        installChannelId = it.installChannelId,
                         innerIp = it.innerIp,
                         loginIp = null,
                         innerIpv6 = null,
@@ -94,7 +92,7 @@ class ApiGwAgentService @Autowired constructor(
         cloudAreaId: Int,
         innerIp: String
     ): AgentResult<ObtainManualCommandResult> {
-        val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = null, cloudAreaId = cloudAreaId, ip = innerIp)
+        val hostList = cmdbNodeDao.getNodeHostIdByCloudIp(projectId = projectId, cloudAreaId = cloudAreaId, ip = innerIp)
         if (hostList.isEmpty()) {
             throw ResourceNotMatchException(
                 errorCode = ERROR_NODE_NOT_BELONG_TO_PROJECT,
@@ -113,7 +111,7 @@ class ApiGwAgentService @Autowired constructor(
                 errors = null,
                 data = ObtainManualCommandResult(
                     status = NODEMAN_GET_JOB_COMMAND_PENDING_STATUS,
-                    networkPolicyDocLink = getNetworkPolicyDocLink()
+                    networkPolicyDocLink = gseAgentService.getNetworkPolicyDocLink()
                 )
             )
         }
@@ -121,12 +119,8 @@ class ApiGwAgentService @Autowired constructor(
         return agentResult
     }
 
-    fun getNodeHostIdByCloudIp(projectId: String?, cloudAreaId: Int, ip: String): List<Long> {
+    fun getNodeHostIdByCloudIp(projectId: String, cloudAreaId: Int, ip: String): List<Long> {
         return cmdbNodeDao.getNodeHostIdByCloudIp(projectId, cloudAreaId, ip)
-    }
-
-    private fun getNetworkPolicyDocLink(): String? {
-        return environmentProperties.nodeman.networkPolicyDocLink
     }
 
     companion object {

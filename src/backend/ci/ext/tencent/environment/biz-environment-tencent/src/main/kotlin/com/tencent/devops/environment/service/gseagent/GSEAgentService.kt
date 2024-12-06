@@ -342,7 +342,7 @@ data class GSEAgentService @Autowired constructor(
         return obtainManualCommandRes
     }
 
-    private fun getNetworkPolicyDocLink(): String? {
+    fun getNetworkPolicyDocLink(): String? {
         return environmentProperties.nodeman.networkPolicyDocLink
     }
 }
