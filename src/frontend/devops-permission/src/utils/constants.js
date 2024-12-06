@@ -1,4 +1,4 @@
-
+export const OPERATE_CHANNEL = 'PERSONAL';
 export const TIME_FILTERS = {
   30: '1个月',
   90: '3个月',

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { ref, reactive, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import dayjs from 'dayjs';
+import { OPERATE_CHANNEL } from "@/utils/constants";
 
 interface GroupTableType {
   resourceCode: string,
@@ -36,8 +37,8 @@ interface SourceType {
   activeFlag?: boolean;
   tableLoading?: boolean;
   scrollLoading?: boolean;
+  isRemotePagination?: boolean;
   tableData: GroupTableType[];
-  allSelectData?: GroupTableType[];
 }
 interface SelectedDataType {
   [key: string]: GroupTableType[];
@@ -110,7 +111,7 @@ export default defineStore('userGroupTable', () => {
     paginations.value = []
     try {
       const query = {
-        operateChannel: 'PERSONAL',
+        operateChannel: OPERATE_CHANNEL,
         memberId: memberId,
         ...searchObj,
       }
@@ -125,6 +126,7 @@ export default defineStore('userGroupTable', () => {
         ...item,
         tableLoading: false,
         scrollLoading: false,
+        isRemotePagination: true,
         tableData: [],
       }))
 
@@ -145,7 +147,7 @@ export default defineStore('userGroupTable', () => {
     }
     try {
       const params = {
-        operateChannel: 'PERSONAL',
+        operateChannel: OPERATE_CHANNEL,
         memberId: memberId.value,
         start: paginations.value[resourceType][0],
         limit: paginations.value[resourceType][1],
@@ -296,6 +298,19 @@ export default defineStore('userGroupTable', () => {
     }
   }
   /**
+   * 替换行数据   
+   */
+  async function handleReplaceRow(memberId: string) {
+    const activeTableData = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
+    if (activeTableData) {
+      const res = await http.getMemberGroupDetails(projectId.value, selectedRow.value!.resourceType, selectedRow.value!.groupId, memberId)
+      activeTableData.tableData?.splice(rowIndex.value as number, 1, res);
+      activeTableData.tableData = [...activeTableData.tableData];
+    }
+    isPermission.value = sourceList.value.every(item => item.count !== 0)
+    handleClear(selectedTableGroupType.value);
+  }
+  /**
    * 删除行数据
    */
   function handleRemoveRow() {
@@ -338,10 +353,9 @@ export default defineStore('userGroupTable', () => {
             count: sourceItem.isAll ? sourceItem.count! : tableData.length
           },
           ...sourceItem,
-          tableData: tableData.slice(0, 11),
+          tableData: tableData,
+          ...(!sourceItem.isAll && { isRemotePagination: false }),
           ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) }),
-          ...(!sourceItem.isAll && { count: tableData.length }),
-          ...(!sourceItem.isAll && { allSelectData: tableData })
         };
       });
   }
@@ -416,16 +430,11 @@ export default defineStore('userGroupTable', () => {
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
       if (item) {
+        paginations.value[resourceType][1] = limit;
         item.tableLoading = true;
-        if (item.isAll) {
-          paginations.value[resourceType][1] = limit;
-          paginations.value[resourceType][0] = 1;
+        if (item.isRemotePagination) {
           const res = await getGroupList(resourceType, searchObj.value)
           item.tableData = res.records;
-          item.tableLoading = false;
-        } else {
-          item.tableData = [];
-          item.tableData = item.allSelectData!.slice(0, limit + 1);
         }
         item.tableLoading = false;
       }
@@ -437,14 +446,16 @@ export default defineStore('userGroupTable', () => {
    * 切换表格分页时
    */
   async function pageValueChange(value: number, resourceType: string) {
-    paginations.value[resourceType][0] = (value - 1) * 10 + 1;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
       if (item) {
+        paginations.value[resourceType][0] = (value - 1) * 10 + 1;
         item.tableLoading = true;
-        const res = await getGroupList(resourceType, searchObj.value)
+        if (item.isRemotePagination) {
+          const res = await getGroupList(resourceType, searchObj.value)
+          item.tableData = res.records;
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
 
@@ -475,6 +486,7 @@ export default defineStore('userGroupTable', () => {
     handleSelectAllData,
     handleClear,
     collapseClick,
+    handleReplaceRow,
     handleRemoveRow,
     handleUpDateRow,
     pageLimitChange,

@@ -8,7 +8,7 @@
       show-overflow-tooltip
       :pagination="pagination"
       :border="border"
-      remote-pagination
+      :remote-pagination="isRemotePagination"
       empty-cell-text="--"
       selection-key="resourceCode"
       :checked="selectedResourceCode"
@@ -105,10 +105,10 @@
                 text
                 theme="primary"
                 @click="handleRenewal(row)"
-                :disabled="row.beingHandedOver || row.removeMemberButtonControl === 'DEPARTMENT'"
+                :disabled="row.removeMemberButtonControl === 'DEPARTMENT'"
                 v-bk-tooltips="{
-                  content: row.beingHandedOver ? t('等待审核中') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : '',
-                  disabled: !row.beingHandedOver && row.removeMemberButtonControl !== 'DEPARTMENT'
+                  content: t('通过组织加入的 不允许 续期/移出/移交'),
+                  disabled: row.removeMemberButtonControl !== 'DEPARTMENT'
                 }"
               >
                 {{t("续期")}}
@@ -118,10 +118,10 @@
                 theme="primary"
                 class="operation-btn"
                 @click="handleHandOver(row, index)"
-                :disabled="row.isExpired || row.removeMemberButtonControl === 'DEPARTMENT'"
+                :disabled="row.isExpired || row.removeMemberButtonControl === 'DEPARTMENT' || row.beingHandedOver "
                 v-bk-tooltips="{
-                  content: row.isExpired ? t('已过期，无需移交') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : '',
-                  disabled: !row.isExpired && row.removeMemberButtonControl !== 'DEPARTMENT'
+                  content: row.isExpired ? t('已过期，无需移交') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : row.beingHandedOver ? t('等待审核中') : '',
+                  disabled: !row.isExpired && row.removeMemberButtonControl !== 'DEPARTMENT' && !row.beingHandedOver
                 }"
               >
                 {{t("移交")}}
@@ -133,8 +133,8 @@
               :disabled="row.removeMemberButtonControl != 'OTHER'"
               @click="handleRemove(row, index)"
               v-bk-tooltips="{
-                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || '',
-                disabled: row.removeMemberButtonControl === 'OTHER'
+                content:  row.beingHandedOver ?  t('等待审核中') : TOOLTIPS_CONTENT[row.removeMemberButtonControl],
+                disabled: row.removeMemberButtonControl === 'OTHER' && !row.beingHandedOver
               }"
             >
               {{t("移出")}}
@@ -177,6 +177,10 @@ const props = defineProps({
   loading: Boolean,
   groupName: String,
   batchFlag: String,
+  isRemotePagination:{
+    type: Boolean,
+    default: true,
+  },
 });
 const emit = defineEmits([
   'handleRenewal',
