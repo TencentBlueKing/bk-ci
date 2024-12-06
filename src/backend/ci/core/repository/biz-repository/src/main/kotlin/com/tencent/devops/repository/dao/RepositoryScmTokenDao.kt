@@ -47,9 +47,7 @@ class RepositoryScmTokenDao {
                 .where(
                     USER_ID.eq(userId)
                         .and(SCM_CODE.eq(scmCode))
-                        .and(
-                            APP_TYPE.eq(appType)
-                        )
+                        .and(APP_TYPE.eq(appType))
                 )
                 .fetchOne()
         }
