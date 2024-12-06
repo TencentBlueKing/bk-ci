@@ -27,56 +27,60 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryGitToken
-import com.tencent.devops.model.repository.tables.records.TRepositoryGitTokenRecord
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.model.repository.tables.TRepositoryScmToken
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
+import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class GitTokenDao {
-    fun getAccessToken(dslContext: DSLContext, userId: String): TRepositoryGitTokenRecord? {
-        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+class RepositoryScmTokenDao {
+    fun getToken(
+        dslContext: DSLContext,
+        userId: String,
+        scmCode: String,
+        appType: String
+    ): TRepositoryScmTokenRecord? {
+        with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
             return dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId))
+                .where(
+                    USER_ID.eq(userId)
+                        .and(SCM_CODE.eq(scmCode))
+                        .and(
+                            APP_TYPE.eq(appType)
+                        )
+                )
                 .fetchOne()
         }
     }
 
-    fun saveAccessToken(dslContext: DSLContext, userId: String, token: GitToken): Int {
-        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+    fun saveAccessToken(dslContext: DSLContext, scmToken: RepositoryScmToken): Int {
+        with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
             return dslContext.insertInto(
                 this,
                 USER_ID,
+                SCM_CODE,
+                APP_TYPE,
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
-                TOKEN_TYPE,
                 EXPIRES_IN,
                 CREATE_TIME
             )
                 .values(
-                    userId,
-                    token.accessToken,
-                    token.refreshToken,
-                    token.tokenType,
-                    token.expiresIn,
+                    scmToken.userId,
+                    scmToken.scmCode,
+                    scmToken.appType,
+                    scmToken.accessToken,
+                    scmToken.refreshToken,
+                    scmToken.expiresIn,
                     LocalDateTime.now()
                 )
                 .onDuplicateKeyUpdate()
-                .set(ACCESS_TOKEN, token.accessToken)
-                .set(REFRESH_TOKEN, token.refreshToken)
-                .set(TOKEN_TYPE, token.tokenType)
-                .set(EXPIRES_IN, token.expiresIn)
-                .set(CREATE_TIME, LocalDateTime.now())
-                .execute()
-        }
-    }
-
-    fun deleteToken(dslContext: DSLContext, userId: String): Int {
-        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
-            return dslContext.deleteFrom(this)
-                .where(USER_ID.eq(userId))
+                .set(ACCESS_TOKEN, scmToken.accessToken)
+                .set(REFRESH_TOKEN, scmToken.refreshToken)
+                .set(EXPIRES_IN, scmToken.expiresIn)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
