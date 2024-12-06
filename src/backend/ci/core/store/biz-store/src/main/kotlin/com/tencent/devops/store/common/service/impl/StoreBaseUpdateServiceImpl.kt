@@ -49,20 +49,18 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
-import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList")
@@ -96,15 +94,6 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         val storeCode = storeBaseUpdateRequest.storeCode
         val name = storeBaseUpdateRequest.name
         val versionInfo = storeBaseUpdateRequest.versionInfo
-        val version = versionInfo.version
-        val baseRecord = storeBaseQueryDao.getComponent(
-            dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeType
-        ) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("$storeCode:$version")
-        )
-        if (StoreStatusEnum.INIT.name != baseRecord.status) {
-            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
-        }
         val classifyCode = storeBaseUpdateRequest.classifyCode
         // 校验分类信息是否准确
         val classifyRecord =
