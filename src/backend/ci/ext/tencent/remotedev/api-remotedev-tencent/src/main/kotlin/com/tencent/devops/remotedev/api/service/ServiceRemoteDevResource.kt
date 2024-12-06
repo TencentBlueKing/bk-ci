@@ -576,7 +576,9 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @QueryParam("size")
-        size: String
+        size: String,
+        @QueryParam("action")
+        action: String?
     ): Result<ExpandDiskValidateResp?>
 
     @Operation(summary = "云桌面调整配置")

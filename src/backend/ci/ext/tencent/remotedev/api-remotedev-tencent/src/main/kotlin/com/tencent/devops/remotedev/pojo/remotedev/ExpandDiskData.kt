@@ -18,3 +18,17 @@ data class ExpandDiskValidateResp(
     val valid: Boolean,
     val message: String?
 )
+
+/**
+ * 机器上的磁盘信息
+ * @param pvcClass 磁盘类型(如hdd/ssd)
+ * @param pvcSize 磁盘大小
+ * @param pvcName 磁盘唯一名称
+ * @param isSystemVolume 是否系统盘
+ */
+data class VmDiskInfo(
+    val pvcClass: String,
+    val pvcSize: String,
+    val pvcName: String,
+    val isSystemVolume: Boolean
+)

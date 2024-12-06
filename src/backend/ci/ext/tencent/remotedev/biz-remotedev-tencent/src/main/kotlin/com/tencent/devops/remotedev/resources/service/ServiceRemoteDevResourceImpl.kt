@@ -24,6 +24,7 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -684,13 +685,31 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 
-    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+    override fun expandDisk(
+        userId: String,
+        workspaceName: String,
+        size: String,
+        action: String?
+    ): Result<ExpandDiskValidateResp?> {
+        if (action == WorkspaceAction.CREATE_DISK.name) {
+            val data = expertSupportService.createDisk(
+                workspaceName = workspaceName,
+                userId = userId,
+                size = size
+            )
+            return Result(
+                ExpandDiskValidateResp(
+                    valid = data.result,
+                    message = data.message
+                )
+            )
+        }
+
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
             size = size
         ) ?: return Result(null)
-
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,

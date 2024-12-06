@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDe
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -173,5 +174,14 @@ class RemoteDevService @Autowired constructor(
         ) ?: return Pair(null, null)
 
         return Pair(EnvironmentActionStatus.parse(record.status), record.updateTime)
+    }
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): CreateDiskResp {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).createDisk(workspaceName, userId, size)
     }
 }

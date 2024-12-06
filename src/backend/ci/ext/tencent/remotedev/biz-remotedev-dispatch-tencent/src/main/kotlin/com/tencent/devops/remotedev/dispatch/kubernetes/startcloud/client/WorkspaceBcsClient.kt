@@ -17,19 +17,23 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateInf
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskData
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.BcsTaskData
+import com.tencent.devops.remotedev.pojo.remotedev.BcsTaskDataV2
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import java.net.SocketTimeoutException
 import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
@@ -123,7 +127,7 @@ class WorkspaceBcsClient @Autowired constructor(
         userId: String,
         action: EnvironmentAction,
         workspaceName: String,
-        environmentOperate: EnvironmentOperate,
+        environmentOperate: EnvironmentOperateInf,
         actionMsg: String = ""
     ): EnvironmentOperateRsp.EnvironmentOperateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
@@ -354,6 +358,31 @@ class WorkspaceBcsClient @Autowired constructor(
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskData>>().data
+    }
+
+    fun createDisk(
+        data: CreateDiskData
+    ): BcsTaskDataV2? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/createdisk"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskDataV2>>().data
+    }
+
+    fun fetchDiskList(
+        uid: String
+    ): List<VmDiskInfo>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/vm/$uid/disks"
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

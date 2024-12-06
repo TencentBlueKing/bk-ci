@@ -55,5 +55,6 @@ enum class WorkspaceAction {
     UPGRADING,
     // 克隆
     CLONE,
-    CLONING
+    CLONING,
+    CREATE_DISK
 }

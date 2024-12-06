@@ -661,7 +661,10 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         @QueryParam("size")
-        size: String
+        size: String,
+        @Parameter(description = "操作类型, 为CREATE_DISK是创建新的hdd磁盘，空或其他值为原扩容逻辑", required = false)
+        @QueryParam("action")
+        action: String?
     ): Result<ExpandDiskValidateResp?>
 
     @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
@@ -788,5 +791,4 @@ interface ApigwRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
-
 }

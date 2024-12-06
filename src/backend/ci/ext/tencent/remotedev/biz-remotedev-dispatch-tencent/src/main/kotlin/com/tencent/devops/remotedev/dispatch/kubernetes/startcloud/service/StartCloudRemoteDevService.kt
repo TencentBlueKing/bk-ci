@@ -38,8 +38,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -282,6 +285,23 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentOperate = expandData
         )
         return validateRes
+    }
+
+    override fun createDisk(workspaceName: String, userId: String, size: String): CreateDiskResp {
+        val envId = getEnvironmentUid(workspaceName)
+        // 存在hdd就不能挂盘了
+        val hdd = workspaceBcsClient.fetchDiskList(envId)?.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }
+        if (hdd != null) {
+            return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}")
+        }
+        val data = EnvironmentOperateCreateDisk(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
+        workspaceBcsClient.startOperateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.EXPAND_DISK,
+            workspaceName = workspaceName,
+            environmentOperate = data
+        )
+        return CreateDiskResp(true, null)
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

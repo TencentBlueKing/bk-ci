@@ -30,4 +30,10 @@ interface ServiceRemoteDevInterface {
     fun workspaceUpdate(
         event: RemoteDevUpdateEvent
     )
+
+    fun workspaceCreateDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    )
 }
