@@ -29,10 +29,14 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -94,12 +98,12 @@ import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -387,14 +391,30 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_EXECUTION)
             )
         }
-        val language = executionInfoMap[KEY_LANGUAGE] as? String
-        if (language.isNullOrBlank()) {
-            // 抛出错误提示
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                params = arrayOf(KEY_LANGUAGE)
-            )
-        }
+        // pref:完善研发商店组件配置文件参数校验 #11269
+        val supportedLanguages = setOf(JAVA, PYTHON, GOLANG, NODEJS)
+        val language = executionInfoMap[KEY_LANGUAGE]?.let { language ->
+            when (language) {
+                is String -> {
+                    if (language in supportedLanguages) {
+                        language
+                    } else {
+                        throw ErrorCodeException(
+                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                            params = arrayOf(KEY_LANGUAGE, supportedLanguages.joinToString(separator = ","))
+                        )
+                    }
+                }
+
+                else -> throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                    params = arrayOf(KEY_LANGUAGE)
+                )
+            }
+        } ?: throw ErrorCodeException(
+            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+            params = arrayOf(KEY_LANGUAGE)
+        )
         val config = taskDataMap[KEY_CONFIG] as? Map<String, Any>
         config?.let { validateConfigMap(config) }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
