@@ -10,6 +10,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_APPROVAL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_FINISH
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_HANDLE
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_REVOKE
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_SINGLE_GROUP_REMOVE
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
@@ -1312,6 +1313,35 @@ class RbacPermissionManageFacadeServiceImpl(
                 authorizationCount = invalidPipelines.size + invalidRepertoryIds.size
             ),
             details = handoverDetails
+        )
+        return true
+    }
+
+    override fun deleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        groupId: Int,
+        targetMember: ResourceMemberInfo
+    ): Boolean {
+        logger.info("delete single group members from personal:$userId|$targetMember|$projectCode|$groupId")
+        // 获取导致流水线代持人权限受到影响的用户组及流水线
+        val (invalidGroups, invalidPipelines, invalidRepertoryIds) =
+            listInvalidAuthorizationsAfterOperatedGroups(
+                projectCode = projectCode,
+                iamGroupIds = listOf(groupId),
+                memberId = targetMember.id
+            )
+        if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() || invalidRepertoryIds.isNotEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_SINGLE_GROUP_REMOVE)
+        }
+        batchOperateGroupMembers(
+            projectCode = projectCode,
+            type = BatchOperateType.REMOVE,
+            conditionReq = GroupMemberRemoveConditionReq(
+                groupIds = listOf(groupId),
+                targetMember = targetMember
+            ),
+            operateGroupMemberTask = ::deleteTask
         )
         return true
     }

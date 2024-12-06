@@ -121,6 +121,13 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         removeMemberDTO: GroupMemberRemoveConditionReq
     ): Boolean = true
 
+    override fun deleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        groupId: Int,
+        targetMember: ResourceMemberInfo
+    ): Boolean = true
+
     override fun batchOperateGroupMembersCheck(
         userId: String,
         projectCode: String,

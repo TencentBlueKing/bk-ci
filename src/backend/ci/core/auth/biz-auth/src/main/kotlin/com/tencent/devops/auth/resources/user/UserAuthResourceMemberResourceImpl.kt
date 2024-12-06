@@ -149,6 +149,29 @@ class UserAuthResourceMemberResourceImpl(
         )
     }
 
+    override fun deleteResourceGroupMembers(
+        userId: String,
+        projectId: String,
+        groupId: Int,
+        operateChannel: OperateChannel,
+        targetMember: ResourceMemberInfo
+    ): Result<Boolean> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = operateChannel,
+            targetMemberId = targetMember.id
+        )
+        return Result(
+            permissionManageFacadeService.deleteResourceGroupMembers(
+                userId = userId,
+                projectCode = projectId,
+                groupId = groupId,
+                targetMember = targetMember
+            )
+        )
+    }
+
     @BkManagerCheck
     override fun batchHandoverGroupMembersFromManager(
         userId: String,

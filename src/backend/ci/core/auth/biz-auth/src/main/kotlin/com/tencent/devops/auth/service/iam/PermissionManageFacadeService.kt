@@ -173,6 +173,16 @@ interface PermissionManageFacadeService {
     ): Boolean
 
     /**
+     * 退出单个组
+     * */
+    fun deleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        groupId: Int,
+        targetMember: ResourceMemberInfo
+    ): Boolean
+
+    /**
      * 批量操作检查
      * */
     fun batchOperateGroupMembersCheck(
