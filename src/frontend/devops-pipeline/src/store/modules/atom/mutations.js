@@ -329,14 +329,10 @@ export default {
 
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
-            for (const key in newParam) {
-                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data, 'input', {
-                        ...atom.data.input,
-                        ...newParam
-                    })
-                }
-            }
+            Vue.set(atom.data, 'input', {
+                ...atom.data.input,
+                ...newParam
+            })
         } catch (e) {
             console.warn(e, 'update atom input error', atom)
         }
