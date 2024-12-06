@@ -186,6 +186,7 @@
       <p class="remove-text">
         <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
       </p>
+      <!-- {{ singleRemoveMessage }} -->
     </template>
     <template #footer>
       <bk-button
@@ -306,6 +307,7 @@
             </bk-button>
             <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
             <p v-if="authorizationInvalid && batchFlag === 'remove'">
+              <img src="@/css/svg/info-circle.svg" class="info-circle">
               <span>{{ t("完成交接后，将自动退出用户组") }}</span>
             </p>
           </div>
@@ -341,6 +343,7 @@ import ProjectUserSelector from '@/components/permission-manage/project-user-sel
 import NoPermission from '@/components/permission-manage/no-permission.vue';
 import manageSearch from "@/components/permission-manage/manage-search.vue";
 import DetailGroupTab from "@/components/permission-manage/detail-group-tab.vue";
+import { OPERATE_CHANNEL } from "@/utils/constants";
 
 const user = ref();
 const { t } = useI18n();
@@ -370,6 +373,7 @@ const manageSearchRef = ref(null);
 const groupTableStore = userGroupTable();
 const detailGroupTable = userDetailGroupTable();
 const operatorLoading = ref(false);
+const singleRemoveMessage = ref('');
 const isNotProject = computed(() => collapseList.value.length);
 // 资源失效个数，是否需要权限交接
 const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount)
@@ -398,6 +402,7 @@ const {
   handleSelectAllData,
   handleClear,
   collapseClick,
+  handleReplaceRow,
   handleRemoveRow,
   handleUpDateRow,
   pageLimitChange,
@@ -486,25 +491,28 @@ function handleRenewalClosed () {
 async function handleHandoverConfirm () {
   const isValidate = await formRef.value.validate();
   if (!isValidate) return;
+
   const param = formatSelectParams(selectedRow.value.groupId);
   delete param.renewalDuration;
+
   if (user.value.id === handOverForm.value.id) {
     showMessage('error', t('目标对象和交接人不允许相同。'));
     return
   }
+
   try {
     operatorLoading.value = true;
     const res = await http.batchHandover(projectId.value, param);
     if (res) {
-     operatorLoading.value = false;
-     showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
-     isShowHandover.value = false;
-    //  这里移交以后不删除改行数据，因为需要进行审核，要改变一下改行数据的状态
-    //  handleRemoveRow();
-     cancelClear('handover');
+      await handleReplaceRow(user.value.id);
+
+      isShowHandover.value = false;
+      cancelClear('handover');
+      showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
     }
   } catch (error) {
-    console.error(error)
+    console.log(error)
+  } finally {
     operatorLoading.value = false;
   }
 };
@@ -521,16 +529,17 @@ async function handleHandoverConfirm () {
 async function handleRemoveConfirm () {
   try {
     operatorLoading.value = true;
-    const param = formatSelectParams(selectedRow.value.groupId);
-    delete param.renewalDuration;
-    const res = await http.batchRemove(projectId.value, param);
+
+    const res = await http.getIsDirectRemove(projectId.value, selectedRow.value.groupId, user.value);
     if (res) {
-      operatorLoading.value = false;
-      showMessage('success', t('X 已移出X用户组。', [`${user.value.id}(${user.value.name})`, selectedRow.value.groupName]));
-      handleRemoveRow();
+      await handleRemoveRow();
+
       isShowRemove.value = false;
+      showMessage('success', t('X 已移出X用户组。', [`${user.value.id}(${user.value.name})`, selectedRow.value.groupName]));
     }
   } catch (error) {
+    console.log(error);
+  } finally {
     operatorLoading.value = false;
   }
 }
@@ -615,7 +624,7 @@ function formatSelectParams (rowGroupId) {
   }
   const params = {
     groupIds: groupIds,
-    operateChannel: "PERSONAL",
+    operateChannel: OPERATE_CHANNEL,
     resourceTypes: resourceTypes || [],
     targetMember: user.value,
     ...(expiredAt.value && {renewalDuration: expiredAt.value}),
@@ -643,20 +652,20 @@ function cancelClear (batchFlag) {
  * @param batchFlag 按钮标识
  */
 async function batchConfirm (batchFlag) {
-  batchBtnLoading.value = true;
   let res = null;
   const params = formatSelectParams();
   delete params.renewalDuration;
   try {
     if (batchFlag === 'handover') {
       if (!(await handleHandoverValidation())) return;
-
+      batchBtnLoading.value = true;
       res = await http.batchHandover(projectId.value, params);
       if (res && authorizationInvalid.value) {
         showHandoverSuccessInfoBox();
       }
     } else if (batchFlag === 'remove') {
       if (!(await handleRemoveValidation())) return;
+      batchBtnLoading.value = true;
       res = await http.batchRemove(projectId.value, params);
       if (res && authorizationInvalid.value) {
         showRemoveSuccessInfoBox();
@@ -665,6 +674,7 @@ async function batchConfirm (batchFlag) {
 
     if (res) {
       batchCancel();
+      fetchUserGroupList(user.value.id, projectId.value, searchGroup.value);
       !authorizationInvalid.value && showMessage('success', t(batchMassageText[batchFlag]));
     }
   } catch (error) {
@@ -782,6 +792,7 @@ function goBack() {
   isDetail.value = false;
 }
 </script>
+
 <style lang="less">
 .info-box {
   .info-content {
@@ -803,6 +814,7 @@ function goBack() {
   }
 }
 </style>
+
 <style lang="less" scoped>
 .manage {
   width: 100%;
@@ -1130,11 +1142,19 @@ function goBack() {
       }
 
       p {
-        margin-left: 18px;
+        display: flex;
+        align-items: center;
+        margin-left: 12px;
       }
 
       span {
         color: #4D4F56;
+      }
+
+      .info-circle {
+        width: 14px;
+        height: 14px;
+        margin: 5px;
       }
     }
   }

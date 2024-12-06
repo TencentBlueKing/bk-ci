@@ -1,7 +1,9 @@
 import fetch from './fetch';
+import { OPERATE_CHANNEL } from "@/utils/constants";
 
 const apiPerfix = '/ms/auth/api/user';
 const projectPerfix = 'ms/project/api/user'
+
 export default {
   getUser() {
     return fetch.get(`${projectPerfix}/users`);
@@ -79,7 +81,7 @@ export default {
    * 获取（代码库、流水线、部署节点）授权列表
    */
   getResourceAuthList(projectId: string, params: any) {
-    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
+    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=${OPERATE_CHANNEL}`, params);
   },
   /**
    * 批量交接用户组成员
@@ -186,10 +188,10 @@ export default {
     return fetch.post(`${apiPerfix}/auth/handover/listGroupsOfHandover`, params);
   },
   /**
-   * 获取交接单中用户组相关
+   * 获取移交移出时的单条数据
    */
-  getMemberGroupDetails(projectId: string, resourceType: string, groupId: number) {
-    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails`);
+  getMemberGroupDetails(projectId: string, resourceType: string, groupId: number, memberId: string) {
+    return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails?memberId=${memberId}`);
   },
   /**
    * 获取交接单列表
@@ -202,5 +204,11 @@ export default {
    */
   handleHanoverApplication(params: any) {
     return fetch.post(`${apiPerfix}/auth/handover/handleHanoverApplication`, params);
+  },
+  /**
+  * 单条移出检测是否可以直接移出项目
+  */
+  getIsDirectRemove(projectId: string, groupId: number, params: any) {
+    return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
   }
 }
