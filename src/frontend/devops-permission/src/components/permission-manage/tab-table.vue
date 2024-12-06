@@ -133,8 +133,8 @@
               :disabled="row.removeMemberButtonControl != 'OTHER'"
               @click="handleRemove(row, index)"
               v-bk-tooltips="{
-                content:  row.beingHandedOver ?  t('等待审核中') : TOOLTIPS_CONTENT[row.removeMemberButtonControl],
-                disabled: row.removeMemberButtonControl === 'OTHER' && !row.beingHandedOver
+                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || '',
+                disabled: row.removeMemberButtonControl === 'OTHER'
               }"
             >
               {{t("移出")}}
@@ -375,6 +375,7 @@ function handleToResourcePage (row) {
   .operation-btn {
     margin: 0 8px;
   }
+
   .hover-link {
     cursor: pointer;
     &:hover {

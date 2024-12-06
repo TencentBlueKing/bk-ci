@@ -16,7 +16,7 @@
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              <img v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)" :src="detailGroupTable.getServiceIcon(item.resourceType)" class="service-icon" alt="">
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
@@ -55,7 +55,11 @@
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              <img
+                v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)"
+                :src="detailGroupTable.getServiceIcon(item.resourceType)"
+                class="service-icon" alt=""
+              >
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
@@ -85,14 +89,6 @@ import { useI18n } from 'vue-i18n';
 import { defineProps, defineEmits, computed } from 'vue';
 import userDetailGroupTable from '@/store/userDetailGroupTable';
 import TabTable from './detail-tab-table.vue';
-import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
-import codelibIcon from '@/css/svg/color-logo-codelib.svg';
-import codeccIcon from '@/css/svg/color-logo-codecc.svg';
-import environmentIcon from '@/css/svg/color-logo-environment.svg';
-import experienceIcon from '@/css/svg/color-logo-experience.svg';
-import qualityIcon from '@/css/svg/color-logo-quality.svg';
-import ticketIcon from '@/css/svg/color-logo-ticket.svg';
-import turboIcon from '@/css/svg/color-logo-turbo.svg';  // 编译加速
 
 const props = defineProps({
   sourceList: {
@@ -112,27 +108,6 @@ const { t } = useI18n();
 const detailGroupTable = userDetailGroupTable();
 const projectTable = computed(() => props.sourceList.filter(item => item.type === "AUTHORIZATION"));
 const sourceTable= computed(() => props.sourceList.filter(item => item.type === "GROUP"));
-
-const getServiceIcon = (type) => {
-  const iconMap = {
-    'pipeline': pipelineIcon,
-    'pipeline_group': pipelineIcon,
-    'repertory': codelibIcon,
-    'credential': ticketIcon,
-    'cert': ticketIcon,
-    'environment': environmentIcon,
-    'env_node': pipelineIcon,
-    'codecc_task': codeccIcon,
-    'codecc_rule_set': codeccIcon,
-    'codecc_ignore_type': codeccIcon,
-    'experience_task': experienceIcon,
-    'experience_group': experienceIcon,
-    'rule': qualityIcon,
-    'quality_group': qualityIcon,
-    'pipeline_template': pipelineIcon,
-  }
-  return iconMap[type]
-}
 
 const emit = defineEmits(['collapseClick']);
 

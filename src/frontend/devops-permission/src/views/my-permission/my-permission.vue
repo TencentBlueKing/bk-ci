@@ -83,15 +83,15 @@
         <span>{{t("到期时间")}}：</span> 
         <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
           <span class="text-gray">{{t("已过期")}}</span>
-          <span class="text-blue">
-            <i class="manage-icon manage-icon-arrows-right"></i> 
+          <span class="text-blue renewal">
+            <img src="@/css/svg/arrows-right.svg" class="arrows-right">
             {{ expiredAt }} {{ t("天") }}
           </span>
         </template>
         <template v-else>
           <span class="text-gray">{{ selectedRow?.expiredAtDisplay }}</span class="text-blue">
-          <span class="text-blue">
-            <i class="manage-icon manage-icon-arrows-right"></i> 
+          <span class="text-blue renewal">
+            <img src="@/css/svg/arrows-right.svg" class="arrows-right"> 
             {{ Number(selectedRow?.expiredAtDisplay.replace(/\D/g, '')) + expiredAt }} {{ t("天") }}
           </span>
         </template>
@@ -471,7 +471,7 @@ async function handleRenewalConfirm () {
     operatorLoading.value = true;
     await handleUpDateRow(expiredAt.value);
     operatorLoading.value = false;
-    showMessage('success', t('用户组权限已续期。'));
+    showMessage('success', t('已成功提交续期申请，等待管理员或资源拥有者审批。可在我的申请中查看进度。'));
     cancelClear('renewal');
     isShowRenewal.value = false;
   } catch (error) {
@@ -508,7 +508,7 @@ async function handleHandoverConfirm () {
 
       isShowHandover.value = false;
       cancelClear('handover');
-      showMessage('success', t('用户组权限已移交给X。',[`${handOverForm.value.id}(${handOverForm.value.name})`]));
+      showMessage('success', t('已成功提交移交权限申请，等待交接人确定。可在我的交接中查看进度。'));
     }
   } catch (error) {
     console.log(error)
@@ -532,10 +532,9 @@ async function handleRemoveConfirm () {
 
     const res = await http.getIsDirectRemove(projectId.value, selectedRow.value.groupId, user.value);
     if (res) {
-      await handleRemoveRow();
-
-      isShowRemove.value = false;
       showMessage('success', t('X 已移出X用户组。', [`${user.value.id}(${user.value.name})`, selectedRow.value.groupName]));
+      handleRemoveRow();
+      isShowRemove.value = false;
     }
   } catch (error) {
     console.log(error);
@@ -943,8 +942,16 @@ function goBack() {
       color: #699DF4;
     }
 
-    .manage-icon-arrows-right {
+    .arrows-right {
       margin: 0 4px;
+      vertical-align: middle;
+      width: 12px;
+      height: 12px;
+    }
+
+    .renewal {
+      display: flex;
+      align-items: center;
     }
   }
 }
