@@ -49,7 +49,7 @@ interface UserCopilotResource {
 
     @Operation(summary = "根据用户ID, 获取工蜂Copilot Open Token")
     @GET
-    @Path("/getCopilotOpenToken")
+    @Path("/tgit/getCopilotOpenToken")
     fun getCopilotOpenToken(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

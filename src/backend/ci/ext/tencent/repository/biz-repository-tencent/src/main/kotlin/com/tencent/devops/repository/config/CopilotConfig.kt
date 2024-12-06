@@ -41,12 +41,12 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class CopilotConfig {
 
-    @Value("\${repo.copilot.appId:#{null}}")
+    @Value("\${scm.git.copilot.appId:#{null}}")
     val appId: String = ""
 
-    @Value("\${repo.copilot.appSecret:#{null}}")
+    @Value("\${scm.git.copilot.appSecret:#{null}}")
     val appSecret: String = ""
 
-    @Value("\${repo.copilot.authUrl:#{null}}")
-    val authUrl: String = ""
+    @Value("\${scm.git.copilot.apiUrl:#{null}}")
+    val apiUrl: String = ""
 }

@@ -1,18 +1,18 @@
 package com.tencent.devops.repository.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.config.CopilotConfig
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.dao.GitTokenDao
+import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.CodeGitCopilotOauthResponse
 import com.tencent.devops.repository.pojo.OauthInfo
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
+import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URL
 import java.time.Instant
-import java.time.LocalDateTime
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -31,8 +30,8 @@ import javax.crypto.spec.SecretKeySpec
 @Service
 class CopilotOpenTokenService @Autowired constructor(
     val copilotConfig: CopilotConfig,
-    val gitTokenDao: GitTokenDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val repositoryScmTokenDao: RepositoryScmTokenDao
 ) {
 
     @Value("\${aes.git:#{null}}")
@@ -43,10 +42,11 @@ class CopilotOpenTokenService @Autowired constructor(
         val copilotToken = if (refresh) {
             null
         } else {
-            gitTokenDao.getAccessToken(
+            repositoryScmTokenDao.getToken(
                 dslContext = dslContext,
-                userId = userId,
-                tokenType = TokenTypeEnum.COPILOT_TOKEN.name
+                scmCode = ScmType.CODE_GIT.name,
+                appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name,
+                userId = userId
             )
         }
         return if (copilotToken == null) {
@@ -65,13 +65,13 @@ class CopilotOpenTokenService @Autowired constructor(
      * 保存copilot token
      */
     private fun saveCopilotToken(userId: String, oauthInfo: OauthInfo) {
-        gitTokenDao.saveAccessToken(
+        repositoryScmTokenDao.saveAccessToken(
             dslContext = dslContext,
-            userId = userId,
-            token = GitToken(
+            scmToken = RepositoryScmToken(
+                userId = userId,
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, oauthInfo.accessToken),
-                tokenType = TokenTypeEnum.COPILOT_TOKEN.name,
-                createTime = LocalDateTime.now().timestampmilli()
+                scmCode = ScmType.CODE_GIT.name,
+                appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name
             )
         )
     }
@@ -92,7 +92,7 @@ class CopilotOpenTokenService @Autowired constructor(
         val response = OkhttpUtils.doHttp(
             Request.Builder()
                 .post(OkhttpUtils.joinParams(body).toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
-                .url(URL(copilotConfig.authUrl))
+                .url(URL("${copilotConfig.apiUrl}/auth/open_app_user_token"))
                 .header("Content-Type", APPLICATION_FORM_URLENCODED)
                 .build()
         )
