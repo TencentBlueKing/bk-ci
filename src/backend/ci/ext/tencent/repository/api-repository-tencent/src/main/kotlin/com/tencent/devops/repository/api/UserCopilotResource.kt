@@ -54,7 +54,7 @@ interface UserCopilotResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "gitProjectId", required = false)
+        @Parameter(description = "refresh", required = false)
         @QueryParam("刷新token")
         refresh: Boolean? = false
     ): Result<String>
