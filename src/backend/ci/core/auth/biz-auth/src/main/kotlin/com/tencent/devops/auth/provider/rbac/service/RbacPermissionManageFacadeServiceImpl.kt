@@ -1298,7 +1298,7 @@ class RbacPermissionManageFacadeServiceImpl(
             }
         }
         val title = permissionHandoverApplicationService.generateTitle(
-            groupCount = groupIds.size,
+            groupCount = toHandoverGroups.size,
             authorizationCount = invalidPipelines.size + invalidRepertoryIds.size
         )
         permissionHandoverApplicationService.createHandoverApplication(
