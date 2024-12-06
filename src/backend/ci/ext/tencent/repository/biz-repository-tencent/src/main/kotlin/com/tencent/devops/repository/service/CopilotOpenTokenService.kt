@@ -55,6 +55,7 @@ class CopilotOpenTokenService @Autowired constructor(
             // 不存在copilot token, 开始授权
             logger.warn("copilot token is not exist")
             val oauthInfo = getCopilotAccessToken(userId)
+            logger.info("get copilot token|oauthInfo=$oauthInfo")
             saveCopilotToken(userId, oauthInfo)
             oauthInfo.accessToken
         } else {
@@ -89,7 +90,7 @@ class CopilotOpenTokenService @Autowired constructor(
         val verify = generateVerify(JsonUtil.toJson(body, false))
         val encryptedBytes = Base64.getDecoder().decode(verify)
         val encryptedBase64Str = Base64.getEncoder().encodeToString(encryptedBytes)
-        body["verify"] = URLEncoder.encode(encryptedBase64Str, Charsets.UTF_8.name())
+        body["verify"] = encryptedBase64Str
         val response = OkhttpUtils.doHttp(
             Request.Builder()
                 .post(OkhttpUtils.joinParams(body).toRequestBody(MEDIA_TYPE_FORM_URLENCODED))
