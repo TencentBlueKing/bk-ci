@@ -25,19 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.enums
+package com.tencent.devops.repository.pojo.oauth
 
-enum class TokenTypeEnum(val type: Int) {
-    OAUTH(0), // oauth认证
-    PRIVATE_KEY(1); // privateKey认证
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-    companion object {
-        fun getTokenType(type: Int): String {
-            return when (type) {
-                0 -> OAUTH.name
-                1 -> PRIVATE_KEY.name
-                else -> OAUTH.name
-            }
-        }
-    }
-}
+@Schema(title = "Token模型")
+data class RepositoryScmToken(
+    @get:Schema(title = "鉴权token")
+    @JsonProperty("access_token")
+    var userId: String = "",
+    @get:Schema(title = "代码库类型")
+    var scmCode: String = "",
+    @get:Schema(title = "应用类型")
+    var appType: String = "",
+    @get:Schema(title = "鉴权token")
+    var accessToken: String = "",
+    @get:Schema(title = "刷新token")
+    var refreshToken: String = "",
+    @get:Schema(title = "过期时间")
+    val expiresIn: Long = 0L,
+    @get:Schema(title = "创建时间")
+    val createTime: Long? = 0L
+)

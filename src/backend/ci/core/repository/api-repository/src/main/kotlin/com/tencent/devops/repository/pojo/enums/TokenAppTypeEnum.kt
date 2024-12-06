@@ -27,17 +27,10 @@
 
 package com.tencent.devops.repository.pojo.enums
 
-enum class TokenTypeEnum(val type: Int) {
-    OAUTH(0), // oauth认证
-    PRIVATE_KEY(1); // privateKey认证
-
-    companion object {
-        fun getTokenType(type: Int): String {
-            return when (type) {
-                0 -> OAUTH.name
-                1 -> PRIVATE_KEY.name
-                else -> OAUTH.name
-            }
-        }
-    }
+/**
+ * token 应用类型
+ */
+enum class TokenAppTypeEnum {
+    OAUTH, // oauth认证
+    COPILOT_OPEN_TOKEN; // copilot open token
 }
