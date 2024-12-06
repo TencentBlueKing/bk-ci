@@ -274,10 +274,18 @@ class SubPipelineTaskService @Autowired constructor(
 
     fun batchAdd(
         dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
         model: Model,
         channel: String,
         modelTasks: List<PipelineModelTask>
     ) {
+        cleanUpInvalidRefs(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            modelTasks = modelTasks
+        )
         subPipelineRefService.batchAdd(
             transaction = dslContext,
             subPipelineRefList = modelTaskConvertSubPipelineRef(
@@ -288,7 +296,7 @@ class SubPipelineTaskService @Autowired constructor(
         )
     }
 
-    fun cleanUpInvalidRefs(
+    private fun cleanUpInvalidRefs(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,

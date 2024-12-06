@@ -835,6 +835,8 @@ class PipelineRepositoryService constructor(
                 // 初始化子流水线关联关系
                 subPipelineTaskService.batchAdd(
                     dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     model = model,
                     channel = channelCode.name,
                     modelTasks = modelTasks.toList()
@@ -1136,15 +1138,11 @@ class PipelineRepositoryService constructor(
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
                         watcher.start("updateSubPipelineRef")
-                        // 禁用态的插件需要被删除
-                        subPipelineTaskService.cleanUpInvalidRefs(
+                        // 批量保存,禁用态的插件需要被删除
+                        subPipelineTaskService.batchAdd(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            modelTasks = modelTasks.toList()
-                        )
-                        subPipelineTaskService.batchAdd(
-                            dslContext = transactionContext,
                             model = model,
                             channel = channelCode.name,
                             modelTasks = modelTasks.toList()
@@ -1892,6 +1890,8 @@ class PipelineRepositoryService constructor(
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
             subPipelineTaskService.batchAdd(
                 dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 model = existModel,
                 channel = channelCode.name,
                 modelTasks = tasks
