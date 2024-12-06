@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
@@ -61,6 +62,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -109,6 +111,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) {
         logger.info("start to sync group member expired time|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
+        val startEpoch = System.currentTimeMillis()
         syncExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
@@ -119,8 +122,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     limit = limit,
                     offset = offset
                 ).data?.map { it.englishName } ?: break
-                projectCodes.forEach { projectCode ->
-                    syncMemberExpiredExecutorService.submit {
+                val futures = projectCodes.map { projectCode ->
+                    syncMemberExpiredExecutorService.submit(Callable {
                         logger.info("start to sync project group member expired time|$projectCode")
                         val projectMembersOfExpired = authResourceGroupMemberDao.listResourceGroupMember(
                             dslContext = dslContext,
@@ -143,10 +146,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                                 }
                             }
                         }
-                    }
+                    })
                 }
+                futures.forEach { it.get() }
                 offset += limit
             } while (projectCodes.size == limit)
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync Group Member Expired Time")
         }
     }
 
@@ -218,62 +223,58 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncIamGroupMembersOfApply() {
-        val traceId = MDC.get(TraceTag.BIZID)
-        syncExecutorService.submit {
-            MDC.put(TraceTag.BIZID, traceId)
-            val limit = 100
-            var offset = 0
-            val startEpoch = System.currentTimeMillis()
-            val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
-            val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
-            do {
-                logger.info("sync members of apply | start")
-                // 获取7天内未审批单据
-                val records = authResourceGroupApplyDao.list(
-                    dslContext = dslContext,
-                    day = 7,
-                    limit = limit,
-                    offset = offset
-                )
-                val (recordsOfSuccess, recordsOfPending) = records.partition {
-                    try {
-                        val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
-                            it.memberId,
-                            it.iamGroupId.toString()
-                        )[it.iamGroupId]?.belong == true
-                        isMemberJoinedToGroup
-                    } catch (ignore: Exception) {
-                        logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
-                        authResourceGroupApplyDao.delete(dslContext, it.id)
-                        false
-                    }
+        val limit = 100
+        var offset = 0
+        val startEpoch = System.currentTimeMillis()
+        val finalRecordsOfPending = mutableListOf<TAuthResourceGroupApplyRecord>()
+        val finalRecordsOfSuccess = mutableListOf<TAuthResourceGroupApplyRecord>()
+        do {
+            logger.info("sync members of apply | start")
+            // 获取7天内未审批单据
+            val records = authResourceGroupApplyDao.list(
+                dslContext = dslContext,
+                day = 7,
+                limit = limit,
+                offset = offset
+            )
+            val (recordsOfSuccess, recordsOfPending) = records.partition {
+                try {
+                    val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
+                        it.memberId,
+                        it.iamGroupId.toString()
+                    )[it.iamGroupId]?.belong == true
+                    isMemberJoinedToGroup
+                } catch (ignore: Exception) {
+                    logger.warn("verify group valid member failed,${it.memberId}|${it.iamGroupId}", ignore)
+                    authResourceGroupApplyDao.delete(dslContext, it.id)
+                    false
                 }
-                finalRecordsOfPending.addAll(recordsOfPending)
-                finalRecordsOfSuccess.addAll(recordsOfSuccess)
-                offset += limit
-            } while (records.size == limit)
-            if (finalRecordsOfPending.isNotEmpty()) {
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordsOfPending.map { it.id },
-                    applyToGroupStatus = ApplyToGroupStatus.PENDING
-                )
             }
-            if (finalRecordsOfSuccess.isNotEmpty()) {
-                finalRecordsOfSuccess.forEach {
-                    syncIamGroupMember(
-                        projectCode = it.projectCode,
-                        iamGroupId = it.iamGroupId
-                    )
-                }
-                authResourceGroupApplyDao.batchUpdate(
-                    dslContext = dslContext,
-                    ids = finalRecordsOfSuccess.map { it.id },
-                    applyToGroupStatus = ApplyToGroupStatus.SUCCEED
-                )
-            }
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
+            finalRecordsOfPending.addAll(recordsOfPending)
+            finalRecordsOfSuccess.addAll(recordsOfSuccess)
+            offset += limit
+        } while (records.size == limit)
+        if (finalRecordsOfPending.isNotEmpty()) {
+            authResourceGroupApplyDao.batchUpdate(
+                dslContext = dslContext,
+                ids = finalRecordsOfPending.map { it.id },
+                applyToGroupStatus = ApplyToGroupStatus.PENDING
+            )
         }
+        if (finalRecordsOfSuccess.isNotEmpty()) {
+            finalRecordsOfSuccess.forEach {
+                syncIamGroupMember(
+                    projectCode = it.projectCode,
+                    iamGroupId = it.iamGroupId
+                )
+            }
+            authResourceGroupApplyDao.batchUpdate(
+                dslContext = dslContext,
+                ids = finalRecordsOfSuccess.map { it.id },
+                applyToGroupStatus = ApplyToGroupStatus.SUCCEED
+            )
+        }
+        logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
     }
 
     override fun syncGroupAndMember(projectCode: String) {
@@ -724,7 +725,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         iamGroupId = iamGroupId,
                         memberId = iamGroupTemplate.id,
                         memberName = iamGroupTemplate.name,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                        memberType = MemberType.TEMPLATE.type,
                         expiredTime = expiredTime
                     )
                 )

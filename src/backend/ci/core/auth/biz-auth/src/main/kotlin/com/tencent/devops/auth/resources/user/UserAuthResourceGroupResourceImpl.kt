@@ -28,18 +28,21 @@
 
 package com.tencent.devops.auth.resources.user
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
-import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
+import com.tencent.devops.auth.pojo.enum.JoinedType
+import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.BkManagerCheck
@@ -50,8 +53,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
-    private val permissionResourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService,
-    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+    private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+    private val permissionResourceValidateService: PermissionResourceValidateService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -69,7 +73,6 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         )
     }
 
-    @BkManagerCheck
     override fun getMemberGroupsDetails(
         userId: String,
         projectId: String,
@@ -81,11 +84,19 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
+        operateChannel: OperateChannel?,
         start: Int,
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = operateChannel ?: OperateChannel.MANAGER,
+            targetMemberId = memberId
+        )
+
         return Result(
-            permissionResourceGroupAndMemberFacadeService.getMemberGroupsDetails(
+            permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectId,
                 resourceType = resourceType,
                 memberId = memberId,
@@ -94,10 +105,35 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 maxExpiredAt = maxExpiredAt,
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
+                operateChannel = operateChannel,
                 action = action,
                 start = start,
                 limit = limit
             )
+        )
+    }
+
+    override fun getMemberGroupDetails(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int,
+        memberId: String
+    ): Result<GroupDetailsInfoVo> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = memberId
+        )
+        return Result(
+            permissionManageFacadeService.getMemberGroupsDetails(
+                projectId = projectId,
+                memberId = memberId,
+                resourceType = resourceType,
+                iamGroupIds = listOf(groupId),
+                operateChannel = OperateChannel.PERSONAL
+            ).records.first { it.groupId == groupId && it.joinedType == JoinedType.DIRECT }
         )
     }
 
@@ -108,6 +144,12 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = userId
+        )
         return Result(
             permissionResourceMemberService.renewalGroupMember(
                 userId = userId,
@@ -126,14 +168,14 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.batchDeleteResourceGroupMembers(
+            permissionManageFacadeService.batchDeleteResourceGroupMembersFromManager(
                 userId = userId,
                 projectCode = projectId,
-                removeMemberDTO = GroupMemberCommonConditionReq(
+                removeMemberDTO = GroupMemberRemoveConditionReq(
                     groupIds = listOf(groupId),
                     targetMember = ResourceMemberInfo(
                         id = userId,
-                        type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+                        type = MemberType.USER.type
                     )
                 )
             )
