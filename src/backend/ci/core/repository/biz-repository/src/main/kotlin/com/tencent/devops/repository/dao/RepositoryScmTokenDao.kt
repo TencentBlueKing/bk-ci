@@ -47,9 +47,7 @@ class RepositoryScmTokenDao {
                 .where(
                     USER_ID.eq(userId)
                         .and(SCM_CODE.eq(scmCode))
-                        .and(
-                            APP_TYPE.eq(appType)
-                        )
+                        .and(APP_TYPE.eq(appType))
                 )
                 .fetchOne()
         }
@@ -57,6 +55,7 @@ class RepositoryScmTokenDao {
 
     fun saveAccessToken(dslContext: DSLContext, scmToken: RepositoryScmToken): Int {
         with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
+            val now = LocalDateTime.now()
             return dslContext.insertInto(
                 this,
                 USER_ID,
@@ -65,7 +64,8 @@ class RepositoryScmTokenDao {
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 EXPIRES_IN,
-                CREATE_TIME
+                CREATE_TIME,
+                UPDATE_TIME
             )
                 .values(
                     scmToken.userId,
@@ -74,7 +74,8 @@ class RepositoryScmTokenDao {
                     scmToken.accessToken,
                     scmToken.refreshToken,
                     scmToken.expiresIn,
-                    LocalDateTime.now()
+                    now,
+                    now
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, scmToken.accessToken)
