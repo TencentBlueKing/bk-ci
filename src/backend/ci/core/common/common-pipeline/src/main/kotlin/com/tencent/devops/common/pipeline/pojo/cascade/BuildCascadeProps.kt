@@ -25,26 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.pojo.cascade
 
-enum class BuildFormPropertyType(val value: String) {
-    STRING("string"),
-    TEXTAREA("textarea"),
-    ENUM("enum"),
-    DATE("date"),
-    LONG("long"),
-    BOOLEAN("boolean"),
-    SVN_TAG("svn_tag"),
-    GIT_REF("git_ref"),
-    REPO_REF("repo_ref"),
-    MULTIPLE("multiple"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
-    ARTIFACTORY("artifactory"), // 版本仓库
-    SUB_PIPELINE("sub_pipeline"), // 子流水线
-    CUSTOM_FILE("custom_file"), // 自定义仓库文件
-    PASSWORD("password"),
-    TEMPORARY("do not storage in database");
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import io.swagger.v3.oas.annotations.media.Schema
 
-    override fun toString() = value
-}
+@Schema(title = "构建模型-表单元素属性")
+data class BuildCascadeProps(
+    // 级联ID
+    val id: String,
+    // 级联下拉框值
+    val options: List<BuildFormValue>,
+    // 后端搜索url
+    val searchUrl: String?,
+    // 搜索key
+    val replaceKey: String?,
+    // 级联子级
+    var children: BuildCascadeProps? = null
+)
