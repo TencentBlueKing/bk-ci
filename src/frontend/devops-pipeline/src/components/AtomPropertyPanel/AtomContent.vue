@@ -580,38 +580,43 @@
             ]),
 
             changePluginPause (isContinue, loadingKey) {
-                const postData = {
-                    projectId: this.projectId,
-                    pipelineId: this.pipelineId,
-                    buildId: this.$route.params.buildNo,
-                    taskId: this.element.id,
-                    isContinue,
-                    stageId: this.stage.id,
-                    containerId: this.container.id,
-                    element: this.element
-                }
-                const editingElementPos = {
-                    ...this.editingElementPos
-                }
-                this[loadingKey] = true
-                this.togglePropertyPanel({
-                    isShow: false,
-                    showPanelType: ''
-                })
-                this.pausePlugin(postData).then(() => {
-                    return this.requestPipelineExecDetail(this.$route.params)
-                }).catch((err) => {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        editingElementPos,
-                        showPanelType: 'PAUSE'
-                    })
-                }).finally(() => {
-                    this[loadingKey] = false
+                this.$bkInfo({
+                    title: this.$t('isTaskTermination'),
+                    confirmFn: async () => {
+                        const postData = {
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            buildId: this.$route.params.buildNo,
+                            taskId: this.element.id,
+                            isContinue,
+                            stageId: this.stage.id,
+                            containerId: this.container.id,
+                            element: this.element
+                        }
+                        const editingElementPos = {
+                            ...this.editingElementPos
+                        }
+                        this[loadingKey] = true
+                        this.togglePropertyPanel({
+                            isShow: false,
+                            showPanelType: ''
+                        })
+                        this.pausePlugin(postData).then(() => {
+                            return this.requestPipelineExecDetail(this.$route.params)
+                        }).catch((err) => {
+                            this.$showTips({
+                                message: err.message || err,
+                                theme: 'error'
+                            })
+                            this.togglePropertyPanel({
+                                isShow: true,
+                                editingElementPos,
+                                showPanelType: 'PAUSE'
+                            })
+                        }).finally(() => {
+                            this[loadingKey] = false
+                        })
+                    }
                 })
             },
             setAtomValidate (addErrors, removeErrors) {
