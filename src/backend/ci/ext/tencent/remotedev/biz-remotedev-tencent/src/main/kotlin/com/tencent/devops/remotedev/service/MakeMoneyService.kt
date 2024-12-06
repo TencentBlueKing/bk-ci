@@ -227,6 +227,7 @@ class MakeMoneyService @Autowired constructor(
 
     private fun pushBills(bills: List<Bill.BillDetail>) {
         val requestBody = JsonUtil.toJson(Bill(Bill.SourceBills(bills = bills)))
+        logger.info("start pushBills|url:${bkConfig.billsPushUrl}")
         OkhttpUtils.doPost(
             url = bkConfig.billsPushUrl,
             jsonParam = requestBody,
