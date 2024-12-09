@@ -77,6 +77,7 @@ interface ExternalThirdPartyAgentResource {
         arch: String?
     ): Response
 
+    @Deprecated("没用了")
     @Operation(summary = "下载JRE")
     @GET
     @Path("/{agentId}/jre")

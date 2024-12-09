@@ -32,6 +32,7 @@ package job
 
 import (
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 	"os"
 	"os/exec"
@@ -164,7 +165,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
 			"-Ddevops.agent.error.file=%s "+
 			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
-			config.GetJava(), scriptFile, prepareScriptFile,
+			third_components.GetJavaLatest(), scriptFile, prepareScriptFile,
 			errorMsgFile,
 			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}

@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
-import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -64,8 +63,6 @@ import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
-import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
@@ -131,6 +128,11 @@ import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.eclipse.jgit.transport.CredentialsProvider
+import org.eclipse.jgit.transport.RefSpec
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -1161,62 +1163,71 @@ class GitService @Autowired constructor(
         logger.info("initRepositoryInfo tmpWorkspace is:${tmpWorkspace.absolutePath}")
         try {
             // 1、clone插件示例工程代码到插件工作空间下
-            val credentialSetter = if (tokenType == TokenTypeEnum.OAUTH) {
-                CodeGitOauthCredentialSetter(token)
+            val credentialsProvider = if (tokenType == TokenTypeEnum.OAUTH) {
+                UsernamePasswordCredentialsProvider("oauth2", token)
             } else {
-                CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
+                UsernamePasswordCredentialsProvider(gitPublicAccount, gitPublicSecret)
             }
-            CommonScriptUtils.execute(
-                script = "git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}",
-                dir = tmpWorkspace
+            cloneRepo(
+                workspace = tmpWorkspace,
+                remoteUrl = sampleProjectPath,
+                credentialsProvider = credentialsProvider
             )
             // 2、删除下载下来示例工程的git信息
-            val fileDir = tmpWorkspace.listFiles()?.firstOrNull()
-            logger.info("initRepositoryInfo atomFileDir is:${fileDir?.absolutePath}")
-            val gitFileDir = File(fileDir, ".git")
-            if (gitFileDir.exists()) {
-                FileSystemUtils.deleteRecursively(gitFileDir)
+            logger.info("initRepositoryInfo workspace is:${tmpWorkspace.absolutePath}")
+            val atomGitFileDir = File(tmpWorkspace, ".git")
+            if (atomGitFileDir.exists()) {
+                atomGitFileDir.deleteRecursively()
             }
             // 处理示例工程的文件
             val handleFileResult =
-                sampleProjectGitFileService.handleSampleProjectGitFile(nameSpaceName, repositoryName, fileDir)
+                sampleProjectGitFileService.handleSampleProjectGitFile(nameSpaceName, repositoryName, tmpWorkspace)
             if (handleFileResult.isNotOk()) {
                 return handleFileResult
             }
             // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
             if (FrontendTypeEnum.SPECIAL == frontendType) {
-                val frontendFileDir = File(fileDir, BK_FRONTEND_DIR_NAME)
-                if (!frontendFileDir.exists()) {
-                    frontendFileDir.mkdirs()
+                val atomFrontendFileDir = File(tmpWorkspace, BK_FRONTEND_DIR_NAME)
+                if (!atomFrontendFileDir.exists()) {
+                    atomFrontendFileDir.mkdirs()
                 }
-                CommonScriptUtils.execute(
-                    script = "git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}",
-                    dir = frontendFileDir
+                cloneRepo(
+                    workspace = atomFrontendFileDir,
+                    remoteUrl = gitConfig.frontendSampleProjectUrl,
+                    credentialsProvider = credentialsProvider
                 )
-                val frontendProjectDir = frontendFileDir.listFiles()?.firstOrNull()
-                logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
-                val frontendGitFileDir = File(frontendProjectDir, ".git")
+                logger.info("initRepositoryInfo atomFrontendFileDir is:${atomFrontendFileDir?.absolutePath}")
+                val frontendGitFileDir = File(atomFrontendFileDir, ".git")
                 if (frontendGitFileDir.exists()) {
                     FileSystemUtils.deleteRecursively(frontendGitFileDir)
                 }
-                FileSystemUtils.copyRecursively(frontendProjectDir!!, frontendFileDir)
-                FileSystemUtils.deleteRecursively(frontendProjectDir)
             }
             // 3、重新生成git信息
-            CommonScriptUtils.execute("git init", fileDir)
+            Git.init().setDirectory(tmpWorkspace).setInitialBranch("master").call().close()
+            val gitRepository = FileRepositoryBuilder()
+                .setGitDir(atomGitFileDir)
+                .readEnvironment()
+                .findGitDir()
+                .build()
             // 4、添加远程仓库
-            CommonScriptUtils.execute(
-                script = "git remote add origin ${credentialSetter.getCredentialUrl(repositoryUrl)}",
-                dir = fileDir
-            )
+            gitRepository.config.setString("remote", "origin", "url", repositoryUrl)
             // 5、给文件添加git信息
-            CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", fileDir)
-            CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", fileDir)
-            CommonScriptUtils.execute("git add .", fileDir)
+            gitRepository.config.setString("user", null, "name", gitPublicAccount)
+            gitRepository.config.setString("user", null, "email", gitPublicEmail)
+            gitRepository.config.save()
+            val gitOperation = Git(gitRepository)
+            gitOperation.add().addFilepattern(".").call()
             // 6、提交本地文件
-            CommonScriptUtils.execute("git commit -m init", fileDir)
+            gitOperation.commit().setMessage("init").call()
             // 7、提交代码到远程仓库
-            CommonScriptUtils.execute("git push origin master", fileDir)
+            gitOperation
+                .push()
+                .setCredentialsProvider(credentialsProvider)
+                .setRemote("origin")
+                .setForce(true)
+                .setRefSpecs(RefSpec("refs/heads/master:refs/heads/master"))
+                .call()
+            gitOperation.close()
             logger.info("initRepositoryInfo finish")
         } catch (e: Exception) {
             logger.error("initRepositoryInfo error is:", e)
@@ -2663,5 +2674,16 @@ class GitService @Autowired constructor(
             )
         }
         return Result(mrInfo)
+    }
+
+    private fun cloneRepo(workspace: File, remoteUrl: String, credentialsProvider: CredentialsProvider) {
+        logger.info("init repo|start clone [$remoteUrl]")
+        // 克隆远程仓库
+        val cloneRepo = Git.cloneRepository()
+            .setURI(remoteUrl)
+            .setDirectory(workspace)
+            .setCredentialsProvider(credentialsProvider)
+            .call()
+        cloneRepo.close()
     }
 }

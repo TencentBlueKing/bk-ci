@@ -29,9 +29,15 @@ package com.tencent.devops.remotedev.pojo
 
 enum class WorkspaceOwnerType {
     PERSONAL,
-    PROJECT;
+    PROJECT,
+    PROJECT_PUBLIC;
+
+    fun projectUse() = this == PROJECT_PUBLIC || this == PROJECT
+    fun projectPublicUse() = this == PROJECT_PUBLIC
+    fun personalUse() = this == PERSONAL
 
     companion object {
+        fun projectNames() = listOf(PROJECT.name, PROJECT_PUBLIC.name)
         fun parse(value: String): WorkspaceOwnerType {
             return values().find { it.name == value } ?: PERSONAL
         }

@@ -65,16 +65,16 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -174,7 +174,8 @@ class NodeService @Autowired constructor(
         displayName: String?,
         createdUser: String?,
         lastModifiedUser: String?,
-        keywords: String?
+        keywords: String?,
+        nodeType: NodeType?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
@@ -188,10 +189,11 @@ class NodeService @Autowired constructor(
                     displayName = displayName,
                     createdUser = createdUser,
                     lastModifiedUser = lastModifiedUser,
-                    keywords = keywords
+                    keywords = keywords,
+                    nodeType = nodeType
                 )
             } else {
-                nodeDao.listNodes(dslContext, projectId)
+                nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
             }
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
@@ -203,7 +205,8 @@ class NodeService @Autowired constructor(
             displayName = displayName,
             createdUser = createdUser,
             lastModifiedUser = lastModifiedUser,
-            keywords = keywords
+            keywords = keywords,
+            nodeType = nodeType
         ).toLong()
         return Page(
             page = page ?: 1,
@@ -252,6 +255,12 @@ class NodeService @Autowired constructor(
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
 
+        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
+        val envInfos = envDao.listServerEnvByIdsAllType(
+            dslContext, nodeEnvs.map { it.envId }.toSet()
+        ).associateBy { it.envId }
+        val nodeEnvsGroups = nodeEnvs.groupBy({ it.nodeId }, { envInfos[it.envId]?.envName ?: "" })
+
         return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
@@ -298,7 +307,9 @@ class NodeService @Autowired constructor(
                     it.osType
                 },
                 bkHostId = it.hostId,
-                serverId = it.serverId
+                serverId = it.serverId,
+                size = it.size,
+                envNames = nodeEnvsGroups[it.nodeId]
             )
         }
     }
@@ -496,6 +507,7 @@ class NodeService @Autowired constructor(
                     )
                 }
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = ERROR_NODE_CHANGE_USER_NOT_SUPPORT,
@@ -538,6 +550,7 @@ class NodeService @Autowired constructor(
                     )
                 }
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = ERROR_NODE_CHANGE_USER_NOT_SUPPORT,

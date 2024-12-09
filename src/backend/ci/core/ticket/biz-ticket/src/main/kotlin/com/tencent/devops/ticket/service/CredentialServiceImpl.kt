@@ -404,7 +404,9 @@ class CredentialServiceImpl @Autowired constructor(
                     use = hasUsePermission
                 ),
                 updateUser = it.updateUser,
-                allowAcrossProject = it.allowAcrossProject
+                allowAcrossProject = it.allowAcrossProject,
+                createTime = it.createdTime.timestamp(),
+                createUser = it.credentialUserId
             )
         }
         return SQLPage(count, credentialList)
@@ -529,7 +531,9 @@ class CredentialServiceImpl @Autowired constructor(
                 hasViewPermission,
                 hasEditPermission
             ),
-            updateUser = credentialRecord.updateUser
+            updateUser = credentialRecord.updateUser,
+            createTime = credentialRecord.createdTime.timestamp(),
+            createUser = credentialRecord.credentialUserId
         )
     }
 
@@ -587,7 +591,9 @@ class CredentialServiceImpl @Autowired constructor(
                 hasEditPermission
             ),
             updateUser = credentialRecord.updateUser,
-            allowAcrossProject = credentialRecord.allowAcrossProject
+            allowAcrossProject = credentialRecord.allowAcrossProject,
+            createTime = credentialRecord.createdTime.timestamp(),
+            createUser = credentialRecord.credentialUserId
         )
     }
 

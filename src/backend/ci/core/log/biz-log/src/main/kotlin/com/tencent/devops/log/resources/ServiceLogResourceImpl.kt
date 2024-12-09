@@ -65,6 +65,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean,
         reverse: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
@@ -81,7 +82,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             stepId = stepId,
             archiveFlag = archiveFlag,
-            reverse = reverse ?: false
+            reverse = reverse ?: false,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 
@@ -101,7 +103,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -119,7 +122,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 
@@ -136,7 +140,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -151,7 +156,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 

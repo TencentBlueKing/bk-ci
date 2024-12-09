@@ -136,10 +136,11 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         userId: String? = null,
-        workspaceName: String? = null
+        workspaceName: Set<String>? = null,
+        notStatus: Set<WorkspaceStatus>? = null
     ): List<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceName)
+            val condition = mixCondition(userId, workspaceName, notStatus)
             val query = dslContext.selectFrom(this)
 
             if (condition.isNotEmpty()) {
@@ -158,20 +159,13 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         projectId: String? = null,
-        unionShared: Boolean = true,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null
     ): Long {
-        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .let {
-                    when (ownerType) {
-                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
-                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
-                    }.and(OWNER_TYPE.eq(ownerType.name))
-                }
+                .where(CREATOR.eq(userId!!))
+                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
                 .let {
                     if (status.isNullOrEmpty()) {
                         it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
@@ -180,15 +174,6 @@ class WorkspaceDao {
                     }
                 }
                 .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .let {
-                    if (unionShared && userId != null) {
-                        it.unionAll(
-                            unionSelect(shared, userId, status, systemType)
-                        )
-                    } else {
-                        it
-                    }
-                }
                 .fetch(0, Long::class.java).sum()
         }
     }
@@ -196,15 +181,14 @@ class WorkspaceDao {
     /**
      * 获取正在使用的 workspace
      */
-    fun fetchUserWorkspaceName(
+    fun fetchProjectWorkspaceName(
         dslContext: DSLContext,
-        projectId: String,
-        ownerType: WorkspaceOwnerType
+        projectId: String
     ): Set<String> {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(OWNER_TYPE.eq(ownerType.name))
+                .and(OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
                 .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .fetch().map { it.name }.toSet()
         }
@@ -246,9 +230,9 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .let {
-                    when (ownerType) {
-                        WorkspaceOwnerType.PERSONAL -> it.where(CREATOR.eq(userId!!))
-                        WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
+                    when {
+                        ownerType.projectUse() -> it.where(PROJECT_ID.eq(projectId!!))
+                        else -> it.where(CREATOR.eq(userId!!))
                     }.and(OWNER_TYPE.eq(ownerType.name))
                 }
                 .let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
@@ -293,14 +277,12 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null
     ): WorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
-                workspaceName = workspaceName,
-                status = status,
+                workspaceName = workspaceName?.let { setOf(workspaceName) },
                 mountType = mountType
             )
 
@@ -321,6 +303,16 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(STATUS.`in`(WorkspaceStatus.Types.ERROR.status().map { s -> s.ordinal }))
                 .fetch(workspaceMapper)
+        }
+    }
+
+    fun fetchAllProject4Public(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(PROJECT_ID).from(this).where(
+                OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT_PUBLIC.name)
+            ).groupBy(PROJECT_ID).fetch().map { it.value1() }
         }
     }
 
@@ -374,7 +366,7 @@ class WorkspaceDao {
             .leftJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            .and(t1.OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
             .unionAll(
                 dslContext.selectDistinct(
                     t1.CREATOR.`as`("SHARED_USER")
@@ -388,8 +380,8 @@ class WorkspaceDao {
 
     private fun mixCondition(
         userId: String? = null,
-        workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
+        workspaceName: Set<String>? = null,
+        notStatus: Set<WorkspaceStatus>? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
@@ -400,11 +392,11 @@ class WorkspaceDao {
             if (!userId.isNullOrBlank()) {
                 condition.add(CREATOR.eq(userId))
             }
-            if (!workspaceName.isNullOrBlank()) {
-                condition.add(NAME.eq(workspaceName))
+            if (workspaceName != null) {
+                condition.add(NAME.`in`(workspaceName))
             }
-            if (status != null) {
-                condition.add(STATUS.eq(status.ordinal))
+            if (notStatus != null) {
+                condition.add(STATUS.notIn(notStatus.map { it.ordinal }))
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
@@ -449,6 +441,21 @@ class WorkspaceDao {
                 .set(HOST_NAME, hostName)
                 .set(IP, ip)
                 .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceOwnerType(
+        dslContext: DSLContext,
+        workspaceName: String,
+        old: WorkspaceOwnerType,
+        new: WorkspaceOwnerType
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(OWNER_TYPE, new.name)
+                .where(NAME.eq(workspaceName))
+                .and(OWNER_TYPE.eq(old.name))
                 .execute()
         }
     }
@@ -653,8 +660,7 @@ class WorkspaceDao {
                     ?: "NO_CHECK",
                 creatorGroupName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_GROUP_NAME) as String?
                     ?: "NO_CHECK",
-                status = WorkspaceStatus.values()[
-                    record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1],
+                status = WorkspaceStatus.load(record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1),
                 createTime = record.getOrNull(TWorkspace.T_WORKSPACE.CREATE_TIME) as LocalDateTime?
                     ?: LocalDateTime.now(),
                 updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?
@@ -680,7 +686,8 @@ class WorkspaceDao {
                 labels = (record.getOrNull(TWorkspace.T_WORKSPACE.LABELS) as String?)?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<String>
                 },
-                bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?
+                bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
+                nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
             )
         }
 

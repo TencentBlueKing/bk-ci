@@ -45,7 +45,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     companion object {
         // 后续需改造数据库字段
         val DOC_URL_MAP = mapOf(
-            ScmType.GITHUB.name to "/markdown/Devops/UserGuide/Setup/guidelines-bkdevops-githubapp.md"
+            ScmType.GITHUB.name to "/UserGuide/Setup/guidelines-bkdevops-githubapp.md"
         )
     }
 

@@ -37,15 +37,15 @@ enum class WorkspaceSystemType {
 
     fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
         this == LINUX -> WorkspaceStatus.RUNNING
-        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PERSONAL -> WorkspaceStatus.PREPARING
-        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> WorkspaceStatus.DELIVERING
+        this == WINDOWS_GPU && ownerType.personalUse() -> WorkspaceStatus.PREPARING
+        this == WINDOWS_GPU && ownerType.projectUse() -> WorkspaceStatus.DELIVERING
         else -> WorkspaceStatus.RUNNING
     }
 
     fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
         this == LINUX -> true
-        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PERSONAL -> false
-        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> true
+        this == WINDOWS_GPU && ownerType.personalUse() -> false
+        this == WINDOWS_GPU && ownerType.projectUse() -> true
         else -> true
     }
 

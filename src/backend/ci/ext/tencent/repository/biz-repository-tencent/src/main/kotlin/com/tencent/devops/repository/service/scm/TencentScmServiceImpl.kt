@@ -27,11 +27,17 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.service.TencentScmMonitorService
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -44,6 +50,7 @@ import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -52,7 +59,10 @@ import jakarta.ws.rs.NotSupportedException
 
 @Primary
 @Service
-class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmService {
+class TencentScmServiceImpl @Autowired constructor(
+    val client: Client,
+    val scmMonitorService: TencentScmMonitorService
+) : IScmService {
 
     override fun deleteBranch(
         projectName: String,
@@ -262,7 +272,36 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {
-        client.getScm(ServiceScmResource::class).addCommitCheck(request)
+        val startEpoch = System.currentTimeMillis()
+        var requestTime = System.currentTimeMillis()
+        var responseTime = System.currentTimeMillis()
+        var statusCode: Int = HTTP_200
+        var statusMessage: String? = "OK"
+        try {
+            requestTime = System.currentTimeMillis() // 请求时间
+            client.getScm(ServiceScmResource::class).addCommitCheck(request)
+            responseTime = System.currentTimeMillis() // 响应时间
+        } catch (ignored: RemoteServiceException) {
+            responseTime = System.currentTimeMillis() // 异常响应时间
+            statusMessage = ignored.message
+            statusCode = ignored.errorCode ?: 400
+            throw ScmException(
+                ignored.message ?: I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_GIT.name
+            )
+        } finally {
+            scmMonitorService.reportCommitCheck(
+                requestTime = requestTime,
+                responseTime = responseTime,
+                statusCode = statusCode,
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
+            )
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
+        }
     }
 
     override fun lock(projectName: String, url: String, type: ScmType, region: CodeSvnRegion?, userName: String) {
@@ -422,5 +461,9 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
                 url = url
             )
         ).data
+    }
+
+    companion object{
+        val logger = LoggerFactory.getLogger(TencentScmServiceImpl::class.java)
     }
 }

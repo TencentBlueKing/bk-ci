@@ -42,9 +42,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -215,6 +215,34 @@ interface AppArtifactoryResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @GET
     fun getFilePlist(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @Parameter(description = "路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @Parameter(description = "体验id", required = false)
+        @QueryParam("experienceHashId")
+        experienceHashId: String?,
+        @Parameter(description = "组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
+        @Parameter(description = "过期时间", required = false)
+        @QueryParam("ttl")
+        ttl: Int? = null
+    ): String
+
+    @Operation(summary = "获取构建HAP文件的json5下载文件")
+    @Path("/{projectId}/{artifactoryType}/hapJson5.json5")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @GET
+    fun getHapJson5(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

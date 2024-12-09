@@ -66,4 +66,9 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         val jarName = matchResult?.value ?: ""
         return jarName
     }
+
+    override fun getDefaultRuntimeVersion(): String {
+        // java插件的runtimeVersion默认值为8
+        return "8"
+    }
 }

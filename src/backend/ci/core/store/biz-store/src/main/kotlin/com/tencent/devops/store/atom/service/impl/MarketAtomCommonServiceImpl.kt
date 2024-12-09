@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
-import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -49,6 +48,7 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -427,9 +427,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val osList = executionInfoMap[KEY_OS] as? List<Map<String, Any>>
         val finishKillFlag = executionInfoMap[KEY_FINISH_KILL_FLAG] as? Boolean
         val runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String
-        val finalRuntimeVersion = if (runtimeVersion.isNullOrBlank() && language == NODEJS) {
-            // 如果nodejs插件未配置runtimeVersion，则给runtimeVersion赋默认值10.*
-            "10.*"
+        val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
+        val finalRuntimeVersion = if (runtimeVersion.isNullOrBlank()) {
+            atomBusHandleService.getDefaultRuntimeVersion()
         } else {
             runtimeVersion
         }
@@ -444,14 +444,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_OS_NAME)
                     )
                 }
-                val target = osExecutionInfoMap[KEY_TARGET] as? String
-                if (target == null) {
-                    // 执行入口为空则校验失败
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(KEY_TARGET)
-                    )
-                }
+                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
+                )
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -490,14 +485,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            val target = executionInfoMap[KEY_TARGET] as? String
-            if (target == null) {
-                // 执行入口为空则校验失败
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    params = arrayOf(KEY_TARGET)
-                )
-            }
+            val target = executionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
+            )
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,

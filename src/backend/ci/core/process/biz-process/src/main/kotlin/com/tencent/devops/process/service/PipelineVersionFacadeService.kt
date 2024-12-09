@@ -560,6 +560,20 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = request.templateVersion
             ).template
         }
+        val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
+            inheritedDialect = request.inheritedDialect,
+            pipelineDialect = request.pipelineDialect
+        )
+        val setting = pipelineRepositoryService.createDefaultSetting(
+            projectId = projectId,
+            pipelineId = "",
+            pipelineName = request.pipelineName,
+            channelCode = ChannelCode.BS
+        ).copy(
+            pipelineAsCodeSettings = pipelineAsCodeSettings,
+            labels = request.labels
+        )
+
         return pipelineInfoFacadeService.createPipeline(
             userId = userId,
             projectId = projectId,
@@ -567,17 +581,16 @@ class PipelineVersionFacadeService @Autowired constructor(
                 name = request.pipelineName,
                 templateId = request.templateId,
                 instanceFromTemplate = false,
-                staticViews = request.staticViews
+                staticViews = request.staticViews,
+                labels = request.labels
             ),
             channelCode = ChannelCode.BS,
+            setting = setting,
             checkPermission = true,
             instanceType = request.instanceType,
             versionStatus = VersionStatus.COMMITTING,
             useSubscriptionSettings = request.useSubscriptionSettings,
-            useLabelSettings = request.useLabelSettings,
-            useConcurrencyGroup = request.useConcurrencyGroup,
-            inheritedDialectSetting = request.inheritedDialect,
-            pipelineDialectSetting = request.pipelineDialect
+            useConcurrencyGroup = request.useConcurrencyGroup
         )
     }
 

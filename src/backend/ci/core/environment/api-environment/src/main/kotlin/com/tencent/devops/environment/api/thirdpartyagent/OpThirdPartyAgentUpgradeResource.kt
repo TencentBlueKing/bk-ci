@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.api.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.JDKInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -174,6 +175,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/set_priority_upgrade_projects")
     fun setPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -182,6 +185,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_priority_upgrade_projects")
     fun unsetPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -189,17 +194,25 @@ interface OpThirdPartyAgentUpgradeResource {
     @Operation(summary = "获取优先升级项目列表(所有）")
     @GET
     @Path("/agents/get_all_priority_upgrade_projects")
-    fun getAllPriorityUpgradeAgentProjects(): Result<Set<String>>
+    fun getAllPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Set<String>>
 
     @Operation(summary = "取消优先升级项目（所有）")
     @DELETE
     @Path("/agents/clean_all_priority_upgrade_projects")
-    fun cleanAllPriorityUpgradeAgentProjects(): Result<Boolean>
+    fun cleanAllPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Boolean>
 
     @Operation(summary = "设置禁止升级项目（指定项目）")
     @PUT
     @Path("/agents/set_deny_upgrade_projects")
     fun setDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -208,6 +221,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_deny_upgrade_projects")
     fun unsetDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "agentIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -215,10 +230,16 @@ interface OpThirdPartyAgentUpgradeResource {
     @Operation(summary = "获取禁止升级项目列表(所有）")
     @GET
     @Path("/agents/get_all_deny_upgrade_projects")
-    fun getAllDenyUpgradeAgentProjects(): Result<Set<String>>
+    fun getAllDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Set<String>>
 
     @Operation(summary = "移除禁止升级项目（所有）")
     @DELETE
     @Path("/agents/clean_all_deny_upgrade_projects")
-    fun cleanAllDenyUpgradeAgentProjects(): Result<Boolean>
+    fun cleanAllDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Boolean>
 }

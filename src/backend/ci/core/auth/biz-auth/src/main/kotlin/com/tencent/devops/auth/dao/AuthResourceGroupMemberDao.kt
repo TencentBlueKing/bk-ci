@@ -294,10 +294,14 @@ class AuthResourceGroupMemberDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String? = null,
+        resourceCode: String? = null,
         memberId: String? = null,
         memberName: String? = null,
         memberType: String? = null,
-        iamGroupId: Int? = null
+        iamGroupId: Int? = null,
+        maxExpiredTime: LocalDateTime? = null,
+        minExpiredTime: LocalDateTime? = null,
+        groupCode: String? = null
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.selectFrom(this)
@@ -307,6 +311,10 @@ class AuthResourceGroupMemberDao {
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
             iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
+            maxExpiredTime?.let { select.and(EXPIRED_TIME.le(maxExpiredTime)) }
+            minExpiredTime?.let { select.and(EXPIRED_TIME.ge(minExpiredTime)) }
+            resourceCode?.let { select.and(RESOURCE_CODE.eq(resourceCode)) }
+            groupCode?.let { select.and(GROUP_CODE.eq(groupCode)) }
             select.fetch().map { convert(it) }
         }
     }
@@ -327,7 +335,7 @@ class AuthResourceGroupMemberDao {
         }
     }
 
-    fun listProjectMember(
+    fun listProjectMembers(
         dslContext: DSLContext,
         projectCode: String,
         memberType: String?,
