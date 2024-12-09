@@ -69,7 +69,7 @@ class CopilotOpenTokenService @Autowired constructor(
             scmToken = RepositoryScmToken(
                 userId = userId,
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, oauthInfo.accessToken),
-                scmCode = ScmType.CODE_GIT.name,
+                scmCode = "TGIT",
                 appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name
             )
         )
