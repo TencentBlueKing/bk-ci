@@ -192,7 +192,13 @@ class MakeMoneyService @Autowired constructor(
             @JsonProperty(value = "data_source_name", required = true)
             val dataSourceName: String = "云研发服务货币化",
             @get:Schema(title = "货币化数据")
-            val bills: List<BillDetail>
+            val bills: List<BillDetail>,
+            @get:Schema(title = "是否覆盖账期内的数据后重新导入")
+            @JsonProperty(value = "is_overwrite", required = true)
+            val overwrite: Boolean,
+            @get:Schema(title = "YYYYMM")
+            @JsonProperty(value = "month", required = true)
+            val month: String
         )
 
         data class BillDetail(
@@ -226,14 +232,15 @@ class MakeMoneyService @Autowired constructor(
     fun bills(year: Int, month: Int, push: Boolean): Response {
         val bills = makeMoneyMonthly(year, month)
         if (push) {
-            pushBills(bills)
+            pushBills(year, month, bills)
         }
         return makeMoneyMonthlyOutput(bills)
     }
 
-    private fun pushBills(bills: List<Bill.BillDetail>) {
-        val requestBody = JsonUtil.toJson(Bill(Bill.SourceBills(bills = bills)))
-        logger.info("start pushBills|url:${bkConfig.billsPushUrl}")
+    private fun pushBills(year: Int, month: Int, bills: List<Bill.BillDetail>) {
+        val date = LocalDate.of(year, month, 14).format(DateTimeFormatter.ofPattern("yyyyMM"))
+        val requestBody = JsonUtil.toJson(Bill(Bill.SourceBills(bills = bills, overwrite = true, month = date)))
+        logger.info("start pushBills|url:${bkConfig.billsPushUrl}|count=${bills.size}")
         OkhttpUtils.doPost(
             url = bkConfig.billsPushUrl,
             jsonParam = requestBody,
