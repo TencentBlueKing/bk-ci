@@ -627,6 +627,7 @@ class StoreProjectRelDao {
                 .where(CREATOR.eq(userId))
                 .and(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
+                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
                 .fetchOne(0, Long::class.java) != 0L
         }
     }

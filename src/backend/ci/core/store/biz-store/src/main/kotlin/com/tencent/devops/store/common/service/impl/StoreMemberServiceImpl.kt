@@ -407,9 +407,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      * 判断是否为成员
      */
     override fun isStoreMember(userId: String, storeCode: String, storeType: Byte): Boolean {
-        if (userId == storeInnerPipelineConfig.innerPipelineUser) {
-            return true
-        }
         return storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)
     }
 

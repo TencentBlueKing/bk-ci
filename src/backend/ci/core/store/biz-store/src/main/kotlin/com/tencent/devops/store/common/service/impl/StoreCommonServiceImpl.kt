@@ -301,10 +301,9 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
             val pipelineId = storeBuildInfoRecord.pipelineId
-            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByStoreCode(
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
                 dslContext = dslContext,
-                storeType = storeType,
-                storeCode = storeCode
+                pipelineId = pipelineId
             )
             var projectCode = storePipelineRelRecord?.projectCode
             if (projectCode.isNullOrBlank()) {

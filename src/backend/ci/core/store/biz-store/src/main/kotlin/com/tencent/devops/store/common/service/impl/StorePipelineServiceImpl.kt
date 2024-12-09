@@ -495,6 +495,7 @@ class StorePipelineServiceImpl @Autowired constructor(
             params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
         )
         logger.info("handleStorePublicPipelineModel pipelineId:$pipelineId|publicPipelineId:$publicPipelineId")
+        // 对已托管给公共项目的组件刷新内置流水线model时则给组件在公共项目下创建单独的流水线
         if (storeCode != null && pipelineId == publicPipelineId) {
             pipelineId = creatStorePipelineByStoreCode(
                 dslContext = dslContext,
@@ -600,7 +601,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                 pipelineName
             )
             val model = JsonUtil.to(pipelineModel, Model::class.java)
-             val pipelineId = client.get(ServicePipelineResource::class).create(
+            val pipelineId = client.get(ServicePipelineResource::class).create(
                 userId = innerPipelineUser,
                 projectId = innerPipelineProject,
                 pipeline = model,
