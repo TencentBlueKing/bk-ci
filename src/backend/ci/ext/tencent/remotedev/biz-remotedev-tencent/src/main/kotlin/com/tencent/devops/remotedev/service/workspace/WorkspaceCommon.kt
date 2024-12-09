@@ -323,7 +323,7 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+            workspace.status.notOk2doNextAction() && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME

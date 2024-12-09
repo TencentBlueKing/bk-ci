@@ -177,6 +177,7 @@ object SignUtils {
         removeKeyList: List<String>?,
         securityApplicationGroupList: List<String>? = null,
         universalLinks: List<String>? = null,
+        associatedDomain: List<String>? = null,
         codesignExternalStr: String? = null,
         bundleId: String? = null,
         bundleName: String? = null,
@@ -192,8 +193,16 @@ object SignUtils {
             return false
         }
         return try {
-            // 先将entitlements文件中补充所有ul和group
-            if (universalLinks != null) addUniversalLink(universalLinks, info.entitlementFile)
+            // 先将entitlements文件中补充所有associated-domain配置
+            val ad = mutableSetOf<String>()
+            if (!associatedDomain.isNullOrEmpty()) ad.addAll(associatedDomain)
+            if (!universalLinks.isNullOrEmpty()) ad.addAll(
+                universalLinks.map { "applinks:$it" }
+            )
+            if (ad.isNotEmpty()) addAssociatedDomain(
+                associatedDomain = ad.toList(),
+                entitlementsFile = info.entitlementFile
+            )
             if (securityApplicationGroupList != null) {
                 addSecurityApplicationGroups(securityApplicationGroupList, info.entitlementFile)
             }
@@ -561,8 +570,8 @@ object SignUtils {
         runtimeExec(cmd)
     }
 
-    private fun addUniversalLink(
-        ul: List<String>,
+    private fun addAssociatedDomain(
+        associatedDomain: List<String>,
         entitlementsFile: File
     ) {
         // 如果存在com.apple.developer.associated-domains字段则可以添加UL
@@ -583,8 +592,8 @@ object SignUtils {
             } finally {
                 val sb = StringBuilder()
                 sb.appendLine("<array>")
-                ul.forEach {
-                    sb.appendLine("<string>applinks:$it</string>")
+                associatedDomain.forEach {
+                    sb.appendLine("<string>$it</string>")
                 }
                 sb.appendLine("</array>")
 

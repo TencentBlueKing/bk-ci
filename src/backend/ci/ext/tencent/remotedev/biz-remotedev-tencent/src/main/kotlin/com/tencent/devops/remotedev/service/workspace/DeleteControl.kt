@@ -114,8 +114,7 @@ class DeleteControl @Autowired constructor(
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        needPermission: Boolean = true,
-        checkDeleteImmediately: Boolean? = null
+        needPermission: Boolean = true
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -136,16 +135,11 @@ class DeleteControl @Autowired constructor(
             expiredTimeInSeconds
         ).tryLock().use {
 
-            // 校验状态以及处理异常的情况
-            val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
-
             // 创建操作历史记录
             createDeleteOperationHistoryRecord(workspace, userId)
 
-            // 如果需要立即删除，则执行删除操作
-            if (deleteImmediately) {
-                doDeleteWS(true, userId, workspaceName, null)
-            }
+            // 立即删除
+            doDeleteWS(true, userId, workspaceName, null)
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
@@ -500,9 +494,9 @@ class DeleteControl @Autowired constructor(
         // 删除cfs的权限组规则
         tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
 
-            // 关联tgit相关
-            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, setOf(ip), true, null)
-        }
+        // 关联tgit相关
+        gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, setOf(ip), true, null)
+    }
 
     private fun checkWorkspaceStatusForDelete(workspace: WorkspaceRecord, userId: String): Boolean {
 
@@ -554,7 +548,11 @@ class DeleteControl @Autowired constructor(
                 dslContext = transactionContext,
                 workspaceName = workspace.workspaceName,
                 operator = userId,
-                action = WorkspaceAction.DELETE,
+                action = if (workspace.status.workspaceInitializing()) {
+                    WorkspaceAction.DELETE_IN_INITIALIZING
+                } else {
+                    WorkspaceAction.DELETE
+                },
                 actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.DELETE)
             )
 

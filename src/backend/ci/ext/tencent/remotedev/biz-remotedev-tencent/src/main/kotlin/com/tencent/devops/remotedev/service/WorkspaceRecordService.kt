@@ -262,14 +262,15 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     fun getUserWorkspaceRecordPermission(userId: String, workspaceName: String): UserWorkspaceRecordPermissionInfo {
-        val enableRecord = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.enableRecordUser
+        val r = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        val enableRecord = r.enableRecordUser
         val record = workspaceRecordUserApprovalDao.fetchAnyApproval(dslContext, workspaceName, userId)
             ?: return UserWorkspaceRecordPermissionInfo(
-                enableRecord = enableRecord.isNotBlank(),
+                enableRecord = !enableRecord.isNullOrBlank(),
                 viewPermission = false,
                 viewPermissionEndTime = null
             )
@@ -277,7 +278,7 @@ class WorkspaceRecordService @Autowired constructor(
             configCacheService.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
         )
         return UserWorkspaceRecordPermissionInfo(
-            enableRecord = enableRecord.isNotBlank(),
+            enableRecord = !enableRecord.isNullOrBlank(),
             viewPermission = endTime > LocalDateTime.now(),
             viewPermissionEndTime = endTime.timestampmilli()
         )

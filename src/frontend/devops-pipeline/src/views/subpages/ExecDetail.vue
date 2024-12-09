@@ -106,7 +106,7 @@
             </header>
             <div
                 :class="['exec-detail-main', {
-                    'is-outputs-panel': curItemTab === 'outputs'
+                    'is-outputs-panel': ['outputs', 'reports'].includes(curItemTab)
                 }]"
             >
                 <component

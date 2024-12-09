@@ -7,4 +7,5 @@ object Constansts {
     const val workspaceNameSuffixLimitLen = 16
     const val ADMIN_NAME = "system"
     const val CGS_AVAIABLE_STATUS = 11
+    const val BAK_FLAG = ".bak."
 }

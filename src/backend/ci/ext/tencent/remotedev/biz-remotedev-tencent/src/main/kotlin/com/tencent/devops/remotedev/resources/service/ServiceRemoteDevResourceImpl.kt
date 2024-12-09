@@ -334,8 +334,7 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = true,
-                checkDeleteImmediately = true
+                needPermission = true
             )
         )
     }
@@ -404,8 +403,7 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = !permissionService.hasUserManager(userId, projectId),
-                checkDeleteImmediately = true
+                needPermission = !permissionService.hasUserManager(userId, projectId)
             )
         )
     }

@@ -47,6 +47,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Tag(name = "OP_REMOTE_DEV", description = "OP-REMOTE-DEV")
 @Path("/op")
@@ -206,4 +207,28 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @Operation(summary = "对昨天在使用的云桌面实例进行快照")
+    @GET
+    @Path("/make_money_last_day")
+    fun makeMoneyLastDay(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Response
+
+    @Operation(summary = "对某一周期计算账单")
+    @GET
+    @Path("/bills")
+    fun bills(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("year")
+        year: Int,
+        @QueryParam("month")
+        month: Int,
+        @QueryParam("push")
+        push: Boolean
+    ): Response
 }

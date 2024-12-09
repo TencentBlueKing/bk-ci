@@ -36,7 +36,7 @@
 
 # v2.0.3
 ## 2024-05-28
-## Changelog since v2.0.2
+### Changelog since v2.0.2
 #### 新增
 - [新增] 登录失效弹窗规范修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 
@@ -46,19 +46,19 @@
 
 # v2.0.2
 ## 2024-03-04
-## Changelog since v2.0.1
+### Changelog since v2.0.1
 #### 新增
 - [新增] 初始化bkrepo可以修改httpSchema [链接](http://github.com/TencentBlueKing/bk-ci/issues/10056)
 
 # v2.0.1
 ## 2024-03-01
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### 修复
 - [修复] 修复新建项目失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10045)
 
 # v2.0.0
 ## 2024-01-02
-## Changelog since v1.14.0
+### Changelog since v1.14.0
 #### 新增
 - [新增] 蓝盾对接权限中心RBAC [链接](http://github.com/TencentBlueKing/bk-ci/issues/7794)
 - [新增] 添加项目管理前端服务 [链接](http://github.com/TencentBlueKing/bk-ci/issues/7923)

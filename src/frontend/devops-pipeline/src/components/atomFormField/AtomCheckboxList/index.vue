@@ -52,9 +52,11 @@
 <style lang="scss">
     .atom-checkbox-list-item {
         padding: 0 20px 10px 0;
-        overflow: hidden;
-        text-overflow:ellipsis;
-        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        .bk-checkbox {
+            flex-shrink: 0;
+        }
     }
     .underline-text {
         border-bottom: dashed 1px #c3cdd7;

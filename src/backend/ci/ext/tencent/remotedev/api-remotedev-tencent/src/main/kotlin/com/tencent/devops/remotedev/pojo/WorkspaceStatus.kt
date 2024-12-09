@@ -113,7 +113,7 @@ enum class WorkspaceStatus {
 
     fun checkDistributing() = this == DISTRIBUTING
 
-    fun workspaceInitializing() = checkDelivering()
+    fun workspaceInitializing() = checkDelivering() || this == PREPARING
 
     fun checkUpgrading() = this == UPGRADING
 
@@ -127,9 +127,8 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
-        (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
-            this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
+    fun notOk2doNextAction() =
+        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING ||
             this == CLONING
 
