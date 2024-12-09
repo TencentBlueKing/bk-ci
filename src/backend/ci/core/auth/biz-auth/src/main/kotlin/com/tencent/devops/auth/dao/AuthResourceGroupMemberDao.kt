@@ -548,7 +548,6 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null
@@ -559,7 +558,6 @@ class AuthResourceGroupMemberDao {
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
             maxExpiredAt = maxExpiredAt,
             memberDeptInfos = memberDeptInfos
@@ -584,7 +582,8 @@ class AuthResourceGroupMemberDao {
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null,
-        operateChannel: OperateChannel?
+        filterMemberType: MemberType? = null,
+        onlyExcludeUserDirectlyJoined: Boolean? = false
     ): Long {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
@@ -592,18 +591,47 @@ class AuthResourceGroupMemberDao {
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
             maxExpiredAt = maxExpiredAt,
             memberDeptInfos = memberDeptInfos,
-            operateChannel = operateChannel
+            filterMemberType = filterMemberType
+        )
+        val excludeConditions = buildExcludeMemberGroupCondition(
+            excludeIamGroupIds = excludeIamGroupIds,
+            onlyExcludeUserDirectlyJoined = onlyExcludeUserDirectlyJoined
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(count())
                 .from(this)
                 .where(conditions)
+                .let {
+                    excludeConditions.forEach { excludeCondition ->
+                        it.andNot(excludeCondition)
+                    }
+                    it
+                }
                 .fetchOne(0, Long::class.java) ?: 0L
         }
+    }
+
+    fun buildExcludeMemberGroupCondition(
+        excludeIamGroupIds: List<Int>?,
+        // 仅排除用户直接加入的组
+        onlyExcludeUserDirectlyJoined: Boolean?,
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            if (!excludeIamGroupIds.isNullOrEmpty()) {
+                // 仅排除用户直接加入的用户组
+                if (onlyExcludeUserDirectlyJoined == true) {
+                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds).and(MEMBER_TYPE.eq(MemberType.USER.type)))
+                } else {
+                    // 会把组织/用户/模板加入的組都排除
+                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
+                }
+            }
+        }
+        return conditions
     }
 
     fun listMemberGroupIdsInProject(
@@ -638,7 +666,8 @@ class AuthResourceGroupMemberDao {
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null,
-        operateChannel: OperateChannel? = null,
+        filterMemberType: MemberType? = null,
+        onlyExcludeUserDirectlyJoined: Boolean? = false,
         offset: Int? = null,
         limit: Int? = null
     ): List<AuthResourceGroupMember> {
@@ -648,15 +677,24 @@ class AuthResourceGroupMemberDao {
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
             maxExpiredAt = maxExpiredAt,
             memberDeptInfos = memberDeptInfos,
-            operateChannel = operateChannel
+            filterMemberType = filterMemberType
+        )
+        val excludeConditions = buildExcludeMemberGroupCondition(
+            excludeIamGroupIds = excludeIamGroupIds,
+            onlyExcludeUserDirectlyJoined = onlyExcludeUserDirectlyJoined
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
                 .where(conditions)
+                .let {
+                    excludeConditions.forEach { excludeCondition ->
+                        it.andNot(excludeCondition)
+                    }
+                    it
+                }
                 .orderBy(IAM_GROUP_ID.desc())
                 .let { if (offset != null && limit != null) it.offset(offset).limit(limit) else it }
                 .fetch()
@@ -670,11 +708,10 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null,
-        operateChannel: OperateChannel? = null
+        filterMemberType: MemberType? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
@@ -698,19 +735,12 @@ class AuthResourceGroupMemberDao {
                         it
                     }
                 })
+            filterMemberType?.let { conditions.add(MEMBER_TYPE.eq(filterMemberType.type)) }
             resourceType?.let { conditions.add(RESOURCE_TYPE.eq(resourceType)) }
             minExpiredAt?.let { conditions.add(EXPIRED_TIME.ge(minExpiredAt)) }
             maxExpiredAt?.let { conditions.add(EXPIRED_TIME.le(maxExpiredAt)) }
             if (!iamGroupIds.isNullOrEmpty()) {
                 conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
-            }
-            if (!excludeIamGroupIds.isNullOrEmpty()) {
-                // 个人渠道排除用户组ID时，仅排除用户直接加入的组
-                if (operateChannel == OperateChannel.PERSONAL) {
-                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds).and(MEMBER_TYPE.eq(MemberType.USER.type)))
-                } else {
-                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
-                }
             }
         }
         return conditions

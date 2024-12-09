@@ -20,6 +20,7 @@ import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
+import com.tencent.devops.auth.pojo.dto.MemberGroupJoinedDTO
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.HandoverAction
@@ -321,7 +322,8 @@ class RbacPermissionManageFacadeServiceImpl(
             },
             operator = "",
             beingHandedOver = authResourceGroupMember.memberType == MemberType.USER.type
-                && groupsBeingHandover.contains(groupId)
+                && groupsBeingHandover.contains(groupId),
+            memberType = MemberType.get(authResourceGroupMember.memberType)
         )
     }
 
@@ -432,10 +434,12 @@ class RbacPermissionManageFacadeServiceImpl(
         memberId: String,
         resourceType: String?,
         iamGroupIds: List<Int>?,
-        excludeIamGroupIds: List<Int>?,
         minExpiredAt: Long?,
         maxExpiredAt: Long?,
         operateChannel: OperateChannel?,
+        filterMemberType: MemberType?,
+        excludeIamGroupIds: List<Int>?,
+        onlyExcludeUserDirectlyJoined: Boolean?,
         start: Int?,
         limit: Int?
     ): Pair<Long, List<AuthResourceGroupMember>> {
@@ -455,11 +459,12 @@ class RbacPermissionManageFacadeServiceImpl(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredTime,
             maxExpiredAt = maxExpiredTime,
             memberDeptInfos = memberDeptInfos,
-            operateChannel = operateChannel
+            filterMemberType = filterMemberType,
+            excludeIamGroupIds = excludeIamGroupIds,
+            onlyExcludeUserDirectlyJoined = onlyExcludeUserDirectlyJoined
         )
         val resourceGroupMembers = authResourceGroupMemberDao.listMemberGroupDetail(
             dslContext = dslContext,
@@ -468,11 +473,12 @@ class RbacPermissionManageFacadeServiceImpl(
             iamTemplateIds = iamTemplateIds,
             resourceType = resourceType,
             iamGroupIds = iamGroupIds,
-            excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredTime,
             maxExpiredAt = maxExpiredTime,
             memberDeptInfos = memberDeptInfos,
-            operateChannel = operateChannel,
+            filterMemberType = filterMemberType,
+            excludeIamGroupIds = excludeIamGroupIds,
+            onlyExcludeUserDirectlyJoined = onlyExcludeUserDirectlyJoined,
             offset = start,
             limit = limit
         )
@@ -540,17 +546,19 @@ class RbacPermissionManageFacadeServiceImpl(
         }
 
         finalMemberGroups.addAll(resourceGroupMembersByCondition)
-
         if (commonCondition.groupIds.isNotEmpty()) {
-            val groupsOfSelect = listResourceGroupMembers(
-                projectCode = projectCode,
-                memberId = commonCondition.targetMember.id,
-                iamGroupIds = commonCondition.groupIds,
-                operateChannel = commonCondition.operateChannel
-            ).second
-            finalMemberGroups.addAll(groupsOfSelect)
+            val memberType2groupIds = commonCondition.groupIds.groupBy { it.memberType }
+            memberType2groupIds.forEach { (memberType, groupIds) ->
+                val groupsOfSelect = listResourceGroupMembers(
+                    projectCode = projectCode,
+                    memberId = commonCondition.targetMember.id,
+                    iamGroupIds = groupIds.map { it.id },
+                    operateChannel = commonCondition.operateChannel,
+                    filterMemberType = memberType
+                ).second
+                finalMemberGroups.addAll(groupsOfSelect)
+            }
         }
-
         // 分类
         val result = mutableMapOf<MemberType, List<Int>>()
         finalMemberGroups.groupBy { it.memberType }.forEach { (memberType, groups) ->
@@ -690,7 +698,8 @@ class RbacPermissionManageFacadeServiceImpl(
                 memberId = memberId,
                 resourceType = ResourceTypeId.PIPELINE,
                 excludeIamGroupIds = operatedGroupsWithExecutePerm,
-                operateChannel = OperateChannel.PERSONAL
+                operateChannel = OperateChannel.PERSONAL,
+                onlyExcludeUserDirectlyJoined = true
             ).second.toMutableList().apply {
                 addAll(
                     listResourceGroupMembers(
@@ -698,7 +707,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         memberId = memberId,
                         resourceType = ResourceTypeId.PROJECT,
                         excludeIamGroupIds = operatedGroupsWithExecutePerm,
-                        operateChannel = OperateChannel.PERSONAL
+                        operateChannel = OperateChannel.PERSONAL,
+                        onlyExcludeUserDirectlyJoined = true
                     ).second
                 )
             }.map { it.iamGroupId }
@@ -804,6 +814,7 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberId = memberId,
             excludeIamGroupIds = iamGroupIds,
+            onlyExcludeUserDirectlyJoined = true,
             operateChannel = OperateChannel.PERSONAL
         )
 
@@ -854,7 +865,12 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             type = BatchOperateType.RENEWAL,
             conditionReq = GroupMemberRenewalConditionReq(
-                groupIds = listOf(groupId),
+                groupIds = listOf(
+                    MemberGroupJoinedDTO(
+                        id = groupId,
+                        memberType = MemberType.get(renewalConditionReq.targetMember.type)
+                    )
+                ),
                 targetMember = renewalConditionReq.targetMember,
                 renewalDuration = renewalConditionReq.renewalDuration
             ),
@@ -1145,7 +1161,12 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             type = BatchOperateType.REMOVE,
             conditionReq = GroupMemberRemoveConditionReq(
-                groupIds = toDeleteGroups,
+                groupIds = toDeleteGroups.map {
+                    MemberGroupJoinedDTO(
+                        id = it,
+                        memberType = MemberType.USER
+                    )
+                },
                 targetMember = removeMemberDTO.targetMember
             ),
             operateGroupMemberTask = ::deleteTask
@@ -1157,7 +1178,12 @@ class RbacPermissionManageFacadeServiceImpl(
                 projectCode = projectCode,
                 type = BatchOperateType.HANDOVER,
                 conditionReq = GroupMemberHandoverConditionReq(
-                    groupIds = toHandoverGroups,
+                    groupIds = toHandoverGroups.map {
+                        MemberGroupJoinedDTO(
+                            id = it,
+                            memberType = MemberType.USER
+                        )
+                    },
                     targetMember = removeMemberDTO.targetMember,
                     handoverTo = removeMemberDTO.handoverTo!!
                 ),
@@ -1243,7 +1269,12 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             type = BatchOperateType.REMOVE,
             conditionReq = GroupMemberRemoveConditionReq(
-                groupIds = toDeleteGroups,
+                groupIds = toDeleteGroups.map {
+                    MemberGroupJoinedDTO(
+                        id = it,
+                        memberType = MemberType.USER
+                    )
+                },
                 targetMember = removeMemberDTO.targetMember
             ),
             operateGroupMemberTask = ::deleteTask
@@ -1326,21 +1357,28 @@ class RbacPermissionManageFacadeServiceImpl(
         targetMember: ResourceMemberInfo
     ): Boolean {
         logger.info("delete single group members from personal:$userId|$targetMember|$projectCode|$groupId")
-        // 获取导致流水线代持人权限受到影响的用户组及流水线
-        val (invalidGroups, invalidPipelines, invalidRepertoryIds) =
-            listInvalidAuthorizationsAfterOperatedGroups(
-                projectCode = projectCode,
-                iamGroupIds = listOf(groupId),
-                memberId = targetMember.id
-            )
-        if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() || invalidRepertoryIds.isNotEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_SINGLE_GROUP_REMOVE)
+        if (targetMember.type == MemberType.USER.type){
+            // 获取导致流水线代持人权限受到影响的用户组及流水线
+            val (invalidGroups, invalidPipelines, invalidRepertoryIds) =
+                listInvalidAuthorizationsAfterOperatedGroups(
+                    projectCode = projectCode,
+                    iamGroupIds = listOf(groupId),
+                    memberId = targetMember.id
+                )
+            if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() || invalidRepertoryIds.isNotEmpty()) {
+                throw ErrorCodeException(errorCode = ERROR_SINGLE_GROUP_REMOVE)
+            }
         }
         batchOperateGroupMembers(
             projectCode = projectCode,
             type = BatchOperateType.REMOVE,
             conditionReq = GroupMemberRemoveConditionReq(
-                groupIds = listOf(groupId),
+                groupIds = listOf(
+                    MemberGroupJoinedDTO(
+                        id = groupId,
+                        memberType = MemberType.get(targetMember.type)
+                    )
+                ),
                 targetMember = targetMember
             ),
             operateGroupMemberTask = ::deleteTask
@@ -1928,7 +1966,12 @@ class RbacPermissionManageFacadeServiceImpl(
             )
 
             val groupMemberHandoverConditionReq = GroupMemberHandoverConditionReq(
-                groupIds = groupsOfHandover,
+                groupIds = groupsOfHandover.map {
+                    MemberGroupJoinedDTO(
+                        id = it,
+                        memberType = MemberType.USER
+                    )
+                },
                 targetMember = targetMember,
                 handoverTo = handoverTo
             )
