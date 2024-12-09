@@ -268,7 +268,7 @@ export default defineStore('userGroupTable', () => {
     isShowRemove.value = true;
   }
   /**
-   * 更新表格行数据
+   * 单行续期弹窗提交
    * @param expiredAt 续期时间
    */
   async function handleUpDateRow(expiredAt: number) {
@@ -285,11 +285,6 @@ export default defineStore('userGroupTable', () => {
       };
       const res = await http.renewal(projectId.value, selectedRow.value!.resourceType, selectedRow.value!.groupId, params)
       if (res) {
-        // 替换当前行的数据 or api.getMemberGroupDetails()
-        let item = sourceList.value.find((item: SourceType) => item.resourceType == selectedRow.value!.resourceType)?.tableData.find(item => item.groupId === selectedRow.value!.groupId);
-        if (item) {
-          item.beingHandedOver = true
-        }
         delete selectedData[selectedTableGroupType.value];
         currentTableRef.value.clearSelection();
       }
@@ -354,6 +349,7 @@ export default defineStore('userGroupTable', () => {
           },
           ...sourceItem,
           tableData: tableData,
+          count: sourceItem.isAll ? sourceItem.count! : tableData.length,
           ...(!sourceItem.isAll && { isRemotePagination: false }),
           ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) }),
         };
@@ -462,6 +458,13 @@ export default defineStore('userGroupTable', () => {
     }
   }
 
+  function clearPaginations() {
+    Object.keys(paginations.value).forEach(key => {
+      paginations.value[key] = [0, 10];
+    });
+  }
+
+
   return {
     isLoading,
     sourceList,
@@ -491,5 +494,6 @@ export default defineStore('userGroupTable', () => {
     handleUpDateRow,
     pageLimitChange,
     pageValueChange,
+    clearPaginations,
   };
 });

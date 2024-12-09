@@ -453,6 +453,7 @@ const {
   handleUpDateRow,
   pageLimitChange,
   pageValueChange,
+  clearPaginations,
 } = groupTableStore;
 
 const {
@@ -565,13 +566,13 @@ async function handleHandoverConfirm () {
 async function handleRemoveConfirm () {
   try {
     operatorLoading.value = true;
-    const param = formatSelectParams(selectedRow.value.groupId);
-    delete param.renewalDuration;
-    await http.batchRemove(projectId.value, param);
-    operatorLoading.value = false;
-    showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
-    handleRemoveRow();
-    isShowRemove.value = false;
+    const res = await http.getIsDirectRemove(projectId.value, selectedRow.value.groupId, asideItem.value);
+    if (res) {
+      operatorLoading.value = false;
+      showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+      handleRemoveRow();
+      isShowRemove.value = false;
+    }
   } catch (error) {
     operatorLoading.value = false;
   }
@@ -664,6 +665,7 @@ function cancelClear (batchFlag) {
     renewalRef.value.initTime();
     expiredAt.value = 30;
   }
+  clearPaginations();
 }
 /**
  * 侧边栏确认事件

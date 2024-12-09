@@ -194,7 +194,7 @@ async function fetchResourceTypes() {
     serviceList.value = resourceTypes;
     projectList.value = projects;
     if (projects.length > 0) {
-      projectValue.value = projects[0].englishName;
+      projectValue.value = 'mht';
     }
   } catch (error) {
     console.log(error);

@@ -66,7 +66,7 @@
       </bk-table-column>
       <bk-table-column :label="t('加入方式')" prop="joinedType">
         <template #default="{row}">
-          {{ row.joinedType === "DIRECT" ? "直接加入" : "用户组加入" }}
+          {{ row.joinedType === "DIRECT" ? t('直接加入') : t('组织加入') }}
         </template>
       </bk-table-column>
       <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
@@ -216,7 +216,7 @@ const tableList = computed(() => props.data.map(item => ({
   }))
 );
 const border = ['row', 'outer'];
-function shouldShowOverlay(row){
+function shouldShowOverlay(row) {
   if (props.isShowOperation) {
     return false;
   }
@@ -233,7 +233,7 @@ function shouldShowOverlay(row){
   }
 }
 
-function getUnableMessage(row){
+function getUnableMessage(row) {
   switch (props.batchFlag) {
     case 'renewal':
       if(row.expiredAtDisplay === t('永久')){
@@ -329,7 +329,7 @@ function pageValueChange(value) {
   emit('pageValueChange',value, resourceType.value);
 }
 
-function handleToResourcePage (row) {
+function handleToResourcePage(row) {
   if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
   switch (row.resourceType) {
     case 'pipeline':
