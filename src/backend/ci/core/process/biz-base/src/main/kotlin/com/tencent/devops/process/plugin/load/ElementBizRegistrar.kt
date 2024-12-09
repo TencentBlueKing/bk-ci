@@ -28,7 +28,6 @@
 package com.tencent.devops.process.plugin.load
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
