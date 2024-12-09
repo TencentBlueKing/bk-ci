@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -24,6 +25,10 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val workspaceRecordService: WorkspaceRecordService
 ) : OpWorkspaceResource {
+
+    companion object {
+        val logger = LoggerFactory.getLogger(OpWorkspaceResourceImpl::class.java)
+    }
 
     @AuditEntry(actionId = ActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
