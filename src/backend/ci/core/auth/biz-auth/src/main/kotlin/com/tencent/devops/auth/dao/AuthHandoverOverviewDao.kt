@@ -1,7 +1,9 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
+import com.tencent.devops.auth.pojo.enum.CollationType
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
+import com.tencent.devops.auth.pojo.enum.SortType
 import com.tencent.devops.auth.pojo.request.HandoverOverviewQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewUpdateReq
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
@@ -82,13 +84,37 @@ class AuthHandoverOverviewDao {
             dslContext.selectFrom(this)
                 .where(buildQueryConditions(queryRequest))
                 .let {
+                    when {
+                        queryRequest.sortType == SortType.FLOW_NO && queryRequest.collationType == CollationType.ASC -> {
+                            it.orderBy(FLOW_NO.asc())
+                        }
+
+                        queryRequest.sortType == SortType.FLOW_NO && queryRequest.collationType == CollationType.DESC -> {
+                            it.orderBy(FLOW_NO.desc())
+                        }
+
+                        queryRequest.sortType == SortType.CREATE_TIME && queryRequest.collationType == CollationType.ASC -> {
+                            it.orderBy(CREATE_TIME.asc())
+                        }
+
+                        queryRequest.sortType == SortType.CREATE_TIME && queryRequest.collationType == CollationType.DESC -> {
+                            it.orderBy(CREATE_TIME.desc())
+                        }
+
+                        else -> {
+                            it.orderBy(FLOW_NO.desc())
+                        }
+                    }
+                }
+                .let {
                     if (queryRequest.page != null && queryRequest.pageSize != null) {
                         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(queryRequest.page, queryRequest.pageSize)
                         it.limit(sqlLimit.limit).offset(sqlLimit.offset)
                     } else {
                         it
                     }
-                }.skipCheck()
+                }
+                .skipCheck()
                 .fetch()
                 .map { it.convert(queryRequest.memberId) }
         }
