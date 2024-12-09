@@ -351,7 +351,7 @@ class RbacPermissionManageFacadeServiceImpl(
             )
         )
         // 获取成员加入的用户组
-        val memberGroupCountMap = authResourceGroupMemberDao.countMemberGroup(
+        val memberGroupCountMap = authResourceGroupMemberDao.countMemberGroupOfResourceType(
             dslContext = dslContext,
             projectCode = projectCode,
             memberId = memberId,
@@ -459,7 +459,7 @@ class RbacPermissionManageFacadeServiceImpl(
             minExpiredAt = minExpiredTime,
             maxExpiredAt = maxExpiredTime,
             memberDeptInfos = memberDeptInfos
-        )[resourceType] ?: 0L
+        )
         val resourceGroupMembers = authResourceGroupMemberDao.listMemberGroupDetail(
             dslContext = dslContext,
             projectCode = projectCode,
