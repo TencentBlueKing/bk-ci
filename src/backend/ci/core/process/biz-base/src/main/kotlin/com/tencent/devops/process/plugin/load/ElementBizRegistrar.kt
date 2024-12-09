@@ -42,8 +42,6 @@ object ElementBizRegistrar {
 
     private val elementPluginMaps = ConcurrentHashMap<String, ElementBizPlugin<*>>()
 
-    private val elementPluginServices = ConcurrentHashMap<String, IElementBizPluginService>()
-
     /**
      * 注册[elementBizPlugin]流水线插件任务的编排插件处理器
      */
@@ -59,17 +57,4 @@ object ElementBizRegistrar {
     fun <T : Element> getPlugin(element: T): ElementBizPlugin<T>? {
         return elementPluginMaps[element::class.qualifiedName] as ElementBizPlugin<T>?
     }
-
-    /**
-     * 注册插件服务
-     */
-    fun register(elementBizPluginService: IElementBizPluginService) {
-        logger.info("[REGISTER] plugin service| ${elementBizPluginService.javaClass.name}")
-        elementPluginServices[elementBizPluginService::javaClass.name] = elementBizPluginService
-    }
-
-    /**
-     * 获取所有插件服务
-     */
-    fun getPluginService() = elementPluginServices
 }

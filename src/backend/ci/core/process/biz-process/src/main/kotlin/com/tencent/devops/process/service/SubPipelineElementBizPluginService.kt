@@ -60,10 +60,6 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SubPipelineElementBizPluginService::class.java)
     }
 
-    init {
-        ElementBizRegistrar.register(this)
-    }
-
     override fun supportElement(element: Element): Boolean {
         return subPipelineCheckService.supportElement(element)
     }
