@@ -31,6 +31,6 @@ package com.tencent.devops.repository.pojo.enums
  * token 应用类型
  */
 enum class TokenAppTypeEnum {
-    OAUTH, // oauth认证
+    OAUTH2, // oauth2认证
     COPILOT_OPEN_TOKEN; // copilot open token
 }
