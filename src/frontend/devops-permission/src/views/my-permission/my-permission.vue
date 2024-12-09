@@ -83,8 +83,8 @@
         <span>{{t("到期时间")}}：</span> 
         <template v-if="selectedRow?.expiredAtDisplay === t('已过期')">
           <span class="text-gray">{{t("已过期")}}</span>
-          <span class="text-blue">
-            <i class="manage-icon manage-icon-arrows-right"></i> 
+          <span class="text-blue renewal">
+            <img src="@/css/svg/arrows-right.svg">
             {{ expiredAt }} {{ t("天") }}
           </span>
         </template>
@@ -186,7 +186,6 @@
       <p class="remove-text">
         <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
       </p>
-      <!-- {{ singleRemoveMessage }} -->
     </template>
     <template #footer>
       <bk-button
@@ -207,7 +206,7 @@
 
   <bk-sideslider
     v-model:isShow="isShowSlider"
-    :title="sliderTitle"
+    :title="title"
     :quick-close="false"
     ext-cls="slider"
     width="960"
@@ -236,8 +235,8 @@
           </div>
         </div>
         <div class="slider-footer">
-          <div class="footer-main">
-            <div class="main-line main-line-handover">
+          <div class="footer-main" :class="authorizationInvalid ? '' : 'main-line-handover'">
+            <div class="main-line">
               <p
                 v-if="authorizationInvalid && batchFlag === 'handover'"
                 class="main-text"
@@ -313,15 +312,13 @@
           </div>
         </div>
       </div>
-      <div v-else>
-        <div class="slider-main">
-          <DetailGroupTab
-            :source-list="detailSourceList"
-            :page-limit-change="detailPageLimitChange"
-            :page-value-change="detailPageValueChange"
-            @collapse-click="detailCollapseClick"
-          />
-        </div>
+      <div class="slider-detail" v-else>
+        <DetailGroupTab
+          :source-list="detailSourceList"
+          :page-limit-change="detailPageLimitChange"
+          :page-value-change="detailPageValueChange"
+          @collapse-click="detailCollapseClick"
+        />
         <bk-button class="go-back" @click="goBack">{{t("返回")}}</bk-button>
       </div>
     </template>
@@ -339,11 +336,12 @@ import userDetailGroupTable from "@/store/userDetailGroupTable";
 import { batchOperateTypes, btnTexts, batchTitle, batchMassageText, unableText } from "@/utils/constants.js";
 import GroupTab from '@/components/permission-manage/group-tab';
 import TimeLimit from '@/components/permission-manage/time-limit.vue';
-import ProjectUserSelector from '@/components/permission-manage/project-user-selector';
+import ProjectUserSelector from '@/components/project-user-selector';
 import NoPermission from '@/components/permission-manage/no-permission.vue';
 import manageSearch from "@/components/permission-manage/manage-search.vue";
 import DetailGroupTab from "@/components/permission-manage/detail-group-tab.vue";
 import { OPERATE_CHANNEL } from "@/utils/constants";
+import { AngleRight  } from 'bkui-vue/lib/icon';
 
 const user = ref();
 const { t } = useI18n();
@@ -373,8 +371,20 @@ const manageSearchRef = ref(null);
 const groupTableStore = userGroupTable();
 const detailGroupTable = userDetailGroupTable();
 const operatorLoading = ref(false);
-const singleRemoveMessage = ref('');
 const isNotProject = computed(() => collapseList.value.length);
+const title = computed(() => {
+  if (!isDetail.value) {
+    return sliderTitle.value
+  } else {
+    return h('p', { style: { display: 'flex', alignItems: 'center' } },
+      [
+        h('span', { style: { color: '#3A84FF' } }, sliderTitle.value),
+        h(AngleRight, { style: { color: '#C4C6CC', fontSize: '22px', magin: '0 5px' } } ),
+        h('span',{ style: { fontSize: '14px', color: '#313238' } },  t('待移交详情'))
+      ]
+    )
+  }
+})
 // 资源失效个数，是否需要权限交接
 const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount)
 const {
@@ -407,6 +417,7 @@ const {
   handleUpDateRow,
   pageLimitChange,
   pageValueChange,
+  clearPaginations,
 } = groupTableStore;
 
 const {
@@ -453,20 +464,20 @@ function init(projectId, searchValue) {
   fetchUserGroupList(user.value.id, projectId, searchValue);
 }
 
-async function refresh () {
+async function refresh() {
   manageSearchRef.value?.clearSearch();
 }
 /**
  * 移交弹窗打开时
  */
-function handOverDialog (row, resourceType, index) {
+function handOverDialog(row, resourceType, index) {
   formRef.value?.clearValidate();
   handleHandOver(row, resourceType, index);
 }
 /**
  * 续期弹窗提交事件
  */
-async function handleRenewalConfirm () {
+async function handleRenewalConfirm() {
   try {
     operatorLoading.value = true;
     await handleUpDateRow(expiredAt.value);
@@ -481,14 +492,14 @@ async function handleRenewalConfirm () {
 /**
  * 续期弹窗关闭
  */
-function handleRenewalClosed () {
+function handleRenewalClosed() {
   cancelClear('renewal');
   isShowRenewal.value = false;
 }
 /**
  * 移交弹窗提交事件
  */
-async function handleHandoverConfirm () {
+async function handleHandoverConfirm() {
   const isValidate = await formRef.value.validate();
   if (!isValidate) return;
 
@@ -519,14 +530,14 @@ async function handleHandoverConfirm () {
 /**
  * 移交弹窗关闭
  */
- function handleHandoverClosed () {
+ function handleHandoverClosed() {
   cancelClear('handover');
   isShowHandover.value = false;
 }
 /**
  * 移出弹窗提交事件
  */
-async function handleRemoveConfirm () {
+async function handleRemoveConfirm() {
   try {
     operatorLoading.value = true;
 
@@ -543,13 +554,13 @@ async function handleRemoveConfirm () {
     operatorLoading.value = false;
   }
 }
-function handleRemoveClosed(){
+function handleRemoveClosed() {
   isShowRemove.value = false;
 }
 /**
  * 授权期限选择
  */
-function handleChangeTime (value) {
+function handleChangeTime(value) {
   expiredAt.value = Number(value);
 };
 
@@ -560,7 +571,7 @@ function handleSelectAll(resourceType){
  * 批量操作
  * @param flag 按钮标识
  */
-async function batchOperator (flag) {
+async function batchOperator(flag) {
   getSourceList();
   if (!selectedLength.value) {
     showMessage('error', t('请先选择用户组'));
@@ -589,6 +600,7 @@ function beforeClose() {
         title: t('批量退出操作尚未完成，确认放弃操作吗？'),
         infoType: 'warning',
         cancelText: t('取消'),
+        confirmText: t('确定'),
         onConfirm: () => resolve(true),
         onCancel: () => reject(),
       });
@@ -598,17 +610,18 @@ function beforeClose() {
   });
 }
 
-function batchCancel () {
+function batchCancel() {
   cancelClear(batchFlag.value);
   batchBtnLoading.value = false;
   isDetail.value = false;
   Object.assign(handOverForm.value, getHandOverForm());
+  clearPaginations();
 }
 /**
  * 批量操作请求参数获取
  * @param batchFlag 按钮标识
  */
-function formatSelectParams (rowGroupId) {
+function formatSelectParams(rowGroupId) {
   let groupIds = [];
   let resourceTypes = [];
   if(rowGroupId) {
@@ -636,7 +649,7 @@ function formatSelectParams (rowGroupId) {
  * 批量操作clear事件
  * @param batchFlag 按钮标识
  */
-function cancelClear (batchFlag) {
+function cancelClear(batchFlag) {
   isShowSlider.value = false;
 
   if (batchFlag === 'handover') {
@@ -651,7 +664,7 @@ function cancelClear (batchFlag) {
  * 侧边栏确认事件
  * @param batchFlag 按钮标识
  */
-async function batchConfirm (batchFlag) {
+async function batchConfirm(batchFlag) {
   let res = null;
   const params = formatSelectParams();
   delete params.renewalDuration;
@@ -679,6 +692,8 @@ async function batchConfirm (batchFlag) {
     }
   } catch (error) {
     console.log(error);
+  } finally {
+    batchBtnLoading.value = false;
   }
 }
 
@@ -750,14 +765,14 @@ function showRemoveSuccessInfoBox() {
   });
 }
 
-function showMessage (theme, message) {
+function showMessage(theme, message) {
   Message({
     theme: theme,
     message: message,
   });
 }
 
-function handleChangeOverFormName ({list, userList}) {
+function handleChangeOverFormName({list, userList}) {
   if(!list){
     handOverForm.value && Object.assign(handOverForm.value, getHandOverForm());
     return;
@@ -1035,8 +1050,31 @@ function goBack() {
         width: 8px !important;
         height: 8px !important;
       }
-
   }
+
+  .slider-detail {
+    margin: 16px 24px;
+    overflow: auto;
+    height: calc(100vh - 120px);
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #c4c6cc !important;
+      border-radius: 5px !important;
+      &:hover {
+        background-color: #979ba5 !important;
+      }
+    }
+
+    &::-webkit-scrollbar {
+      width: 8px !important;
+      height: 8px !important;
+    }
+
+    .go-back {
+      margin-top: 18px;
+    }
+  }
+
   .slider-main {
     margin: 16px 24px;
 
@@ -1065,7 +1103,7 @@ function goBack() {
     position: fixed;
     bottom: 0;
     z-index: 9;
-    width: 100%;
+    width: 960px;
     height: 230px;
     padding: 24px 48px;
     background: #FFFFFF;
@@ -1117,10 +1155,6 @@ function goBack() {
         }
       }
 
-      .main-line-handover {
-        margin-top: 26px;
-      }
-
       .font-weight {
         color: #4D4F56;
         font-weight: 700;
@@ -1160,8 +1194,8 @@ function goBack() {
   }
 }
 
-.go-back {
-  margin-left: 24px;
+.main-line-handover {
+  margin-top: 26px;
 }
 
 .text-blue {

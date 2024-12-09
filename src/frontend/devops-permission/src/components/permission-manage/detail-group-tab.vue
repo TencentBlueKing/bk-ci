@@ -1,14 +1,26 @@
 <template>
-  <bk-loading :loading="detailGroupTable.isLoading" :zIndex="100" class="group-tab">
+  <bk-loading
+    :loading="detailGroupTable.isLoading"
+    :zIndex="100"
+    class="group-tab"
+  >
     <div class="manage-content-project" v-if="projectTable.length">
       <p class="project-group">
         <span>{{t("流水线权限代持")}}</span>
-        <i18n-t class="describe" keypath="你是以下X条流水线权限代持人，直接退出将导致流水线运行失败，需先移交" tag="div">
-          <span class="text-blue">{{ 3 }}</span>
+        <i18n-t v-overflow-title class="describe" keypath="你是以下X条流水线权限代持人，直接退出将导致流水线运行失败，需先移交" tag="div">
+          <span class="text-blue">{{ authorizationsLength }}</span>
         </i18n-t>
       </p>
-      <div class="project-group-table" v-for="item in projectTable" :key="item.resourceType">
-        <bk-collapse-panel v-model="item.activeFlag" :item-click="(type) => collapseClick(type, 'AUTHORIZATION')" :name="item.resourceType">
+      <div
+        class="project-group-table"
+        v-for="item in projectTable"
+        :key="item.resourceType"
+      >
+        <bk-collapse-panel
+          v-model="item.activeFlag"
+          :item-click="(type) => collapseClick(type, 'AUTHORIZATION')"
+          :name="item.resourceType"
+        >
           <template #header>
             <p class="group-title">
               <i :class="{
@@ -16,7 +28,11 @@
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              <img
+                v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)"
+                :src="detailGroupTable.getServiceIcon(item.resourceType)"
+                class="service-icon"
+              >
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
@@ -46,8 +62,16 @@
           <span class="text-blue">{{ 3 }}</span>
         </i18n-t> -->
       </p>
-      <div class="project-group-table" v-for="item in sourceTable" :key="item.resourceType">
-        <bk-collapse-panel v-model="item.activeFlag" :item-click="(type) => collapseClick(type, 'GROUP')" :name="item.resourceType">
+      <div
+        class="project-group-table"
+        v-for="item in sourceTable"
+        :key="item.resourceType"
+      >
+        <bk-collapse-panel
+          v-model="item.activeFlag"
+          :item-click="(type) => collapseClick(type, 'GROUP')"
+          :name="item.resourceType"
+        >
           <template #header>
             <p class="group-title">
               <i :class="{
@@ -55,7 +79,11 @@
                 'manage-icon manage-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
-              <img v-if="item.resourceType && getServiceIcon(item.resourceType)" :src="getServiceIcon(item.resourceType)" class="service-icon" alt="">
+              <img
+                v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)"
+                :src="detailGroupTable.getServiceIcon(item.resourceType)"
+                class="service-icon"
+              >
               {{item.resourceTypeName}} ({{ item.resourceType }})
               <span class="group-num">{{item.count}}</span>
             </p>
@@ -113,26 +141,11 @@ const detailGroupTable = userDetailGroupTable();
 const projectTable = computed(() => props.sourceList.filter(item => item.type === "AUTHORIZATION"));
 const sourceTable= computed(() => props.sourceList.filter(item => item.type === "GROUP"));
 
-const getServiceIcon = (type) => {
-  const iconMap = {
-    'pipeline': pipelineIcon,
-    'pipeline_group': pipelineIcon,
-    'repertory': codelibIcon,
-    'credential': ticketIcon,
-    'cert': ticketIcon,
-    'environment': environmentIcon,
-    'env_node': pipelineIcon,
-    'codecc_task': codeccIcon,
-    'codecc_rule_set': codeccIcon,
-    'codecc_ignore_type': codeccIcon,
-    'experience_task': experienceIcon,
-    'experience_group': experienceIcon,
-    'rule': qualityIcon,
-    'quality_group': qualityIcon,
-    'pipeline_template': pipelineIcon,
-  }
-  return iconMap[type]
-}
+const authorizationsLength = computed(() => {
+  return projectTable.value.reduce((sum, current) => {
+    return sum + current.count
+  }, 0)
+})
 
 const emit = defineEmits(['collapseClick']);
 
@@ -148,21 +161,6 @@ function collapseClick(resourceType, flag) {
 <style lang="less" scoped>
 .group-tab {
   width: calc(100% - 8px);
-  height: 100%;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #c4c6cc !important;
-    border-radius: 5px !important;
-    &:hover {
-      background-color: #979ba5 !important;
-    }
-  }
-  &::-webkit-scrollbar {
-    width: 8px !important;
-    height: 8px !important;
-  }
-
 
   .manage-content-common {
     background: #FFFFFF;
@@ -179,7 +177,7 @@ function collapseClick(resourceType, flag) {
   }
   
   .project-group {
-    
+    display: flex;
     font-family: MicrosoftYaHei-Bold;
     font-weight: 700;
     font-size: 14px;
@@ -189,7 +187,7 @@ function collapseClick(resourceType, flag) {
     line-height: 22px;
 
     .describe {
-      display: inline-block;
+      width: 640px;
       margin-left: 24px;
       font-size: 12px;
       color: #4D4F56;

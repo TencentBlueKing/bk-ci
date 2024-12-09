@@ -60,7 +60,7 @@ export default {
   /**
    * 获取（代码库、流水线、部署节点）授权列表
    */
-  getResourceAuthList (projectId: string, params: any) {
+  getResourceAuthList(projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
   },
   // 获取oauth授权列表
@@ -133,19 +133,19 @@ export default {
   /**
    * 获取用户已加入的项目列表
    */
-  fetchProjectList () {
+  fetchProjectList() {
     return fetch.get(`${projectPerfix}/projects`)
   },
   /**
    * 重置授权（代码库、流水线、部署节点） 
    */
-  resetAuthorization (projectId: string, params: any) {
+  resetAuthorization(projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/handover/${projectId}/handoverAuthorizationsApplication`, params)
   },
   /**
    * 校验是否可交接
    */
-  checkAuthorization (projectId: string, params: any) {
+  checkAuthorization(projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
   },
   /**
@@ -206,7 +206,7 @@ export default {
     return fetch.post(`${apiPerfix}/auth/handover/handleHanoverApplication`, params);
   },
   /**
-  * 单条移出检测是否可以直接移出项目
+  * 单条移出
   */
   getIsDirectRemove(projectId: string, groupId: number, params: any) {
     return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
