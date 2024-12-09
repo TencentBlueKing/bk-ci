@@ -31,6 +31,7 @@ package com.tencent.devops.auth.resources.user
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.MemberGroupJoinedDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.enum.MemberType
@@ -172,7 +173,12 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberDTO = GroupMemberRemoveConditionReq(
-                    groupIds = listOf(groupId),
+                    groupIds = listOf(
+                        MemberGroupJoinedDTO(
+                            id = groupId,
+                            memberType = MemberType.USER
+                        )
+                    ),
                     targetMember = ResourceMemberInfo(
                         id = userId,
                         type = MemberType.USER.type
