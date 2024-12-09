@@ -650,7 +650,6 @@ class AuthResourceGroupMemberDao {
         iamTemplateIds: List<String>,
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
-        excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null
@@ -682,9 +681,6 @@ class AuthResourceGroupMemberDao {
             maxExpiredAt?.let { conditions.add(EXPIRED_TIME.le(maxExpiredAt)) }
             if (!iamGroupIds.isNullOrEmpty()) {
                 conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
-            }
-            if (!excludeIamGroupIds.isNullOrEmpty()) {
-                conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
             }
         }
         return conditions
