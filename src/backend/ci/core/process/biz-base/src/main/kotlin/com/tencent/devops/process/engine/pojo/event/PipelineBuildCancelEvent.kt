@@ -47,6 +47,7 @@ data class PipelineBuildCancelEvent(
     val buildId: String,
     val status: BuildStatus = BuildStatus.CANCELED,
     val buildNum: Int? = null,
+    val executeCount: Int?,
     override var actionType: ActionType = ActionType.END,
     override var delayMills: Int = 2000
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
