@@ -262,7 +262,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         // 触发执行流水线
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
             userId = innerPipelineUser,
-            projectId = storePipelineRelRecord?.projectCode ?: innerPipelineProject,
+            projectId = innerPipelineProject,
             pipelineId = pipelineId,
             values = startParams,
             channelCode = ChannelCode.AM,
