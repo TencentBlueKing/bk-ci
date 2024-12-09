@@ -712,7 +712,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     ).second
                 )
             }.map { it.iamGroupId }
-            logger.debug("list user groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
+            logger.debug("list pipeline and project groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
             // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
             // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
             val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
@@ -817,9 +817,10 @@ class RbacPermissionManageFacadeServiceImpl(
             onlyExcludeUserDirectlyJoined = true,
             operateChannel = OperateChannel.PERSONAL
         )
-
+        logger.debug("list all user groups joined after operated groups:{}|{}", count, records)
         // 如果退出/交接了项目下所有组，直接返回用户无效代码库oauth列表
         if (count == 0L) {
+            logger.debug("The user has removed/handover all user groups")
             return authAuthorizationDao.list(
                 dslContext = dslContext,
                 condition = ResourceAuthorizationConditionRequest(
@@ -838,11 +839,15 @@ class RbacPermissionManageFacadeServiceImpl(
             relatedResourceCode = projectCode,
             action = ActionId.PROJECT_VISIT
         )
-
+        logger.debug("whether the user has project visit perm after operated groups {}", isHasProjectVisitPermOperatedGroups)
         // 如果有访问权限，返回空列表，否则直接返回用户无效代码库oauth列表
         return if (isHasProjectVisitPermOperatedGroups) {
             emptyList()
         } else {
+            logger.debug(
+                "user does not have perm to visit the project after operated groups|{}|{}|{}",
+                projectCode, memberId, iamGroupIds
+            )
             authAuthorizationDao.list(
                 dslContext = dslContext,
                 condition = ResourceAuthorizationConditionRequest(
@@ -1357,7 +1362,7 @@ class RbacPermissionManageFacadeServiceImpl(
         targetMember: ResourceMemberInfo
     ): Boolean {
         logger.info("delete single group members from personal:$userId|$targetMember|$projectCode|$groupId")
-        if (targetMember.type == MemberType.USER.type){
+        if (targetMember.type == MemberType.USER.type) {
             // 获取导致流水线代持人权限受到影响的用户组及流水线
             val (invalidGroups, invalidPipelines, invalidRepertoryIds) =
                 listInvalidAuthorizationsAfterOperatedGroups(
