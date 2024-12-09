@@ -1,7 +1,6 @@
 package com.tencent.devops.repository.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -44,7 +43,7 @@ class CopilotOpenTokenService @Autowired constructor(
         } else {
             repositoryScmTokenDao.getToken(
                 dslContext = dslContext,
-                scmCode = ScmType.CODE_GIT.name,
+                scmCode = COPILOT_OPEN_TOKEN_SCM_CODE,
                 appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name,
                 userId = userId
             )
@@ -69,7 +68,7 @@ class CopilotOpenTokenService @Autowired constructor(
             scmToken = RepositoryScmToken(
                 userId = userId,
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, oauthInfo.accessToken),
-                scmCode = "TGIT",
+                scmCode = COPILOT_OPEN_TOKEN_SCM_CODE,
                 appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name
             )
         )
@@ -119,5 +118,6 @@ class CopilotOpenTokenService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CopilotOpenTokenService::class.java)
         private const val APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
         private val MEDIA_TYPE_FORM_URLENCODED = APPLICATION_FORM_URLENCODED.toMediaTypeOrNull()
+        private const val COPILOT_OPEN_TOKEN_SCM_CODE = "TGIT"
     }
 }
