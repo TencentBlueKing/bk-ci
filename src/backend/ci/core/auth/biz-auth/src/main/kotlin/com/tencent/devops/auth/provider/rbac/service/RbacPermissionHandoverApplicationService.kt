@@ -66,8 +66,7 @@ class RbacPermissionHandoverApplicationService(
         return I18nUtil.getCodeLanMessage(messageCode = AuthI18nConstants.BK_APPLY_TO_HANDOVER).let {
             when {
                 groupCount > 0 && authorizationCount > 0 -> {
-                    it.plus(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_GROUPS, params = arrayOf(groupCount.toString()))).plus(",")
-                    it.plus(
+                    it.plus(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_GROUPS, params = arrayOf(groupCount.toString()))).plus(",").plus(
                         I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_HANDOVER_AUTHORIZATIONS, params = arrayOf(authorizationCount.toString()))
                     )
                 }

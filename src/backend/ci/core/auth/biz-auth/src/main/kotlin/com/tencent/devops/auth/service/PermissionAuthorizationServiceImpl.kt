@@ -3,7 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_HANDOVER_AUTHORIZATION
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REPERTORY_HANDOVER_AUTHORIZATION
 import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
@@ -297,7 +297,7 @@ class PermissionAuthorizationServiceImpl(
             condition = finalCondition
         )
         if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_HANDOVER_AUTHORIZATION)
+            throw ErrorCodeException(errorCode = ERROR_REPERTORY_HANDOVER_AUTHORIZATION)
         }
         val resourceAuthorizationList = getResourceAuthorizationList(condition = finalCondition)
         val authorizationCount = resourceAuthorizationList.size
@@ -394,7 +394,7 @@ class PermissionAuthorizationServiceImpl(
         )[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()
         if (!canHandoverRepertory) {
             throw ErrorCodeException(
-                errorCode = ERROR_HANDOVER_AUTHORIZATION
+                errorCode = ERROR_REPERTORY_HANDOVER_AUTHORIZATION
             )
         }
     }
