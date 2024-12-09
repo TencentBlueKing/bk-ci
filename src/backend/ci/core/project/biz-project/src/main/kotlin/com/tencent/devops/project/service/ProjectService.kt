@@ -164,7 +164,9 @@ interface ProjectService {
         enabled: Boolean? = null,
         unApproved: Boolean,
         sortType: ProjectSortType? = null,
-        collation: ProjectCollation? = null
+        collation: ProjectCollation? = null,
+        // 获取授权相关项目（主要用于个人视角界面）
+        queryAuthorization: Boolean? = false
     ): List<ProjectVO>
 
     fun listProjectsForApply(
