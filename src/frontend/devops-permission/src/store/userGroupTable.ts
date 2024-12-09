@@ -1,7 +1,6 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { useRoute } from 'vue-router';
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import dayjs from 'dayjs';
 import { OPERATE_CHANNEL } from "@/utils/constants";
@@ -18,8 +17,9 @@ interface GroupTableType {
   expiredAt: number,
   operateSource: string;
   operator: string;
-  removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
+  removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER' | 'DEPARTMENT';
   beingHandedOver: Boolean;
+  memberType: string;
 };
 interface Pagination {
   limit: number;
@@ -48,11 +48,6 @@ interface CollapseListType {
   resourceTypeName: string;
   count: number;
 }
-export interface AsideItem {
-  id: string,
-  name: string,
-  type: "department" | "user"
-}
 
 interface SearchParamsType {
   relatedResourceType?: string,
@@ -67,7 +62,7 @@ export default defineStore('userGroupTable', () => {
   const { t } = useI18n();
   const isLoading = ref(true);
   const projectId = ref();
-  const paginations = ref({})
+  const paginations = ref<any>({})
   const memberId = ref('');
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([]);
@@ -351,7 +346,7 @@ export default defineStore('userGroupTable', () => {
           tableData: tableData,
           count: sourceItem.isAll ? sourceItem.count! : tableData.length,
           ...(!sourceItem.isAll && { isRemotePagination: false }),
-          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) }),
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => ({ id: item.groupId, memberType: item.memberType })) }),
         };
       });
   }
