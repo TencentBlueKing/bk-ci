@@ -307,12 +307,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        inheritedDialectSetting: Boolean? = true,
-        pipelineDialectSetting: String? = null
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -432,12 +429,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 watcher.start("deployPipeline")
-                val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                    projectId = projectId,
-                    asCodeSettings = setting?.pipelineAsCodeSettings,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting
-                )
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     setting = setting,
@@ -447,7 +438,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
-                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     versionStatus = versionStatus,
                     branchName = branchName,
@@ -455,31 +445,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting,
-                    pipelineDialect = pipelineDialect
+                    yamlInfo = yamlInfo
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
                 if (templateId != null) {
-                    watcher.start("addLabel")
-                    if (useLabelSettings == true || versionStatus == VersionStatus.RELEASED) {
-                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-                        val labels = ArrayList<String>()
-                        groups.forEach {
-                            labels.addAll(it.labels)
-                        }
-                        pipelineGroupService.updatePipelineLabel(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            labelIds = labels
-                        )
-                    }
-                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
@@ -1125,11 +1097,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
-            val pipelineSetting = savedSetting ?: pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
-            val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                projectId = projectId,
-                pipelineSetting?.pipelineAsCodeSettings
-            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1144,8 +1111,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo,
-                pipelineDialect = pipelineDialect
+                yamlInfo = yamlInfo
             )
             // 审计
             ActionAuditContext.current()
