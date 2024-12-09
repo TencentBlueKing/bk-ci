@@ -647,10 +647,10 @@ class AuthResourceGroupMemberDao {
             if (!excludeIamGroupIds.isNullOrEmpty()) {
                 // 仅排除用户直接加入的用户组
                 if (onlyExcludeUserDirectlyJoined == true) {
-                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds).and(MEMBER_TYPE.eq(MemberType.USER.type)))
+                    conditions.add(IAM_GROUP_ID.`in`(excludeIamGroupIds).and(MEMBER_TYPE.eq(MemberType.USER.type)))
                 } else {
                     // 会把组织/用户/模板加入的組都排除
-                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
+                    conditions.add(IAM_GROUP_ID.`in`(excludeIamGroupIds))
                 }
             }
         }
