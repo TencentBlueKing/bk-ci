@@ -1,9 +1,9 @@
 package com.tencent.devops.dispatch.macos.util
 
-import org.jolokia.util.Base64Util
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.util.Base64
 import javax.crypto.Cipher
 
 object RSAUtils {
@@ -39,7 +39,7 @@ object RSAUtils {
             outputStream.write(temp)
         }
         outputStream.close()
-        return Base64Util.encode(outputStream.toByteArray())
+        return Base64.getMimeEncoder().encodeToString(outputStream.toByteArray())
     }
 
     /**
@@ -67,7 +67,7 @@ object RSAUtils {
         }
 
         outputStream.close()
-        return Base64Util.encode(outputStream.toByteArray())
+        return Base64.getMimeEncoder().encodeToString(outputStream.toByteArray())
     }
 
     /**
@@ -77,7 +77,7 @@ object RSAUtils {
      * 关于到底是128个字节还是256个，我也很迷糊了，我写成128的时候就报这个错误，改成256后就没事了
      */
     fun decryptByPrivateKey(str: String, privateKey: PrivateKey): String {
-        val byteArray = Base64Util.decode(str)
+        val byteArray = Base64.getMimeDecoder().decode(str)
         val cipher = Cipher.getInstance(transformation)
         cipher.init(Cipher.DECRYPT_MODE, privateKey)
 
@@ -109,7 +109,7 @@ object RSAUtils {
      * 公钥解密
      */
     fun decryptByPublicKey(str: String, publicKey: PublicKey): String {
-        val byteArray = Base64Util.decode(str)
+        val byteArray = Base64.getMimeDecoder().decode(str)
         val cipher = Cipher.getInstance(transformation)
         cipher.init(Cipher.DECRYPT_MODE, publicKey)
 

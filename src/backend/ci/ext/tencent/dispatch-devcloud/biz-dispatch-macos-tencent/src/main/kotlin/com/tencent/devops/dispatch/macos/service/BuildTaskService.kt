@@ -7,7 +7,6 @@ import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.pojo.PasswordInfo
 import com.tencent.devops.dispatch.macos.util.RSAUtils
 import com.tencent.devops.model.dispatch.macos.tables.records.TBuildTaskRecord
-import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -66,7 +65,8 @@ class BuildTaskService @Autowired constructor(
             null
         } else {
             val keyFactory = KeyFactory.getInstance("RSA")
-            val privateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64Util.decode(rsaPrivateKey)))
+            val privateKey =
+                keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(rsaPrivateKey)))
             val passwordDevcloud = RSAUtils.decryptByPrivateKey(devcloudVmInfoRecord.password, privateKey)
             logger.info("devcloud macos ip:$realIp,password:$passwordDevcloud")
             AESUtil.encrypt(aesKey, passwordDevcloud)

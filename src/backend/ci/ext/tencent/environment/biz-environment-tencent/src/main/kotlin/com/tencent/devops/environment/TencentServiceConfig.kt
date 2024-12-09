@@ -39,7 +39,7 @@ import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServ
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean

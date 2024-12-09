@@ -457,10 +457,13 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
+
+                else -> {}
             }
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
             }
+
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
@@ -595,6 +598,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
+                else -> {}
             }
         }
 
@@ -873,7 +878,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,

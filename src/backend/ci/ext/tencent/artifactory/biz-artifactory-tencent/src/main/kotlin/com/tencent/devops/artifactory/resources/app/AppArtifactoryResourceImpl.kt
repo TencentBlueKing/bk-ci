@@ -65,12 +65,11 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import javax.ws.rs.BadRequestException
+import jakarta.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import jakarta.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")

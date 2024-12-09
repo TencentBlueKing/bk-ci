@@ -62,10 +62,10 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WI
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.util.concurrent.TimeUnit
 import jakarta.ws.rs.core.Response
+import java.util.Base64
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -305,7 +305,7 @@ class SoftwareManageService @Autowired constructor(
         workspaceName: String
     ) {
         val params = "-project_id \"$projectId\" -creator \"$workspaceName\" -region_id \"$regionId\" -inner_ip \"$ip\""
-        val base64Val = Base64Util.encode(params.toByteArray())
+        val base64Val = Base64.getMimeEncoder().encodeToString(params.toByteArray())
         val systemSoftwareInfoList = softwareManageDao.getSystemSoftwareList(dslContext)
         logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList|params|$params")
         if (systemSoftwareInfoList.isEmpty()) {
