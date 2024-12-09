@@ -540,7 +540,7 @@ class AuthResourceGroupMemberDao {
     /**
      * 获取成员按资源类型分组数量
      */
-    fun countMemberGroup(
+    fun countMemberGroupOfResourceType(
         dslContext: DSLContext,
         projectCode: String,
         memberId: String,
@@ -569,6 +569,37 @@ class AuthResourceGroupMemberDao {
                 .where(conditions)
             select.groupBy(RESOURCE_TYPE)
             select.fetch().map { Pair(it.value1(), it.value2().toLong()) }.toMap()
+        }
+    }
+
+    fun countMemberGroup(
+        dslContext: DSLContext,
+        projectCode: String,
+        memberId: String,
+        iamTemplateIds: List<String>,
+        resourceType: String? = null,
+        iamGroupIds: List<Int>? = null,
+        excludeIamGroupIds: List<Int>? = null,
+        minExpiredAt: LocalDateTime? = null,
+        maxExpiredAt: LocalDateTime? = null,
+        memberDeptInfos: List<String>? = null
+    ): Long {
+        val conditions = buildMemberGroupCondition(
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds,
+            resourceType = resourceType,
+            iamGroupIds = iamGroupIds,
+            excludeIamGroupIds = excludeIamGroupIds,
+            minExpiredAt = minExpiredAt,
+            maxExpiredAt = maxExpiredAt,
+            memberDeptInfos = memberDeptInfos
+        )
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.select(count())
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
