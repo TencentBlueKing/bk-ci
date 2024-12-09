@@ -458,7 +458,8 @@ class RbacPermissionManageFacadeServiceImpl(
             excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredTime,
             maxExpiredAt = maxExpiredTime,
-            memberDeptInfos = memberDeptInfos
+            memberDeptInfos = memberDeptInfos,
+            operateChannel = operateChannel
         )
         val resourceGroupMembers = authResourceGroupMemberDao.listMemberGroupDetail(
             dslContext = dslContext,
@@ -471,6 +472,7 @@ class RbacPermissionManageFacadeServiceImpl(
             minExpiredAt = minExpiredTime,
             maxExpiredAt = maxExpiredTime,
             memberDeptInfos = memberDeptInfos,
+            operateChannel = operateChannel,
             offset = start,
             limit = limit
         )

@@ -31,6 +31,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
@@ -605,7 +606,8 @@ class AuthResourceGroupMemberDao {
         excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
-        memberDeptInfos: List<String>? = null
+        memberDeptInfos: List<String>? = null,
+        operateChannel: OperateChannel?
     ): Long {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
@@ -616,7 +618,8 @@ class AuthResourceGroupMemberDao {
             excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
             maxExpiredAt = maxExpiredAt,
-            memberDeptInfos = memberDeptInfos
+            memberDeptInfos = memberDeptInfos,
+            operateChannel = operateChannel
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(count())
@@ -658,6 +661,7 @@ class AuthResourceGroupMemberDao {
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
         memberDeptInfos: List<String>? = null,
+        operateChannel: OperateChannel? = null,
         offset: Int? = null,
         limit: Int? = null
     ): List<AuthResourceGroupMember> {
@@ -670,7 +674,8 @@ class AuthResourceGroupMemberDao {
             excludeIamGroupIds = excludeIamGroupIds,
             minExpiredAt = minExpiredAt,
             maxExpiredAt = maxExpiredAt,
-            memberDeptInfos = memberDeptInfos
+            memberDeptInfos = memberDeptInfos,
+            operateChannel = operateChannel
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.selectFrom(this)
@@ -691,7 +696,8 @@ class AuthResourceGroupMemberDao {
         excludeIamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
         maxExpiredAt: LocalDateTime? = null,
-        memberDeptInfos: List<String>? = null
+        memberDeptInfos: List<String>? = null,
+        operateChannel: OperateChannel? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
@@ -722,7 +728,12 @@ class AuthResourceGroupMemberDao {
                 conditions.add(IAM_GROUP_ID.`in`(iamGroupIds))
             }
             if (!excludeIamGroupIds.isNullOrEmpty()) {
-                conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
+                // 个人渠道排除用户组ID时，仅排除用户直接加入的组
+                if (operateChannel == OperateChannel.PERSONAL) {
+                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds).and(MEMBER_TYPE.eq(MemberType.USER.type)))
+                } else {
+                    conditions.add(IAM_GROUP_ID.notIn(excludeIamGroupIds))
+                }
             }
         }
         return conditions
