@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.pojo.request
 
+import com.tencent.devops.auth.pojo.enum.CollationType
 import com.tencent.devops.auth.pojo.enum.HandoverStatus
+import com.tencent.devops.auth.pojo.enum.SortType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "权限交接总览查询")
@@ -23,6 +25,10 @@ data class HandoverOverviewQueryReq(
     val minCreatedTime: Long? = null,
     @get:Schema(title = "最打提单时间")
     val maxCreatedTime: Long? = null,
+    @get:Schema(title = "排序类型")
+    val sortType: SortType? = null,
+    @get:Schema(title = "排序类型")
+    val collationType: CollationType? = null,
     @get:Schema(title = "页数")
     val page: Int? = null,
     @get:Schema(title = "页大小")
