@@ -250,7 +250,6 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 
     override fun listOauthRepo(
         userId: String,
-        projectId: String?,
         scmType: ScmType,
         page: Int?,
         pageSize: Int?
@@ -260,21 +259,10 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = repositoryService.listOauthRepo(
             userId = userId,
-            projectId = projectId,
             scmType = scmType,
             limit = limit.limit,
             offset = limit.offset
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
-    }
-
-    override fun countOauthRepo(userId: String, projectId: String?, scmType: ScmType): Result<Long> {
-        return Result(
-            repositoryService.countOauthRepo(
-                userId = userId,
-                projectId = projectId,
-                scmType = scmType
-            )
-        )
     }
 }

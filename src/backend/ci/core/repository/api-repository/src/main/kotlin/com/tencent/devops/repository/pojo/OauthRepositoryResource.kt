@@ -1,9 +1,9 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.repository.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "用户Oauth关联的资源")
-data class OauthRelResource(
+@Schema(title = "Oauth授权类型的代码库资源信息")
+data class OauthRepositoryResource(
     @get:Schema(title = "资源名称")
     val name: String,
     @get:Schema(title = "资源链接")

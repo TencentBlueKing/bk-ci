@@ -26,15 +26,15 @@
  *
  */
 
-package com.tencent.devops.auth.api.user
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.auth.pojo.OauthRelResource
-import com.tencent.devops.auth.pojo.OauthResetUrl
-import com.tencent.devops.auth.pojo.UserOauthInfo
-import com.tencent.devops.auth.pojo.enum.OauthType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.OauthRepositoryResource
+import com.tencent.devops.repository.pojo.OauthResetUrl
+import com.tencent.devops.repository.pojo.UserOauthRepositoryInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -49,7 +49,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_RESOURCE", description = "用户态-iam资源映射")
-@Path("/user/oauth/resource/")
+@Path("/user/repositories/oauth/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserOauthResource {
@@ -59,11 +59,8 @@ interface UserOauthResource {
     fun list(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam(value = "projectId")
-        projectId: String?
-    ): Result<List<UserOauthInfo>>
+        userId: String
+    ): Result<List<UserOauthRepositoryInfo>>
 
     @GET
     @Path("/relSource")
@@ -72,19 +69,16 @@ interface UserOauthResource {
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "授权类型", required = true)
-        @QueryParam("oauthType")
-        oauthType: OauthType,
+        @QueryParam("scmCode")
+        scmCode: ScmCode,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
-    ): Result<Page<OauthRelResource>>
+    ): Result<Page<OauthRepositoryResource>>
 
     @DELETE
     @Path("/delete")
@@ -93,24 +87,21 @@ interface UserOauthResource {
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "授权类型", required = true)
-        @QueryParam("oauthType")
-        oauthType: OauthType
+        @QueryParam("scmCode")
+        scmCode: ScmCode
     ): Result<Boolean>
 
     @POST
-    @Path("/reOauth")
+    @Path("/reset")
     @Operation(summary = "重置授权")
-    fun reOauth(
+    fun reset(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "授权类型", required = true)
-        @QueryParam("oauthType")
-        oauthType: OauthType,
+        @QueryParam("scmCode")
+        scmCode: ScmCode,
         @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
         @QueryParam("redirectUrl")
         redirectUrl: String

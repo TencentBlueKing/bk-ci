@@ -279,9 +279,6 @@ interface ServiceRepositoryResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
         @Parameter(description = "代码库类型")
         @QueryParam("scmType")
         scmType: ScmType,
@@ -292,19 +289,4 @@ interface ServiceRepositoryResource {
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<RepoOauthRefVo>>
-
-    @Operation(summary = "获取指定用户授权的代码库")
-    @POST
-    @Path("/countOauthRepo")
-    fun countOauthRepo(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
-        @Parameter(description = "代码库类型")
-        @QueryParam("scmType")
-        scmType: ScmType
-    ): Result<Long>
 }

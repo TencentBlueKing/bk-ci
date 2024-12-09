@@ -67,6 +67,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.REPOSITORY_N
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -118,7 +119,8 @@ class RepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
-    private val client: Client
+    private val client: Client,
+    private val repositoryGithubDao: RepositoryGithubDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -1563,41 +1565,68 @@ class RepositoryService @Autowired constructor(
 
     fun listOauthRepo(
         userId: String,
-        projectId: String?,
         scmType: ScmType,
         limit: Int,
         offset: Int
     ): SQLPage<RepoOauthRefVo> {
-        val list = repositoryDao.listOauthRepo(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            scmType = scmType,
-            limit = limit,
-            offset = offset
-        ).map {
-            it.detailUrl = "/console/codelib/${it.projectId}/?id=${it.hashId}"
-            it
-        }
-        val count = countOauthRepo(
-            userId = userId,
-            projectId = projectId,
-            scmType = scmType
-        )
-        return SQLPage(records = list, count = count)
+        val list = when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            else -> {
+                listOf()
+            }
+        }.setDetailUrl()
+        val count = countOauthRepo(userId, scmType)
+        return SQLPage(count, list)
     }
 
     fun countOauthRepo(
         userId: String,
-        projectId: String?,
         scmType: ScmType
     ): Long {
-        return repositoryDao.countOauthRepo(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            scmType = scmType
-        )
+        return when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            else -> 0L
+        }
+    }
+
+    /**
+     * 填充详情url
+     */
+    private fun List<RepoOauthRefVo>.setDetailUrl(): List<RepoOauthRefVo> {
+        return this.map {
+            it.detailUrl = "/console/codelib/${it.projectId}/?id=${it.hashId}"
+            it
+        }
     }
 
     companion object {

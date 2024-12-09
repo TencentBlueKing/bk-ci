@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.repository.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 

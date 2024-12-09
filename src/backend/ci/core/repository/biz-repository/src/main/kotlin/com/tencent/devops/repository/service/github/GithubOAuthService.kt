@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.repository.service.ScmUrlProxyService
 import com.tencent.devops.scm.config.GitConfig
@@ -229,6 +230,10 @@ class GithubOAuthService @Autowired constructor(
 
     fun deleteToken(userId: String) {
         githubTokenService.deleteAccessToken(userId)
+    }
+
+    fun getUser(accessToken: String): GetUserResponse {
+        return githubUserService.getUser(accessToken)
     }
 
     companion object {
