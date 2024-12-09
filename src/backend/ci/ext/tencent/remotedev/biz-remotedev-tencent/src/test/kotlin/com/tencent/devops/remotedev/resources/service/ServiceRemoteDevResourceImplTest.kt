@@ -32,7 +32,7 @@ class ServiceRemoteDevResourceImplTest {
             createTime = "",
             regionId = "",
             innerIp = "1.2.3",
-            status = WorkspaceStatus.RUNNING,
+            status = WorkspaceStatus.RUNNING.name,
             realOwner = "",
             displayName = "",
             ownerDepartments = null,

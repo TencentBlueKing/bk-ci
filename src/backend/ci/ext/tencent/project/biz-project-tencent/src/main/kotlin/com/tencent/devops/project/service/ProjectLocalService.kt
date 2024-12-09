@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
@@ -43,6 +44,7 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDis
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -59,7 +61,6 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import org.jooq.DSLContext
@@ -80,13 +81,16 @@ class ProjectLocalService @Autowired constructor(
     private val projectTagService: ProjectTagService,
     private val client: Client,
     private val projectPermissionService: ProjectPermissionService,
-    private val txProjectServiceImpl: TxProjectServiceImpl,
+    private val tokenService: ClientTokenService,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val bkTag: BkTag
 ) {
 
     @Value("\${tag.stream:#{null}}")
     private val streamTag: String? = null
+
+    // TODO 后续改回到tag
+    private var rbacTag: String = "rbac-gray"
 
     fun listForApp(
         userId: String,
@@ -116,7 +120,17 @@ class ProjectLocalService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
-        val projectIds = txProjectServiceImpl.getProjectFromAuth(userId, null)
+        val projectIds = try {
+            bkTag.invokeByTag(rbacTag) {
+                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
+                    userId = userId,
+                    token = tokenService.getSystemToken()
+                ).data!!
+            }
+        } catch (e: Exception) {
+            logger.error("getUserProjects error", e)
+            emptyList<String>()
+        }
         // 如果使用搜索 且 总数量少于1000 , 则全量获取
         if (searchName != null &&
             searchName.isNotEmpty() &&
@@ -134,7 +148,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     },
@@ -159,7 +173,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     },
@@ -393,6 +407,7 @@ class ProjectLocalService @Autowired constructor(
                         enabled = true
                     )
                 }
+
                 AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
                     projectDao.listByOrganization(
                         dslContext = dslContext,
@@ -402,9 +417,11 @@ class ProjectLocalService @Autowired constructor(
                         enabled = true
                     )
                 }
+
                 AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
                     projectDao.listByOrganization(dslContext = dslContext, centerId = organizationId, enabled = true)
                 }
+
                 else -> null
             }
             records?.map { list.add(ProjectUtils.packagingBean(it)) }
@@ -467,11 +484,13 @@ class ProjectLocalService @Autowired constructor(
                     return null
                 }
             }
+
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
                 if (projectInfo.deptId == null || projectInfo.deptId != organizationId) {
                     return null
                 }
             }
+
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
                 if (projectInfo.centerId == null || projectInfo.centerId != organizationId) {
                     return null
@@ -490,7 +509,8 @@ class ProjectLocalService @Autowired constructor(
         if (!validateFlag) {
             val messageResult = I18nUtil.generateResponseDataObject<String>(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId))
+                language = I18nUtil.getLanguage(userId)
+            )
             return Result(messageResult.status, messageResult.message, null)
         }
         val projectUserList = authProjectApi.getProjectUsers(pipelineAuthServiceCode, projectCode)

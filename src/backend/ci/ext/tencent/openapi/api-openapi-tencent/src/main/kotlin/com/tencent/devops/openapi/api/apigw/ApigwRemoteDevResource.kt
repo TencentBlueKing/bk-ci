@@ -10,14 +10,20 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -26,6 +32,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -300,6 +309,22 @@ interface ApigwRemoteDevResource {
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
 
+    @Operation(summary = "克隆工作空间", tags = ["v4_app_remotedev_win_workspace_clone"])
+    @POST
+    @Path("/workspace_clone")
+    fun workspaceClone(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<Boolean>
+
     @Operation(summary = "删除windows工作空间-项目", tags = ["v4_app_remotedev_win_project_delete"])
     @DELETE
     @Path("/project_win_workspace")
@@ -341,6 +366,21 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<SupRecordDataResp>
+
+    @Operation(summary = "获取专家协助单据", tags = ["v4_app_remotedev_expertsup_record"])
+    @GET
+    @Path("/expertsup/record")
+    fun getExpertSupRecord(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "单据ID", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<SupRecordData?>
 
     @Operation(summary = "获取windows空闲资源数据", tags = ["v4_app_remotedev_win_quota"])
     @GET
@@ -623,6 +663,132 @@ interface ApigwRemoteDevResource {
         @QueryParam("size")
         size: String
     ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
+    @POST
+    @Path("/workspace/upgrade")
+    fun upgradeWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean>
+
+    @Operation(summary = "剔除当前用户所有云桌面相关权限", tags = ["v4_app_remotedev_remove_user_permission"])
+    @POST
+    @Path("/remove_user_permission")
+    fun removeUserPermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "被移除用户", required = true)
+        @QueryParam("removeUser")
+        removeUser: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取用户工作空间列表", tags = ["v4_app_remotedev_workspaces_search"])
+    @POST
+    @Path("/workspaces_search")
+    fun getWorkspaceListNew(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "查询录屏权限相关信息", tags = ["v4_app_get_user_workspace_record_permission_info"])
+    @GET
+    @Path("/get_user_workspace_record_permission_info")
+    fun getUserWorkspaceRecordPermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo>
+
+    @Operation(summary = "录屏权限续期", tags = ["v4_app_update_user_workspace_record_permission_info"])
+    @POST
+    @Path("/update_user_workspace_record_permission_info")
+    fun updateUserWorkspaceRecordPermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "查看当前工作空间录屏元数据", tags = ["v4_app_get_user_workspace_record_metadata"])
+    @POST
+    @Path("/get_user_workspace_record_metadata")
+    fun getViewRecordMetadata(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        data: FetchMetaDataParam
+    ): Result<Page<WorkspaceRecordMetadata>>
+
+    @Operation(summary = "获取实例操作记录", tags = ["v4_app_workspace_detail_timeline"])
+    @GET
+    @Path("/detail_timeline")
+    fun getWorkspaceTimeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>>
+
 
     @Operation(
         summary = "获取工作空间录屏密钥",

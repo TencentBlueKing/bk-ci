@@ -68,3 +68,10 @@ data class AsyncNotify(
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_NOTIFY
 }
+
+data class AsyncUserAuthCheck(
+    val projectId: String,
+    val userId: String
+) : AsyncExecuteEventData {
+    override fun toType() = AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK
+}

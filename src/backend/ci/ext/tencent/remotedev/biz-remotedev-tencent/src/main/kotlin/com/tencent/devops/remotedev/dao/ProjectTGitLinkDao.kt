@@ -183,6 +183,19 @@ class ProjectTGitLinkDao {
         }
     }
 
+    fun fetchAny(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitId: Long
+    ): TProjectTgitIdLinkRecord? {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TGIT_ID.eq(tgitId))
+                .fetchAny()
+        }
+    }
+
     fun fetchByTGitId(
         dslContext: DSLContext,
         tgitId: Long,

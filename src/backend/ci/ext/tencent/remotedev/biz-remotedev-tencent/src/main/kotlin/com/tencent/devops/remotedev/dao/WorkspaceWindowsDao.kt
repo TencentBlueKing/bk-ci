@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -21,6 +22,18 @@ class WorkspaceWindowsDao {
     ): Result<TWorkspaceWindowsRecord> {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch()
+        }
+    }
+
+    fun batchFetchWorkspaceWindowsInfoWithNodeIds(
+        dslContext: DSLContext,
+        nodeHashIds: Set<String>
+    ): Result<Record3<String, String, String>> {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.select(WORKSPACE_NAME, HOST_IP, NODE_HASH_ID)
+                .from(this)
+                .where(NODE_HASH_ID.`in`(nodeHashIds))
+                .fetch()
         }
     }
 
@@ -59,6 +72,18 @@ class WorkspaceWindowsDao {
             return dslContext.update(this)
                 .set(CUR_LAUNCH_ID, launchId)
                 .set(REGION_ID, regionId)
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
+    fun updateNodeHashId(
+        dslContext: DSLContext,
+        nodeHashId: String?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(NODE_HASH_ID, nodeHashId)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
@@ -106,7 +131,7 @@ class WorkspaceWindowsDao {
                         .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
                         .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                         .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-                        .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                        .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.`in`(WorkspaceOwnerType.projectNames()))
                         .skipCheck()
                 )
         )
@@ -141,17 +166,6 @@ class WorkspaceWindowsDao {
             return dslContext.update(this)
                 .set(WORKSPACE_NAME, bakName)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
-        }
-    }
-
-    fun fetchLastWindowsBak(
-        dslContext: DSLContext,
-        workspaceName: String
-    ): TWorkspaceWindowsRecord? {
-        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            return dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.like("$workspaceName.bak.%"))
-                .orderBy(ID.desc()).fetchAny()
         }
     }
 

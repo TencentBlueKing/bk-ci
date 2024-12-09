@@ -44,10 +44,10 @@ class RemoteDevDispatchKubernetesMQConfiguration {
     @EventConsumer
     fun workspaceCreateConsumer(
         @Autowired workspaceListener: WorkspaceListener
-    ) = ScsConsumerBuilder.build<WorkspaceCreateEvent> { workspaceListener.handleWorkspaceCreate(it) }
+    ) = ScsConsumerBuilder.build<WorkspaceCreateEvent> { workspaceListener.handleWorkspaceCreateSyn(it) }
 
     @EventConsumer
     fun workspaceOperateConsumer(
         @Autowired workspaceListener: WorkspaceListener
-    ) = ScsConsumerBuilder.build<WorkspaceOperateEvent> { workspaceListener.handleWorkspaceOperate(it) }
+    ) = ScsConsumerBuilder.build<WorkspaceOperateEvent> { workspaceListener.handleWorkspaceOperateSyn(it) }
 }

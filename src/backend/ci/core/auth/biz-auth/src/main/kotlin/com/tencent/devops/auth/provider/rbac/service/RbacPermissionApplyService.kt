@@ -32,6 +32,7 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.net.URLEncoder
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -264,6 +266,13 @@ class RbacPermissionApplyService @Autowired constructor(
             val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
             val resourceName = dbGroupRecord?.resourceName ?: projectName
             val resourceCode = dbGroupRecord?.resourceCode ?: projectId
+            val memberJoinedResult = verifyMemberJoinedResult[gInfo.id.toInt()]
+            val isMemberJoinedGroup = when {
+                memberJoinedResult?.belong == true &&
+                    memberJoinedResult.expiredAt > LocalDateTime.now().timestamp() -> true
+
+                else -> false
+            }
             ManagerRoleGroupInfo(
                 id = gInfo.id,
                 name = gInfo.name,
@@ -271,7 +280,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 readonly = gInfo.readonly,
                 userCount = gInfo.userCount,
                 departmentCount = gInfo.departmentCount,
-                joined = verifyMemberJoinedResult[gInfo.id.toInt()]?.belong ?: false,
+                joined = isMemberJoinedGroup,
                 resourceType = resourceType,
                 resourceTypeName = resourceTypeName,
                 resourceName = resourceName,

@@ -52,6 +52,7 @@ import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -74,10 +75,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -85,6 +82,10 @@ import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -237,8 +238,13 @@ class BkRepoService @Autowired constructor(
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
-        val lastModifyUser = client.get(ServicePipelineResource::class)
+        var lastModifyUser = client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        val pipelineOauthUser = pipelineService.getPipelineOauthUser(projectId, pipelineId)
+        if (!pipelineOauthUser.isNullOrBlank()) {
+            lastModifyUser = pipelineOauthUser
+        }
         if (!crossProjectId.isNullOrBlank()) {
             targetProjectId = crossProjectId
             if (artifactoryType == ArtifactoryType.PIPELINE) {
@@ -522,7 +528,7 @@ class BkRepoService @Autowired constructor(
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-                    val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
+                    val shortUrl = if (generateShortUrl && (PlatformEnum.isPackage(it.name))) {
                         shortUrlService.createShortUrl(
                             PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
                             TimeUnit.DAYS.toSeconds(90L).toInt()

@@ -28,8 +28,6 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatus
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -90,6 +88,18 @@ interface RemoteDevInterface {
     fun upgradeWorkspaceVm(userId: String, workspaceName: String, machineType: String, pipelineId: String): String
 
     /**
+     * 工作空间克隆
+     */
+    fun cloneWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        pipelineId: String,
+        machineType: String?,
+        zoneId: String?,
+        live: Boolean?
+    ): String
+
+    /**
      * 获取工作空间web端链接
      */
     fun getWorkspaceUrl(userId: String, workspaceName: String): String?
@@ -100,18 +110,18 @@ interface RemoteDevInterface {
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
 
     /**
+     * 工作空间创建自动修正流程
+     */
+    fun workspaceTaskCreate(
+        taskStatus: TaskStatus,
+        workspaceName: String,
+        operator: String
+    )
+
+    /**
      * 查询工作空间状态
      */
     fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
-
-    /**
-     * 等待任务结束
-     */
-    fun waitTaskFinish(
-        userId: String,
-        taskId: String,
-        type: UpdateEventType
-    ): DispatchBuildTaskStatus
 
     fun expandDisk(
         workspaceName: String,

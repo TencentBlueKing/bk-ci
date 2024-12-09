@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -15,6 +16,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.service.client.NodeSearchBody
 import com.tencent.devops.remotedev.service.client.NodeSearchPage
@@ -26,6 +28,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.security.SecureRandom
 import java.util.Base64
 
@@ -110,6 +113,7 @@ class WorkspaceRecordService @Autowired constructor(
      * @return <enable, address>
      */
     fun checkRecordAndAddress(
+        userId: String,
         appId: Long,
         ip: String
     ): Pair<Boolean, String?> {
@@ -135,7 +139,7 @@ class WorkspaceRecordService @Autowired constructor(
                 projectId = projectId,
                 repoName = genRepoName(workspaceName),
                 userId = enableUser
-            ) + "&skToken=$token"
+            ) + "&recordUser=$userId&skToken=$token"
         )
     }
 
@@ -150,6 +154,18 @@ class WorkspaceRecordService @Autowired constructor(
             params = arrayOf(workspaceName)
         )
         bkItsmService.createRecordView(projectId = projectId, userId = user, workspaceName = workspaceName)
+    }
+
+    fun updateApprovalRecordViewPermission(
+        userId: String,
+        workspaceName: String
+    ) {
+        val record =
+            workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        approvalRecordViewCallback(record.projectId, userId, workspaceName)
     }
 
     fun approvalRecordViewCallback(
@@ -260,7 +276,10 @@ class WorkspaceRecordService @Autowired constructor(
                         "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
                         "?skToken=$token",
                 startTime = it.metadata?.mediaStartTime,
-                stopTime = it.metadata?.mediaStopTime
+                stopTime = it.metadata?.mediaStopTime,
+                fileSize = it.size,
+                // TODO: 未来有了参数再加
+                recordUser = ""
             )
         }
         return Page(
@@ -268,6 +287,29 @@ class WorkspaceRecordService @Autowired constructor(
             pageSize = resp.pageSize,
             count = resp.totalRecords,
             records = data
+        )
+    }
+
+    fun getUserWorkspaceRecordPermission(userId: String, workspaceName: String): UserWorkspaceRecordPermissionInfo {
+        val r = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        val enableRecord = r.enableRecordUser
+        val record = workspaceRecordUserApprovalDao.fetchAnyApproval(dslContext, workspaceName, userId)
+            ?: return UserWorkspaceRecordPermissionInfo(
+                enableRecord = !enableRecord.isNullOrBlank(),
+                viewPermission = false,
+                viewPermissionEndTime = null
+            )
+        val endTime = record.updateTime.plusDays(
+            redisOperation.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
+        )
+        return UserWorkspaceRecordPermissionInfo(
+            enableRecord = !enableRecord.isNullOrBlank(),
+            viewPermission = endTime > LocalDateTime.now(),
+            viewPermissionEndTime = endTime.timestampmilli()
         )
     }
 

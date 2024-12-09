@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -25,6 +26,18 @@ interface UserMonitorResource {
     @Path("/checkEnableDashboard")
     @GET
     fun checkEnableDashboard(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<EnableDashboardResp>
+
+    @Operation(summary = "开启监控面板")
+    @Path("/enableDashboard")
+    @POST
+    fun enableDashboard(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

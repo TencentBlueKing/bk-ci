@@ -71,16 +71,49 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         oldWorkspaceName: String?,
         projectId: String?,
         ownerType: WorkspaceOwnerType?,
-        uid: String
+        uid: String,
+        bak: Boolean
     ): Result<Boolean> {
         val res = createControl.createWinWorkspaceByVm(
             userId = userId,
             oldWorkspaceName = oldWorkspaceName,
             projectCode = projectId,
             ownerType = ownerType,
-            uid = uid
+            uid = uid,
+            bak = bak
         )
         return Result(res)
+    }
+
+    override fun devxEnvNodeInit(userId: String, workspaceName: String): Result<Boolean> {
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName
+        ) ?: return Result(false)
+        val ip = ws.ip?.substringAfter(".") ?: run {
+            logger.info("workspace not find ip|$workspaceName")
+            return Result(false)
+        }
+        workspaceCommon.devxEnvNodeInit(
+            userId = userId,
+            projectId = ws.projectId,
+            workspaceName = ws.workspaceName,
+            ip = ip,
+            size = ws.machineType ?: ""
+        )
+        if (ws.ownerType != WorkspaceOwnerType.PROJECT_PUBLIC) {
+            workspaceService.changeWorkspaceOwnerType(
+                ws.workspaceName,
+                ws.ownerType,
+                WorkspaceOwnerType.PROJECT_PUBLIC
+            )
+        }
+        return Result(true)
+    }
+
+    override fun devxEnvNodeDel(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceCommon.devxEnvNodeDel(userId, workspaceName)
+        return Result(true)
     }
 
     override fun createWorkspaceRecordTicket(userId: String, workspaceNames: Set<String>): Result<Boolean> {

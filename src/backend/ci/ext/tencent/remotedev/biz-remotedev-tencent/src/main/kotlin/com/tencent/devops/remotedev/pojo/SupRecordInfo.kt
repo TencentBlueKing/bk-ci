@@ -1,0 +1,28 @@
+package com.tencent.devops.remotedev.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+data class SupRecordInfo(
+    @get:Schema(title = "出口IP")
+    val requestIp: String?,
+    @get:Schema(title = "项目管理员")
+    val projectManager: Set<String>?,
+    @get:Schema(title = "客户端版本")
+    val clientVersion: String?,
+    @get:Schema(title = "机器状态")
+    val machineStatus: String?,
+    @get:Schema(title = "CDS版本")
+    val cdsVersion: String?,
+    @get:Schema(title = "CDS区域")
+    val cdsRegion: String?,
+    @get:Schema(title = "CDS状态")
+    val cdsStatus: String?,
+    @get:Schema(title = "CDS端口号")
+    val cdsPort: String?,
+    @get:Schema(title = "agent状态")
+    val agentStatus: String?,
+    @get:Schema(title = "拥有者")
+    val owner: String?,
+    @get:Schema(title = "共享人名单")
+    val viewers: Set<String>?
+)

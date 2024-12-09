@@ -81,7 +81,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -116,7 +117,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -157,7 +159,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 containerHashId = null,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = null
+                stepId = null,
+                checkPermissionFlag = false
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)

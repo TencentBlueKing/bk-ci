@@ -72,7 +72,7 @@
                 <syntax-style-configuration
                     :is-show-popover="false"
                     :inherited-dialect="templateSetting.pipelineAsCodeSettings?.inheritedDialect"
-                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? currentPipelineDialect"
+                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? defaultPipelineDialect"
                     @inherited-change="inheritedChange"
                     @pipeline-dialect-change="pipelineDialectChange"
                 />
@@ -165,8 +165,7 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'templateSetting',
-                'currentPipelineDialect'
+                'templateSetting'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -246,6 +245,12 @@
             },
             TEMPLATE_RESOURCE_ACTION () {
                 return TEMPLATE_RESOURCE_ACTION
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
             }
         },
         watch: {
@@ -260,8 +265,7 @@
         methods: {
             ...mapActions('pipelines', [
                 'requestTemplateSetting',
-                'updateTemplateSetting',
-                'getPipelineDialect'
+                'updateTemplateSetting'
             ]),
             ...mapActions('atom', [
                 'updatePipelineSetting'
@@ -300,8 +304,6 @@
                     })
                     $store.commit('pipelines/updateGroupLists', res)
                     this.dataList = this.tagGroupList
-                    // 获取当前项目语法风格
-                    await this.getPipelineDialect(this.projectId)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -356,7 +358,7 @@
                 settings.inheritedDialect = value
 
                 if (value) {
-                    settings.pipelineDialect = this.currentPipelineDialect
+                    settings.pipelineDialect = this.defaultPipelineDialect
                 }
             },
             pipelineDialectChange (value) {

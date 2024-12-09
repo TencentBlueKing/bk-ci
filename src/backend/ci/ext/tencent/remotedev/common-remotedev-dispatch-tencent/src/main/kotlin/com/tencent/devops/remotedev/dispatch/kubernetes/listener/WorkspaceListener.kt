@@ -27,15 +27,14 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.listener
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.RebuildOptions
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.RemoteDevService
-import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.WorkspaceOperateCommonObject
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import org.slf4j.LoggerFactory
@@ -45,117 +44,91 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
+    private val redisOperation: RedisOperation,
     private val remoteDevService: RemoteDevService,
-    private val remoteDevDispatcher: SampleEventDispatcher
+    private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
 
     @BkTimed
-    fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
-        val backEvent = RemoteDevUpdateEvent(
-            traceId = event.traceId,
-            userId = event.userId,
-            workspaceName = event.workspaceName,
-            mountType = event.mountType,
-            type = UpdateEventType.CREATE,
-            status = false
-        )
+    fun handleWorkspaceCreateSyn(event: WorkspaceCreateEvent) {
         try {
             logger.info("Start to handle workspace create ($event)")
-            val workspaceResponse = remoteDevService.createWorkspace(
-                userId = event.userId,
+            remoteDevService.createWorkspaceSyn(
                 event = event
             )
-
-            backEvent.environmentUid = workspaceResponse.environmentUid
-            backEvent.environmentHost = workspaceResponse.environmentHost
-            backEvent.environmentIp = workspaceResponse.environmentIp
-            backEvent.resourceId = workspaceResponse.resourceId
-            backEvent.macAddress = workspaceResponse.macAddress
-            backEvent.status = true
-        } catch (e: WorkspaceDispatchException) {
-            backEvent.errorMsg = e.message
-            backEvent.environmentUid = e.envId
-            logger.error("Handle workspace create error.", e)
-        } catch (e: ErrorCodeException) {
-            backEvent.errorMsg = I18nUtil.getCodeLanMessage(
-                messageCode = e.errorCode,
-                params = e.params,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                defaultMessage = e.defaultMessage
-            )
-            logger.error("Handle workspace create error.", e)
         } catch (t: Throwable) {
-            backEvent.errorMsg = t.message
             logger.error("Handle workspace create error.", t)
-        } finally {
-            // 业务逻辑处理完成回调remotedev事件
-            remoteDevDispatcher.dispatch(
-                backEvent
-            )
         }
     }
 
     @BkTimed
-    fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
-        val backEvent = RemoteDevUpdateEvent(
-            traceId = event.traceId,
-            userId = event.userId,
-            workspaceName = event.workspaceName,
-            mountType = event.mountType,
-            type = event.type,
-            status = false,
-            environmentUid = "",
-            workspaceImageInfo = WorkspaceImageInfo(imageId = event.imageId ?: "")
-        )
-
+    fun handleWorkspaceOperateSyn(event: WorkspaceOperateEvent) {
         try {
             logger.info("Start to handle workspace operate ($event)")
             when (event.type) {
                 UpdateEventType.START -> {
-                    val workspaceResponse = remoteDevService.startWorkspace(event)
-                    backEvent.status = true
-                    backEvent.environmentIp = workspaceResponse.environmentIp
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+                        .startWorkspace(event.userId, event.workspaceName)
                 }
 
                 UpdateEventType.STOP -> {
-                    backEvent.status = remoteDevService.stopWorkspace(event)
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+                        .stopWorkspace(event.userId, event.workspaceName)
                 }
 
                 UpdateEventType.DELETE -> {
-                    backEvent.status = remoteDevService.deleteWorkspace(event)
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+                        .deleteWorkspace(event.userId, event)
                 }
 
                 UpdateEventType.RESTART -> {
-                    backEvent.status = remoteDevService.restartWorkspace(event)
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+                        .restartWorkspace(event.userId, event.workspaceName)
                 }
 
                 UpdateEventType.REBUILD -> {
-                    backEvent.status = remoteDevService.rebuildWorkspace(event)
+                    val taskUid = remoteDevServiceFactory.loadRemoteDevService(event.mountType).rebuildWorkspace(
+                        userId = event.userId,
+                        workspaceName = event.workspaceName,
+                        imageCosFile = event.imageCosFile ?: "",
+                        formatDataDisk = event.formatDataDisk
+                    )
+                    if (event.rebuildRemoveOwner == true) {
+                        WorkspaceOperateCommonObject.saveRebuildOptions(
+                            redisOperation, taskUid, RebuildOptions(true)
+                        )
+                        logger.debug("rebuildWorkspace|saveRebuildOptions|$taskUid")
+                    }
                 }
 
                 UpdateEventType.UPGRADE -> {
-                    remoteDevService.upgradeWorkspace(event)
+                    // 需要生成一个新的 pipelineId 进行操作
+                    val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
+                        userId = event.userId,
+                        workspaceName = event.workspaceName,
+                        machineType = event.machineType!!,
+                        pipelineId = orderId
+                    )
                 }
 
+                UpdateEventType.CLONE -> {
+                    // 需要生成一个新的 pipelineId 进行操作
+                    val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+                    remoteDevServiceFactory.loadRemoteDevService(event.mountType).cloneWorkspaceVm(
+                        userId = event.userId,
+                        workspaceName = event.workspaceName,
+                        pipelineId = orderId,
+                        machineType = event.machineType,
+                        zoneId = event.zoneId,
+                        live = event.live
+                    )
+                }
                 else -> {
                 }
             }
         } catch (e: Exception) {
-            backEvent.status = false
-            backEvent.errorMsg = e.message
             logger.error("Fail to handle workspace operate ($event)", e)
-        } finally {
-            if (event.type == UpdateEventType.UPGRADE) {
-                // 不进行等待回写操作
-                return
-            }
-            if (!backEvent.status) {
-                logger.warn("WORKSPACE_CHANGE_FAILED|${event.type}|event=$event")
-            }
-            // 业务逻辑处理完成回调remotedev事件
-            remoteDevDispatcher.dispatch(
-                backEvent
-            )
         }
     }
 

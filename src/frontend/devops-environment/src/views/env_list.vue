@@ -46,9 +46,7 @@
                     prop="envType"
                 >
                     <template slot-scope="props">
-                        <span v-if="props.row.envType === 'DEV'">{{ $t('environment.envInfo.devEnvType') }}</span>
-                        <span v-if="props.row.envType === 'PROD'">{{ $t('environment.envInfo.testEnvType') }}</span>
-                        <span v-if="props.row.envType === 'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</span>
+                        <span>{{ $t(`environment.envInfo.${props.row.envType}EnvType`) }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column

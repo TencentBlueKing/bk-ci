@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -23,6 +24,7 @@ import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserData
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserEnum
 import com.tencent.devops.remotedev.service.client.StartCloudClient
+import java.time.Duration
 import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -94,6 +96,29 @@ class StartWorkspaceService @Autowired constructor(
             status = statusResMap.values.toList(),
             users = userResMap.values.toList()
         )
+    }
+
+    private val userEnvCache = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofMinutes(1))
+        .build<String, List<String>>()
+
+    fun cachingLoginUsers(
+        cgsIds: Set<String>
+    ): Map<String, List<String>> {
+        val res = mutableMapOf<String, List<String>>()
+        cgsIds.forEach { cgsId ->
+            res[cgsId] = userEnvCache.getIfPresent(cgsId) ?: return@forEach
+        }
+        val diff = cgsIds - res.keys
+        if (diff.isEmpty()) {
+            return res
+        }
+        val load = loginUsers(diff)
+        userEnvCache.putAll(load)
+        res.putAll(load)
+        val invalid = diff - load.keys
+        userEnvCache.putAll(invalid.associateWith { emptyList() })
+        return res
     }
 
     fun loginUsers(
