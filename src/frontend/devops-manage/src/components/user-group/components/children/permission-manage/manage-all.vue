@@ -532,7 +532,10 @@ function handleRenewalClosed () {
 async function handleHandoverConfirm () {
   const isValidate = await formRef.value.validate();
   if (!isValidate) return;
-  const param = formatSelectParams(selectedRow.value.groupId);
+  const param = formatSelectParams({
+    id: selectedRow.value.groupId,
+    memberType: selectedRow.value.memberType
+  });
   delete param.renewalDuration;
   if (asideItem.value.id === handOverForm.value.id) {
     showMessage('error', t('目标对象和交接人不允许相同。'));

@@ -342,10 +342,12 @@ import manageSearch from "@/components/permission-manage/manage-search.vue";
 import DetailGroupTab from "@/components/permission-manage/detail-group-tab.vue";
 import { OPERATE_CHANNEL } from "@/utils/constants";
 import { AngleRight  } from 'bkui-vue/lib/icon';
+import { useRouter } from 'vue-router';
 
 const user = ref();
 const { t } = useI18n();
 const formRef = ref(null);
+const router = useRouter();
 const renewalRef = ref(null);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
@@ -378,7 +380,12 @@ const title = computed(() => {
   } else {
     return h('p', { style: { display: 'flex', alignItems: 'center' } },
       [
-        h('span', { style: { color: '#3A84FF' } }, sliderTitle.value),
+        h('span', {
+          style: { color: '#3A84FF', cursor: 'pointer' },
+          onClick () {
+            goBack()
+          }
+        }, sliderTitle.value),
         h(AngleRight, { style: { color: '#C4C6CC', fontSize: '22px', magin: '0 5px' } } ),
         h('span',{ style: { fontSize: '14px', color: '#313238' } },  t('待移交详情'))
       ]
@@ -502,8 +509,10 @@ function handleRenewalClosed() {
 async function handleHandoverConfirm() {
   const isValidate = await formRef.value.validate();
   if (!isValidate) return;
-
-  const param = formatSelectParams(selectedRow.value.groupId);
+  const param = formatSelectParams({
+    id: selectedRow.value.groupId,
+    memberType: selectedRow.value.memberType
+  });
   delete param.renewalDuration;
 
   if (user.value.id === handOverForm.value.id) {
@@ -733,13 +742,15 @@ function showHandoverSuccessInfoBox() {
       ]
     ),
     onConfirm() {
-      console.log('跳转到我的交接页面');
+      router.push({
+        name: 'my-handover'
+      })
     }
   });
 }
 
 function showRemoveSuccessInfoBox() {
-  const successRemove = checkData.value.totalCount - authorizationInvalid.value
+  const successRemove = checkData.value.invalidGroupCount + checkData.value.uniqueManagerCount
   InfoBox({
     width: 500,
     type: 'success',
@@ -750,17 +761,19 @@ function showRemoveSuccessInfoBox() {
     content: h(
       'div', { class: 'info-content' },
       [
-        h('p', { class: 'info-text' }, t('无需交接的X个用户组已成功退出。', [successRemove])),
+        h('p', { class: 'info-text' }, t('无需交接的X个用户组已成功退出。', [checkData.value.operableCount])),
         h('div', [
-          h('p', { class: 'info-text info-tip' }, t('需要交接的X个用户组：', [authorizationInvalid.value])),
-          h('p', { class: 'info-text' }, t('1. 已成功提交移交权限申请，等待交接人X确认。', [handOverForm.value.name])),
+          h('p', { class: 'info-text info-tip' }, t('需要交接的X个用户组：', [successRemove])),
+          h('p', { class: 'info-text' }, t('1. 已成功提交移交权限申请，等待交接人X确认。', [handOverForm.value.id])),
           h('p', { class: 'info-text' }, t('2. 可在“我的交接”中查看进度。')),
           h('p', { class: 'info-text' }, t('3. 完成交接后，将自动退出用户组')),
         ])
       ]
     ),
     onConfirm() {
-      console.log('跳转到我的交接页面');
+      router.push({
+        name: 'my-handover'
+      })
     }
   });
 }

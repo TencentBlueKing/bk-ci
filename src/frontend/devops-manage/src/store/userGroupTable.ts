@@ -17,6 +17,7 @@ interface GroupTableType {
   operateSource: string;
   operator: string;
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
+  memberType: string;
 };
 interface Pagination {
   limit: number;
@@ -278,7 +279,7 @@ export default defineStore('userGroupTable', () => {
           ...sourceItem,
           tableData: tableData.slice(0,11),
           count: sourceItem.isAll ? sourceItem.count! : tableData.length,
-          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) }),
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => ({ id: item.groupId, memberType: item.memberType })) }),
           ...(!sourceItem.isAll && { isRemotePagination: false }),
         };
       });
