@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.enum.JoinedType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -31,5 +32,7 @@ data class GroupDetailsInfoVo(
     @get:Schema(title = "操作人")
     val operator: String,
     @get:Schema(title = "是否正在交接")
-    val beingHandedOver: Boolean? = null
+    val beingHandedOver: Boolean? = null,
+    @get:Schema(title = "组成员类型")
+    val memberType: MemberType? = null
 )

@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
@@ -67,10 +68,12 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         memberId: String,
         resourceType: String?,
         iamGroupIds: List<Int>?,
-        excludeIamGroupIds: List<Int>?,
         minExpiredAt: Long?,
         maxExpiredAt: Long?,
         operateChannel: OperateChannel?,
+        filterMemberType: MemberType?,
+        excludeIamGroupIds: List<Int>?,
+        onlyExcludeUserDirectlyJoined: Boolean?,
         start: Int?,
         limit: Int?
     ): Pair<Long, List<AuthResourceGroupMember>> = Pair(0, emptyList())

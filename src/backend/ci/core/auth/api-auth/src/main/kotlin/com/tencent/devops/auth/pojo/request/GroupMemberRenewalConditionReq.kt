@@ -28,13 +28,14 @@
 package com.tencent.devops.auth.pojo.request
 
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.dto.MemberGroupJoinedDTO
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户组成员续期")
 data class GroupMemberRenewalConditionReq(
     @get:Schema(title = "组IDs")
-    override val groupIds: List<Int>,
+    override val groupIds: List<MemberGroupJoinedDTO>,
     @get:Schema(title = "全选某种资源类型下的用户组")
     override val resourceTypes: List<String> = emptyList(),
     @get:Schema(title = "全量选择")
