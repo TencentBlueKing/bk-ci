@@ -20,6 +20,18 @@ data class EnvironmentOperate(
 ) : EnvironmentOperateInf(uid)
 
 /**
+ * 扩容数据盘相关
+ * @param uid 环境id
+ * @param size 数据盘扩容大小单位Gi
+ * @param pvcId PVCID
+ */
+data class EnvironmentOperateExpandDisk(
+    override val uid: String,
+    val size: String,
+    val pvcId: String?
+) : EnvironmentOperateInf(uid)
+
+/**
  * 创建数据盘相关
  * @param uid 环境id
  * @param pvcSize 数据盘扩容大小单位Gi

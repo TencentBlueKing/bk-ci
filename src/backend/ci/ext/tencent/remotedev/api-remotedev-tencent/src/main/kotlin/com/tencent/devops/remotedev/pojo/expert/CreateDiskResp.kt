@@ -1,7 +1,12 @@
 package com.tencent.devops.remotedev.pojo.expert
 
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "磁盘创建任务详情")
 data class CreateDiskResp(
+    @get:Schema(title = "创建任务发起是否成功")
     val result: Boolean,
+    @get:Schema(title = "创建发起不成功原因")
     val message: String?
 )
 

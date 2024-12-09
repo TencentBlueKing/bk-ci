@@ -24,7 +24,6 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -35,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
@@ -48,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -689,26 +690,13 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         workspaceName: String,
         size: String,
-        action: String?
+        pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
-        if (action == WorkspaceAction.CREATE_DISK.name) {
-            val data = expertSupportService.createDisk(
-                workspaceName = workspaceName,
-                userId = userId,
-                size = size
-            )
-            return Result(
-                ExpandDiskValidateResp(
-                    valid = data.result,
-                    message = data.message
-                )
-            )
-        }
-
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
-            size = size
+            size = size,
+            pvcId = pvcId
         ) ?: return Result(null)
         return Result(
             ExpandDiskValidateResp(
@@ -718,7 +706,30 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun upgradeWorkspace(userId: String, projectId: String, workspaceName: String, upgradeReq: WorkspaceUpgradeReq): Result<Boolean> {
+    override fun createDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.createDisk(
+                workspaceName = workspaceName,
+                userId = userId,
+                size = size
+            )
+        )
+    }
+
+    override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
+        return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    }
+
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
         return Result(true)
     }
@@ -765,7 +776,12 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
         return Result(
             workspaceService.getWorkspaceTimeline(
                 userId = userId,

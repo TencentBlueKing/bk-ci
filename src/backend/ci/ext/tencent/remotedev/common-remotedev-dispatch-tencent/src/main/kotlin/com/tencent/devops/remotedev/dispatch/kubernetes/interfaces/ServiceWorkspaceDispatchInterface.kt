@@ -57,6 +57,7 @@ interface ServiceWorkspaceDispatchInterface {
         workspaceName: String,
         userId: String,
         size: String,
+        pvcId: String?,
         mountType: WorkspaceMountType
     ): Result<ExpandDiskValidateResp>
 

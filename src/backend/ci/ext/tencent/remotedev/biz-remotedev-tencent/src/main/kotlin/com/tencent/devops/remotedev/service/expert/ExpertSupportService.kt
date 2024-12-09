@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -570,7 +571,8 @@ class ExpertSupportService @Autowired constructor(
     fun expandDisk(
         workspaceName: String,
         userId: String,
-        size: String
+        size: String,
+        pvcId: String?
     ): ExpandDiskValidateResp? {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -599,6 +601,7 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = workspaceName,
             userId = userId,
             size = size,
+            pvcId,
             mountType = WorkspaceMountType.START
         ).data ?: return null
         if (!data.valid) {
@@ -609,7 +612,11 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = workspaceName,
             operator = userId,
             action = WorkspaceAction.EXPAND_DISK,
-            actionMessage = size
+            actionMessage = if (pvcId != null) {
+                "$pvcId: $size"
+            } else {
+                size
+            }
         )
         return data
     }
@@ -795,6 +802,35 @@ class ExpertSupportService @Autowired constructor(
                 "notifyTemplateCode" to "REMOTEDEV_EXPAND_DISK_DONE",
                 "dsize" to dSize
             )
+        )
+    }
+
+    fun fetchDiskList(
+        userId: String,
+        workspaceName: String
+    ): List<VmDiskInfo> {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+            )
+        }
+
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchDiskList(
+            workspaceName = workspaceName,
+            userId = userId
         )
     }
 

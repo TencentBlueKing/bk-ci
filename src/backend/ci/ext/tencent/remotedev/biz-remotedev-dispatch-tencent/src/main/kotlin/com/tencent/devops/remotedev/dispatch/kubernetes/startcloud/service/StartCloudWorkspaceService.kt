@@ -67,9 +67,10 @@ class StartCloudWorkspaceService @Autowired constructor(
         workspaceName: String,
         userId: String,
         size: String,
+        pvcId: String?,
         mountType: WorkspaceMountType
     ): Result<ExpandDiskValidateResp> {
-        return Result(remoteDevService.expandDisk(workspaceName, userId, size, mountType))
+        return Result(remoteDevService.expandDisk(workspaceName, userId, size, pvcId, mountType))
     }
 
     override fun createDisk(

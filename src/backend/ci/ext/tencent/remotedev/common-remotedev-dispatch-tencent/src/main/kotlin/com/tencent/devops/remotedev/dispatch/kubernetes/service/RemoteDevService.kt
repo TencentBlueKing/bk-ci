@@ -159,9 +159,10 @@ class RemoteDevService @Autowired constructor(
         workspaceName: String,
         userId: String,
         size: String,
+        pvcId: String?,
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size, pvcId)
     }
 
     fun getLastExpandDiskStatusAndTime(

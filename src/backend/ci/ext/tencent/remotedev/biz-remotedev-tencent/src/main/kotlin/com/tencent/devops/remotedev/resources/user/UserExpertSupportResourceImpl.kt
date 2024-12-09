@@ -34,7 +34,7 @@ class UserExpertSupportResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.CGS_EXPAND_DISK)
     override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
-        val data = expertSupportService.expandDisk(workspaceName, userId, size) ?: return Result(null)
+        val data = expertSupportService.expandDisk(workspaceName, userId, size, null) ?: return Result(null)
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,

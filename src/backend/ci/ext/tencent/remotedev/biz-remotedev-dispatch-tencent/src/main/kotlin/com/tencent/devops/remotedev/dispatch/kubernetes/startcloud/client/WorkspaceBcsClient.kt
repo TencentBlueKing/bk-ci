@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.Worksp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateInf
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
@@ -335,7 +336,7 @@ class WorkspaceBcsClient @Autowired constructor(
     }
 
     fun expandDiskValidate(
-        data: EnvironmentOperate
+        data: EnvironmentOperateExpandDisk
     ): ExpandDiskValidateResp? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk/validate"
         val body = JsonUtil.toJson(data, false)

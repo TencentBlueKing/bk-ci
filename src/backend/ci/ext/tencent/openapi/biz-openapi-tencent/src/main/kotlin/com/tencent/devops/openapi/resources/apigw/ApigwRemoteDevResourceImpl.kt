@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -34,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -460,10 +462,24 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         userId: String,
         workspaceName: String,
         size: String,
-        action: String?
+        pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
         logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
-        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, action)
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, pvcId)
+    }
+
+    override fun createWorkspaceDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<CreateDiskResp> {
+        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size")
+        return client.get(ServiceRemoteDevResource::class).createDisk(userId, workspaceName, size)
+    }
+
+    override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
+        logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
     }
 
     override fun upgradeWorkspace(

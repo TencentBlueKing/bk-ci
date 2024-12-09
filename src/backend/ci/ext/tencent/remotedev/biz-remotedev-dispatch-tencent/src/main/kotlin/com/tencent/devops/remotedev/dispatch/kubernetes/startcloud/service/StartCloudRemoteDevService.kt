@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
@@ -48,6 +49,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -268,9 +270,15 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
+    override fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        pvcId: String?
+    ): ExpandDiskValidateResp {
         val envId = getEnvironmentUid(workspaceName)
-        val expandData = EnvironmentOperate(uid = envId, size = size)
+        val expandData = EnvironmentOperateExpandDisk(uid = envId, size = size, pvcId = pvcId)
+        // TODO: 判断扩容也要加pvcId
         val validateRes = workspaceBcsClient.expandDiskValidate(expandData) ?: run {
             logger.warn("expandDiskValidate $workspaceName|$size validateRes is null")
             return ExpandDiskValidateResp(false, "validateRes is null")
@@ -302,6 +310,11 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentOperate = data
         )
         return CreateDiskResp(true, null)
+    }
+
+    override fun fetchDiskList(workspaceName: String, userId: String): List<VmDiskInfo> {
+        val envId = getEnvironmentUid(workspaceName)
+        return workspaceBcsClient.fetchDiskList(envId) ?: emptyList()
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
