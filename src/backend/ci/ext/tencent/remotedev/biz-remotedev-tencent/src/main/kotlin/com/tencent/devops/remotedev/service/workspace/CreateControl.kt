@@ -46,6 +46,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
@@ -671,11 +672,11 @@ class CreateControl @Autowired constructor(
             // 当存在引用副本的情况，将细分多种情况
             val bakName = when {
                 /*克隆副本，但不删除副本*/
-                !bak -> "clone.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+                !bak -> "clone.${copy.workspaceName}$BAK_FLAG${LocalDateTime.now()}"
                 /*升级副本，升级后需删除副本*/
-                copy.status.checkUpgrading() -> "upgrade.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+                copy.status.checkUpgrading() -> "upgrade.${copy.workspaceName}$BAK_FLAG${LocalDateTime.now()}"
                 /*修复副本，旧副本立即删除*/
-                else -> "fix.${copy.workspaceName}.bak.${LocalDateTime.now()}"
+                else -> "fix.${copy.workspaceName}$BAK_FLAG${LocalDateTime.now()}"
             }
             ws.bakWorkspaceName = bakName
             if (bak) {

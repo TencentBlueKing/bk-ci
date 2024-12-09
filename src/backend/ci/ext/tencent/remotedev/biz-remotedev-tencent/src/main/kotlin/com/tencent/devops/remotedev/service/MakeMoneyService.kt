@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -73,10 +74,15 @@ class MakeMoneyService @Autowired constructor(
         val aMap = aMap()
         val a = aMap.keys
 
-        val use = a + c - d - b + e - f
+        val use = (a + c - d - b + e - f).toMutableSet()
 
+        removeBakWorkspace(use)
         save(use, a, aMap, lastDay)
         return makeMoneyLastDayOutput(a, b, c, d, e, f, use)
+    }
+
+    private fun removeBakWorkspace(use: MutableSet<String>) {
+        use.removeIf { it.contains(BAK_FLAG) }
     }
 
     private fun makeMoneyLastDayOutput(
