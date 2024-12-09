@@ -24,7 +24,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getRequest(): AuditHttpRequest {
         val httpServletRequest: HttpServletRequest = getHttpServletRequest()
-        return AuditHttpRequest::class.java.newInstance()//TODO 后面需要新的audit的包 (tyleryuwang)
+        return AuditHttpRequest(httpServletRequest)
     }
 
     private fun getHttpServletRequest(): HttpServletRequest {

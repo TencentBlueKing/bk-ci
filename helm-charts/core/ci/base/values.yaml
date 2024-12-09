@@ -82,9 +82,9 @@ init:
   defaultImage:
     enabled: true
     image:
-      registry: registry-1.docker.io/bkci
+      registry: bkci
       repository: ci
-      tag: latest
+      tag: jdk17
   plugin:
     enabled: false
     atoms:
