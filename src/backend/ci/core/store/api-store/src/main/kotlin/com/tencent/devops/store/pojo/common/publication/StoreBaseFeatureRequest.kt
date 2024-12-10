@@ -37,5 +37,5 @@ data class StoreBaseFeatureRequest(
     @get:Schema(title = "研发类型", required = false)
     val rdType: RdTypeEnum? = null,
     @get:Schema(title = "特性扩展信息", required = false)
-    val extBaseFeatureInfo: Map<String, Any>? = null
+    val extBaseFeatureInfo: MutableMap<String, Any>? = null
 )
