@@ -1198,7 +1198,7 @@ class AtomDao : AtomBaseDao() {
                 listOf(
                     AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
                     AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                    AtomStatusEnum.RELEASED.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte()
                 )
             ))
         } else {

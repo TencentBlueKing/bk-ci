@@ -83,17 +83,17 @@
 </template>
 
 <script>
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import api from '@/api'
 
     function formatterTime (val) {
-        return moment(val).format('YYYY-MM-DD HH:mm:ss')
+        return dayjs(val).format('YYYY-MM-DD HH:mm:ss')
     }
 
     export default {
         data () {
-            const startTime = formatterTime(moment().subtract(7, 'days'))
-            const endTime = formatterTime(moment())
+            const startTime = formatterTime(dayjs().subtract(7, 'days'))
+            const endTime = formatterTime(dayjs())
 
             return {
                 searchData: {

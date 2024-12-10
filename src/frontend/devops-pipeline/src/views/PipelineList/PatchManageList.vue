@@ -65,7 +65,6 @@
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import moment from 'moment'
     import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     export default {
@@ -107,9 +106,6 @@
                     delay: [300, 0]
                 }
             }
-        },
-        created () {
-            moment.locale(this.$i18n.locale)
         },
         mounted () {
             this.updateTableHeight()

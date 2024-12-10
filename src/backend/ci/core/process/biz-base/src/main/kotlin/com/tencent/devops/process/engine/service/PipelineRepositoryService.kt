@@ -1715,7 +1715,7 @@ class PipelineRepositoryService constructor(
     ): PipelineName {
         setting.checkParam()
 
-        if (isPipelineExist(
+        if (!isTemplate && isPipelineExist(
                 projectId = setting.projectId,
                 excludePipelineId = setting.pipelineId,
                 pipelineName = setting.pipelineName
@@ -1761,7 +1761,7 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (versionStatus.isReleasing()) pipelineInfoDao.update(
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
