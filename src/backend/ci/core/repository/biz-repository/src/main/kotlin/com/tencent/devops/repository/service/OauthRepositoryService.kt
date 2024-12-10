@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -85,7 +86,7 @@ class OauthRepositoryService @Autowired constructor(
         // 检查是否还有关联代码库
         if (countOauthRepo(userId, scmCode) > 0) {
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.OAUTH_INFO_OCCUPIED_CANNOT_DELETE
+                errorCode = RepositoryMessageCode.OAUTH_INFO_OCCUPIED_CANNOT_DELETE
             )
         }
         oauth2TokenStoreManager.delete(userId = userId, scmCode = scmCode.name)
