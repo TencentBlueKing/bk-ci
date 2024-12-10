@@ -241,7 +241,7 @@
                 v-if="authorizationInvalid && batchFlag === 'handover'"
                 class="main-text"
               >
-                <i18n-t keypath="移交以上用户组，将导致流水线权限代持失效。请确认是否同步移交授权。" tag="div">
+                <i18n-t keypath="移交以上用户组，将导致X条流水线权限代持失效。请确认是否同步移交授权。" tag="div">
                   <span class="remove-num">{{ authorizationInvalid }}</span>
                 </i18n-t>
               </p>
@@ -251,7 +251,7 @@
                   v-if="authorizationInvalid"
                   class="main-text"
                 >
-                  <i18n-t keypath="退出以上用户组，将导致X流水线权限代持失效，X个资源没有拥有者。查看详情, 请填写交接人，完成交接后才能成功退出。" tag="div">
+                  <i18n-t keypath="退出以上用户组，将导致X条流水线权限代持失效，X个资源没有拥有者。查看详情, 请填写交接人，完成交接后才能成功退出。" tag="div">
                     <template #op>
                       <span class="remove-num">{{ authorizationInvalid }}</span>
                     </template>
