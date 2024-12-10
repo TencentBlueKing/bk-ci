@@ -305,7 +305,7 @@ object LoggerService {
                 )
                 this.uploadQueue.put(
                     logMessage.copy(
-                        message = "Printed logs cannot exceed 1 million lines. " +
+                        message = "Printed logs cannot exceed 100,000 lines. " +
                             "Please download logs to view."
                     )
                 )
