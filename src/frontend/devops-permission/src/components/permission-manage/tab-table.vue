@@ -225,7 +225,7 @@ function shouldShowOverlay(row) {
     case 'renewal':
       return row.expiredAtDisplay === t('永久') || row.removeMemberButtonControl === 'TEMPLATE';
     case 'handover':
-      return row.removeMemberButtonControl === 'TEMPLATE' || row.isExpired;
+      return row.removeMemberButtonControl === 'TEMPLATE' || row.removeMemberButtonControl === 'DEPARTMENT' || row.isExpired;
     case 'remove':
       return row.removeMemberButtonControl !== 'OTHER';
     default:
@@ -244,11 +244,11 @@ function getUnableMessage(row) {
     case 'handover':
       if (row.removeMemberButtonControl === 'TEMPLATE') {
         return t('通过用户组获得权限，请到用户组里移出用户');
-      } else if (row.isExpired) {
-        return t('已过期，无需移交')
       } else if (row.removeMemberButtonControl === 'DEPARTMENT') {
         return t('通过组织加入的 不允许 续期/移出/移交');
-      } 
+      }  else if (row.isExpired) {
+        return t('已过期，无需移交')
+      }
     case 'remove':
       let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
       return message;

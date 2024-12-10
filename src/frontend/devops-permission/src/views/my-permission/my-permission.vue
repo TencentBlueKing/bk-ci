@@ -241,8 +241,8 @@
                 v-if="authorizationInvalid && batchFlag === 'handover'"
                 class="main-text"
               >
-                <i18n-t keypath="移交以上用户组，将导致X资源授权失效。请确认是否同步移交流水线权限代持人。" tag="div">
-                  <span class="remove-num">{{ authorizationInvalid }}</span><span class="font-weight">{{ t("流水线权限代持人") }}</span>
+                <i18n-t keypath="移交以上用户组，将导致流水线权限代持失效。请确认是否同步移交授权。" tag="div">
+                  <span class="remove-num">{{ authorizationInvalid }}</span>
                 </i18n-t>
               </p>
               
@@ -251,15 +251,15 @@
                   v-if="authorizationInvalid"
                   class="main-text"
                 >
-                  <i18n-t keypath="退出以上用户组，将导致X资源授权失效，X个资源没有拥有者。查看详情, 请填写交接人，完成交接后才能成功退出。" tag="div">
+                  <i18n-t keypath="退出以上用户组，将导致X流水线权限代持失效，X个资源没有拥有者。查看详情, 请填写交接人，完成交接后才能成功退出。" tag="div">
                     <template #op>
                       <span class="remove-num">{{ authorizationInvalid }}</span>
                     </template>
                     <template #op1>
-                      <span class="remove-person">{{ checkData.uniqueManagerCount }}</span>
+                      <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
                     </template>
                     <template #op2>
-                      <span class="remove-person remove-detail text-blue" @click="handleDetail">{{ t("查看详情") }}</span>
+                      <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
                     </template>
                   </i18n-t>
                 </p>
@@ -1161,12 +1161,6 @@ function goBack() {
           color: #63656e;
           font-size: 16px;
 
-          .remove-num {
-            color: #3a84ff;
-            font-size: 16px;
-            font-weight: 700;
-          }
-
           .remove-person {
             color: #63656e;
             font-size: 16px;
@@ -1174,9 +1168,9 @@ function goBack() {
           }
         }
       }
-
-      .font-weight {
-        color: #4D4F56;
+      .remove-num {
+        color: #3a84ff;
+        font-size: 14px;
         font-weight: 700;
       }
 
