@@ -78,6 +78,8 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -87,8 +89,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -328,7 +328,7 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+            workspace.status.notOk2doNextAction() && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME
@@ -668,7 +668,7 @@ class WorkspaceCommon @Autowired constructor(
                         "owner" to (owner ?: "")
                     )
                 ),
-                    formatted = false
+                formatted = false
             )
         )
     }
@@ -750,7 +750,7 @@ class WorkspaceCommon @Autowired constructor(
             }
             AsyncExecute.dispatch(
                 streamBridge,
-                    AsyncPipelineEvent(
+                AsyncPipelineEvent(
                     userId = info.userId ?: user,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

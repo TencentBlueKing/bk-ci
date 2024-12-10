@@ -389,6 +389,11 @@ class StartActionTaskContainerCmd(
                     BuildStatus.UNEXEC
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stageId, containerId = containerId, taskId = taskId,
+                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                )
                 // 打印构建日志
                 message.append(
                     I18nUtil.getCodeLanMessage(

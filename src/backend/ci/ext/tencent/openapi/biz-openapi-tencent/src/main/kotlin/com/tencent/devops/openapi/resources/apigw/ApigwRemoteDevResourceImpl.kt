@@ -9,13 +9,16 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.OperateCvmData
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -28,6 +31,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -484,6 +490,75 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).removeUserPermission(
             userId = userId,
             removeUser = removeUser
+        )
+    }
+
+    override fun getWorkspaceListNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>> {
+        logger.info("getWorkspaceListNew $appCode|$userId|$projectId|$page|$pageSize|$search")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceListNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            search = search
+        )
+    }
+
+    override fun getUserWorkspaceRecordPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo> {
+        logger.info("getUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getUserWorkspaceRecordPermission(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+    }
+
+    override fun updateUserWorkspaceRecordPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("updateUserWorkspaceRecordPermission $appCode|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).updateUserWorkspaceRecordPermission(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+    }
+
+    override fun getViewRecordMetadata(
+        appCode: String?,
+        apigwType: String?,
+        data: FetchMetaDataParam
+    ): Result<Page<WorkspaceRecordMetadata>> {
+        logger.info("getViewRecordMetadata $appCode|$data")
+        return client.get(ServiceRemoteDevResource::class).getViewRecordMetadata(data)
+    }
+
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
+        logger.info("getWorkspaceTimeline $workspaceName|$workspaceName|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceTimeline(
+            userId = userId,
+            workspaceName = workspaceName,
+            page = page,
+            pageSize = pageSize
         )
     }
 }

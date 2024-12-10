@@ -12,6 +12,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
@@ -147,13 +149,24 @@ class UserInfoCertService @Autowired constructor(
             ).data?.records?.filter { it.joinedType == JoinedType.DIRECT && it.expiredAt < expiredTime }
                 ?.ifEmpty { null } ?: return
 
-            val admins = client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
-                FetchRemoteDevData(
-                    setOf(data.projectId)
-                )
-            ).data?.get(data.projectId) ?: run {
-                logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
-                return
+            // 太湖用户发送给云研发管理员；集团用户发送给项目管理员
+            val admins = if (UserUtil.isTaiUser(data.userId)) {
+                    client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
+                    FetchRemoteDevData(
+                        setOf(data.projectId)
+                    )
+                ).data?.get(data.projectId) ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
+                    return
+                }
+            } else {
+                client.get(ServiceTxUserResource::class).getProjectUserRoles(
+                    projectCode = data.projectId,
+                    roleId = BkAuthGroup.MANAGER
+                ).data?.toSet() ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getProjectUserRoles|${data.projectId} is null")
+                    return
+                }
             }
 
             val recordId = userAuthApplyDao.create(
@@ -211,7 +224,7 @@ class UserInfoCertService @Autowired constructor(
                             id = record.userId,
                             type = "user"
                         ),
-                        renewalDuration = 30
+                        renewalDuration = 365
                     )
                 )
             }

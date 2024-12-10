@@ -50,6 +50,7 @@
                     v-else
                     :params="params"
                     :disabled="!editable"
+                    :pipeline-model="pipelineModel"
                     :container="container"
                     :update-container-params="handleContainerChange"
                     :is-direct-show-version="isDirectShowVersion"
@@ -83,6 +84,10 @@
                 default: true
             },
             isDirectShowVersion: {
+                type: Boolean,
+                default: false
+            },
+            pipelineModel: {
                 type: Boolean,
                 default: false
             }

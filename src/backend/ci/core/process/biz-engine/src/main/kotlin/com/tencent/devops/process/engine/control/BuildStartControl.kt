@@ -773,7 +773,8 @@ class BuildStartControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
                     source = TAG, projectId = projectId, pipelineId = pipelineId,
-                    userId = userId, buildId = buildId, status = BuildStatus.UNEXEC
+                    userId = userId, buildId = buildId, status = BuildStatus.UNEXEC,
+                    executeCount = executeCount
                 )
             )
             return // model不存在直接取消构建

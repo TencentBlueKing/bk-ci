@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -58,7 +59,8 @@ class RbacPermissionResourceMemberService(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
-    private val syncIamGroupMemberService: PermissionResourceGroupSyncService
+    private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
+    private val rbacCacheService: RbacCacheService
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -360,6 +362,33 @@ class RbacPermissionResourceMemberService(
             )
         }
         return true
+    }
+
+    override fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Boolean {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = userId
+        )
+        val memberDeptInfos = deptService.getUserInfo(
+            userId = "admin",
+            name = userId
+        )?.deptInfo?.map { it.name!! }
+
+        return authResourceGroupMemberDao.isMemberInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            userId = userId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
+        ) || rbacCacheService.validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectCode,
+            permission = AuthPermission.VISIT
+        )
     }
 
     private fun verifyGroupBelongToProject(

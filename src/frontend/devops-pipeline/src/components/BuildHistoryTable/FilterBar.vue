@@ -21,7 +21,6 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { coverStrTimer } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
-    import moment from 'moment'
     import { mapActions, mapGetters } from 'vuex'
 
     import '@blueking/search-select/dist/styles/index.css'
@@ -235,7 +234,7 @@
             },
             formatTime (date) {
                 try {
-                    return moment(date).valueOf() || ''
+                    return +new Date(date)
                 } catch (e) {
                     return ''
                 }

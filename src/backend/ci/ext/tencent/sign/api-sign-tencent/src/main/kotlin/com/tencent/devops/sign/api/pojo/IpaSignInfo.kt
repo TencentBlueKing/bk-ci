@@ -61,8 +61,11 @@ data class IpaSignInfo(
     var archivePath: String? = "/",
     @get:Schema(title = "主App描述文件ID", required = false)
     var mobileProvisionId: String? = null,
+    @Deprecated("使用associatedDomain代替传值")
     @get:Schema(title = "Universal Link的设置", required = false)
     var universalLinks: List<String>? = null,
+    @get:Schema(title = "Associated-domain的设置（兼容原Universal Link的设置）", required = false)
+    var associatedDomain: List<String>? = null,
     @get:Schema(title = "安全应用组，应为securityApplicationGroupList", required = false)
     var keychainAccessGroups: List<String>? = null,
     @get:Schema(title = "是否替换bundleId", required = false)

@@ -39,7 +39,7 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib'), path.resolve(__dirname, './locale')],
                     use: [
                         { loader: 'babel-loader' }
                     ]
@@ -68,7 +68,7 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib')],
+                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib'), path.resolve(__dirname, './locale')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,
@@ -136,7 +136,11 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
                         name: 'bk-magic-vue-chunk', // chunk 的名字
                         chunks: 'all', // 可能的值 'async', 'initial', 'all',
                         reuseExistingChunk: true
-                        
+                    },
+                    vendor: {
+                        test: /[\\/]node_modules[\\/]/, // 指定要单独打包的依赖
+                        name: 'vendors', // chunk 的名字
+                        chunks: 'all' // 可能的值 'async', 'initial', 'all'
                     },
                     default: {
                         minChunks: 2,
