@@ -266,7 +266,7 @@ class TxStoreIndexCronService(
                         }
                     }
                     val codeccOpensourceMeasurement = getCodeccOpensourceMeasurement(atomCode)
-                    val result = if (complianceRate > 99.9 && codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR
+                    val result = if (complianceRate >= 99.9 && codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR
                     else BK_NOT_UP_TO_PAR
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
