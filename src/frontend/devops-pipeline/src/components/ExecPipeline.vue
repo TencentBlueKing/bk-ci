@@ -718,27 +718,35 @@
                 done
             ) {
                 if (!isContinue) {
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        stageId,
-                        containerId,
-                        taskId,
-                        isContinue,
-                        element: atom
-                    }
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            const postData = {
+                                projectId: this.routerParams.projectId,
+                                pipelineId: this.routerParams.pipelineId,
+                                buildId: this.routerParams.buildNo,
+                                stageId,
+                                containerId,
+                                taskId,
+                                isContinue,
+                                element: atom
+                            }
 
-                    try {
-                        await this.pausePlugin(postData)
-                        await this.requestPipelineExecDetail(this.routerParams)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                        done()
-                    }
+                            try {
+                                await this.pausePlugin(postData)
+                                await this.requestPipelineExecDetail(this.routerParams)
+                            } catch (err) {
+                                this.$showTips({
+                                    message: err.message || err,
+                                    theme: 'error'
+                                })
+                                done()
+                            }
+                        },
+                        cancelFn: () => {
+                            done()
+                        }
+                    })
                 } else {
                     this.toggleAsidePropertyPanel({
                         isShow: true,

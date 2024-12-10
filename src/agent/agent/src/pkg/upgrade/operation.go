@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"os"
 	"strconv"
 	"strings"
@@ -118,14 +119,14 @@ func runUpgrader(action string) error {
 }
 
 // DoUpgradeOperation 调用升级程序
-func DoUpgradeOperation(changeItems upgradeChangeItem) error {
-	logs.Info("agentUpgrade|start upgrade, agent changed: ", changeItems.AgentChanged,
-		", work agent changed: ", changeItems.WorkAgentChanged,
-		", jdk agent changed: ", changeItems.JdkChanged,
-		", docker init file changed: ", changeItems.DockerInitFile,
+func DoUpgradeOperation(upItems *upgradeItems) error {
+	logs.Info("agentUpgrade|start upgrade, agent changed: ", upItems.Agent,
+		", work agent changed: ", upItems.Worker,
+		", jdk agent changed: ", upItems.Jdk,
+		", docker init file changed: ", upItems.DockerInitFile,
 	)
 
-	if changeItems.JdkChanged {
+	if upItems.Jdk {
 		err := DoUpgradeJdk()
 		if err != nil {
 			return err
@@ -134,7 +135,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("agentUpgrade|jdk not changed, skip agent upgrade")
 	}
 
-	if changeItems.WorkAgentChanged {
+	if upItems.Worker {
 		logs.Info("agentUpgrade|work agent changed, replace work agent file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.WorkAgentFile,
@@ -146,12 +147,12 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		}
 		logs.Info("agentUpgrade|replace agent file done")
 
-		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
+		third_components.Worker.DetectWorkerVersion()
 	} else {
 		logs.Info("agentUpgrade|worker not changed, skip agent upgrade")
 	}
 
-	if changeItems.AgentChanged {
+	if upItems.Agent {
 		logs.Info("agentUpgrade|agent changed, start upgrader")
 		err := runUpgrader(config.ActionUpgrade)
 		if err != nil {
@@ -161,7 +162,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("agentUpgrade|agent not changed, skip agent upgrade")
 	}
 
-	if changeItems.DockerInitFile {
+	if upItems.DockerInitFile {
 		logs.Info("agentUpgrade|docker init file changed, replace docker init file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.DockerInitFile,
@@ -189,43 +190,38 @@ func DoUpgradeJdk() error {
 	logs.Info("agentUpgrade|jdk changed, replace jdk file")
 
 	workDir := systemutil.GetWorkDir()
-	// 复制出来jdk.zip
-	_, err := fileutil.CopyFile(
-		systemutil.GetUpgradeDir()+"/"+config.JdkClientFile,
-		workDir+"/"+config.JdkClientFile,
-		true,
-	)
-	if err != nil {
-		return errors.Wrap(err, "upgrade jdk copy new jdk file error")
-	}
 
-	// 解压缩为一个新文件取代旧文件路径
-	jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
-	err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
+	// 解压缩为一个新文件取代旧文件路径，优先使用标准路径
+	jdkTmpName := "jdk17"
+	_, err := os.Stat(workDir + "/" + jdkTmpName)
+	if !(err != nil && errors.Is(err, os.ErrNotExist)) {
+		jdkTmpName = "jdk17-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	err = fileutil.Unzip(systemutil.GetUpgradeDir()+"/"+config.Jdk17ClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
-		return errors.Wrap(err, "upgrade jdk unzip error")
+		return errors.Wrap(err, "upgrade jdk17 unzip error")
 	}
 
 	// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
 	go func() {
 		files, err := os.ReadDir(workDir)
 		if err != nil {
-			logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
+			logs.WithError(err).Error("agentUpgrade|upgrade jdk17 remove old jdk file error")
 			return
 		}
 		for _, file := range files {
-			if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
-				file.Name() != jdkTmpName {
+			if file.Name() != jdkTmpName && (file.Name() == "jdk17" || file.Name() == "jdk17.zip" ||
+				strings.HasPrefix(file.Name(), "jdk17-")) {
 				err = os.RemoveAll(workDir + "/" + file.Name())
 				if err != nil {
-					logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
+					logs.WithError(err).Error("agentUpgrade|upgrade jdk17 remove old jdk file error")
 				}
 			}
 		}
 	}()
 
 	// 修改启动worker的jdk路径
-	config.SaveJdkDir(workDir + "/" + jdkTmpName)
+	third_components.Jdk.Jdk17.SetJavaDir(workDir + "/" + jdkTmpName)
 
 	logs.Info("agentUpgrade|replace jdk file done")
 
