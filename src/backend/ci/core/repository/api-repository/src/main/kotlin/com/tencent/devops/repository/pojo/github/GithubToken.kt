@@ -39,5 +39,7 @@ data class GithubToken(
     @get:Schema(title = "token类型", description = "token_type")
     val tokenType: String,
     @get:Schema(title = "范围")
-    val scope: String
+    val scope: String,
+    @get:Schema(title = "创建时间(时间戳)")
+    val createTime: Long
 )
