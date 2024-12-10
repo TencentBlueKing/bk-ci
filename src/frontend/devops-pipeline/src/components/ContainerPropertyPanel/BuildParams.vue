@@ -522,7 +522,6 @@
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import FileParamInput from '@/components/FileParamInput'
     import {
         PROCESS_API_URL_PREFIX,
         REPOSITORY_API_URL_PREFIX,
