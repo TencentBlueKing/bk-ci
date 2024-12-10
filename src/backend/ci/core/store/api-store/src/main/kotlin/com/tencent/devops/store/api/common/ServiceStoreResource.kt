@@ -109,6 +109,21 @@ interface ServiceStoreResource {
         userId: String
     ): Result<Boolean>
 
+    @Operation(summary = "校验流水线用户访问插件信息权限")
+    @GET
+    @Path("/codes/{storeCode}/pipeline/user/validate")
+    fun validatePipelineUserAtomPermission(
+        @Parameter(description = "标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
+
     @Operation(summary = "判断错误码是否合规")
     @POST
     @Path("/codes/{storeCode}/errorCode/compliance")

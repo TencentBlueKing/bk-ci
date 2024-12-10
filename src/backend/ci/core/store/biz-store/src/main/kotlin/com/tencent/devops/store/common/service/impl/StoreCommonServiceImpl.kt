@@ -532,4 +532,16 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
         return releaseTotalNum > currentNum
     }
+
+    override fun getStoreCodeById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String {
+        var code = storeBaseQueryDao.getComponentById(dslContext, storeId)?.storeCode
+        if (code == null) {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            code = storeCommonDao.getStoreCodeById(dslContext, storeId)
+        }
+        return code ?: ""
+    }
 }
