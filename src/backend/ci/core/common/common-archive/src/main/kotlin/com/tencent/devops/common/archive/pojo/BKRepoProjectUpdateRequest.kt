@@ -12,5 +12,5 @@ data class BKRepoProjectUpdateRequest(
     @get:Schema(title = "项目新建仓库默认使用的存储")
     val credentialsKey: String? = null,
     @get:Schema(title = "设置项目新建仓库默认使用默认存储")
-    val useDefaultCredentialsKey: Boolean? = false,
+    val useDefaultCredentialsKey: Boolean? = false
 )
