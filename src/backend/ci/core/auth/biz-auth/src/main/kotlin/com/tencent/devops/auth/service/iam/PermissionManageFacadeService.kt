@@ -232,4 +232,12 @@ interface PermissionManageFacadeService {
      * 获取交接中用户组相关-分为预览/交接单审批两个场景
      * */
     fun listGroupsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo>
+
+    /**
+     * 校验是否为项目成员
+     * */
+    fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Boolean
 }

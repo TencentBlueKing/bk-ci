@@ -104,9 +104,4 @@ interface PermissionResourceMemberService {
         members: List<String>? = emptyList(),
         departments: List<String>? = emptyList()
     ): Boolean
-
-    fun isProjectMember(
-        projectCode: String,
-        userId: String
-    ): Boolean
 }

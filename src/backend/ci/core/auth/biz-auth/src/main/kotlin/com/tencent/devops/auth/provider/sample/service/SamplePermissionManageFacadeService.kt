@@ -163,4 +163,8 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
     override fun listGroupsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {
         return SQLPage(0, emptyList())
     }
+
+    override fun isProjectMember(projectCode: String, userId: String): Boolean {
+        return true
+    }
 }

@@ -63,6 +63,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
@@ -1889,6 +1890,33 @@ class RbacPermissionManageFacadeServiceImpl(
         } else {
             listGroupsOfHandoverPreview(queryReq)
         }
+    }
+
+    override fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Boolean {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = userId
+        )
+        val memberDeptInfos = deptService.getUserInfo(
+            userId = "admin",
+            name = userId
+        )?.deptInfo?.map { it.name!! }
+
+        return authResourceGroupMemberDao.isMemberInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            userId = userId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
+        ) || rbacCacheService.validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectCode,
+            permission = AuthPermission.VISIT
+        )
     }
 
     private fun listGroupsOfHandoverPreview(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {
