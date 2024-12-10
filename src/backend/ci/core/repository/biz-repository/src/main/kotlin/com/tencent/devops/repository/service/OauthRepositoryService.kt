@@ -1,6 +1,5 @@
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.repository.pojo.OauthResetUrl
 import com.tencent.devops.repository.pojo.UserOauthRepositoryInfo
 import com.tencent.devops.common.api.enums.ScmCode
@@ -40,7 +39,7 @@ class OauthRepositoryService @Autowired constructor(
                 userId = userId,
                 scmCode = scmCode.name
             )?.let {
-                val (expired, username) = getRealUsername(scmCode, userId)
+                val (expired, username) = getRealUsername(scmCode, it.accessToken)
                 UserOauthRepositoryInfo(
                     username = username ?: "",
                     repoCount = repositoryService.countOauthRepo(
