@@ -1,13 +1,5 @@
 
 // const commonPrefix = `${DOCS_URL_PREFIX}/docs/markdown/持续集成平台/产品白皮书`
-function getVersion (version) {
-    const versionMatch = version?.match(/^(\d+)\.(\d+)/)
-    if (versionMatch) {
-        return `${versionMatch[1]}.${versionMatch[2]}`
-    }
-    return ''
-}
-
 const createDocs = (lang, version) => {
     const BkciDocs = {
         BKCI_DOC: `${IWIKI_DOCS_URL}/display/DevOps`, // 首页跳转文档

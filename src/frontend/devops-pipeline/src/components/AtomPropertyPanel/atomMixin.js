@@ -71,7 +71,6 @@ const atomMixin = {
         stage: Object,
         atomPropsModel: Object,
         setAtomValidate: Function,
-        atomValue: Object,
         disabled: Boolean
     },
     components: {
