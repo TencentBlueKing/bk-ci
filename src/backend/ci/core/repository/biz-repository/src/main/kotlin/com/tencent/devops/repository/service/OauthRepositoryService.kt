@@ -47,6 +47,7 @@ class OauthRepositoryService @Autowired constructor(
                         scmType = scmCode.convertScmType()
                     ),
                     type = scmCode,
+                    createTime = it.createTime,
                     expired = expired,
                     authorized = true
                 )

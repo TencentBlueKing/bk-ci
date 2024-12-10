@@ -228,10 +228,6 @@ class GithubOAuthService @Autowired constructor(
         }
     }
 
-    fun deleteToken(userId: String) {
-        githubTokenService.deleteAccessToken(userId)
-    }
-
     fun getUser(accessToken: String): GetUserResponse {
         return githubUserService.getUser(accessToken)
     }

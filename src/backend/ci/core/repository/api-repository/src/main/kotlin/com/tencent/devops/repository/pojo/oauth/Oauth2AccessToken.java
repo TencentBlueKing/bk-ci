@@ -14,4 +14,5 @@ public class Oauth2AccessToken {
     private String tokenType;
     private Long expiresIn;
     private String refreshToken;
+    private Long createTime;
 }

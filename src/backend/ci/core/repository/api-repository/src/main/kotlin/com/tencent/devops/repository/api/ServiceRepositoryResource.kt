@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
-import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -271,22 +270,4 @@ interface ServiceRepositoryResource {
         @QueryParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>
-
-    @Operation(summary = "获取指定用户授权的代码库")
-    @POST
-    @Path("/listOauthRepo")
-    fun listOauthRepo(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "代码库类型")
-        @QueryParam("scmType")
-        scmType: ScmType,
-        @Parameter(description = "第几页", required = false, example = "1")
-        @QueryParam("page")
-        page: Int? = null,
-        @Parameter(description = "每页多少条", required = false, example = "20")
-        @QueryParam("pageSize")
-        pageSize: Int? = null
-    ): Result<Page<RepoOauthRefVo>>
 }

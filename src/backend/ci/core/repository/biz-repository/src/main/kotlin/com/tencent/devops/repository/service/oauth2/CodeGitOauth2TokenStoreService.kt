@@ -27,6 +27,8 @@
 
 package com.tencent.devops.repository.service.oauth2
 
+import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -58,7 +60,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
                 it.tokenType,
                 it.expiresIn,
-                BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken)
+                BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                it.createTime.timestampmilli()
             )
         }
     }
