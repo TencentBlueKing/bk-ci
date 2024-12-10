@@ -94,6 +94,8 @@ object RepositoryMessageCode {
     const val ERROR_USER_HAVE_NOT_DOWNLOAD_PEM = "2115043" // 用户（{0}）无（{1}）项目下载权限
     const val NOT_GITHUB_AUTHORIZED_BY_OAUTH = "2115044" // 用户[{0}]尚未进行GITHUB OAUTH授权，请先授权。
     const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
+    const val EMPTY_COMMIT_RECORD = "2115050" // 无代码变更记录
+    const val REPOSITORY_NO_SUPPORT_AI_SUMMARY = "2115051" // 仅支持工蜂代码库生成AI摘要，
 
     const val USER_NOT_PERMISSIONS_OPERATE_REPOSITORY = "2115046" // 用户({0})无权限在工程({1})下{2}流水线{3}
 
