@@ -94,11 +94,11 @@ object RepositoryMessageCode {
     const val ERROR_USER_HAVE_NOT_DOWNLOAD_PEM = "2115043" // 用户（{0}）无（{1}）项目下载权限
     const val NOT_GITHUB_AUTHORIZED_BY_OAUTH = "2115044" // 用户[{0}]尚未进行GITHUB OAUTH授权，请先授权。
     const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
-    const val EMPTY_COMMIT_RECORD = "2115050" // 无代码变更记录
-    const val REPOSITORY_NO_SUPPORT_AI_SUMMARY = "2115051" // 仅支持工蜂代码库生成AI摘要，
 
     const val USER_NOT_PERMISSIONS_OPERATE_REPOSITORY = "2115046" // 用户({0})无权限在工程({1})下{2}流水线{3}
     const val FAIL_TO_GET_OPEN_COPILOT_TOKEN = "2115048" // 获取open copilot token 失败, 失败详情: {0}
+    const val EMPTY_COMMIT_RECORD = "2115050" // 无代码变更记录
+    const val REPOSITORY_NO_SUPPORT_AI_SUMMARY = "2115051" // 仅支持工蜂代码库生成AI摘要，
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
