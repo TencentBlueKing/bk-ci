@@ -23,32 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.webhook
+package com.tencent.devops.common.pipeline.pojo.cascade
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.permission.PipelinePermissionService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Service
-class PipelineBuildPermissionService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService
-) {
-    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        )
-    }
-}
+@Schema(title = "构建模型-表单元素属性")
+data class BuildCascadeProps(
+    // 级联ID
+    val id: String,
+    // 级联下拉框值
+    val options: List<BuildFormValue>,
+    // 后端搜索url
+    val searchUrl: String?,
+    // 搜索key
+    val replaceKey: String?,
+    // 级联子级
+    var children: BuildCascadeProps? = null
+)

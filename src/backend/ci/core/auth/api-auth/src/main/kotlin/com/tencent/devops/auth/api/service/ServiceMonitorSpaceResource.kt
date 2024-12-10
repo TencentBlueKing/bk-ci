@@ -58,6 +58,14 @@ interface ServiceMonitorSpaceResource {
         projectCode: String
     ): Result<String>
 
+    @Operation(summary = "获取监控空间业务id")
+    @POST
+    @Path("/listMonitorSpaceBizIds")
+    fun listMonitorSpaceBizIds(
+        @Parameter(description = "项目ID列表", required = false)
+        projectCodes: List<String>
+    ): Result<Map<String/*projectCode*/, String/*bizId*/>>
+
     @POST
     @Path("/migrateMonitorResource")
     @Operation(summary = "迁移监控空间权限资源")
