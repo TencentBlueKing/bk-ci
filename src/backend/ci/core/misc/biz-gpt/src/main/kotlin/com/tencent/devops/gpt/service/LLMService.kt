@@ -40,6 +40,7 @@ import com.tencent.devops.gpt.constant.GptMessageCode.GPT_BUSY
 import com.tencent.devops.gpt.constant.GptMessageCode.SCRIPT_ERROR_ANALYSIS_CHAT_TASK_LOGS_EMPTY
 import com.tencent.devops.gpt.constant.GptMessageCode.SCRIPT_ERROR_ANALYSIS_CHAT_TASK_NOT_FAILED
 import com.tencent.devops.gpt.constant.GptMessageCode.SCRIPT_ERROR_ANALYSIS_CHAT_TASK_NOT_FIND
+import com.tencent.devops.gpt.constant.GptMessageCode.SCRIPT_ERROR_ANALYSIS_CHAT_TASK_UNDEFINED
 import com.tencent.devops.gpt.dao.AIScoreDao
 import com.tencent.devops.gpt.pojo.AIScoreRes
 import com.tencent.devops.gpt.service.config.GptGatewayCondition
@@ -91,16 +92,20 @@ class LLMService @Autowired constructor(
         refresh: Boolean?,
         output: ChunkedOutput<String>
     ) {
+        if (taskId == "undefined") {
+            output.write(I18nUtil.getCodeLanMessage(SCRIPT_ERROR_ANALYSIS_CHAT_TASK_UNDEFINED))
+            return
+        }
         logger.info("scriptErrorAnalysisChat|$userId|$projectId|$pipelineId|$buildId|$taskId|$executeCount|$refresh")
         // 拿插件执行信息
         val task = client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
-            projectId = projectId, buildId = buildId, taskId = taskId, stepId = null, executeCount = executeCount
+            projectId = projectId, buildId = buildId, taskId = taskId, stepId = null, executeCount = null
         ).data ?: run {
             output.write(I18nUtil.getCodeLanMessage(SCRIPT_ERROR_ANALYSIS_CHAT_TASK_NOT_FIND))
             return
         }
         // 校验插件状态
-        if (task.status != BuildStatus.FAILED) {
+        if (task.status != BuildStatus.FAILED && task.executeCount == executeCount) {
             output.write(I18nUtil.getCodeLanMessage(SCRIPT_ERROR_ANALYSIS_CHAT_TASK_NOT_FAILED))
             return
         }
