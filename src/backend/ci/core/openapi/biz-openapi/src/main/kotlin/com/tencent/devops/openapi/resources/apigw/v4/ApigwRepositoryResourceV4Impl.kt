@@ -27,18 +27,22 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryResourceV4
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -155,6 +159,33 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
             projectId = projectId,
             repositoryHashId = repositoryHashId
         )
+    }
+
+    override fun authorized(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        scmCode: ScmCode,
+        redirectUrl: String
+    ): Result<AuthorizeResult> {
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|verify if $scmCode oauth authorization has been performed")
+        return when (scmCode) {
+            ScmCode.TGIT -> {
+                client.get(ServiceOauthResource::class).isOAuth(
+                    userId = userId,
+                    redirectUrl = redirectUrl,
+                    redirectUrlType = RedirectUrlTypeEnum.SPEC
+                )
+            }
+
+            ScmCode.GITHUB -> {
+                client.get(ServiceOauthResource::class).githubOAuth(
+                    userId = userId,
+                    redirectUrl = redirectUrl,
+                    redirectUrlType = RedirectUrlTypeEnum.SPEC
+                )
+            }
+        }
     }
 
     companion object {

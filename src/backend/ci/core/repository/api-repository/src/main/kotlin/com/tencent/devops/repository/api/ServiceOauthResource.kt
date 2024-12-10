@@ -123,4 +123,19 @@ interface ServiceOauthResource {
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false
     ): Result<AuthorizeResult>
+
+    @Operation(summary = "根据用户ID判断用户是否已经github oauth认证")
+    @GET
+    @Path("/github_oauth")
+    fun githubOAuth(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum?,
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?
+    ): Result<AuthorizeResult>
 }
