@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineInfo
@@ -103,9 +102,12 @@ class PipelineModelTaskDao {
      */
     fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            val condition = getListByAtomCodeCond(this, atomCode, projectCode)
+            val condition = mutableListOf<Condition>()
             val tpi = TPipelineInfo.T_PIPELINE_INFO
-            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
+            condition.add(ATOM_CODE.eq(atomCode))
+            if (projectCode != null) {
+                condition.add(tpi.PROJECT_ID.eq(projectCode))
+            }
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
                 .join(tpi)
@@ -126,11 +128,10 @@ class PipelineModelTaskDao {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = mutableListOf<Condition>()
             condition.add(ATOM_CODE.`in`(atomCodeList))
-            if (projectCode != null) {
-                condition.add(PROJECT_ID.eq(projectCode))
-            }
             val tpi = TPipelineInfo.T_PIPELINE_INFO
-            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
+            if (projectCode != null) {
+                condition.add(tpi.PROJECT_ID.eq(projectCode))
+            }
             return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
                 .from(this)
                 .join(tpi)
@@ -223,13 +224,15 @@ class PipelineModelTaskDao {
             val condition = getListByAtomCodeCond(
                 a = this,
                 atomCode = atomCode,
-                projectId = projectId,
+                projectId = null,
                 version = version,
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
             )
             val tpi = TPipelineInfo.T_PIPELINE_INFO
-            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
+            if (!projectId.isNullOrEmpty()) {
+                condition.add(tpi.PROJECT_ID.eq(projectId))
+            }
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
