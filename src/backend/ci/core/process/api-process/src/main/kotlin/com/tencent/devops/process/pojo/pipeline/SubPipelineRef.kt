@@ -67,21 +67,6 @@ data class SubPipelineRef(
     @get:Schema(title = "插件参数[pipelineName]", required = false)
     val taskPipelineName: String? = ""
 ) {
-    constructor(projectId: String, pipelineId: String, element: Element) : this(
-        pipelineId = pipelineId,
-        pipelineName = "",
-        projectId = projectId,
-        channel = "",
-        element = element,
-        subPipelineId = "",
-        subProjectId = "",
-        subPipelineName = "",
-        userId = "",
-        elementEnable = true,
-        isTemplate = false,
-        taskPosition = ""
-    )
-
     constructor(projectId: String, pipelineId: String, subPipelineId: String, subProjectId: String) : this(
         pipelineId = pipelineId,
         pipelineName = "",
