@@ -611,9 +611,6 @@ importers:
       mavon-editor:
         specifier: ^2.10.4
         version: 2.10.4
-      moment:
-        specifier: ^2.29.2
-        version: 2.30.1
       vue:
         specifier: ~2.7.16
         version: 2.7.16
