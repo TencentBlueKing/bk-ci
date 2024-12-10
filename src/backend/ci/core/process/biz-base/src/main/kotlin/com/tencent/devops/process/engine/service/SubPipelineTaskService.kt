@@ -228,18 +228,22 @@ class SubPipelineTaskService @Autowired constructor(
     fun modelTaskConvertSubPipelineRef(
         model: Model,
         channel: String,
-        modelTasks: List<PipelineModelTask>
-    ): List<SubPipelineRef> {
-        val subPipelineRefList = mutableListOf<SubPipelineRef>()
-        modelTasks.filter {
-            it.taskEnable()
-        }.forEach {
+        enableModelTasks: List<PipelineModelTask>,
+        validRefList: MutableList<SubPipelineRef>,
+        invalidTaskIds: MutableSet<String>
+    ) {
+        enableModelTasks.forEach {
             val subPipelineTaskParam = getSubPipelineParam(
                 projectId = it.projectId,
                 element = JsonUtil.mapTo(it.taskParams, Element::class.java),
                 contextMap = getContextMap(model.stages)
-            ) ?: return@forEach
-            subPipelineRefList.add(
+            )
+            if (subPipelineTaskParam == null) {
+                // 记录无效数据，插件存在无效参数的情况
+                invalidTaskIds.add(it.taskId)
+                return@forEach
+            }
+            validRefList.add(
                 SubPipelineRef(
                     projectId = it.projectId,
                     pipelineId = it.pipelineId,
@@ -257,7 +261,6 @@ class SubPipelineTaskService @Autowired constructor(
                 )
             )
         }
-        return subPipelineRefList
     }
 
     fun batchDelete(
@@ -280,33 +283,53 @@ class SubPipelineTaskService @Autowired constructor(
         channel: String,
         modelTasks: List<PipelineModelTask>
     ) {
+        // 启用状态的插件
+        val enableModelTasks = modelTasks.filter { it.taskEnable() }
+        // 有效的引用信息
+        val validRefList = mutableListOf<SubPipelineRef>()
+        // 无效的引用信息
+        val invalidTaskIds = mutableSetOf<String>()
+        // 转换为引用信息
+        modelTaskConvertSubPipelineRef(
+            model = model,
+            channel = channel,
+            enableModelTasks = enableModelTasks,
+            validRefList = validRefList,
+            invalidTaskIds = invalidTaskIds
+        )
+        // 清理无效数据
         cleanUpInvalidRefs(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            modelTasks = modelTasks
+            existsTaskIds = enableModelTasks.map { it.taskId }.toSet(),
+            invalidTaskIds = invalidTaskIds
         )
+        // 添加并更新引用信息
         subPipelineRefService.batchAdd(
             transaction = dslContext,
-            subPipelineRefList = modelTaskConvertSubPipelineRef(
-                model = model,
-                channel = channel,
-                modelTasks = modelTasks
-            )
+            subPipelineRefList = validRefList
         )
     }
 
+    /**
+     * 清理无效引用信息
+     * 1. 已禁用的插件引用
+     * 2. 无效配置的插件引用
+     */
     private fun cleanUpInvalidRefs(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        modelTasks: List<PipelineModelTask>
+        existsTaskIds: Set<String>,
+        invalidTaskIds: Set<String>
     ) {
         subPipelineRefService.cleanUpInvalidRefs(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            existsTaskIds = modelTasks.filter { it.taskEnable() }.map { it.taskId }.toSet()
+            existsTaskIds = existsTaskIds,
+            invalidTaskIds = invalidTaskIds
         )
     }
 

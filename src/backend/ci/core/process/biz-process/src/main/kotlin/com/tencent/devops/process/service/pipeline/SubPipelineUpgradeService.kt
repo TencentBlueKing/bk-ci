@@ -176,7 +176,7 @@ class SubPipelineUpgradeService @Autowired constructor(
             )
             val targetRefs = subPipelineRefList.associateBy { "${it.pipelineId}_${it.element.id}" }
             val needDeleteInfos = existsRefs.filter { !targetRefs.containsKey("${it.pipelineId}_${it.taskId}") }
-                .map { Triple(it.projectId, it.pipelineId, it.taskId) }
+                .map { Triple(it.projectId, it.pipelineId, it.taskId) }.toSet()
             // 删除无效数据
             subPipelineRefService.batchDelete(transaction = transaction, infos = needDeleteInfos)
             // 添加新数据

@@ -70,7 +70,7 @@ class SubPipelineRefService @Autowired constructor(
         )
     }
 
-    fun batchDelete(transaction: DSLContext? = null, infos: List<Triple<String, String, String>>) {
+    fun batchDelete(transaction: DSLContext? = null, infos: Set<Triple<String, String, String>>) {
         subPipelineRefDao.batchDelete(
             dslContext = transaction ?: dslContext,
             infos = infos
@@ -91,7 +91,8 @@ class SubPipelineRefService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        existsTaskIds: Set<String>
+        existsTaskIds: Set<String>,
+        invalidTaskIds: Set<String>
     ) {
         val taskIdRecords = subPipelineRefDao.list(
             dslContext = dslContext,
@@ -100,7 +101,9 @@ class SubPipelineRefService @Autowired constructor(
         ).map { it.taskId }
         val needDelInfos = taskIdRecords.filter { !existsTaskIds.contains(it) }.map {
             Triple(projectId, pipelineId, it)
-        }
+        }.toMutableSet()
+        // 填充需要同时移除的无效引用信息
+        needDelInfos.addAll(invalidTaskIds.map { Triple(projectId, pipelineId, it) })
         batchDelete(
             transaction = dslContext,
             infos = needDelInfos
