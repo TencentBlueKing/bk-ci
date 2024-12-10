@@ -271,7 +271,7 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import ExtMenu from './extMenu'
 
     export default {
@@ -367,7 +367,7 @@
                         this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
-                            x.updateTime = moment(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
+                            x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                             x.templateActions = [
                                 {
                                     text: this.$t('clone'),
