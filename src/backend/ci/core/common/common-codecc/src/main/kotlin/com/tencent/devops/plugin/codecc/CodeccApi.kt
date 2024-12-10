@@ -36,20 +36,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
-import javax.ws.rs.HttpMethod
 
 @Suppress("ALL")
 class CodeccApi(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
     private val codeccHost: String,
-    private val codeccGrayProjectId: String? = null
+    private val codeccGrayProjectId: String? = null,
+    private val codeccProjectId: String? = null
 ) {
 
     companion object {
@@ -185,10 +186,10 @@ class CodeccApi(
     }
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
-        val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        val url = "http://$codeccHost/ms/openapi/api/open/v2/defect/opensource/measurement?url=$atomCodeSrc"
         val headers = mutableMapOf<String, String>()
-        if (!codeccGrayProjectId.isNullOrBlank()) {
-            headers[AUTH_HEADER_PROJECT_ID] = codeccGrayProjectId
+        if (!codeccProjectId.isNullOrBlank()) {
+            headers[AUTH_HEADER_PROJECT_ID] = codeccProjectId
         }
         val httpReq = Request.Builder()
             .url(url)
