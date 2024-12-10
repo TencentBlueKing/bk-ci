@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.service.oauth2
 
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.dao.GitTokenDao
