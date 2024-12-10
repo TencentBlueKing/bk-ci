@@ -12,7 +12,7 @@
         {{ $t('importPipelineLabel') }}
         <bk-upload
             v-if="isShow"
-            accept="application/json"
+            accept=".json, .yaml, .yml, application/json, application/x-yaml"
             :with-credentials="true"
             :custom-request="handleSelect"
         >
@@ -23,6 +23,7 @@
 <script>
     import { hashID } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import YAML from 'js-yaml'
     export default {
         name: 'import-pipeline-popup',
         props: {
@@ -66,40 +67,69 @@
             handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
                 const reader = new FileReader()
                 reader.readAsText(fileObj.origin)
+                
+                if (fileObj.type === 'application/json' || fileObj.name.endsWith('.json')) {
+                    reader.addEventListener('loadend', e => {
+                        try {
+                            const jsonResult = JSON.parse(reader.result)
+                            const isValid = this.checkJosnValid(jsonResult)
+                            const code = isValid ? 0 : 1
+                            const message = isValid ? null : this.$t('invalidPipelineJsonOrYaml')
 
-                reader.addEventListener('loadend', e => {
-                    try {
-                        const jsonResult = JSON.parse(reader.result)
-                        const isValid = this.checkJosnValid(jsonResult)
-                        const code = isValid ? 0 : 1
-                        const message = isValid ? null : this.$t('invalidPipelineJson')
+                            onSuccess({
+                                code,
+                                message,
+                                result: jsonResult
+                            }, fileObj)
 
-                        onSuccess({
-                            code,
-                            message,
-                            result: jsonResult
-                        }, fileObj)
-
-                        if (isValid) {
-                            this.handleSuccess(jsonResult)
+                            if (isValid) {
+                                this.handleSuccess(jsonResult)
+                            }
+                        } catch (e) {
+                            console.log(e)
+                            onSuccess({
+                                code: 1,
+                                message: this.$t('invalidPipelineJsonOrYaml'),
+                                result: ''
+                            }, fileObj)
+                        } finally {
+                            onDone(fileObj)
                         }
-                    } catch (e) {
-                        console.log(e)
-                        onSuccess({
-                            code: 1,
-                            message: this.$t('invalidPipelineJson'),
-                            result: ''
-                        }, fileObj)
-                    } finally {
-                        onDone(fileObj)
-                    }
-                })
+                    })
+                } else if (fileObj.type === 'application/x-yaml' || fileObj.name.endsWith('.yaml') || fileObj.name.endsWith('.yml')) {
+                    reader.addEventListener('loadend', e => {
+                        try {
+                            const jsonResult = YAML.load(e.target.result)
+                            const isValid = !!jsonResult.stages?.length
+                            const code = isValid ? 0 : 1
+                            const message = isValid ? null : this.$t('invalidPipelineJsonOrYaml')
 
+                            onSuccess({
+                                code,
+                                message,
+                                result: jsonResult
+                            }, fileObj)
+
+                            if (isValid) {
+                                this.handleSuccess(jsonResult)
+                            }
+                        } catch (e) {
+                            console.log(e)
+                            onSuccess({
+                                code: 1,
+                                message: this.$t('invalidPipelineJsonOrYaml'),
+                                result: ''
+                            }, fileObj)
+                        } finally {
+                            onDone(fileObj)
+                        }
+                    })
+                }
                 reader.addEventListener('progress', onProgress)
             },
 
             async handleSuccess (result) {
-                const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
+                const newPipelineName = this.pipelineName || `${result.name || result.model.name}_${hashID().slice(0, 8)}`
                 const res = await this.updatePipeline(result, newPipelineName)
                 this.setEditFrom(true)
                 if (res) {
@@ -168,7 +198,7 @@
             },
             checkJosnValid (json) {
                 try {
-                    return json.model.stages && json.setting.pipelineName
+                    return (json.model.stages && json.setting.pipelineName) || json.stages
                 } catch (e) {
                     return false
                 }

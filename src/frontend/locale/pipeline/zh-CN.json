@@ -141,8 +141,8 @@
   "pipelinesDetail": "执行详情",
   "newPipelineFromTemplateLabel": "从模板新建",
   "newPipelineFromJSONLabel": "导入流水线",
-  "importPipelineLabel": "请上传一个流水线JSON文件",
-  "invalidPipelineJson": "非法的流水线JSON文件",
+  "importPipelineLabel": "请上传一个流水线JSON/YAML文件",
+  "invalidPipelineJsonOrYaml": "非法的流水线JSON/YAML文件",
   "exportPipelineSuccess": "导出流水线成功",
   "sizeLimit": "最大上传{0}MB，重新上传时若路径未变更，无需保存流水线",
   "fileUploadSuccess": "上传成功",
@@ -465,6 +465,7 @@
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
+    "exportPipelineYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。了解 PAC 模式",
     "chooseExport": "选择导出的文件格式",
     "defaultViews": "我的常用视图",
     "copyPipeline": "复制流水线",
