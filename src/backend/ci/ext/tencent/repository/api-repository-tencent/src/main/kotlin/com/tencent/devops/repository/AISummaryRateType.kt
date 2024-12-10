@@ -24,35 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.repository.config
-
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+package com.tencent.devops.repository
 
 /**
- * Copilot配置
+ * 针对[AI 摘要]的评论类型
  */
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class CopilotConfig {
-
-    @Value("\${scm.git.copilot.appId:#{null}}")
-    val appId: String = ""
-
-    @Value("\${scm.git.copilot.appSecret:#{null}}")
-    val appSecret: String = ""
-
-    @Value("\${scm.git.copilot.apiUrl:#{null}}")
-    val apiUrl: String = ""
-
-    @Value("\${scm.git.copilot.apiHost:#{null}}")
-    val apiHost: String = ""
-
-    @Value("\${scm.git.copilot.supportHost:#{null}}")
-    val supportHost: List<String> = listOf()
+enum class AISummaryRateType constructor(val value: String) {
+    UP("up"),
+    DOWN("down")
 }

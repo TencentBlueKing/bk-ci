@@ -30,6 +30,8 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.AISummaryRateType
+import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,4 +60,46 @@ interface UserCopilotResource {
         @QueryParam("refresh")
         refresh: Boolean? = false
     ): Result<String>
+
+    @Operation(summary = "生成AI摘要")
+    @GET
+    @Path("/createSummary")
+    fun createSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "插件ID", required = true)
+        @QueryParam("elementId")
+        elementId: String
+    ): Result<CodeGitCopilotSummary>
+
+    @Operation(summary = "评价AI结果")
+    @GET
+    @Path("/summary/rate")
+    fun rateSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库名", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "AI摘要任务ID", required = true)
+        @QueryParam("processId")
+        processId: String,
+        @Parameter(description = "评价类型", required = true)
+        @QueryParam("type")
+        type: AISummaryRateType,
+        @Parameter(description = "更多反馈", required = false)
+        @QueryParam("feedback")
+        feedback: String? = null
+    ): Result<Boolean>
 }
