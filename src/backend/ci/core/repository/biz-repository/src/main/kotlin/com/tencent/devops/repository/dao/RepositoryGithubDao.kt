@@ -190,7 +190,7 @@ class RepositoryGithubDao {
         dslContext: DSLContext,
         userId: String,
         limit: Int,
-        offset: Int,
+        offset: Int
     ): List<RepoOauthRefVo> {
         val t1 = TRepository.T_REPOSITORY
         val t2 = TRepositoryGithub.T_REPOSITORY_GITHUB

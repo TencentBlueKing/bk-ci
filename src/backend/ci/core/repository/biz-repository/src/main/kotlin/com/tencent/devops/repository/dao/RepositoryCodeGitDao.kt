@@ -217,7 +217,7 @@ class RepositoryCodeGitDao {
         dslContext: DSLContext,
         userId: String,
         limit: Int,
-        offset: Int,
+        offset: Int
     ): List<RepoOauthRefVo> {
         val t1 = TRepository.T_REPOSITORY
         val t2 = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
