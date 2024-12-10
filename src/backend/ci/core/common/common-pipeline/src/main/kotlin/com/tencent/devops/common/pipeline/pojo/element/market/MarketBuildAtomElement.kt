@@ -75,5 +75,12 @@ data class MarketBuildAtomElement(
         )
     }
 
+    override fun transferSensitiveParam(params: List<String>) {
+        val input = data["input"] as MutableMap<String, Any>? ?: return
+        params.forEach {
+            input[it] = "******"
+        }
+    }
+
     override fun getClassType() = classType
 }
