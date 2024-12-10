@@ -246,7 +246,9 @@ function getUnableMessage(row) {
         return t('通过用户组获得权限，请到用户组里移出用户');
       } else if (row.isExpired) {
         return t('已过期，无需移交')
-      }
+      } else if (row.removeMemberButtonControl === 'DEPARTMENT') {
+        return t('通过组织加入的 不允许 续期/移出/移交');
+      } 
     case 'remove':
       let message = TOOLTIPS_CONTENT[row.removeMemberButtonControl];
       return message;
