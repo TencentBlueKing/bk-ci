@@ -137,6 +137,7 @@
                 },
                 // env: ReleaseChannel.INSIDER,
                 env: ReleaseChannel.PRODUCTION,
+                brandPaddingRight: 32,
                 authenticatedSession: {
                     accessToken,
                     user: this.$userInfo.username,

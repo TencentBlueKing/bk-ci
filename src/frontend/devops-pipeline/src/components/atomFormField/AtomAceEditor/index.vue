@@ -32,8 +32,8 @@
 
 <script>
     import Ace from '@/components/common/ace-editor'
-    import atomFieldMixin from '../atomFieldMixin'
     import { getActualTop } from '@/utils/util'
+    import atomFieldMixin from '../atomFieldMixin'
 
     export default {
         name: 'atom-ace-editor',
@@ -160,7 +160,7 @@
 
 <style lang="scss">
     .ace-fullscreen {
-        top: 10px;
+        top: 1px;
         right: 10px;
         position: absolute;
         z-index: 999;
