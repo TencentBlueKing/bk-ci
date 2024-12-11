@@ -715,7 +715,7 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberId = memberId,
             resourceType = ResourceTypeId.PIPELINE,
-            excludeIamGroupIds = operatedGroupsWithExecutePerm,
+            excludeIamGroupIds = iamGroupIdsOfNotExpired,
             operateChannel = OperateChannel.PERSONAL,
             onlyExcludeUserDirectlyJoined = true,
             minExpiredAt = now.timestampmilli()
@@ -725,7 +725,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     projectCode = projectCode,
                     memberId = memberId,
                     resourceType = ResourceTypeId.PROJECT,
-                    excludeIamGroupIds = operatedGroupsWithExecutePerm,
+                    excludeIamGroupIds = iamGroupIdsOfNotExpired,
                     operateChannel = OperateChannel.PERSONAL,
                     onlyExcludeUserDirectlyJoined = true,
                     minExpiredAt = now.timestampmilli()
@@ -733,6 +733,21 @@ class RbacPermissionManageFacadeServiceImpl(
             )
         }.map { it.iamGroupId }
         logger.debug("list pipeline and project groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
+        // 2.1 如果已经退出所有的项目/流水线级别的组，那么该用户在该项目下所有的流水线代持都会失效
+        if (userGroupsJoinedAfterOperatedGroups.isEmpty()) {
+            return InvalidAuthorizationsDTO(
+                invalidGroupIds = operatedGroupsWithExecutePerm,
+                invalidPipelineIds = authAuthorizationDao.list(
+                    dslContext = dslContext,
+                    condition = ResourceAuthorizationConditionRequest(
+                        projectCode = projectCode,
+                        resourceType = ResourceTypeId.PIPELINE,
+                        handoverFrom = memberId
+                    )
+                ).map { it.resourceCode }
+            )
+        }
+
         // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
         // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
         val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
