@@ -67,7 +67,8 @@
     "targets": {
       "public:master": {
         "outputs": [
-          "{workspaceRoot}/frontend/store"
+          "{workspaceRoot}/frontend/store",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }

@@ -71,7 +71,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/codelib"
+          "{workspaceRoot}/frontend/codelib",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }
