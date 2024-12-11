@@ -48,7 +48,7 @@
             <div class="project-group-table" v-for="item in viewTable.data" :key="item.resourceType">
               <bk-collapse-panel 
                 v-model="item.activeFlag"
-                :item-click="(type) => detailCollapseClick(type, viewTable.type)"
+                :item-click="({ name }) => detailCollapseClick(name, viewTable.type)"
                 :name="item.resourceType"
               >
                 <template #header>
@@ -73,13 +73,13 @@
                   <TabTable
                     v-if="item.tableData"
                     :data="item.tableData"
-                    :isAuthorizations="true"
+                    :isAuthorizations="viewTable?.isAuthorizations"
                     :pagination="item.pagination"
                     :resource-type="item.resourceType"
                     :resource-name="item.resourceTypeName"
                     :loading="item.tableLoading"
                     :group-name="item.resourceTypeName"
-                    :type="'AUTHORIZATION'"
+                    :type="viewTable.type"
                     @page-limit-change="pageLimitChange"
                     @page-value-change="pageValueChange"
                   />
@@ -105,6 +105,7 @@
         />
         <bk-button
           theme="primary"
+          class="agree-btn"
           :loading="approvalLoading"
           @click="handleApproval('AGREE')"
         >
@@ -181,7 +182,8 @@
         type: 'AUTHORIZATION',
         key: 'auth',
         data: authTable.value,
-        title: t('资源权限代持')
+        title: t('资源权限代持'),
+        isAuthorizations: true
       }
     ]
   })
@@ -474,6 +476,9 @@
       }
       .remark-input {
         margin-bottom: 20px;
+      }
+      .agree-btn {
+        margin-right: 10px;
       }
     }
   }

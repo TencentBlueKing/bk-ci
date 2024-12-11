@@ -34,8 +34,8 @@ class CronSyncGroupMembersExpiredTimeLock(redisOperation: RedisOperation) :
     RedisLock(
         redisOperation = redisOperation,
         lockKey = "cron.sync.group.member.expired.lock",
-        // 2小时，防止服务重启，锁未释放
-        expiredTimeInSeconds = 7200000
+        // 1小时，防止服务重启，锁未释放
+        expiredTimeInSeconds = 3600000
     ) {
     override fun decorateKey(key: String): String {
         return key

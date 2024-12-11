@@ -14,12 +14,13 @@
             {{ item.label }}
           </span>
         </div>
-        <bk-button v-if="!isGiven" @click="handleBatchProcess">{{ t('批量处理') }}</bk-button>
+        <!-- <bk-button v-if="!isGiven" @click="handleBatchProcess">{{ t('批量处理') }}</bk-button> -->
       </div>
       <div class="right">
         <bk-search-select
             v-model="searchValue"
             :data="searchData"
+            :key="isGiven"
             unique-select
             max-height="32"
             class="search-select"
@@ -39,6 +40,7 @@
         show-overflow-tooltip
         :pagination="pagination"
         remote-pagination
+        :key="isGiven"
         :is-row-select-enable="disabledRowSelect"
         @select-all="handleSelectAll"
         @selection-change="handleSelectionChange"
@@ -253,15 +255,15 @@
     ]
   })
   const searchData = computed(() => {
-  const data = [
+    const data = [
       {
         name: t('单号'),
         id: 'flowNo',
         default: true,
       },
       {
-        name: t('提单人'),
-        id: 'memberID',
+        name: isGiven.value ? t('审批人') : t('提单人'),
+        id: isGiven.value ? 'approver' : 'applicant',
       },
       {
         name: t('状态'),
@@ -289,7 +291,7 @@
   });
 
   watch(() => isGiven.value, () => {
-    init()
+    searchValue.value = []
   })
   watch(() => searchValue.value, (val) => {
     init()
@@ -347,7 +349,7 @@
     selectList.value = refTable.value.getSelection();
   }
   const handleSelectAllData = () => {
-    if (!isSelectAll.value && selectList.value.length !== handoverList.value.length) {
+    if (!isSelectAll.value && selectList.value.length !== handoverList.value.filter(i => i.handoverStatus === 'PENDING').length) {
       refTable.value.toggleAllSelection();
     }
     isSelectAll.value = true;
@@ -361,7 +363,7 @@
     isSelectAll.value = false;
     selectList.value = refTable.value.getSelection();
   }
-  const handlePageChange = () => {
+  const handlePageChange = (page) => {
     refTable.value?.clearSelection();
     isSelectAll.value = false;
     selectList.value = [];
@@ -369,7 +371,7 @@
     fetchHandoverList();
   }
 
-  const handlePageLimitChange = () => {
+  const handlePageLimitChange = (limit) => {
     refTable.value?.clearSelection();
     isSelectAll.value = false;
     selectList.value = [];

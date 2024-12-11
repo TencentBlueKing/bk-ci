@@ -13,7 +13,6 @@
       @page-limit-change="pageLimitChange"
       @page-value-change="pageValueChange"
     >
-
       <bk-table-column :label="groupName" prop="resourceName">
         <template #default="{ row }">
           <span
@@ -27,12 +26,11 @@
       </bk-table-column>
       <template v-if="!isAuthorizations">
         <bk-table-column :label="t('用户组')" prop="groupName" />
-        <bk-table-column :label="t('用户组描述')" prop="groupDesc" />
+        <!-- <bk-table-column :label="t('用户组描述')" prop="groupDesc" /> -->
       </template>
       <template v-else>
         <bk-table-column :label="t('授权人')" prop="handoverFrom" />
       </template>
-
     </bk-table>
   </bk-loading>
 </template>

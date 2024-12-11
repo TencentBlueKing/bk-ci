@@ -179,6 +179,7 @@ export default defineStore('userDetailGroupTable', () => {
    */
   async function detailCollapseClick(resourceType: string, flag: HandoverType) {
     const item = detailSourceList.value.find(item => item.resourceType === resourceType && item.type === flag);
+    console.log(item, 'item')
     if (!item || !item.count || item.tableData.length) return;
 
     item.pagination.current = 1;

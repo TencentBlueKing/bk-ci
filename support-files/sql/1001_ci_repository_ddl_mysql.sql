@@ -244,4 +244,23 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_WEBHOOK_REQUEST`
     PRIMARY KEY (`REQUEST_ID`, `CREATE_TIME`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='代码库WEBHOOK请求表';
 
+
+-- ----------------------------
+-- Table structure for T_REPOSITORY_SCM_TOKEN
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_SCM_TOKEN` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户名',
+    `SCM_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '代码库类型',
+    `APP_TYPE` varchar(64) NOT NULL DEFAULT '' COMMENT 'app类型',
+    `ACCESS_TOKEN` varchar(256) DEFAULT NULL COMMENT 'access token 密文',
+    `REFRESH_TOKEN` varchar(256) DEFAULT NULL COMMENT 'access refresh token',
+    `EXPIRES_IN` bigint(20) DEFAULT NULL COMMENT '过期时间',
+    `CREATE_TIME` datetime DEFAULT NULL COMMENT '创建时间',
+    `UPDATE_TIME` datetime DEFAULT NULL COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNIQ_USER_SCM_CODE_APP_TYPE` (`USER_ID`,`SCM_CODE`,`APP_TYPE`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COMMENT='代码仓库token表';
+
 SET FOREIGN_KEY_CHECKS = 1;
