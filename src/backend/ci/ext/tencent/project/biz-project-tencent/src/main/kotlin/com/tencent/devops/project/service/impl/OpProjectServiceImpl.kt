@@ -49,6 +49,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectService
@@ -189,6 +190,16 @@ class OpProjectServiceImpl @Autowired constructor(
                     cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
                 )
             }
+        }
+        // 项目启用状态变更时，发送广播事件
+        if (dbProjectRecord.enabled != projectInfoRequest.enabled) {
+            projectDispatcher.dispatch(
+                ProjectEnableStatusBroadCastEvent(
+                    userId = userId,
+                    projectId = dbProjectRecord.englishName,
+                    enabled = projectInfoRequest.enabled
+                )
+            )
         }
 
         return if (!flag) {
