@@ -241,9 +241,15 @@
                 v-if="authorizationInvalid && batchFlag === 'handover'"
                 class="main-text"
               >
-                <i18n-t keypath="移交以上用户组，将导致X条流水线权限代持失效。请确认是否同步移交授权。" tag="div">
-                  <span class="remove-num">{{ authorizationInvalid }}</span>
+                {{ t('移交以上用户组，将导致') }}
+                <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
+                  <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
                 </i18n-t>
+
+                <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
+                  <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
+                </i18n-t>
+                {{ t('请确认是否同步移交授权。') }}
               </p>
               
               <div v-if="batchFlag === 'remove'">
@@ -251,16 +257,21 @@
                   v-if="authorizationInvalid"
                   class="main-text"
                 >
-                  <i18n-t keypath="退出以上用户组，将导致X条流水线权限代持失效，X个资源没有拥有者。查看详情, 请填写交接人，完成交接后才能成功退出。" tag="div">
-                    <template #op>
-                      <span class="remove-num">{{ authorizationInvalid }}</span>
-                    </template>
-                    <template #op1>
-                      <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
-                    </template>
-                    <template #op2>
-                      <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
-                    </template>
+                  {{ t('退出以上用户组，将导致') }}
+                  <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
+                    <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
+                  </i18n-t>
+
+                  <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
+                    <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
+                  </i18n-t>
+
+                  <i18n-t v-if="checkData.uniqueManagerCount" keypath="X个资源没有拥有者，" tag="span">
+                    <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
+                  </i18n-t>
+
+                  <i18n-t keypath="查看详情, 请填写交接人，完成交接后才能成功退出。" tag="span">
+                    <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
                   </i18n-t>
                 </p>
                 <p
@@ -681,7 +692,7 @@ async function batchConfirm(batchFlag) {
       if (!(await handleHandoverValidation())) return;
       batchBtnLoading.value = true;
       res = await http.batchHandover(projectId.value, params);
-      if (res && authorizationInvalid.value) {
+      if (res) {
         showHandoverSuccessInfoBox();
       }
     } else if (batchFlag === 'remove') {
@@ -749,7 +760,6 @@ function showHandoverSuccessInfoBox() {
 }
 
 function showRemoveSuccessInfoBox() {
-  const successRemove = checkData.value.invalidGroupCount + checkData.value.uniqueManagerCount
   InfoBox({
     width: 500,
     type: 'success',
@@ -760,9 +770,9 @@ function showRemoveSuccessInfoBox() {
     content: h(
       'div', { class: 'info-content' },
       [
-        h('p', { class: 'info-text' }, t('无需交接的X个用户组已成功退出。', [checkData.value.operableCount])),
+        checkData.value.operableCount && h('p', { class: 'info-text' }, t('无需交接的X个用户组已成功退出。', [checkData.value.operableCount])),
         h('div', [
-          h('p', { class: 'info-text info-tip' }, t('需要交接的X个用户组：', [successRemove])),
+          h('p', { class: 'info-text info-tip' }, t('需要交接的X个用户组：', [checkData.value.canHandoverCount])),
           h('p', { class: 'info-text' }, t('1. 已成功提交移交权限申请，等待交接人X确认。', [handOverForm.value.id])),
           h('p', { class: 'info-text' }, t('2. 可在“我的交接”中查看进度。')),
           h('p', { class: 'info-text' }, t('3. 完成交接后，将自动退出用户组')),

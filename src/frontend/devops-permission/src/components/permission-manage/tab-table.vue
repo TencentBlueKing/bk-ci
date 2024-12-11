@@ -130,11 +130,11 @@
             <bk-button
               text
               theme="primary"
-              :disabled="row.removeMemberButtonControl != 'OTHER'"
+              :disabled="row.removeMemberButtonControl != 'OTHER' || row.beingHandedOver"
               @click="handleRemove(row, index)"
               v-bk-tooltips="{
-                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || '',
-                disabled: row.removeMemberButtonControl === 'OTHER'
+                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || t('等待审核中, 不能移出'),
+                disabled: row.removeMemberButtonControl === 'OTHER' && !row.beingHandedOver
               }"
             >
               {{t("移出")}}

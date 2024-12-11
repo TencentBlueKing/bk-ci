@@ -6,7 +6,7 @@
   >
     <div class="manage-content-project" v-if="projectTable.length">
       <p class="project-group">
-        <span>{{t("流水线权限代持")}}</span>
+        <span>{{t("资源授权")}}</span>
         <i18n-t v-overflow-title class="describe" keypath="你是以下X条流水线权限代持人，直接退出将导致流水线运行失败，需先移交" tag="div">
           <span class="text-blue">{{ authorizationsLength }}</span>
         </i18n-t>
@@ -57,7 +57,7 @@
     </div>
     <div class="manage-content-resource" v-if="sourceTable.length">
       <p class="project-group">
-        <span>{{t("唯一拥有者资源")}}</span>
+        <span>{{t("影响流水线代持权限及唯一拥有者用户组")}}</span>
         <!-- <i18n-t class="describe" keypath="你是以下X个用户组的唯一管理员，直接退出将导致对应资源无管理人，需先移交" tag="div">
           <span class="text-blue">{{ 3 }}</span>
         </i18n-t> -->
