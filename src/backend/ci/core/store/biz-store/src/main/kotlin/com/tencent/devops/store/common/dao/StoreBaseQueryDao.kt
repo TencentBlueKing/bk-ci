@@ -244,7 +244,8 @@ class StoreBaseQueryDao {
         storeType: StoreTypeEnum,
         name: String? = null,
         storeCode: String? = null,
-        status: StoreStatusEnum? = null
+        status: StoreStatusEnum? = null,
+        classifyId: String? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -255,8 +256,11 @@ class StoreBaseQueryDao {
             if (!storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
             }
-            if (status != null) {
+            status?.let {
                 conditions.add(STATUS.eq(status.name))
+            }
+            classifyId?.let {
+                conditions.add(CLASSIFY_ID.eq(it))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -274,9 +278,9 @@ class StoreBaseQueryDao {
     fun countComponents(
         dslContext: DSLContext,
         queryComponentsParam: QueryComponentsParam,
-        classifyId: String?,
-        categoryIds: List<String>?,
-        labelIds: List<String>?
+        classifyId: String? = null,
+        categoryIds: List<String>? = null,
+        labelIds: List<String>? = null
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = dslContext.selectCount().from(tStoreBase)
