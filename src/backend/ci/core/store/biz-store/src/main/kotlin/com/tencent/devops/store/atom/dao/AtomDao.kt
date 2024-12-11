@@ -221,14 +221,13 @@ class AtomDao : AtomBaseDao() {
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        return dslContext.selectCount().from(tAtom).join(tStoreProjectRel)
+        return dslContext.select(countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tAtom).join(tStoreProjectRel)
             .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
             .where(
                 tAtom.ATOM_STATUS.`in`(atomStatusList)
                     .and(tAtom.CLASSIFY_ID.eq(classifyId))
                     .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            ).groupBy(tStoreProjectRel.PROJECT_CODE)
-            .fetchOne(0, Int::class.java)!!
+            ).fetchOne(0, Int::class.java)!!
     }
 
     fun delete(dslContext: DSLContext, id: String) {

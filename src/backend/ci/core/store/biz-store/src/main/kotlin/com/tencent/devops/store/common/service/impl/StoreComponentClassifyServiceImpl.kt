@@ -24,36 +24,50 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.image.service.impl
+package com.tencent.devops.store.common.service.impl
 
-import com.tencent.devops.store.image.dao.ImageDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.AbstractClassifyService
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
-@Service("IMAGE_CLASSIFY_SERVICE")
-class MarketImageClassifyService : AbstractClassifyService() {
-
-    private val logger = LoggerFactory.getLogger(MarketImageClassifyService::class.java)
+@Primary
+@Service("DEFAULT_CLASSIFY_SERVICE")
+class StoreComponentClassifyServiceImpl : AbstractClassifyService() {
 
     @Autowired
     private lateinit var dslContext: DSLContext
 
     @Autowired
-    private lateinit var imageDao: ImageDao
+    private lateinit var storeBaseQueryDao: StoreBaseQueryDao
 
     override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
-        // 允许删除分类是条件：1、该分类下的镜像都不处于上架状态 2、该分类下的镜像如果处于已下架状态但已经没人在用
+        // 允许删除分类是条件：1、该分类下的组件都不处于上架状态 2、该分类下的组件如果处于已下架状态但已经没人在用
         var flag = false
-        val releaseImageNum = imageDao.countReleaseImageNumByClassifyId(dslContext, classifyId)
-        logger.info("$classifyId releaseImageNum is :$releaseImageNum")
-        if (releaseImageNum == 0) {
-            val undercarriageImageNum = imageDao.countUndercarriageImageNumByClassifyId(dslContext, classifyId)
-            logger.info("$classifyId undercarriageImageNum is :$undercarriageImageNum")
-            if (undercarriageImageNum == 0) {
+        val releaseNum = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            status = StoreStatusEnum.RELEASED,
+            classifyId = classifyId
+        )
+        if (releaseNum == 0) {
+            val undercarriagingNum = storeBaseQueryDao.countByCondition(
+                dslContext = dslContext,
+                storeType = storeType,
+                status = StoreStatusEnum.UNDERCARRIAGING,
+                classifyId = classifyId
+            )
+            val undercarriagedNum = storeBaseQueryDao.countByCondition(
+                dslContext = dslContext,
+                storeType = storeType,
+                status = StoreStatusEnum.UNDERCARRIAGED,
+                classifyId = classifyId
+            )
+            if (undercarriagingNum + undercarriagedNum == 0) {
                 flag = true
             }
         }
