@@ -268,7 +268,7 @@ export default defineStore('userGroupTable', () => {
    */
   async function handleUpDateRow(expiredAt: number) {
     let paramTimestamp: number;
-    const isExpired = selectedRow.value!.expiredAt < Date.now() && selectedRow.value!.removeMemberButtonControl === 'OTHER'
+    const isExpired = selectedRow.value!.expiredAt < Date.now()
     if (isExpired) {
       paramTimestamp = (selectedRow.value!.expiredAt / 1000) + expiredAt * 24 * 3600
     } else {
