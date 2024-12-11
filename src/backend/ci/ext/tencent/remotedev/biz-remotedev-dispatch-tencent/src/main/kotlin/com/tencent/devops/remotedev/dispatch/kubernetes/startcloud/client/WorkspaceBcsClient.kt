@@ -331,7 +331,7 @@ class WorkspaceBcsClient @Autowired constructor(
     }
 
     fun expandDiskValidate(
-        data: ExpandDiskData
+        data: EnvironmentOperate
     ): ExpandDiskValidateResp? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk/validate"
         val body = JsonUtil.toJson(data, false)

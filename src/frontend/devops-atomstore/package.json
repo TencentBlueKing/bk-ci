@@ -11,7 +11,6 @@
     "dayjs": "^1.11.2",
     "js-cookie": "^3.0.5",
     "mavon-editor": "^2.10.4",
-    "moment": "^2.29.2",
     "vue": "~2.7.16"
   },
   "devDependencies": {

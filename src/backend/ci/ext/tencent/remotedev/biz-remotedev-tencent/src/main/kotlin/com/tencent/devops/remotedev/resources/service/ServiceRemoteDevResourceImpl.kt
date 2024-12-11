@@ -18,14 +18,17 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -41,6 +44,9 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
+import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -326,8 +332,7 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = true,
-                checkDeleteImmediately = true
+                needPermission = true
             )
         )
     }
@@ -396,8 +401,7 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = !permissionService.hasUserManager(userId, projectId),
-                checkDeleteImmediately = true
+                needPermission = !permissionService.hasUserManager(userId, projectId)
             )
         )
     }
@@ -667,6 +671,7 @@ class ServiceRemoteDevResourceImpl(
         ip: String
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
+            userId = userId,
             appId = appId,
             ip = ip
         )
@@ -700,5 +705,53 @@ class ServiceRemoteDevResourceImpl(
     override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
         workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
         return Result(true)
+    }
+
+    override fun getWorkspaceListNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>> {
+        permissionService.checkUserManager(userId, projectId)
+        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
+    }
+
+    override fun getUserWorkspaceRecordPermission(
+        userId: String,
+        workspaceName: String
+    ): Result<UserWorkspaceRecordPermissionInfo> {
+        return Result(workspaceRecordService.getUserWorkspaceRecordPermission(userId, workspaceName))
+    }
+
+    override fun updateUserWorkspaceRecordPermission(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceRecordService.updateApprovalRecordViewPermission(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun getViewRecordMetadata(data: FetchMetaDataParam): Result<Page<WorkspaceRecordMetadata>> {
+        return Result(
+            workspaceRecordService.getWorkspaceRecordMetadata(
+                projectId = data.projectId,
+                userId = data.userId,
+                workspaceName = data.workspaceName,
+                page = data.page,
+                pageSize = data.pageSize,
+                startTime = data.startTime,
+                stopTime = data.stopTime
+            )
+        )
+    }
+
+    override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
+        return Result(
+            workspaceService.getWorkspaceTimeline(
+                userId = userId,
+                workspaceName = workspaceName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }

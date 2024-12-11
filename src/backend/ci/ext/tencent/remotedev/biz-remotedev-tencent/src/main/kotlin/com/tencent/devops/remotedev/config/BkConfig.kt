@@ -54,4 +54,11 @@ class BkConfig {
 
     @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
     val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
+
+    // 货币化配置
+    @Value("\${bills.pushUrl:}")
+    val billsPushUrl: String = ""
+
+    @Value("\${bills.platformKey:}")
+    val billsPlatformKey: String = ""
 }

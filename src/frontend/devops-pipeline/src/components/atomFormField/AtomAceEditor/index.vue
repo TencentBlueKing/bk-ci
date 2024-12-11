@@ -31,9 +31,9 @@
 </template>
 
 <script>
-    import Ace from '@/components/common/ace-editor'
-    import { getActualTop } from '@/utils/util'
-    import atomFieldMixin from '../atomFieldMixin'
+    import Ace from '@/components/common/ace-editor';
+import { getActualTop } from '@/utils/util';
+import atomFieldMixin from '../atomFieldMixin';
 
     export default {
         name: 'atom-ace-editor',

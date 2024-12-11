@@ -37,19 +37,15 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -205,22 +201,6 @@ class SleepControl @Autowired constructor(
                 WorkspaceStatus.SLEEPING.name
             )
         )
-    }
-
-    fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
-        if (!event.status) {
-            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
-            when (workspaceInfo.status) {
-                EnvStatusEnum.stopped -> event.status = true
-                else -> logger.warn(
-                    "stop workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
-                )
-            }
-        }
-        doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
     fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {

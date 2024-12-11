@@ -70,7 +70,16 @@
                                             v-if="param.readOnly"
                                             class="read-only"
                                         >{{ $t('readonlyParams') }}</span>
-                                        <span class="default-value">{{ param.defaultValue || '--' }}</span>
+                                        <span
+                                            class="default-value"
+                                            v-bk-overflow-tips
+                                        >
+                                            {{
+                                                param.type === 'REPO_REF'
+                                                    ? `${param.defaultValue['repo-name']} @ ${param?.defaultValue.branch}`
+                                                    : param.defaultValue || '--'
+                                            }}
+                                        </span>
                                     </div>
                                     <div
                                         v-if="editable"
@@ -85,6 +94,7 @@
                                                 class="bk-icon icon-copy"
                                             ></i>
                                             <bk-popconfirm
+                                                ref="removePopConfirmRef"
                                                 :popover-options="{ appendTo: 'parent' }"
                                                 :title="$t('newui.pipelineParam.removeTitle')"
                                                 :confirm-text="$t('newui.pipelineParam.remove')"
@@ -185,6 +195,7 @@
                 this.isShow = !this.isShow
             },
             triggerSort (event) {
+                this.$refs.removePopConfirmRef.forEach(i => i?.cancel())
                 // 判断拖拽element的newIndex，如果是newIndex=0, 放到最前面， 否则， 找出他的上一个element
                 const { element, newIndex } = event?.moved
                 if (!element?.id) return
@@ -359,6 +370,7 @@
                                 @include ellipsis();
                             }
                             .read-only {
+                                flex-shrink: 0;
                                 font-size: 12px;
                                 color: #63656E;
                                 background: #F0F1F5;

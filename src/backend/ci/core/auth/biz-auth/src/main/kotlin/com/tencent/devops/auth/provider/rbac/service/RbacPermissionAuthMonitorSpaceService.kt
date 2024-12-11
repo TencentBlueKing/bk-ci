@@ -143,6 +143,13 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         return "-${dbMonitorSpaceRecord.spaceBizId}"
     }
 
+    override fun listMonitorSpaceBizIds(projectCode: List<String>): Map<String, String> {
+        return authMonitorSpaceDao.list(
+            dslContext = dslContext,
+            projectCodes = projectCode
+        ).mapValues { "-${it.value}" }
+    }
+
     private fun updateMonitorSpace(
         projectCode: String,
         monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo,

@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWorkspaceRecordUserApproval
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecordUserApprovalRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -49,6 +50,16 @@ class WorkspaceRecordUserApprovalDao {
             return dslContext.selectCount().from(this).where(WORKSPACE_NAME.eq(workspaceName)).and(USER.eq(user))
                 .and(UPDATE_TIME.greaterThan(LocalDateTime.now().minusDays(expiredDays)))
                 .fetchOne(0, Long::class.java)!! > 0
+        }
+    }
+
+    fun fetchAnyApproval(
+        dslContext: DSLContext,
+        workspaceName: String,
+        user: String
+    ): TWorkspaceRecordUserApprovalRecord? {
+        with(TWorkspaceRecordUserApproval.T_WORKSPACE_RECORD_USER_APPROVAL) {
+            return dslContext.selectFrom(this).where(WORKSPACE_NAME.eq(workspaceName)).and(USER.eq(user)).fetchAny()
         }
     }
 }
