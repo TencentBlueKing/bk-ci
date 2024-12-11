@@ -1590,7 +1590,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         uniqueManagerCount = groupsOfUniqueManager.size,
                         invalidGroupCount = invalidGroups.size,
                         invalidPipelineAuthorizationCount = invalidPipelines.size,
-                        invalidRepositoryAuthorizationCount = invalidRepositoryIds.size
+                        invalidRepositoryAuthorizationCount = invalidRepositoryIds.size,
+                        canHandoverCount = groupsOfUniqueManager.union(invalidGroups).size
                     )
                 }
             }
@@ -1663,7 +1664,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         operableCount = totalCount - inoperableCount,
                         inoperableCount = groupsOfTemplateOrDeptJoined.size + groupCountOfExpired,
                         invalidPipelineAuthorizationCount = invalidPipelines.size,
-                        invalidRepositoryAuthorizationCount = invalidRepositoryIds.size
+                        invalidRepositoryAuthorizationCount = invalidRepositoryIds.size,
+                        canHandoverCount = totalCount - inoperableCount
                     )
                 }
             }
