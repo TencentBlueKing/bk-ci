@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory
  * 工蜂Copilot接口调用
  */
 class CopilotApi {
-    constructor() {}
-
     /**
      * 获取AI摘要
      */
@@ -27,7 +25,7 @@ class CopilotApi {
         sourceSha: String,
         targetSha: String,
         accessToken: String
-    ): CodeGitCopilotSummary {
+    ): CodeGitCopilotSummary? {
         val queryParam = OkhttpUtils.joinParams(
             params = mapOf(
                 "source" to sourceSha,
@@ -38,11 +36,15 @@ class CopilotApi {
         val response = doPost(
             url = "$url?$queryParam",
             body = JsonUtil.toJson(mapOf<String, String>(), false),
-            accessToken = accessToken,
-            headers = mapOf()
+            headers = mapOf("Authorization" to "Bearer $accessToken"),
+            longRequest = true
         )
         val responseContent = response.body!!.string()
-        return JsonUtil.to(responseContent, object : TypeReference<CodeGitCopilotSummary>() {})
+        return if (responseContent.isBlank()) {
+            null
+        } else {
+            JsonUtil.to(responseContent, object : TypeReference<CodeGitCopilotSummary>() {})
+        }
     }
 
     fun rateSummary(
@@ -67,19 +69,34 @@ class CopilotApi {
         doPost(
             url = "$url?$queryParam",
             body = JsonUtil.toJson(mapOf<String, String>(), false),
-            accessToken = accessToken,
-            headers = mapOf()
+            headers = mapOf("Authorization" to "Bearer $accessToken")
         )
     }
 
-    private fun doPost(url: String, body: String, accessToken: String, headers: Map<String, String>): Response {
+    private fun doPost(
+        url: String,
+        body: String,
+        headers: Map<String, String>,
+        longRequest: Boolean = false
+    ): Response {
         val watcher = Watcher("access copilot api [$url]")
         watcher.start()
-        val response = OkhttpUtils.doPost(
-            url = url,
-            jsonParam = body,
-            headers = mutableMapOf("Authorization" to "Bearer $accessToken").plus(headers)
-        )
+        val response = if (longRequest) {
+            OkhttpUtils.doCustomTimeoutPost(
+                connectTimeout = CONNECT_TIMEOUT_SECONDS,
+                readTimeout = READ_TIMEOUT_SECONDS,
+                writeTimeout = WRITE_TIMEOUT_SECONDS,
+                url = url,
+                jsonParam = body,
+                headers = headers
+            )
+        } else {
+            OkhttpUtils.doPost(
+                url = url,
+                jsonParam = body,
+                headers = headers
+            )
+        }
         if (!response.isSuccessful) {
             logger.warn("copilot api access failed|$url|${response.code}|${response.body?.string()}")
             throw ErrorCodeException(
@@ -95,5 +112,9 @@ class CopilotApi {
         // 蓝盾侧调用接口固定值
         const val API_REFERER = "landun"
         val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
+        // HTTP请求超时时间（秒）
+        private const val CONNECT_TIMEOUT_SECONDS = 5L
+        private const val READ_TIMEOUT_SECONDS = 60L
+        private const val WRITE_TIMEOUT_SECONDS = 60L
     }
 }

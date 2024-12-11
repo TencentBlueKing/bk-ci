@@ -28,25 +28,32 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.repository.AISummaryRateType
 import com.tencent.devops.repository.config.CopilotConfig
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.dao.CopilotSummaryDao
+import com.tencent.devops.repository.enum.CopilotSummaryCreateStatus
 import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.service.api.CopilotApi
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.util.concurrent.Executors
 
 @Service
 class RepositoryCopilotService @Autowired constructor(
+    val dslContext: DSLContext,
     val repositoryService: RepositoryService,
     val commitService: CommitService,
     val copilotConfig: CopilotConfig,
-    val gitOauthService: IGitOauthService
+    val gitOauthService: IGitOauthService,
+    val copilotSummaryDao: CopilotSummaryDao
 ) {
 
     val copilotApi = CopilotApi()
@@ -56,9 +63,103 @@ class RepositoryCopilotService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String
+        elementId: String,
+        refresh: Boolean
     ): CodeGitCopilotSummary {
+        logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId|$refresh")
         val accessToken = getAccessToken(userId)
+        val summary = if (refresh) {
+            null
+        } else {
+            copilotSummaryDao.get(
+                dslContext = dslContext,
+                buildId = buildId,
+                elementId = elementId
+            )?.summary
+        }
+        // 返回已有摘要结果
+        if (!summary.isNullOrBlank()) {
+            return JsonUtil.to(summary, CodeGitCopilotSummary::class.java)
+        }
+        val (projectName, sourceSha, targetSha) = resolveSummaryParams(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId
+        )
+        executorService.execute {
+            logger.info("async get summary|$projectName|$sourceSha...$targetSha")
+            val copilotSummary = copilotApi.getSummary(
+                url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary",
+                sourceSha = sourceSha,
+                targetSha = targetSha,
+                accessToken = accessToken
+            )?.let {
+                it.projectName = projectName
+                it
+            } ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+            logger.info("async save summary|$copilotSummary")
+            copilotSummaryDao.create(
+                dslContext = dslContext,
+                buildId = buildId,
+                elementId = elementId,
+                summary = JsonUtil.toJson(copilotSummary, false),
+                source = sourceSha,
+                target = targetSha,
+                projectName = projectName,
+                scmCode = SCM_CODE,
+                status = copilotSummary.status.toString()
+            )
+        }
+        val runningSummary = CodeGitCopilotSummary(status = CopilotSummaryCreateStatus.RUNNING.value)
+        copilotSummaryDao.create(
+            dslContext = dslContext,
+            buildId = buildId,
+            elementId = elementId,
+            summary = JsonUtil.toJson(runningSummary, false),
+            source = sourceSha,
+            target = targetSha,
+            projectName = projectName,
+            scmCode = SCM_CODE,
+            status = CopilotSummaryCreateStatus.RUNNING.value.toString()
+        )
+        return runningSummary
+    }
+
+    fun rateSummary(
+        projectName: String,
+        processId: String,
+        userId: String,
+        type: AISummaryRateType,
+        feedback: String? = null
+    ) {
+        val accessToken = getAccessToken(userId)
+        copilotApi.rateSummary(
+            url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary/rate",
+            processId = processId,
+            type = type,
+            accessToken = accessToken,
+            feedback = feedback
+        )
+    }
+
+    private fun encodeProjectName(projectName: String) =
+        URLEncoder.encode(projectName, "UTF-8")
+
+    private fun getAccessToken(userId: String) =
+        gitOauthService.getAccessToken(userId)?.accessToken ?: throw ErrorCodeException(
+            errorCode = RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+        )
+
+    /**
+     * 提取摘要参数
+     */
+    private fun resolveSummaryParams(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): Triple<String, String, String> {
         val commitRecords = commitService.list(
             buildId = buildId,
             pipelineId = pipelineId,
@@ -93,42 +194,12 @@ class RepositoryCopilotService @Autowired constructor(
             repository.projectName
         }
         val (sourceSha, targetSha) = commitRecords.last().commit to commitRecords.first().commit
-        return copilotApi.getSummary(
-            url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary",
-            sourceSha = sourceSha,
-            targetSha = targetSha,
-            accessToken = accessToken
-        ).let {
-            it.projectName = projectName
-            it
-        }
+        return Triple(projectName, sourceSha, targetSha)
     }
-
-    fun rateSummary(
-        projectName: String,
-        processId: String,
-        userId: String,
-        type: AISummaryRateType,
-        feedback: String? = null
-    ) {
-        val accessToken = getAccessToken(userId)
-        copilotApi.rateSummary(
-            url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary/rate",
-            processId = processId,
-            type = type,
-            accessToken = accessToken,
-            feedback = feedback
-        )
-    }
-
-    fun encodeProjectName(projectName: String) = URLEncoder.encode(projectName, "UTF-8")
-
-    fun getAccessToken(userId: String) =
-        gitOauthService.getAccessToken(userId)?.accessToken ?: throw ErrorCodeException(
-            errorCode = RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
-        )
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
+        private val executorService = Executors.newFixedThreadPool(50)
+        const val SCM_CODE = "TGIT"
     }
 }
