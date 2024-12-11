@@ -682,7 +682,7 @@ class AuthResourceGroupMemberDao {
         dslContext: DSLContext,
         projectCode: String,
         memberId: String,
-        iamTemplateIds: List<String>,
+        iamTemplateIds: List<String>? = emptyList(),
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
         excludeIamGroupIds: List<Int>? = null,
@@ -728,7 +728,7 @@ class AuthResourceGroupMemberDao {
     private fun buildMemberGroupCondition(
         projectCode: String,
         memberId: String,
-        iamTemplateIds: List<String>,
+        iamTemplateIds: List<String>? = emptyList(),
         resourceType: String? = null,
         iamGroupIds: List<Int>? = null,
         minExpiredAt: LocalDateTime? = null,
@@ -745,7 +745,7 @@ class AuthResourceGroupMemberDao {
                     MEMBER_TYPE.`in`(listOf(MemberType.USER.type, MemberType.DEPARTMENT.type))
                 )).let {
                     // 获取模板加入
-                    if (iamTemplateIds.isNotEmpty()) {
+                    if (!iamTemplateIds.isNullOrEmpty()) {
                         it.or(MEMBER_ID.`in`(iamTemplateIds).and(MEMBER_TYPE.eq(MemberType.TEMPLATE.type)))
                     } else {
                         it

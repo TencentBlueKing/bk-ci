@@ -76,6 +76,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -659,21 +660,29 @@ class RbacPermissionManageFacadeServiceImpl(
         iamGroupIds: List<Int>,
         memberId: String
     ): InvalidAuthorizationsDTO {
-        val (invalidGroups, invalidPipelines) = listInvalidPipelinesAfterOperatedGroups(
-            projectCode = projectCode,
-            iamGroupIds = iamGroupIds,
-            memberId = memberId
-        )
-        val invalidRepositoryIds = listInvalidRepositoryAfterOperatedGroups(
-            projectCode = projectCode,
-            iamGroupIds = iamGroupIds,
-            memberId = memberId
-        )
-        return InvalidAuthorizationsDTO(
-            invalidGroupIds = invalidGroups,
-            invalidPipelineIds = invalidPipelines,
-            invalidRepertoryIds = invalidRepositoryIds
-        )
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val (invalidGroups, invalidPipelines) = listInvalidPipelinesAfterOperatedGroups(
+                projectCode = projectCode,
+                iamGroupIds = iamGroupIds,
+                memberId = memberId
+            )
+            val invalidRepositoryIds = listInvalidRepositoryAfterOperatedGroups(
+                projectCode = projectCode,
+                iamGroupIds = iamGroupIds,
+                memberId = memberId
+            )
+            return InvalidAuthorizationsDTO(
+                invalidGroupIds = invalidGroups,
+                invalidPipelineIds = invalidPipelines,
+                invalidRepertoryIds = invalidRepositoryIds
+            )
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations after operated groups" +
+                    "|$projectCode|$iamGroupIds|$memberId"
+            )
+        }
     }
 
     private fun listInvalidPipelinesAfterOperatedGroups(
@@ -682,126 +691,131 @@ class RbacPermissionManageFacadeServiceImpl(
         memberId: String
     ): InvalidAuthorizationsDTO {
         logger.info("list invalid authorizations after operated groups:$projectCode|$iamGroupIds|$memberId")
-        val startEpoch = System.currentTimeMillis()
-        try {
-            // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
-            val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
-                projectCode = projectCode,
-                relatedResourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                action = ActionId.PIPELINE_EXECUTE,
-                filterIamGroupIds = iamGroupIds
-            )
-            logger.debug("list operated groups with execute perm:{}", operatedGroupsWithExecutePerm)
+        val now = LocalDateTime.now()
+        // 0.筛选出本次操作中的用户未过期用户组ID
+        val iamGroupIdsOfNotExpired = authResourceGroupMemberDao.listMemberGroupDetail(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberId = memberId,
+            iamGroupIds = iamGroupIds,
+            minExpiredAt = now
+        ).map { it.iamGroupId }
+        logger.debug("list iam group ids of not expired:{}", iamGroupIdsOfNotExpired)
+        // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
+        val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
+            projectCode = projectCode,
+            relatedResourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            action = ActionId.PIPELINE_EXECUTE,
+            filterIamGroupIds = iamGroupIdsOfNotExpired
+        )
+        logger.debug("list operated groups with execute perm:{}", operatedGroupsWithExecutePerm)
 
-            // 2.获取用户退出/交接以上操作的用户组后，还未退出的流水线/项目级别（仅这些类型会包含流水线执行权限）的用户组。
-            val userGroupsJoinedAfterOperatedGroups = listResourceGroupMembers(
-                projectCode = projectCode,
-                memberId = memberId,
-                resourceType = ResourceTypeId.PIPELINE,
-                excludeIamGroupIds = operatedGroupsWithExecutePerm,
-                operateChannel = OperateChannel.PERSONAL,
-                onlyExcludeUserDirectlyJoined = true
-            ).second.toMutableList().apply {
-                addAll(
-                    listResourceGroupMembers(
-                        projectCode = projectCode,
-                        memberId = memberId,
-                        resourceType = ResourceTypeId.PROJECT,
-                        excludeIamGroupIds = operatedGroupsWithExecutePerm,
-                        operateChannel = OperateChannel.PERSONAL,
-                        onlyExcludeUserDirectlyJoined = true
-                    ).second
-                )
-            }.map { it.iamGroupId }
-            logger.debug("list pipeline and project groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
-            // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
-            // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
-            val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
+        // 2.获取用户退出/交接以上操作的用户组后，还未退出并且未过期的流水线/项目级别（仅这些类型会包含流水线执行权限）的用户组。
+        val userGroupsJoinedAfterOperatedGroups = listResourceGroupMembers(
+            projectCode = projectCode,
+            memberId = memberId,
+            resourceType = ResourceTypeId.PIPELINE,
+            excludeIamGroupIds = operatedGroupsWithExecutePerm,
+            operateChannel = OperateChannel.PERSONAL,
+            onlyExcludeUserDirectlyJoined = true,
+            minExpiredAt = now.timestampmilli()
+        ).second.toMutableList().apply {
+            addAll(
+                listResourceGroupMembers(
+                    projectCode = projectCode,
+                    memberId = memberId,
+                    resourceType = ResourceTypeId.PROJECT,
+                    excludeIamGroupIds = operatedGroupsWithExecutePerm,
+                    operateChannel = OperateChannel.PERSONAL,
+                    onlyExcludeUserDirectlyJoined = true,
+                    minExpiredAt = now.timestampmilli()
+                ).second
+            )
+        }.map { it.iamGroupId }
+        logger.debug("list pipeline and project groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
+        // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
+        // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
+        val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
+            projectCode = projectCode,
+            filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
+            action = ActionId.PIPELINE_EXECUTE
+        )
+        logger.debug("has all pipeline execute perm after operate groups:{}", hasAllPipelineExecutePermAfterOperateGroups)
+
+        // 3.1.若用户在未退出的组中拥有整个项目的流水线执行权限，则本次不会对任何的流水线代持人权限造成影响。
+        if (hasAllPipelineExecutePermAfterOperateGroups)
+            return InvalidAuthorizationsDTO(emptyList(), emptyList())
+
+        // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
+        val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
+            projectCode = projectCode,
+            filterIamGroupIds = operatedGroupsWithExecutePerm,
+            action = ActionId.PIPELINE_EXECUTE
+        )
+        logger.debug("has all pipeline execute perm in operate groups:{}", hasAllPipelineExecutePermInOperateGroups)
+
+        val pipelinesWithoutAuthorization = if (hasAllPipelineExecutePermInOperateGroups) {
+            // 3.2.1 如果本次退出/交接的用户组中包含项目级别的流水线执行权限，
+            // 那么查询出用户还有执行流水线权限的流水线，该项目下除了这些流水线，其他的流水线代持人权限都会失效。
+            val userHasExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
                 projectCode = projectCode,
                 filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
+                relatedResourceType = ResourceTypeId.PIPELINE,
                 action = ActionId.PIPELINE_EXECUTE
-            )
-            logger.debug("has all pipeline execute perm after operate groups:{}", hasAllPipelineExecutePermAfterOperateGroups)
+            )[ResourceTypeId.PIPELINE] ?: emptyList()
+            logger.debug("user has execute perm after operated groups:{}", userHasExecutePermAfterOperatedGroups)
+            // 失去代持人权限的流水线
+            authAuthorizationDao.list(
+                dslContext = dslContext,
+                condition = ResourceAuthorizationConditionRequest(
+                    projectCode = projectCode,
+                    resourceType = ResourceTypeId.PIPELINE,
+                    handoverFrom = memberId,
+                    excludeResourceCodes = userHasExecutePermAfterOperatedGroups
+                )
+            ).map { it.resourceCode }
+        } else {
+            // 3.2.2 如果本次退出/交接的用户组中不包含整个项目的流水线执行权限。
+            // 通过计算得出，用户本次操作用户组，导致失去流水线执行权限的流水线。
+            // 然后再计算失去这些流水线执行权限后，会导致哪些流水线的代持人权限失效。
+            val pipelinesWithExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
+                projectCode = projectCode,
+                filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
+                relatedResourceType = ResourceTypeId.PIPELINE,
+                action = ActionId.PIPELINE_EXECUTE
+            )[ResourceTypeId.PIPELINE] ?: emptyList()
+            logger.debug("pipelines with execute perm after operate groups:{}", pipelinesWithExecutePermAfterOperatedGroups)
 
-            // 3.1.若用户在未退出的组中拥有整个项目的流水线执行权限，则本次不会对任何的流水线代持人权限造成影响。
-            if (hasAllPipelineExecutePermAfterOperateGroups)
-                return InvalidAuthorizationsDTO(emptyList(), emptyList())
-
-            // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
-            val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
+            val pipelinesWithExecutePermInOperateGroups = groupPermissionService.listGroupResourcesWithPermission(
                 projectCode = projectCode,
                 filterIamGroupIds = operatedGroupsWithExecutePerm,
+                relatedResourceType = ResourceTypeId.PIPELINE,
                 action = ActionId.PIPELINE_EXECUTE
-            )
-            logger.debug("has all pipeline execute perm in operate groups:{}", hasAllPipelineExecutePermInOperateGroups)
+            )[ResourceTypeId.PIPELINE] ?: emptyList()
+            logger.debug("pipelines with execute perm in operate groups:{}", pipelinesWithExecutePermInOperateGroups)
 
-            val pipelinesWithoutAuthorization = if (hasAllPipelineExecutePermInOperateGroups) {
-                // 3.2.1 如果本次退出/交接的用户组中包含项目级别的流水线执行权限，
-                // 那么查询出用户还有执行流水线权限的流水线，该项目下除了这些流水线，其他的流水线代持人权限都会失效。
-                val userHasExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
-                    projectCode = projectCode,
-                    filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
-                    relatedResourceType = ResourceTypeId.PIPELINE,
-                    action = ActionId.PIPELINE_EXECUTE
-                )[ResourceTypeId.PIPELINE] ?: emptyList()
-                logger.debug("user has execute perm after operated groups:{}", userHasExecutePermAfterOperatedGroups)
-                // 失去代持人权限的流水线
-                authAuthorizationDao.list(
-                    dslContext = dslContext,
-                    condition = ResourceAuthorizationConditionRequest(
-                        projectCode = projectCode,
-                        resourceType = ResourceTypeId.PIPELINE,
-                        handoverFrom = memberId,
-                        excludeResourceCodes = userHasExecutePermAfterOperatedGroups
-                    )
-                ).map { it.resourceCode }
-            } else {
-                // 3.2.2 如果本次退出/交接的用户组中不包含整个项目的流水线执行权限。
-                // 通过计算得出，用户本次操作用户组，导致失去流水线执行权限的流水线。
-                // 然后再计算失去这些流水线执行权限后，会导致哪些流水线的代持人权限失效。
-                val pipelinesWithExecutePermAfterOperatedGroups = groupPermissionService.listGroupResourcesWithPermission(
-                    projectCode = projectCode,
-                    filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
-                    relatedResourceType = ResourceTypeId.PIPELINE,
-                    action = ActionId.PIPELINE_EXECUTE
-                )[ResourceTypeId.PIPELINE] ?: emptyList()
-                logger.debug("pipelines with execute perm after operate groups:{}", pipelinesWithExecutePermAfterOperatedGroups)
-
-                val pipelinesWithExecutePermInOperateGroups = groupPermissionService.listGroupResourcesWithPermission(
-                    projectCode = projectCode,
-                    filterIamGroupIds = operatedGroupsWithExecutePerm,
-                    relatedResourceType = ResourceTypeId.PIPELINE,
-                    action = ActionId.PIPELINE_EXECUTE
-                )[ResourceTypeId.PIPELINE] ?: emptyList()
-                logger.debug("pipelines with execute perm in operate groups:{}", pipelinesWithExecutePermInOperateGroups)
-
-                val pipelineExecutePermLostFromUser = pipelinesWithExecutePermInOperateGroups.filterNot {
-                    pipelinesWithExecutePermAfterOperatedGroups.contains(it)
-                }
-                // 失去代持人权限的流水线
-                authAuthorizationDao.list(
-                    dslContext = dslContext,
-                    condition = ResourceAuthorizationConditionRequest(
-                        projectCode = projectCode,
-                        resourceType = ResourceTypeId.PIPELINE,
-                        handoverFrom = memberId,
-                        filterResourceCodes = pipelineExecutePermLostFromUser
-                    )
-                ).map { it.resourceCode }
+            val pipelineExecutePermLostFromUser = pipelinesWithExecutePermInOperateGroups.filterNot {
+                pipelinesWithExecutePermAfterOperatedGroups.contains(it)
             }
-            logger.debug("pipelines without authorization:{}", pipelinesWithoutAuthorization)
-            if (pipelinesWithoutAuthorization.isNotEmpty()) {
-                return InvalidAuthorizationsDTO(
-                    invalidGroupIds = operatedGroupsWithExecutePerm,
-                    invalidPipelineIds = pipelinesWithoutAuthorization
+            // 失去代持人权限的流水线
+            authAuthorizationDao.list(
+                dslContext = dslContext,
+                condition = ResourceAuthorizationConditionRequest(
+                    projectCode = projectCode,
+                    resourceType = ResourceTypeId.PIPELINE,
+                    handoverFrom = memberId,
+                    filterResourceCodes = pipelineExecutePermLostFromUser
                 )
-            }
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations after operated groups" +
-                    "|$projectCode|$iamGroupIds|$memberId"
+            ).map { it.resourceCode }
+        }
+        logger.debug("pipelines without authorization:{}", pipelinesWithoutAuthorization)
+        if (pipelinesWithoutAuthorization.isNotEmpty()) {
+            return InvalidAuthorizationsDTO(
+                invalidGroupIds = operatedGroupsWithExecutePerm,
+                invalidPipelineIds = pipelinesWithoutAuthorization
             )
         }
+
         return InvalidAuthorizationsDTO(emptyList(), emptyList())
     }
 
@@ -810,13 +824,14 @@ class RbacPermissionManageFacadeServiceImpl(
         iamGroupIds: List<Int>,
         memberId: String
     ): List<String> {
-        // 获取用户退出/交接以上用户组后还加入的用户组
+        // 获取用户退出/交接以上用户组后还加入并且未过期的用户组
         val (count, records) = listResourceGroupMembers(
             projectCode = projectCode,
             memberId = memberId,
             excludeIamGroupIds = iamGroupIds,
             onlyExcludeUserDirectlyJoined = true,
-            operateChannel = OperateChannel.PERSONAL
+            operateChannel = OperateChannel.PERSONAL,
+            minExpiredAt = LocalDateTime.now().timestampmilli()
         )
         logger.debug("list all user groups joined after operated groups:{}|{}", count, records)
         // 如果退出/交接了项目下所有组，直接返回用户无效代码库oauth列表
