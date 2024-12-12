@@ -199,6 +199,7 @@ class MarketTemplateDao {
             tt.TEMPLATE_NAME,
             tt.TEMPLATE_CODE,
             tt.VERSION,
+            tt.TEMPLATE_STATUS,
             tt.TEMPLATE_RD_TYPE,
             tt.CLASSIFY_ID,
             tt.LOGO_URL,
