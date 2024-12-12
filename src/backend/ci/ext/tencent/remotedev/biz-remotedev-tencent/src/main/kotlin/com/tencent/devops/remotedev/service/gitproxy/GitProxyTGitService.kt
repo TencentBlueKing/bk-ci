@@ -1049,7 +1049,7 @@ class GitProxyTGitService @Autowired constructor(
                 page++
             }
 
-            return result
+            return result.map { it.trim() }.toSet()
         } catch (e: Exception) {
             logger.error("$LOG_UPDATE_TGIT_ACL_TAG|fetchDevcloudCvm error", e)
             return emptySet()
