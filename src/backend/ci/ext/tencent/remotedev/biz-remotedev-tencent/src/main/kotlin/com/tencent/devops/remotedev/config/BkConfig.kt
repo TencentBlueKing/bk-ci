@@ -59,6 +59,13 @@ class BkConfig @Autowired constructor(
     @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
     val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
 
+    // 货币化配置
+    @Value("\${bills.pushUrl:}")
+    val billsPushUrl: String = ""
+
+    @Value("\${bills.platformKey:}")
+    val billsPlatformKey: String = ""
+
     // bknodeman配置
     @Value("\${bknodeman.host:}")
     val bknodemanHost: String = ""

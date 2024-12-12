@@ -23,26 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.service.webhook
+package com.tencent.devops.repository.config
 
-import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.service.perm.PermFixService
-import com.tencent.devops.process.webhook.PipelineBuildPermissionService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-@Service
-@Primary
-class TxPipelineBuildPermissionService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val permFixService: PermFixService
-) : PipelineBuildPermissionService(pipelinePermissionService) {
+/**
+ * Copilot配置
+ */
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class CopilotConfig {
 
-    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        permFixService.checkPermission(userId, projectId, pipelineId)
-    }
+    @Value("\${scm.git.copilot.appId:#{null}}")
+    val appId: String = ""
+
+    @Value("\${scm.git.copilot.appSecret:#{null}}")
+    val appSecret: String = ""
+
+    @Value("\${scm.git.copilot.apiUrl:#{null}}")
+    val apiUrl: String = ""
 }

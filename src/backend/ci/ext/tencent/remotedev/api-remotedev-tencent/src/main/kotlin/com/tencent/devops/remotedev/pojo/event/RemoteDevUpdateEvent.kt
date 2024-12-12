@@ -1,21 +1,10 @@
 package com.tencent.devops.remotedev.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.remotedev.RemoteDevMQ.WORKSPACE_UPDATE_FROM_K8S
-import com.tencent.devops.common.remotedev.WorkspaceEvent
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
-import org.slf4j.MDC
-
-@Event(WORKSPACE_UPDATE_FROM_K8S)
 data class RemoteDevUpdateEvent(
-    override val userId: String,
-    override val traceId: String = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
-    override val workspaceName: String,
+    val userId: String,
+    val workspaceName: String,
     val type: UpdateEventType,
     var status: Boolean,
-    val mountType: WorkspaceMountType,
     var environmentUid: String? = null,
     /*带区域的ip*/
     var environmentHost: String? = null,
@@ -24,8 +13,5 @@ data class RemoteDevUpdateEvent(
     var resourceId: String? = null,
     var macAddress: String? = null,
     var errorMsg: String? = null,
-    var workspaceImageInfo: WorkspaceImageInfo? = null,
-    val bkTicket: String? = null,
-    override var delayMills: Int = 0,
-    override var retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)
+    val taskUid: String? = null
+)

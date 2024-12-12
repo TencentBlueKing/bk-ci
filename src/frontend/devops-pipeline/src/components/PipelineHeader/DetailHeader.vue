@@ -145,7 +145,7 @@
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
             },
             canManualStartup () {
-                return this.pipelineInfo?.canManualStartup ?? false
+                return this.pipelineInfo?.canManualStartup ?? true
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false

@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.0-rc.4](#v310-rc4)
+   - [Changelog since v3.1.0-rc.3](#changelog-since-v310-rc3)
+
 - [v3.1.0-rc.3](#v310-rc3)
    - [Changelog since v3.1.0-rc.2](#changelog-since-v310-rc2)
 
@@ -13,6 +16,47 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.0-rc.4
+## 2024-12-05
+### Changelog since v3.1.0-rc.3
+#### 新增
+
+##### 流水线
+- [新增] feat：项目设置支持管理员配置项目下流水线的命名规范 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11057)
+- [新增] feat：创建流水线时支持设置标签 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11055)
+- [新增] 流水线插件开发自定义UI希望可以获取到container 的 jobid 属性 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11197)
+- [新增] feat: 触发器的自定义触发控制回调增加事件类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11196)
+
+##### 未分类
+- [新增] feat: 整理网关的tag路由 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11050)
+- [新增] feat：我的凭证列表展示创建和更新信息 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11023)
+- [新增] worker和agent支持java17和java8同步运行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10586)
+- [新增] feat: 引擎等MQ场景接入SCS框架 [链接](http://github.com/TencentBlueKing/bk-ci/issues/7443)
+
+#### 优化
+
+##### 代码库
+- [优化] perf: repository服务去掉对git命令依赖 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11193)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 流水线另存为模版,模版名字与流水线名字一样，会报"流水线名称已被使用" [链接](http://github.com/TencentBlueKing/bk-ci/issues/11264)
+- [修复] bug: 创建流水线组失败，导致代码库开启PAC一直显示同步中 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11253)
+- [修复] bug: 心跳超时被取消的插件没有刷新前端状态 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11265)
+- [修复] bug: [PAC].ci下的目录已经删除,但是关联的流水线组没有删除，也无法手工删除 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11254)
+
+##### 权限中心
+- [修复] bug: 权限管理-权限续期数据同步 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11271)
+
+##### 调度
+- [修复] feat：第三方构建机支持使用 dcoker 运行构建任务 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9820)
+
+##### 未分类
+- [修复] bugfix: Agent没有开启监控会无限打日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11274)
+- [修复] feat：支持查看版本日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10938)
+- [修复] bug: 版本日志根据配置控制弹框 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11260)
+
 # v3.1.0-rc.3
 ## 2024-11-22
 ### Changelog since v3.1.0-rc.2

@@ -75,7 +75,7 @@
     "axios": "0.28.0",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
-    "js-cookie": "^3.0.1",
+    "js-cookie": "^3.0.5",
     "sockjs-client": "1.3.0",
     "stompjs": "2.3.3",
     "vee-validate": "^2.0.3",
@@ -98,7 +98,8 @@
       ],
       "public:master": {
         "outputs": [
-          "{workspaceRoot}/frontend/console"
+          "{workspaceRoot}/frontend/console",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }

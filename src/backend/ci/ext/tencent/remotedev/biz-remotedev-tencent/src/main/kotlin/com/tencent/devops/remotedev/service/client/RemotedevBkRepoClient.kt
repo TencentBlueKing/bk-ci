@@ -158,7 +158,8 @@ class RemotedevBkRepoClient @Autowired constructor(
 data class BkRepoNodeDetail(
     val name: String,
     val fullPath: String,
-    val metadata: BkRepoNodeDetailMetadata?
+    val metadata: BkRepoNodeDetailMetadata?,
+    val size: Long?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

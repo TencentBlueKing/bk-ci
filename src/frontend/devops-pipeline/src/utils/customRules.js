@@ -126,6 +126,11 @@ const customeRules = {
         validate: function (value, args) {
             return /^(?:[1-9]|[1-9]\d|[1-9]\d{2}|1000)$/.test(value)
         }
+    },
+    objectRequired: {
+        validate: function (value, args) {
+            return Object.values(value).every(val => !!val)
+        }
     }
 }
 
