@@ -73,6 +73,7 @@ class RepositoryCopilotService @Autowired constructor(
         } else {
             copilotSummaryDao.get(
                 dslContext = dslContext,
+                projectId = projectId,
                 buildId = buildId,
                 elementId = elementId
             )?.summary
@@ -102,7 +103,6 @@ class RepositoryCopilotService @Autowired constructor(
             copilotSummaryDao.create(
                 dslContext = dslContext,
                 projectId = projectId,
-                pipelineId = pipelineId,
                 buildId = buildId,
                 elementId = elementId,
                 summary = JsonUtil.toJson(copilotSummary, false),
@@ -117,7 +117,6 @@ class RepositoryCopilotService @Autowired constructor(
         copilotSummaryDao.create(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId,
             buildId = buildId,
             elementId = elementId,
             summary = JsonUtil.toJson(runningSummary, false),

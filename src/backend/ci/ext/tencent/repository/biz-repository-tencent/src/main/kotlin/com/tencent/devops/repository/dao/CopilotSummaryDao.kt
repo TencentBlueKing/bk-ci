@@ -39,15 +39,14 @@ class CopilotSummaryDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         elementId: String
     ): TRepositoryCopilotSummaryRecord? {
         with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
             return dslContext.selectFrom(this)
                 .where(
-                    BUILD_ID.eq(buildId).and(
-                        ELEMENT_ID.eq(elementId)
-                    )
+                    BUILD_ID.eq(buildId).and(ELEMENT_ID.eq(elementId)).and(PROJECT_ID.eq(projectId))
                 )
                 .fetchAny()
         }
@@ -56,7 +55,6 @@ class CopilotSummaryDao {
     fun create(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
         buildId: String,
         elementId: String,
         scmCode: String,
@@ -69,6 +67,7 @@ class CopilotSummaryDao {
         with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 BUILD_ID,
                 ELEMENT_ID,
                 SCM_CODE,
@@ -79,6 +78,7 @@ class CopilotSummaryDao {
                 SUMMARY,
                 CREATE_TIME
             ).values(
+                projectId,
                 buildId,
                 elementId,
                 scmCode,
