@@ -101,6 +101,8 @@ class RepositoryCopilotService @Autowired constructor(
             logger.info("async save summary|$copilotSummary")
             copilotSummaryDao.create(
                 dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 elementId = elementId,
                 summary = JsonUtil.toJson(copilotSummary, false),
@@ -114,6 +116,8 @@ class RepositoryCopilotService @Autowired constructor(
         val runningSummary = CodeGitCopilotSummary(status = CopilotSummaryCreateStatus.RUNNING.value)
         copilotSummaryDao.create(
             dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             elementId = elementId,
             summary = JsonUtil.toJson(runningSummary, false),

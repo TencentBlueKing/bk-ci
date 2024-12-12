@@ -55,6 +55,8 @@ class CopilotSummaryDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
         buildId: String,
         elementId: String,
         scmCode: String,
