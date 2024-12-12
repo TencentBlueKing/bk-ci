@@ -25,43 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.api.github
+package com.tencent.devops.repository.service.oauth2
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.sdk.github.response.GetUserEmailResponse
-import com.tencent.devops.repository.sdk.github.response.GetUserResponse
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Tag(name = "SERVICE_USER_GITHUB", description = "服务-github-user")
-@Path("/service/github/user")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceGithubUserResource {
+@Service
+class Oauth2TokenStoreManager @Autowired constructor(
+    private val oauth2TokenStoreServices: List<IOauth2TokenStoreService>
+) {
 
-    @Operation(summary = "获取用户信息")
-    @GET
-    @Path("/getUser")
-    fun getUser(
-        @Parameter(description = "授权token", required = true)
-        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
-        token: String
-    ): Result<GetUserResponse?>
+    fun get(userId: String, scmCode: String): Oauth2AccessToken? {
+        return getTokenStoreService(scmCode).get(userId, scmCode)
+    }
 
-    @Operation(summary = "获取用户 email 信息")
-    @GET
-    @Path("/get_user_email")
-    fun getUserEmail(
-        @Parameter(description = "授权token", required = true)
-        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
-        token: String
-    ): Result<List<GetUserEmailResponse>>
+    fun delete(userId: String, scmCode: String) {
+        getTokenStoreService(scmCode).delete(userId, scmCode)
+    }
+
+    private fun getTokenStoreService(scmCode: String): IOauth2TokenStoreService {
+        return oauth2TokenStoreServices.find { it.support(scmCode) } ?: throw ErrorCodeException(errorCode = "")
+    }
 }

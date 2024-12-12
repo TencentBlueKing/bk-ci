@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.github
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -84,7 +85,8 @@ class GithubTokenService @Autowired constructor(
         return GithubToken(
             BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
-            githubTokenRecord.scope
+            githubTokenRecord.scope,
+            githubTokenRecord.createTime.timestampmilli()
         )
     }
 
