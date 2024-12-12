@@ -28,7 +28,6 @@
 package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -59,6 +58,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -79,7 +79,7 @@ interface TencentServiceJobResource {
     fun executeScript(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -93,7 +93,7 @@ interface TencentServiceJobResource {
     fun distributeFile(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -107,7 +107,7 @@ interface TencentServiceJobResource {
     fun terminateTask(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -121,7 +121,7 @@ interface TencentServiceJobResource {
     fun queryJobInstanceStatus(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -139,7 +139,7 @@ interface TencentServiceJobResource {
     fun queryJobInstanceLogs(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -153,7 +153,7 @@ interface TencentServiceJobResource {
     fun createAccount(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -167,7 +167,7 @@ interface TencentServiceJobResource {
     fun deleteAccount(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -181,7 +181,7 @@ interface TencentServiceJobResource {
     fun getAccountList(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -208,7 +208,7 @@ interface TencentServiceJobResource {
     fun getStepInstanceDetail(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -226,7 +226,7 @@ interface TencentServiceJobResource {
     fun getStepInstanceStatus(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -265,7 +265,7 @@ interface TencentServiceJobResource {
     fun operateStepInstance(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -290,7 +290,7 @@ interface TencentServiceJobResource {
     fun checkDeployNodesInCmdb(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "gse agent状态版本更新接口")
@@ -299,7 +299,7 @@ interface TencentServiceJobResource {
     fun updateGseAgent(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "将存量不在CC中的机器导入CC中的接口")
@@ -308,7 +308,7 @@ interface TencentServiceJobResource {
     fun addStockNodeToCC(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "给存量部署节点写入机器server_id")
@@ -317,7 +317,7 @@ interface TencentServiceJobResource {
     fun writeServerId(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "安装GSE Agent")
@@ -326,7 +326,7 @@ interface TencentServiceJobResource {
     fun installAgent(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -340,7 +340,7 @@ interface TencentServiceJobResource {
     fun queryAgentTaskStatus(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -349,10 +349,12 @@ interface TencentServiceJobResource {
         jobId: Int,
         @Parameter(description = "查询agent任务状态的页码", required = true)
         @QueryParam("page")
-        page: Int = 1,
+        @DefaultValue("1")
+        page: Int,
         @Parameter(description = "查询agent任务状态的页码", required = true)
         @QueryParam("pageSize")
-        pageSize: Int = 10
+        @DefaultValue("10")
+        pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult>
 
     @Operation(summary = "获取手动安装agent的命令")
@@ -361,7 +363,7 @@ interface TencentServiceJobResource {
     fun obtainManualInstallationCommand(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -373,6 +375,7 @@ interface TencentServiceJobResource {
         innerIp: String,
         @Parameter(description = "主机云区域ID，默认为公共区域，云区域ID为0")
         @QueryParam("bkCloudId")
-        bkCloudId: Int = 0
+        @DefaultValue("0")
+        bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult>
 }

@@ -197,7 +197,8 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     }
 
     override fun installAgent(
-        userId: String,
+        appCode: String?,
+        userId: String?,
         apigwType: String?,
         projectId: String,
         apiGwInstallAgentReq: ApiGwInstallAgentReq
@@ -206,7 +207,8 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     }
 
     override fun queryAgentTaskStatus(
-        userId: String,
+        appCode: String?,
+        userId: String?,
         apigwType: String?,
         projectId: String,
         jobId: Int,
@@ -224,7 +226,8 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     }
 
     override fun obtainManualInstallationCommand(
-        userId: String,
+        appCode: String?,
+        userId: String?,
         apigwType: String?,
         projectId: String,
         jobId: Int,
