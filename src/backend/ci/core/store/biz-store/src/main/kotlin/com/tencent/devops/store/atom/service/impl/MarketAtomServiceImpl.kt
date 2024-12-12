@@ -100,6 +100,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -1583,6 +1584,35 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             builder.removeSuffix("|")
         } catch (ignored: Throwable) {
             logger.warn("load atom input[list] with error", ignored)
+        }
+    }
+
+    override fun updateAtomSensitiveCacheConfig(atomCode: String, atomVersion: String) {
+        val propJsonStr = atomDao.getAtomProps(dslContext, atomCode, atomVersion) ?: return
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
+        val params = mutableListOf<String>()
+        if (null != props["input"]) {
+            val input = props["input"] as Map<String, Any>
+            input.forEach { inputIt ->
+                val paramKey = inputIt.key
+                val paramValueMap = inputIt.value as Map<String, Any>
+                val isSensitive = paramValueMap["isSensitive"] as? Boolean
+                if (isSensitive == true) {
+                    params.add(paramKey)
+                }
+            }
+        }
+        if (params.isNotEmpty()) {
+            redisOperation.hset(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                values = params.joinToString(",")
+            )
+        } else {
+            redisOperation.hdelete(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(atomVersion)
+            )
         }
     }
 }
