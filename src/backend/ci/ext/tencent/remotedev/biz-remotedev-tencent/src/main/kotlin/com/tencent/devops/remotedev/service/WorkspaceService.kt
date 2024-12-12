@@ -33,6 +33,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
@@ -42,6 +43,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -97,6 +99,7 @@ import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.project.DepartmentsInfo
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
@@ -121,6 +124,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -152,8 +156,10 @@ class WorkspaceService @Autowired constructor(
     private val taiService: TaiService,
     private val startCloudInterfaceService: StartCloudInterfaceService,
     private val windowsGpuResourceDao: WindowsGpuResourceDao
-
 ) {
+    @Value("\${remoteDev.projectMonitorUrl:}")
+    val projectMonitorUrl = ""
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
         instance = AuditInstanceRecord(
@@ -715,6 +721,36 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    fun getWorkspaceProjectNew(projectId: String?, page: Int, pageSize: Int): List<RemotedevProjectNew> {
+        logger.info("get workspace project list new")
+        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val projects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+            projectConditionDTO = ProjectConditionDTO(
+                queryRemoteDevFlag = true,
+                projectCodes = if (projectId != null) {
+                    listOf(projectId)
+                } else {
+                    null
+                }
+            ),
+            limit = limit.limit,
+            offset = limit.offset
+        ).data ?: return emptyList()
+
+        val projectAndBizs = client.get(ServiceMonitorSpaceResource::class).listMonitorSpaceBizIds(
+            projects.map { it.englishName }
+        ).data ?: emptyMap()
+
+        return projects.map {
+            RemotedevProjectNew(
+                projectId = it.englishName,
+                projectName = it.projectName,
+                remotedevManager = it.remotedevManager ?: "",
+                monitorUrl = "$projectMonitorUrl?orgName=${projectAndBizs[it.englishName] ?: ""}"
+            )
+        }
+    }
+
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?, search: WorkspaceSearch?): Page<Workspace> {
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
@@ -873,7 +909,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,

@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -115,6 +116,21 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
+
+    @Operation(summary = "获取开启云桌面的项目列表")
+    @GET
+    @Path("/project/list/new")
+    fun getRemotedevProjectsNew(
+        @Parameter(description = "project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>>
 
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
