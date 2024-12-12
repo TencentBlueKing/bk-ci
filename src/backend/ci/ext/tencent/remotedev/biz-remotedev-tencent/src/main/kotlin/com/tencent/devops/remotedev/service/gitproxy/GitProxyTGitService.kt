@@ -252,7 +252,8 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        ips.addAll(fetchDevcloudCvm(projectId))
         // 获取项目下正在跑的所有机器的用户
         val users = fetchProjectSpecAclUsers(setOf(projectId))
 
