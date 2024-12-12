@@ -279,10 +279,10 @@
       <div class="slider-main">
         <p class="main-desc">
           <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary">{{ totalCount }}</span>
+            <span class="desc-primary">{{ checkData.totalCount }}</span>
           </i18n-t>
-          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-            <span class="desc-warn">{{ inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
+          <i18n-t v-if="checkData.inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
+            <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
           </i18n-t>
         </p>
         <div>
@@ -308,8 +308,51 @@
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
-          <div v-if="batchFlag === 'handover'">
-            <div class="main-line main-line-handover">
+          <div :class="[{'main-line-remove': !checkData.canHandoverCount}, 'main-line']">
+            <p
+              v-if="batchFlag === 'handover' && invalidAuthorizationCount"
+              class="main-text"
+            >
+              {{ t('移交以上用户组，将导致') }}
+              <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
+                <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
+              </i18n-t>
+
+              <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
+                <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
+              </i18n-t>
+              {{ t('请确认是否同步移交授权。') }}
+            </p>
+            <div v-if="batchFlag === 'remove'">
+              <p
+                v-if="checkData.canHandoverCount && invalidAuthorizationCount"
+                class="main-text"
+              >
+                {{ t('退出以上用户组，将导致') }}
+                <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
+                  <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
+                </i18n-t>
+
+                <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
+                  <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
+                </i18n-t>
+
+                <i18n-t v-if="checkData.uniqueManagerCount" keypath="X个资源没有拥有者，" tag="span">
+                  <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
+                </i18n-t>
+                {{ t('请填写交接人，完成交接后才能成功退出。') }}
+              </p>
+              <p v-else class="main-label-remove">
+                <i18n-t  keypath="确认从以上X个用户组中移出X吗？" tag="div">
+                  <span class="remove-num">{{ checkData.operableCount }}</span><span class="remove-person">{{ userName }}</span>
+                </i18n-t>
+              </p>
+            </div>
+
+            <div
+              class="main-line main-line-handover"
+              v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.canHandoverCount)"
+            >
               <p class="main-label">{{t("移交给")}}</p>
               <bk-form
                 ref="formRef"
@@ -331,24 +374,15 @@
               </bk-form>
             </div>
           </div>
-          <div v-if="batchFlag === 'remove'">
-            <div class="main-line main-line-remove">
-              <p class="main-label-remove">
-                <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ totalCount - inoperableCount }}</span><span class="remove-person">{{ userName }}</span>
-                </i18n-t>
-              </p>
-            </div>
-          </div>
         </div>
         <div class="footer-btn">
           <bk-button
-            :disabled="totalCount === inoperableCount"
-            :theme="batchFlag === 'remove' ? 'danger' : 'primary'"
+            :disabled="!checkData.canHandoverCount && !checkData.operableCount"
+            :theme="batchFlag === 'remove' && !checkData.canHandoverCount && checkData.operableCount ? 'danger' : 'primary'"
             @click="batchConfirm(batchFlag)"
             :loading="batchBtnLoading"
           >
-            {{t(btnTexts[batchFlag])}}
+            {{batchFlag === 'remove' && checkData.canHandoverCount ? t("申请交接") : t(btnTexts[batchFlag])}}
           </bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
@@ -398,8 +432,8 @@ const rules = {
     { required: true, message: t('请输入移交人'), trigger: 'blur' },
   ],
 };
-const inoperableCount = ref();
-const totalCount = ref();
+const checkData = ref();
+const invalidAuthorizationCount = ref();
 const renewalLoading = ref(false);
 const handoverLoading = ref(false);
 const removerLoading = ref(false);
@@ -612,8 +646,8 @@ async function batchOperator (flag) {
     delete params.renewalDuration
 
     const res = await http.batchOperateCheck(projectId.value, batchOperateTypes[flag], params);
-    totalCount.value = res.totalCount;
-    inoperableCount.value = res.inoperableCount;
+    checkData.value = res;
+    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount + res.invalidRepositoryAuthorizationCount
     loadingMap[flag].value = false;
 
     sliderTitle.value = t(batchTitle[flag]);
@@ -675,25 +709,26 @@ function cancelClear (batchFlag) {
  * @param batchFlag 按钮标识
  */
 async function batchConfirm (batchFlag) {
-  batchBtnLoading.value = true;
 
   let res = null;
   const params = formatSelectParams();
 
   try {
-    if (batchFlag === 'renewal') {
-      res = await http.batchRenewal(projectId.value, params);
-    } else if (batchFlag === 'handover') {
-      const flag = await formRef.value.validate();
-      if (!flag) return;
-      if(asideItem.value.id === handOverForm.value.id){
-        showMessage('error', t('目标对象和交接人不允许相同。'));
-        batchBtnLoading.value = false;
-        return
-      }
-      res = await http.batchHandover(projectId.value, params);
-    } else if (batchFlag === 'remove') {
-      res = await http.batchRemove(projectId.value, params);
+    switch (batchFlag) {
+      case 'renewal':
+        batchBtnLoading.value = true;
+        res = await http.batchRenewal(projectId.value, params);
+        break;
+      case 'renewal':
+        if (!(await validateFormAndUser())) return;
+        batchBtnLoading.value = true;
+        res = await http.batchHandover(projectId.value, params);
+        break;
+      case 'renewal':
+        if (!(await validateRemoveCondition())) return;
+        batchBtnLoading.value = true;
+        res = await http.batchRemove(projectId.value, params);
+        break;
     }
 
     if (res) {
@@ -706,12 +741,31 @@ async function batchConfirm (batchFlag) {
     batchBtnLoading.value = false;
   }
 }
+async function validateFormAndUser() {
+  const isValid = await formRef.value.validate();
+  if (!isValid) return false;
+
+  if (asideItem.value.id === handOverForm.value.id) {
+    showMessage('error', t('目标对象和交接人不允许相同。'));
+    return false;
+  }
+
+  return true;
+}
+
+async function validateRemoveCondition() {
+  if (!checkData.value.canHandoverCount && checkData.value.operableCount) return true;
+
+  return await validateFormAndUser();
+}
+
 function showMessage (theme, message) {
   Message({
     theme: theme,
     message: message,
   });
 }
+
 function asideRemoveConfirm (removeUser, handOverForm) {
   handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
@@ -1020,7 +1074,7 @@ function closeDeptListPermissionDialog () {
         }
 
         .main-text {
-          font-size: 12px;
+          font-size: 14px;
           color: #63656E;
         }
 
@@ -1032,19 +1086,19 @@ function closeDeptListPermissionDialog () {
           margin: 0 !important;
         }
 
+        .remove-num {
+          color: #3a84ff;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
         .main-label-remove {
           color: #63656e;
           font-size: 16px;
 
-          .remove-num {
-            color: #3a84ff;
-            font-size: 16px;
-            font-weight: 700;
-          }
-
           .remove-person {
             color: #63656e;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
           }
         }

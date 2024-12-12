@@ -235,7 +235,7 @@
           </div>
         </div>
         <div class="slider-footer">
-          <div class="footer-main" :class="authorizationInvalid ? '' : 'main-line-handover'">
+          <div class="footer-main" :class="checkData.canHandoverCount ? '' : 'main-line-handover'">
             <div class="main-line">
               <p
                 v-if="authorizationInvalid && batchFlag === 'handover'"
@@ -254,7 +254,7 @@
               
               <div v-if="batchFlag === 'remove'">
                 <p
-                  v-if="authorizationInvalid"
+                  v-if="checkData.canHandoverCount && invalidAuthorizationCount"
                   class="main-text"
                 >
                   {{ t('退出以上用户组，将导致') }}
@@ -278,12 +278,12 @@
                   v-else
                   class="main-label-remove">
                   <i18n-t keypath="确认退出以上X个用户组吗？" tag="div">
-                    <span class="remove-num">{{ checkData.totalCount }}</span>
+                    <span class="remove-num">{{ checkData.operableCount }}</span>
                   </i18n-t>
                 </p>
               </div>
   
-              <div v-if="authorizationInvalid || batchFlag === 'handover'">
+              <div v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.canHandoverCount)">
                 <p class="main-label">{{t("移交给")}}</p>
                 <bk-form
                   ref="formRef"
@@ -309,14 +309,15 @@
           </div>
           <div class="footer-btn">
             <bk-button
-              :theme="batchFlag === 'remove' && !authorizationInvalid ? 'danger' : 'primary'"
+              :theme="batchFlag === 'remove' && !checkData.canHandoverCount && checkData.operableCount ? 'danger' : 'primary'"
+              :disabled="!checkData.canHandoverCount && !checkData.operableCount"
               @click="batchConfirm(batchFlag)"
               :loading="batchBtnLoading"
             >
-              {{authorizationInvalid ? t("申请交接") : t(btnTexts[batchFlag])}}
+              {{batchFlag === 'remove' && checkData.canHandoverCount ? t("申请交接") : t(btnTexts[batchFlag])}}
             </bk-button>
             <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
-            <p v-if="authorizationInvalid && batchFlag === 'remove'">
+            <p v-if="batchFlag === 'remove' && checkData.canHandoverCount">
               <img src="@/css/svg/info-circle.svg" class="info-circle">
               <span>{{ t("完成交接后，将自动退出用户组") }}</span>
             </p>
@@ -403,7 +404,6 @@ const title = computed(() => {
     )
   }
 })
-// 资源失效个数，是否需要权限交接
 const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount)
 const {
   projectId,
@@ -684,20 +684,21 @@ function cancelClear(batchFlag) {
  * 侧边栏确认事件
  * @param batchFlag 按钮标识
  */
-async function batchConfirm(batchFlag) {
+ async function batchConfirm(batchFlag) {
   let res = null;
   const params = formatSelectParams();
   delete params.renewalDuration;
+
   try {
     if (batchFlag === 'handover') {
-      if (!(await handleHandoverValidation())) return;
+      if (!(await validateFormAndUser())) return;
       batchBtnLoading.value = true;
       res = await http.batchHandover(projectId.value, params);
       if (res) {
         showHandoverSuccessInfoBox();
       }
     } else if (batchFlag === 'remove') {
-      if (!(await handleRemoveValidation())) return;
+      if (!(await validateRemoveCondition())) return;
       batchBtnLoading.value = true;
       res = await http.batchRemove(projectId.value, params);
       if (res && authorizationInvalid.value) {
@@ -708,7 +709,9 @@ async function batchConfirm(batchFlag) {
     if (res) {
       batchCancel();
       fetchUserGroupList(user.value.id, projectId.value, searchGroup.value);
-      !authorizationInvalid.value && showMessage('success', t(batchMassageText[batchFlag]));
+      if (!checkData.value.canHandoverCount && checkData.value.operableCount) {
+        showMessage('success', t(batchMassageText[batchFlag]));
+      }
     }
   } catch (error) {
     console.log(error);
@@ -717,25 +720,20 @@ async function batchConfirm(batchFlag) {
   }
 }
 
-async function handleHandoverValidation() {
-  const flag = await formRef.value.validate();
-  if (!flag) return false;
+async function validateFormAndUser() {
+  const isValid = await formRef.value.validate();
+  if (!isValid) return false;
 
   if (user.value.id === handOverForm.value.id) {
     showMessage('error', t('目标对象和交接人不允许相同。'));
-    batchBtnLoading.value = false;
     return false;
   }
   return true;
 }
 
-async function handleRemoveValidation() {
-  if (!authorizationInvalid.value) return true;
-
-  const flag = await formRef.value.validate();
-  if (!flag) return false;
-
-  return true;
+async function validateRemoveCondition() {
+  if (!checkData.value.canHandoverCount && checkData.value.operableCount) return true;
+  return await validateFormAndUser();
 }
 
 function showHandoverSuccessInfoBox() {
