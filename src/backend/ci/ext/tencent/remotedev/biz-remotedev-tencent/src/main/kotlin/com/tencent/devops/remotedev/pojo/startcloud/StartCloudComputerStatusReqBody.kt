@@ -12,7 +12,8 @@ data class StartCloudComputerStatusRespData(
     val cgsId: String,
     val state: Int,
     val message: String?,
-    val userInfos: List<StartCloudComputerStatusUserInfo>?
+    val userInfos: List<StartCloudComputerStatusUserInfo>?,
+    val cgsVersion: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
