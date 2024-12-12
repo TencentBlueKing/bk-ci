@@ -1591,7 +1591,7 @@ class RepositoryService @Autowired constructor(
             else -> {
                 listOf()
             }
-        }.setDetailUrl()
+        }
         val count = countOauthRepo(userId, scmType)
         return SQLPage(count, list)
     }
@@ -1616,16 +1616,6 @@ class RepositoryService @Autowired constructor(
             }
 
             else -> 0L
-        }
-    }
-
-    /**
-     * 填充详情url
-     */
-    private fun List<RepoOauthRefVo>.setDetailUrl(): List<RepoOauthRefVo> {
-        return this.map {
-            it.detailUrl = "/console/codelib/${it.projectId}/?id=${it.hashId}"
-            it
         }
     }
 

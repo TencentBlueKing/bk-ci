@@ -8,8 +8,6 @@ data class RepoOauthRefVo(
     val aliasName: String,
     @get:Schema(title = "仓库源URL", required = true)
     val url: String,
-    @get:Schema(title = "代码库详情页", required = true)
-    var detailUrl: String? = null,
     @get:Schema(title = "蓝盾项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "代码库HashId", required = true)

@@ -29,11 +29,10 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.OauthRepositoryResource
 import com.tencent.devops.repository.pojo.OauthResetUrl
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.UserOauthRepositoryInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -71,14 +70,14 @@ interface UserOauthResource {
         userId: String,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("scmCode")
-        scmCode: ScmCode,
+        scmCode: String,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
-    ): Result<Page<OauthRepositoryResource>>
+    ): Result<Page<RepoOauthRefVo>>
 
     @DELETE
     @Path("/delete")
@@ -89,7 +88,7 @@ interface UserOauthResource {
         userId: String,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("scmCode")
-        scmCode: ScmCode
+        scmCode: String
     ): Result<Boolean>
 
     @POST
@@ -101,7 +100,7 @@ interface UserOauthResource {
         userId: String,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("scmCode")
-        scmCode: ScmCode,
+        scmCode: String,
         @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
         @QueryParam("redirectUrl")
         redirectUrl: String

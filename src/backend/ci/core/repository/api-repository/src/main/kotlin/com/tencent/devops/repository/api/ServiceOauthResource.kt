@@ -130,12 +130,6 @@ interface ServiceOauthResource {
     fun githubOAuth(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "重定向url类型", required = false)
-        @QueryParam("redirectUrlType")
-        redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
-        @QueryParam("redirectUrl")
-        redirectUrl: String?
+        userId: String
     ): Result<AuthorizeResult>
 }

@@ -31,11 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -287,28 +285,4 @@ interface ApigwRepositoryResourceV4 {
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
-
-    @Operation(
-        summary = "校验用户是否已经OAUTH授权",
-        tags = ["v4_app_repository_oauth_authorized", "v4_user_repository_oauth_authorized"]
-    )
-    @PUT
-    @Path("/{scmCode}/oauth/authorized")
-    fun authorized(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "代码库类型", required = true)
-        @PathParam("scmCode")
-        scmCode: ScmCode,
-        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = true)
-        @QueryParam("redirectUrl")
-        redirectUrl: String
-    ): Result<AuthorizeResult>
 }

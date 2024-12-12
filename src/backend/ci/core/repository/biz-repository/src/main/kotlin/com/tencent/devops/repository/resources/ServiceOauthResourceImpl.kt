@@ -94,15 +94,13 @@ class ServiceOauthResourceImpl @Autowired constructor(
     }
 
     override fun githubOAuth(
-        userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?
+        userId: String
     ): Result<AuthorizeResult> {
         return Result(
             githubService.isOAuth(
                 userId = userId,
-                redirectUrl = redirectUrl,
-                redirectUrlType = redirectUrlType,
+                redirectUrl = "",
+                redirectUrlType = null,
                 projectId = "",
                 resetType = "",
                 refreshToken = false
