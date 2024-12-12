@@ -23,32 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.webhook
+package com.tencent.devops.repository.pojo.enums
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.permission.PipelinePermissionService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class PipelineBuildPermissionService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService
-) {
-    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        )
-    }
+/**
+ * token 应用类型
+ */
+enum class TokenAppTypeEnum {
+    OAUTH2, // oauth2认证
+    COPILOT_OPEN_TOKEN; // copilot open token
 }
