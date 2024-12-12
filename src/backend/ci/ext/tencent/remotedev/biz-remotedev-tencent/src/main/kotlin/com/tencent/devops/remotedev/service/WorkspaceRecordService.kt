@@ -1,14 +1,17 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkRepoRegion
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -22,9 +25,12 @@ import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS
+import java.security.SecureRandom
 import java.time.LocalDateTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -36,11 +42,16 @@ class WorkspaceRecordService @Autowired constructor(
     private val workspaceRecordUserApprovalDao: WorkspaceRecordUserApprovalDao,
     private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
+    private val workspaceRecordTicketDao: WorkspaceRecordTicketDao,
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
     private val bkItsmService: BKItsmService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val permissionService: PermissionService,
     private val configCacheService: ConfigCacheService
 ) {
+
+    @Value("\${workspaceRecordTicket.aes-key}")
+    private val aesKey = ""
 
     fun enableRecord(
         workspaceName: String,
@@ -70,6 +81,10 @@ class WorkspaceRecordService @Autowired constructor(
         if (remotedevBkRepoClient.existProject(region, record.projectId) != true) {
             remotedevBkRepoClient.createProject(region, enableUser, record.projectId)
         }
+
+        // 创建工作空间编码密钥
+        saveWorkspaceRecordTicket(workspaceName)
+
         workspaceWindowsDao.updateRecord(
             dslContext = dslContext,
             workspaceName = workspaceName,
@@ -111,6 +126,13 @@ class WorkspaceRecordService @Autowired constructor(
         }
 
         val region = genRegion(hostIp)
+        // 生成访问token
+        val token = permissionService.init1Password(
+            userId = enableUser,
+            workspaceName = workspaceName,
+            projectId = null,
+            expiredInSecond = 24 * 3600
+        )
         return Pair(
             true,
             remotedevBkRepoClient.repoStreamCreate(
@@ -118,7 +140,7 @@ class WorkspaceRecordService @Autowired constructor(
                 projectId = projectId,
                 repoName = genRepoName(workspaceName),
                 userId = enableUser
-            ) + "&recordUser=$userId"
+            ) + "&recordUser=$userId&skToken=$token"
         )
     }
 
@@ -242,10 +264,18 @@ class WorkspaceRecordService @Autowired constructor(
             body = searchBody
         ) ?: return Page(0, 0, 0, emptyList())
 
+        // 生成访问token
+        val token = permissionService.init1Password(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = null,
+            expiredInSecond = 24 * 3600
+        )
         val data = resp.records.map {
             WorkspaceRecordMetadata(
                 link = bkRepoConfig.getRegionConfig(region).webUrl +
-                    "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}",
+                    "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
+                    "?skToken=$token",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime,
                 fileSize = it.size,
@@ -282,6 +312,28 @@ class WorkspaceRecordService @Autowired constructor(
             viewPermission = endTime > LocalDateTime.now(),
             viewPermissionEndTime = endTime.timestampmilli()
         )
+    }
+
+    fun saveWorkspaceRecordTicket(workspaceName: String) {
+        val random = ByteArray(32)
+        SecureRandom().nextBytes(random)
+        workspaceRecordTicketDao.create(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            cert = BkCryptoUtil.encryptSm4ButAes(aesKey, Base64.getEncoder().encodeToString(random))
+        )
+    }
+
+    fun getWorkspaceRecordTicket(workspaceName: String, token: String): String {
+        val checkedToken = permissionService.checkAndGetUser1PasswordNoDelete(token)
+        if (checkedToken.workspaceName != workspaceName) {
+            throw OperationException("Token verification failed.Please reapply for authorization.")
+        }
+        val ticket = workspaceRecordTicketDao.fetchAny(dslContext, workspaceName)?.cert ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        return BkCryptoUtil.decryptSm4OrAes(aesKey, ticket)
     }
 
     companion object {

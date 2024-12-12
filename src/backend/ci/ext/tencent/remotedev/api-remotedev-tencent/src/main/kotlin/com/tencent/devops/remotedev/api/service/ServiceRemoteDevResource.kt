@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -115,6 +116,21 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
+
+    @Operation(summary = "获取开启云桌面的项目列表")
+    @GET
+    @Path("/project/list/new")
+    fun getRemotedevProjectsNew(
+        @Parameter(description = "project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>>
 
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
@@ -554,6 +570,7 @@ interface ServiceRemoteDevResource {
         ip: String
     ): Result<CheckWorkspaceRecordData>
 
+    @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
     @Operation(summary = "检查用户是否有产看当前工作空间录像的权限")
     @GET
     @Path("/check_user_view_workspace_record_permission")
@@ -709,4 +726,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
+
+    @Operation(summary = "获取工作空间录屏密钥")
+    @GET
+    @Path("/get_workspace_record_ticket")
+    fun getWorkspaceRecordTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "skToken", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String>
 }

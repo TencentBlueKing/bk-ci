@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.gitproxy.OffshoreTGitApiClient.Companion.LOG_UPDATE_TGIT_ACL_TAG
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_PUBLIC_IPS
@@ -62,6 +63,7 @@ class GitProxyTGitService @Autowired constructor(
     private val tGitConfig: TGitConfig,
     private val redisOperation: RedisOperation,
     private val streamBridge: StreamBridge,
+    private val devcloudService: DevcloudService,
     private val configCacheService: ConfigCacheService
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
@@ -599,7 +601,10 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        otherProjects.forEach { op ->
+            ips.addAll(fetchDevcloudCvm(op))
+        }
         val users = fetchProjectSpecAclUsers(otherProjects)
 
         val ok = incUpdateTGitProjectAcl(
@@ -820,7 +825,8 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        ips.addAll(fetchDevcloudCvm(info.projectId))
         val users = fetchProjectSpecAclUsers(setOf(info.projectId))
 
         val ok = incUpdateTGitProjectAcl(
@@ -1007,6 +1013,40 @@ class GitProxyTGitService @Autowired constructor(
             )
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun fetchDevcloudCvm(
+        projectId: String
+    ): Set<String> {
+        try {
+            var page = 1
+            val pageSize = 100
+            val result = mutableSetOf<String>()
+
+            while (true) {
+                val cvmPage = devcloudService.fetchCVMList(
+                    userId = "landun",
+                    project = projectId,
+                    page = page,
+                    pageSize = pageSize
+                )
+
+                // 过滤项目信息
+                cvmPage.records.forEach { cvm ->
+                    result.add(cvm.ip ?: return@forEach)
+                }
+
+                if (cvmPage.count < pageSize) {
+                    break
+                }
+                page++
+            }
+
+            return result
+        } catch (e: Exception) {
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG|fetchDevcloudCvm error", e)
+            return emptySet()
         }
     }
 

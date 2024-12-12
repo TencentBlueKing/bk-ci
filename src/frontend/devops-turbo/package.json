@@ -64,7 +64,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/turbo"
+          "{workspaceRoot}/frontend/turbo",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }

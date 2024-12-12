@@ -52,10 +52,12 @@ import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_EXPORT_CONFIG_INFO
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.time.Duration
@@ -83,6 +85,8 @@ class ExpertSupportService @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val remoteDevService: RemoteDevService,
+    private val startCloudClient: StartCloudClient,
+    private val bkNodemanService: BKNodemanService,
     private val configCacheService: ConfigCacheService
 ) {
     @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
@@ -260,7 +264,7 @@ class ExpertSupportService @Autowired constructor(
         data: CreateSupportData
     ): Long {
         // 校验机器在不在
-        val record = workspaceDao.fetchAnyWorkspace(
+        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
             workspaceName = data.workspaceName
         ) ?: throw ErrorCodeException(
@@ -300,16 +304,30 @@ class ExpertSupportService @Autowired constructor(
             viewers = sharedInfo.filter { it.type == AssignType.VIEWER }.map { it.sharedUser }.toSet().ifEmpty { null }
         }
 
+        val cgsStatus = try {
+            startCloudClient.computerStatus(setOf(data.hostIp))?.firstOrNull()
+        } catch (e: Exception) {
+            logger.warn("createSupportNew computerStatus error", e)
+            null
+        }
+
+        val agentStatus = if (record.regionId != null) {
+            bkNodemanService.ipchooserHostDetail(data.hostIp.substringAfter("."), record.regionId!!)
+        } else {
+            logger.warn("createSupportNew ${data.workspaceName} regionId is null")
+            null
+        }
+
         val info = SupRecordInfo(
             requestIp = requestIp,
             projectManager = projectInfo?.properties?.remotedevManager?.split(";")?.toSet(),
             clientVersion = clientVersion,
             machineStatus = record.status.name,
-            cdsVersion = null,
-            cdsRegion = null,
-            cdsStatus = null,
-            cdsPort = null,
-            agentStatus = null,
+            cdsVersion = cgsStatus?.cgsVersion,
+            cdsRegion = data.hostIp.split(".").first(),
+            cdsStatus = cgsStatus?.state?.toString(),
+            cdsPort = CGS_PORT,
+            agentStatus = agentStatus?.alive.toString(),
             owner = owner,
             viewers = viewers
         )
@@ -693,5 +711,6 @@ class ExpertSupportService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
+        private const val CGS_PORT = "10080"
     }
 }

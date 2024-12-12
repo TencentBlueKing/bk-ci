@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
+import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -174,6 +175,10 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
         return Result(workspaceService.getWorkspaceProject(projectId))
+    }
+
+    override fun getRemotedevProjectsNew(projectId: String?, page: Int, pageSize: Int): Result<List<RemotedevProjectNew>> {
+        return Result(workspaceService.getWorkspaceProjectNew(projectId, page, pageSize))
     }
 
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
@@ -778,5 +783,9 @@ class ServiceRemoteDevResourceImpl(
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
+        return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
     }
 }
