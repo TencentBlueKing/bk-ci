@@ -1419,13 +1419,13 @@ class RepositoryService @Autowired constructor(
     }
 
     fun getRepository(projectId: String, repositoryHashId: String?, repoAliasName: String?): Repository {
-        if (repoAliasName.isNullOrBlank() && repoAliasName.isNullOrBlank()) {
+        if (repositoryHashId.isNullOrBlank() && repoAliasName.isNullOrBlank()) {
             throw IllegalArgumentException("repositoryHashId or repoAliasName can not be null")
         }
         return compose(
             getRepository(
                 projectId = projectId,
-                repositoryConfig = if (repositoryHashId.isNullOrBlank()) {
+                repositoryConfig = if (!repositoryHashId.isNullOrBlank()) {
                     RepositoryConfig(
                         repositoryHashId = repositoryHashId,
                         repositoryName = null,
