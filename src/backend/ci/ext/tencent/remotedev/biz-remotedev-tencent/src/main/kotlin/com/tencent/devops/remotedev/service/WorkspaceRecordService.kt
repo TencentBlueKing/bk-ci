@@ -139,7 +139,7 @@ class WorkspaceRecordService @Autowired constructor(
                 projectId = projectId,
                 repoName = genRepoName(workspaceName),
                 userId = enableUser
-            ) + "&recordUser=$userId&skToken=$token"
+            ) + "&skToken=$token&recordUser=$userId"
         )
     }
 
