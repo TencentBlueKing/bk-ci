@@ -286,6 +286,14 @@ class PermissionService @Autowired constructor(
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 
+    fun checkAndGetUser1PasswordNoDelete(key: String): UserOnePassword {
+        val value = redisOperation.get(REDIS_KEY + key)
+        if (value.isNullOrBlank()) {
+            throw OperationException("Session is already registered or has expired.Please reapply for authorization.")
+        }
+        return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
+    }
+
     fun init1Password(userId: String, workspaceName: String, projectId: String?, expiredInSecond: Long?): String {
         val key = initRedisUser(
             UserOnePassword(

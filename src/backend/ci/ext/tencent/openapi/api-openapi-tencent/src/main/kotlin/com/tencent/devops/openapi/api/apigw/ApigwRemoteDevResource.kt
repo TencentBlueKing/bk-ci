@@ -811,4 +811,22 @@ interface ApigwRemoteDevResource {
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
 
+
+    @Operation(
+        summary = "获取工作空间录屏密钥",
+        tags = ["v4_app_get_workspace_record_ticket"]
+    )
+    @GET
+    @Path("/get_workspace_record_ticket")
+    fun getWorkspaceRecordTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "skToken", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String>
 }

@@ -759,4 +759,8 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
+        return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
 }
