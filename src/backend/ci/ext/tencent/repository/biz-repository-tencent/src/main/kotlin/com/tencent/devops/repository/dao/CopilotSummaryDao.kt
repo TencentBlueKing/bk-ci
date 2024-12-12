@@ -65,13 +65,14 @@ class CopilotSummaryDao {
         summary: String?
     ) {
         with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
+            val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 BUILD_ID,
                 ELEMENT_ID,
                 SCM_CODE,
-                PROJECT_ID,
+                PROJECT_NAME,
                 SOURCE_COMMIT,
                 TARGET_COMMIT,
                 STATUS,
@@ -87,12 +88,13 @@ class CopilotSummaryDao {
                 target,
                 status,
                 summary,
-                LocalDateTime.now()
+                now
             ).onDuplicateKeyUpdate()
                 .set(SOURCE_COMMIT, source)
                 .set(TARGET_COMMIT, target)
                 .set(STATUS, status)
                 .set(SUMMARY, summary)
+                .set(CREATE_TIME, now)
                 .execute()
         }
     }

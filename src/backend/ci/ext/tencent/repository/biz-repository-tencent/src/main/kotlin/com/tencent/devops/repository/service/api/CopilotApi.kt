@@ -41,6 +41,7 @@ class CopilotApi {
         )
         val responseContent = response.body!!.string()
         return if (responseContent.isBlank()) {
+            logger.warn("the AI summary result is empty, please check the input parameters")
             null
         } else {
             JsonUtil.to(responseContent, object : TypeReference<CodeGitCopilotSummary>() {})

@@ -196,7 +196,7 @@ class RepositoryCopilotService @Autowired constructor(
             }
             repository.projectName
         }
-        val (sourceSha, targetSha) = commitRecords.last().commit to commitRecords.first().commit
+        val (sourceSha, targetSha) = commitRecords.first().commit to commitRecords.last().commit
         return Triple(projectName, sourceSha, targetSha)
     }
 
