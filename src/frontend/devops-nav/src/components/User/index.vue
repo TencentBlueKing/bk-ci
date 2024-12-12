@@ -65,10 +65,7 @@
         @Action togglePopupShow
 
         hideUserInfo (item): void {
-            if (item) {
-                if (item.to === this.$route.fullPath) return
-                this.$router.push(item.to)
-            }
+            this.$refs.popoverRef.hideHandler()
         }
 
         handleShow () {
@@ -79,6 +76,10 @@
             this.togglePopupShow(false)
         }
 
+        updatePage (name) {
+            window.open(`${window.location.origin}/console/${name}`, '_self')
+        }
+
         get menu (): object[] {
             try {
                 return [
@@ -87,12 +88,14 @@
                         label: this.$t('projectManage')
                     },
                     {
-                        to: '/console/permission',
-                        label: this.$t('accessCenter')
+                        cb: this.updatePage,
+                        label: this.$t('accessCenter'),
+                        name: 'permission'
                     },
                     {
-                        to: '/console/permission/auth/oauth',
-                        label: this.$t('oauthManage')
+                        cb: this.updatePage,
+                        label: this.$t('oauthManage'),
+                        name: 'permission/auth/oauth'
                     },
                     {
                         cb: this.logout,
