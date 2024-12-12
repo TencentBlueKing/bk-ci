@@ -76,12 +76,14 @@ import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.constant.StoreConstants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
+import com.tencent.devops.store.pojo.common.enums.FrameworkCodeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -95,7 +97,6 @@ import com.tencent.devops.store.pojo.devx.BkConfigInfo
 import com.tencent.devops.store.pojo.devx.OsConfigInfo
 import com.tencent.devops.store.pojo.devx.SignatureConfigInfo
 import com.tencent.devops.store.pojo.devx.constants.KEY_BUILD_DIR
-import com.tencent.devops.store.pojo.devx.constants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
@@ -103,7 +104,6 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
 import com.tencent.devops.store.pojo.devx.constants.KEY_SOURCE_TYPE
-import com.tencent.devops.store.pojo.devx.enums.FrameworkCodeEnum
 import com.tencent.devops.store.pojo.devx.enums.SourceCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
