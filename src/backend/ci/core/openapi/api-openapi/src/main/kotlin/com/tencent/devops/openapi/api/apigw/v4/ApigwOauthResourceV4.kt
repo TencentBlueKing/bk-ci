@@ -35,8 +35,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -53,7 +53,7 @@ interface ApigwOauthResourceV4 {
         summary = "校验用户是否已经OAUTH授权",
         tags = ["v4_app_oauth_isOauth", "v4_user_oauth_isOauth"]
     )
-    @PUT
+    @GET
     @Path("/isOauth")
     fun isOauth(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
