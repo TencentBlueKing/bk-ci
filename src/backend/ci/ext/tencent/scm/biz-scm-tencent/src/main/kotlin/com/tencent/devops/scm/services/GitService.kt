@@ -1138,7 +1138,7 @@ class GitService @Autowired constructor(
                     )
                 }
             }
-            val id = dataMap[ID] as Long
+            val id = dataMap[ID].toString().toLong()
             return Result(GitRepositoryResp(id, nameSpaceName, repositoryUrl as String))
         }
     }
