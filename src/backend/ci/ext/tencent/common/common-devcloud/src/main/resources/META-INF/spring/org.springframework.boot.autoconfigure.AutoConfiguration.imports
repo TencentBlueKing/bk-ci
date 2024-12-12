@@ -1,2 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.tencent.devops.common.environment.agent.config.DevCloudConfiguration
