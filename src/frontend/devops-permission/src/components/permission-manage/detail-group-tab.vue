@@ -113,14 +113,6 @@ import { useI18n } from 'vue-i18n';
 import { defineProps, defineEmits, computed } from 'vue';
 import userDetailGroupTable from '@/store/userDetailGroupTable';
 import TabTable from './detail-tab-table.vue';
-import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
-import codelibIcon from '@/css/svg/color-logo-codelib.svg';
-import codeccIcon from '@/css/svg/color-logo-codecc.svg';
-import environmentIcon from '@/css/svg/color-logo-environment.svg';
-import experienceIcon from '@/css/svg/color-logo-experience.svg';
-import qualityIcon from '@/css/svg/color-logo-quality.svg';
-import ticketIcon from '@/css/svg/color-logo-ticket.svg';
-import turboIcon from '@/css/svg/color-logo-turbo.svg';  // 编译加速
 
 const props = defineProps({
   sourceList: {
