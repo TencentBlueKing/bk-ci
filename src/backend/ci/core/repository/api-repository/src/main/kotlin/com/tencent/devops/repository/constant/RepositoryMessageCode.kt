@@ -109,5 +109,4 @@ object RepositoryMessageCode {
     const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
 
     const val TRIGGER_CONDITION_PREFIX = "trigger.condition"
-
 }

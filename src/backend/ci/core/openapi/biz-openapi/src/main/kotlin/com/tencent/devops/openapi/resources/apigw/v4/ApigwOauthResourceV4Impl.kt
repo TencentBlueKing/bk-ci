@@ -44,7 +44,7 @@ class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client
         scmCode: String
     ): Result<Boolean> {
         logger.info("OPENAPI_OAUTH_V4|$userId|verify if $scmCode oauth authorization has been performed")
-         val result = when (scmCode) {
+        val result = when (scmCode) {
             ScmCode.TGIT.name -> {
                 client.get(ServiceOauthResource::class).isOAuth(
                     userId = userId,
@@ -59,10 +59,10 @@ class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client
                 ).data?.status
             }
 
-             else -> {
-                 null
-             }
-         }
+            else -> {
+                null
+            }
+        }
         return Result(result == AUTHORIZED_STATUS)
     }
 
