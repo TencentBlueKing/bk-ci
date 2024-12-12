@@ -44,7 +44,9 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreBaseDeleteService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
+import com.tencent.devops.store.constant.StoreConstants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.FrameworkCodeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
@@ -52,6 +54,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
@@ -68,6 +71,9 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
     }
+
+    @Value("\${git.devopsPrivateToken:}")
+    private val devopsPrivateToken: String = ""
 
     private fun getStoreManagementExtraService(storeType: StoreTypeEnum): StoreManagementExtraService {
         return SpringContextUtil.getBean(
@@ -128,14 +134,26 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         if (!repositoryId.isNullOrBlank()) {
             val bkStoreContext = handlerRequest.bkStoreContext
             val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-            val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
-                ?: throw NotFoundException("cannot found access token for user($userId)")
+            val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE
+            )?.fieldValue
+            val token: String
+            var tokenType = TokenTypeEnum.PRIVATE_KEY
+            if (frameworkCode == FrameworkCodeEnum.CUSTOM_FRAMEWORK.name) {
+                // 如果用户选择自定义框架方式发布，则使用用户自已的oauthToken去删除代码库
+                val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                    ?: throw NotFoundException("cannot found access token for user($userId)")
+                token = gitToken.accessToken
+                tokenType = TokenTypeEnum.OAUTH
+            } else {
+                token = devopsPrivateToken
+            }
             try {
                 val deleteRepositoryResult = getStoreManagementExtraService(storeType).deleteComponentCodeRepository(
                     userId = userId,
                     repositoryId = repositoryId,
-                    token = gitToken.accessToken,
-                    tokenType = TokenTypeEnum.OAUTH
+                    token = token,
+                    tokenType = tokenType
                 )
                 if (deleteRepositoryResult.isNotOk()) {
                     setDeleteCodeRepositoryMsg(bkStoreContext, deleteRepositoryResult.message)
