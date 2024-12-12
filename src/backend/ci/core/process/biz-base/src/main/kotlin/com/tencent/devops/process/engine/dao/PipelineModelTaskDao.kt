@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineInfo
@@ -108,6 +109,7 @@ class PipelineModelTaskDao {
             if (projectCode != null) {
                 condition.add(tpi.PROJECT_ID.eq(projectCode))
             }
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
                 .join(tpi)
@@ -132,6 +134,7 @@ class PipelineModelTaskDao {
             if (projectCode != null) {
                 condition.add(tpi.PROJECT_ID.eq(projectCode))
             }
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
                 .from(this)
                 .join(tpi)
@@ -233,6 +236,7 @@ class PipelineModelTaskDao {
             if (!projectId.isNullOrEmpty()) {
                 condition.add(tpi.PROJECT_ID.eq(projectId))
             }
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
