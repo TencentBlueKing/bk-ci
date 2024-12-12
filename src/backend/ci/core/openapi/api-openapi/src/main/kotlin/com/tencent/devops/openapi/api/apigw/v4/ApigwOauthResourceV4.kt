@@ -43,8 +43,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "OPEN_API_REPOSITORY_V4", description = "OPEN-API-OAUTH授权资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/oauth")
+@Tag(name = "OPEN_API_REPOSITORY_V4", description = "OPEN-API-代码库OAUTH授权")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/repositories/oauth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("All")
