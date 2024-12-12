@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -56,7 +57,8 @@ class RbacPermissionProjectService(
     private val rbacCacheService: RbacCacheService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
-    private val resourceMemberService: PermissionResourceMemberService
+    private val resourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : PermissionProjectService {
 
     companion object {
@@ -153,7 +155,7 @@ class RbacPermissionProjectService(
         userId: String,
         projectCode: String
     ): Boolean {
-        return resourceMemberService.isProjectMember(
+        return permissionManageFacadeService.isProjectMember(
             projectCode = projectCode,
             userId = userId
         )
@@ -167,7 +169,7 @@ class RbacPermissionProjectService(
 //            resourceCode = projectCode,
 //            group = null
 //        ).contains(userId)
-        return resourceMemberService.isProjectMember(
+        return permissionManageFacadeService.isProjectMember(
             projectCode = projectCode,
             userId = userId
         )

@@ -41,6 +41,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
@@ -62,6 +63,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -752,7 +754,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         iamGroupId = iamGroupId,
                         memberId = iamGroupTemplate.id,
                         memberName = iamGroupTemplate.name,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                        memberType = MemberType.TEMPLATE.type,
                         expiredTime = expiredTime
                     )
                 )
