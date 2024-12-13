@@ -48,7 +48,7 @@ class OauthRepositoryService @Autowired constructor(
                     type = scmCode,
                     createTime = it.createTime,
                     expired = it.expiresIn?.let { expiresIn ->
-                        (it.createTime ?: 0L) + expiresIn * 1000 > System.currentTimeMillis()
+                        (it.createTime ?: 0L) + expiresIn * 1000 <= System.currentTimeMillis()
                     } ?: false,
                     authorized = true
                 )
