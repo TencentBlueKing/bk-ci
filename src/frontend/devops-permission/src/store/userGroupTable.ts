@@ -253,7 +253,7 @@ export default defineStore('userGroupTable', () => {
     isShowHandover.value = true;
   }
   /**
-   * 移出按钮点击
+   * 退出按钮点击
    * @param row 行数据
    */
   function handleRemove(row: GroupTableType, resourceType: string, index: number) {
@@ -380,7 +380,7 @@ export default defineStore('userGroupTable', () => {
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
     if (item) {
       item.isAll = true;
-      selectedData[resourceType] = item.tableData
+      selectedData[resourceType] = item.tableData.filter(i => !i.beingHandedOver)
     }
   }
   /**

@@ -647,7 +647,7 @@ async function batchOperator (flag) {
 
     const res = await http.batchOperateCheck(projectId.value, batchOperateTypes[flag], params);
     checkData.value = res;
-    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount + res.invalidRepositoryAuthorizationCount
+    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount + res.invalidRepositoryAuthorizationCount + res.uniqueManagerCount
     loadingMap[flag].value = false;
 
     sliderTitle.value = t(batchTitle[flag]);

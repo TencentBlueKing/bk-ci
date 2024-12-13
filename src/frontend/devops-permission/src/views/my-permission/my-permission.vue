@@ -177,11 +177,11 @@
   >
     <template #header>
       <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
-      <h2 class="dialog-header"> {{t("确认从用户组中移出用户吗")}}？ </h2>
+      <h2 class="dialog-header"> {{t("确认从用户组中退出用户吗")}}？ </h2>
     </template>
     <template #default>
       <p class="remove-text">
-        <span>{{t("待移出用户")}}：</span> {{user.id}}
+        <span>{{t("待退出用户")}}：</span> {{user.id}}
       </p>
       <p class="remove-text">
         <span>{{t("所在用户组")}}：</span> {{ selectedRow?.groupName }}
@@ -193,7 +193,7 @@
         :loading="operatorLoading"
         @click="handleRemoveConfirm"
       >
-        {{t('确认移出')}}
+        {{t('确认退出')}}
       </bk-button>
       <bk-button
         class="btn-margin"
@@ -235,7 +235,7 @@
           </div>
         </div>
         <div class="slider-footer">
-          <div class="footer-main" :class="checkData.canHandoverCount ? '' : 'main-line-handover'">
+          <div class="footer-main" :class="authorizationInvalid ? '' : 'main-line-handover'">
             <div class="main-line">
               <p
                 v-if="authorizationInvalid && batchFlag === 'handover'"
@@ -254,7 +254,7 @@
               
               <div v-if="batchFlag === 'remove'">
                 <p
-                  v-if="checkData.canHandoverCount && invalidAuthorizationCount"
+                  v-if="checkData.canHandoverCount && authorizationInvalid"
                   class="main-text"
                 >
                   {{ t('退出以上用户组，将导致') }}
@@ -359,7 +359,6 @@ import { useRouter } from 'vue-router';
 const user = ref();
 const { t } = useI18n();
 const formRef = ref(null);
-const router = useRouter();
 const renewalRef = ref(null);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
@@ -404,7 +403,7 @@ const title = computed(() => {
     )
   }
 })
-const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount)
+const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount + checkData.value.uniqueManagerCount)
 const {
   projectId,
   sourceList,
@@ -555,7 +554,7 @@ async function handleHandoverConfirm() {
   isShowHandover.value = false;
 }
 /**
- * 移出弹窗提交事件
+ * 退出弹窗提交事件
  */
 async function handleRemoveConfirm() {
   try {
@@ -563,8 +562,8 @@ async function handleRemoveConfirm() {
 
     const res = await http.getIsDirectRemove(projectId.value, selectedRow.value.groupId, user.value);
     if (res) {
-      await handleRemoveRow();
-
+      showMessage('success', t('X 已退出X用户组。', [`${user.value.id}(${user.value.name})`, selectedRow.value.groupName]));
+      handleRemoveRow();
       isShowRemove.value = false;
       showMessage('success', t('X 已移出X用户组。', [`${user.value.id}(${user.value.name})`, selectedRow.value.groupName]));
     }
@@ -695,14 +694,14 @@ function cancelClear(batchFlag) {
       batchBtnLoading.value = true;
       res = await http.batchHandover(projectId.value, params);
       if (res) {
-        showHandoverSuccessInfoBox();
+        showHandoverSuccessInfoBox(res);
       }
     } else if (batchFlag === 'remove') {
       if (!(await validateRemoveCondition())) return;
       batchBtnLoading.value = true;
       res = await http.batchRemove(projectId.value, params);
       if (res && authorizationInvalid.value) {
-        showRemoveSuccessInfoBox();
+        showRemoveSuccessInfoBox(res);
       }
     }
 
@@ -736,7 +735,7 @@ async function validateRemoveCondition() {
   return await validateFormAndUser();
 }
 
-function showHandoverSuccessInfoBox() {
+function showHandoverSuccessInfoBox(flowNo) {
   InfoBox({
     type: 'success',
     title: t('移交申请提交成功'),
@@ -751,14 +750,12 @@ function showHandoverSuccessInfoBox() {
       ]
     ),
     onConfirm() {
-      router.push({
-        name: 'my-handover'
-      })
+      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
     }
   });
 }
 
-function showRemoveSuccessInfoBox() {
+function showRemoveSuccessInfoBox(flowNo) {
   InfoBox({
     width: 500,
     type: 'success',
@@ -769,9 +766,9 @@ function showRemoveSuccessInfoBox() {
     content: h(
       'div', { class: 'info-content' },
       [
-        checkData.value.operableCount && h('p', { class: 'info-text' }, t('无需交接的X个用户组已成功退出。', [checkData.value.operableCount])),
+        checkData.value.operableCount ? h('p', { class: 'info-text info-tip' }, t('无需交接的X个用户组已成功退出。', [checkData.value.operableCount])) : null,
         h('div', [
-          h('p', { class: 'info-text info-tip' }, t('需要交接的X个用户组：', [checkData.value.canHandoverCount])),
+          h('p', { class: 'info-text' }, t('需要交接的X个用户组：', [checkData.value.canHandoverCount])),
           h('p', { class: 'info-text' }, t('1. 已成功提交移交权限申请，等待交接人X确认。', [handOverForm.value.id])),
           h('p', { class: 'info-text' }, t('2. 可在“我的交接”中查看进度。')),
           h('p', { class: 'info-text' }, t('3. 完成交接后，将自动退出用户组')),
@@ -779,9 +776,7 @@ function showRemoveSuccessInfoBox() {
       ]
     ),
     onConfirm() {
-      router.push({
-        name: 'my-handover'
-      })
+      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
     }
   });
 }
@@ -845,7 +840,7 @@ function goBack() {
     }
 
     .info-tip {
-      margin-top: 20px;
+      margin-bottom: 20px;
     }
   }
 }
@@ -1210,7 +1205,7 @@ function goBack() {
 }
 
 .main-line-handover {
-  margin-top: 26px;
+  margin-top: 36px;
 }
 
 .text-blue {
