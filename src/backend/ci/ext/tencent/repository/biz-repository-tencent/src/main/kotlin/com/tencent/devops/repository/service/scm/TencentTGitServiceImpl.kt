@@ -37,7 +37,7 @@ import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.tgit.ITGitService
-import com.tencent.devops.scm.api.ServiceCopilotResource
+import com.tencent.devops.scm.api.ServiceTGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -52,15 +52,15 @@ import org.springframework.stereotype.Service
 @Service
 class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitService {
     override fun getToken(userId: String, code: String): GitToken {
-        return client.getScm(ServiceCopilotResource::class).getToken(userId, code).data!!
+        return client.getScm(ServiceTGitResource::class).getToken(userId, code).data!!
     }
 
     override fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum): GitUserInfo {
-        return client.getScm(ServiceCopilotResource::class).getUserInfoByToken(token, tokenType).data!!
+        return client.getScm(ServiceTGitResource::class).getUserInfoByToken(token, tokenType).data!!
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
-        return client.getScm(ServiceCopilotResource::class).refreshToken(userId, accessToken).data!!
+        return client.getScm(ServiceTGitResource::class).refreshToken(userId, accessToken).data!!
     }
 
     override fun getBranch(
@@ -71,7 +71,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         pageSize: Int?,
         search: String?
     ): List<GitBranch> {
-        return client.getScm(ServiceCopilotResource::class).getBranch(
+        return client.getScm(ServiceTGitResource::class).getBranch(
             accessToken = accessToken,
             userId = userId,
             repository = repository,
@@ -88,7 +88,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         page: Int?,
         pageSize: Int?
     ): List<GitTag> {
-        return client.getScm(ServiceCopilotResource::class).getTag(
+        return client.getScm(ServiceTGitResource::class).getTag(
             accessToken = accessToken,
             userId = userId,
             repository = repository,
@@ -104,7 +104,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         token: String,
         ref: String
     ): String {
-        return client.getScm(ServiceCopilotResource::class).getGitFileContent(
+        return client.getScm(ServiceTGitResource::class).getGitFileContent(
             repoName = repoName,
             filePath = filePath,
             authType = authType,
@@ -121,7 +121,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         ref: String,
         response: HttpServletResponse
     ) {
-        val serviceUrlPrefix = client.getScmUrl(ServiceCopilotResource::class)
+        val serviceUrlPrefix = client.getScmUrl(ServiceTGitResource::class)
         val serviceUrl = "$serviceUrlPrefix/service/tgit/downloadGitFile?repoName=$repoName" +
                 "&filePath=$filePath&authType=$authType&token=$token&ref=$ref"
         OkhttpUtils.downloadFile(serviceUrl, response)
@@ -135,7 +135,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         recursive: Boolean?,
         tokenType: TokenTypeEnum
     ): List<GitFileInfo> {
-        return client.getScm(ServiceCopilotResource::class).getFileTree(
+        return client.getScm(ServiceTGitResource::class).getFileTree(
             gitProjectId = gitProjectId,
             path = path,
             token = token,
@@ -155,7 +155,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo> {
-        return client.getScm(ServiceCopilotResource::class).getProjectList(
+        return client.getScm(ServiceTGitResource::class).getProjectList(
             accessToken = accessToken,
             page = page,
             pageSize = pageSize,
@@ -178,7 +178,7 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
         pageSize: Int,
         url: String
     ): List<ChangeFileInfo> {
-        return client.getScm(ServiceCopilotResource::class).getChangeFileList(
+        return client.getScm(ServiceTGitResource::class).getChangeFileList(
             token = token,
             tokenType = tokenType,
             gitProjectId = gitProjectId,
