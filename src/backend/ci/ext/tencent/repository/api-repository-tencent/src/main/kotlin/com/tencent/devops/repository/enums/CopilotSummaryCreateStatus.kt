@@ -1,4 +1,4 @@
-package com.tencent.devops.repository.enum
+package com.tencent.devops.repository.enums
 
 /**
  * AI摘要生成状态

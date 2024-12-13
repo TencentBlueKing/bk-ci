@@ -29,34 +29,33 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.repository.AISummaryRateType
-import com.tencent.devops.repository.config.CopilotConfig
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CopilotSummaryDao
-import com.tencent.devops.repository.enum.CopilotSummaryCreateStatus
-import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
+import com.tencent.devops.repository.enums.CopilotSummaryCreateStatus
 import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.service.api.CopilotApi
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.scm.api.ServiceCopilotResource
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 import java.util.concurrent.Executors
 
 @Service
 class RepositoryCopilotService @Autowired constructor(
+    val client: Client,
+    val gitConfig: GitConfig,
     val dslContext: DSLContext,
     val repositoryService: RepositoryService,
     val commitService: CommitService,
-    val copilotConfig: CopilotConfig,
     val gitOauthService: IGitOauthService,
     val copilotSummaryDao: CopilotSummaryDao
 ) {
-
-    val copilotApi = CopilotApi()
 
     fun createSummary(
         userId: String,
@@ -90,12 +89,12 @@ class RepositoryCopilotService @Autowired constructor(
         )
         executorService.execute {
             logger.info("async get summary|$projectName|$sourceSha...$targetSha")
-            val copilotSummary = copilotApi.getSummary(
-                url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary",
-                sourceSha = sourceSha,
-                targetSha = targetSha,
-                accessToken = accessToken
-            )?.let {
+            val copilotSummary = client.getScm(ServiceCopilotResource::class).getSummary(
+                projectName = projectName,
+                source = sourceSha,
+                target = targetSha,
+                token =  accessToken
+            ).data?.let {
                 it.projectName = projectName
                 it
             } ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
@@ -137,17 +136,14 @@ class RepositoryCopilotService @Autowired constructor(
         feedback: String? = null
     ) {
         val accessToken = getAccessToken(userId)
-        copilotApi.rateSummary(
-            url = "${copilotConfig.apiHost}/projects/${encodeProjectName(projectName)}/summary/rate",
+        client.getScm(ServiceCopilotResource::class).rateSummary(
+            projectName = projectName,
             processId = processId,
             type = type,
-            accessToken = accessToken,
+            token = accessToken,
             feedback = feedback
         )
     }
-
-    private fun encodeProjectName(projectName: String) =
-        URLEncoder.encode(projectName, "UTF-8")
 
     private fun getAccessToken(userId: String) =
         gitOauthService.getAccessToken(userId)?.accessToken ?: throw ErrorCodeException(
@@ -176,7 +172,7 @@ class RepositoryCopilotService @Autowired constructor(
         val (repoId, repoUrl) = commitRecords.first().let { it.repoId to it.url }
         val projectName = if (repoId == 0L) { // url拉取
             val (host, projectName) = GitUtils.getDomainAndRepoName(repoUrl)
-            if (!copilotConfig.supportHost.contains(host)) {
+            if (!gitConfig.supportHost.contains(host)) {
                 throw ErrorCodeException(
                     errorCode = RepositoryMessageCode.REPOSITORY_NO_SUPPORT_AI_SUMMARY
                 )

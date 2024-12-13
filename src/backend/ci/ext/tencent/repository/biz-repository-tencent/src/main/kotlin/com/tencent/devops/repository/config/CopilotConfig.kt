@@ -49,10 +49,4 @@ class CopilotConfig {
 
     @Value("\${scm.git.copilot.apiUrl:#{null}}")
     val apiUrl: String = ""
-
-    @Value("\${scm.git.copilot.apiHost:#{null}}")
-    val apiHost: String = ""
-
-    @Value("\${scm.git.copilot.supportHost:#{null}}")
-    val supportHost: List<String> = listOf()
 }

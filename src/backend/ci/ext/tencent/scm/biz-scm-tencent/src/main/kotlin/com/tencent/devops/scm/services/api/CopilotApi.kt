@@ -1,4 +1,4 @@
-package com.tencent.devops.repository.service.api
+package com.tencent.devops.scm.services.api
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -7,9 +7,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.repository.AISummaryRateType
-import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
-import com.tencent.devops.repository.service.RepositoryCopilotService
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 
@@ -112,7 +111,7 @@ class CopilotApi {
     companion object {
         // 蓝盾侧调用接口固定值
         const val API_REFERER = "landun"
-        val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
+        val logger = LoggerFactory.getLogger(CopilotApi::class.java)
         // HTTP请求超时时间（秒）
         private const val CONNECT_TIMEOUT_SECONDS = 5L
         private const val READ_TIMEOUT_SECONDS = 60L
