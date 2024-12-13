@@ -28,7 +28,6 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.scm.enums.AISummaryRateType
 import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import io.swagger.v3.oas.annotations.tags.Tag

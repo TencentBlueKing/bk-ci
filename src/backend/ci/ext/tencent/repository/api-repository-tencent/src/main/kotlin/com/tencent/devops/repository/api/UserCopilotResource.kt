@@ -30,8 +30,8 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.AISummaryRateType
-import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
