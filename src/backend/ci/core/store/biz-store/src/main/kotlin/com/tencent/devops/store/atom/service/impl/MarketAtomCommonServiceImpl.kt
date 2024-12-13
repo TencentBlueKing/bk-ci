@@ -393,17 +393,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as? Map<String, Any>
         val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
         if (!keyInputGroupMapList.isNullOrEmpty()) {
-            fun checkInputGroupFieldNotNull(inputGroupMap: Map<String, Any>, fieldName: String) {
-                inputGroupMap[fieldName] as? String
-                    ?: throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(fieldName)
-                    )
-            }
             keyInputGroupMapList.forEach { inputGroupMap ->
-                checkInputGroupFieldNotNull(inputGroupMap, NAME)
-                checkInputGroupFieldNotNull(inputGroupMap, LABEL)
-                checkInputGroupFieldNotNull(inputGroupMap, IS_EXPANDED)
+                validateTaskJsonField(inputGroupMap, NAME, String::class.java)
+                validateTaskJsonField(inputGroupMap, LABEL, String::class.java)
+                validateTaskJsonField(inputGroupMap, IS_EXPANDED, Boolean::class.java)
             }
         }
         var atomPostInfo: AtomPostInfo? = null
@@ -470,17 +463,11 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (!osList.isNullOrEmpty()) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
-                val osName = osExecutionInfoMap[KEY_OS_NAME] as? String
-                if (osName.isNullOrBlank()) {
-                    // 执行入口为空则校验失败
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(KEY_OS_NAME)
-                    )
-                }
-                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
-                )
+                validateTaskJsonField(osExecutionInfoMap, KEY_OS_NAME, String::class.java)
+                val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
+
+                validateTaskJsonField(osExecutionInfoMap, KEY_TARGET, String::class.java)
+                val target = osExecutionInfoMap[KEY_TARGET].toString()
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -519,9 +506,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            val target = executionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
-            )
+            validateTaskJsonField(executionInfoMap, KEY_TARGET, String::class.java)
+            val target = executionInfoMap[KEY_TARGET] as String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
@@ -550,6 +536,26 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
 
+    private fun <T> validateTaskJsonField(
+        inputGroupMap: Map<String, Any>,
+        fieldName: String,
+        expectedType: Class<T>
+    ) {
+        val fieldValue = inputGroupMap[fieldName]
+        if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                params = arrayOf(fieldName)
+            )
+        } else if (!expectedType.isInstance(fieldValue)) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf(fieldName)
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
     private fun validateInputOutputData(
         dataMap: Map<String, Any>,
         maxInputNum: Int,
@@ -564,26 +570,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
 
         dataMap.values
-            .mapNotNull { it as? Map<*, *> }
+            .mapNotNull { it as? Map<String, Any> }
             .forEach { map ->
-                val type = map[KEY_TYPE]?.toString()
-                when {
-                    type.isNullOrEmpty() -> {
-                        throw ErrorCodeException(
-                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                            params = arrayOf(KEY_TYPE)
-                        )
-                    }
-
-                    !isInput && (supportedTypes != null && type !in supportedTypes) -> {
-                        throw ErrorCodeException(
-                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                            params = arrayOf(KEY_OUTPUT, KEY_TYPE,supportedTypes.joinToString(separator = ","))
-                        )
-                    }
+                validateTaskJsonField(map, KEY_TYPE, String::class.java)
+                val type = map[KEY_TYPE].toString()
+                if (!isInput && (supportedTypes != null && type !in supportedTypes)) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                        params = arrayOf(KEY_OUTPUT, KEY_TYPE, supportedTypes.joinToString(separator = ","))
+                    )
                 }
             }
     }
+
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
         val message: String?
