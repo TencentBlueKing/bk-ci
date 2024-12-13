@@ -191,5 +191,11 @@ export default {
   */
   getIsDirectRemove(projectId: string, groupId: number, params: any) {
     return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
+  },
+  /**
+   * 批量处理交接审批单
+   */
+  handleBatchHandovers(params: any) {
+    return fetch.post(`${apiPerfix}/auth/handover/batchHandleHanoverApplications`, params);
   }
 }

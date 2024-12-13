@@ -35,6 +35,7 @@ const pageSize = ref(20);
 const relSourceList = ref<any>([]);
 const isLoading = ref(false);
 const hasLoadEnd = ref(false);
+const codelibPageUrl = `${window.location.origin}/console/codelib`
 
 watch(() => showDeleteDialog.value, (val) => {
   if (!val) {
@@ -301,10 +302,10 @@ const handleAuthorize = () => {
               :key="item.name"
             >
               <a
-                :href="`${item.url}&searchName=${item.name}`"
+                :href="`${codelibPageUrl}/${item.projectId}?searchName=${item.aliasName}`"
                 target="_blank"
               >
-                {{ item.name }}
+                {{ item.aliasName }}
               </a>
             </li>
           </ul>
