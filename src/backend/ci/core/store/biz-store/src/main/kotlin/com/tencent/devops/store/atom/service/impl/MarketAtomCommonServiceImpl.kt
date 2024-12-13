@@ -112,6 +112,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
+import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -394,9 +395,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
         if (!keyInputGroupMapList.isNullOrEmpty()) {
             keyInputGroupMapList.forEach { inputGroupMap ->
-                validateTaskJsonField(inputGroupMap, NAME, String::class.java)
-                validateTaskJsonField(inputGroupMap, LABEL, String::class.java)
-                validateTaskJsonField(inputGroupMap, IS_EXPANDED, Boolean::class.java)
+                validateTaskJsonField(inputGroupMap, NAME, String::class)
+                validateTaskJsonField(inputGroupMap, LABEL, String::class)
+                validateTaskJsonField(inputGroupMap, IS_EXPANDED, Boolean::class)
             }
         }
         var atomPostInfo: AtomPostInfo? = null
@@ -463,10 +464,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (!osList.isNullOrEmpty()) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
-                validateTaskJsonField(osExecutionInfoMap, KEY_OS_NAME, String::class.java)
+                validateTaskJsonField(osExecutionInfoMap, KEY_OS_NAME, String::class)
                 val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
 
-                validateTaskJsonField(osExecutionInfoMap, KEY_TARGET, String::class.java)
+                validateTaskJsonField(osExecutionInfoMap, KEY_TARGET, String::class)
                 val target = osExecutionInfoMap[KEY_TARGET].toString()
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
@@ -506,7 +507,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            validateTaskJsonField(executionInfoMap, KEY_TARGET, String::class.java)
+            validateTaskJsonField(executionInfoMap, KEY_TARGET, String::class)
             val target = executionInfoMap[KEY_TARGET] as String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
@@ -536,10 +537,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
 
-    private fun <T> validateTaskJsonField(
+    private fun <T : Any> validateTaskJsonField(
         inputGroupMap: Map<String, Any>,
         fieldName: String,
-        expectedType: Class<T>
+        expectedType: KClass<T>
     ) {
         val fieldValue = inputGroupMap[fieldName]
         if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
@@ -572,7 +573,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         dataMap.values
             .mapNotNull { it as? Map<String, Any> }
             .forEach { map ->
-                validateTaskJsonField(map, KEY_TYPE, String::class.java)
+                validateTaskJsonField(map, KEY_TYPE, String::class)
                 val type = map[KEY_TYPE].toString()
                 if (!isInput && (supportedTypes != null && type !in supportedTypes)) {
                     throw ErrorCodeException(
