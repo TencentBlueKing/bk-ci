@@ -96,6 +96,7 @@ object RepositoryMessageCode {
     const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
 
     const val USER_NOT_PERMISSIONS_OPERATE_REPOSITORY = "2115046" // 用户({0})无权限在工程({1})下{2}流水线{3}
+    const val FAIL_TO_GET_OPEN_COPILOT_TOKEN = "2115048" // 获取open copilot token 失败, 失败详情: {0}
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

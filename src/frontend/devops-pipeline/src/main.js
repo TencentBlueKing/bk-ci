@@ -23,8 +23,8 @@
 
 import Vue from 'vue'
 import App from './App'
-import enClass from './directives/focus/en-class'
-import enStyle from './directives/focus/en-style'
+import enClass from './directives/en-class'
+import enStyle from './directives/en-style'
 import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
@@ -35,7 +35,7 @@ import PortalVue from "portal-vue"; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import createLocale from '../../locale'
+import createLocale from '@locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
