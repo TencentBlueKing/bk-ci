@@ -681,11 +681,7 @@ abstract class ImageReleaseService {
         imageRepoUrl?.let { startParams["registryHost"] = it }
         val pipelineId: String?
         if (null == imagePipelineRelRecord) {
-            pipelineId = storePipelineService.creatStorePipeline(
-                userId = storeInnerPipelineConfig.innerPipelineUser,
-                storeType = StoreTypeEnum.IMAGE,
-                projectCode = storeInnerPipelineConfig.innerPipelineProject
-            )
+            pipelineId = storePipelineService.creatStorePipelineByStoreCode(storeType = StoreTypeEnum.IMAGE.name)
             storePipelineRelDao.add(
                 dslContext = context,
                 storeCode = imageCode,

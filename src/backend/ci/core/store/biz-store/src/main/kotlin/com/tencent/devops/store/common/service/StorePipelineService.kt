@@ -53,10 +53,10 @@ interface StorePipelineService {
     ): Boolean
 
     // 创建组件内置流水线
-    fun creatStorePipeline(
-        userId: String,
-        storeType: StoreTypeEnum,
-        projectCode: String
+    fun creatStorePipelineByStoreCode(
+        storeCode: String? = null,
+        storeType: String,
+        grayFlag: Boolean = false
     ): String
 
     /**
