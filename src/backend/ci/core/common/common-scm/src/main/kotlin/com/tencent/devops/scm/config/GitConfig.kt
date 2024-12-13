@@ -131,4 +131,10 @@ class GitConfig {
 
     @Value("\${scm.external.tGit.hookSecret:}")
     val tGitHookSecret: String = ""
+
+    @Value("\${scm.git.copilot.url:}")
+    val copilotUrl: String = ""
+
+    @Value("\${scm.git.copilot.supportHost:}")
+    val supportHost: String = ""
 }
