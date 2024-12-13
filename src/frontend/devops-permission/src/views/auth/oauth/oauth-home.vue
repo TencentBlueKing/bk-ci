@@ -1,4 +1,5 @@
 <script setup>
+import oauthCard from './oauth-card.vue'
 import card from './oauth-card.vue'
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
@@ -25,7 +26,7 @@ onMounted(() => {
 
 <template>
 	<bk-loading class="oauth-home" :loading="isLoading">
-		<card
+		<oauth-card
 			v-for="card in oauthList"
       :key="card.id"
 			:oauth="card"
