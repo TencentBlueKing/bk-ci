@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -41,6 +42,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -50,12 +52,15 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
+import com.tencent.devops.store.pojo.common.test.StoreTestRequest
 import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -79,7 +84,8 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val storePipelineRelDao: StorePipelineRelDao,
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeCommonService: StoreCommonService
+    private val storeCommonService: StoreCommonService,
+    private val storeMemberDao: StoreMemberDao
 ) : StoreProjectService {
 
     /**
@@ -373,11 +379,12 @@ class StoreProjectServiceImpl @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             // 获取组件当前初始化项目
-            val initProjectInfo = storeProjectRelDao.getInitProjectInfoByStoreCode(
+            val initProjectInfo = storeProjectRelDao.getProjectInfoByStoreCode(
                 dslContext = context,
                 storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType.type.toByte()
-            )!!
+                storeType = storeProjectInfo.storeType.type.toByte(),
+                storeProjectType = StoreProjectTypeEnum.INIT
+            )?.getOrNull(0)
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
             val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
@@ -388,7 +395,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                 userId = storeProjectInfo.userId
             )
             if (testProjectInfo == null) {
-                storeProjectRelDao.deleteUserStoreTestProject(
+                storeProjectRelDao.deleteStoreProject(
                     dslContext = context,
                     userId = storeProjectInfo.userId,
                     storeType = storeProjectInfo.storeType,
@@ -412,13 +419,15 @@ class StoreProjectServiceImpl @Autowired constructor(
             storePipelineRel?.let {
                 storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
                 storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
-                client.get(ServicePipelineResource::class).delete(
-                    userId = userId,
-                    pipelineId = it.pipelineId,
-                    channelCode = ChannelCode.AM,
-                    projectId = initProjectInfo.projectCode,
-                    checkFlag = false
-                )
+                initProjectInfo?.let {
+                    client.get(ServicePipelineResource::class).delete(
+                        userId = userId,
+                        pipelineId = storePipelineRel.pipelineId,
+                        channelCode = ChannelCode.AM,
+                        projectId = initProjectInfo.projectCode,
+                        checkFlag = false
+                    )
+                }
             }
             val storeRepoHashId =
                 storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
@@ -431,5 +440,74 @@ class StoreProjectServiceImpl @Autowired constructor(
             }
         }
         return true
+    }
+
+    override fun saveStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeTestRequest: StoreTestRequest
+    ): Boolean {
+        val memberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!memberFlag) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            storeProjectRelDao.deleteStoreProject(
+                dslContext = context,
+                storeType = storeType,
+                storeCode = storeCode,
+                storeProjectType = StoreProjectTypeEnum.TEST
+            )
+            storeTestRequest.testItems.forEach { testItem ->
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = testItem.projectCode,
+                    type = StoreProjectTypeEnum.TEST.type.toByte(),
+                    storeType = storeType.type.toByte(),
+                    instanceId = testItem.instanceId
+                )
+            }
+        }
+        return true
+    }
+
+    override fun getStoreTestInfo(userId: String, storeType: StoreTypeEnum, storeCode: String): Set<StoreTestItem> {
+        val memberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!memberFlag) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        val testProjectInfos = storeProjectRelDao.getProjectInfoByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.TEST
+        )
+        val storeTestItems = mutableSetOf<StoreTestItem>()
+        testProjectInfos?.forEach { testProjectInfo ->
+            storeTestItems.add(
+                StoreTestItem(testProjectInfo.projectCode, testProjectInfo.instanceId)
+            )
+        }
+        return storeTestItems
     }
 }

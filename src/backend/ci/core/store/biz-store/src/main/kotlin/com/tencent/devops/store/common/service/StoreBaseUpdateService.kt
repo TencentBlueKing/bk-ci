@@ -48,6 +48,14 @@ interface StoreBaseUpdateService {
     )
 
     /**
+     * 执行更新组件请求前置业务
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreUpdatePreBus(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
      * 持久化更新组件数据
      * @param storeUpdateRequest 更新组件请求报文
      */
