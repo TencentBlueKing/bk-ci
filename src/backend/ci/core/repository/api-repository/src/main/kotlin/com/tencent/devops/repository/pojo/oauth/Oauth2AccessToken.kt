@@ -28,7 +28,6 @@ package com.tencent.devops.repository.pojo.oauth
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "Oauth2 Access Token")
 data class Oauth2AccessToken(
     val accessToken: String,

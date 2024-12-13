@@ -76,7 +76,7 @@ class GitTokenDao {
                 .set(UPDATE_TIME, now)
                 .let {
                     // 避免空值覆盖操作人
-                    if (token.operator.isNotBlank()){
+                    if (token.operator.isNotBlank()) {
                         it.set(OPERATOR, token.operator)
                     }
                     it
