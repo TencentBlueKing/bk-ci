@@ -30,13 +30,13 @@ import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.v4.ApigwOauthResourceV4
+import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryOauthResourceV4
 import com.tencent.devops.repository.api.ServiceOauthResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client) : ApigwOauthResourceV4 {
+class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client) : ApigwRepositoryOauthResourceV4 {
     override fun isOauth(
         appCode: String?,
         apigwType: String?,

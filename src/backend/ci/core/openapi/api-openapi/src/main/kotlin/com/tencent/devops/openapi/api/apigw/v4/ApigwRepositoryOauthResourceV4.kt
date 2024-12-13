@@ -48,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("All")
-interface ApigwOauthResourceV4 {
+interface ApigwRepositoryOauthResourceV4 {
     @Operation(
         summary = "校验用户是否已经OAUTH授权",
         tags = ["v4_app_oauth_isOauth", "v4_user_oauth_isOauth"]
