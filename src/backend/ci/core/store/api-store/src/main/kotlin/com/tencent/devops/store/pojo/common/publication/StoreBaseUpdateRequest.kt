@@ -67,5 +67,5 @@ data class StoreBaseUpdateRequest(
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
     @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
+    val baseEnvInfos: MutableList<StoreBaseEnvRequest>? = null
 )

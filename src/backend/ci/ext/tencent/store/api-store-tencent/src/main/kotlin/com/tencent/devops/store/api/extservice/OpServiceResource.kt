@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.extservice.dto.EditInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.extservice.dto.ServiceOfflineDTO

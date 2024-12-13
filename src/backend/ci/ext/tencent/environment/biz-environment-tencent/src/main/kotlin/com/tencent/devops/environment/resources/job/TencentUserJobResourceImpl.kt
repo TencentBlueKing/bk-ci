@@ -1,11 +1,15 @@
 package com.tencent.devops.environment.resources.job
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentUserJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
@@ -109,7 +113,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return gseAgentService.installAgent(userId, keyFile, installAgentReq)
+        return gseAgentService.installAgent(userId, keyFile, mapper.readValue<InstallAgentReq>(installAgentReq))
     }
 
     override fun queryAgentTaskStatus(
@@ -186,6 +190,12 @@ class TencentUserJobResourceImpl @Autowired constructor(
                 status = Response.Status.BAD_REQUEST,
                 message = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
+        }
+    }
+
+    companion object {
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
 }

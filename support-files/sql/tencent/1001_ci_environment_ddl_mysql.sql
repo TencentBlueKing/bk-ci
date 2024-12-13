@@ -219,8 +219,6 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_ENABLE_PROJECTS`
   PRIMARY KEY (`PROJECT_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
-SET FOREIGN_KEY_CHECKS = 1;
-
 CREATE TABLE IF NOT EXISTS `T_BKBIZ_PROJECT`  (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `BIZ_ID` bigint(20) NOT NULL COMMENT '蓝鲸BIZID',
@@ -246,3 +244,24 @@ CREATE TABLE IF NOT EXISTS `T_NETWORK_AREA` (
   PRIMARY KEY (`NET_AREA_ID`),
   KEY `NET_AREA` (`NET_AREA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+
+CREATE TABLE IF NOT EXISTS `T_DEVX_HOOK`
+(
+    `ID`             bigint(20)                          NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `PROJECT_ID`     varchar(64)                         NOT NULL COMMENT '项目ID',
+    `ENV_HASH_ID`    varchar(64)                         NULL COMMENT '环境哈希ID',
+    `HOOK_TYPE`      varchar(32)                         NOT NULL COMMENT '钩子类型',
+    `EXECUTION_TYPE` varchar(16)                         NOT NULL COMMENT '执行类型',
+    `ENABLE`         boolean   default 0                 not null comment '是否开启',
+    `UPDATED_TIME`   timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    constraint `ENV_U_IDX`
+        unique (`ENV_HASH_ID`, `HOOK_TYPE`, `EXECUTION_TYPE`),
+    KEY `ENV_HASH_ID_IDX` (`ENV_HASH_ID`),
+    KEY `HOOK_TYPE_IDX` (`HOOK_TYPE`),
+    KEY `EXECUTION_TYPE_IDX` (`EXECUTION_TYPE`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='云桌面钩子配置';
+
+
+SET FOREIGN_KEY_CHECKS = 1;

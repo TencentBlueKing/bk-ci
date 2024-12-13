@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
 
-    private val bkConfig = BkConfig()
+    private val bkConfig = BkConfig(mockk())
 
     private val workspaceTemplate = RemotedevSdkService(
         kafkaClient = mockk(),

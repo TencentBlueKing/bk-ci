@@ -91,7 +91,7 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
         val templateDeptInfos = storeVisibleDeptService.getVisibleDept(
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
-            deptStatus = DeptStatusEnum.APPROVED
+            deptStatusInfos = DeptStatusEnum.APPROVED.name
         ).data?.deptInfos
         templateVisibleDeptService.validateTemplateVisibleDept(
             templateCode = templateCode,

@@ -15,11 +15,14 @@ data class SupRecordInfo(
     val cdsVersion: String?,
     @get:Schema(title = "CDS区域")
     val cdsRegion: String?,
-    @get:Schema(title = "CDS状态")
+    @get:Schema(
+        title = "CDS状态, 1 正常, 2 关机, 0 未知异常, -1 磁盘I/O使用率, -2 Agent心跳丢失, -3 CPU总使用率过高, " +
+                "-4 主机重启, -5 磁盘使用率过高, -6 Ping不可达, 其它<0错误码 未知异常"
+    )
     val cdsStatus: String?,
     @get:Schema(title = "CDS端口号")
     val cdsPort: String?,
-    @get:Schema(title = "agent状态")
+    @get:Schema(title = "agent状态, NOT_ALIVE = 0, ALIVE = 1, TERMINATED = 2, NOT_INSTALLED = 3")
     val agentStatus: String?,
     @get:Schema(title = "拥有者")
     val owner: String?,

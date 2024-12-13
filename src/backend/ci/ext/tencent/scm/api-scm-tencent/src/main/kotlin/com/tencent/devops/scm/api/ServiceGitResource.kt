@@ -613,9 +613,9 @@ interface ServiceGitResource {
     @DELETE
     @Path("/deleteGitProject")
     fun deleteGitProject(
-        @Parameter(description = "代码库命名空间名称", required = true)
-        @QueryParam("repositorySpaceName")
-        repositorySpaceName: String,
+        @Parameter(description = "项目ID或项目全路径", required = true)
+        @QueryParam("id")
+        id: String,
         @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,

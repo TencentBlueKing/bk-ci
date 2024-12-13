@@ -52,6 +52,7 @@ interface WorkspaceRecordInf {
     val remark: String?
     val labels: List<String>?
     val bakWorkspaceName: String?
+    val ip: String?
 }
 
 @Schema(title = "工作空间信息")
@@ -97,7 +98,9 @@ data class WorkspaceRecord(
     @get:Schema(title = "标签")
     override var labels: List<String>?,
     @get:Schema(title = "备份的workspace name")
-    override var bakWorkspaceName: String? = null
+    override var bakWorkspaceName: String? = null,
+    @get:Schema(title = "无区域ip地址,比如:11.11.11.111")
+    override var ip: String?
 ) : WorkspaceRecordInf
 
 /**
@@ -146,6 +149,8 @@ data class WorkspaceRecordWithWindows(
     override var labels: List<String>?,
     @get:Schema(title = "备份的workspace name")
     override var bakWorkspaceName: String? = null,
+    @get:Schema(title = "无区域ip地址,比如:11.11.11.111")
+    override val ip: String?,
     @get:Schema(title = "ip地址,比如:NJ1.11.11.11.111")
     val hostIp: String?,
     @get:Schema(title = "mac地址")

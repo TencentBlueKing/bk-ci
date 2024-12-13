@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
@@ -84,6 +85,19 @@ interface StoreReleaseService {
     fun passTest(userId: String, storeId: String): Boolean
 
     /**
+     * 填写信息
+     * @param userId userId
+     * @param storeId 组件ID
+     * @param storeReleaseInfoUpdateRequest 组件发布信息修改请求报文
+     * @return 布尔值
+     */
+    fun editReleaseInfo(
+        userId: String,
+        storeId: String,
+        storeReleaseInfoUpdateRequest: StoreReleaseInfoUpdateRequest
+    ): Boolean
+
+    /**
      * 处理发布
      * @param userId userId
      * @param storeReleaseRequest 发布请求报文
@@ -114,6 +128,17 @@ interface StoreReleaseService {
      * @return 布尔值
      */
     fun rebuild(
+        userId: String,
+        storeId: String
+    ): Boolean
+
+    /**
+     * 返回上一步
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 布尔值
+     */
+    fun back(
         userId: String,
         storeId: String
     ): Boolean

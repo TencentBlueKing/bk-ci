@@ -28,7 +28,7 @@ package com.tencent.devops.store.api.image
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.image.request.ImageVisibleDeptReq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

@@ -12,11 +12,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
@@ -38,6 +34,8 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -58,8 +56,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceRecordService: WorkspaceRecordService,
     private val client: Client,
     private val notifyControl: NotifyControl,
-    private val redisOperation: RedisOperation,
-    private val streamBridge: StreamBridge
+    private val streamBridge: StreamBridge,
+    private val configCacheService: ConfigCacheService
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -97,7 +95,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         }
 
         try {
-            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
+            val infoS = configCacheService.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
             val cgsIps = data.cgsIds?.map {
@@ -130,48 +128,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         }
 
         return Result(true)
-    }
-
-    private fun doPipelineConfInfo(
-        cgsIds: List<String>?,
-        ips: List<String>?,
-        repoId: String?,
-        localDriver: String?,
-        userId: String
-    ) {
-        try {
-            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
-            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-            val cgsIps = cgsIds?.map {
-                val hostIdSub = it.split(".")
-                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-            }?.toSet()
-            val resIps = mutableSetOf<String>()
-            resIps.addAll(cgsIps ?: emptySet())
-            resIps.addAll(ips ?: emptySet())
-
-            val newParam = mutableMapOf<String, String>()
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    "repoId" -> newParam[k] = repoId ?: ""
-                    "localDriver" -> newParam[k] = localDriver ?: ""
-                    else -> newParam[k] = v
-                }
-            }
-            client.get(ServiceBuildResource::class).manualStartupNew(
-                userId = info.userId ?: userId,
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                values = newParam,
-                channelCode = ChannelCode.BS,
-                buildNo = null,
-                startType = StartType.SERVICE
-            )
-        } catch (e: Exception) {
-            logger.warn("execute assignWorkspace pipeline error", e)
-        }
     }
 
     private fun assignProjectWorkspace(
@@ -324,7 +280,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
-        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 }
 

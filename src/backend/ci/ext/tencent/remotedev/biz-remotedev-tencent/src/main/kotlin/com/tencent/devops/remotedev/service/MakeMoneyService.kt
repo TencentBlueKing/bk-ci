@@ -228,7 +228,6 @@ class MakeMoneyService @Autowired constructor(
         )
     }
 
-
     fun bills(year: Int, month: Int, push: Boolean): Response {
         val bills = makeMoneyMonthly(year, month)
         if (push) {

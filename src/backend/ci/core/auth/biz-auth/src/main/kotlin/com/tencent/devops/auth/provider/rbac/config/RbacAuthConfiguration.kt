@@ -270,7 +270,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         permissionAuthorizationService = permissionAuthorizationService,
-        syncIamGroupMemberService = syncIamGroupMemberService
+        syncIamGroupMemberService = syncIamGroupMemberService,
+        rbacCacheService = rbacCacheService
     )
 
     @Bean
@@ -639,7 +640,8 @@ class RbacAuthConfiguration {
         redisOperation: RedisOperation,
         authResourceSyncDao: AuthResourceSyncDao,
         authResourceGroupApplyDao: AuthResourceGroupApplyDao,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        deptService: DeptService
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -651,6 +653,7 @@ class RbacAuthConfiguration {
         redisOperation = redisOperation,
         authResourceSyncDao = authResourceSyncDao,
         authResourceGroupApplyDao = authResourceGroupApplyDao,
-        resourceGroupPermissionService = resourceGroupPermissionService
+        resourceGroupPermissionService = resourceGroupPermissionService,
+        deptService = deptService
     )
 }

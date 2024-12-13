@@ -16,7 +16,6 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -53,7 +52,12 @@ import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_EXPORT_CONFIG_INFO
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.time.Duration
@@ -73,7 +77,6 @@ class ExpertSupportService @Autowired constructor(
     private val expertSupportDao: ExpertSupportDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
@@ -81,7 +84,10 @@ class ExpertSupportService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val notifyControl: NotifyControl,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val remoteDevService: RemoteDevService
+    private val remoteDevService: RemoteDevService,
+    private val startCloudClient: StartCloudClient,
+    private val bkNodemanService: BKNodemanService,
+    private val configCacheService: ConfigCacheService
 ) {
     @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
     @Suppress("ComplexMethod")
@@ -205,7 +211,7 @@ class ExpertSupportService @Autowired constructor(
          *     }
          * }
          */
-        val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
+        val infoS = configCacheService.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
         val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
         val newParam = mutableMapOf<String, String>()
         val hostIdSub = data.hostIp.split(".")
@@ -258,7 +264,7 @@ class ExpertSupportService @Autowired constructor(
         data: CreateSupportData
     ): Long {
         // 校验机器在不在
-        val record = workspaceDao.fetchAnyWorkspace(
+        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
             workspaceName = data.workspaceName
         ) ?: throw ErrorCodeException(
@@ -298,16 +304,30 @@ class ExpertSupportService @Autowired constructor(
             viewers = sharedInfo.filter { it.type == AssignType.VIEWER }.map { it.sharedUser }.toSet().ifEmpty { null }
         }
 
+        val cgsStatus = try {
+            startCloudClient.computerStatus(setOf(data.hostIp))?.firstOrNull()
+        } catch (e: Exception) {
+            logger.warn("createSupportNew computerStatus error", e)
+            null
+        }
+
+        val agentStatus = if (record.regionId != null) {
+            bkNodemanService.ipchooserHostDetail(data.hostIp.substringAfter("."), record.regionId!!)
+        } else {
+            logger.warn("createSupportNew ${data.workspaceName} regionId is null")
+            null
+        }
+
         val info = SupRecordInfo(
             requestIp = requestIp,
             projectManager = projectInfo?.properties?.remotedevManager?.split(";")?.toSet(),
             clientVersion = clientVersion,
             machineStatus = record.status.name,
-            cdsVersion = null,
-            cdsRegion = null,
-            cdsStatus = null,
-            cdsPort = null,
-            agentStatus = null,
+            cdsVersion = cgsStatus?.cgsVersion,
+            cdsRegion = data.hostIp.split(".").first(),
+            cdsStatus = cgsStatus?.state?.toString(),
+            cdsPort = CGS_PORT,
+            agentStatus = agentStatus?.alive.toString(),
             owner = owner,
             viewers = viewers
         )
@@ -446,7 +466,7 @@ class ExpertSupportService @Autowired constructor(
             return Pair(false, "${userId}不是云研发运维，不可查询")
         }
         try {
-            val infoS = redisOperation.get(PIPELINE_QUERY_CGS_PWD) ?: return Pair(false, null)
+            val infoS = configCacheService.get(PIPELINE_QUERY_CGS_PWD) ?: return Pair(false, null)
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
             val newParam = mutableMapOf<String, String>()
@@ -691,7 +711,6 @@ class ExpertSupportService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
-        private const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo"
-        private const val PIPELINE_QUERY_CGS_PWD = "remotedev:queryCgsPwd.pipelineinfo"
+        private const val CGS_PORT = "10080"
     }
 }

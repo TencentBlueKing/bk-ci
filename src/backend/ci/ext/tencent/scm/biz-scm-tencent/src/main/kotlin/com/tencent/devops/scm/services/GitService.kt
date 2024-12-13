@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
+import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
@@ -1110,8 +1111,8 @@ class GitService @Autowired constructor(
             val data = response.body!!.string()
             logger.info("createGitRepository response>> $data")
             val dataMap = JsonUtil.toMap(data)
-            val repositoryUrl = dataMap["http_url_to_repo"]
-            if (StringUtils.isEmpty(repositoryUrl)) {
+            val repositoryUrl = dataMap["https_url_to_repo"]
+            if (repositoryUrl == null || repositoryUrl.toString().isBlank()) {
                 val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                     messageCode = USER_CREATE_GIT_CODE_REPOSITORY_FAIL,
                     language = I18nUtil.getLanguage(userId)
@@ -1139,7 +1140,8 @@ class GitService @Autowired constructor(
                     )
                 }
             }
-            return Result(GitRepositoryResp(nameSpaceName, repositoryUrl as String))
+            val id = dataMap[ID].toString().toLong()
+            return Result(GitRepositoryResp(id, nameSpaceName, repositoryUrl as String))
         }
     }
 
@@ -1385,10 +1387,10 @@ class GitService @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operation", "delete_project_member_info"], value = "bk_tgit_api_time")
-    fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
-        logger.info("deleteGitProject repoName is:$repoName,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
+    fun deleteGitProject(id: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+        logger.info("deleteGitProject id is:$id,tokenType is:$tokenType")
+        val encodeId = URLEncoder.encode(id, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeId")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
@@ -1397,10 +1399,10 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
             logger.info("deleteGitProject response>> $data")
-            if (!StringUtils.isEmpty(data)) {
+            if (data.isNotBlank()) {
                 val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (!StringUtils.isEmpty(message)) {
+                val message = dataMap["message"]?.toString()
+                if (!message.isNullOrBlank()) {
                     val validateResult: Result<String?> =
                         I18nUtil.generateResponseDataObject(
                             messageCode = USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,

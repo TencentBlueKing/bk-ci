@@ -29,7 +29,7 @@ package com.tencent.devops.store.template.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 
 /**
  * 模板可见范围逻辑类

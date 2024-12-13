@@ -101,11 +101,11 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun deleteGitProject(
-        repositorySpaceName: String,
+        id: String,
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return gitService.deleteGitProject(repositorySpaceName, token, tokenType)
+        return gitService.deleteGitProject(id, token, tokenType)
     }
 
     override fun moveProjectToGroup(

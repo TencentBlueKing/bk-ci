@@ -411,6 +411,9 @@ interface ServiceGitResource {
         @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
         @QueryParam("isProjectPathWrapped")
         isProjectPathWrapped: Boolean?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Context
         response: HttpServletResponse
     )

@@ -6,6 +6,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
@@ -365,4 +370,78 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
+
+    @Operation(
+        summary = "在指定节点上安装GSE Agent",
+        tags = ["v4_app_job_install_agent"]
+    )
+    @POST
+    @Path("/{projectId}/install_agent")
+    fun installAgent(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "安装agent的请求信息", required = true)
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
+    ): AgentResult<InstallAgentResult>
+
+    @Operation(
+        summary = "查询节点的agent安装任务的状态",
+        tags = ["v4_app_job_query_agent_task_status"]
+    )
+    @GET
+    @Path("/{projectId}/query_agent_task_status")
+    fun queryAgentTaskStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @QueryParam("jobId")
+        jobId: Int,
+        @Parameter(description = "查询agent任务状态的页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "查询agent任务状态的页码", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): AgentResult<QueryAgentTaskStatusResult>
+
+    @Operation(
+        summary = "获取手动安装agent的命令",
+        tags = ["v4_app_job_obtain_manual_installation_command"]
+    )
+    @GET
+    @Path("/{projectId}/obtain_manual_installation_command")
+    fun obtainManualInstallationCommand(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @QueryParam("jobId")
+        jobId: Int,
+        @Parameter(description = "主机内网ip", required = true)
+        @QueryParam("innerIp")
+        innerIp: String,
+        @Parameter(description = "主机管控区域ID，可在蓝鲸配置平台搜索主机信息查看，默认值为0，表示公司内部区域")
+        @QueryParam("bkCloudId")
+        bkCloudId: Int = 0
+    ): AgentResult<ObtainManualCommandResult>
 }

@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.filter.impl
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -15,8 +16,10 @@ import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
+import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_LIMIT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_WARNING
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
 import java.util.concurrent.TimeUnit
@@ -27,13 +30,12 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 
 @Provider
 @PreMatching
 @RequestFilter
 class ClientVersionFilter constructor(
-    private val cacheService: RedisCacheService,
+    private val cacheService: ConfigCacheService,
     private val clientVersionDao: ClientVersionDao,
     private val dslContext: DSLContext,
     private val notifyControl: NotifyControl,
@@ -56,15 +58,12 @@ class ClientVersionFilter constructor(
         }
     }
 
-    @Value("\${remoteDev.clientVersionLimit:0.3.0}")
-    val clientVersionLimit: String = "0.3.0"
-
-    @Value("\${remoteDev.clientVersionWarning:0.3.0}")
-    val clientVersionWarning: String = "0.3.0"
-
-    lateinit var clientVersionLimitList: List<Int>
-
-    lateinit var clientVersionWarningList: List<Int>
+    private val cache = Caffeine.newBuilder()
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .maximumSize(2)
+        .build<String/*key*/, List<Int>> { key ->
+            cacheService.get(key)?.split(".")?.map { it.toInt() } ?: emptyList()
+        }
 
     lateinit var clientVersion: MutableMap<String, String>
 
@@ -106,7 +105,7 @@ class ClientVersionFilter constructor(
         val split = version?.substringBefore("-")?.split(".") ?: kotlin.run {
             logger.info(
                 "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
-                        " $path not have $BK_CI_CLIENT_VERSION,return error."
+                    " $path not have $BK_CI_CLIENT_VERSION,return error."
             )
             return false
         }
@@ -133,10 +132,7 @@ class ClientVersionFilter constructor(
             )
         }
 
-        if (!this::clientVersionLimitList.isInitialized) {
-            clientVersionLimitList = clientVersionLimit.split(".").map { it.toInt() }
-        }
-        clientVersionLimitList.forEachIndexed { index, s ->
+        cache.get(CLIENT_VERSION_LIMIT)?.forEachIndexed { index, s ->
             if (split.lastIndex < index) {
                 return false
             }
@@ -157,11 +153,8 @@ class ClientVersionFilter constructor(
      * false： 不告警
      * */
     private fun checkClientVersionWarning(split: List<String>): Boolean {
-        if (!this::clientVersionWarningList.isInitialized) {
-            clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
-        }
         kotlin.run {
-            clientVersionWarningList.forEachIndexed { index, s ->
+            cache.get(CLIENT_VERSION_WARNING)?.forEachIndexed { index, s ->
                 if (split.lastIndex < index) {
                     return true
                 }
