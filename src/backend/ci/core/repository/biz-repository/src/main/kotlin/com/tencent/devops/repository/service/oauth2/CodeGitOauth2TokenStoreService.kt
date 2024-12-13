@@ -60,7 +60,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 it.tokenType,
                 it.expiresIn,
                 BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
-                it.createTime.timestampmilli()
+                it.createTime.timestampmilli(),
+                userId = it.operator
             )
         }
     }

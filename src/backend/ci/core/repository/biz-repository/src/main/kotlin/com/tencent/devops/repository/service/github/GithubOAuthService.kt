@@ -152,12 +152,15 @@ class GithubOAuthService @Autowired constructor(
         val specRedirectUrl = arrays.getOrNull(6) ?: ""
         // 重定向类型
         val redirectUrlTypeEnum = RedirectUrlTypeEnum.getRedirectUrlType(arrays.getOrNull(7) ?: "")
+        // 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
+        val userResponse = getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
-            userId = userId,
+            userId = userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
-            githubTokenType = githubTokenType
+            githubTokenType = githubTokenType,
+            operator = userId
         )
         return GithubOauthCallback(
             userId = userId,
@@ -180,11 +183,12 @@ class GithubOAuthService @Autowired constructor(
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            userId = stateMap["userId"]?.toString() ?: userResponse.login,
+            userId = userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
-            githubTokenType = githubTokenType
+            githubTokenType = githubTokenType,
+            operator = stateMap["userId"]?.toString() ?: userResponse.login
         )
         return GithubOauthCallback(
             userId = userResponse.login,

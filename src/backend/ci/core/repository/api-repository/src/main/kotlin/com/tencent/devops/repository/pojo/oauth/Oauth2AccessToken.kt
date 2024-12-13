@@ -26,10 +26,16 @@
  */
 package com.tencent.devops.repository.pojo.oauth
 
+import io.swagger.v3.oas.annotations.media.Schema
+
+
+@Schema(title = "Oauth2 Access Token")
 data class Oauth2AccessToken(
     val accessToken: String,
     val tokenType: String,
     val expiresIn: Long? = 0L,
     val refreshToken: String? = null,
-    val createTime: Long? = 0L
+    val createTime: Long? = 0L,
+    @get:Schema(title = "server端用户名")
+    val userId: String? = null
 )

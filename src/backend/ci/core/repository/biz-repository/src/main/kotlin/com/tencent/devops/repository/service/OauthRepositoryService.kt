@@ -39,16 +39,17 @@ class OauthRepositoryService @Autowired constructor(
                 userId = userId,
                 scmCode = scmCode.name
             )?.let {
-                val (expired, username) = getRealUsername(scmCode, it.accessToken)
                 UserOauthRepositoryInfo(
-                    username = username ?: "",
+                    username = it.userId ?: "",
                     repoCount = repositoryService.countOauthRepo(
                         userId = userId,
                         scmType = scmCode.convertScmType()
                     ),
                     type = scmCode,
                     createTime = it.createTime,
-                    expired = expired,
+                    expired = it.expiresIn?.let { expiresIn ->
+                        (it.createTime ?: 0L) + expiresIn * 1000 > System.currentTimeMillis()
+                    } ?: false,
                     authorized = true
                 )
             } ?: UserOauthRepositoryInfo(

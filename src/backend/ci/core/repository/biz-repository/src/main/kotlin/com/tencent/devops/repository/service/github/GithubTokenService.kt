@@ -58,18 +58,47 @@ class GithubTokenService @Autowired constructor(
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
+    /**
+     * 保存token
+     * @param userId server端的用户名
+     * @param operator 蓝盾平台操作人用户名
+     */
     fun createAccessToken(
         userId: String,
         accessToken: String,
         tokenType: String,
         scope: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
+        operator: String
     ) {
         val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
-        if (githubTokenDao.getOrNull(dslContext, userId, githubTokenType) == null) {
-            githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
+        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, operator, githubTokenType)
+        if (githubTokenRecord == null) {
+            githubTokenDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                accessToken = encryptedAccessToken,
+                tokenType = tokenType,
+                scope = scope,
+                githubTokenType = githubTokenType,
+                operator = operator
+            )
         } else {
-            githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
+            if (githubTokenRecord.operator != operator) {
+                logger.info(
+                    "the operator of the gitHub token has changed|userId=$userId|" +
+                            "operator=$operator|oldOperator=${githubTokenRecord.operator}"
+                )
+            }
+            githubTokenDao.update(
+                dslContext = dslContext,
+                userId = userId,
+                accessToken = encryptedAccessToken,
+                tokenType = tokenType,
+                scope = scope,
+                githubTokenType = githubTokenType,
+                operator = operator
+            )
         }
     }
 
@@ -86,7 +115,9 @@ class GithubTokenService @Autowired constructor(
             BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope,
-            githubTokenRecord.createTime.timestampmilli()
+            githubTokenRecord.createTime.timestampmilli(),
+            githubTokenRecord.userId,
+            githubTokenRecord.operator
         )
     }
 
