@@ -3,6 +3,7 @@ import { OPERATE_CHANNEL } from "@/utils/constants";
 
 const apiPerfix = '/ms/auth/api/user';
 const projectPerfix = 'ms/project/api/user'
+const repositoryPerfix = 'ms/repository/api/user'
 
 export default {
   getUser() {
@@ -45,43 +46,23 @@ export default {
   },
   // 获取oauth授权列表
   getOauthResource() {
-    return fetch.get(`${apiPerfix}/oauth/resource`)
+    return fetch.get(`${repositoryPerfix}/repositories/oauth`)
   },
   // 删除oauth授权
   deleteOauth(type: any) {
-    return fetch.delete(`${apiPerfix}/oauth/resource/delete?oauthType=${type}`)
+    return fetch.delete(`${repositoryPerfix}/repositories/oauth//delete?scmCode=${type}`)
   },
   getOauthRelSource(type: any, page: Number, pageSize: Number) {
-    return fetch.get(`${apiPerfix}/oauth/resource/relSource?oauthType=${type}&page=${page}&pageSize=${pageSize}`)
+    return fetch.get(`${repositoryPerfix}/repositories/oauth/relSource?scmCode=${type}&page=${page}&pageSize=${pageSize}`)
   },
   refreshOauth(oauthType: any, redirectUrl: any) {
-    return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
+    return fetch.post(`${repositoryPerfix}/repositories/oauth/reset?scmCode=${oauthType}&redirectUrl=${redirectUrl}`)
   },
   /**
    * 获取（代码库、流水线、部署节点）授权列表
    */
   getResourceAuthList(projectId: string, params: any) {
     return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=PERSONAL`, params);
-  },
-  // 获取oauth授权列表
-  getOauthResource() {
-    return fetch.get(`${apiPerfix}/oauth/resource`)
-  },
-  // 删除oauth授权
-  deleteOauth(type: any) {
-    return fetch.delete(`${apiPerfix}/oauth/resource/delete?oauthType=${type}`)
-  },
-  getOauthRelSource(type: any, page: Number, pageSize: Number) {
-    return fetch.get(`${apiPerfix}/oauth/resource/relSource?oauthType=${type}&page=${page}&pageSize=${pageSize}`)
-  },
-  refreshOauth(oauthType: any, redirectUrl: any) {
-    return fetch.post(`${apiPerfix}/oauth/resource/reOauth?oauthType=${oauthType}&redirectUrl=${redirectUrl}`)
-  },
-  /**
-   * 获取（代码库、流水线、部署节点）授权列表
-   */
-  getResourceAuthList(projectId: string, params: any) {
-    return fetch.post(`${apiPerfix}/auth/authorization/${projectId}/listResourceAuthorization?operateChannel=${OPERATE_CHANNEL}`, params);
   },
   /**
    * 批量交接用户组成员

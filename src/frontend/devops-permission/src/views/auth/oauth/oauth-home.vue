@@ -26,7 +26,8 @@ onMounted(() => {
 <template>
 	<bk-loading class="oauth-home" :loading="isLoading">
 		<card
-			v-for="card in oauthList" :key="card.id"
+			v-for="card in oauthList"
+      :key="card.id"
 			:oauth="card"
 		/>
 	</bk-loading>

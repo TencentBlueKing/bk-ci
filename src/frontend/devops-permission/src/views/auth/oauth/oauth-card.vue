@@ -29,6 +29,7 @@ const props = defineProps({
 const oauthType = computed(() => props.oauth.type);
 const showDeleteDialog = ref(false);
 const showRefreshDialog = ref(false);
+const showAuthorizeDialog = ref(false);
 const page = ref(1);
 const pageSize = ref(20);
 const relSourceList = ref<any>([]);
@@ -161,10 +162,10 @@ const handleCancelRefresh = () => {
 const handleConfirmRefresh = () => {
   try {
     isLoading.value = true;
-    const url = encodeURIComponent(window.location.href.replace('com/permission', 'com/console/permission'));
+    const url = encodeURIComponent(window.location.href.replace('com/permission', `com/console/permission`));
     http.refreshOauth(oauthType.value, url).then(res => {
       if (res.url) {
-        window.open(res.url)
+        window.top.open(res.url, '_self')
       }
     })
   } catch (e) {
@@ -174,6 +175,9 @@ const handleConfirmRefresh = () => {
   };
 };
 
+const handleAuthorize = () => {
+  showAuthorizeDialog.value = true;
+}
 </script>
 
 <template>
@@ -196,18 +200,76 @@ const handleConfirmRefresh = () => {
         </div>
       </div>
       <div :class="['code-operate', { 'expired': oauth.expired }]">
-        <div class="create-time">{{ createdTimeAgo(oauth.username, oauth.createTime) }}</div>
+        <div :class="{ 'create-time': !oauth.authorized }">
+          {{ createdTimeAgo(oauth.username, oauth.createTime) }}
+        </div>
         <div class="btn">
-          <bk-button v-if="oauth.expired" class="mr5" text theme="primary">{{ t('重置授权') }}</bk-button>
-          <bk-button v-else class="mr5" text theme="primary" @click="handleShowRefreshDialog">{{ t('刷新') }}</bk-button>
-          <bk-button text theme="primary" @click="handleShowDeleteDialog">{{ t('删除') }}</bk-button>
+          <bk-button
+            v-if="!oauth.authorized"
+            class="mr5"
+            text
+            theme="primary"
+            @click="handleAuthorize">
+            {{ t('OAUTH 授权') }}
+          </bk-button>
+          <bk-button
+            v-if="oauth.authorized && oauth.expired"
+            class="mr5"
+            text
+            theme="primary"
+            @click="handleConfirmRefresh">
+            {{ t('重置授权') }}
+          </bk-button>
+          <bk-button
+            v-if="oauth.authorized && !oauth.expired"
+            class="mr5"
+            text
+            theme="primary"
+            @click="handleShowRefreshDialog">
+            {{ t('刷新') }}
+          </bk-button>
+          <bk-button
+            v-if="oauth.authorized"
+            text
+            theme="primary"
+            @click="handleShowDeleteDialog">
+            {{ t('删除') }}
+          </bk-button>
         </div>
       </div>
-      <div v-if="oauth.expired" class="expired-tag">
-        {{ t('已过期') }}
+      <div v-if="!oauth.authorized || oauth.expired" class="expired-tag">
+        {{ !oauth.authorized ? t('未授权') : t('已过期') }}
       </div>
     </div>
-
+    <bk-dialog
+      v-model:is-show="showAuthorizeDialog"
+      class="authorize-dialog"
+    >
+      <div class="content">
+        <div class="title">{{ t(' OAUTH授权') }}</div>
+        <div class="oauth-tips">
+          <template v-if="oauth.type !== 'GITHUB'">
+            <p>{{ t('此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
+            <p>1.{{ t('回写 Commit statuses 到 Github') }}</p>
+            <p>2.{{ t('流水线中 Checkout 代码') }}</p>
+            <p>{{ t('需拥有代码库 Push 权限') }}</p>
+          </template>
+          <template v-else>
+            <p>{{ t('此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+            <p>1.{{ t('注册 Webhook 到工蜂') }}</p>
+            <p>2.{{ t('回写提交检测状态到工蜂') }}</p>
+            <p>3.{{ t('流水线中 Checkout 代码') }}</p>
+            <p>{{ t('需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+          </template>
+        </div>
+        <bk-button
+          theme="primary"
+          @click="handleConfirmRefresh"
+        >
+          {{ t('OAUTH授权') }}
+        </bk-button>
+      </div>
+    </bk-dialog>
     <bk-dialog
       v-model:is-show="showDeleteDialog"
       class="oauth-dialog"
@@ -220,33 +282,33 @@ const handleConfirmRefresh = () => {
         </div>
       </template>
       <template v-else>
-          <i class="warning-icon permission-icon permission-icon-tishi" />
-          <div class="title">{{ t('无法删除 OAUTH') }}</div>
-          <div class="cannot-delete-content">
-            <span>{{ t('OAUTH 授权:') }}</span>
-            <span>{{ oauth.type }}</span>
-            <div class="tips">
-              <p>{{ t('有 X 个代码库正在使用此 OAUTH 授权，无法直接删除。', [oauth.repoCount]) }}</p>
-              <p>{{ t('请先修改对应代码库的授权方式，或者请新的负责人重置代码库授权后重试。') }}</p>
-            </div>
-            <li class="resource-list-header">{{ t('授权代码库') }}</li>
-            <ul
-              class="resource-list-content"
-              @scroll.passive="handleScroll"
-            >
-              <li
-                v-for="item in relSourceList"
-                :key="item.name"
-              >
-                <a
-                  :href="`${item.url}&searchName=${item.name}`"
-                  target="_blank"
-                >
-                  {{ item.name }}
-                </a>
-              </li>
-            </ul>
+        <i class="warning-icon permission-icon permission-icon-tishi" />
+        <div class="title">{{ t('无法删除 OAUTH') }}</div>
+        <div class="cannot-delete-content">
+          <span>{{ t('OAUTH 授权:') }}</span>
+          <span>{{ oauth.type }}</span>
+          <div class="tips">
+            <p>{{ t('有 X 个代码库正在使用此 OAUTH 授权，无法直接删除。', [oauth.repoCount]) }}</p>
+            <p>{{ t('请先修改对应代码库的授权方式，或者请新的负责人重置代码库授权后重试。') }}</p>
           </div>
+          <li class="resource-list-header">{{ t('授权代码库') }}</li>
+          <ul
+            class="resource-list-content"
+            @scroll.passive="handleScroll"
+          >
+            <li
+              v-for="item in relSourceList"
+              :key="item.name"
+            >
+              <a
+                :href="`${item.url}&searchName=${item.name}`"
+                target="_blank"
+              >
+                {{ item.name }}
+              </a>
+            </li>
+          </ul>
+        </div>
       </template>
       <div class="operate-btn">
         <bk-button
@@ -361,6 +423,9 @@ const handleConfirmRefresh = () => {
     padding: 0 16px;
     background: #FAFBFD;
     box-shadow: 0 -1px 0 0 #EAEBF0;
+    .create-time {
+      opacity: 0;
+    }
     &.expired {
       color: #C4C6CC !important;
     }
@@ -381,6 +446,19 @@ const handleConfirmRefresh = () => {
 </style>
 
 <style lang="scss">
+  .authorize-dialog {
+    .bk-modal-content {
+      margin-bottom: 10px;
+    }
+    
+    .oauth-tips {
+      margin-bottom: 26px;
+      font-size: 14px;
+      text-align: left;
+      color: #979BA5;
+    }
+  }
+  .authorize-dialog,
   .oauth-dialog {
     .bk-modal-header,
     .bk-modal-footer {
