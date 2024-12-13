@@ -29,11 +29,11 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.AISummaryRateType
 import com.tencent.devops.repository.api.UserCopilotResource
-import com.tencent.devops.repository.pojo.CodeGitCopilotSummary
 import com.tencent.devops.repository.service.CopilotOpenTokenService
 import com.tencent.devops.repository.service.RepositoryCopilotService
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
