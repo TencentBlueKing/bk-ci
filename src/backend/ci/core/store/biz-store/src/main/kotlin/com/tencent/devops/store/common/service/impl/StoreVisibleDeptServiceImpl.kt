@@ -31,15 +31,16 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,15 +66,16 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun getVisibleDept(
         storeCode: String,
         storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
+        deptStatusInfos: String?
     ): Result<StoreVisibleDeptResp?> {
-        logger.info("getVisibleDept storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
+        val deptStatusList = deptStatusInfos?.split(",")?.map {
+            DeptStatusEnum.valueOf(it).status.toByte()
+        }
         val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType.type.toByte(),
-            deptStatus = deptStatus,
-            deptIdList = null
+            deptStatusList = deptStatusList
         )
         return Result(
             if (storeDeptRelRecords == null) {
@@ -106,15 +108,16 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             storeCodeList = storeCodeList,
             storeType = storeType.type.toByte()
         )
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL
         storeDeptRelRecords?.forEach {
-            val list = if (ret.containsKey(it["STORE_CODE"] as String)) {
-                ret[it["STORE_CODE"] as String]!!
+            val list = if (ret.containsKey(it[tStoreDeptRel.STORE_CODE] as String)) {
+                ret[it[tStoreDeptRel.STORE_CODE] as String]!!
             } else {
                 val tmp = mutableListOf<Int>()
-                ret[it["STORE_CODE"] as String] = tmp
+                ret[it[tStoreDeptRel.STORE_CODE] as String] = tmp
                 tmp
             }
-            list.add(it["DEPT_ID"] as Int)
+            list.add(it[tStoreDeptRel.DEPT_ID] as Int)
         }
         return Result(ret)
     }
@@ -142,7 +145,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deptIdApprovedList = mutableListOf<DeptInfo>()
+        val pendingDeptInfoList = mutableListOf<DeptInfo>()
         deptInfos.forEach forEach@{
             val count = storeDeptRelDao.countByCodeAndDeptId(
                 dslContext = dslContext,
@@ -153,16 +156,13 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             if (count> 0) {
                 return@forEach
             }
-            deptIdApprovedList.add(it)
+            pendingDeptInfoList.add(it)
         }
-        // 可见范围默认审核通过
         storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
-            deptInfoList = deptIdApprovedList,
-            status = DeptStatusEnum.APPROVED.status.toByte(),
-            comment = "AUTO APPROVE",
+            deptInfoList = pendingDeptInfoList,
             storeType = storeType.type.toByte()
         )
         return Result(true)

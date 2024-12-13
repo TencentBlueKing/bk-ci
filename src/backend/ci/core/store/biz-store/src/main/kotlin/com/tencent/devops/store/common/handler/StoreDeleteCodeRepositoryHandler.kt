@@ -25,12 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.handler
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import org.springframework.stereotype.Service
 
-@Schema(title = "store组件可见范围响应报文体")
-data class StoreVisibleDeptResp(
-    @get:Schema(title = "机构列表", required = true)
-    val deptInfos: List<DeptInfo>
-)
+@Service
+class StoreDeleteCodeRepositoryHandler(
+    private val storeBaseDeleteService: StoreBaseDeleteService
+) : Handler<StoreDeleteRequest> {
+
+    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+
+        return when (handlerRequest.storeType) {
+            StoreTypeEnum.TEMPLATE.name, StoreTypeEnum.IMAGE.name -> false
+            else -> true
+        }
+    }
+
+    override fun execute(handlerRequest: StoreDeleteRequest) {
+        // 删除组件代码库
+        storeBaseDeleteService.deleteComponentCodeRepository(handlerRequest)
+    }
+}

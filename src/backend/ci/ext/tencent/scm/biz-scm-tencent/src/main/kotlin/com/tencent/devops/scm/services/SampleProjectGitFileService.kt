@@ -29,6 +29,7 @@ package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -50,10 +51,11 @@ class SampleProjectGitFileService {
         workspace: File? = null
     ): Result<Boolean> {
         logger.info(
-            "handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, nameSpaceName is :$nameSpaceName")
+            "handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, nameSpaceName is :$nameSpaceName"
+        )
         // 根据groupName推断出要处理的文件
-        var type: String? = null
-        var fileName: String? = null
+        val type: String?
+        val fileName: String?
         val name = nameSpaceName.split("/")[0]
         if (name.contains("bkdevops-plugins")) {
             // 处理插件示例工程的git文件
@@ -63,14 +65,14 @@ class SampleProjectGitFileService {
             // 处理扩展服务示例工程的git文件
             type = StoreTypeEnum.SERVICE.name
             fileName = EXTENSION_JSON_NAME
+        } else {
+            type = "DEFAULT"
+            fileName = CONFIG_YML_NAME
         }
         logger.info("handleSampleProjectGitFile type is:$type, fileName is :$fileName")
-        return if (type != null && fileName != null) {
-            val fileHandleService =
-                SpringContextUtil.getBean(AbstractFileHandleService::class.java, "${type}_FILE_HANDLE")
-            fileHandleService.handleFile(repositoryName, fileName, workspace)
-        } else {
-            Result(true)
-        }
+        val fileHandleService =
+            SpringContextUtil.getBean(AbstractFileHandleService::class.java, "${type}_FILE_HANDLE")
+        fileHandleService.handleFile(repositoryName, fileName, workspace)
+        return Result(true)
     }
 }

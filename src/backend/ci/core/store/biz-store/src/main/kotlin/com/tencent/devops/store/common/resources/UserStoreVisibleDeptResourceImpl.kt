@@ -2,17 +2,17 @@ package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxStoreVisibleDeptResource
+import com.tencent.devops.store.api.common.UserStoreVisibleDeptResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptReq
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptReq
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TxStoreVisibleDeptResourceImpl @Autowired constructor(
+class UserStoreVisibleDeptResourceImpl @Autowired constructor(
     private val storeVisibleDeptService: StoreVisibleDeptService
-) : TxStoreVisibleDeptResource {
+) : UserStoreVisibleDeptResource {
 
     override fun addVisibleDept(userId: String, storeVisibleDeptReq: StoreVisibleDeptReq): Result<Boolean> {
         return storeVisibleDeptService.addVisibleDept(
@@ -23,11 +23,16 @@ class TxStoreVisibleDeptResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getVisibleDept(userId: String, storeType: String, storeCode: String): Result<StoreVisibleDeptResp?> {
+    override fun getVisibleDept(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        deptStatusInfos: String?
+    ): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(
             storeCode = storeCode,
             storeType = StoreTypeEnum.valueOf(storeType),
-            deptStatus = null
+            deptStatusInfos = deptStatusInfos
         )
     }
 
