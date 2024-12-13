@@ -12,7 +12,7 @@ export const batchOperateTypes = {
 
 export const batchMassageText = {
   handover: '用户组权限已移交',
-  remove: '用户组已移出',
+  remove: '用户组已退出',
 }
 
 export const btnTexts = {
@@ -27,5 +27,5 @@ export const batchTitle = {
 export const unableText = {
   renewal: '无法续期',
   handover: '无法移交',
-  remove: '无法移出',
+  remove: '无法退出',
 }

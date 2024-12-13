@@ -169,7 +169,7 @@ export default {
     return fetch.post(`${apiPerfix}/auth/handover/listGroupsOfHandover`, params);
   },
   /**
-   * 获取移交移出时的单条数据
+   * 获取移交退出时的单条数据
    */
   getMemberGroupDetails(projectId: string, resourceType: string, groupId: number, memberId: string) {
     return fetch.get(`${apiPerfix}/auth/resource/group/${projectId}/${resourceType}/${groupId}/getMemberGroupDetails?memberId=${memberId}`);
@@ -187,7 +187,7 @@ export default {
     return fetch.post(`${apiPerfix}/auth/handover/handleHanoverApplication`, params);
   },
   /**
-  * 单条移出
+  * 单条退出
   */
   getIsDirectRemove(projectId: string, groupId: number, params: any) {
     return fetch.DELETE(`${apiPerfix}/auth/resource/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);

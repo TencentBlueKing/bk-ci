@@ -13,6 +13,7 @@
       selection-key="resourceCode"
       :checked="selectedResourceCode"
       :scroll-loading="scrollLoading"
+      :is-row-select-enable="disabledRowSelect"
       @select-all="handleSelectAll"
       @selection-change="handleSelectionChange"
       @page-limit-change="pageLimitChange"
@@ -20,13 +21,13 @@
     >
       <template #prepend>
         <div v-if="isCurrentAll" class="prepend">
-          {{t('已选择全量数据X条', [groupTotal])}}
+          {{t('已选择全量数据')}}
           <span class="prepend-line">|</span>
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
         <div v-else-if="isShowOperation && selectedData[resourceType]?.length" class="prepend">
           {{t('已选择X条数据，', [selectedData[resourceType].length])}}
-          <span @click="handleSelectAllData">{{ t('选择全量数据X条', [groupTotal]) }}</span>
+          <span @click="handleSelectAllData">{{ t('选择全量数据') }}</span>
           <span class="prepend-line">|</span>
           <span @click="handleClear">{{t("清除选择")}}</span>
         </div>
@@ -69,6 +70,11 @@
           {{ row.joinedType === "DIRECT" ? t('直接加入') : t('组织加入') }}
         </template>
       </bk-table-column>
+      <bk-table-column :label="t('状态')" prop="beingHandedOver" v-if="isShowOperation">
+        <template #default="{row}">
+          {{ row.beingHandedOver ? t('移交中') : '' }}
+        </template>
+      </bk-table-column>
       <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
         <template #default="{row, index}">
           <div>
@@ -93,7 +99,7 @@
                 class="operation-btn"
                 disabled
                 v-bk-tooltips="{
-                  content: t('通过用户组获得权限，请到用户组里移出用户'),
+                  content: t('通过用户组获得权限，请到用户组里退出用户'),
                   placement: 'top'
                 }"
               >
@@ -107,7 +113,7 @@
                 @click="handleRenewal(row)"
                 :disabled="row.removeMemberButtonControl === 'DEPARTMENT'"
                 v-bk-tooltips="{
-                  content: t('通过组织加入的 不允许 续期/移出/移交'),
+                  content: t('通过组织加入的 不允许 续期/退出/移交'),
                   disabled: row.removeMemberButtonControl !== 'DEPARTMENT'
                 }"
               >
@@ -120,7 +126,7 @@
                 @click="handleHandOver(row, index)"
                 :disabled="row.isExpired || row.removeMemberButtonControl === 'DEPARTMENT' || row.beingHandedOver "
                 v-bk-tooltips="{
-                  content: row.isExpired ? t('已过期，无需移交') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/移出/移交') : row.beingHandedOver ? t('等待审核中') : '',
+                  content: row.isExpired ? t('已过期，无需移交') : row.removeMemberButtonControl === 'DEPARTMENT' ? t('通过组织加入的 不允许 续期/退出/移交') : row.beingHandedOver ? t('等待审核中') : '',
                   disabled: !row.isExpired && row.removeMemberButtonControl !== 'DEPARTMENT' && !row.beingHandedOver
                 }"
               >
@@ -133,11 +139,11 @@
               :disabled="row.removeMemberButtonControl != 'OTHER' || row.beingHandedOver"
               @click="handleRemove(row, index)"
               v-bk-tooltips="{
-                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || t('等待审核中, 不能移出'),
+                content: TOOLTIPS_CONTENT[row.removeMemberButtonControl] || t('等待审核中, 不能退出'),
                 disabled: row.removeMemberButtonControl === 'OTHER' && !row.beingHandedOver
               }"
             >
-              {{t("移出")}}
+              {{t("退出")}}
             </bk-button>
           </div>
         </template>
@@ -200,13 +206,12 @@ const curSelectedData = ref([]);
 const isCurrentAll = ref(false);
 const selectedResourceCode = computed(() => isCurrentAll.value ? tableList.value.map(i => i.resourceCode) : curSelectedData.value.map(i => i.resourceCode));
 const resourceType = computed(() => props.resourceType);
-const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
 const TOOLTIPS_CONTENT = {
-  UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
-  UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
-  TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组'),
-  DEPARTMENT: t('通过组织加入的 不允许 续期/移出/移交')
+  UNIQUE_MANAGER: t('唯一管理员，不可退出。请添加新的管理员后再退出'),
+  UNIQUE_OWNER: t('唯一拥有者，不可退出。请添加新的拥有者后再退出'),
+  TEMPLATE: t('通过用户组加入，不可直接退出。如需调整，请编辑用户组'),
+  DEPARTMENT: t('通过组织加入的 不允许 续期/退出/移交')
 }
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
@@ -243,9 +248,9 @@ function getUnableMessage(row) {
       }
     case 'handover':
       if (row.removeMemberButtonControl === 'TEMPLATE') {
-        return t('通过用户组获得权限，请到用户组里移出用户');
+        return t('通过用户组获得权限，请到用户组里退出用户');
       } else if (row.removeMemberButtonControl === 'DEPARTMENT') {
-        return t('通过组织加入的 不允许 续期/移出/移交');
+        return t('通过组织加入的 不允许 续期/退出/移交');
       }  else if (row.isExpired) {
         return t('已过期，无需移交')
       }
@@ -256,13 +261,17 @@ function getUnableMessage(row) {
       return '';
   }
 }
+function disabledRowSelect({ row }) {
+  return !row.beingHandedOver
+}
 /**
  * 当前页全选事件
  */
 function handleSelectAll({checked}) {
   if (checked) {
-    emit('getSelectList', tableList.value, resourceType.value);
-    curSelectedData.value = tableList.value;
+    const selectionList = refTable.value.getSelection();
+    emit('getSelectList', selectionList, resourceType.value);
+    curSelectedData.value = selectionList;
     isCurrentAll.value = false;
   } else {
     handleClear()
@@ -282,7 +291,7 @@ function handleSelectionChange() {
  */
 function handleSelectAllData() {
   const selectLength = refTable.value.getSelection().length
-  if (selectLength != props.data.length) {
+  if (selectLength != props.data.length && curSelectedData.value.length !== tableList.value.filter(i => !i.beingHandedOver).length) {
     refTable.value.toggleAllSelection();
   }
   emit('handleSelectAllData', resourceType.value)
@@ -311,7 +320,7 @@ function handleHandOver(row, index) {
   emit('handleHandOver', row, resourceType.value, index);
 }
 /**
- * 移出按钮点击
+ * 退出按钮点击
  * @param row 行数据
  */
 function handleRemove(row, index) {
