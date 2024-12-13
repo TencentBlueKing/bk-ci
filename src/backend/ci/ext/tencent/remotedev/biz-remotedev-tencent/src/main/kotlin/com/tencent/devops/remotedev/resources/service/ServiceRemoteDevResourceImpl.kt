@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
@@ -57,6 +56,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceHookService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -71,6 +71,8 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -92,7 +94,6 @@ class ServiceRemoteDevResourceImpl(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
     private val client: Client,
-    private val redisOperation: RedisOperation,
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
     private val streamBridge: StreamBridge,
@@ -109,11 +110,12 @@ class ServiceRemoteDevResourceImpl(
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val workspaceRecordService: WorkspaceRecordService,
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
-    private val cloneWorkspaceHandler: CloneWorkspaceHandler
+    private val cloneWorkspaceHandler: CloneWorkspaceHandler,
+    private val workspaceHookService: WorkspaceHookService,
+    private val configCacheService: ConfigCacheService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
-        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
@@ -243,7 +245,7 @@ class ServiceRemoteDevResourceImpl(
             return Result(true)
         }
         try {
-            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
+            val infoS = configCacheService.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
             val cgsIps = data.cgsIds?.map {
@@ -702,7 +704,12 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun upgradeWorkspace(userId: String, projectId: String, workspaceName: String, upgradeReq: WorkspaceUpgradeReq): Result<Boolean> {
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
         upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
         return Result(true)
     }
@@ -710,6 +717,24 @@ class ServiceRemoteDevResourceImpl(
     override fun removeUserPermission(userId: String, removeUser: String): Result<Boolean> {
         workspaceCommon.removeUserWorkspaceShare(operator = userId, userId = removeUser)
         return Result(true)
+    }
+
+    override fun reloadEnvHook(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
+        workspaceHookService.hookLoad(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId,
+            nodeHashIds = nodeHashIds
+        )
+    }
+
+    override fun deleteEnvHook(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
+        workspaceHookService.hookDelete(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId,
+            nodeHashIds = nodeHashIds
+        )
     }
 
     override fun getWorkspaceListNew(

@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkRepoRegion
@@ -24,18 +23,19 @@ import com.tencent.devops.remotedev.service.client.NodeSearchRule
 import com.tencent.devops.remotedev.service.client.NodeSearchRulesItem
 import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS
+import java.security.SecureRandom
+import java.time.LocalDateTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.security.SecureRandom
-import java.util.Base64
 
 @Service
 class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val bkRepoConfig: RemoteDevBkRepoConfig,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
@@ -46,7 +46,8 @@ class WorkspaceRecordService @Autowired constructor(
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
     private val bkItsmService: BKItsmService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val configCacheService: ConfigCacheService
 ) {
 
     @Value("\${workspaceRecordTicket.aes-key}")
@@ -189,7 +190,7 @@ class WorkspaceRecordService @Autowired constructor(
             dslContext = dslContext,
             workspaceName = workspaceName,
             user = userId,
-            expiredDays = redisOperation.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
+            expiredDays = configCacheService.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
         )
     }
 
@@ -273,8 +274,8 @@ class WorkspaceRecordService @Autowired constructor(
         val data = resp.records.map {
             WorkspaceRecordMetadata(
                 link = bkRepoConfig.getRegionConfig(region).webUrl +
-                        "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
-                        "?skToken=$token",
+                    "/web/media/api/user/stream/$projectId/${genRepoName(workspaceName)}${it.fullPath}" +
+                    "?skToken=$token",
                 startTime = it.metadata?.mediaStartTime,
                 stopTime = it.metadata?.mediaStopTime,
                 fileSize = it.size,
@@ -304,7 +305,7 @@ class WorkspaceRecordService @Autowired constructor(
                 viewPermissionEndTime = null
             )
         val endTime = record.updateTime.plusDays(
-            redisOperation.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
+            configCacheService.get(REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS)?.toLongOrNull() ?: 7L
         )
         return UserWorkspaceRecordPermissionInfo(
             enableRecord = !enableRecord.isNullOrBlank(),
@@ -336,8 +337,6 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     companion object {
-        private const val REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS =
-            "remotedev:worksapce.user.approval.expiredDays"
 
         private const val BKREPO_WORKSPACE_REPONAME_PREFIX = "REMOTEDEV_"
 

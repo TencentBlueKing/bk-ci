@@ -25,17 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.remotedev.dao
+
+import com.tencent.devops.model.remotedev.tables.TRemotedevConfig
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class ConfigDao {
+    fun fetchConfig(
+        dslContext: DSLContext,
+        configKey: String
+    ): String? {
+        with(TRemotedevConfig.T_REMOTEDEV_CONFIG) {
+            return dslContext.selectFrom(this)
+                .where(KEY.eq(configKey))
+                .fetchAny()?.value
+        }
+    }
 }

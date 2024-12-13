@@ -56,6 +56,11 @@ class BkConfig @Autowired constructor(
     @Value("\${bkvision.url:}")
     val bkvisionUrl: String = ""
 
+    @Value("\${bksops.createTask:}")
+    val bksopsCreateTask: String = ""
+    @Value("\${bksops.startTask:}")
+    val bksopsStartTask: String = ""
+
     @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
     val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
 

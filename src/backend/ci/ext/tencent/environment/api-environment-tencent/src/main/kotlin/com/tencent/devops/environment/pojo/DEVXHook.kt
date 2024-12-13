@@ -25,17 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.environment.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "云桌面hook配置")
+data class DEVXHook(
+    @get:Schema(title = "钩子类型", required = true)
+    val hookType: HookType,
+    @get:Schema(title = "执行类型", required = true)
+    val executionType: ExecutionType,
+    @get:Schema(title = "值", required = true)
+    val enable: Boolean
+) {
+    enum class HookType(vararg val executionType: ExecutionType) {
+        CLEAN_CREDENTIALS(ExecutionType.LOG_IN, ExecutionType.LOG_OUT),
+        IOA_LOGIN(ExecutionType.LOG_IN),
+        IOA_LOGOUT(ExecutionType.LOG_OUT);
+    }
+
+    enum class ExecutionType {
+        LOG_IN,
+        LOG_OUT
+    }
 }

@@ -25,17 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.environment.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.devx.UserDEVXResource
+import com.tencent.devops.environment.pojo.DEVXHook
+import com.tencent.devops.environment.service.devx.DEVXService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserDEVXResourceImpl @Autowired constructor(
+    private val devxService: DEVXService
+) : UserDEVXResource {
+
+    override fun getEnvHook(userId: String, projectId: String, envHashId: String): Result<List<DEVXHook>> {
+        return Result(devxService.getEnvHook(userId, projectId, envHashId))
+    }
+
+    override fun pushEnvHook(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        hooks: List<DEVXHook>
+    ): Result<Boolean> {
+        devxService.pushEnvHook(userId, projectId, envHashId, hooks)
+        return Result(true)
+    }
 }

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.DEVXHook
-import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -46,41 +45,10 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT", description = "PreBuild构建机资源")
-@Path("/service/environment/devx")
+@Path("/user/devx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDEVXResource {
-
-    @Operation(summary = "创建云桌面环境管理node")
-    @POST
-    @Path("/projects_node/{projectId}")
-    fun createNode(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名称", required = false)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "不带地域ip", required = false)
-        @QueryParam("ip")
-        ip: String,
-        @Parameter(description = "机型", required = false)
-        @QueryParam("size")
-        size: String
-    ): Result<Long>
-
-    @Operation(summary = "获取用户云桌面环境")
-    @POST
-    @Path("/projects_env")
-    fun getUserDEVXEnv(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        projectIds: Set<String>
-    ): Result<List<EnvWithNodeCount>>
+interface UserDEVXResource {
 
     @Operation(summary = "获取环境hook配置")
     @GET
@@ -96,4 +64,20 @@ interface ServiceDEVXResource {
         @QueryParam("envHashId")
         envHashId: String
     ): Result<List<DEVXHook>>
+
+    @Operation(summary = "更新环境hook配置")
+    @POST
+    @Path("/env_hook/{projectId}")
+    fun pushEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = false)
+        @QueryParam("envHashId")
+        envHashId: String,
+        hooks: List<DEVXHook>
+    ): Result<Boolean>
 }

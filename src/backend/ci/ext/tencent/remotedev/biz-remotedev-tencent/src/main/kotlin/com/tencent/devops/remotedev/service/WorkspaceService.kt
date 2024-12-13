@@ -72,7 +72,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service.StartCloudInterfaceService
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -108,10 +107,8 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
@@ -146,7 +143,6 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
@@ -154,7 +150,6 @@ class WorkspaceService @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val taiClient: TaiClient,
     private val taiService: TaiService,
-    private val startCloudInterfaceService: StartCloudInterfaceService,
     private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
@@ -903,7 +898,7 @@ class WorkspaceService @Autowired constructor(
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10000
+        val discountTime = 10000L
         return WorkspaceUserDetail(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
