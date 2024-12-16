@@ -374,7 +374,11 @@ class PipelineAtomService @Autowired constructor(
 
     private fun validateUserAtomPermission(atomCode: String, userId: String) {
         val validateResult =
-            client.get(ServiceStoreResource::class).isStoreMember(atomCode, StoreTypeEnum.ATOM, userId)
+            client.get(ServiceStoreResource::class).validatePipelineUserAtomPermission(
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM,
+                userId = userId
+            )
         if (validateResult.isNotOk()) {
             throw ErrorCodeException(
                 errorCode = validateResult.status.toString(),

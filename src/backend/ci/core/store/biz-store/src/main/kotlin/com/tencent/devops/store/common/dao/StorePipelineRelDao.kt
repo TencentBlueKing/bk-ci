@@ -86,6 +86,14 @@ class StorePipelineRelDao {
         }
     }
 
+    fun getStorePipelineRelByPipelineId(dslContext: DSLContext, pipelineId: String): TStorePipelineRelRecord? {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchOne()
+        }
+    }
+
     fun getStorePipelineRelByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
@@ -96,7 +104,6 @@ class StorePipelineRelDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .orderBy(UPDATE_TIME.desc())
-                .limit(1)
                 .fetchOne()
         }
     }

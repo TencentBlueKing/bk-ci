@@ -52,6 +52,13 @@ interface StorePipelineService {
         storeRunPipelineParam: StoreRunPipelineParam
     ): Boolean
 
+    // 创建组件内置流水线
+    fun creatStorePipelineByStoreCode(
+        storeCode: String? = null,
+        storeType: String,
+        grayFlag: Boolean = false
+    ): String
+
     /**
      * 删除组件内置流水线
      * @param userId 用户ID
