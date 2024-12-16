@@ -34,15 +34,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "节点管理数据返回包装模型")
 data class AgentResult<out T>(
-    @get:Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码，0表示successful", required = true)
     val code: Int,
-    @get:Schema(title = "结果bool值")
+    @get:Schema(title = "结果bool值，true表示正确", required = true)
     val result: Boolean? = null,
     @get:Schema(title = "请求失败返回的错误信息")
     val message: String?,
     @get:Schema(title = "请求错误信息")
     val errors: String?,
-    @get:Schema(title = "数据")
+    @get:Schema(title = "请求返回的具体数据")
     @BkFieldI18n
     val data: T? = null
 )

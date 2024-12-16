@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(title = "安装agent的返回结果中的 主机信息")
+@Schema(title = "安装agent失败的主机信息")
 data class IpFilter(
     @get:Schema(title = "主机业务ID")
     val bkBizId: Int,
