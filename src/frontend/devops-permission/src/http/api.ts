@@ -115,7 +115,7 @@ export default {
    * 获取用户已加入的项目列表
    */
   fetchProjectList() {
-    return fetch.get(`${projectPerfix}/projects`)
+    return fetch.get(`${projectPerfix}/projects?enabled=true&queryAuthorization=true`)
   },
   /**
    * 重置授权（代码库、流水线、部署节点） 
