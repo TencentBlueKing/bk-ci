@@ -29,13 +29,16 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
+import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -44,7 +47,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcatDistinct
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -102,8 +104,12 @@ class PipelineModelTaskDao {
     fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = getListByAtomCodeCond(this, atomCode, projectCode)
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .fetchOne(0, Int::class.java)!!
         }
@@ -123,9 +129,12 @@ class PipelineModelTaskDao {
             if (projectCode != null) {
                 condition.add(PROJECT_ID.eq(projectCode))
             }
-
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .groupBy(ATOM_CODE)
                 .fetch()
@@ -219,13 +228,16 @@ class PipelineModelTaskDao {
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
             )
-
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
                 groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION)
             )
                 .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
                 .where(condition)
                 .groupBy(PIPELINE_ID)
                 .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())

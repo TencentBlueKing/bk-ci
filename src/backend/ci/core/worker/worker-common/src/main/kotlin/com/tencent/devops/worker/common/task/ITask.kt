@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -63,7 +62,7 @@ abstract class ITask {
 
     companion object {
         // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
-        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.-]*"
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9.-]*"
     }
 
     fun run(
@@ -105,18 +104,12 @@ abstract class ITask {
 
     protected fun addEnv(env: Map<String, String>) {
         var errReadOnlyFlag = false
-        var errLongValueFlag = false
-        val errLongValueVars = mutableSetOf<String>()
         var errChineseVarName = false
         val errChineseVars = mutableSetOf<String>()
-        env.forEach { (key, value) ->
+        env.keys.forEach { key ->
             if (this::constVar.isInitialized && key in constVar) {
                 LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
                 errReadOnlyFlag = true
-            }
-            if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
-                errLongValueVars.add(key)
-                errLongValueFlag = true
             }
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, key)) {
                 errChineseVars.add(key)
@@ -132,16 +125,6 @@ abstract class ITask {
             )
         }
         if (this::dialect.isInitialized) {
-            if (errLongValueFlag && !dialect.supportLongVarValue()) {
-                LoggerService.addWarnLine("Variable $errLongValueVars value exceeds 4000 length limit.")
-                throw TaskExecuteException(
-                    errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                            "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
-                            " message: variable value exceeds 4000 length limit.",
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_INPUT_INVAILD
-                )
-            }
             if (errChineseVarName && !dialect.supportChineseVarName()) {
                 LoggerService.addWarnLine(
                     "Variable $errChineseVars name is illegal,Variable names can only use letters, " +

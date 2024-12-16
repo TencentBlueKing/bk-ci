@@ -29,7 +29,7 @@ func DownloadAgentFile(saveDir string) (string, error) {
 
 func DownloadJdkFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
-		"jre/windows/jre.zip", saveDir+"/"+config.JdkClientFile,
+		"jre/windows/jdk17.zip", saveDir+"/"+config.Jdk17ClientFile,
 	)
 }
 

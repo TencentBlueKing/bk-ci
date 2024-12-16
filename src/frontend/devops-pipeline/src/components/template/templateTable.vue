@@ -181,109 +181,10 @@
                         >
                             {{ $t('template.instantiate') }}
                         </span>
-                        <span
-                            @click.stop="showTools(row)"
-                            :class="[{ 'has-show': row.showMore }, 'show-more']"
-                            data-name="btns"
-                        >
-                            {{ $t('more') }}
-                            <template v-if="isEnabledPermission">
-                                <ul
-                                    v-show="row.showMore"
-                                    class="btn-more"
-                                >
-                                    <li
-                                        @click="copyTemplate(row)"
-                                        data-name="copy"
-                                        v-perm="{
-                                            hasPermission: hasCreatePermission,
-                                            disablePermissionApi: true,
-                                            permissionData: {
-                                                projectId: projectId,
-                                                resourceType: 'pipeline_template',
-                                                resourceCode: projectId,
-                                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                                            }
-                                        }"
-                                        key="cloneBtn"
-                                    >
-                                        {{ $t('clone') }}
-                                    </li>
-                                    <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
-                                        <li
-                                            v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
-                                            data-name="stored"
-                                            class="is-disabled bk-permission-disable"
-                                            key="alreadyToStoreBtn"
-                                        >
-                                            {{ $t('template.alreadyToStore') }}
-                                        </li>
-                                        <li
-                                            v-else
-                                            @click="toRelativeStore(row)"
-                                            data-name="store"
-                                            v-perm="{
-                                                hasPermission: row.canEdit,
-                                                disablePermissionApi: true,
-                                                permissionData: {
-                                                    projectId: projectId,
-                                                    resourceType: 'pipeline_template',
-                                                    resourceCode: row.templateId,
-                                                    action: TEMPLATE_RESOURCE_ACTION.EDIT
-                                                }
-                                            }"
-                                            key="toStoreBtn"
-                                        >
-                                            {{ $t('template.toStore') }}
-                                        </li>
-                                    </template>
-                                    <li
-                                        @click="deleteTemplate(row)"
-                                        data-name="delete"
-                                        v-perm="{
-                                            hasPermission: row.canEdit,
-                                            disablePermissionApi: true,
-                                            permissionData: {
-                                                projectId: projectId,
-                                                resourceType: 'pipeline_template',
-                                                resourceCode: row.templateId,
-                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
-                                            }
-                                        }"
-                                        key="deleteBtn"
-                                    >
-                                        {{ ['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete') }}
-                                    </li>
-                                </ul>
-                            </template>
-                            <template v-else>
-                                <ul
-                                    v-show="row.showMore"
-                                    class="btn-more"
-                                >
-                                    <li
-                                        @click="copyTemplate(row)"
-                                        data-name="copy"
-                                    >{{ $t('clone') }}</li>
-                                    <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
-                                        <li
-                                            v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
-                                            data-name="stored"
-                                            class="has-stored"
-                                        >{{ $t('template.alreadyToStore') }}</li>
-                                        <li
-                                            @click="toRelativeStore(row)"
-                                            v-else
-                                            data-name="store"
-                                        >{{ $t('template.toStore') }}</li>
-                                    </template>
-                                    <li
-                                        @click="deleteTemplate(row)"
-                                        data-name="delete"
-                                    >{{ ['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete') }}</li>
-                                </ul>
-                            </template>
-                        </span>
+                        <ext-menu
+                            :data="row"
+                            :config="row.templateActions"
+                        />
                     </div>
                 </template>
             </bk-table-column>
@@ -365,16 +266,18 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { navConfirm } from '@/utils/util'
+    import dayjs from 'dayjs'
+    import ExtMenu from './extMenu'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import moment from 'moment'
+    import { navConfirm } from '@/utils/util'
 
     export default {
         components: {
-            Logo
+            Logo,
+            ExtMenu
         },
         data () {
             return {
@@ -434,12 +337,7 @@
 
         mounted () {
             this.requestHasCreatePermission()
-            this.addClickListener()
             this.getListData()
-        },
-
-        beforeDestroy () {
-            this.removeClickListener()
         },
 
         methods: {
@@ -452,13 +350,6 @@
                 this.pagingConfig.current = current
                 this.getListData()
             },
-            showTools (row) {
-                this.listData.forEach((data) => {
-                    if (data.templateId === row.templateId) row.showMore = true
-                    else data.showMore = false
-                })
-            },
-
             async requestHasCreatePermission () {
                 try {
                     this.canCreatePP = await this.$store.dispatch('pipelines/requestHasCreatePermission', {
@@ -476,8 +367,56 @@
                         this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
-                            x.showMore = false
-                            x.updateTime = moment(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
+                            x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
+                            x.templateActions = [
+                                {
+                                    text: this.$t('clone'),
+                                    handler: this.copyTemplate,
+                                    hasPermission: this.hasCreatePermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: this.projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: this.projectId,
+                                        action: this.RESOURCE_ACTION.CREATE
+                                    }
+                                },
+                                ...(
+                                    !['constraint', 'CONSTRAINT'].includes(x.templateType)
+                                        ? [
+                                            ['customize', 'CUSTOMIZE'].includes(x.templateType) && x.storeFlag
+                                                ? {
+                                                    text: this.$t('template.alreadyToStore'),
+                                                    disable: true
+                                                }
+                                                : {
+                                                    text: this.$t('template.toStore'),
+                                                    handler: this.toRelativeStore,
+                                                    hasPermission: x.canEdit,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: this.projectId,
+                                                        resourceType: 'pipeline_template',
+                                                        resourceCode: x.templateId,
+                                                        action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                                    }
+                                                }
+                                        ]
+                                        : []
+                                ),
+                                {
+                                    text: ['constraint', 'CONSTRAINT'].includes(x.templateType) ? this.$t('uninstall') : this.$t('delete'),
+                                    handler: this.deleteTemplate,
+                                    hasPermission: x.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: this.projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: x.templateId,
+                                        action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                    }
+                                }
+                            ]
                             return x
                         })
                         this.pagingConfig.count = res.count
@@ -618,14 +557,6 @@
                 }
             },
 
-            addClickListener () {
-                document.addEventListener('mouseup', this.closeShowMore)
-            },
-
-            removeClickListener () {
-                document.removeEventListener('mouseup', this.closeShowMore)
-            },
-
             handleSortChange ({ prop, order }) {
                 this.getListData({
                     orderBy: this.sortByMap[prop],
@@ -713,6 +644,7 @@
         .handler-btn {
             overflow: visible;
             position: relative;
+            display: flex;
             .btn-more {
                 position: absolute;
                 top: 50px;
@@ -739,26 +671,6 @@
                     }
                 }
             }
-            .show-more {
-                position: relative;
-                padding-right: 20px;
-                &:after {
-                    content: '';
-                    position: absolute;
-                    top: 23px;
-                    right: 8px;
-                    height: 8px;
-                    width: 8px;
-                    border-right: 1px solid $fontColor;
-                    border-bottom: 1px solid $fontColor;
-                    transition: transform 200ms;
-                    transform: rotate(45deg);
-                    transform-origin: 6px 6px;
-                }
-            }
-            .has-show:after {
-                transform: rotate(225deg);
-            }
             span {
                 display: inline-block;
                 margin-left: 5px;
@@ -777,7 +689,6 @@
         ::v-deep .cell {
             height: 60px;
             line-height: 60px;
-            overflow: visible !important;
         }
     }
 

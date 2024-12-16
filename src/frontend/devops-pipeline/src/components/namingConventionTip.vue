@@ -70,16 +70,6 @@
                         constrainedExample: this.$t('constraintFunctionFormatExample')
                     },
                     {
-                        difference: this.$t('variableValueTooLong'),
-                        classic: this.$t('traditionalValueTooLongMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
-                        difference: this.$t('variableNotFound'),
-                        classic: this.$t('traditionalNotFoundMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
                         difference: this.$t('variableStandard'),
                         classic: this.$t('traditionalStandardMode'),
                         constrainedMode: this.$t('constraintStandardMode')

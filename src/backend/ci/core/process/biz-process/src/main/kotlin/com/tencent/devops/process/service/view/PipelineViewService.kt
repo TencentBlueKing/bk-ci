@@ -516,7 +516,8 @@ class PipelineViewService @Autowired constructor(
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
-                defaultMessage = "view name is duplicate , name:${pipelineView.name}"
+                defaultMessage = "view name is duplicate , name:${pipelineView.name}",
+                params = arrayOf(pipelineView.name)
             )
         }
     }

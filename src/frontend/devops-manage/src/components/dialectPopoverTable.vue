@@ -76,16 +76,6 @@ const namingConventionData = [
         constrainedExample: t('如变量a值为Json字符串，则bash脚本中，可以使用fromJSON读取echo “a.node is ${{fromJSON(a).node}}”')
     },
     {
-        difference: t('变量值超长'),
-        classic: t('仅警告未报错'),
-        constrainedMode: t('将报错，运行失败'),
-    },
-    {
-        difference: t('变量不存在'),
-        classic: t('未报错，继续执行，依赖执行逻辑自行检查'),
-        constrainedMode: t('将报错，运行失败'),
-    },
-    {
         difference: t('变量 ID 规范'),
         classic: t('未限制'),
         constrainedMode: t('不支持中文 ID，减少不同构建环境下的兼容问题'),

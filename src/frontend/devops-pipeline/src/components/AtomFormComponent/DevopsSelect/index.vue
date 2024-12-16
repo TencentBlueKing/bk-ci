@@ -162,6 +162,23 @@
                 }
                 this.displayName = keyArr.join(',')
                 this.handleChange(this.name, params)
+            },
+            value (newValue) {
+                if (this.isMultiple) {
+                    if (this.displayName) {
+                        this.getMultipleDisplayName(this.displayName, 'name')
+                    } else {
+                        this.getMultipleDisplayName(newValue)
+                    }
+                } else {
+                    if (this.isEnvVar(this.displayName) && this.displayName.trim() !== newValue) {
+                        this.handleChange(this.name, this.displayName.trim())
+                    } else if (this.isEnvVar(newValue)) {
+                        this.displayName = newValue
+                    } else {
+                        this.displayName = this.getDisplayName(newValue ?? this.displayName)
+                    }
+                }
             }
         },
         created () {
@@ -269,22 +286,6 @@
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-
-                if (this.isMultiple) {
-                    if (this.displayName) {
-                        this.getMultipleDisplayName(this.displayName, 'name')
-                    } else {
-                        this.getMultipleDisplayName(this.value)
-                    }
-                } else {
-                    if (this.isEnvVar(this.displayName)) {
-                        this.handleChange(this.name, this.displayName.trim())
-                    } else if (this.isEnvVar(this.value)) {
-                        this.displayName = this.value
-                    } else {
-                        this.displayName = this.getDisplayName(this.value ?? this.displayName)
-                    }
-                }
             },
 
             handleFocus (e) {
@@ -436,98 +437,107 @@
 </script>
 
 <style lang="scss" scoped>
-    @import "../../../scss/conf";
-    .select-input {
-        position: relative;
-        .option-fetching-icon {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            color: $fontLighterColor;
-            &.icon-close-circle-shape {
-                cursor: pointer;
-            }
-        }
-        > input {
-            padding-right: 50px;
-            text-overflow: ellipsis;
-        }
-        > .dropbox-container {
-            position: absolute;
-            max-height: 222px;
-            width: 100%;
-            border: 1px solid $borderLightColor;
-            border-radius: 2px;
-            box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
-            margin-top: 4px;
-            z-index: 1111;
-            overflow: auto;
-            background: white;
-            > ul {
-                float:left;
-                transition: all 0.3s ease;
-                min-width: 100%;
-                // > li {
-                //     line-height: 36px;
-                //     padding-left: 10px;
-                //     white-space: nowrap;
-                //     cursor: pointer;
-                //     font-size: 12px;
-                //     &.selected,
-                //     &.active,
-                //     &:hover {
-                //         background-color: $primaryLightColor;
-                //         color: $primaryColor;
-                //     }
+@import "../../../scss/conf";
 
-                //     &[disabled] {
-                //         color: $fontLighterColor;
-                //     }
-                // }
-                li:first-child {
-                    .option-group-name {
-                        border-top: 0
-                    }
-                }
+.select-input {
+    position: relative;
+
+    .option-fetching-icon {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        color: $fontLighterColor;
+
+        &.icon-close-circle-shape {
+            cursor: pointer;
+        }
+    }
+
+    >input {
+        padding-right: 50px;
+        text-overflow: ellipsis;
+    }
+
+    >.dropbox-container {
+        position: absolute;
+        max-height: 222px;
+        width: 100%;
+        border: 1px solid $borderLightColor;
+        border-radius: 2px;
+        box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
+        margin-top: 4px;
+        z-index: 1111;
+        overflow: auto;
+        background: white;
+
+        >ul {
+            float: left;
+            transition: all 0.3s ease;
+            min-width: 100%;
+            // > li {
+            //     line-height: 36px;
+            //     padding-left: 10px;
+            //     white-space: nowrap;
+            //     cursor: pointer;
+            //     font-size: 12px;
+            //     &.selected,
+            //     &.active,
+            //     &:hover {
+            //         background-color: $primaryLightColor;
+            //         color: $primaryColor;
+            //     }
+
+            //     &[disabled] {
+            //         color: $fontLighterColor;
+            //     }
+            // }
+            li:first-child {
                 .option-group-name {
-                    padding: 0 12px;
-                    line-height: 36px;
-                    font-size: 12px;
-                    border-bottom: 1px solid #dcdee5;
-                    border-top: 1px solid #dcdee5;
-                    color: #999;
-
+                    border-top: 0
                 }
-                .option-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+            }
+
+            .option-group-name {
+                padding: 0 12px;
+                line-height: 36px;
+                font-size: 12px;
+                border-bottom: 1px solid #dcdee5;
+                border-top: 1px solid #dcdee5;
+                color: #999;
+
+            }
+
+            .option-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .option-item,
+            .option-group-item {
+                line-height: 36px;
+                padding: 0 18px;
+                white-space: nowrap;
+                cursor: pointer;
+                font-size: 12px;
+                border: 1px solid transparent;
+
+                &.selected,
+                &.active,
+                &:hover {
+                    background-color: $primaryLightColor;
+                    color: $primaryColor;
                 }
 
-                .option-item,
-                .option-group-item {
-                    line-height: 36px;
-                    padding: 0 18px;
-                    white-space: nowrap;
-                    cursor: pointer;
-                    font-size: 12px;
-                    border: 1px solid transparent;
-                    &.selected,
-                    &.active,
-                    &:hover {
-                        background-color: $primaryLightColor;
-                        color: $primaryColor;
-                    }
+                &.selected {
+                    border-color: $primaryColor;
+                }
 
-                    &.selected {
-                       border-color : $primaryColor;
-                    }
-
-                    &[disabled] {
-                        color: $fontLighterColor;
-                    }
+                &[disabled] {
+                    color: $fontLighterColor;
                 }
             }
         }
     }
+}
 </style>

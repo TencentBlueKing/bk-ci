@@ -35,27 +35,13 @@ interface IPipelineDialect {
     fun getPipelineDialectType(): String
 
     /**
-     * 支持插件变量使用表达式
+     * 1. 仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题
+     * 2. 流程控制选项、插件入参、Job设置等流水线配置中均可使用函数
      */
     fun supportUseExpression(): Boolean
-    /**
-     * 是否支持${}变量引用
-     *
-     */
-    fun supportUseSingleCurlyBracesVar(): Boolean
-
-    /**
-     * 是否支持长变量
-     */
-    fun supportLongVarValue(): Boolean
 
     /**
      * 是否支持中文变量名
      */
     fun supportChineseVarName(): Boolean
-
-    /**
-     * 是否支持变量不存在
-     */
-    fun supportMissingVar(): Boolean
 }

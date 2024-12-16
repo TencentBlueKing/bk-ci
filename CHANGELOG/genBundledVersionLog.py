@@ -6,6 +6,7 @@ import re
 import sys
 
 VERSION_LOG_PATH = os.environ.get("VERSION_LOG_PATH", os.getcwd())
+VERSION_LOG_DIALOG_VISIBLE =  os.environ.get("VERSION_LOG_DIALOG_VISIBLE", 'True').lower() in ('true', '1')
 
 # data元素格式
 '''
@@ -21,7 +22,8 @@ resp = {
     "code": 0,
     "errorMsg": None,
     "data": [],
-    "requestId": None
+    "requestId": None,
+    "dialogVisible": VERSION_LOG_DIALOG_VISIBLE
 }
 DEFAULT_LANGUAGE = "zh_CN"
 time_pattern = r'\d{4}-\d{2}-\d{2}'

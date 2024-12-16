@@ -40,6 +40,19 @@ class AuthMonitorSpaceDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        projectCodes: List<String>
+    ): Map<String, Long> {
+        return with(TAuthMonitorSpace.T_AUTH_MONITOR_SPACE) {
+            dslContext.select(PROJECT_CODE, SPACE_BIZ_ID)
+                .from(this)
+                .where(PROJECT_CODE.`in`(projectCodes))
+                .fetch()
+                .map { Pair(it.value1(), it.value2()) }.toMap()
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         projectCode: String,
