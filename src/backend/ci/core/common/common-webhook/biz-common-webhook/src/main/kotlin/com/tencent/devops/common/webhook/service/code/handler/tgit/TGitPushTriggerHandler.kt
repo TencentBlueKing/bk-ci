@@ -227,7 +227,7 @@ class TGitPushTriggerHandler(
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
-                commits?.first()?.message ?: "",
+                commits?.firstOrNull()?.message ?: "",
                 pipelineId
             )
             val eventPaths = if (tryGetChangeFilePath(this, event.operation_kind)) {
