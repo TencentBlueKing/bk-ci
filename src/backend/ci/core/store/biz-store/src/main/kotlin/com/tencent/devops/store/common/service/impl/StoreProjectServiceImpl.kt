@@ -42,8 +42,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
-import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
@@ -81,8 +79,6 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val storeUserService: StoreUserService,
     private val redisOperation: RedisOperation,
-    private val storePipelineRelDao: StorePipelineRelDao,
-    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
     private val storeCommonService: StoreCommonService,
     private val storeMemberDao: StoreMemberDao
 ) : StoreProjectService {
