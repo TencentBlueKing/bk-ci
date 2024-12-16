@@ -66,7 +66,7 @@ class GitTokenDao {
                     token.expiresIn,
                     now,
                     now,
-                    token.operator
+                    token.operator ?: userId
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
