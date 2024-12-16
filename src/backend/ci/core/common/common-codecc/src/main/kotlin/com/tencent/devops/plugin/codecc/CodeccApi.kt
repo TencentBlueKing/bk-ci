@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.codecc
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CODECC_OPENAPI_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
@@ -43,6 +44,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
 class CodeccApi(
@@ -52,6 +54,9 @@ class CodeccApi(
     private val codeccGrayProjectId: String? = null,
     private val codeccProjectId: String? = null
 ) {
+
+    @Value("\${codecc.openapi.token:#{null}}")
+    private val codeccOpenApiToken: String = ""
 
     companion object {
         private val objectMapper = JsonUtil.getObjectMapper()
@@ -190,6 +195,7 @@ class CodeccApi(
         val headers = mutableMapOf<String, String>()
         if (!codeccProjectId.isNullOrBlank()) {
             headers[AUTH_HEADER_PROJECT_ID] = codeccProjectId
+            headers[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         }
         val httpReq = Request.Builder()
             .url(url)
