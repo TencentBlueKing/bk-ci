@@ -183,7 +183,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     imageCosFile = rebuildReq.imageCosFile,
-                    gameId = gameId.first,
+                    appName = gameId.first,
                     formatDataDisk = rebuildReq.formatDataDisk ?: false,
                     rebuildRemoveOwner = rebuildReq.removeOwner ?: false
                 )

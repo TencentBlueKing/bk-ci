@@ -103,7 +103,8 @@ class WorkspaceListener @Autowired constructor(
 
                 UpdateEventType.UPGRADE -> {
                     // 需要生成一个新的 pipelineId 进行操作
-                    val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+                    val orderId = "${checkNotNull(event.appName)}_" +
+                        "${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
                     remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
@@ -114,7 +115,8 @@ class WorkspaceListener @Autowired constructor(
 
                 UpdateEventType.CLONE -> {
                     // 需要生成一个新的 pipelineId 进行操作
-                    val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
+                    val orderId = "${checkNotNull(event.appName)}_" +
+                        "${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
                     remoteDevServiceFactory.loadRemoteDevService(event.mountType).cloneWorkspaceVm(
                         userId = event.userId,
                         workspaceName = event.workspaceName,

@@ -138,6 +138,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -147,7 +148,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     mountType = WorkspaceMountType.START,
                     zoneId = zoneId,
                     machineType = rebuildReq.machineType,
-                    gameId = null,
+                    appName = appName,
                     projectId = projectId,
                     live = rebuildReq.live
                 )
