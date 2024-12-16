@@ -221,7 +221,7 @@ class TGitPushTriggerHandler(
             val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
                 keyWord = KEYWORD_SKIP_CI,
-                triggerOnMessage = event.commits?.get(0)?.message ?: ""
+                triggerOnMessage = event.commits?.firstOrNull()?.message ?: ""
             )
             val commits = event.commits
             val commitMessageFilter = CommitMessageFilter(
