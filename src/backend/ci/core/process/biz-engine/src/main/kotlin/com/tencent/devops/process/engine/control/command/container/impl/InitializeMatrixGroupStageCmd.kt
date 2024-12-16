@@ -234,7 +234,7 @@ class InitializeMatrixGroupStageCmd(
         when (modelContainer) {
             is VMBuildContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,
@@ -421,7 +421,7 @@ class InitializeMatrixGroupStageCmd(
             }
             is NormalContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,

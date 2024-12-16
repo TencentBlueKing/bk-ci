@@ -642,7 +642,7 @@ class PipelineContainerService @Autowired constructor(
                 ModelUtils.initContainerOldData(container)
                 val controlOption = when (container) {
                     is NormalContainer -> PipelineBuildContainerControlOption(
-                        jobControlOption = container.jobControlOption!!,
+                        jobControlOption = container.jobControlOption ?: JobControlOption(),
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
@@ -654,7 +654,7 @@ class PipelineContainerService @Autowired constructor(
                     )
 
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
-                        jobControlOption = container.jobControlOption!!,
+                        jobControlOption = container.jobControlOption ?: JobControlOption(),
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
