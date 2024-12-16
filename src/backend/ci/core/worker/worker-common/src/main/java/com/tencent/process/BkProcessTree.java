@@ -630,18 +630,9 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         private UnixReflection() {
         }
 
+        // TODO: 升级到JDK17后，这里可以使用 java.lang.Process 重构
         public static void destroy(int pid, boolean forceFlag) throws IllegalAccessException, InvocationTargetException {
-            if (isPreJava8()) {
-                DESTROY_PROCESS.invoke((Object) null, pid);
-            } else {
-                DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
-            }
-
-        }
-
-        private static boolean isPreJava8() {
-            int javaVersionAsAnInteger = Integer.parseInt(System.getProperty("java.version").replaceAll("\\.", "").replaceAll("_", "").substring(0, 2));
-            return javaVersionAsAnInteger < 18;
+            DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
         }
 
         static {
@@ -650,11 +641,7 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 Class<?> clazz = Class.forName("java.lang.UNIXProcess");
                 PID_FIELD = clazz.getDeclaredField("pid");
                 PID_FIELD.setAccessible(true);
-                if (isPreJava8()) {
-                    DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE);
-                } else {
-                    DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
-                }
+                DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
 
                 DESTROY_PROCESS.setAccessible(true);
             } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
