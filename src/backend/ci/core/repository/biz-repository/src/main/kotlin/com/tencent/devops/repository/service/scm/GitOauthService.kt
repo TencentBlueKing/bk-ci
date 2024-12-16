@@ -279,7 +279,7 @@ class GitOauthService @Autowired constructor(
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli(),
                 updateTime = LocalDateTime.now().timestampmilli(),
-                operator = it.operator
+                operator = it.operator ?: userId
             )
         }
     }
