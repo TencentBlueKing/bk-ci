@@ -54,19 +54,15 @@ class MonitorEsConfiguration {
     private var password: String? = null
 
     @Bean
-    fun restHighLevelClient(restClientBuilder: RestClientBuilder): RestHighLevelClient {
-        return RestHighLevelClient(restClientBuilder)
-    }
-
-    @Bean
-    fun restClientBuilder(): RestClientBuilder {
+    fun restHighLevelClient(): RestHighLevelClient {
         val credentialsProvider: CredentialsProvider = BasicCredentialsProvider()
         credentialsProvider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(user, password))
-        return RestClient.builder(HttpHost(ip, port!!))
+        val restClientBuilder = RestClient.builder(HttpHost(ip, port!!))
             .setHttpClientConfigCallback { httpClientBuilder ->
                 httpClientBuilder.setDefaultCredentialsProvider(
                     credentialsProvider
                 )
             }
+        return RestHighLevelClient(restClientBuilder)
     }
 }
