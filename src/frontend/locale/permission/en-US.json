@@ -78,9 +78,8 @@
     "删除成功": "Deletion Successful",
     "确认刷新 OAUTH?": "Confirm Refresh OAUTH?",
     "刷新过程中可能会导致正在使用此 OAUTH 授权的流水线运行失败。": "Refreshing might cause pipelines using this OAUTH authorization to fail.",
-    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {1} or {2} the remaining repository authorizations.",
-    "前往处理": "Go to handle",
-    "继续重置其余": "Continue resetting the remaining",
+    "检测到以下X项授权将无法重置，请给授权人添加Y权限或Z": "Detected that the following {0} authorizations cannot be reset, please grant the authorizer {1} permission or {2}",
+    "切换授权人": "Switch Authorizer",
     "授权": "Authorization",
     "代码库": "Repository",
     "部署节点": "Deployment Node",
@@ -89,6 +88,8 @@
     "输入授权人，输入框失焦进行校验": "Enter the authorizer, validation will occur when the input box loses focus",
     "申请批量重置": "Apply for batch reset",
     "重置授权人": "Reset Authorizer",
+    "续期": "Renew",
+    "用户组": "User Group",
     "已选择全量数据": "All data selected",
     "清除选择": "Clear selection",
     "已选择X条数据，": "{0} data items selected,",
@@ -111,8 +112,6 @@
     "移交中": "In transfer",
     "正常": "Normal",
     "重置授权申请提交成功": "Reset authorization request submitted successfully",
-    "续期": "Renew",
-    "用户组": "User Group",
     "该用户无操作权限，但存在授权，可前往「授权管理」查看处理": "This user has no operation permissions, but there is authorization. Please go to {0} to view and handle it",
     "授权管理": "Authorization Management",
     "批量移交": "Batch Transfer",
@@ -234,5 +233,7 @@
     "我的交接": "My transfers",
     "待移交详情": "Pending transfer details",
     "未授权": "Unauthorized",
-    "OAUTH授权": "OAUTH authorization"
+    "OAUTH授权": "OAUTH authorization",
+    "请先选择交接单": "Please select a handover form first",
+    "审批意见": "Approval Comments"
 }

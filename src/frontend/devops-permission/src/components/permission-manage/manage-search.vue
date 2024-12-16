@@ -90,10 +90,14 @@ import { ref, onMounted, computed, watch, defineEmits } from 'vue';
 import DatePicker from '@blueking/date-picker';
 import '@blueking/date-picker/vue3/vue3.css';
 import http from '@/http/api';
+import tools from '@/utils/tools';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+import { cacheProjectCode } from '@/store/useCacheProjectCode'
 
+const route = useRoute();
 const { t } = useI18n();
-const projectValue = ref('');
+const projectValue = ref(route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
 const serviceValue = ref('');
 const resourceValue = ref('');
 const actionValue = ref('');
@@ -193,15 +197,13 @@ async function fetchResourceTypes() {
     ]);
     serviceList.value = resourceTypes;
     projectList.value = projects;
-    if (projects.length > 0) {
-      projectValue.value = projects[0].englishName;
-    }
   } catch (error) {
     console.log(error);
   }
 }
 
 function handleProjectChange(value) {
+  cacheProjectCode.set(value);
   projectValue.value = value;
   serviceValue.value = '';
   resetSelections();

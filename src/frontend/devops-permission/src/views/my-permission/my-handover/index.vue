@@ -14,7 +14,7 @@
             {{ item.label }}
           </span>
         </div>
-        <!-- <bk-button v-if="!isGiven" @click="handleBatchProcess">{{ t('批量处理') }}</bk-button> -->
+        <bk-button v-if="!isGiven" @click="handleBatchProcess">{{ t('批量处理') }}</bk-button>
       </div>
       <div class="right">
         <bk-search-select
@@ -29,6 +29,59 @@
           />
       </div>
     </div>
+    <bk-dialog
+      v-model:is-show="showBatchApproval"
+      class="batch-approval-dialog"
+      :title="t('审批')"
+      header-align="center"
+      quick-close
+    >
+      <bk-form
+        :model="batchApprovalData"
+        label-width="100"
+      >
+        <bk-form-item
+          :label="t('审批意见')"
+          property="name"
+        >
+          <bk-radio-group
+            v-model="batchApprovalData.handoverAction"
+          >
+            <bk-radio label="AGREE">{{ t('通过') }}</bk-radio>
+            <bk-radio label="REJECT">{{ t('拒绝') }}</bk-radio>
+          </bk-radio-group>
+          
+        </bk-form-item>
+        <bk-form-item
+          :label="t('备注')"
+        >
+          <bk-input
+            v-model="batchApprovalData.remark"
+            placeholder="请输入"
+            clearable
+            type="textarea"
+            :rows="3"
+            :maxlength="100"
+          />
+        </bk-form-item>
+      </bk-form>
+      <template #footer>
+        <bk-button
+          :loading="isFetchLoading"
+          class="mr5"
+          theme="primary"
+          @click="handleConfirmBatch"
+        >
+          {{ t('确定') }}
+        </bk-button>
+        <bk-button
+          :loading="isFetchLoading"
+          @click="handleCancelBatch"
+        >
+          {{ t('取消') }}
+        </bk-button>
+      </template>
+    </bk-dialog>
     <bk-loading class="handover-table" :loading="isLoading">
       <bk-table
         ref="refTable"
@@ -65,7 +118,7 @@
         </template>
         <template #prepend>
           <div v-if="isSelectAll" class="prepend">
-            {{ t('已选择全量数据X条', [pagination.count]) }}
+            {{ t('已选择全量数据') }}
             <span @click="handleClear">{{ t('清除选择') }}</span>
           </div>
           <div v-else-if="selectList.length" class="prepend">
@@ -109,14 +162,17 @@
   import { useI18n } from 'vue-i18n';
   import { Message } from 'bkui-vue'
   import { Spinner, Copy  } from 'bkui-vue/lib/icon';
+  import { useRoute } from 'vue-router';
   import abnormalIcon from '@/css/svg/abnormal.svg'
   import unknownIcon from '@/css/svg/unknown.svg'
   import normalIcon from '@/css/svg/normal.svg'
   import HandoverDetail from './handover-detail.vue'
   const bkTooltips = resolveDirective('bk-tooltips');
   const { t } = useI18n();
+  const route = useRoute();
   const refTable = ref(null);
   const isLoading = ref(false);
+  const isFetchLoading = ref(false);
   const handoverList = ref([]);
   const pagination = ref({
     count: 0,
@@ -129,6 +185,12 @@
   const isSelectAll = ref(false);  // 选择全量数据
   const curHandoverInfo = ref({});
   const showHandoverDetail = ref(false);
+  const showBatchApproval = ref(false);
+  const batchApprovalData = ref({
+    remark: '',
+    handoverAction: 'AGREE'
+  })
+  const queryFlowNo = ref (route.query?.flowNo || '');
   const userId = computed(() => window.top.userInfo.username);
   const columns = computed(() => {
     return [
@@ -343,7 +405,51 @@
     isGiven.value = value;
   }
   const handleBatchProcess = () => {
+    if (!selectList.value.length) {
+      Message({
+        theme: 'error',
+        message: t('请先选择交接单')
+      })
+      return
+    }
+    showBatchApproval.value = true;
+  }
+  const handleConfirmBatch = async () => {
+    const params = {
+      allSelection: isSelectAll.value,
+      flowNos: isSelectAll.value ? [] : selectList.value.map(i => i.flowNo),
+      operator: userId.value,
+      handoverAction: batchApprovalData.value.handoverAction,
+      remark: batchApprovalData.value.remark,
+    }
+    try {
+      isFetchLoading.value = true;
+      const res = await http.handleBatchHandovers(params);
+      if (res) {
+        Message({
+          theme: 'success',
+          message: batchApprovalData.value.handoverAction === 'AGREE' ? t('移交权限已通过') : t('移交权限已拒绝')
+        });
+        fetchHandoverList();
+        refTable.value?.clearSelection();
+        selectList.value = [];
+        isSelectAll.value = false;
+      }
+    } catch (e) {
+      Message({
+        theme: 'error',
+        message: e.message || e
+      })
+    } finally {
+      isFetchLoading.value = false
+      handleCancelBatch()
+    }
+  }
 
+  const handleCancelBatch = () => {
+    showBatchApproval.value = false;
+    batchApprovalData.value.remark = '';
+    batchApprovalData.value.handoverAction = 'AGREE';
   }
   const handleSelectAll = () => {
     selectList.value = refTable.value.getSelection();
@@ -407,8 +513,12 @@
     isSelectAll.value = false;
     fetchHandoverList();
   }
-  onMounted(() => {
-    fetchHandoverList();
+  onMounted(async () => {
+    await fetchHandoverList();
+    if (queryFlowNo.value) {
+      curHandoverInfo.value = handoverList.value.find(i => i.flowNo === queryFlowNo.value);
+      showHandoverDetail.value = true;
+    }
   })
 </script>
 
@@ -487,6 +597,11 @@
     }
     ::v-deep .bk-modal-body {
       background-color: #F0F1F5;
+    }
+  }
+  .batch-approval-dialog {
+    .mr5 {
+      margin-right: 5px;
     }
   }
 </style>

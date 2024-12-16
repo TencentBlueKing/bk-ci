@@ -75,7 +75,7 @@
               </template>
               <template #prepend>
                 <div v-if="isSelectAll" class="prepend">
-                  {{ t('已选择全量数据X条', [pagination.count]) }}
+                  {{ t('已选择全量数据') }}
                   <span @click="handleClear">{{ t('清除选择') }}</span>
                 </div>
                 <div v-else-if="selectList.length" class="prepend">
@@ -130,10 +130,8 @@
           <div v-else-if="isResetFailure" class="check-failure">
             <div class="failed-tips">
               <div class="permission-icon permission-icon-warning-circle-fill warning-icon"></div>
-              <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
-                <span class="tips-count">
-                  {{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
-                </span>
+              <i18n-t keypath="检测到以下X项授权将无法重置，请给授权人添加Y权限或Z" tag="div">
+                <span class="tips-count">{{ failedCount }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('切换授权人') }}</span>
               </i18n-t>
             </div>
             <bk-table
@@ -212,6 +210,7 @@
   import { convertTime } from '@/utils/util'
   import { InfoBox, Message } from 'bkui-vue';
   import { Success, Spinner  } from 'bkui-vue/lib/icon';
+  import { cacheProjectCode } from '@/store/useCacheProjectCode'
   import ProjectUserSelector from '@/components/project-user-selector'
   import normalIcon from '@/css/svg/normal.svg'
 
@@ -236,7 +235,7 @@
   const isResetSuccess = ref(false);
   const isChecking = ref(false);
   const canLoading = ref(true);
-  const defaultProjectId = computed(() => route?.params.projectCode || route?.query.projectCode || route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
+  const defaultProjectId = computed(() => route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
   const projectId = ref('');
   const userId = computed(() => window.top.userInfo.username);
   const resourceType = computed(() => route.name || 'repertory');
@@ -251,13 +250,7 @@
     current: 1,
   });
   const projectList = ref([]);
-  const projectPageInfo = ref({
-    page: 1,
-    pageSize: 30,
-    projectName: '',
-    loadEnd: false,
-    scrollLoading: false
-  })
+  
   const searchName = computed(() => {
     const nameMap = {
       'pipeline': t('流水线执行授权'),
@@ -439,6 +432,7 @@
 
   const handleChangeProject = (val) => {
     projectId.value = val;
+    cacheProjectCode.set(val);
     init();
     getTableList();
   }
@@ -514,7 +508,7 @@
    * 全量数据选择
    */
   const handleSelectAllData = () => {
-    if (!isSelectAll.value && selectList.value.length !== tableData.value.length) {
+    if (!isSelectAll.value && selectList.value.length !== tableData.value.filter(i => !i.beingHandover).length) {
       refTable.value.toggleAllSelection();
     }
     isSelectAll.value = true;
@@ -594,7 +588,7 @@
     if (canLoading.value) dialogLoading.value = true;
     formRef.value?.validate().then(async () => {
       try {
-        await http.resetAuthorization(projectId.value, resetParams.value)
+        const flowNo = await http.resetAuthorization(projectId.value, resetParams.value)
         
         dialogLoading.value = false;
         showResetDialog.value = false;
@@ -602,6 +596,11 @@
         InfoBox({
           type: 'success',
           title: t('重置授权申请提交成功'),
+          confirmText: t('查看进度'),
+          cancelText: t('关闭'),
+          onConfirm: () => {
+            window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
+          },
           content: h(
             'div',
             {
