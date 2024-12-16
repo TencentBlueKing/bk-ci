@@ -85,7 +85,7 @@ class GithubTokenDao {
                 .set(ACCESS_TOKEN, accessToken)
                 .set(SCOPE, scope)
                 .let {
-                    if (operator.isNotBlank()){
+                    if (operator.isNotBlank()) {
                         it.set(OPERATOR, operator)
                     }
                     it
