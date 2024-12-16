@@ -336,11 +336,21 @@ class CodeGitRepositoryService @Autowired constructor(
     }
 
     override fun pacCheckEnabled(projectId: String, userId: String, record: TRepositoryRecord, retry: Boolean) {
-        val codeGitRepository = compose(record)
-        if (codeGitRepository.authType != RepoAuthType.OAUTH) {
+        val repository = compose(record)
+        if (repository.authType != RepoAuthType.OAUTH) {
             throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
         }
-        pacCheckEnabled(projectId = projectId, userId = userId, repository = codeGitRepository, retry = retry)
+        val gitProjectId =
+            pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = retry)
+        // 修复历史数据
+        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
+            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
+            repositoryCodeGitDao.updateGitProjectId(
+                dslContext = dslContext,
+                id = repositoryId,
+                gitProjectId = gitProjectId
+            )
+        }
     }
 
     private fun pacCheckEnabled(
@@ -348,7 +358,7 @@ class CodeGitRepositoryService @Autowired constructor(
         userId: String,
         repository: CodeGitRepository,
         retry: Boolean
-    ) {
+    ): Long {
         if (repository.authType != RepoAuthType.OAUTH) {
             throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
         }
@@ -418,15 +428,7 @@ class CodeGitRepositoryService @Autowired constructor(
             userName = userId,
             event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
         )
-        // 修复历史数据
-        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
-            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
-            repositoryCodeGitDao.updateGitProjectId(
-                dslContext = dslContext,
-                id = repositoryId,
-                gitProjectId = gitProjectInfo.id
-            )
-        }
+        return gitProjectInfo.id
     }
 
     override fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo> {

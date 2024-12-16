@@ -11,7 +11,7 @@
 <!-- NEW RELEASE NOTES ENTRY -->
 # v3.0.0
 ## 2024-09-10
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### New
 ##### Pipeline
 - Pipeline as code
@@ -227,7 +227,7 @@
 
 # v3.0.0-rc.1
 ## 2024-09-10
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### New
 ##### Pipeline
 - Pipeline as code

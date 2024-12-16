@@ -9,8 +9,8 @@
     </bk-timeline>
 </template>
 <script>
-    import moment from 'moment'
     import { computed, defineComponent } from 'vue'
+    import dayjs from 'dayjs'
     import TriggerEventChildren from './TriggerEventChildren.vue'
 
     export default defineComponent({
@@ -26,14 +26,14 @@
         setup (props) {
             const timelineList = computed(() => {
                 const dateMap = props.list.reduce((acc, item) => {
-                    const date = moment(item.eventTime).format('YYYY-MM-DD')
+                    const date = dayjs(item.eventTime).format('YYYY-MM-DD')
                     if (!acc.has(date)) {
                         acc.set(date, [])
                     }
                     acc.get(date).push(item)
                     return acc
                 }, new Map())
-            
+
                 return Array.from(dateMap).map(([date, events]) => ({
                     tag: date,
                     content: events
@@ -43,6 +43,6 @@
                 timelineList
             }
         }
-       
+
     })
 </script>

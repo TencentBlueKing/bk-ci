@@ -33,15 +33,15 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import org.apache.commons.io.FileUtils
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import java.io.File
-import java.io.InputStream
 import java.net.URLDecoder
 
 @Service
@@ -54,24 +54,40 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     @Autowired
     lateinit var commonConfig: CommonConfig
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(ArchiveStorePkgToLocalServiceImpl::class.java)
+    }
+
     override fun getStoreArchiveBasePath(): String {
         return storeArchiveLocalBasePath
     }
 
     override fun handleArchiveFile(
-        disposition: FormDataContentDisposition,
-        inputStream: InputStream,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        storePkgEnvInfos: List<StorePkgEnvInfo>?
     ) {
-        handlePkgFile(
-            disposition = disposition,
-            inputStream = inputStream,
-            storeType = storeType,
-            storeCode = storeCode,
-            version = version
-        )
+        val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
+        storePkgEnvInfos?.forEach { storePkgEnvInfo ->
+            val pkgLocalPath = storePkgEnvInfo.pkgLocalPath
+            if (pkgLocalPath.isNullOrBlank()) {
+                return@forEach
+            }
+            val file = File(storeArchivePath, pkgLocalPath)
+            if (!file.exists()) {
+                logger.warn("uploadLocalFile file[$pkgLocalPath] not exist!!")
+                return@forEach
+            }
+            val pkgRepoPath = generatePkgRepoPath(
+                storeCode = storeCode,
+                version = version,
+                pkgFileName = file.name,
+                osName = storePkgEnvInfo.osName,
+                osArch = storePkgEnvInfo.osArch
+            )
+            file.renameTo(File(storeArchivePath, pkgRepoPath))
+        }
     }
 
     override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {

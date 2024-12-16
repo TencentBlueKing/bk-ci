@@ -443,8 +443,13 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val dbVersion = opBaseRecord.version
         val dbStatus = opBaseRecord.status
         // 判断首个版本对应的请求是否合法
+        val validStatusList = listOf(
+            StoreStatusEnum.INIT.name,
+            StoreStatusEnum.COMMITTING.name,
+            StoreStatusEnum.GROUNDING_SUSPENSION.name
+        )
         if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            dbStatus !in listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.GROUNDING_SUSPENSION.name)
+            dbStatus !in validStatusList
         ) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }

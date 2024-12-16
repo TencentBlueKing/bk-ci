@@ -196,6 +196,9 @@ class ProjectDao {
                         )
                     }
                 }
+                if (queryRemoteDevFlag == true) {
+                    conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
+                }
             }
         }
         return conditions
