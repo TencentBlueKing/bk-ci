@@ -20,7 +20,6 @@ object RedisKeys {
     const val REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY = "remotedev:user_face_recognition:error_code"
     const val REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS = "remotedev:worksapce.user.approval.expiredDays"
 
-
     const val REDIS_WORKING_ON_WEEKEND_DAY = "remotedev:holiday:workingDays" // 调休上班时间
     const val REDIS_HOLIDAY = "remotedev:holiday:holidays" // 休假时间
 }

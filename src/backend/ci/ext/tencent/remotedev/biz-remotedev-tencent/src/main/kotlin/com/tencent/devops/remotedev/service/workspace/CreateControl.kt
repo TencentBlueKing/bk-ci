@@ -738,8 +738,13 @@ class CreateControl @Autowired constructor(
                 )
             }
         }
-        SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-            .createStartCloudUser(userId, gameId.first)
+        kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .createStartCloudUser(userId, gameId.first)
+        }.onFailure {
+            logger.warn("create user failed when clone.|${it.message}")
+        }
+
         val bizId = MDC.get(TraceTag.BIZID)
         // 发送给k8s
         dispatcher.dispatch(
