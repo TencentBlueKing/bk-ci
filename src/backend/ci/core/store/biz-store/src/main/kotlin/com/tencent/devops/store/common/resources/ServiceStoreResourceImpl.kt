@@ -82,6 +82,12 @@ class ServiceStoreResourceImpl @Autowired constructor(
         )
     }
 
+    override fun isPublicProject(projectCode: String): Result<Boolean> {
+        return Result(
+            projectCode == storeInnerPipelineConfig.innerPipelineProject
+        )
+    }
+
     override fun validatePipelineUserAtomPermission(
         storeCode: String,
         storeType: StoreTypeEnum,
