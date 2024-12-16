@@ -183,7 +183,6 @@ watch(serviceValue, (newValue) => {
 
 onMounted(() => {
   fetchResourceTypes();
-  console.log(route?.params.projectCode ,route?.query.projectCode ,route?.query.project_code ,cacheProjectCode.get(),tools.getCookie('X-DEVOPS-PROJECT-ID'), '---')
 });
 
 defineExpose({
