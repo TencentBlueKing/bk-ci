@@ -18,7 +18,8 @@
             class="ace-wrapper"
             :read-only="disabled"
             :value="value"
-            :lang="lang"
+            :lang="dynamicLang"
+            :ace-lang-map="aceLangMap"
             :name="name"
             :full-screen="isFullScreen"
             @input="handleScriptInput"
@@ -31,8 +32,8 @@
 
 <script>
     import Ace from '@/components/common/ace-editor'
-    import atomFieldMixin from '../atomFieldMixin'
     import { getActualTop } from '@/utils/util'
+    import atomFieldMixin from '../atomFieldMixin'
 
     export default {
         name: 'atom-ace-editor',
@@ -43,10 +44,15 @@
         props: {
             lang: {
                 type: String,
-                default: 'sh'
+                default: 'shell'
             },
+            aceLangMap: Object,
             default: String,
             bashConf: {
+                type: Object,
+                default: () => ({})
+            },
+            atomValue: {
                 type: Object,
                 default: () => ({})
             },
@@ -60,6 +66,14 @@
                 height: 360,
                 isLoading: false,
                 isFullScreen: false
+            }
+        },
+        computed: {
+            dynamicLang () {
+                if (this.lang === 'auto') {
+                    return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'shell'
+                }
+                return this.lang
             }
         },
         watch: {
@@ -146,7 +160,7 @@
 
 <style lang="scss">
     .ace-fullscreen {
-        top: 10px;
+        top: 1px;
         right: 10px;
         position: absolute;
         z-index: 999;

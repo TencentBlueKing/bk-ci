@@ -89,6 +89,6 @@ class GitCIPipelineUrlBeanImpl constructor(
 
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(GitCIPipelineUrlBeanImpl::class.java)
-        private const val TTL = 24 * 3600 * 3
+        private const val TTL = 24 * 3600 * 15
     }
 }

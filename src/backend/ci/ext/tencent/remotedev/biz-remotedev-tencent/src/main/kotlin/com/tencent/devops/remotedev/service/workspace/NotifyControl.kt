@@ -149,54 +149,78 @@ class NotifyControl @Autowired constructor(
             owners = notifyData.owner?.toSet(),
             projectIds = notifyData.projectId?.toSet(),
             notStatus = setOf(WorkspaceStatus.DELETED, WorkspaceStatus.PREPARING, WorkspaceStatus.DELIVERING_FAILED),
-            checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.PROJECT_ID)
+            checkField = listOf(
+                TWorkspace.T_WORKSPACE.NAME,
+                TWorkspace.T_WORKSPACE.PROJECT_ID,
+                TWorkspace.T_WORKSPACE.OWNER_TYPE,
+                TWorkspace.T_WORKSPACE.CREATOR
+            )
         )
-
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         notifyDao.add(dslContext, userId, notifyData)
 
+        // 增加个人云桌面的拥有者
+        val personalUsers = workspace.filter { it.ownerType == WorkspaceOwnerType.PERSONAL }
+            .map { it.createUserId }
+            .toMutableSet()
+
+        logger.debug("notifyWorkspaceInfo|workspace|$workspace|personalUsers|$personalUsers")
+
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
         } else {
+            // 团队实例拥有者 +个人实例拥有者
             workspaceSharedDao.fetchWorkspaceOwner(
                 dslContext = dslContext,
                 workspaceNames = workspace.map { it.workspaceName }.toSet().ifEmpty { return }
-            ).values.toSet()
+            ).values.toSet().plus(personalUsers)
         }
 
         // 给拥有者的客户端发送消息
-        workspace.forEach { ws ->
-            notify4User(
-                userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
-                notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
-                bodyParams = mutableMapOf(
-                    "operator" to userId,
-                    "workspaceName" to ws.workspaceName,
-                    "clientMsg" to messageContent,
-                    "projectId" to ws.projectId
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true
+        ) {
+            workspace.forEach { ws ->
+                notify4User(
+                    userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
+                    notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
+                    bodyParams = mutableMapOf(
+                        "operator" to userId,
+                        "workspaceName" to ws.workspaceName,
+                        "clientMsg" to messageContent,
+                        "projectId" to ws.projectId
+                    )
                 )
-            )
+            }
         }
 
         // 给所有云桌面的owner发送云桌面-跑马灯消息
-        notify4User(
-            userIds = userList,
-            notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
-            bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
-        )
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
+        ) {
+            notify4User(
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
+                bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
+            )
+        }
 
         // 给所有云桌面的owner发送邮件
-        notify4User(
-            userIds = userList,
-            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-            bodyParams = mutableMapOf(
-                "operator" to userId,
-                "title" to notifyData.title,
-                "body" to (notifyData.desc ?: ""),
-                "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.EMAIL) == true
+        ) {
+            notify4User(
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                bodyParams = mutableMapOf(
+                    "operator" to userId,
+                    "title" to notifyData.title,
+                    "body" to (notifyData.desc ?: ""),
+                    "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
+                )
             )
-        )
+        }
     }
 
     fun notify4RemoteDevManager(

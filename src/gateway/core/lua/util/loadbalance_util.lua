@@ -20,6 +20,7 @@ _M = {}
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     local gateway_project = ngx.var.project
+    local devops_project_id = ngx.var.project_id
 
     -- 不走容器化的服务
     local no_container = false
@@ -42,9 +43,15 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            kubernetes_domain = config.kubernetes.domain
-        end
+            if ngx.var.devops_region == 'DEVNET' then
+                kubernetes_domain = config.kubernetes.devnetDomain
+            elseif self:is_recovery_project(devops_project_id) then
+                kubernetes_domain = config.kubernetes.recovery.domain
+            else
+                kubernetes_domain = config.kubernetes.domain
+            end
 
+        end
         -- 特殊处理的域名,优先级最高
         local special_key = gateway_project .. ":" .. devops_tag
         if config.kubernetes.special_domain[special_key] ~= nil then
@@ -164,6 +171,37 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     end
 
     return ips[math.random(#ips)] .. ":" .. port
+end
+
+function _M:is_recovery_project(devops_project_id)
+    if config.kubernetes.recovery.switchAll then
+        return true
+    end
+
+    local recovery_project_cache = ngx.shared.router_srv_store
+    local local_cache_key = "ci_recovery_" .. devops_project_id
+    local is_recovery = recovery_project_cache:get(local_cache_key)
+    if is_recovery == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return false
+        end
+        local red_key = "ci:recovery:project:" .. devops_project_id
+        is_recovery = red:get(red_key)
+        if is_recovery ~= "1" then
+            is_recovery = "0"
+        end
+        recovery_project_cache:set(local_cache_key, is_recovery, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
+
+    if is_recovery == "1" then
+        return true
+    else
+        return false
+    end
 end
 
 return _M

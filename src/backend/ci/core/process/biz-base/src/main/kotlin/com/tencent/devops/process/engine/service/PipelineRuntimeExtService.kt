@@ -126,13 +126,19 @@ class PipelineRuntimeExtService @Autowired constructor(
         return null
     }
 
-    fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
+    fun changeBuildStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        oldBuildStatus: BuildStatus,
+        newBuildStatus: BuildStatus
+    ): Boolean {
         return pipelineBuildDao.updateStatus(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            oldBuildStatus = buildStatus,
-            newBuildStatus = BuildStatus.UNEXEC
+            oldBuildStatus = oldBuildStatus,
+            newBuildStatus = newBuildStatus
         )
     }
 }

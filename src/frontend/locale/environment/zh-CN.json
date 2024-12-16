@@ -106,7 +106,7 @@
     "mirrorTagRule": "只允许包含大小写英文，数字，下划线和点",
     "selectModel": "选择机型",
     "confirmInfo": "确认信息",
-    "setting": "设置",
+    "setting": "共享设置",
     "removeShareEnvProjectSuc": "项目 {0} 移除成功",
     "shareEnvSuc": "共享环境成功",
     "removeShareProjectConfirm": "是否移除项目 {0}",
@@ -117,9 +117,11 @@
         "type": "类型",
         "key": "键",
         "value": "值",
-        "devEnvType": "部署-研发/测试环境",
-        "testEnvType": "部署-生产环境",
-        "buildEnvType": "构建环境",
+        "DEVEnvType": "部署-研发/测试环境",
+        "PRODEnvType": "部署-生产环境",
+        "DEVXEnvType": "研发-云桌面环境",
+        "BUILDEnvType": "构建环境",
+        "DEVX": "云桌面",
         "nodeCount": "节点数",
         "creationTime": "创建时间",
         "creator": "创建人",
@@ -240,7 +242,14 @@
         "installMethod": "安装方式",
         "remoteInstall": "远程安装",
         "manualInstall": "手动安装",
-        "dockerMaxConcurrency": "docker构建最大并发数"
+        "dockerMaxConcurrency": "docker构建最大并发数",
+        "cloudLoginHook": "云桌面登录钩子",
+        "cloudLogoutHook": "云桌面退出钩子",
+        "loginHookTips": "登录云桌面，将执行如下已勾选的操作",
+        "logoutHookTips": "退出云桌面，将执行如下已勾选的操作",
+        "cleanCredentialsLabel": "清理凭据，包括 Git/SNV 凭据、浏览器缓存器凭据 (Chrome、Microsoft Edge)",
+        "ioaLoginLabel": "登录IOA",
+        "ioaLogoutLabel": "IOA注销登录"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -437,5 +446,8 @@
     "无法连通网络？": "无法连通网络？",
     "正在生成手动安装命令": "正在生成手动安装命令",
     "已加载X条": "已加载{0}条",
-    "共X个节点": "共{0}个节点"
+    "共X个节点": "共{0}个节点",
+    "authManage": "权限管理",
+    "advancedSetting": "高级设置",
+    "saveChange": "保存变更"
 }

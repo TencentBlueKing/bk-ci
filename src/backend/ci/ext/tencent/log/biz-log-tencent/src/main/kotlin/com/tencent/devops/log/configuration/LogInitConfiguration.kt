@@ -28,12 +28,9 @@
 package com.tencent.devops.log.configuration
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.LogPermissionServiceImpl
 import com.tencent.devops.log.service.impl.StreamLogPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -48,16 +45,6 @@ import org.springframework.core.Ordered
 class LogInitConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun logPermissionService(
-        authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        managerService: ManagerService
-    ) = LogPermissionServiceImpl(
-        authPermissionApi, pipelineAuthServiceCode, managerService
-    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")

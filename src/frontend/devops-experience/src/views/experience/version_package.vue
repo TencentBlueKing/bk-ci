@@ -4,7 +4,7 @@
         width="800"
         ext-cls="version-package-wrapper"
         header-position="left"
-        title="请选择ipa或apk文件"
+        title="请选择ipa或apk或hap文件"
         :has-header="versionSelectConf.hasHeader"
         :close-icon="versionSelectConf.closeIcon"
         :quick-close="versionSelectConf.quickClose"
@@ -253,7 +253,7 @@
                 this.listLoading.isLoading = true
 
                 const params = {
-                    fileNames: ['*.ipa', '*.apk'],
+                    fileNames: ['*.ipa', '*.apk', '*.hap'],
                     props: {
                         pipelineId: this.selectInfo.pipelineId,
                         buildId: buildId === 'all' ? undefined : buildId

@@ -51,7 +51,7 @@ import com.tencent.devops.remotedev.pojo.CdsToken
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import java.net.URLEncoder
 import java.util.Base64
 import java.util.concurrent.TimeUnit
@@ -68,8 +68,7 @@ class PermissionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val redisCache: RedisCacheService,
-    private val whiteListService: WhiteListService,
+    private val redisCache: ConfigCacheService,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {
@@ -97,8 +96,11 @@ class PermissionService @Autowired constructor(
                     return if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
                         listOf(ws.createUserId)
                     } else {
-                        workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
-                            .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                        workspaceSharedDao.fetchWorkspaceSharedInfo(
+                            dslContext = dslContext,
+                            workspaceName = ws.workspaceName,
+                            assignType = WorkspaceShared.AssignType.OWNER
+                        ).map { it.sharedUser }
                     }
                 }
             }
@@ -127,7 +129,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (ownerType == WorkspaceOwnerType.PROJECT && !checkUserVisitPermission(userId, projectId)) {
+        if (ownerType.projectUse() && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -135,13 +137,18 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+    fun hasOwnerPermission(
+        userId: String,
+        workspaceName: String,
+        projectId: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         kotlin.runCatching {
             checkOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                ownerType = ownerType
             )
         }.fold(
             { return true }, {
@@ -224,11 +231,17 @@ class PermissionService @Autowired constructor(
         )
     }
 
-    fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+    fun hasManagerOrOwnerPermission(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ownerType: WorkspaceOwnerType
+    ): Boolean {
         return hasOwnerPermission(
             userId = userId,
             workspaceName = workspaceName,
-            projectId = projectId
+            projectId = projectId,
+            ownerType = ownerType
         ) || hasUserManager(userId, projectId)
     }
 
@@ -270,6 +283,14 @@ class PermissionService @Autowired constructor(
             throw OperationException("Session is already registered or has expired.Please reapply for authorization.")
         }
         redisOperation.delete(REDIS_KEY + key)
+        return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
+    }
+
+    fun checkAndGetUser1PasswordNoDelete(key: String): UserOnePassword {
+        val value = redisOperation.get(REDIS_KEY + key)
+        if (value.isNullOrBlank()) {
+            throw OperationException("Session is already registered or has expired.Please reapply for authorization.")
+        }
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 

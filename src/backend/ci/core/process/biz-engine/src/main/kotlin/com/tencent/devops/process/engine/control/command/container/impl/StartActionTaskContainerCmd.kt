@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -135,7 +136,8 @@ class StartActionTaskContainerCmd(
                     jobId = jobId,
                     stepId = null,
                     executeCount = executeCount,
-                    buildStatus = commandContext.buildStatus.name
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START
                 )
             )
         }
@@ -387,6 +389,11 @@ class StartActionTaskContainerCmd(
                     BuildStatus.UNEXEC
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stageId, containerId = containerId, taskId = taskId,
+                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                )
                 // 打印构建日志
                 message.append(
                     I18nUtil.getCodeLanMessage(

@@ -28,22 +28,27 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
@@ -55,6 +60,7 @@ import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -71,7 +77,8 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val streamBridge: StreamBridge
+    private val streamBridge: StreamBridge,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     companion object {
@@ -343,6 +350,18 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY,
             params = arrayOf(detailId.toString())
         )
+        val permission = AuthPermission.EXECUTE
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
+            )
+        )
         replayAll(
             userId = userId,
             projectId = projectId,
@@ -370,6 +389,12 @@ class PipelineTriggerEventService @Autowired constructor(
         val scmType = PipelineTriggerType.toScmType(triggerEvent.triggerType) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
+        )
+        client.get(ServiceRepositoryPermissionResource::class).validatePermission(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = triggerEvent.eventSource!!,
+            permission = AuthPermission.USE
         )
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)

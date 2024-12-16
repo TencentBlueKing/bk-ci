@@ -38,6 +38,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateE
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.EventConsumer
@@ -61,9 +62,11 @@ class RbacMQConfiguration {
 
     @Bean
     fun syncGroupAndMemberListener(
-        permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService
     ) = SyncGroupAndMemberListener(
-        permissionResourceGroupSyncService = permissionResourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        resourceGroupPermissionService = resourceGroupPermissionService
     )
 
     @EventConsumer

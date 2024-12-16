@@ -1,6 +1,13 @@
 # 不显示进度条用来提速
 $ProgressPreference = 'SilentlyContinue'
 
+# 检查当前目录是否有文件
+$files = Get-ChildItem -File -Force
+if ($files.Count -gt 0) {
+    Write-Host "fatal: current directory is not empty, please install in an empty directory"
+    exit 1
+}
+
 # 下载agent.zip
 $Uri = '##agent_url##'
 $InvalidHeaders = @{

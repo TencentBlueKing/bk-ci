@@ -40,6 +40,11 @@ interface PermissionResourceGroupSyncService {
     fun syncByCondition(projectConditionDTO: ProjectConditionDTO)
 
     /**
+     * 通过条件搜素项目，同步用户组过期时间
+     */
+    fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO)
+
+    /**
      * 批量同步项目下组和成员
      */
     fun batchSyncGroupAndMember(projectCodes: List<String>)
@@ -48,6 +53,11 @@ interface PermissionResourceGroupSyncService {
      * 同步项目下组和成员
      */
     fun syncGroupAndMember(projectCode: String)
+
+    /**
+     * 同步项目下组
+     */
+    fun syncProjectGroup(projectCode: String)
 
     /**
      * 获取项目的同步状态

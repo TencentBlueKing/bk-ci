@@ -29,7 +29,10 @@
                     </div>
                 </div>
                 <component
-                    class="env-detail-tab-content"
+                    
+                    :class="['env-detail-tab-content', {
+                        'auth-manage-content': curItemTab === 'auth'
+                    }]"
                     :is="activeTabComp"
                     :cur-env-detail="curEnvDetail"
                     :request-env-detail="requestEnvDetail"
@@ -47,6 +50,8 @@
     import configTab from '@/components/envTabs/configTab'
     import nodeTab from '@/components/envTabs/nodeTab'
     import settingTab from '@/components/envTabs/settingTab'
+    import authTab from '@/components/envTabs/authTab'
+    import advancedTab from '@/components/envTabs/advancedTab'
     import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     
@@ -55,7 +60,8 @@
             baseTab,
             configTab,
             nodeTab,
-            settingTab
+            settingTab,
+            authTab
         },
         data () {
             return {
@@ -71,25 +77,54 @@
             isBuildEnv () {
                 return this.curEnvDetail && this.curEnvDetail.envType === 'BUILD'
             },
+            isDevxEnv () {
+                return this.curEnvDetail && this.curEnvDetail.envType === 'DEVX'
+            },
             tabs () {
-                const tabs = [{
-                    cls: 'node-list',
-                    tabName: 'node',
-                    label: 'node',
-                    comp: nodeTab
-                }, {
-                    cls: 'config-item',
-                    tabName: 'config',
-                    label: 'configItem',
-                    comp: configTab
-                }, {
-                    cls: 'base-item',
-                    tabName: 'base',
-                    label: 'basicInfo',
-                    comp: baseTab
-                }]
+                const tabs = [
+                    {
+                        cls: 'node-list',
+                        tabName: 'node',
+                        label: 'node',
+                        comp: nodeTab
+                    },
+                    {
+                        cls: 'base-item',
+                        tabName: 'base',
+                        label: 'basicInfo',
+                        comp: baseTab
+                    },
+                    {
+                        cls: 'base-item',
+                        tabName: 'auth',
+                        label: 'authManage',
+                        comp: authTab
+                    }
+                ]
+                // 配置项
+                if (!this.isDevxEnv) {
+                    const index = tabs.findIndex(tab => tab.tabName === 'base')
+                    tabs.splice(index, 0, {
+                        cls: 'config-item',
+                        tabName: 'config',
+                        label: 'configItem',
+                        comp: configTab
+                    })
+                }
+                // 云研发-高级设置
+                if (this.isDevxEnv) {
+                    const index = tabs.findIndex(tab => tab.tabName === 'auth')
+                    tabs.splice(index, 0, {
+                        cls: 'advanced-item',
+                        tabName: 'advancedSetting',
+                        label: 'advancedSetting',
+                        comp: advancedTab
+                    })
+                }
+                // 共享设置
                 if (this.isBuildEnv) {
-                    tabs.push({
+                    const index = tabs.findIndex(tab => tab.tabName === 'auth')
+                    tabs.splice(index, 0, {
                         cls: 'base-item',
                         tabName: 'setting',
                         label: 'setting',
@@ -173,7 +208,7 @@
                     if (curTab === 'config') {
                         obj.className += ' ' + 'config-active'
                     } else {
-                        obj.classList.remove('.config-active')
+                        obj?.classList?.remove('.config-active')
                     }
                 })
             },
@@ -240,11 +275,15 @@
             padding: 12px;
             overflow: auto;
         }
+        .auth-manage-content {
+            padding: 0;
+        }
 
         .tab-nav-item {
             float: left;
-            width: 100px;
+            min-width: 100px;
             height: 100%;
+            padding: 0 20px;
             line-height: 42px;
             text-align: center;
             background-color: rgb(250, 251, 253);

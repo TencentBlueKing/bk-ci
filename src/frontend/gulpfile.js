@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 const chalk = require('chalk')
 const fs = require('fs')
 const path = require('path')
-const htmlmin = require('gulp-htmlmin')
+const htmlmin = require('gulp-html-minifier-terser')
 const svgSprite = require('gulp-svg-sprite')
 const inject = require('gulp-inject')
 const rename = require('gulp-rename')
@@ -48,12 +48,18 @@ const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
 const FINAL_ASSETS_JSON_FILENAME = `${dist}/assetsBundles.js`
 const ASSETS_JSON_URL = `https://${envPrefix}devnet.devops.woa.com/${BUNDLE_NAME}`
+const gateWayTagMap = {
+    dev: 'dev-rbac',
+    test: 'test-rbac',
+    stream: '',
+    'stream-gray': ''
+}
 
 async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
-                'X-GATEWAY-TAG': ['dev', 'test', 'stream', 'stream-gray'].includes(env) ? null : env
+                'X-GATEWAY-TAG': gateWayTagMap[env] ?? env
             }
         })
         const assets = await res.json()
@@ -126,8 +132,8 @@ task('build', async () => {
 
 task('generate-assets-json', () => {
     const entryDir = path.join(__dirname, dist, "entry's")
-    const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME);
-    const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'));
+    const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME)
+    const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'))
     // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
     const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
         const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
@@ -188,7 +194,7 @@ async function execAsync () {
         const spawnCmd = spawn('pnpm', [
             'exec',
             'nx',
-            '--parallel=16',
+            '--parallel=22',
             ...cmd.split(' ')
         ], {
             stdio: 'inherit',
@@ -202,8 +208,8 @@ async function execAsync () {
         spawnCmd.on('close', async (code) => {
             console.log(`child process exited with code ${code}`)
             if (code) {
-                reject(Error('build failed'))
-                spinner.fail('Failed bk-ci frontend project')
+                spinner.fail('Failed to build bk-ci frontend project')
+                reject(Error('Failed to build bk-ci frontend project'))
                 process.exit(1)
             }
             spinner.succeed('Finished building bk-ci frontend project')

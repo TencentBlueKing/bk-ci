@@ -66,6 +66,19 @@
             </form-field>
 
             <form-field
+                :label="$t('namingConvention')"
+                :custom-desc="true"
+            >
+                <syntax-style-configuration
+                    :is-show-popover="false"
+                    :inherited-dialect="templateSetting.pipelineAsCodeSettings?.inheritedDialect"
+                    :pipeline-dialect="templateSetting.pipelineAsCodeSettings?.pipelineDialect ?? defaultPipelineDialect"
+                    @inherited-change="inheritedChange"
+                    @pipeline-dialect-change="pipelineDialectChange"
+                />
+            </form-field>
+
+            <form-field
                 :label="$t('settings.runLock')"
                 class="opera-lock-radio"
             >
@@ -125,6 +138,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
     import { NotifyTab } from '@/components/PipelineEditTabs/'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
@@ -133,7 +147,8 @@
         components: {
             NotifyTab,
             FormField,
-            RunningLock
+            RunningLock,
+            SyntaxStyleConfiguration
         },
         props: {
             isLoading: Boolean,
@@ -230,6 +245,12 @@
             },
             TEMPLATE_RESOURCE_ACTION () {
                 return TEMPLATE_RESOURCE_ACTION
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
             }
         },
         watch: {
@@ -243,7 +264,8 @@
         },
         methods: {
             ...mapActions('pipelines', [
-                'requestTemplateSetting'
+                'requestTemplateSetting',
+                'updateTemplateSetting'
             ]),
             ...mapActions('atom', [
                 'updatePipelineSetting'
@@ -330,6 +352,17 @@
             handleUpdateNotify (name, value) {
                 Object.assign(this.templateSetting, { [name]: value })
                 this.setIsEditing()
+            },
+            inheritedChange (value) {
+                const settings = this.templateSetting.pipelineAsCodeSettings
+                settings.inheritedDialect = value
+
+                if (value) {
+                    settings.pipelineDialect = this.defaultPipelineDialect
+                }
+            },
+            pipelineDialectChange (value) {
+                this.templateSetting.pipelineAsCodeSettings.pipelineDialect = value
             }
         }
     }

@@ -41,7 +41,8 @@ enum class EnvironmentAction(val action: String) {
     MAKE_IMAGE("copyvm"),
     REBUILD("rebuild/vm"),
     EXPAND_DISK("expanddisk"),
-    UPGRADE_VM("upgrade/vm");
+    UPGRADE_VM("upgrade/vm"),
+    CLONE_VM("vm/clone");
 
     @JsonValue
     fun getValue(): String {

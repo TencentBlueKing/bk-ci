@@ -6,6 +6,7 @@ import re
 import sys
 
 VERSION_LOG_PATH = os.environ.get("VERSION_LOG_PATH", os.getcwd())
+VERSION_LOG_DIALOG_VISIBLE =  os.environ.get("VERSION_LOG_DIALOG_VISIBLE", 'True').lower() in ('true', '1')
 
 # data元素格式
 '''
@@ -21,9 +22,11 @@ resp = {
     "code": 0,
     "errorMsg": None,
     "data": [],
-    "requestId": None
+    "requestId": None,
+    "dialogVisible": VERSION_LOG_DIALOG_VISIBLE
 }
 DEFAULT_LANGUAGE = "zh_CN"
+time_pattern = r'\d{4}-\d{2}-\d{2}'
 
 # 获取版本类型, 0-输出所有版本, 1-输出release版本, 2-输出rc版本
 def getVersionType():
@@ -32,20 +35,10 @@ def getVersionType():
         versionType = sys.argv[1]
     return int(versionType)
 
-def extract_version_and_time(version_title):
-    index = version_title.find("(")
-    # 版本号上没有时间戳
-    if index == -1:
-        version_name = version_title
-        date = ""
-    else:
-        version_name = version_title[0:index]
-        date = version_title[index + 1: len(version_title) - 1]
-    return version_name, date
-
 def extract_title_and_content(changelog_content):
     sections_data = []
     current_heading = None
+    current_time = ""
     current_content = []
 
     lines = changelog_content.split('\n')
@@ -53,16 +46,16 @@ def extract_title_and_content(changelog_content):
         line = line.rstrip()
         if line.startswith('# '):
             if current_heading:
-                version_name, time = extract_version_and_time(current_heading)
-                sections_data.append((version_name, time , '\n'.join(current_content)))
+                sections_data.append((current_heading, current_time , '\n'.join(current_content)))
             current_heading = line[2:]
             current_content = []
+        elif line.startswith('## ') and re.search(time_pattern, line) and current_heading:
+            current_time = line[3:]
         elif current_heading:
             current_content.append(line)
 
     if current_heading:
-        version_name, time = extract_version_and_time(current_heading)
-        sections_data.append((version_name, time, '\n'.join(current_content)))
+        sections_data.append((current_heading, current_time, '\n'.join(current_content)))
     return sections_data
 
 def process(data, path):

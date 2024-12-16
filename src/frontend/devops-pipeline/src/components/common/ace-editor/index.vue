@@ -24,6 +24,9 @@
     </div>
 </template>
 <script>
+    import {
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
     export default {
         props: {
@@ -42,6 +45,10 @@
             lang: {
                 type: String,
                 default: 'text'
+            },
+            aceLangMap: {
+                type: Object,
+                default: () => ({})
             },
             readOnly: {
                 type: Boolean,
@@ -67,6 +74,18 @@
                 monaco: null
             }
         },
+        computed: {
+            langMap () {
+                return {
+                    sh: 'shell',
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell',
+                    ...(this.aceLangMap ?? {})
+                }
+            }
+        },
         watch: {
             value (newValue) {
                 if (this.editor) {
@@ -78,7 +97,7 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), this.getLang(newVal))
                 }
             },
 
@@ -92,15 +111,42 @@
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-editor'
-            )
+            const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    'monaco-editor'
+                ),
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    '@tencent/gongfeng-copilot-monaco'
+                ),
+                this.getAccessToken(false)
+            ])
+            this.monaco = monaco
+            const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                app: {
+                    name: 'bkci',
+                    // 接入方版本号
+                    version: '1.0.0'
+                },
+                // env: ReleaseChannel.INSIDER,
+                env: ReleaseChannel.PRODUCTION,
+                brandPaddingRight: 32,
+                authenticatedSession: {
+                    accessToken,
+                    user: this.$userInfo.username,
+                    refreshToken: this.getAccessToken
+                }
+            })
+
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-            this.editor = this.monaco.editor.create(this.$el, {
+            this.editor = await gongfengEditor.createEditor(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
                 theme: 'ciYamlTheme',
@@ -128,12 +174,7 @@
         },
         methods: {
             getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    batchfile: 'bat'
-                }
-
-                return langMap[lang] || lang
+                return this.langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()
@@ -142,6 +183,21 @@
                 if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
+            },
+            async getAccessToken (refresh = true) {
+                try {
+                    const tokenKey = '__GONGFENG_COPILOT_TOKEN__'
+                    const token = localStorage.getItem(tokenKey)
+                    if (token) return token
+                    const res = await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/tgit/getCopilotOpenToken?refresh=${refresh}`)
+                    localStorage.setItem(tokenKey, res.data)
+                    return res.data
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message,
+                        theme: 'error'
+                    })
+                }
             }
         }
     }

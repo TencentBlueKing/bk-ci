@@ -120,5 +120,17 @@ data class ProjectDiffVO(
     @get:Schema(title = "运营产品名称")
     val productName: String? = null,
     @get:Schema(title = "审批中运营产品名称")
-    val afterProductName: String? = null
+    val afterProductName: String? = null,
+    @get:Schema(title = "流水线语言风格")
+    val pipelineDialect: String? = null,
+    @get:Schema(title = "审批中流水线语言风格")
+    val afterPipelineDialect: String? = null,
+    @get:Schema(title = "是否开启流水线命名提示")
+    val enablePipelineNameTips: Boolean? = false,
+    @get:Schema(title = "审批中是否开启流水线命名提示")
+    val afterEnablePipelineNameTips: Boolean? = false,
+    @get:Schema(title = "流水线命名格式")
+    val pipelineNameFormat: String? = null,
+    @get:Schema(title = "审批中流水线命名格式")
+    val afterPipelineNameFormat: String? = null
 )

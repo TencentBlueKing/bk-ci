@@ -91,6 +91,15 @@
                     :handle-change="handleBaseInfoChange"
                 />
             </bk-form-item>
+
+            <bk-form-item ext-cls="namingConvention">
+                <syntax-style-configuration
+                    :inherited-dialect="settings.inheritedDialect"
+                    :pipeline-dialect="settings.pipelineDialect ?? defaultPipelineDialect"
+                    @inherited-change="inheritedChange"
+                    @pipeline-dialect-change="pipelineDialectChange"
+                />
+            </bk-form-item>
         </bk-form>
     </div>
 </template>
@@ -98,13 +107,15 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import { mapGetters } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
         components: {
             VuexTextarea,
-            VuexInput
+            VuexInput,
+            SyntaxStyleConfiguration
         },
         props: {
             pipelineSetting: Object,
@@ -113,6 +124,11 @@
                 default: true
             },
             handleBaseInfoChange: Function
+        },
+        data () {
+            return {
+                settings: {}
+            }
         },
         computed: {
             ...mapGetters({
@@ -135,6 +151,26 @@
                     })
                     return value
                 })
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
+            }
+        },
+        watch: {
+            'pipelineSetting.pipelineAsCodeSettings': {
+                handler (val) {
+                    if (val) {
+                        const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting.pipelineAsCodeSettings
+                        this.settings = {
+                            ...this.pipelineSetting.pipelineAsCodeSettings,
+                            pipelineDialect: inheritedDialect ? projectDialect : pipelineDialect
+                        }
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -151,6 +187,7 @@
                     })
 
                     this.$store.commit('pipelines/updateGroupLists', res)
+                    // 获取当前项目语法风格
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -169,6 +206,18 @@
             toManageLabel () {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/list/group`
                 window.open(url, '_blank')
+            },
+            inheritedChange (value) {
+                this.settings = {
+                    ...this.settings,
+                    inheritedDialect: value,
+                    ...value && { pipelineDialect: this.defaultPipelineDialect }
+                }
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
+            },
+            pipelineDialectChange (value) {
+                this.settings.pipelineDialect = value
+                this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
             }
         }
     }
@@ -231,6 +280,14 @@
                 justify-content: center;
                 color: #979BA5;
                 font-size: 12px;
+            }
+        }
+        .namingConvention {
+            position: relative;
+            .bk-form-control {
+                display: flex;
+                grid-gap: 16px;
+                margin-top: 8px;
             }
         }
     }

@@ -110,6 +110,7 @@ open class SVNApi {
     private fun getBody(request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
+                logger.warn("fail to get response|url=${request.url}|code=${response.code}|body=${response.body}")
                 when {
                     response.code == 401 -> throw ScmException(
                         I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_UNAUTHORIZED),

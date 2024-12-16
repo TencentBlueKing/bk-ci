@@ -32,6 +32,7 @@ package job
 
 import (
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 	"os"
 	"os/exec"
@@ -55,6 +56,8 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
+	// windows特有环境变量
+	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
 	var err error
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
@@ -74,7 +77,7 @@ func doBuild(
 		}()
 	}
 
-	startCmd := config.GetJava()
+	startCmd := third_components.GetJavaLatest()
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	args := []string{

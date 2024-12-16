@@ -1,0 +1,217 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.environment.service.devx
+
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_VIEW_PERMISSSION
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.EnvNodeDao
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.devx.DEVXDao
+import com.tencent.devops.environment.dao.devx.DEVXHookDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.DEVXHook
+import com.tencent.devops.environment.pojo.EnvWithNodeCount
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.TXEnvType
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Suppress("LongMethod")
+@Service
+class DEVXService @Autowired constructor(
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val devxDao: DEVXDao,
+    private val envDao: EnvDao,
+    private val nodeDao: NodeDao,
+    private val envNodeDao: EnvNodeDao,
+    private val devxHookDao: DEVXHookDao,
+    private val environmentPermissionService: EnvironmentPermissionService
+) {
+
+    fun createNode(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        ip: String,
+        size: String
+    ): Long {
+
+        var nodeId: Long = 0L
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+
+            // node
+            logger.info("create devx node, projectId: $projectId, initIp: $ip")
+            nodeId = devxDao.addNode(
+                dslContext = context,
+                projectId = projectId,
+                ip = ip,
+                name = workspaceName,
+                userId = userId,
+                size = size
+            )
+            environmentPermissionService.createNode(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                nodeName = "devx($ip)"
+            )
+        }
+        return nodeId
+    }
+
+    fun getUserDEVXEnv(userId: String, projectIds: Set<String>): List<EnvWithNodeCount> {
+        val envRecordList = devxDao.listEnv(dslContext, projectIds)
+        if (envRecordList.isEmpty()) {
+            return emptyList()
+        }
+        val res = mutableListOf<EnvWithNodeCount>()
+        envRecordList.forEach { env ->
+            if (environmentPermissionService.checkEnvPermission(
+                    userId,
+                    env.projectId,
+                    env.envId,
+                    AuthPermission.USE
+                )
+            ) {
+                val nodeIds = envNodeDao.list(dslContext, env.projectId, listOf(env.envId)).map { node ->
+                    node.nodeId
+                }.toSet()
+
+                val normalNodeCount = if (nodeIds.isEmpty()) {
+                    0
+                } else {
+                    nodeDao.countNodeByStatus(dslContext, env.projectId, nodeIds, NodeStatus.NORMAL)
+                }
+
+                val abnormalNodeCount = if (nodeIds.isEmpty()) {
+                    0
+                } else {
+                    nodeIds.size - normalNodeCount
+                }
+                res.add(
+                    EnvWithNodeCount(
+                        projectId = env.projectId,
+                        envHashId = HashUtil.encodeLongId(env.envId),
+                        name = env.envName,
+                        normalNodeCount = normalNodeCount,
+                        abnormalNodeCount = abnormalNodeCount,
+                        sharedProjectId = null,
+                        sharedUserId = null,
+                        nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
+                    )
+                )
+            }
+        }
+        return res
+    }
+
+    fun getEnvHook(userId: String, projectId: String, envHashId: String): List<DEVXHook> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
+        }
+        val check = envDao.getOrNull(dslContext, projectId, envId)
+        if (check == null || check.envType != TXEnvType.DEVX.name) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+            )
+        }
+
+        return getEnvHook(envHashId)
+    }
+
+    private fun getEnvHook(envHashId: String): List<DEVXHook> {
+        val inSave =
+            devxHookDao.fetchEnvHooks(dslContext, envHashId).associateBy { "${it.hookType}-${it.executionType}" }
+        val res = mutableListOf<DEVXHook>()
+        DEVXHook.HookType.values().forEach { hookType ->
+            hookType.executionType.forEach { executionType ->
+                inSave["${hookType.name}-${executionType.name}"]?.let { save ->
+                    res.add(
+                        DEVXHook(hookType, executionType, ByteUtils.byte2Bool(save.enable))
+                    )
+                } ?: kotlin.run {
+                    res.add(
+                        DEVXHook(hookType, executionType, false)
+                    )
+                }
+            }
+        }
+        return res
+    }
+
+    fun pushEnvHook(userId: String, projectId: String, envHashId: String, hooks: List<DEVXHook>) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+        val check = envDao.getOrNull(dslContext, projectId, envId)
+        if (check == null || check.envType != TXEnvType.DEVX.name) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+            )
+        }
+        logger.info("pushEnvHook|$userId|$projectId|$envHashId|$hooks")
+        devxHookDao.insertOrUpdateHook(dslContext, projectId, envHashId, hooks)
+        client.get(ServiceRemoteDevResource::class).reloadEnvHook(userId, projectId, envHashId, null)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DEVXService::class.java)
+    }
+}

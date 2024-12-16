@@ -89,6 +89,78 @@ class BKItsmService @Autowired constructor(
         )
     }
 
+    fun createCheckTicket(
+        projectId: String,
+        creator: String,
+        operator: String,
+        urls: List<String>
+    ) {
+        val fields = listOf(
+            mapOf(
+                "key" to "title",
+                "value" to "${urls.size}个离岸工蜂代码库绑定状态异常，请及时处理！"
+            ),
+            mapOf(
+                "key" to "projectId",
+                "value" to projectId
+            ),
+            mapOf(
+                "key" to "OPERATOR",
+                "value" to operator
+            ),
+            mapOf(
+                "key" to "YCDXMLB",
+                "value" to urls.joinToString("\n")
+            )
+        )
+        createTicket(
+            creator = creator,
+            fields = fields,
+            serviceId = bkConfig.dailyCheckServiceId!!,
+            errorParam1 = projectId
+        )
+    }
+
+    fun userAuthCheck(
+        recordId: Long,
+        projectId: String,
+        userId: String,
+        groupNames: List<String>,
+        admins: Set<String>
+    ): String {
+        return createTicket(
+            creator = userId,
+            fields = listOf(
+                mapOf(
+                    "key" to "title",
+                    "value" to "云桌面项目权限续期申请"
+                ),
+                mapOf(
+                    "key" to "projectId",
+                    "value" to projectId
+                ),
+                mapOf(
+                    "key" to "userId",
+                    "value" to userId
+                ),
+                mapOf(
+                    "key" to "recordId",
+                    "value" to recordId.toString()
+                ),
+                mapOf(
+                    "key" to "admins",
+                    "value" to admins.joinToString(",")
+                ),
+                mapOf(
+                    "key" to "groupNames",
+                    "value" to groupNames.joinToString("\n")
+                )
+            ),
+            serviceId = bkConfig.userAuthCheckServiceId!!,
+            errorParam1 = projectId
+        )
+    }
+
     private fun createTicket(
         creator: String,
         fields: List<Map<String, String>>,

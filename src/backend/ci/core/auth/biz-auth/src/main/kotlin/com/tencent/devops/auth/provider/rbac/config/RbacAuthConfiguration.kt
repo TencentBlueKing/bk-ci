@@ -182,7 +182,8 @@ class RbacAuthConfiguration {
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         authResourceDao: AuthResourceDao,
-        resourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        redisOperation: RedisOperation
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -192,7 +193,8 @@ class RbacAuthConfiguration {
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         authResourceDao = authResourceDao,
-        resourceGroupSyncService = resourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        redisOperation = redisOperation
     )
 
     @Bean
@@ -268,7 +270,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         permissionAuthorizationService = permissionAuthorizationService,
-        syncIamGroupMemberService = syncIamGroupMemberService
+        syncIamGroupMemberService = syncIamGroupMemberService,
+        rbacCacheService = rbacCacheService
     )
 
     @Bean
@@ -637,7 +640,8 @@ class RbacAuthConfiguration {
         redisOperation: RedisOperation,
         authResourceSyncDao: AuthResourceSyncDao,
         authResourceGroupApplyDao: AuthResourceGroupApplyDao,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        deptService: DeptService
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -649,6 +653,7 @@ class RbacAuthConfiguration {
         redisOperation = redisOperation,
         authResourceSyncDao = authResourceSyncDao,
         authResourceGroupApplyDao = authResourceGroupApplyDao,
-        resourceGroupPermissionService = resourceGroupPermissionService
+        resourceGroupPermissionService = resourceGroupPermissionService,
+        deptService = deptService
     )
 }

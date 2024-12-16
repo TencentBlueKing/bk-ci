@@ -27,13 +27,47 @@
 
 package com.tencent.devops.common.expression.expression
 
-class EvaluationOptions() {
-
-    constructor(copy: EvaluationOptions?) : this() {
-        if (copy != null) {
-            maxMemory = copy.maxMemory
-        }
+/**
+ * @param contextNotNull 上下文计算时需要不存在的变量抛出异常而不是返回空
+ * @param maxMemory 暂未使用
+ */
+data class EvaluationOptions(
+    val contextNotNull: ExceptionInsteadOfNullOption,
+    var maxMemory: Int = 0
+) {
+    fun contextNotNull(): Boolean {
+        return contextNotNull.enable
     }
 
-    var maxMemory: Int = 0
+    constructor(contextNotNull: Boolean) : this(
+        if (contextNotNull) {
+            ExceptionInsteadOfNullOption.enable()
+        } else {
+            ExceptionInsteadOfNullOption.disabled()
+        }
+    )
+}
+
+/**
+ * @param enable 是否开启
+ * @param exceptionTraceMsg 存放为空的变量的索引链路，方便排查
+ */
+data class ExceptionInsteadOfNullOption(
+    val enable: Boolean,
+    val exceptionTraceMsg: MutableList<String>?
+) {
+    fun trace(name: String) {
+        if (!enable) {
+            return
+        }
+        // 字符串的格式化会带 ''
+        exceptionTraceMsg?.add(name.removeSurrounding("'"))
+    }
+
+    fun errKey() = exceptionTraceMsg?.joinToString(".")
+
+    companion object {
+        fun disabled(): ExceptionInsteadOfNullOption = ExceptionInsteadOfNullOption(false, null)
+        fun enable(): ExceptionInsteadOfNullOption = ExceptionInsteadOfNullOption(true, mutableListOf())
+    }
 }

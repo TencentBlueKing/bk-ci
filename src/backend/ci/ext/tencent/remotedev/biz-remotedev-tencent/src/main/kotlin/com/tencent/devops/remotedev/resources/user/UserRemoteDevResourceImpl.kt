@@ -49,7 +49,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import org.slf4j.LoggerFactory
@@ -65,7 +65,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
     private val txcService: TxcService,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val clientUpgradeService: ClientUpgradeService,
     private val clientTipsService: ClientTipsService
 ) : UserRemoteDevResource {
@@ -110,7 +110,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
-                userId = userId,
                 searchCustom = searchCustom,
                 quotaType = QuotaType.OFFSHORE,
                 withProjectLimit = projectId

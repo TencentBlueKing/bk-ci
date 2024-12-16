@@ -5,7 +5,7 @@
     "private": true,
     "author": "",
     "scripts": {
-        "dev": "nx exec -- webpack-cli serve --mode development --progress",
+        "dev": "webpack-cli serve --mode development --progress",
         "dll": "webpack --mode production --config webpack.dll.config.js",
         "public": "npm run dll && webpack --mode production",
         "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -18,16 +18,17 @@
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "@tencent/bk-magic-vue": "2.5.9-beta.6",
-        "@tencent/gongfeng-copilot-monaco": "^2.0.8",
+        "@tencent/gongfeng-copilot-monaco": "^2.3.5",
         "axios": "0.28.0",
         "bk-permission": "workspace:bk-permission",
         "bkui-pipeline": "workspace:bk-pipeline",
         "clipboard": "^1.7.1",
         "echarts": "^5.3.2",
+        "dayjs": "^1.11.2",
         "js-base64": "^3.7.2",
+        "js-cookie": "^3.0.5",
         "mavon-editor": "^2.10.4",
-        "moment": "^2.29.2",
-        "monaco-editor": "^0.40.0",
+        "monaco-editor": "^0.51.0",
         "monaco-editor-webpack-plugin": "^7.1.0",
         "monaco-yaml": "^5.1.0",
         "portal-vue": "^1.5.1",
@@ -104,7 +105,8 @@
                     "{projectRoot}"
                 ],
                 "outputs": [
-                    "{workspaceRoot}/frontend/pipeline"
+                    "{workspaceRoot}/frontend/pipeline",
+                    "{workspaceRoot}/frontend/entry's"
                 ]
             }
         }

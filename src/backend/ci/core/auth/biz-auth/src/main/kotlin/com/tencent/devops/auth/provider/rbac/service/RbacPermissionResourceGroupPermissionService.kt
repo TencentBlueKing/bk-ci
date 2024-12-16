@@ -457,12 +457,18 @@ class RbacPermissionResourceGroupPermissionService(
                 }
             }.distinct()
 
-            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(dslContext, projectCode, iamGroupId)
+            val oldResourceGroupPermissions = resourceGroupPermissionDao.listByGroupId(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupId = iamGroupId
+            )
 
             val toDeleteRecords = oldResourceGroupPermissions.filter { it !in latestResourceGroupPermissions }
             val toAddRecords = latestResourceGroupPermissions.filter { it !in oldResourceGroupPermissions }.map {
                 it.copy(
-                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG).data!!
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                        bizTag = AUTH_RESOURCE_GROUP_PERMISSION_ID_TAG
+                    ).data!!
                 )
             }
             dslContext.transaction { configuration ->

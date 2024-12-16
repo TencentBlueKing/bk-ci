@@ -29,7 +29,8 @@ module.exports = (env = {}, argv) => {
             'echarts',
             'vue-echarts',
             'vue-i18n',
-            'moment'
+            'js-cookie',
+            'dayjs'
         ],
         output: {
             publicPath: 'auto',
@@ -94,7 +95,6 @@ module.exports = (env = {}, argv) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
-            new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,
                 name: 'lib',

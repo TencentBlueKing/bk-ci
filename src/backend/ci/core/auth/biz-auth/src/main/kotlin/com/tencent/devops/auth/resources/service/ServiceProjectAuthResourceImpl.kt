@@ -106,6 +106,18 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun isProjectMember(
+        userId: String,
+        projectCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.isProjectMember(
+                userId = userId,
+                projectCode = projectCode
+            )
+        )
+    }
+
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkUserInProjectLevelGroup(
         token: String,

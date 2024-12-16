@@ -32,5 +32,35 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "设置-YAML流水线功能设置")
 data class PipelineAsCodeSettings(
     @get:Schema(title = "是否支持YAML流水线功能", required = true)
-    val enable: Boolean = false
-)
+    val enable: Boolean = false,
+    @get:Schema(title = "项目级流水线语法风格", required = false)
+    var projectDialect: String? = null,
+    @get:Schema(title = "是否继承项目流水线语言风格", required = false)
+    val inheritedDialect: Boolean? = true,
+    @get:Schema(title = "流水线语言风格", required = false)
+    var pipelineDialect: String? = null
+) {
+    companion object {
+        fun initDialect(inheritedDialect: Boolean?, pipelineDialect: String?): PipelineAsCodeSettings {
+            return PipelineAsCodeSettings(
+                inheritedDialect = inheritedDialect ?: true,
+                // 如果继承项目方言配置,置空pipelineDialect字段,防止数据库存储多余数据
+                pipelineDialect = if (inheritedDialect == false) {
+                    pipelineDialect
+                } else {
+                    null
+                }
+            )
+        }
+    }
+
+    /**
+     * 入库时,重置方言字段值
+     */
+    fun resetDialect() {
+        projectDialect = null
+        if (inheritedDialect != false) {
+            pipelineDialect = null
+        }
+    }
+}

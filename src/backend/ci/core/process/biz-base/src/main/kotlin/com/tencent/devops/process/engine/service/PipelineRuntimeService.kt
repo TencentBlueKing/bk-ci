@@ -212,7 +212,8 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineId,
                         userId = userId,
                         buildId = build.buildId,
-                        status = BuildStatus.TERMINATE
+                        status = BuildStatus.TERMINATE,
+                        executeCount = build.executeCount
                     )
                 )
             }
@@ -616,7 +617,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIdsOnly(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
@@ -701,7 +702,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 status = buildStatus,
-                actionType = actionType
+                actionType = actionType,
+                executeCount = executeCount
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",

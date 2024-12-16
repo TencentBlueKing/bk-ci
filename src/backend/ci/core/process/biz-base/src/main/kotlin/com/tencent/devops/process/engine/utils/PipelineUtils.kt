@@ -68,7 +68,8 @@ object PipelineUtils {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
                     message = I18nUtil.getCodeLanMessage(
-                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR
+                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR,
+                        params = arrayOf(param.id)
                     )
                 )
             }

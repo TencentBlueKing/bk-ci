@@ -52,5 +52,10 @@ enum class WorkspaceAction {
     EXPAND_DISK,
     // 升级配置
     UPGRADE,
-    UPGRADING
+    UPGRADING,
+    // 克隆
+    CLONE,
+    CLONING,
+    CREATE_SUCCESS, // 交付成功
+    DELETE_IN_INITIALIZING // 交付时删除
 }

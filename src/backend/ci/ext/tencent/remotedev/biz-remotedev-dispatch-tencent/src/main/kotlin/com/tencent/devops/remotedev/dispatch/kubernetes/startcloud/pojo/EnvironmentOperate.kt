@@ -8,6 +8,9 @@ data class EnvironmentOperate(
     val env: Map<String, String>? = null,
     val cgsId: String? = null,
     val image: String? = null,
+    val zoneId: String? = null,
     val machineType: String? = null,
-    val formatDataDisk: Boolean? = null
+    val formatDataDisk: Boolean? = null,
+    val size: String? = null,
+    val live: Boolean? = null
 )

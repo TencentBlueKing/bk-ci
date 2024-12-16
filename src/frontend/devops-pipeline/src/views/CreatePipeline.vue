@@ -23,6 +23,11 @@
                 </bk-breadcrumb-item>
             </bk-breadcrumb>
         </pipeline-header>
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
         <div
             v-bkloading="{ isLoading }"
             class="pipeline-template-box"
@@ -88,7 +93,7 @@
                                 >
                                     <bk-checkbox
                                         :value="item.value"
-                                        :disabled="item.disabled"
+                                        :disabled="item.disabled || isConstrainMode"
                                     >
                                         <p class="template-apply-setting-checkbox-txt">
                                             <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
@@ -110,6 +115,21 @@
                             </bk-checkbox-group>
                         </bk-form-item>
                     </template>
+                    <bk-form-item>
+                        <pipeline-label-selector
+                            :value.sync="labelValues"
+                            :disabled="isConstrainMode"
+                        />
+                    </bk-form-item>
+                    <bk-form-item ext-cls="namingConvention">
+                        <syntax-style-configuration
+                            :disabled="isConstrainMode"
+                            :inherited-dialect="inheritedDialect"
+                            :pipeline-dialect="pipelineDialect"
+                            @inherited-change="inheritedChange"
+                            @pipeline-dialect-change="pipelineDialectChange"
+                        />
+                    </bk-form-item>
                 </bk-form>
                 <footer style="margin-top: 24px;">
                     <bk-button
@@ -247,12 +267,18 @@
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import AlertTips from '@/components/AlertTips.vue'
+    import PipelineLabelSelector from '@/components/PipelineLabelSelector/'
 
     export default {
         components: {
             pipelineHeader,
             PipelineTemplatePreview,
-            Logo
+            Logo,
+            SyntaxStyleConfiguration,
+            AlertTips,
+            PipelineLabelSelector
         },
         data () {
             return {
@@ -261,6 +287,8 @@
                 isDisabled: false,
                 activeTempIndex: 0,
                 applySettings: [],
+                inheritedDialect: true,
+                pipelineDialect: 'CLASSIC',
                 isLoading: false,
                 newPipelineName: '',
                 searchName: '',
@@ -272,7 +300,8 @@
                 page: 1,
                 pageSize: 50,
                 isShowPreview: false,
-                previewSettingType: ''
+                previewSettingType: '',
+                labelValues: []
             }
         },
         computed: {
@@ -280,8 +309,21 @@
                 'pipelineTemplateMap'
             ]),
             ...mapState('pipelines', [
-                'isManage'
+                'isManage',
+                'templateSetting'
             ]),
+            curProject () {
+                return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
+            },
             pipelineListRoute () {
                 return {
                     name: 'PipelineManageList',
@@ -373,6 +415,9 @@
                         }
                     }).filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1) ?? []
                 }
+            },
+            isConstrainMode () {
+                return this.templateType === templateTypeEnum.CONSTRAIN
             }
         },
         watch: {
@@ -384,22 +429,26 @@
                         }
                         return acc
                     }, [])
-                    console.log(this.applySettings)
                 }
             },
             searchName (val) {
                 if (this.activePanel === 'store') {
                     this.requestMarkTemplates(true)
                 }
+            },
+            defaultPipelineDialect (val) {
+                this.pipelineDialect = val
             }
         },
-        created () {
+        async created () {
+            await this.$store.dispatch('requestProjectDetail', {
+                projectId: this.$route.params.projectId
+            })
             this.requestPipelineTemplate({
                 projectId: this.$route.params.projectId
             })
         },
         mounted () {
-            console.log(this.$refs.pipelineName)
             this.$nextTick(() => {
                 this.$refs.pipelineName.focus()
             })
@@ -411,7 +460,8 @@
             ]),
             ...mapActions('pipelines', [
                 'installPipelineTemplate',
-                'createPipelineWithTemplate'
+                'createPipelineWithTemplate',
+                'requestTemplateSetting'
             ]),
             goList () {
                 this.$router.push(this.pipelineListRoute)
@@ -482,9 +532,17 @@
                     this.isLoading = false
                 }
             },
-            selectTemp (index) {
-                console.log(index)
+            async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
+                if (target?.templateType !== 'PUBLIC') {
+                    await this.requestTemplateSetting({
+                        projectId: this.$route.params.projectId,
+                        templateId: target.templateId
+                    })
+                    this.labelValues = this.templateSetting.labels
+                } else {
+                    this.labelValues = []
+                }
                 if (index !== this.activeTempIndex && target.installed) {
                     this.activeTempIndex = index
                 }
@@ -502,7 +560,6 @@
                 this.previewSettingType = ''
             },
             previewSetting (setting) {
-                console.log(setting)
                 this.isShowPreview = true
                 this.previewSettingType = setting
             },
@@ -528,7 +585,10 @@
                             result[item] = true
                             return result
                         }, {}),
-                        instanceType: this.templateType
+                        instanceType: this.templateType,
+                        inheritedDialect: this.inheritedDialect,
+                        pipelineDialect: this.pipelineDialect,
+                        labels: this.labelValues
                     }
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
@@ -538,6 +598,10 @@
                                 templateId: this.activeTemp.templateId,
                                 curVersionId: this.activeTemp.version,
                                 pipelineName: this.newPipelineName
+
+                            },
+                            query: {
+                                useTemplateSettings: true
                             }
                         })
                         return
@@ -571,6 +635,15 @@
                 } finally {
                     this.isDisabled = false
                 }
+            },
+            inheritedChange (value) {
+                this.inheritedDialect = value
+                if (value) {
+                    this.pipelineDialect = this.defaultPipelineDialect
+                }
+            },
+            pipelineDialectChange (value) {
+                this.pipelineDialect = value
             }
         }
     }
@@ -598,6 +671,10 @@
             padding: 24px;
             background: white;
             overflow: auto;
+
+            .namingConvention {
+                position: relative;
+            }
 
             .pipeline-input {
                 position: relative;

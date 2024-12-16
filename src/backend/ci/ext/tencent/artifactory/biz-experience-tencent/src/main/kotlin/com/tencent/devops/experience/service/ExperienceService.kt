@@ -43,6 +43,7 @@ import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -191,11 +192,55 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
-        val expireTime = DateUtil.today()
-        val searchTime = if (expired == null || expired == false) expireTime else null
+    @SuppressWarnings("ComplexMethod")
+    fun list(
+        userId: String,
+        projectId: String,
+        expired: Boolean?,
+        createDateBegin: Long?,
+        createDateEnd: Long?,
+        endDateBegin: Long?,
+        endDateEnd: Long?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        versionTitle: String?,
+        creator: String?,
+        classify: String?,
+        experienceName: String?,
+        platform: String?
+    ): List<ExperienceSummaryWithPermission> {
+        val today = DateUtil.today()
+        val expiredTime = if (expired == null || expired == false) today else null
+        val finalEndDateBegin = if (endDateBegin == null) {
+            expiredTime
+        } else {
+            val c = endDateBegin.let { DateTimeUtil.convertTimestampToLocalDateTime(it) }
+            if (expiredTime == null) {
+                c
+            } else {
+                DateTimeUtil.max(c, expiredTime)
+            }
+        }
+
         val online = if (expired == null || expired == false) true else null
-        val experienceRecordList = experienceDao.list(dslContext, projectId, searchTime, online)
+        val experienceRecordList = experienceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            createDateBegin = createDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateBegin = finalEndDateBegin,
+            endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            name = name,
+            version = version,
+            remark = remark,
+            versionTitle = versionTitle,
+            creator = creator,
+            online = online,
+            classify = classify,
+            experienceName = experienceName,
+            platform = platform
+        )
         // Rbac得校验体验是否列表权限，有才返回。
         val experienceListResult = experiencePermissionService.filterCanListExperience(
             user = userId,
@@ -210,7 +255,7 @@ class ExperienceService @Autowired constructor(
         )
 
         return experienceListResult.map {
-            val isExpired = DateUtil.isExpired(it.endDate, expireTime)
+            val isExpired = DateUtil.isExpired(it.endDate, today)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             val canDelete = experiencePermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
@@ -461,7 +506,7 @@ class ExperienceService @Autowired constructor(
 
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = if (experience.path.endsWith(".ipa")) PlatformEnum.IOS else PlatformEnum.ANDROID
+        val platform = PlatformEnum.ofTail(experience.path)
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -1342,17 +1387,15 @@ class ExperienceService @Autowired constructor(
     }
 
     fun lastParams(userId: String, name: String, projectId: String, bundleIdentifier: String): ExperienceCreate? {
-        val platform = when {
-            name.endsWith(".apk") -> {
-                PlatformEnum.ANDROID
-            }
+        val platform = PlatformEnum.ofTail(name).let {
+            when (it) {
+                PlatformEnum.UNKNOWN -> {
+                    return null
+                }
 
-            name.endsWith(".ipa") -> {
-                PlatformEnum.IOS
-            }
-
-            else -> {
-                return null
+                else -> {
+                    it
+                }
             }
         }
 

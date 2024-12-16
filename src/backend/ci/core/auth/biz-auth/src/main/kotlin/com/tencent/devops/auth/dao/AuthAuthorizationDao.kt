@@ -79,6 +79,7 @@ class AuthAuthorizationDao {
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun batchUpdate(
         dslContext: DSLContext,
         resourceAuthorizationHandoverList: List<ResourceAuthorizationDTO>

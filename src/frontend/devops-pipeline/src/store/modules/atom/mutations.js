@@ -69,6 +69,7 @@ import {
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
+    SET_PLUGIN_HEAD_TAB,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -328,11 +329,10 @@ export default {
 
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
-            for (const key in newParam) {
-                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data.input, key, newParam[key])
-                }
-            }
+            Vue.set(atom.data, 'input', {
+                ...atom.data.input,
+                ...newParam
+            })
         } catch (e) {
             console.warn(e, 'update atom input error', atom)
         }
@@ -510,5 +510,10 @@ export default {
 
         })
         return state
+    },
+    [SET_PLUGIN_HEAD_TAB]: (state, { isGetPluginHeadTab }) => {
+        return Object.assign(state, {
+            isGetPluginHeadTab
+        })
     }
 }

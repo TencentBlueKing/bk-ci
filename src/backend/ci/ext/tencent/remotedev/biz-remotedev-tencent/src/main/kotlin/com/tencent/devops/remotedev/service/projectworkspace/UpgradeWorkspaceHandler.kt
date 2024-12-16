@@ -15,12 +15,12 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -38,12 +38,12 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class UpgradeWorkspaceHandler @Autowired constructor(
@@ -59,7 +59,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
 
     @ActionAuditRecord(
@@ -80,10 +81,17 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         rebuildReq: WorkspaceUpgradeReq
     ): WorkspaceResponse {
         logger.info("$userId upgrade project $projectId workspace $workspaceName|$rebuildReq")
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId
+                projectId = projectId,
+                ownerType = workspace.ownerType
             ) && !permissionService.hasUserManager(userId, projectId)
         ) {
             throw ErrorCodeException(
@@ -91,12 +99,6 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to upgrade $workspaceName")
             )
         }
-
-        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
         RedisCallLimit(
             redisOperation = redisOperation,
             lockKey = "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -142,6 +144,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -150,7 +153,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     machineType = rebuildReq.machineType,
-                    gameId = null,
+                    appName = appName,
                     projectId = projectId
                 )
             )
@@ -165,7 +168,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.UPGRADING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = workspace.ownerType,
                 projectId = projectId
             )
 
@@ -187,7 +190,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             return
         }
         val bakWorkspaceName = ws.bakWorkspaceName
-        if (bakWorkspaceName == null) {
+        if (bakWorkspaceName == null || !bakWorkspaceName.startsWith("upgrade")) {
             logger.info("checkAndUpgradeVm not need upgrade workspace $workspaceName")
             return
         }
@@ -204,7 +207,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             checkPermission = false
         )
         // 别名等信息同步
-        val old = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = bakWorkspaceName)
+        val old = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = bakWorkspaceName)
         if (old != null) {
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = dslContext,
@@ -214,6 +217,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     old.displayName, old.remark, old.labels
                 )
             )
+            if (old.nodeHashId != null) {
+                workspaceWindowsDao.updateNodeHashId(dslContext, old.nodeHashId, workspaceName)
+            }
 
             // 删除旧云桌面
             if (old.status.checkUnused()) {
@@ -252,16 +258,16 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             )
         }
 
-        if (old.ownerType == WorkspaceOwnerType.PROJECT && old.winConfigId != windowsConfig.id?.toInt()) {
-            val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+        if (old.ownerType.projectUse() && old.winConfigId != windowsConfig.id?.toInt()) {
+            val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
                 dslContext = dslContext,
-                projectId = old.projectId,
-                ownerType = WorkspaceOwnerType.PROJECT
+                projectId = old.projectId
             )
             windowsResourceConfigService.createCheckSpecLimit(
                 windowsType = machineType,
                 projectId = old.projectId,
-                workspaceNames = workspaceNames
+                workspaceNames = workspaceNames,
+                createCount = 1
             )
         }
         windowsResourceConfigService.createCheckWhenWinNotAlready(

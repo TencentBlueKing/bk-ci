@@ -991,8 +991,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val extServiceFeature = extFeatureDao.getServiceByCode(dslContext, serviceCode)!!
         // 从工蜂拉取文件
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
-            extServiceFeature.repositoryHashId,
-            EXTENSION_JSON_NAME, null, null, null
+            repoId = extServiceFeature.repositoryHashId,
+            filePath = EXTENSION_JSON_NAME
         ).data
         logger.info("get serviceCode[$serviceCode] file($EXTENSION_JSON_NAME) fileStr is:$fileStr")
         dslContext.transaction { t ->
@@ -1453,8 +1453,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         // 从工蜂拉取文件
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
-            repositoryHashId,
-            fileName, null, null, null
+            repoId = repositoryHashId, filePath = fileName
         ).data
         if (fileStr.isNullOrEmpty()) {
             // 文件数据为空，直接返回输入数据
