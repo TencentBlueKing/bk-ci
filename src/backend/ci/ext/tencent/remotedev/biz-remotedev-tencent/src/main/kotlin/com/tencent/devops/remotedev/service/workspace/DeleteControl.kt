@@ -153,7 +153,7 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
 
@@ -362,7 +362,7 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
             return true

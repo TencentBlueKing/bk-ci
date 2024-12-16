@@ -131,7 +131,7 @@ class SleepControl @Autowired constructor(
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
 
