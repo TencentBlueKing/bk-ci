@@ -45,5 +45,5 @@ data class GithubToken(
     @get:Schema(title = "用户名 (github server端的用户名)")
     val userId: String,
     @get:Schema(title = "操作者 (蓝盾平台用户名)")
-    val operator: String
+    val operator: String? = ""
 )

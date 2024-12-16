@@ -84,7 +84,12 @@ class GithubTokenDao {
                 .set(TOKEN_TYPE, tokenType)
                 .set(ACCESS_TOKEN, accessToken)
                 .set(SCOPE, scope)
-                .set(OPERATOR, operator)
+                .let {
+                    if (operator.isNotBlank()){
+                        it.set(OPERATOR, operator)
+                    }
+                    it
+                }
                 .where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name))
                 .execute()
         }
