@@ -51,8 +51,7 @@ class CodeccApi(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
     private val codeccHost: String,
-    private val codeccGrayProjectId: String? = null,
-    private val codeccProjectId: String? = null
+    private val codeccGrayProjectId: String? = null
 ) {
 
     @Value("\${codecc.openapi.token:#{null}}")
@@ -193,8 +192,8 @@ class CodeccApi(
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
         val url = "http://$codeccHost/ms/openapi/api/open/v2/defect/opensource/measurement?url=$atomCodeSrc"
         val headers = mutableMapOf<String, String>()
-        if (!codeccProjectId.isNullOrBlank()) {
-            headers[AUTH_HEADER_PROJECT_ID] = codeccProjectId
+        if (!codeccGrayProjectId.isNullOrBlank()) {
+            headers[AUTH_HEADER_PROJECT_ID] = codeccGrayProjectId
             headers[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         }
         val httpReq = Request.Builder()
