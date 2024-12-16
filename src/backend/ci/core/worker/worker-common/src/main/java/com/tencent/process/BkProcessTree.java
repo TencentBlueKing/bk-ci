@@ -632,7 +632,19 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
         // TODO: 升级到JDK17后，这里可以使用 java.lang.Process 重构
         public static void destroy(int pid, boolean forceFlag) throws IllegalAccessException, InvocationTargetException {
-            DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
+            if (isJava17()) {
+                destroyProcessJava17(pid, forceFlag);
+            } else {
+                DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
+            }
+        }
+
+        private static boolean isJava17() {
+            String javaVersion = System.getProperty("java.version");
+            if (javaVersion.startsWith("17")) {
+                return true;
+            }
+            return false;
         }
 
         static {
@@ -642,12 +654,44 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 PID_FIELD = clazz.getDeclaredField("pid");
                 PID_FIELD.setAccessible(true);
                 DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
-
                 DESTROY_PROCESS.setAccessible(true);
             } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
                 x = new LinkageError();
                 x.initCause(e);
                 throw x;
+            }
+        }
+
+        private static void destroyProcessJava17(int pid, boolean forceFlag) {
+            try {
+                // 获取ProcessHandle类
+                Class<?> processHandleClass = Class.forName("java.lang.ProcessHandle");
+
+                // 获取ProcessHandle.of方法
+                Method ofMethod = processHandleClass.getMethod("of", long.class);
+                Object optionalProcessHandle = ofMethod.invoke(null, pid);
+
+                // 获取Optional.isPresent方法
+                Class<?> optionalClass = Class.forName("java.util.Optional");
+                Method isPresentMethod = optionalClass.getMethod("isPresent");
+                boolean isPresent = (boolean) isPresentMethod.invoke(optionalProcessHandle);
+
+                if (isPresent) {
+                    // 获取Optional.get方法
+                    Method getMethod = optionalClass.getMethod("get");
+                    Object processHandle = getMethod.invoke(optionalProcessHandle);
+
+                    // 获取ProcessHandle.destroy方法
+                    Method destroyMethod;
+                    if (forceFlag) {
+                        destroyMethod = processHandleClass.getMethod("destroyForcibly");
+                    } else {
+                        destroyMethod = processHandleClass.getMethod("destroy");
+                    }
+                    destroyMethod.invoke(processHandle);
+                }
+            } catch (Exception e) {
+                BkProcessTree.log("Failed to terminate pid=" + pid, e);
             }
         }
     }
