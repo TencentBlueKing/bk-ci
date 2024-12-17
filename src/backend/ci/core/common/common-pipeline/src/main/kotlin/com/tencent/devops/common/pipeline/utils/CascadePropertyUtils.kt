@@ -3,35 +3,13 @@ package com.tencent.devops.common.pipeline.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam.Companion.SELECTOR_KEY_BRANCH
-import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam.Companion.SELECTOR_KEY_REPO_NAME
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import org.slf4j.LoggerFactory
 
 object CascadePropertyUtils {
     fun getCascadeVariableKeyMap(key: String, type: BuildFormPropertyType) = when (type) {
-        BuildFormPropertyType.REPO_REF -> {
-            mapOf(
-                SELECTOR_KEY_REPO_NAME to "$key.$SELECTOR_KEY_REPO_NAME",
-                SELECTOR_KEY_BRANCH to "$key.$SELECTOR_KEY_BRANCH"
-            )
-        }
-
+        BuildFormPropertyType.REPO_REF -> RepoRefCascadeParam.variableKeyMap(key)
         else -> mapOf()
-    }
-
-    /**
-     * 获取级联选择器的参数值的拼接规则
-     * eg：xxx.repo-name,xxx.branch --> ${{xxx.repo-name}}@${{xxx.branch}}
-     */
-    private fun getCascadeVariableSubKey(key: String, type: BuildFormPropertyType) = when (type) {
-        BuildFormPropertyType.REPO_REF -> {
-            listOf(
-                "$key.$SELECTOR_KEY_REPO_NAME",
-                "$key.$SELECTOR_KEY_BRANCH"
-            )
-        }
-
-        else -> listOf()
     }
 
     /**
@@ -52,13 +30,7 @@ object CascadePropertyUtils {
     }
 
     private fun getDefaultValue(type: BuildFormPropertyType?) = when (type) {
-        BuildFormPropertyType.REPO_REF -> {
-            mapOf(
-                SELECTOR_KEY_REPO_NAME to "",
-                SELECTOR_KEY_BRANCH to ""
-            )
-        }
-
+        BuildFormPropertyType.REPO_REF -> RepoRefCascadeParam.defaultValue()
         else -> mapOf()
     }
 

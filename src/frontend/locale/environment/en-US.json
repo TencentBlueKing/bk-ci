@@ -247,7 +247,7 @@
         "cloudLogoutHook": "Cloud Desktop Logout Hook",
         "loginHookTips": "When logging into the cloud desktop, the following selected actions will be executed",
         "logoutHookTips": "When logging out of the cloud desktop, the following selected actions will be executed",
-        "cleanCredentialsLabel": "Clean credentials, including Git/SNV credentials and browser cache credentials (Chrome, Microsoft Edge)",
+        "cleanCredentialsLabel": "Clean credentials, including Git/SVN credentials and browser cache credentials (Chrome, Microsoft Edge)",
         "ioaLoginLabel": "Login to IOA",
         "ioaLogoutLabel": "Logout from IOA"
     },
