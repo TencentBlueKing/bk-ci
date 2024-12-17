@@ -173,6 +173,7 @@
             flex-direction: column;
             .checkbox-item {
                 margin-top: 8px;
+                font-weight: normal;
             }
         }
     }
