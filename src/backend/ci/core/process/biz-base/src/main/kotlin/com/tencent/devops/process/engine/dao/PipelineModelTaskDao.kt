@@ -113,7 +113,7 @@ class PipelineModelTaskDao {
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
                 .join(tpi)
-                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
                 .fetchOne(0, Int::class.java)!!
         }
@@ -138,7 +138,7 @@ class PipelineModelTaskDao {
             return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
                 .from(this)
                 .join(tpi)
-                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
                 .groupBy(ATOM_CODE)
                 .fetch()
@@ -240,8 +240,7 @@ class PipelineModelTaskDao {
             )
                 .from(this)
                 .join(tpi)
-                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
-                .and(PROJECT_ID.eq(tpi.PROJECT_ID))
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
                 .groupBy(PIPELINE_ID)
                 .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
@@ -275,8 +274,7 @@ class PipelineModelTaskDao {
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
                 .join(tpi)
-                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID))
-                .and(PROJECT_ID.eq(tpi.PROJECT_ID))
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
                 .fetchOne(0, Long::class.java)!!
         }
