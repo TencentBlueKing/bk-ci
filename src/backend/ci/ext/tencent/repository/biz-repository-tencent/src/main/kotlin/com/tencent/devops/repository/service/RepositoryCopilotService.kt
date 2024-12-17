@@ -145,10 +145,11 @@ class RepositoryCopilotService @Autowired constructor(
         )
     }
 
-    private fun getAccessToken(userId: String) =
-        gitOauthService.getAccessToken(userId)?.accessToken ?: throw ErrorCodeException(
-            errorCode = RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
-        )
+    private fun getAccessToken(userId: String) = gitOauthService.getAccessToken(
+        userId = userId
+    )?.accessToken ?: throw ErrorCodeException(
+        errorCode = RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+    )
 
     /**
      * 提取摘要参数
