@@ -437,8 +437,7 @@ class StorePipelineServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
             params = arrayOf(storeCode ?: "$storeType-PIPELINE-BUILD:PUBLIC")
         )
-        logger.info("handleStorePublicPipelineModel pipelineId:$pipelineId|publicPipelineId:$publicPipelineId")
-        // 对已托管给公共项目的组件刷新内置流水线model时则给组件在公共项目下创建单独的流水线
+        // 对已托管给公共项目的指定组件刷新内置流水线model时则给组件在公共项目下创建单独的流水线
         if (storeCode != null && pipelineId == publicPipelineId) {
             pipelineId = creatStorePipelineByStoreCode(
                 storeCode = storeCode,
