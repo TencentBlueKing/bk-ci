@@ -25,63 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.devx.UserDEVXResource
+import com.tencent.devops.environment.pojo.DEVXHook
+import com.tencent.devops.environment.service.devx.DEVXService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * store组件可见范围逻辑类
- * since: 2019-01-08
- */
-@Suppress("ALL")
-interface StoreVisibleDeptService {
+@RestResource
+class UserDEVXResourceImpl @Autowired constructor(
+    private val devxService: DEVXService
+) : UserDEVXResource {
 
-    /**
-     * 查看store组件可见范围
-     */
-    fun getVisibleDept(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
-    ): Result<StoreVisibleDeptResp?>
+    override fun getEnvHook(userId: String, projectId: String, envHashId: String): Result<List<DEVXHook>> {
+        return Result(devxService.getEnvHook(userId, projectId, envHashId))
+    }
 
-    /**
-     * 批量获取已经审核通过的可见范围
-     */
-    fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>>
-
-    /**
-     * 设置store组件可见范围
-     */
-    fun addVisibleDept(
+    override fun pushEnvHook(
         userId: String,
-        storeCode: String,
-        deptInfos: List<DeptInfo>,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 删除store组件可见范围
-     */
-    fun deleteVisibleDept(
-        userId: String,
-        storeCode: String,
-        deptIds: String,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 判断用户是否有组件的权限
-     */
-    fun checkUserInvalidVisibleStoreInfo(
-        userStoreDeptInfoRequest: UserStoreDeptInfoRequest
-    ): Boolean
+        projectId: String,
+        envHashId: String,
+        hooks: List<DEVXHook>
+    ): Result<Boolean> {
+        devxService.pushEnvHook(userId, projectId, envHashId, hooks)
+        return Result(true)
+    }
 }

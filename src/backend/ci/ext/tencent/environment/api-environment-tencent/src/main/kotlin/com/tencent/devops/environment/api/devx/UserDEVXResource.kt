@@ -25,19 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.environment.api.devx
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptReq
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.environment.pojo.DEVXHook
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -47,57 +44,40 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_STORE_VISIBLE", description = "研发商店-可见范围")
-@Path("/user/store/visibilities")
+@Tag(name = "SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT", description = "PreBuild构建机资源")
+@Path("/user/devx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface TxStoreVisibleDeptResource {
+interface UserDEVXResource {
 
-    @Operation(summary = "设置组件可见范围")
-    @POST
-    @Path("/add")
-    fun addVisibleDept(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件可见范围请求报文体", required = true)
-        storeVisibleDeptReq: StoreVisibleDeptReq
-    ): Result<Boolean>
-
-    @Operation(summary = "查看组件可见范围")
+    @Operation(summary = "获取环境hook配置")
     @GET
-    @Path("/types/{storeType}/codes/{storeCode}/get")
-    fun getVisibleDept(
-        @Parameter(description = "userId", required = true)
+    @Path("/env_hook/{projectId}")
+    fun getEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<StoreVisibleDeptResp?>
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = false)
+        @QueryParam("envHashId")
+        envHashId: String
+    ): Result<List<DEVXHook>>
 
-    @Operation(summary = "删除组件可见范围")
-    @DELETE
-    @Path("/types/{storeType}/codes/{storeCode}/delete")
-    fun deleteVisibleDept(
-        @Parameter(description = "userId", required = true)
+    @Operation(summary = "更新环境hook配置")
+    @POST
+    @Path("/env_hook/{projectId}")
+    fun pushEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
-        @QueryParam("deptIds")
-        deptIds: String
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = false)
+        @QueryParam("envHashId")
+        envHashId: String,
+        hooks: List<DEVXHook>
     ): Result<Boolean>
 }

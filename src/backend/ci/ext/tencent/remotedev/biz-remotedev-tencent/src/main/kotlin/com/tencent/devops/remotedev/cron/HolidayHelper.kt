@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_HOLIDAY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WORKING_ON_WEEKEND_DAY
 import java.time.DayOfWeek
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service
 class HolidayHelper @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val redisCache: RedisCacheService
+    private val redisCache: ConfigCacheService
 ) {
 
     companion object {

@@ -27,14 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.media.MediaInfoReq
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "组件可见范围请求报文体")
-data class StoreVisibleDeptReq(
-    @get:Schema(title = "组件类型", required = true)
-    val storeType: String,
-    @get:Schema(title = "组件代码", required = true)
-    val storeCode: String,
+@Schema(title = "研发商店-组件发布信息修改请求报文体")
+data class StoreReleaseInfoUpdateRequest(
+    @get:Schema(title = "媒体信息", required = false)
+    val mediaInfoList: List<MediaInfoReq>? = null,
     @get:Schema(title = "机构列表", required = true)
-    val deptInfos: List<DeptInfo>
+    val deptInfoList: List<DeptInfo>? = null
 )

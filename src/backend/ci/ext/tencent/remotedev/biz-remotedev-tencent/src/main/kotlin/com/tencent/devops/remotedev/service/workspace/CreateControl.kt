@@ -82,8 +82,7 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import java.time.LocalDateTime
@@ -106,7 +105,7 @@ class CreateControl @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceResourceTypeDao: WindowsResourceTypeDao,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val whiteListService: WhiteListService,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
@@ -172,9 +171,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 检查项目配额
-        val projectLimit = projectInfo.properties?.cloudDesktopNum
-            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
-            ?: 20
+        val projectLimit = projectInfo.properties?.cloudDesktopNum ?: 1
         val workspaceNames = workspaceDao.fetchProjectWorkspaceName(
             dslContext = dslContext,
             projectId = projectInfo.englishName
@@ -741,8 +738,13 @@ class CreateControl @Autowired constructor(
                 )
             }
         }
-        SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-            .createStartCloudUser(userId, gameId.first)
+        kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .createStartCloudUser(userId, gameId.first)
+        }.onFailure {
+            logger.warn("create user failed when clone.|${it.message}")
+        }
+
         val bizId = MDC.get(TraceTag.BIZID)
         // 发送给k8s
         dispatcher.dispatch(

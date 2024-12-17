@@ -33,19 +33,22 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.service.client.FaceCheckData
 import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 class UserInfoCertService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
+    private val configCacheService: ConfigCacheService,
     private val tokenService: ClientTokenService,
     private val streamBridge: StreamBridge,
     private val userAuthApplyDao: UserAuthApplyDao,
@@ -243,15 +246,12 @@ class UserInfoCertService @Autowired constructor(
     private val faceRecognitionErrorCodeCache: LoadingCache<String, Set<String>> = Caffeine.newBuilder()
         .maximumSize(100L)
         .expireAfterWrite(Duration.ofMinutes(10))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = false)?.split(";")?.toSet() ?: setOf() }
+        .build { key -> configCacheService.get(key)?.split(";")?.toSet() ?: setOf() }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
         private const val TICKET_EXPIRT_DAYS = 15L
         private const val USER_CERT_LOG_PREFIX = "USER_CERT_LOG"
         private const val REMOTEDEV_USER_ATUCH_CHECK_REDIS_KEY_PREFIX = "remotedev:user_auth_check"
-
-        // 保存人脸识别错误的校验错误码，;进行分割
-        private const val REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY = "remotedev:user_face_recognition:error_code"
     }
 }

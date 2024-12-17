@@ -27,10 +27,15 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -68,14 +73,26 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import javax.servlet.http.HttpServletResponse
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import javax.servlet.http.HttpServletResponse
 
 @Primary
 @Service
-class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitService {
+class TencentGitServiceImpl @Autowired constructor(
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val gitTokenDao: GitTokenDao
+) : IGitService {
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = ""
+
+    @Value("\${repository.git.devopsPrivateToken:#{null}}")
+    private val devopsPrivateToken: String = ""
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
@@ -254,7 +271,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
 
     override fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
         return client.getScm(ServiceGitResource::class).deleteGitProject(
-            repositorySpaceName = repoName,
+            id = repoName,
             token = token,
             tokenType = tokenType
         )
@@ -781,5 +798,35 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             gitProjectId = gitProjectId,
             gitCreateMergeRequest = gitCreateMergeRequest
         )
+    }
+
+    fun getGitFileContent(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        oauthUserId: String?,
+        token: String?,
+        ref: String
+    ): String {
+        val finalToken = if (token.isNullOrBlank() && authType == RepoAuthType.OAUTH) {
+            if (oauthUserId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("oauthUserId")
+                )
+            }
+            val tokenRecord = gitTokenDao.getAccessToken(dslContext, oauthUserId) ?: throw ErrorCodeException(
+                errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(oauthUserId)
+            )
+            BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        } else {
+            token ?: devopsPrivateToken
+        }
+        return client.getScm(ServiceGitResource::class).getGitFileContent(
+            repoName = repoName,
+            filePath = filePath,
+            authType = authType,
+            token = finalToken,
+            ref = ref
+        ).data ?: ""
     }
 }

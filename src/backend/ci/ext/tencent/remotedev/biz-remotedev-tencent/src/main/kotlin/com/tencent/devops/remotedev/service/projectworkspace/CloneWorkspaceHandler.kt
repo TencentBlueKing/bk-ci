@@ -34,7 +34,6 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -56,7 +55,6 @@ class CloneWorkspaceHandler @Autowired constructor(
     private val deliverControl: DeliverControl,
     private val workspaceCommon: WorkspaceCommon,
     private val dispatcher: SampleEventDispatcher,
-    private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val windowsResourceConfigService: WindowsResourceConfigService
@@ -140,6 +138,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -149,7 +148,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     mountType = WorkspaceMountType.START,
                     zoneId = zoneId,
                     machineType = rebuildReq.machineType,
-                    gameId = null,
+                    appName = appName,
                     projectId = projectId,
                     live = rebuildReq.live
                 )

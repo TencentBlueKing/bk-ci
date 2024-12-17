@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -37,6 +38,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -44,7 +46,6 @@ import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -257,6 +258,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
         projectCode: String,
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean> {
+        if (projectOrganizationInfo.bgId == null || projectOrganizationInfo.bgName.isNullOrBlank()) {
+            throw ParamBlankException("bgId or bgName must be not null.")
+        }
         projectService.updateOrganizationByEnglishName(
             englishName = projectCode,
             projectOrganizationInfo = projectOrganizationInfo

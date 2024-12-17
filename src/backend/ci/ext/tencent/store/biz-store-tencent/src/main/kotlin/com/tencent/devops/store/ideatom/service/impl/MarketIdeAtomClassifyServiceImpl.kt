@@ -29,6 +29,7 @@ package com.tencent.devops.store.ideatom.service.impl
 
 import com.tencent.devops.store.common.service.AbstractClassifyService
 import com.tencent.devops.store.ideatom.dao.IdeAtomDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +46,7 @@ class MarketIdeAtomClassifyServiceImpl : AbstractClassifyService() {
     @Autowired
     lateinit var ideAtomDao: IdeAtomDao
 
-    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
+    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
         // 允许删除分类是条件：1、该分类下的原子插件都不处于上架状态
         var flag = false
         val releaseAtomNum = ideAtomDao.countReleaseAtomNumByClassifyId(dslContext, classifyId)

@@ -105,7 +105,8 @@
                     "{projectRoot}"
                 ],
                 "outputs": [
-                    "{workspaceRoot}/frontend/pipeline"
+                    "{workspaceRoot}/frontend/pipeline",
+                    "{workspaceRoot}/frontend/entry's"
                 ]
             }
         }

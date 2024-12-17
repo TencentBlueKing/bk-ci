@@ -56,7 +56,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/ticket"
+          "{workspaceRoot}/frontend/ticket",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }

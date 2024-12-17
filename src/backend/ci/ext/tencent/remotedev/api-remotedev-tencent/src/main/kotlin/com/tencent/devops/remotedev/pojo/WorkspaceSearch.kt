@@ -69,6 +69,8 @@ data class WorkspaceSearch(
     val workspaceOwnerType: List<WorkspaceOwnerType>? = null,
     @get:Schema(title = "逻辑区域")
     val logicalArea: List<WindowsResourceZoneConfigType>? = null,
+    @get:Schema(title = "节点HashId")
+    val nodeHashIds: List<String>? = null,
     @get:Schema(title = "为true返回公共云桌面实例，默认不会返回")
     val onPublic: Boolean = false
 ) {

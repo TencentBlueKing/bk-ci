@@ -28,6 +28,7 @@ package com.tencent.devops.store.image.service.impl
 
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.common.service.AbstractClassifyService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,7 @@ class MarketImageClassifyService : AbstractClassifyService() {
     @Autowired
     private lateinit var imageDao: ImageDao
 
-    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
+    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
         // 允许删除分类是条件：1、该分类下的镜像都不处于上架状态 2、该分类下的镜像如果处于已下架状态但已经没人在用
         var flag = false
         val releaseImageNum = imageDao.countReleaseImageNumByClassifyId(dslContext, classifyId)

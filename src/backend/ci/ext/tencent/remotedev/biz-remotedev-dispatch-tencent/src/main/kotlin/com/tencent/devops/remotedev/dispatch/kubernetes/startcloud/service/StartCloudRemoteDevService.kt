@@ -176,13 +176,13 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-        return deleteWorkspace(userId, event.workspaceName, event.gameId)
+        return deleteWorkspace(userId, event.workspaceName, event.appName)
     }
 
     private fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        gameId: String?
+        appName: String?
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -190,7 +190,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
-                appName = gameId,
+                appName = appName,
                 userId = userId,
                 pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
             )

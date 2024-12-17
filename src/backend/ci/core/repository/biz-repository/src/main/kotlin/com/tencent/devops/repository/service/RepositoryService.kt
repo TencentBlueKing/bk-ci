@@ -209,7 +209,8 @@ class RepositoryService @Autowired constructor(
                     aliasName = gitRepositoryResp.name,
                     url = gitRepositoryResp.repositoryUrl,
                     type = ScmType.CODE_GIT,
-                    updatedTime = LocalDateTime.now().timestampmilli()
+                    updatedTime = LocalDateTime.now().timestampmilli(),
+                    remoteRepoId = gitRepositoryResp.id
                 )
             )
         } else {

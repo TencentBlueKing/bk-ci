@@ -478,7 +478,7 @@
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId)
                 Object.keys(params).forEach(key => {
-                    if (isObject(params[key])) {
+                    if (key !== 'buildNo' && isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])
                     }
                 })
