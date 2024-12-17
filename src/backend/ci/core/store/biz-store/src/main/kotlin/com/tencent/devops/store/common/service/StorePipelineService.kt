@@ -55,8 +55,7 @@ interface StorePipelineService {
     // 创建组件内置流水线
     fun creatStorePipelineByStoreCode(
         storeCode: String? = null,
-        storeType: String,
-        grayFlag: Boolean = false
+        storeType: String
     ): String
 
     /**

@@ -118,9 +118,9 @@ interface ServiceStoreResource {
         projectCode: String
     ): Result<Boolean>
 
-    @Operation(summary = "校验流水线用户访问插件信息权限")
+    @Operation(summary = "校验流水线用户访问组件信息权限")
     @GET
-    @Path("/codes/{storeCode}/pipeline/user/validate")
+    @Path("/codes/{storeCode}/pipeline/visit/validate")
     fun validatePipelineUserAtomPermission(
         @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
