@@ -31,7 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_CODECC_OPENAPI_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -50,8 +50,7 @@ import org.springframework.beans.factory.annotation.Value
 class CodeccApi(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
-    private val codeccHost: String,
-    private val codeccGrayProjectId: String? = null
+    private val codeccHost: String
 ) {
 
     @Value("\${codecc.openapi.token:#{null}}")
@@ -189,11 +188,11 @@ class CodeccApi(
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
+    fun getCodeccOpensourceMeasurement(atomCodeSrc: String, tag: String? = null): Result<Map<String, Any>> {
         val url = "http://$codeccHost/ms/openapi/api/open/v2/defect/opensource/measurement?url=$atomCodeSrc"
         val headers = mutableMapOf<String, String>()
-        if (!codeccGrayProjectId.isNullOrBlank()) {
-            headers[AUTH_HEADER_PROJECT_ID] = codeccGrayProjectId
+        if (!tag.isNullOrBlank()) {
+            headers[AUTH_HEADER_GATEWAY_TAG] = tag
             headers[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         }
         val httpReq = Request.Builder()
