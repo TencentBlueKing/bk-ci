@@ -624,8 +624,8 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     }
 
     private static final class UnixReflection {
-        private static final Field PID_FIELD;
-        private static final Method DESTROY_PROCESS;
+        private static Field PID_FIELD;
+        private static Method DESTROY_PROCESS;
 
         private UnixReflection() {
         }
@@ -633,8 +633,10 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
         // TODO: 升级到JDK17后，这里可以使用 java.lang.Process 重构
         public static void destroy(int pid, boolean forceFlag) throws IllegalAccessException, InvocationTargetException {
             if (isJava17()) {
+                BkProcessTree.log("Killing by jdk17");
                 destroyProcessJava17(pid, forceFlag);
             } else {
+                BkProcessTree.log("Killing by jdk8");
                 DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
             }
         }
@@ -656,9 +658,13 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
                 DESTROY_PROCESS.setAccessible(true);
             } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
-                x = new LinkageError();
-                x.initCause(e);
-                throw x;
+                if (isJava17()) {
+                    BkProcessTree.log("java17 ignore java8 class error");
+                } else {
+                    x = new LinkageError();
+                    x.initCause(e);
+                    throw x;
+                }
             }
         }
 
@@ -689,6 +695,8 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                         destroyMethod = processHandleClass.getMethod("destroy");
                     }
                     destroyMethod.invoke(processHandle);
+                } else {
+                    BkProcessTree.log("Failed to terminate pid=" + pid + "no present");
                 }
             } catch (Exception e) {
                 BkProcessTree.log("Failed to terminate pid=" + pid, e);
