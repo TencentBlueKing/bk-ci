@@ -49,17 +49,13 @@ class CodeCCAutoConfiguration {
         codeccHost: String = "",
 
         @Value("\${codecc.gray.projectId:}")
-        codeccGrayProjectId: String? = null,
-
-        @Value("\${codecc.projectId:}")
-        codeccProjectId: String? = null
+        codeccGrayProjectId: String? = null
 
     ): CodeccApi =
         CodeccApi(
             codeccApiUrl = codeccApiGateWay,
             codeccApiProxyUrl = codeccApiProxyGateWay,
             codeccHost = codeccHost,
-            codeccGrayProjectId = codeccGrayProjectId,
-            codeccProjectId = codeccProjectId
+            codeccGrayProjectId = codeccGrayProjectId
         )
 }
