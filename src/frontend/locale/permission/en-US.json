@@ -136,7 +136,6 @@
     "请确认是否同步移交授权。": "Please confirm whether to also transfer the authorization.",
     "退出以上用户组，将导致": "Exiting the above user group will cause",
     "查看详情, 请填写交接人，完成交接后才能成功退出。": "{0}, please specify a transferee and complete the transfer before successfully exiting.",
-    "影响流水线代持权限及唯一拥有者用户组": "Affecting pipeline delegated permissions and sole owner user group",
     "资源授权": "Resource Authorization",
     "等待审核中, 不能退出": "Pending approval, cannot exit",
     "确定续期": "Confirm Renewal",
@@ -235,5 +234,7 @@
     "未授权": "Unauthorized",
     "OAUTH授权": "OAUTH authorization",
     "请先选择交接单": "Please select a handover form first",
-    "审批意见": "Approval Comments"
+    "审批意见": "Approval Comments",
+    "个人事务": "Personal affairs",
+    "管理事务": "Administrative affairs"
 }

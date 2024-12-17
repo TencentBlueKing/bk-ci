@@ -160,9 +160,9 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 import { timeFormatter } from '@/common/util.ts'
+import userGroupTable from '@/store/userGroupTable';
 
 const props = defineProps({
   isShowOperation: {
@@ -199,11 +199,11 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
-const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
 const curSelectedData = ref([]);
 const isCurrentAll = ref(false);
+const groupTableStore = userGroupTable();
 const selectedResourceCode = computed(() => isCurrentAll.value ? tableList.value.map(i => i.resourceCode) : curSelectedData.value.map(i => i.resourceCode));
 const resourceType = computed(() => props.resourceType);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
@@ -213,7 +213,7 @@ const TOOLTIPS_CONTENT = {
   TEMPLATE: t('通过用户组加入，不可直接退出。如需调整，请编辑用户组'),
   DEPARTMENT: t('通过组织加入的 不允许 续期/退出/移交')
 }
-const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
+
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
@@ -344,13 +344,13 @@ function handleToResourcePage(row) {
   if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
   switch (row.resourceType) {
     case 'pipeline':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
+      window.open(`${location.origin}/console/pipeline/${groupTableStore.projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
       return
     case 'pipeline_group':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
+      window.open(`${location.origin}/console/pipeline/${groupTableStore.projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
       return
     case 'codecc_task':
-      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
+      window.open(`${location.origin}/console/codecc/${groupTableStore.projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
       return
   }
 }

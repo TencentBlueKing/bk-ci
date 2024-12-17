@@ -719,12 +719,12 @@ async function batchConfirm (batchFlag) {
         batchBtnLoading.value = true;
         res = await http.batchRenewal(projectId.value, params);
         break;
-      case 'renewal':
+      case 'handover':
         if (!(await validateFormAndUser())) return;
         batchBtnLoading.value = true;
         res = await http.batchHandover(projectId.value, params);
         break;
-      case 'renewal':
+      case 'remove':
         if (!(await validateRemoveCondition())) return;
         batchBtnLoading.value = true;
         res = await http.batchRemove(projectId.value, params);

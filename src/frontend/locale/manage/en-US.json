@@ -307,5 +307,6 @@
     " {0} 个资源没有拥有者，": " {0} resources to have no owner,",
     "请确认是否同步移交授权。": "Please confirm whether to also transfer the authorization.",
     "退出以上用户组，将导致": "Exiting the above user group will cause",
-    "请填写交接人，完成交接后才能成功退出。": "Please specify a transferee and complete the transfer before successfully exiting."
+    "请填写交接人，完成交接后才能成功退出。": "Please specify a transferee and complete the transfer before successfully exiting.",
+    "申请交接": "Apply for Transfer"
 }
