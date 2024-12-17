@@ -185,6 +185,7 @@
                         :atom-props-model="atom.atomModal.props"
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
+                        :is-instance-template="isInstanceTemplate"
                         class="atom-content"
                     >
                     </div>
