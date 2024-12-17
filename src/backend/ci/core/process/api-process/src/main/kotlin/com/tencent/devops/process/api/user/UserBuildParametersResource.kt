@@ -183,4 +183,22 @@ interface UserBuildParametersResource {
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>
+
+    @Operation(summary = "构建表单查询分支/Tag变量")
+    @GET
+    @Path("/{projectId}/repository/refs")
+    fun listRepoRefs(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "repo hash id", required = true)
+        @QueryParam("repositoryId")
+        repositoryId: String,
+        @Parameter(description = "代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<BuildFormValue>>
 }

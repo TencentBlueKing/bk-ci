@@ -36,7 +36,7 @@ const val TASK_JSON_NAME = "task.json"
 const val QUALITY_JSON_NAME = "quality.json"
 const val ERROR_JSON_NAME = "errorCodes.json"
 const val EXTENSION_JSON_NAME = "extension.json"
-const val CONFIG_JSON_NAME = "bk-config.json"
+const val CONFIG_YML_NAME = "bk-config.yml"
 const val README = "README.md"
 const val STORE_ATOM_STATUS = "STORE_ATOM_STATUS" // 插件状态
 const val STORE_IMAGE_STATUS = "STORE_IMAGE_STATUS" // 镜像状态
@@ -148,6 +148,7 @@ const val KEY_RELEASE_INFO = "releaseInfo"
 const val KEY_VERSION_INFO = "versionInfo"
 const val KEY_RELEASE_TYPE = "releaseType"
 const val KEY_YAML_FLAG = "yamlFlag"
+const val KEY_REPOSITORY_AUTHORIZER = "repositoryAuthorizer"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
