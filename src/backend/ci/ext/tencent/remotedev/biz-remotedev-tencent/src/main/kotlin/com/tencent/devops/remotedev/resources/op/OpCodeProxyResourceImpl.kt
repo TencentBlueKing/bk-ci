@@ -30,6 +30,10 @@ class OpCodeProxyResourceImpl @Autowired constructor(
         )
     }
 
+    override fun refreshTgitlink(projectIds: Set<String>): Result<Map<Long, Boolean>> {
+        return Result(gitProxyTGitService.linkTGitOp(projectIds))
+    }
+
     override fun updateTgitAclIp(
         data: UpdateTgitAclIpData
     ) {

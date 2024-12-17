@@ -226,6 +226,19 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     /**
+     * 刷数据装用
+     */
+    fun linkTGitOp(
+        projectIds: Set<String>
+    ): Map<Long, Boolean> {
+        val result = mutableMapOf<Long, Boolean>()
+        projectIds.forEach {
+            result.putAll(linkTGit(it, null, null))
+        }
+        return result
+    }
+
+    /**
      * OP回调链接工蜂acl
      */
     @ActionAuditRecord(
@@ -237,7 +250,7 @@ class GitProxyTGitService @Autowired constructor(
     )
     fun linkTGit(
         projectId: String,
-        repoIds: Set<Long>,
+        repoIds: Set<Long>?,
         innerToken: TGitToken? = null
     ): Map<Long, Boolean> {
         val result = mutableMapOf<Long, Boolean>()
@@ -259,15 +272,16 @@ class GitProxyTGitService @Autowired constructor(
 
         // 获取关联的工蜂仓库
         val repoRecord = projectTGitLinkDao.fetch(dslContext, projectId, repoIds).associateBy { it.tgitId }
+        val newRepoIds = repoIds ?: repoRecord.keys
 
         // 审计
         ActionAuditContext.current()
-            .setInstanceName(repoIds.toString())
+            .setInstanceName(newRepoIds.toString())
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
         val tokenBox = TokenBox(client, true)
-        repoIds.forEach { repoId ->
+        newRepoIds.forEach { repoId ->
             val record = repoRecord[repoId] ?: return@forEach
 
             // 当前场景下目前是单一 token，拿不到肯定没了
