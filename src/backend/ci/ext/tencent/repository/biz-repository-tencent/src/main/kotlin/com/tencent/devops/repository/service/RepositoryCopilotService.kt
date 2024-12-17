@@ -47,6 +47,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
+@SuppressWarnings("LongParameterList", "LongMethod")
 class RepositoryCopilotService @Autowired constructor(
     val client: Client,
     val gitConfig: GitConfig,
