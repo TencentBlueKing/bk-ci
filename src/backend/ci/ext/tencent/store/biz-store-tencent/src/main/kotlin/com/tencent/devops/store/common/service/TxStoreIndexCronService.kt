@@ -405,7 +405,8 @@ class TxStoreIndexCronService(
     private fun getCodeccOpensourceMeasurement(atomCode: String): Double {
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
-            val result = codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore")
+            val result =
+                codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, "clss").data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0
