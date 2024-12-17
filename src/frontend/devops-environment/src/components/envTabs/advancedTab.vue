@@ -153,7 +153,7 @@
         color: #2e2d2c;
         padding: 25px !important;
         .header {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             margin-bottom: 40px;
         }

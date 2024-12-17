@@ -247,7 +247,7 @@
         "cloudLogoutHook": "云桌面退出钩子",
         "loginHookTips": "登录云桌面，将执行如下已勾选的操作",
         "logoutHookTips": "退出云桌面，将执行如下已勾选的操作",
-        "cleanCredentialsLabel": "清理凭据，包括 Git/SVN 凭据、浏览器缓存器凭据 (Chrome、Microsoft Edge)",
+        "cleanCredentialsLabel": "清理凭据，包括 Git/SVN 凭据、浏览器缓存凭据 (Chrome、Microsoft Edge)",
         "ioaLoginLabel": "登录IOA",
         "ioaLogoutLabel": "IOA注销登录"
     },
