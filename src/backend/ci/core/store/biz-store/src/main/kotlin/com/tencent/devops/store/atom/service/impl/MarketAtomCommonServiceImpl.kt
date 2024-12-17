@@ -416,7 +416,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             } else {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                    params = arrayOf(KEY_EXECUTION,KEY_LANGUAGE, supportedLanguages.joinToString(separator = ", "))
+                    params = arrayOf(KEY_EXECUTION, KEY_LANGUAGE, supportedLanguages.joinToString(separator = ", "))
                 )
             }
         } ?: throw ErrorCodeException(
@@ -536,8 +536,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
     }
 
-
-
     private fun <T : Any> validateTaskJsonField(
         inputGroupMap: Map<String, Any>,
         fieldName: String,
@@ -584,8 +582,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
     }
-
-
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
         val message: String?
