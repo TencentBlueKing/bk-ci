@@ -215,6 +215,7 @@ class TxStoreIndexCronService(
      * 计算插件质量指标数据
      */
     @Scheduled(cron = "0 0 1 * * ?")
+    @Suppress("NestedBlockDepth")
     fun computeAtomQualityIndexInfo() {
         if (!gray.isGray()) {
             return
