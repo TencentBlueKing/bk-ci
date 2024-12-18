@@ -24,45 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.devx.service
 
-package com.tencent.devops.store.common.service.action.impl
-
-import com.tencent.devops.common.api.auth.REFERER
-import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.util.RegexUtils
-import com.tencent.devops.common.web.utils.BkApiUtil
-import javax.annotation.Priority
+import com.tencent.devops.store.common.service.AbstractDomainService
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Primary
-@Component
-@Priority(Int.MAX_VALUE)
-@Suppress("UNUSED")
-class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
-
-    @Value("\${bkrepo.staticRepoPrefixUrl:#{null}}")
-    val staticRepoPrefixUrl: String? = null
+@Service("DEVX_DOMAIN_SERVICE")
+class DevxDomainServiceImpl : AbstractDomainService() {
 
     @Value("\${bkrepo.devxStaticRepoPrefixUrl:#{null}}")
     val devxStaticRepoPrefixUrl: String? = null
 
-    override fun handleHostBus(str: String): String {
-        // 获取请求来源
-        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
-        val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
-            // 判断请求来源的域名是否是devx环境的域名
-            val host = RegexUtils.splitDomainContextPath("$devxStaticRepoPrefixUrl/")?.first
-            val refererHost = RegexUtils.splitDomainContextPath("$referer/")?.first ?: referer
-            host?.contains(refererHost)
-        } else {
-            false
+    override fun convertDomain(url: String): String {
+        if (devxStaticRepoPrefixUrl.isNullOrBlank()) {
+            // 如果配置不存在则不进行域名替换
+            return url
         }
-        if (hostReplaceFlag == true && !staticRepoPrefixUrl.isNullOrBlank()) {
-            // 进行域名替换
-            return str.replace(staticRepoPrefixUrl!!, devxStaticRepoPrefixUrl!!)
-        }
-        return str
+        // 进行域名替换
+        val urlHost = RegexUtils.splitDomainContextPath("$url/")?.first ?: ""
+        val devxHost = RegexUtils.splitDomainContextPath("$devxStaticRepoPrefixUrl/")?.first ?: ""
+        return url.replace(urlHost, devxHost)
     }
 }
