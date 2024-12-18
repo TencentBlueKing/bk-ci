@@ -24,44 +24,49 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v4
 
-package com.tencent.devops.repository.api.github
-
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.sdk.github.response.GetUserEmailResponse
-import com.tencent.devops.repository.sdk.github.response.GetUserResponse
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_USER_GITHUB", description = "服务-github-user")
-@Path("/service/github/user")
+@Tag(name = "OPEN_API_REPOSITORY_V4", description = "OPEN-API-代码库OAUTH授权")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/repositories/oauth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceGithubUserResource {
-
-    @Operation(summary = "获取用户信息")
+@SuppressWarnings("All")
+interface ApigwRepositoryOauthResourceV4 {
+    @Operation(
+        summary = "校验用户是否已经OAUTH授权",
+        tags = ["v4_app_oauth_isOauth", "v4_user_oauth_isOauth"]
+    )
     @GET
-    @Path("/getUser")
-    fun getUser(
-        @Parameter(description = "授权token", required = true)
-        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
-        token: String
-    ): Result<GetUserResponse?>
-
-    @Operation(summary = "获取用户 email 信息")
-    @GET
-    @Path("/get_user_email")
-    fun getUserEmail(
-        @Parameter(description = "授权token", required = true)
-        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
-        token: String
-    ): Result<List<GetUserEmailResponse>>
+    @Path("/isOauth")
+    fun isOauth(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库类型", required = true)
+        @QueryParam("scmCode")
+        scmCode: String
+    ): Result<Boolean>
 }
