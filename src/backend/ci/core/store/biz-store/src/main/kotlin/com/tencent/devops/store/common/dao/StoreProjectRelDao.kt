@@ -153,7 +153,7 @@ class StoreProjectRelDao {
             return dslContext.selectCount().from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
-                    .and(TYPE.eq(1))
+                    .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
                 )
                 .fetchOne(0, Int::class.java)!!
         }
@@ -266,8 +266,7 @@ class StoreProjectRelDao {
             storeProjectTypes?.let {
                 conditions.add(TYPE.`in`(storeProjectTypes))
             }
-            // 测试中的应用对应的调试项目下无需判断测试版本的应用已安装
-            if (!instanceId.isNullOrBlank() && storeProjectTypes?.contains(StoreProjectTypeEnum.TEST.type.toByte()) != true) {
+            if (!instanceId.isNullOrBlank()) {
                 conditions.add(INSTANCE_ID.eq(instanceId))
             }
             val baseQuery = dslContext.select(STORE_CODE, VERSION)
@@ -386,17 +385,21 @@ class StoreProjectRelDao {
         storeCode: String,
         storeType: StoreTypeEnum
     ): String? {
-        val a = TStoreMember.T_STORE_MEMBER.`as`("a")
-        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
-        val finalStep = dslContext.select(b.PROJECT_CODE)
-            .from(a)
-            .join(b)
-            .on(a.STORE_CODE.eq(b.STORE_CODE).and(a.STORE_TYPE.eq(b.STORE_TYPE)))
-            .where(a.USERNAME.eq(userId))
-            .and(b.STORE_CODE.eq(storeCode))
-            .and(b.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
-            .and(b.CREATOR.eq(userId))
-            .and(a.STORE_TYPE.eq(storeType.type.toByte()))
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
+        val finalStep = dslContext.select(tStoreProjectRel.PROJECT_CODE)
+            .from(tStoreMember)
+            .join(tStoreProjectRel)
+            .on(
+                tStoreMember.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
+                    .and(tStoreMember.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
+            )
+            .where(tStoreMember.USERNAME.eq(userId))
+            .and(tStoreProjectRel.STORE_CODE.eq(storeCode))
+            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .and(tStoreProjectRel.CREATOR.eq(userId))
+            .and(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+            .limit(1)
         return finalStep.fetchOne(0, String::class.java)
     }
 
@@ -458,22 +461,24 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 删除用户的组件设定的调试项目
+     * 删除组件的项目
      */
-    fun deleteUserStoreTestProject(
+    fun deleteStoreProject(
         dslContext: DSLContext,
-        userId: String,
         storeProjectType: StoreProjectTypeEnum,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        userId: String? = null
     ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.deleteFrom(this)
-                .where(CREATOR.eq(userId))
-                .and(TYPE.eq(storeProjectType.type.toByte()))
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            if (userId != null) {
+                conditions.add(CREATOR.eq(userId))
+            }
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
@@ -577,18 +582,20 @@ class StoreProjectRelDao {
         }
     }
 
-    fun getInitProjectInfoByStoreCode(
+    fun getProjectInfoByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: Byte
-    ): TStoreProjectRelRecord? {
+        storeType: Byte,
+        storeProjectType: StoreProjectTypeEnum? = null
+    ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode)
-                    .and(STORE_TYPE.eq(storeType))
-                    .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-                )
-                .fetchOne()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            if (storeProjectType != null) {
+                conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -608,6 +615,7 @@ class StoreProjectRelDao {
             conditions.add(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .limit(1)
                 .fetchOne()
         }
     }

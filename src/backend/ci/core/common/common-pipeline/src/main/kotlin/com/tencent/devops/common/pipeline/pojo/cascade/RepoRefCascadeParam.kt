@@ -49,5 +49,15 @@ class RepoRefCascadeParam : CascadeParam(
             ScmType.CODE_TGIT,
             ScmType.CODE_GITLAB
         )
+
+        fun variableKeyMap(key: String) = mapOf(
+            SELECTOR_KEY_REPO_NAME to "$key.$SELECTOR_KEY_REPO_NAME",
+            SELECTOR_KEY_BRANCH to "$key.$SELECTOR_KEY_BRANCH"
+        )
+
+        fun defaultValue() = mapOf(
+            SELECTOR_KEY_REPO_NAME to "",
+            SELECTOR_KEY_BRANCH to ""
+        )
     }
 }
