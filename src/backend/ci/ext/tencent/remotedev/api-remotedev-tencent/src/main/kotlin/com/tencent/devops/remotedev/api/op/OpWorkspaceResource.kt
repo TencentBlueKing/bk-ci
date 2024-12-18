@@ -168,4 +168,16 @@ interface OpWorkspaceResource {
         userId: String,
         workspaceNames: Set<String>
     ): Result<Boolean>
+
+    @Operation(summary = "由于取消了任务轮询，现在状态流转依赖于回调，所以增加此监控手段")
+    @POST
+    @Path("/pending_check")
+    fun pendingCheck(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "企微群id", required = true)
+        @QueryParam("ww")
+        ww: String?
+    ): Result<String>
 }

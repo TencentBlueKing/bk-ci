@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
@@ -37,12 +38,17 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
+import java.time.Duration
+import java.time.LocalDateTime
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class StartCloudService @Autowired constructor(
+    private val dslContext: DSLContext,
     private val startCloudInterfaceService: StartCloudInterfaceService,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceBcsClient: WorkspaceBcsClient
 ) : ServiceStartCloudInterface {
 
@@ -88,5 +94,25 @@ class StartCloudService @Autowired constructor(
 
     override fun getVmStandardImages(): Result<List<StandardVmImage>?> {
         return Result(workspaceBcsClient.startGetVmStandardImages())
+    }
+
+    override fun pendingCheck(userId: String): Result<String> {
+        val now = LocalDateTime.now()
+        // 拉取所有pending任务
+        val tasks = dispatchWorkspaceOpHisDao.fetchAllPendingTask(dslContext)
+        // 返回格式: 按照运行时长降序
+        // id(xxx) 操作类型(xxx) 运行时长(xx小时xx分钟) 当前步骤及状态(xxx[当前步骤状态]) 疑似BCS未回调
+        return Result(tasks.asSequence().map { task ->
+            val taskStatus = workspaceBcsClient.startGetTaskStatus(userId = "system", taskId = task.taskId)
+            "id(${task.workspaceName}) " +
+                "操作类型(${task.action}) " +
+                "运行时长(${
+                    Duration.between(task.createdTime, now).toMinutes().let { "${it / 60}小时${it % 60}分" }
+                }) " +
+                "当前步骤及状态(${taskStatus.currentStep}[${taskStatus.status}]) " +
+                if (task.status != "RUNNING") {
+                    "疑似BCS未回调 <@$userId>"
+                } else ""
+        }.joinToString("\n"))
     }
 }
