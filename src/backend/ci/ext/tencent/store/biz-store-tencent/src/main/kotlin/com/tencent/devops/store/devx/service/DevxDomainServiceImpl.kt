@@ -43,8 +43,8 @@ class DevxDomainServiceImpl : AbstractDomainService() {
             return url
         }
         // 进行域名替换
-        val urlHost = RegexUtils.splitDomainContextPath(url)!!.first
-        val devxHost = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
+        val urlHost = RegexUtils.splitDomainContextPath("$url/")?.first ?: ""
+        val devxHost = RegexUtils.splitDomainContextPath("$devxStaticRepoPrefixUrl/")?.first ?: ""
         return url.replace(urlHost, devxHost)
     }
 }
