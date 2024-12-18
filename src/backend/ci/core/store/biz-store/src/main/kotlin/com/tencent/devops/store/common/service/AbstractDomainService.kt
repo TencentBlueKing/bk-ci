@@ -25,36 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.env
+package com.tencent.devops.store.common.service
 
-import io.swagger.v3.oas.annotations.media.Schema
+abstract class AbstractDomainService {
 
-@Schema(title = "store组件安装包运行时环境信息")
-data class StorePkgRunEnvInfo(
-    @get:Schema(title = "环境变量ID", required = true)
-    val id: String,
-    @get:Schema(title = "store组件类型", required = true)
-    val storeType: String,
-    @get:Schema(title = "开发语言", required = true)
-    val language: String,
-    @get:Schema(title = "支持的操作系统名称", required = true)
-    val osName: String,
-    @get:Schema(title = "支持的操作系统架构", required = true)
-    val osArch: String,
-    @get:Schema(title = "运行时版本", required = true)
-    val runtimeVersion: String,
-    @get:Schema(title = "安装包名称", required = true)
-    val pkgName: String,
-    @get:Schema(title = "安装包下载路径", required = true)
-    var pkgDownloadPath: String,
-    @get:Schema(title = "是否为默认安装包", required = true)
-    val defaultFlag: Boolean,
-    @get:Schema(title = "添加用户", required = true)
-    val creator: String,
-    @get:Schema(title = "修改用户", required = true)
-    val modifier: String,
-    @get:Schema(title = "添加时间", required = true)
-    val createTime: String,
-    @get:Schema(title = "修改时间", required = true)
-    val updateTime: String
-)
+    /**
+     * 转换url域名
+     * @param url url地址
+     * @return 转换域名后的url地址
+     */
+    abstract fun convertDomain(url: String): String
+}
