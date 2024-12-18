@@ -71,6 +71,7 @@ class BuildStoreResourceImpl @Autowired constructor(
     ): Result<StorePkgRunEnvInfo?> {
         return Result(
             storePkgRunEnvInfoService.getStorePkgRunEnvInfo(
+                devopsEnv = devopsEnv,
                 userId = "",
                 storeType = storeType,
                 language = language,
