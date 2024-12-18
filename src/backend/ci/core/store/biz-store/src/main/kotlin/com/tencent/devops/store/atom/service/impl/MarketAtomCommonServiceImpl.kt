@@ -27,13 +27,22 @@
 
 package com.tencent.devops.store.atom.service.impl
 
+import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
+import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.STRING
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -77,6 +86,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.IS_EXPANDED
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
@@ -85,21 +95,24 @@ import com.tencent.devops.store.pojo.common.KEY_DEMANDS
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_FINISH_KILL_FLAG
 import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_TARGET
+import com.tencent.devops.store.pojo.common.KEY_TYPE
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
+import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -379,6 +392,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as? Map<String, Any>
+        val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
+        if (!keyInputGroupMapList.isNullOrEmpty()) {
+            keyInputGroupMapList.forEach { inputGroupMap ->
+                validateTaskJsonField(inputGroupMap, NAME, String::class)
+                validateTaskJsonField(inputGroupMap, LABEL, String::class)
+                validateTaskJsonField(inputGroupMap, IS_EXPANDED, Boolean::class)
+            }
+        }
         var atomPostInfo: AtomPostInfo? = null
         if (executionInfoMap == null) {
             // 抛出错误提示
@@ -387,14 +408,21 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_EXECUTION)
             )
         }
-        val language = executionInfoMap[KEY_LANGUAGE] as? String
-        if (language.isNullOrBlank()) {
-            // 抛出错误提示
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                params = arrayOf(KEY_LANGUAGE)
-            )
-        }
+        // pref:完善研发商店组件配置文件参数校验 #11269
+        val supportedLanguages = setOf(JAVA, PYTHON, GOLANG, NODEJS)
+        val language = executionInfoMap[KEY_LANGUAGE]?.toString()?.let { language ->
+            if (language in supportedLanguages) {
+                language
+            } else {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                    params = arrayOf(KEY_EXECUTION, KEY_LANGUAGE, supportedLanguages.joinToString(separator = ", "))
+                )
+            }
+        } ?: throw ErrorCodeException(
+            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+            params = arrayOf(KEY_LANGUAGE)
+        )
         val config = taskDataMap[KEY_CONFIG] as? Map<String, Any>
         config?.let { validateConfigMap(config) }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
@@ -433,20 +461,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         } else {
             runtimeVersion
         }
-        if (null != osList) {
+        if (!osList.isNullOrEmpty()) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
-                val osName = osExecutionInfoMap[KEY_OS_NAME] as? String
-                if (osName.isNullOrBlank()) {
-                    // 执行入口为空则校验失败
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(KEY_OS_NAME)
-                    )
-                }
-                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
-                )
+                validateTaskJsonField(osExecutionInfoMap, KEY_OS_NAME, String::class)
+                val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
+
+                validateTaskJsonField(osExecutionInfoMap, KEY_TARGET, String::class)
+                val target = osExecutionInfoMap[KEY_TARGET].toString()
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -485,9 +507,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            val target = executionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
-            )
+            validateTaskJsonField(executionInfoMap, KEY_TARGET, String::class)
+            val target = executionInfoMap[KEY_TARGET] as String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
@@ -506,22 +527,60 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomEnvRequests.add(atomEnvRequest)
         }
 
-        // 校验参数输入参数和输出参数是否超过最大值
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
-        if (inputDataMap != null && inputDataMap.size > maxInputNum) {
+        inputDataMap?.let { validateInputOutputData(it, maxInputNum) }
+
+        val supportedTypes = setOf(STRING, ARTIFACT, REPORT)
+        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+        outputDataMap?.let { validateInputOutputData(it, maxInputNum, supportedTypes, isInput = false) }
+        return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
+    }
+
+    private fun <T : Any> validateTaskJsonField(
+        inputGroupMap: Map<String, Any>,
+        fieldName: String,
+        expectedType: KClass<T>
+    ) {
+        val fieldValue = inputGroupMap[fieldName]
+        if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                params = arrayOf(fieldName)
+            )
+        } else if (!expectedType.isInstance(fieldValue)) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf(fieldName)
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun validateInputOutputData(
+        dataMap: Map<String, Any>,
+        maxInputNum: Int,
+        supportedTypes: Set<String>? = null,
+        isInput: Boolean = true
+    ) {
+        if (dataMap.size > maxInputNum) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_INPUT_NUM_IS_TOO_MANY,
                 params = arrayOf(maxInputNum.toString())
             )
         }
-        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
-        if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
-                params = arrayOf(maxOutputNum.toString())
-            )
-        }
-        return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
+
+        dataMap.values
+            .mapNotNull { it as? Map<String, Any> }
+            .forEach { map ->
+                validateTaskJsonField(map, KEY_TYPE, String::class)
+                val type = map[KEY_TYPE].toString()
+                if (!isInput && (supportedTypes != null && type !in supportedTypes)) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                        params = arrayOf(KEY_OUTPUT, KEY_TYPE, supportedTypes.joinToString(separator = ","))
+                    )
+                }
+            }
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
