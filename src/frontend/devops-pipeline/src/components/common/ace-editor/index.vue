@@ -188,7 +188,7 @@
                 try {
                     const tokenKey = '__GONGFENG_COPILOT_TOKEN__'
                     const token = localStorage.getItem(tokenKey)
-                    if (token) return token
+                    if (!refresh && token) return token
                     const res = await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/tgit/getCopilotOpenToken?refresh=${refresh}`)
                     localStorage.setItem(tokenKey, res.data)
                     return res.data
