@@ -340,6 +340,10 @@
                 <i18n-t v-if="checkData.uniqueManagerCount" keypath="X个资源没有拥有者，" tag="span">
                   <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
                 </i18n-t>
+
+                <i18n-t v-if="checkData.invalidEnvNodeAuthorizationCount" keypath="X个环境节点授权失效，" tag="span">
+                  <span class="remove-num">{{ checkData.invalidEnvNodeAuthorizationCount }}</span>
+                </i18n-t>
                 {{ t('请填写交接人，完成交接后才能成功退出。') }}
               </p>
               <p v-else class="main-label-remove">

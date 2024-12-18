@@ -133,6 +133,7 @@
     "X个流水线权限代持失效，": " {0} pipeline delegation permissions to become invalid,",
     "X个代码库授权失效，": " {0} repository authorizations to become invalid,",
     "X个资源没有拥有者，": " {0} resources to have no owner,",
+    "X个环境节点授权失效，": "{0} environment node authorizations have expired,",
     "请确认是否同步移交授权。": "Please confirm whether to also transfer the authorization.",
     "退出以上用户组，将导致": "Exiting the above user group will cause",
     "查看详情, 请填写交接人，完成交接后才能成功退出。": "{0}, please specify a transferee and complete the transfer before successfully exiting.",
@@ -236,5 +237,8 @@
     "请先选择交接单": "Please select a handover form first",
     "审批意见": "Approval Comments",
     "个人事务": "Personal affairs",
-    "管理事务": "Administrative affairs"
+    "管理事务": "Administrative affairs",
+    "当前处理人": "Current handler",
+    "审批": "Approval",
+    "已撤销": "Revoked"
 }
