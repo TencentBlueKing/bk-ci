@@ -49,7 +49,7 @@ subprojects {
         it.exclude(group = "org.glassfish.jersey.core", module = "*")
         it.exclude(group = "org.glassfish.hk2", module = "*")
         it.exclude(group = "org.glassfish.hk2.external", module = "*")
-        it.exclude(group = "jakarta.validation", module = "*")
+        it.exclude(group = "javax.validation", module = "*")
         it.exclude(group = "javax.mail", module = "*")
         it.exclude(group = "io.swagger", module = "*")
         it.exclude(group = "io.micrometer", module = "*")
