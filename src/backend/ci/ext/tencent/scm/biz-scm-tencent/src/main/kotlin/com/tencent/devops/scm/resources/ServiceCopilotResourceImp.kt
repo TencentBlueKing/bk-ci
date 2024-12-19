@@ -44,16 +44,29 @@ class ServiceCopilotResourceImp @Autowired constructor(
 ) : ServiceCopilotResource {
     val copilotApi = CopilotApi()
 
-    override fun getSummary(
+    override fun createSummary(
         token: String,
         projectName: String,
         source: String,
         target: String
     ): Result<CodeGitCopilotSummary?> {
-        val summary = copilotApi.getSummary(
+        val summary = copilotApi.createSummary(
             url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary",
             sourceSha = source,
             targetSha = target,
+            accessToken = token
+        )
+        return Result(summary)
+    }
+
+    override fun getSummary(
+        token: String,
+        projectName: String,
+        taskId: String
+    ): Result<CodeGitCopilotSummary?> {
+        val summary = copilotApi.getSummary(
+            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary",
+            taskId = taskId,
             accessToken = token
         )
         return Result(summary)

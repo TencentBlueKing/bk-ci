@@ -44,7 +44,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 @SuppressWarnings("LongParameterList", "LongMethod")
@@ -68,65 +67,90 @@ class RepositoryCopilotService @Autowired constructor(
     ): CodeGitCopilotSummary {
         logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId|$refresh")
         val accessToken = getAccessToken(userId)
-        val summary = if (refresh) {
-            null
-        } else {
-            copilotSummaryDao.get(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                elementId = elementId
-            )?.summary
-        }
-        // 返回已有摘要结果
-        if (!summary.isNullOrBlank()) {
-            return JsonUtil.to(summary, CodeGitCopilotSummary::class.java)
-        }
         val (projectName, sourceSha, targetSha) = resolveSummaryParams(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             elementId = elementId
         )
-        executorService.execute {
-            logger.info("async get summary|$projectName|$sourceSha...$targetSha")
-            val copilotSummary = client.getScm(ServiceCopilotResource::class).getSummary(
-                projectName = projectName,
-                source = sourceSha,
-                target = targetSha,
-                token =  accessToken
-            ).data?.let {
-                it.projectName = projectName
-                it
-            } ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
-            logger.info("async save summary|$copilotSummary")
-            copilotSummaryDao.create(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                elementId = elementId,
-                summary = JsonUtil.toJson(copilotSummary, false),
-                source = sourceSha,
-                target = targetSha,
-                projectName = projectName,
-                scmCode = SCM_CODE,
-                status = copilotSummary.status.toString()
-            )
-        }
-        val runningSummary = CodeGitCopilotSummary(status = CopilotSummaryCreateStatus.RUNNING.value)
+        logger.info("async get summary|$projectName|$sourceSha...$targetSha")
+        val copilotSummary = client.getScm(ServiceCopilotResource::class).createSummary(
+            projectName = projectName,
+            source = sourceSha,
+            target = targetSha,
+            token = accessToken
+        ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+        logger.info("save summary|$copilotSummary")
         copilotSummaryDao.create(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             elementId = elementId,
-            summary = JsonUtil.toJson(runningSummary, false),
+            summary = JsonUtil.toJson(copilotSummary, false),
             source = sourceSha,
             target = targetSha,
             projectName = projectName,
-            scmCode = SCM_CODE,
-            status = CopilotSummaryCreateStatus.RUNNING.value.toString()
+            scmCode = COPILOT_SCM_CODE,
+            status = copilotSummary.status
         )
-        return runningSummary
+        return copilotSummary
+    }
+
+    fun getSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): CodeGitCopilotSummary {
+        // 没有生成摘要，则先生成
+        val record = copilotSummaryDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            elementId = elementId
+        )
+        val accessToken = getAccessToken(userId)
+        return when {
+            record == null ->
+                createSummary(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    elementId = elementId,
+                    refresh = true
+                )
+
+            CopilotSummaryCreateStatus.isFinal(record.status) ->
+                JsonUtil.to(record.summary, CodeGitCopilotSummary::class.java)
+
+            else -> {
+                val summary = JsonUtil.to(record.summary, CodeGitCopilotSummary::class.java)
+                val copilotSummary = client.getScm(ServiceCopilotResource::class).getSummary(
+                    projectName = record.projectName,
+                    taskId = summary.id!!.toString(),
+                    token = accessToken
+                ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+                if (CopilotSummaryCreateStatus.isFinal(copilotSummary.status)) {
+                    // 成功获取摘要
+                    logger.info("success get summary|$summary")
+                    copilotSummaryDao.create(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        buildId = buildId,
+                        elementId = elementId,
+                        summary = JsonUtil.toJson(copilotSummary, false),
+                        source = record.sourceCommit,
+                        target = record.targetCommit,
+                        projectName = record.projectName,
+                        scmCode = COPILOT_SCM_CODE,
+                        status = copilotSummary.status
+                    )
+                }
+                copilotSummary
+            }
+        }
     }
 
     fun rateSummary(
@@ -200,7 +224,6 @@ class RepositoryCopilotService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
-        private val executorService = Executors.newFixedThreadPool(50)
-        const val SCM_CODE = "TGIT"
+        const val COPILOT_SCM_CODE = "TGIT"
     }
 }

@@ -6,20 +6,23 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.scm.enums.AISummaryRateType
 import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import java.net.URL
 
 /**
  * 工蜂Copilot接口调用
  */
 class CopilotApi {
     /**
-     * 获取AI摘要
+     * 生成AI摘要
      */
-    fun getSummary(
+    fun createSummary(
         url: String,
         sourceSha: String,
         targetSha: String,
@@ -32,11 +35,42 @@ class CopilotApi {
                 "referer" to API_REFERER
             )
         )
-        val response = doPost(
-            url = "$url?$queryParam",
-            body = JsonUtil.toJson(mapOf<String, String>(), false),
-            headers = mapOf("Authorization" to "Bearer $accessToken"),
-            longRequest = true
+        val response = doHttp(
+            request = Request.Builder()
+                .url(URL("$url?$queryParam"))
+                .header("Authorization", "Bearer $accessToken")
+                .post("".toRequestBody(jsonMediaType))
+                .build()
+        )
+        val responseContent = response.body!!.string()
+        return if (responseContent.isBlank()) {
+            logger.warn("the AI summary result is empty, please check the input parameters")
+            null
+        } else {
+            JsonUtil.to(responseContent, object : TypeReference<CodeGitCopilotSummary>() {})
+        }
+    }
+
+    /**
+     * 获取AI摘要结果
+     */
+    fun getSummary(
+        url: String,
+        taskId: String,
+        accessToken: String
+    ): CodeGitCopilotSummary? {
+        val queryParam = OkhttpUtils.joinParams(
+            params = mapOf(
+                "task_id" to taskId,
+                "referer" to API_REFERER
+            )
+        )
+        val response = doHttp(
+            request = Request.Builder()
+                .url(URL("$url?$queryParam"))
+                .header("Authorization", "Bearer $accessToken")
+                .get()
+                .build()
         )
         val responseContent = response.body!!.string()
         return if (responseContent.isBlank()) {
@@ -66,45 +100,28 @@ class CopilotApi {
                 it
             }
         )
-        doPost(
-            url = "$url?$queryParam",
-            body = JsonUtil.toJson(mapOf<String, String>(), false),
-            headers = mapOf("Authorization" to "Bearer $accessToken")
+
+        doHttp(
+            request = Request.Builder()
+                .url(URL("$url?$queryParam"))
+                .header("Authorization", "Bearer $accessToken")
+                .post("".toRequestBody(jsonMediaType))
+                .build()
         )
     }
 
-    private fun doPost(
-        url: String,
-        body: String,
-        headers: Map<String, String>,
-        longRequest: Boolean = false
-    ): Response {
-        val watcher = Watcher("access copilot api [$url]")
+    private fun doHttp(request: Request): Response {
+        val watcher = Watcher("access copilot api [${request.url}]")
         watcher.start()
-        val response = if (longRequest) {
-            OkhttpUtils.doCustomTimeoutPost(
-                connectTimeout = CONNECT_TIMEOUT_SECONDS,
-                readTimeout = READ_TIMEOUT_SECONDS,
-                writeTimeout = WRITE_TIMEOUT_SECONDS,
-                url = url,
-                jsonParam = body,
-                headers = headers
-            )
-        } else {
-            OkhttpUtils.doPost(
-                url = url,
-                jsonParam = body,
-                headers = headers
-            )
-        }
+        val response = OkhttpUtils.doHttp(request)
         if (!response.isSuccessful) {
-            logger.warn("copilot api access failed|$url|${response.code}|${response.body?.string()}")
+            logger.warn("copilot api access failed|${request.url}|${response.code}|${response.body?.string()}")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
                 params = arrayOf("Copilot", response.body?.string() ?: response.code.toString())
             )
         }
-        LogUtils.printCostTimeWE(watcher, warnThreshold = 200, errorThreshold = 1000)
+        watcher.stop()
         return response
     }
 
@@ -112,9 +129,6 @@ class CopilotApi {
         // 蓝盾侧调用接口固定值
         const val API_REFERER = "landun"
         val logger = LoggerFactory.getLogger(CopilotApi::class.java)
-        // HTTP请求超时时间（秒）
-        private const val CONNECT_TIMEOUT_SECONDS = 5L
-        private const val READ_TIMEOUT_SECONDS = 60L
-        private const val WRITE_TIMEOUT_SECONDS = 60L
+        val jsonMediaType = "application/json".toMediaTypeOrNull()
     }
 }

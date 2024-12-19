@@ -65,6 +65,24 @@ class UserCopilotResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): Result<CodeGitCopilotSummary> {
+        return Result(
+            repositoryCopilotService.getSummary(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId
+            )
+        )
+    }
+
     override fun rateSummary(
         userId: String,
         projectName: String,

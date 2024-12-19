@@ -6,5 +6,11 @@ package com.tencent.devops.repository.enums
 enum class CopilotSummaryCreateStatus constructor(val value: Int) {
     SUCCESS(5),
     FAILURE(3),
-    RUNNING(1)
+    RUNNING(1);
+
+    companion object {
+        fun isFinal(status: Int): Boolean {
+            return status == SUCCESS.value || status == FAILURE.value
+        }
+    }
 }

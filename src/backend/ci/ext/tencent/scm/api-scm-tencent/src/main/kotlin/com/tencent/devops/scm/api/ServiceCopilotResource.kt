@@ -46,10 +46,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCopilotResource {
 
-    @Operation(summary = "获取AI摘要")
+    @Operation(summary = "生成AI摘要")
     @GET
-    @Path("/getSummary")
-    fun getSummary(
+    @Path("/createSummary")
+    fun createSummary(
         @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
@@ -62,6 +62,21 @@ interface ServiceCopilotResource {
         @Parameter(description = "目标提交点", required = true)
         @QueryParam("target")
         target: String
+    ): Result<CodeGitCopilotSummary?>
+
+    @Operation(summary = "获取AI摘要结果")
+    @GET
+    @Path("/getSummary")
+    fun getSummary(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "仓库名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "摘要ID", required = true)
+        @QueryParam("taskId")
+        taskId: String
     ): Result<CodeGitCopilotSummary?>
 
     @Operation(summary = "评论AI摘要")

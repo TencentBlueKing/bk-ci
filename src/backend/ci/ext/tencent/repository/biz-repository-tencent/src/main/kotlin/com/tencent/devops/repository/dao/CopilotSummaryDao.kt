@@ -61,7 +61,7 @@ class CopilotSummaryDao {
         projectName: String,
         source: String,
         target: String,
-        status: String,
+        status: Int,
         summary: String?
     ) {
         with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {

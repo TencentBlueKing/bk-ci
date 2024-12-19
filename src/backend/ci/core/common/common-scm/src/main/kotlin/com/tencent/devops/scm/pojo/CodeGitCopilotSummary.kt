@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "工蜂Copilot摘要返回值")
 data class CodeGitCopilotSummary(
     @get:Schema(title = "id")
-    val number: Int? = null,
+    val id: Int? = null,
     @get:Schema(title = "任务id, 后续好评差评使用的是这个 id")
     val processId: String? = null,
     @get:Schema(title = "状态  1：运行中 3：失败  5：已生成")
