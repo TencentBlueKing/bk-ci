@@ -65,7 +65,7 @@ class ServiceCopilotResourceImp @Autowired constructor(
         taskId: String
     ): Result<CodeGitCopilotSummary?> {
         val summary = copilotApi.getSummary(
-            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary",
+            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary/status",
             taskId = taskId,
             accessToken = token
         )
