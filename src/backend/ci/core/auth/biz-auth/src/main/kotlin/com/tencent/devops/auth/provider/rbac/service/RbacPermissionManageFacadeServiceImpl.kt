@@ -766,9 +766,13 @@ class RbacPermissionManageFacadeServiceImpl(
             action = ActionId.PIPELINE_EXECUTE,
             filterIamGroupIds = iamGroupIdsOfNotExpired
         )
-
+        val invalidGroupIds = if (invalidAuthorizations.isNotEmpty()) {
+            operatedGroupsWithExecutePerm
+        } else {
+            emptyList()
+        }
         return InvalidAuthorizationsDTO(
-            invalidGroupIds = operatedGroupsWithExecutePerm,
+            invalidGroupIds = invalidGroupIds,
             invalidPipelineIds = invalidAuthorizations[ResourceTypeId.PIPELINE] ?: emptyList(),
             invalidRepertoryIds = invalidAuthorizations[ResourceTypeId.REPERTORY] ?: emptyList(),
             invalidEnvNodeIds = invalidAuthorizations[ResourceTypeId.ENV_NODE] ?: emptyList()
