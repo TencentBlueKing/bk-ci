@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -93,7 +94,7 @@ class WorkspaceWindowsDao {
         projectId: String,
         ip: String
     ): Int {
-        return dslContext.fetchCount(
+        return dslContext.fetchCountFix(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
                 .from(TWorkspace.T_WORKSPACE)
                 .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
@@ -109,7 +110,7 @@ class WorkspaceWindowsDao {
         user: String,
         ip: String
     ): Int {
-        return dslContext.fetchCount(
+        return dslContext.fetchCountFix(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
                 .from(TWorkspace.T_WORKSPACE)
                 .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
