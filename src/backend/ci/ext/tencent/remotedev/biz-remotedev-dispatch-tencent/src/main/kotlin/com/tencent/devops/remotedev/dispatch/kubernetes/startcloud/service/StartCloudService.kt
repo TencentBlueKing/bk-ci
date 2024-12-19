@@ -110,7 +110,7 @@ class StartCloudService @Autowired constructor(
                     Duration.between(task.createdTime, now).toMinutes().let { "${it / 60}小时${it % 60}分" }
                 }) " +
                 "当前步骤及状态(${taskStatus.currentStep}[${taskStatus.status}]) " +
-                if (task.status != "RUNNING") {
+                if (taskStatus.status != "RUNNING") {
                     "疑似BCS未回调 <@$userId>"
                 } else ""
         }.joinToString("\n"))
