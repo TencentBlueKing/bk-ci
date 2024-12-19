@@ -80,8 +80,8 @@
                     :loading="item.tableLoading"
                     :group-name="item.resourceTypeName"
                     :type="viewTable.type"
-                    @page-limit-change="pageLimitChange"
-                    @page-value-change="pageValueChange"
+                    @page-limit-change="detailPageLimitChange"
+                    @page-value-change="detailPageValueChange"
                   />
                 </template>
               </bk-collapse-panel>
@@ -127,7 +127,6 @@
   import { storeToRefs } from 'pinia';
   import { ref, computed, watch } from 'vue';
   import { Message } from 'bkui-vue'
-  import userGroupTable from "@/store/userGroupTable";
   import userDetailGroupTable from "@/store/userDetailGroupTable";
   import TabTable from '@/components/permission-manage/detail-tab-table.vue';
 
@@ -146,19 +145,16 @@
     flowNo: props.data?.flowNo
   }
   const detailGroupTable = userDetailGroupTable();
-  const groupTableStore = userGroupTable();
   const {
     isLoading,
     detailSourceList,
   } = storeToRefs(detailGroupTable);
   const {
-    pageLimitChange,
-    pageValueChange
-  } = groupTableStore;
-  const {
     fetchDetailList,
     getServiceIcon,
-    detailCollapseClick
+    detailCollapseClick,
+    detailPageLimitChange,
+    detailPageValueChange
   } = detailGroupTable;
   const showApproval = computed(() => !props.isGiven && props.data?.handoverStatus === 'PENDING')
   const authTable = computed(() => detailSourceList.value.filter(item => item.type === 'AUTHORIZATION'));
@@ -216,9 +212,9 @@
         value: props.data?.approver,
       },
       {
-        field: 'projectCode',
+        field: 'projectName',
         label: t('项目'),
-        value: props.data?.projectCode
+        value: props.data?.projectName
       },
       {
         field: 'createTime',

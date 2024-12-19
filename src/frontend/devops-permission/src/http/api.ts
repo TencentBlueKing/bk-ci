@@ -118,6 +118,12 @@ export default {
     return fetch.get(`${projectPerfix}/projects?enabled=true&queryAuthorization=true`)
   },
   /**
+   * 获取用户有授权的项目列表
+   */
+  fetchProjectsWithAuthorization() {
+    return fetch.get(`${apiPerfix}/auth//authorization/listUserProjectsWithAuthorization`)
+  },
+  /**
    * 重置授权（代码库、流水线、部署节点） 
    */
   resetAuthorization(projectId: string, params: any) {

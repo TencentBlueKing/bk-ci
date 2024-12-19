@@ -14,7 +14,7 @@
               >
                 <bk-option
                   v-for="(item, index) in projectList"
-                  :id="item.englishName"
+                  :id="item.projectCode"
                   :key="index"
                   :name="item.projectName"
                 />
@@ -420,10 +420,10 @@
    */
   const fetchProjectList = async () => {
     try {
-      projectList.value = await http.fetchProjectList()
+      projectList.value = await http.fetchProjectsWithAuthorization()
       if (defaultProjectId.value) {
-        const curProject = projectList.value.find(i => i.englishName === defaultProjectId.value);
-        projectId.value = curProject?.englishName || projectList.value[0].englishName;
+        const curProject = projectList.value.find(i => i.projectCode === defaultProjectId.value);
+        projectId.value = curProject?.projectCode || projectList.value[0].projectCode;
       }
     } catch (e) {
       console.error(e)

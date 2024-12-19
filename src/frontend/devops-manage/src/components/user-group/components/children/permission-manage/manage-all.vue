@@ -1057,7 +1057,7 @@ function closeDeptListPermissionDialog () {
     position: fixed;
     bottom: 0;
     z-index: 9;
-    width: 100%;
+    width: 960px;
     height: 230px;
     padding: 24px 48px;
     background: #FFFFFF;
@@ -1079,6 +1079,7 @@ function closeDeptListPermissionDialog () {
 
         .main-text {
           font-size: 14px;
+          margin-bottom: 24px;
           color: #63656E;
         }
 

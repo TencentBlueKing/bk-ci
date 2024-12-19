@@ -228,6 +228,11 @@
         },
       },
       {
+        label: t('项目名称'),
+        field: 'projectName',
+        showOverflowTooltip: true,
+      },
+      {
         label: t('移交详情'),
         field: 'title',
         showOverflowTooltip: true,
