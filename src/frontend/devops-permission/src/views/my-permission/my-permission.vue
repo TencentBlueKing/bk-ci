@@ -753,7 +753,7 @@ function showHandoverSuccessInfoBox(flowNo) {
       ]
     ),
     onConfirm() {
-      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
+      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
     }
   });
 }
@@ -779,7 +779,7 @@ function showRemoveSuccessInfoBox(flowNo) {
       ]
     ),
     onConfirm() {
-      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
+      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
     }
   });
 }

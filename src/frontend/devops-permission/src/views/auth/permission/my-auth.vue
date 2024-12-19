@@ -599,7 +599,7 @@
           confirmText: t('查看进度'),
           cancelText: t('关闭'),
           onConfirm: () => {
-            window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}`, '_blank')
+            window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
           },
           content: h(
             'div',

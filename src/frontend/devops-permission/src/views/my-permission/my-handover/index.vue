@@ -190,7 +190,7 @@
     remark: '',
     handoverAction: 'AGREE'
   })
-  const queryFlowNo = ref (route.query?.flowNo || '');
+  const queryFlowNo = ref ('');
   const userId = computed(() => window.top.userInfo.username);
   const columns = computed(() => {
     return [
@@ -316,6 +316,10 @@
       }
     ]
   })
+  const typeMapping = {
+    handoverFromMe: true,
+    handoverToMe: false
+  }
   const searchData = computed(() => {
     const data = [
       {
@@ -515,7 +519,20 @@
   }
   onMounted(async () => {
     await fetchHandoverList();
-    if (queryFlowNo.value) {
+    const { type, flowNo } = route.query;
+
+    if (type && flowNo) {
+      isGiven.value = typeMapping[type] ?? isGiven.value;
+
+      searchValue.value = [
+        {
+          name: t('单号'),
+          id: 'flowNo',
+          values: [{ id: flowNo, name: flowNo }]
+        }
+      ];
+
+      queryFlowNo.value = flowNo;
       curHandoverInfo.value = handoverList.value.find(i => i.flowNo === queryFlowNo.value);
       showHandoverDetail.value = true;
     }

@@ -79,7 +79,6 @@
       class="multi-search"
       value-behavior="need-key"
       :placeholder="filterTips"
-      :get-menu-list="getMenuList"
       @search="handleSearch"
     />
   </div>
@@ -197,7 +196,8 @@ async function fetchResourceTypes() {
     ]);
     serviceList.value = resourceTypes;
     projectList.value = projects;
-    projectValue.value = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || projects[0].englishName
+    const hasLocationCode = projectList.value.find(item => item.englishName === cacheProjectCode.get() )
+    projectValue.value = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || (hasLocationCode && cacheProjectCode.get()) || projects[0].englishName
   } catch (error) {
     console.log(error);
   }
@@ -282,34 +282,7 @@ function clearSearch() {
   serviceValue.value = '';
   resetSelections();
 }
-/**
- * 下拉搜索获取列表数据
- */
-// async function getMenuList (item, keyword) {
-  // const query = {
-  //   memberType: item.id,
-  //   page: 1,
-  //   pageSize: 400,
-  //   projectCode: projectId.value,
-  // }
-  // if (item.id === 'user' && keyword) {
-  //   query.userName = keyword
-  // } else if (item.id === 'department' && keyword) {
-  //   query.deptName = keyword
-  // }
-  // if(item.id === 'groupName') {
-  //   return []
-  // } else {
-  //   const res = await http.getProjectMembers(projectId.value, query)
-  //   return res.records.map(i => {
-  //     return {
-  //       ...i,
-  //       displayName: i.name || i.id,
-  //       name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
-  //     }
-  //   })
-  // }
-// }
+
 </script>
 <style lang="less" scoped>
 .search{ 

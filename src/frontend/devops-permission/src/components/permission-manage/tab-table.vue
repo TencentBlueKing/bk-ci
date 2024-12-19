@@ -72,7 +72,9 @@
       </bk-table-column>
       <bk-table-column :label="t('状态')" prop="beingHandedOver" v-if="isShowOperation">
         <template #default="{row}">
-          {{ row.beingHandedOver ? t('移交中') : '' }}
+          <span @click="handleToHandoverPage(row.flowNo)" :class="row.flowNo ? 'hover-link' : ''">
+            {{ row.beingHandedOver ? t('移交中') : '' }}
+          </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="t('操作')" v-if="isShowOperation" :show-overflow-tooltip="false">
@@ -111,10 +113,10 @@
                 text
                 theme="primary"
                 @click="handleRenewal(row)"
-                :disabled="row.removeMemberButtonControl === 'DEPARTMENT'"
+                :disabled="row.expiredAtDisplay == t('永久') || row.removeMemberButtonControl === 'DEPARTMENT'"
                 v-bk-tooltips="{
-                  content: t('通过组织加入的 不允许 续期/退出/移交'),
-                  disabled: row.removeMemberButtonControl !== 'DEPARTMENT'
+                  content: row.expiredAtDisplay == t('永久') ? t('无需续期') : t('通过组织加入的 不允许 续期/退出/移交'),
+                  disabled: row.removeMemberButtonControl !== 'DEPARTMENT' && row.expiredAtDisplay !== t('永久')
                 }"
               >
                 {{t("续期")}}
@@ -352,6 +354,11 @@ function handleToResourcePage(row) {
     case 'codecc_task':
       window.open(`${location.origin}/console/codecc/${groupTableStore.projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
       return
+  }
+}
+function handleToHandoverPage(flowNo) {
+  if (flowNo) {
+    window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`)
   }
 }
 </script>
