@@ -213,4 +213,19 @@ class UserPipelineTriggerEventResourceImpl(
             )
         )
     }
+
+    override fun replayByBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<Boolean> {
+        pipelineTriggerEventService.replayByBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        return Result(true)
+    }
 }
