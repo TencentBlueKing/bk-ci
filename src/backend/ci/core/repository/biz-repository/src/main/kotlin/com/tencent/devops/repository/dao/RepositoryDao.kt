@@ -30,6 +30,7 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
@@ -268,7 +269,7 @@ class RepositoryDao {
             dslContext = dslContext,
             projectId = projectId
         )
-        return dslContext.fetchCount(repositoryAuthorizationQuery)
+        return dslContext.fetchCountFix(repositoryAuthorizationQuery)
     }
 
     private fun buildRepositoryAuthorizationQuery(
