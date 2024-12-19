@@ -180,7 +180,7 @@ class SoftwareManageService @Autowired constructor(
                         workspaceCommon.updateStatusAndCreateHistory(
                             workspace = workspace,
                             newStatus = WorkspaceStatus.DISTRIBUTING,
-                            action = WorkspaceAction.CREATE
+                            action = WorkspaceAction.CREATE_SUCCESS
                         )
                         workspaceCommon.autoAssignOwner(workspace)
 
@@ -223,7 +223,7 @@ class SoftwareManageService @Autowired constructor(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         operator = workspace.createUserId,
-                        action = WorkspaceAction.CREATE,
+                        action = WorkspaceAction.CREATE_SUCCESS,
                         actionMessage = String.format(
                             workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                             workspace.status.name,

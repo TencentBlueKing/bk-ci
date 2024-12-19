@@ -97,8 +97,7 @@ class ServiceRepositoryService {
                 language = I18nUtil.getLanguage(userId))
             )
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
-            featureRecord.repositoryHashId,
-            README, null, null, null
+            repoId = featureRecord.repositoryHashId, filePath = README
         ).data
         return Result(fileStr)
     }

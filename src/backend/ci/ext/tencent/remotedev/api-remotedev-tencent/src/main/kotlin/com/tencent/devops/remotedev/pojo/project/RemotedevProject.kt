@@ -42,3 +42,15 @@ data class RemotedevProject(
     @JsonProperty("remotedev_manager")
     val remotedevManager: String? = ""
 )
+
+@Schema(title = "开启云研发项目信息")
+data class RemotedevProjectNew(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String,
+    @get:Schema(title = "云研发管理员")
+    val remotedevManager: String,
+    @get:Schema(title = "监控面板URL")
+    val monitorUrl: String?
+)

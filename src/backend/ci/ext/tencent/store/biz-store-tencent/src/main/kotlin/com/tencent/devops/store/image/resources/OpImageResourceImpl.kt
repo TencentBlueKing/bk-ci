@@ -37,8 +37,8 @@ import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.image.service.OpImageService
 import com.tencent.devops.store.image.service.impl.TxImageRepoService
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
@@ -179,8 +179,7 @@ class OpImageResourceImpl @Autowired constructor(
     override fun getVisibleDept(userId: String, imageCode: String): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(
             storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE,
-            deptStatus = null
+            storeType = StoreTypeEnum.IMAGE
         )
     }
 

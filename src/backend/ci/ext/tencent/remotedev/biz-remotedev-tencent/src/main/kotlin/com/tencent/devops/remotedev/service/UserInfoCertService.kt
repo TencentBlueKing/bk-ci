@@ -12,6 +12,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
@@ -31,19 +33,22 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.service.client.FaceCheckData
 import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 class UserInfoCertService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
+    private val configCacheService: ConfigCacheService,
     private val tokenService: ClientTokenService,
     private val streamBridge: StreamBridge,
     private val userAuthApplyDao: UserAuthApplyDao,
@@ -147,13 +152,24 @@ class UserInfoCertService @Autowired constructor(
             ).data?.records?.filter { it.joinedType == JoinedType.DIRECT && it.expiredAt < expiredTime }
                 ?.ifEmpty { null } ?: return
 
-            val admins = client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
-                FetchRemoteDevData(
-                    setOf(data.projectId)
-                )
-            ).data?.get(data.projectId) ?: run {
-                logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
-                return
+            // 太湖用户发送给云研发管理员；集团用户发送给项目管理员
+            val admins = if (UserUtil.isTaiUser(data.userId)) {
+                    client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
+                    FetchRemoteDevData(
+                        setOf(data.projectId)
+                    )
+                ).data?.get(data.projectId) ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
+                    return
+                }
+            } else {
+                client.get(ServiceTxUserResource::class).getProjectUserRoles(
+                    projectCode = data.projectId,
+                    roleId = BkAuthGroup.MANAGER
+                ).data?.toSet() ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getProjectUserRoles|${data.projectId} is null")
+                    return
+                }
             }
 
             val recordId = userAuthApplyDao.create(
@@ -211,7 +227,7 @@ class UserInfoCertService @Autowired constructor(
                             id = record.userId,
                             type = "user"
                         ),
-                        renewalDuration = 30
+                        renewalDuration = 365
                     )
                 )
             }
@@ -230,15 +246,12 @@ class UserInfoCertService @Autowired constructor(
     private val faceRecognitionErrorCodeCache: LoadingCache<String, Set<String>> = Caffeine.newBuilder()
         .maximumSize(100L)
         .expireAfterWrite(Duration.ofMinutes(10))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = false)?.split(";")?.toSet() ?: setOf() }
+        .build { key -> configCacheService.get(key)?.split(";")?.toSet() ?: setOf() }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
         private const val TICKET_EXPIRT_DAYS = 15L
         private const val USER_CERT_LOG_PREFIX = "USER_CERT_LOG"
         private const val REMOTEDEV_USER_ATUCH_CHECK_REDIS_KEY_PREFIX = "remotedev:user_auth_check"
-
-        // 保存人脸识别错误的校验错误码，;进行分割
-        private const val REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY = "remotedev:user_face_recognition:error_code"
     }
 }

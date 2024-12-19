@@ -30,11 +30,13 @@ package com.tencent.devops.environment.api.devx
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.DEVXHook
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -79,4 +81,19 @@ interface ServiceDEVXResource {
         userId: String,
         projectIds: Set<String>
     ): Result<List<EnvWithNodeCount>>
+
+    @Operation(summary = "获取环境hook配置")
+    @GET
+    @Path("/env_hook/{projectId}")
+    fun getEnvHook(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = false)
+        @QueryParam("envHashId")
+        envHashId: String
+    ): Result<List<DEVXHook>>
 }

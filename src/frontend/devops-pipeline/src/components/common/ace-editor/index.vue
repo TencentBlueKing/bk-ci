@@ -24,6 +24,9 @@
     </div>
 </template>
 <script>
+    import {
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
     export default {
         props: {
@@ -42,6 +45,10 @@
             lang: {
                 type: String,
                 default: 'text'
+            },
+            aceLangMap: {
+                type: Object,
+                default: () => ({})
             },
             readOnly: {
                 type: Boolean,
@@ -65,6 +72,18 @@
                 editor: null,
                 isLoading: false,
                 monaco: null
+            }
+        },
+        computed: {
+            langMap () {
+                return {
+                    sh: 'shell',
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell',
+                    ...(this.aceLangMap ?? {})
+                }
             }
         },
         watch: {
@@ -92,7 +111,7 @@
         },
         async mounted () {
             this.isLoading = true
-            const [monaco, { GongfengMonacoEditor, ReleaseChannel }] = await Promise.all([
+            const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
                 import(
                     /* webpackMode: "lazy" */
                     /* webpackPrefetch: true */
@@ -106,9 +125,9 @@
                     /* webpackPreload: true */
                     /* webpackChunkName: "monaco-editor" */
                     '@tencent/gongfeng-copilot-monaco'
-                )
+                ),
+                this.getAccessToken(false)
             ])
-
             this.monaco = monaco
             const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
                 app: {
@@ -118,12 +137,12 @@
                 },
                 // env: ReleaseChannel.INSIDER,
                 env: ReleaseChannel.PRODUCTION,
-                forceAuthentication: false
-                // forceAuthentication: false,
-                // authenticatedSession: {
-                //     accessToken: '',
-                //     user: ''
-                // }
+                brandPaddingRight: 32,
+                authenticatedSession: {
+                    accessToken,
+                    user: this.$userInfo.username,
+                    refreshToken: this.getAccessToken
+                }
             })
 
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
@@ -155,15 +174,7 @@
         },
         methods: {
             getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    bash: 'shell',
-                    batchfile: 'bat',
-                    cmd: 'bat',
-                    pwsh: 'powershell'
-                }
-
-                return langMap[lang] || lang
+                return this.langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()
@@ -172,6 +183,23 @@
                 if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
+            },
+            async getAccessToken (refresh = true) {
+                try {
+                    const tokenKey = '__GONGFENG_COPILOT_TOKEN__'
+                    if (!refresh) {
+                        const token = localStorage.getItem(tokenKey)
+                        if (token) return token
+                    }
+                    const res = await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/tgit/getCopilotOpenToken?refresh=${refresh}`)
+                    localStorage.setItem(tokenKey, res.data)
+                    return res.data
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message,
+                        theme: 'error'
+                    })
+                }
             }
         }
     }

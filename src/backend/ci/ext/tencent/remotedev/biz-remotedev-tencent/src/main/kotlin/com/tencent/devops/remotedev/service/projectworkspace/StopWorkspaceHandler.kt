@@ -156,7 +156,7 @@ class StopWorkspaceHandler @Autowired constructor(
                     type = UpdateEventType.STOP,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
 

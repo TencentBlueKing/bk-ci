@@ -14,15 +14,15 @@
         <atom-output
             :element="element"
             :atom-props-model="atomPropsModel"
-            :set-parent-validate="() => {}"
+            :set-parent-validate="setParentValidate"
         ></atom-output>
     </section>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     import AtomOutput from './AtomOutput'
     export default {
         name: 'remote-atom',
@@ -31,7 +31,8 @@
         },
         mixins: [atomMixin, validMixins],
         props: {
-            atom: Object
+            atom: Object,
+            isInstanceTemplate: Boolean
         },
         data () {
             return {
@@ -83,6 +84,7 @@
                     currentUserInfo,
                     envConf,
                     atomDisabled,
+                    isInstanceTemplate: this.isInstanceTemplate,
                     hostInfo: {
                         ...this.$route.params
                     },
@@ -118,6 +120,9 @@
                     env = {}
                 }
                 return env
+            },
+            setParentValidate () {
+                // EMPTY
             }
         }
     }

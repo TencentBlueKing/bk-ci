@@ -33,12 +33,15 @@ import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
@@ -46,24 +49,31 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreCreateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreCreateHandlerChain
 import com.tencent.devops.store.common.handler.StoreCreateParamCheckHandler
+import com.tencent.devops.store.common.handler.StoreCreatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
 import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
 import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandler
+import com.tencent.devops.store.common.handler.StoreUpdatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreMediaService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
+import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
@@ -87,6 +97,7 @@ import java.time.LocalDateTime
 class StoreReleaseServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseManageDao: StoreBaseManageDao,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
@@ -94,13 +105,18 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeReleaseDao: StoreReleaseDao,
+    private val storeDeptRelDao: StoreDeptRelDao,
     private val storeCommonService: StoreCommonService,
     private val storeNotifyService: StoreNotifyService,
     private val storePipelineService: StorePipelineService,
+    private val storeVisibleDeptService: StoreVisibleDeptService,
+    private val storeMediaService: StoreMediaService,
     private val storeCreateParamCheckHandler: StoreCreateParamCheckHandler,
+    private val storeCreatePreBusHandler: StoreCreatePreBusHandler,
     private val storeCreateDataPersistHandler: StoreCreateDataPersistHandler,
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
     private val storeUpdateParamCheckHandler: StoreUpdateParamCheckHandler,
+    private val storeUpdatePreBusHandler: StoreUpdatePreBusHandler,
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig
@@ -115,6 +131,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         logger.info("createComponent userId:$userId|storeCreateRequest:$storeCreateRequest")
         val handlerList = mutableListOf(
             storeCreateParamCheckHandler, // 参数检查处理
+            storeCreatePreBusHandler, // 前置业务处理
             storeCreateDataPersistHandler // 数据持久化处理
         )
         val bkStoreContext = storeCreateRequest.bkStoreContext
@@ -133,6 +150,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val handlerList = mutableListOf(
             storeUpdateParamI18nConvertHandler, // 参数国际化处理
             storeUpdateParamCheckHandler, // 参数检查处理
+            storeUpdatePreBusHandler, // 前置业务处理
             storeUpdateDataPersistHandler, // 数据持久化处理
             storeUpdateRunPipelineHandler // 运行内置流水线
         )
@@ -153,18 +171,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeCode = record.storeCode
         val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
         // 判断用户是否有查询权限
-        val queryFlag = storeMemberDao.isStoreMember(
-            dslContext = dslContext,
-            userId = userId,
-            storeCode = storeCode,
-            storeType = storeType.type.toByte()
-        )
-        if (!queryFlag) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
-                params = arrayOf(storeCode)
-            )
-        }
+        validateUserPermission(userId, storeCode, storeType)
         val status = StoreStatusEnum.valueOf(record.status)
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val isNormalUpgrade = storeCommonService.getNormalUpgradeFlag(
@@ -189,6 +196,25 @@ class StoreReleaseServiceImpl @Autowired constructor(
             creator = record.creator,
             processInfo = processInfo
         )
+    }
+
+    private fun validateUserPermission(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        val memberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!memberFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
     }
 
     override fun cancelRelease(userId: String, storeId: String): Boolean {
@@ -226,17 +252,79 @@ class StoreReleaseServiceImpl @Autowired constructor(
             storeType = storeType,
             status = recordStatus
         )
-        val status = if (storeApproveSwitch == CLOSE || isNormalUpgrade) {
-            StoreStatusEnum.RELEASED
-        } else {
-            StoreStatusEnum.AUDITING
-        }
+        val status = StoreStatusEnum.EDITING
         checkStoreVersionOptRight(
             userId = userId,
             storeId = storeId,
             status = status,
             isNormalUpgrade = isNormalUpgrade
         )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeBaseManageDao.updateStoreBaseInfo(
+                dslContext = context,
+                updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                    id = storeId,
+                    status = status,
+                    modifier = userId
+                )
+            )
+        }
+        return true
+    }
+
+    override fun editReleaseInfo(
+        userId: String,
+        storeId: String,
+        storeReleaseInfoUpdateRequest: StoreReleaseInfoUpdateRequest
+    ): Boolean {
+        val record = storeBaseQueryDao.getComponentById(dslContext, storeId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
+        val storeCode = record.storeCode
+        val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
+        validateUserPermission(userId, storeCode, storeType)
+        // 保存媒体信息
+        val mediaInfoList = storeReleaseInfoUpdateRequest.mediaInfoList
+        mediaInfoList?.let {
+            storeMediaService.deleteByStoreCode(userId, storeCode, storeType)
+            mediaInfoList.forEach {
+                storeMediaService.add(
+                    userId = userId,
+                    type = storeType,
+                    storeMediaInfo = StoreMediaInfoRequest(
+                        storeCode = storeCode,
+                        mediaUrl = it.mediaUrl,
+                        mediaType = it.mediaType.name,
+                        modifier = userId
+                    )
+                )
+            }
+        }
+        // 保存可见范围信息
+        val deptInfoList = storeReleaseInfoUpdateRequest.deptInfoList
+        deptInfoList?.let {
+            deptInfoList.forEach {
+                // 上架过程中设置的可见范围状态默认为待审核状态
+                it.status = DeptStatusEnum.APPROVING.name
+            }
+            storeVisibleDeptService.addVisibleDept(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                deptInfos = deptInfoList
+            )
+        }
+        val recordStatus = StoreStatusEnum.valueOf(record.status)
+        val isNormalUpgrade = storeCommonService.getNormalUpgradeFlag(
+            storeCode = storeCode,
+            storeType = storeType,
+            status = recordStatus
+        )
+        val status = if (storeApproveSwitch == CLOSE || isNormalUpgrade) {
+            StoreStatusEnum.RELEASED
+        } else {
+            StoreStatusEnum.AUDITING
+        }
         val storeReleaseRecord = storeVersionLogDao.getStoreVersion(dslContext, storeId)!!
         return handleStoreRelease(
             userId = userId,
@@ -283,6 +371,14 @@ class StoreReleaseServiceImpl @Autowired constructor(
                     // 清空旧版本LATEST_FLAG
                     storeBaseManageDao.cleanLatestFlag(context, storeCode, storeType)
                 }
+                storeDeptRelDao.updateDeptStatus(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    originStatus = DeptStatusEnum.APPROVING.status.toByte(),
+                    newStatus = DeptStatusEnum.APPROVED.status.toByte(),
+                    userId = userId
+                )
                 storeBaseManageDao.updateStoreBaseInfo(
                     dslContext = context,
                     updateStoreBaseDataPO = UpdateStoreBaseDataPO(
@@ -406,18 +502,55 @@ class StoreReleaseServiceImpl @Autowired constructor(
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
         val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
         val storeReleaseSpecBusService = SpringContextUtil.getBean(
-            StoreReleaseSpecBusService::class.java,
-            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+            StoreReleaseSpecBusService::class.java, StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         val status = storeReleaseSpecBusService.getStoreRunPipelineStatus(startFlag = false)
-        status?.let {
-            checkStoreVersionOptRight(userId, storeId, status)
+        val lock = RedisLock(redisOperation, "store:$storeId:build", 30)
+        try {
+            lock.lock()
+            status?.let {
+                checkStoreVersionOptRight(userId, storeId, status)
+            }
+            val storeCode = record.storeCode
+            val version = record.version
+            // 处理环境信息逻辑
+            storeReleaseSpecBusService.doStoreEnvBus(
+                storeCode = storeCode, storeType = storeType, version = version, userId = userId
+            )
+            val storeRunPipelineParam = StoreRunPipelineParam(
+                userId = userId, storeId = storeId
+            )
+            storePipelineService.runPipeline(storeRunPipelineParam)
+        } finally {
+            lock.unlock()
         }
-        val storeRunPipelineParam = StoreRunPipelineParam(
-            userId = userId,
-            storeId = storeId
-        )
-        storePipelineService.runPipeline(storeRunPipelineParam)
+        return true
+    }
+
+    override fun back(userId: String, storeId: String): Boolean {
+        val record = storeBaseQueryDao.getComponentById(dslContext, storeId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
+        val recordStatus = StoreStatusEnum.valueOf(record.status)
+        when (recordStatus) {
+            StoreStatusEnum.TESTING -> {
+                // 测试中状态的上一步需要进行重新构建
+                rebuild(userId, storeId)
+            }
+
+            StoreStatusEnum.EDITING -> {
+                // 把组件状态置为上一步的状态
+                storeBaseManageDao.updateStoreBaseInfo(
+                    dslContext = dslContext, updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                        id = storeId, status = StoreStatusEnum.TESTING, modifier = userId
+                    )
+                )
+            }
+
+            else -> {
+                // 其它状态不允许回退至上一步
+                throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+            }
+        }
         return true
     }
 
@@ -538,15 +671,15 @@ class StoreReleaseServiceImpl @Autowired constructor(
         )?.fieldValue
         val testingValidPreviousStatuses = if (repositoryHashId.isNullOrBlank()) {
             // 传包方式可以进入测试中的状态是提交中
-            listOf(StoreStatusEnum.COMMITTING)
+            listOf(StoreStatusEnum.COMMITTING, StoreStatusEnum.EDITING)
         } else {
-            listOf(StoreStatusEnum.BUILDING)
+            listOf(StoreStatusEnum.BUILDING, StoreStatusEnum.CHECKING, StoreStatusEnum.EDITING)
         }
         val releasedValidPreviousStatuses = if (isNormalUpgrade == true) {
-            // 普通升级可以由测试中的状态直接发布
-            listOf(StoreStatusEnum.TESTING)
+            // 普通升级可以由测试中或者审核中的状态直接发布
+            listOf(StoreStatusEnum.TESTING, StoreStatusEnum.EDITING)
         } else {
-            listOf(StoreStatusEnum.TESTING, StoreStatusEnum.AUDITING)
+            listOf(StoreStatusEnum.TESTING, StoreStatusEnum.EDITING, StoreStatusEnum.AUDITING)
         }
         val cancelValidPreviousStatuses = StoreStatusEnum.values().toMutableList()
         cancelValidPreviousStatuses.remove(StoreStatusEnum.RELEASED)
@@ -558,19 +691,15 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 StoreStatusEnum.TESTING
             ),
             StoreStatusEnum.BUILD_FAIL to listOf(StoreStatusEnum.BUILDING),
-            StoreStatusEnum.TESTING to testingValidPreviousStatuses,
             StoreStatusEnum.CHECKING to listOf(
                 StoreStatusEnum.COMMITTING,
                 StoreStatusEnum.CHECK_FAIL,
                 StoreStatusEnum.TESTING
             ),
-            StoreStatusEnum.CHECK_FAIL to listOf(
-                StoreStatusEnum.COMMITTING,
-                StoreStatusEnum.CHECKING,
-                StoreStatusEnum.CHECK_FAIL,
-                StoreStatusEnum.TESTING
-            ),
-            StoreStatusEnum.AUDITING to listOf(StoreStatusEnum.TESTING),
+            StoreStatusEnum.CHECK_FAIL to listOf(StoreStatusEnum.CHECKING),
+            StoreStatusEnum.TESTING to testingValidPreviousStatuses,
+            StoreStatusEnum.EDITING to listOf(StoreStatusEnum.TESTING),
+            StoreStatusEnum.AUDITING to listOf(StoreStatusEnum.EDITING),
             StoreStatusEnum.AUDIT_REJECT to listOf(StoreStatusEnum.AUDITING),
             StoreStatusEnum.RELEASED to releasedValidPreviousStatuses,
             StoreStatusEnum.GROUNDING_SUSPENSION to cancelValidPreviousStatuses,

@@ -28,12 +28,21 @@
 package com.tencent.devops.environment.resources.job
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -54,6 +63,8 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResul
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
+import com.tencent.devops.environment.service.gseagent.InstallTaskService
+import com.tencent.devops.environment.service.job.ApiGwAgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
@@ -71,7 +82,9 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val permissionManageService: PermissionManageService,
     private val updateCmdbNodeService: UpdateCmdbNodeService,
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
-    private val tencentStockDataUpdateService: TencentStockDataUpdateService
+    private val tencentStockDataUpdateService: TencentStockDataUpdateService,
+    private val installTaskService: InstallTaskService,
+    private val apiGwAgentService: ApiGwAgentService
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
@@ -227,8 +240,68 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         tencentStockDataUpdateService.writeServerIdOnce()
     }
 
-    private fun checkParamBlank(userId: String, projectId: String) {
-        if (userId.isBlank()) {
+    override fun installAgent(
+        userId: String?,
+        projectId: String,
+        apiGwInstallAgentReq: ApiGwInstallAgentReq
+    ): AgentResult<InstallAgentResult> {
+        checkParamBlank(userId, projectId)
+        checkIpIsValid(apiGwInstallAgentReq.innerIp)
+
+        val hostList = apiGwAgentService.getNodeHostIdByCloudIp(
+            projectId = projectId,
+            cloudAreaId = apiGwInstallAgentReq.bkCloudId,
+            ip = apiGwInstallAgentReq.innerIp
+        )
+
+        checkInstallPermission(
+            projectId = projectId,
+            cloudAreaId = apiGwInstallAgentReq.bkCloudId,
+            ip = apiGwInstallAgentReq.innerIp,
+            hostList = hostList,
+        )
+        return apiGwAgentService.installAgent(
+            userId = userId!!,
+            projectId = projectId,
+            apiGwInstallAgentReq = apiGwInstallAgentReq,
+            bkHostId = hostList[0].toInt()
+        )
+    }
+
+    override fun queryAgentTaskStatus(
+        userId: String?,
+        projectId: String,
+        jobId: Int,
+        page: Int,
+        pageSize: Int
+    ): AgentResult<QueryAgentTaskStatusResult> {
+        checkParamBlank(userId, projectId)
+        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+            page = page,
+            pageSize = pageSize
+        )
+        return installTaskService.queryAgentInstallTaskStatus(jobId, queryAgentTaskStatusReq)
+    }
+
+    override fun obtainManualInstallationCommand(
+        userId: String?,
+        projectId: String,
+        jobId: Int,
+        innerIp: String,
+        bkCloudId: Int
+    ): AgentResult<ObtainManualCommandResult> {
+        checkParamBlank(userId, projectId)
+        checkIpIsValid(innerIp)
+        return apiGwAgentService.getInstallCommand(
+            projectId = projectId,
+            jobId = jobId,
+            cloudAreaId = bkCloudId,
+            innerIp = innerIp
+        )
+    }
+
+    private fun checkParamBlank(userId: String?, projectId: String) {
+        if (userId.isNullOrBlank()) {
             throw ParamBlankException("userId is blank.")
         }
         if (projectId.isBlank()) {
@@ -247,5 +320,38 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     private fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
         permissionManageService.recordJobInsToProj(projectId, jobInstanceId, createUser)
+    }
+
+    private fun checkIpIsValid(ip: String) {
+        if (ip.isBlank()) {
+            throw ParamBlankException("ip is blank.")
+        }
+        val pattern = Regex(
+            "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        )
+        if (!pattern.matches(ip)) {
+            throw InvalidParamException(
+                message = "$ip is invalid ip address",
+                params = arrayOf(ip)
+            )
+        }
+    }
+
+    /*
+    * 判断待安装 GSE Agent 的主机是否属于当前项目
+     */
+    private fun checkInstallPermission(
+        projectId: String,
+        cloudAreaId: Int,
+        ip: String,
+        hostList: List<Long>
+    ) {
+        if (hostList.isEmpty()) {
+            throw ResourceNotMatchException(
+                errorCode = ERROR_NODE_NOT_BELONG_TO_PROJECT,
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NOT_BELONG_TO_PROJECT),
+                params = arrayOf("$cloudAreaId:$ip", projectId)
+            )
+        }
     }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
@@ -41,7 +43,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
-import com.tencent.devops.repository.service.scm.GitService
+import com.tencent.devops.repository.service.scm.TencentGitServiceImpl
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
@@ -50,7 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitRepositoryResourceImpl @Autowired constructor(
-    private val gitService: GitService,
+    private val gitService: TencentGitServiceImpl,
     private val repoFileService: RepoFileService,
     private val repositoryService: RepositoryService,
     private val repositoryUserService: RepositoryUserService
@@ -102,8 +104,43 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         return repositoryService.moveGitProjectToGroup(userId, groupCode, RepositoryConfigUtils.buildConfig(repoId, null), tokenType)
     }
 
-    override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(RepositoryConfigUtils.buildConfig(repoId, repositoryType), filePath, reversion, branch))
+    override fun getFileContent(
+        repoId: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        repositoryType: RepositoryType?,
+        projectId: String?
+    ): Result<String> {
+        return Result(
+            repoFileService.getFileContent(
+                repositoryConfig = RepositoryConfigUtils.buildConfig(repoId, repositoryType),
+                filePath = filePath,
+                reversion = reversion,
+                branch = branch,
+                projectId = projectId ?: ""
+            )
+        )
+    }
+
+    override fun getFileContent(
+        remoteRepoId: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        oauthUserId: String?,
+        token: String?,
+        branch: String?
+    ): Result<String> {
+        return Result(
+            gitService.getGitFileContent(
+                repoName = remoteRepoId,
+                filePath = filePath,
+                authType = authType,
+                oauthUserId = oauthUserId,
+                token = token,
+                ref = branch ?: MASTER
+            )
+        )
     }
 
     override fun updateTGitFileContent(

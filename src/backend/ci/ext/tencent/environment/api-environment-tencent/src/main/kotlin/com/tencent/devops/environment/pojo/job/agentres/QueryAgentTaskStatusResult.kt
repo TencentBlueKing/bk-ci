@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询agent任务状态的接口的返回结果")
 data class QueryAgentTaskStatusResult(
-    @get:Schema(title = "作业任务ID", required = true)
+    @get:Schema(title = "作业任务ID")
     val jobId: Int,
-    @get:Schema(title = "创建者", required = true)
+    @get:Schema(title = "创建者")
     val createdBy: String,
-    @get:Schema(title = "作业类型", required = true)
+    @get:Schema(title = "作业类型")
     val jobType: String,
-    @get:Schema(title = "作业类型名称", required = true)
+    @get:Schema(title = "作业类型名称")
     val jobTypeDisplay: String,
-    @get:Schema(title = "过滤的IP列表", required = true)
+    @get:Schema(title = "失败的IP列表")
     val ipFilterList: List<String>,
     @get:Schema(title = "实例记录数量总和")
     val total: Int?,
     @get:Schema(title = "过滤的主机详细信息列表")
     val list: List<HostDetail>?,
-    @get:Schema(title = "任务统计信息", required = true)
+    @get:Schema(title = "任务统计信息")
     val statistics: Statistics,
-    @get:Schema(title = "执行状态", required = true)
+    @get:Schema(title = "执行状态")
     val status: String,
     @get:Schema(title = "完成时间")
     val endTime: String?,
-    @get:Schema(title = "启动时间时间", required = true)
+    @get:Schema(title = "启动时间时间")
     val startTime: String,
-    @get:Schema(title = "执行耗时", required = true)
+    @get:Schema(title = "执行耗时")
     val costTime: String,
-    @get:Schema(title = "执行任务元数据信息", required = true)
+    @get:Schema(title = "执行任务元数据信息")
     val meta: Meta
 )

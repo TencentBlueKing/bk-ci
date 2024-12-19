@@ -6,7 +6,6 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component
 @Component
 class WorkspaceCheckJob @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val workspaceService: WorkspaceService,
     private val bkTag: BkTag,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService

@@ -46,7 +46,7 @@ data class StorePkgRunEnvInfo(
     @get:Schema(title = "安装包名称", required = true)
     val pkgName: String,
     @get:Schema(title = "安装包下载路径", required = true)
-    val pkgDownloadPath: String,
+    var pkgDownloadPath: String,
     @get:Schema(title = "是否为默认安装包", required = true)
     val defaultFlag: Boolean,
     @get:Schema(title = "添加用户", required = true)

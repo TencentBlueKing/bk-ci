@@ -31,7 +31,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "操作系统配置信息")
 data class OsConfigInfo(
-    @get:Schema(title = "软件包相对于压缩包中的位置", required = true)
+    @get:Schema(title = "打包脚本路径（相对于工程构建目录的相对路径，不填用平台默认的打包脚本）", required = false)
+    val packScriptPath: String? = null,
+    @get:Schema(title = "如果配了packScriptPath，packagePath为软件包相对于构建目录的位置； 否则packagePath为软件包相对于打的zip包中的位置", required = true)
     val packagePath: String,
     @get:Schema(title = "支持的操作系统名称", required = true)
     val osName: String,

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ENV
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
@@ -73,6 +74,9 @@ interface BuildStoreResource {
     @GET
     @Path("/pkg/envs/types/{storeType}/languages/{language}/versions/{runtimeVersion}/get")
     fun getStorePkgRunEnvInfo(
+        @Parameter(description = "环境信息", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ENV)
+        devopsEnv: String? = null,
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,

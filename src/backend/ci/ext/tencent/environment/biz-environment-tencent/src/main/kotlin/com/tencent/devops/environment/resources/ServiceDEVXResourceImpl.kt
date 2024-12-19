@@ -30,6 +30,7 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.environment.pojo.DEVXHook
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.service.devx.DEVXService
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,5 +60,9 @@ class ServiceDEVXResourceImpl @Autowired constructor(
 
     override fun getUserDEVXEnv(userId: String, projectIds: Set<String>): Result<List<EnvWithNodeCount>> {
         return Result(devxService.getUserDEVXEnv(userId, projectIds))
+    }
+
+    override fun getEnvHook(userId: String, projectId: String, envHashId: String): Result<List<DEVXHook>> {
+        return Result(devxService.getEnvHook(userId, projectId, envHashId))
     }
 }

@@ -80,7 +80,8 @@
       ],
       "public:master": {
         "outputs": [
-          "{workspaceRoot}/frontend/environment"
+          "{workspaceRoot}/frontend/environment",
+          "{workspaceRoot}/frontend/entry's"
         ]
       }
     }

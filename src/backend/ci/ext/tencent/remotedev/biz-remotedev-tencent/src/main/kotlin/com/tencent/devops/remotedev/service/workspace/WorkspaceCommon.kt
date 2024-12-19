@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
@@ -75,9 +75,11 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -87,21 +89,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
 class WorkspaceCommon @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisCache: RedisCacheService,
+    private val redisCache: ConfigCacheService,
     private val profile: Profile,
     @Lazy
     private val startControl: StartControl,
@@ -127,16 +126,12 @@ class WorkspaceCommon @Autowired constructor(
         const val DEFAULT_WAIT_TIME = 300
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
-        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 
     @Value("\${spring.kafka.topics.cgsInfoTopic:#{null}}")
     val buildCommitsTopic: String? = null
 
-    fun getOpHistory(key: OpHistoryCopyWriting) =
-        redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name)?.ifBlank {
-            key.default
-        } ?: key.default
+    fun getOpHistory(key: OpHistoryCopyWriting) = I18nUtil.getCodeLanMessage(key.default)
 
     fun updateWorkspaceWinDetail(
         ws: WorkspaceRecord?,
@@ -328,7 +323,7 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+            workspace.status.notOk2doNextAction() && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME
@@ -668,7 +663,7 @@ class WorkspaceCommon @Autowired constructor(
                         "owner" to (owner ?: "")
                     )
                 ),
-                    formatted = false
+                formatted = false
             )
         )
     }
@@ -735,7 +730,7 @@ class WorkspaceCommon @Autowired constructor(
     // 创建实例成功后做异步设置，包含L盘挂载
     fun makeDiskMount(ip: String, user: String) {
         try {
-            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
+            val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
             val resIps = mutableSetOf<String>()
             resIps.add(ip)
@@ -750,7 +745,7 @@ class WorkspaceCommon @Autowired constructor(
             }
             AsyncExecute.dispatch(
                 streamBridge,
-                    AsyncPipelineEvent(
+                AsyncPipelineEvent(
                     userId = info.userId ?: user,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,

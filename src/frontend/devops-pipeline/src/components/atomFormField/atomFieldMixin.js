@@ -65,7 +65,8 @@ const atomFieldMixin = {
         readOnly: {
             type: Boolean,
             default: false
-        }
+        },
+        getAtomKeyModal: Function
     },
     data () {
         return {

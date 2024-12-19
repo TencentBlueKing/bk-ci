@@ -10,7 +10,14 @@
                 class="input-label"
                 :title="label"
             >
-                {{ label }}：
+                <label>
+                    {{ label }}
+                </label>
+                <i
+                    v-if="desc"
+                    class="bk-icon icon-info-circle label-desc"
+                    v-bk-tooltips.top="{ content: desc, allowHTML: false }"
+                />
             </p>
             <bk-input
                 class="input-main"
@@ -62,6 +69,9 @@
 
         props: {
             label: {
+                type: String
+            },
+            desc: {
                 type: String
             },
             type: {
@@ -249,10 +259,20 @@
     .parameter-input {
         flex: 1;
         .input-label {
-            max-width: 100%;
+            display: flex;
+            align-items: center;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 12px;
+            > label {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            > i {
+                flex-shrink: 0;
+                margin-left: 8px;
+            }
         }
         .input-main {
             flex: 1;

@@ -473,6 +473,14 @@ const actions = {
         return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
             return response
         })
+    },
+    // 获取环境hook设置
+    fetchEnvHookDetail (_, { projectId, envHashId }) {
+        return vue.$ajax.get(`${prefix}/user/devx/env_hook/${projectId}?envHashId=${envHashId}`)
+    },
+    // 更新环境hook设置
+    updateEnvHookDetail (_, { projectId, envHashId, params }) {
+        return vue.$ajax.post(`${prefix}/user/devx/env_hook/${projectId}?envHashId=${envHashId}`, params)
     }
 
 }
