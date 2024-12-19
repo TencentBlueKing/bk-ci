@@ -121,7 +121,7 @@ export default {
    * 获取用户有授权的项目列表
    */
   fetchProjectsWithAuthorization() {
-    return fetch.get(`${apiPerfix}/auth//authorization/listUserProjectsWithAuthorization`)
+    return fetch.get(`${apiPerfix}/auth/authorization/listUserProjectsWithAuthorization`)
   },
   /**
    * 重置授权（代码库、流水线、部署节点） 

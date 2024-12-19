@@ -130,13 +130,11 @@
             } else {
                 const reg = /^\/?\w+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
-                const query = Object.assign({
-                    project_code: cookie.get(X_DEVOPS_PROJECT_ID)
-                }, this.$route.query)
-
-                this.src
-                    = urlJoin(this.currentPage.iframe_url, initPath)
-                    + (this.currentPage.link === '/permission/' ? '' : `?${queryStringify(query)}${hash}`)
+                const query = Object.assign(
+                    this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },
+                    this.$route.query
+                )
+                this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
             }
         }
 

@@ -136,7 +136,7 @@
       width="960"
     >
       <template #header>
-          {{ curHandoverInfo.flowNo }}
+          {{ curHandoverInfo?.flowNo }}
           <Copy
             class="copy-icon"
             @click="handleCopyFlowNo"
@@ -523,12 +523,15 @@
     fetchHandoverList();
   }
   onMounted(async () => {
-    await fetchHandoverList();
     const { type, flowNo } = route.query;
 
-    if (type && flowNo) {
+    if (type) {
       isGiven.value = typeMapping[type] ?? isGiven.value;
+    }
+    // isGiven参数获取之后调用接口
+    await fetchHandoverList();
 
+    if (type && flowNo) {
       searchValue.value = [
         {
           name: t('单号'),
@@ -536,7 +539,6 @@
           values: [{ id: flowNo, name: flowNo }]
         }
       ];
-
       queryFlowNo.value = flowNo;
       curHandoverInfo.value = handoverList.value.find(i => i.flowNo === queryFlowNo.value);
       showHandoverDetail.value = true;
