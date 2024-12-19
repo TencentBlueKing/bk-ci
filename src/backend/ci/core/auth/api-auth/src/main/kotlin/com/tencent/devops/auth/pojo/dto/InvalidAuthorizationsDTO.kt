@@ -12,4 +12,8 @@ data class InvalidAuthorizationsDTO(
     val invalidRepertoryIds: List<String> = emptyList(),
     @get:Schema(title = "失效的CMDB环境节点")
     val invalidEnvNodeIds: List<String> = emptyList()
-)
+) {
+    fun isHasInvalidAuthorizations(): Boolean {
+        return invalidRepertoryIds.isNotEmpty() || invalidPipelineIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()
+    }
+}

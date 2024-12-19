@@ -1264,12 +1264,14 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             commonCondition = removeMemberDTO
         )[MemberType.USER] ?: return true
-        val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
-            listInvalidAuthorizationsAfterOperatedGroups(
-                projectCode = projectCode,
-                iamGroupIds = groupIdsDirectlyJoined,
-                memberId = removeMemberDTO.targetMember.id
-            )
+
+        val invalidAuthorizationsDTO = listInvalidAuthorizationsAfterOperatedGroups(
+            projectCode = projectCode,
+            iamGroupIds = groupIdsDirectlyJoined,
+            memberId = removeMemberDTO.targetMember.id
+        )
+        val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) = invalidAuthorizationsDTO
+
         if (invalidRepertoryIds.isNotEmpty()) {
             permissionAuthorizationService.checkRepertoryAuthorizationsHanover(
                 operator = userId,
@@ -1322,15 +1324,17 @@ class RbacPermissionManageFacadeServiceImpl(
                 operateGroupMemberTask = ::handoverTask
             )
         }
-        handoverAuthorizationsWhenOperatedGroups(
-            userId = userId,
-            projectCode = projectCode,
-            invalidPipelines = invalidPipelines,
-            invalidRepertoryIds = invalidRepertoryIds,
-            invalidEnvNodeIds = invalidEnvNodeIds,
-            handoverFrom = removeMemberDTO.targetMember.id,
-            handoverTo = removeMemberDTO.handoverTo!!.id
-        )
+        if (invalidAuthorizationsDTO.isHasInvalidAuthorizations()) {
+            handoverAuthorizationsWhenOperatedGroups(
+                userId = userId,
+                projectCode = projectCode,
+                invalidPipelines = invalidPipelines,
+                invalidRepertoryIds = invalidRepertoryIds,
+                invalidEnvNodeIds = invalidEnvNodeIds,
+                handoverFrom = removeMemberDTO.targetMember.id,
+                handoverTo = removeMemberDTO.handoverTo!!.id
+            )
+        }
         return true
     }
 
