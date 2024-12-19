@@ -220,5 +220,6 @@
     "tencentBlueKing": "Tencent BlueKing",
     "openSource": "Open Source",
     "currentVersion": "Current",
-    "releaseNotes": "Release Nodes"
+    "releaseNotes": "Release Nodes",
+    "oauthManage": "Oauth Manage"
 }
