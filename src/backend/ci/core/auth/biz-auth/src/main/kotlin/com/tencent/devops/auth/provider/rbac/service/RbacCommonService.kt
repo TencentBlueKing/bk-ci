@@ -3,18 +3,21 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
 import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.AuthGroupConfigAction
+import com.tencent.devops.auth.pojo.enum.HandoverType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -22,12 +25,13 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 @Suppress("MagicNumber", "LongParameterList")
-class RbacCacheService constructor(
+class RbacCommonService(
     private val dslContext: DSLContext,
     private val authResourceTypeDao: AuthResourceTypeDao,
     private val authActionDao: AuthActionDao,
@@ -38,7 +42,7 @@ class RbacCacheService constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacCacheService::class.java)
+        private val logger = LoggerFactory.getLogger(RbacCommonService::class.java)
     }
 
     /*获取资源类型下的动作*/
@@ -190,7 +194,7 @@ class RbacCacheService constructor(
 
             val subject = SubjectDTO.builder()
                 .id(userId)
-                .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+                .type(MemberType.USER.type)
                 .build()
             val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
                 .subject(subject)
@@ -212,5 +216,43 @@ class RbacCacheService constructor(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"
             )
         }
+    }
+
+    fun convertResourceType2Count(
+        resourceType2Count: Map<String, Long>,
+        type: HandoverType = HandoverType.GROUP
+    ): List<ResourceType2CountVo> {
+        val memberGroupCountList = mutableListOf<ResourceType2CountVo>()
+        // 项目排在第一位
+        resourceType2Count[AuthResourceType.PROJECT.value]?.let { projectCount ->
+            memberGroupCountList.add(
+                ResourceType2CountVo(
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceTypeName = I18nUtil.getCodeLanMessage(
+                        messageCode = AuthResourceType.PROJECT.value + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
+                    ),
+                    count = projectCount,
+                    type = type
+                )
+            )
+        }
+
+        listResourceTypes()
+            .filter { it.resourceType != AuthResourceType.PROJECT.value }
+            .forEach { resourceTypeInfoVo ->
+                resourceType2Count[resourceTypeInfoVo.resourceType]?.let { count ->
+                    val memberGroupCount = ResourceType2CountVo(
+                        resourceType = resourceTypeInfoVo.resourceType,
+                        resourceTypeName = I18nUtil.getCodeLanMessage(
+                            messageCode = resourceTypeInfoVo.resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
+                            defaultMessage = resourceTypeInfoVo.name
+                        ),
+                        count = count,
+                        type = type
+                    )
+                    memberGroupCountList.add(memberGroupCount)
+                }
+            }
+        return memberGroupCountList
     }
 }

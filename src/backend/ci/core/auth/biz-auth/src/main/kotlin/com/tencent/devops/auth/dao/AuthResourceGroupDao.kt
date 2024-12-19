@@ -30,6 +30,7 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.jooq.impl.DSL.count
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
@@ -204,6 +205,21 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun getResourceType2Count(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>
+    ): Map<String, Long> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.select(RESOURCE_TYPE, count())
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.`in`(iamGroupIds))
+                .groupBy(RESOURCE_TYPE)
+                .fetch().map { Pair(it.value1(), it.value2().toLong()) }.toMap()
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         projectCode: String,
@@ -368,6 +384,7 @@ class AuthResourceGroupDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
+        iamGroupIds: List<String>? = null,
         offset: Int,
         limit: Int
     ): List<AuthResourceGroup> {
@@ -375,6 +392,14 @@ class AuthResourceGroupDao {
             val records = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty()) {
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    } else {
+                        it
+                    }
+                }
+                .orderBy(CREATE_TIME)
                 .offset(offset)
                 .limit(limit)
                 .fetch()
