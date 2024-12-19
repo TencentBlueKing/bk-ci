@@ -157,7 +157,7 @@ class WorkspaceBcsClient @Autowired constructor(
                         uid = environmentOpRsp.data!!.taskUid,
                         action = action,
                         actionMsg = actionMsg,
-                        taskId = environmentOpRsp.data.taskUid,
+                        taskId = environmentOpRsp.data.taskID,
                     )
 
                     return environmentOpRsp.data
