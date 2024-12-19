@@ -50,8 +50,7 @@ class UserCopilotResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
-        refresh: Boolean?
+        elementId: String
     ): Result<CodeGitCopilotSummary> {
         return Result(
             repositoryCopilotService.createSummary(
@@ -59,8 +58,7 @@ class UserCopilotResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                elementId = elementId,
-                refresh = refresh ?: false
+                elementId = elementId
             )
         )
     }

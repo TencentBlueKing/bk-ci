@@ -79,10 +79,7 @@ interface UserCopilotResource {
         buildId: String,
         @Parameter(description = "插件ID", required = true)
         @QueryParam("elementId")
-        elementId: String,
-        @Parameter(description = "重新生成", required = false)
-        @QueryParam("refresh")
-        refresh: Boolean? = false
+        elementId: String
     ): Result<CodeGitCopilotSummary>
 
     @Operation(summary = "获取AI摘要结果")

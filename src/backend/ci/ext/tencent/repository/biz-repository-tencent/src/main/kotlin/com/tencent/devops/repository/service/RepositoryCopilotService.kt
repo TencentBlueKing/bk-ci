@@ -62,10 +62,9 @@ class RepositoryCopilotService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
-        refresh: Boolean
+        elementId: String
     ): CodeGitCopilotSummary {
-        logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId|$refresh")
+        logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId")
         val accessToken = getAccessToken(userId)
         val (projectName, sourceSha, targetSha) = resolveSummaryParams(
             projectId = projectId,
@@ -118,8 +117,7 @@ class RepositoryCopilotService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    elementId = elementId,
-                    refresh = true
+                    elementId = elementId
                 )
 
             CopilotSummaryCreateStatus.isFinal(record.status) ->
@@ -132,6 +130,8 @@ class RepositoryCopilotService @Autowired constructor(
                     taskId = summary.id!!.toString(),
                     token = accessToken
                 ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+                // 更新processId
+                copilotSummary.processId = summary.processId
                 if (CopilotSummaryCreateStatus.isFinal(copilotSummary.status)) {
                     // 成功获取摘要
                     logger.info("success get summary|$summary")
