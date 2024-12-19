@@ -134,7 +134,7 @@ class OpWorkspaceResourceImpl @Autowired constructor(
 
     override fun pendingCheck(userId: String, ww: String?): Result<String> {
         val data = SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).pendingCheck(userId).data!!
-        if (!ww.isNullOrBlank()) {
+        if (!ww.isNullOrBlank() && data.isNotBlank()) {
             notifyControl.notify4SystemAdministrator(
                 notifyTemplateCode = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL",
                 bodyParams = mapOf(
