@@ -170,7 +170,7 @@ interface OpWorkspaceResource {
     ): Result<Boolean>
 
     @Operation(summary = "由于取消了任务轮询，现在状态流转依赖于回调，所以增加此监控手段")
-    @POST
+    @GET
     @Path("/pending_check")
     fun pendingCheck(
         @Parameter(description = "用户ID", required = true)
