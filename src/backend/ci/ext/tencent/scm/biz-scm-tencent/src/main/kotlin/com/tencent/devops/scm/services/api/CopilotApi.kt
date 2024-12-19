@@ -115,10 +115,11 @@ class CopilotApi {
         watcher.start()
         val response = OkhttpUtils.doHttp(request)
         if (!response.isSuccessful) {
-            logger.warn("copilot api access failed|${request.url}|${response.code}|${response.body?.string()}")
+            val (code, message) = response.code to response.body?.string()
+            logger.warn("copilot api access failed|${request.url}|$code|$message")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
-                params = arrayOf("Copilot", response.body?.string() ?: response.code.toString())
+                params = arrayOf("Copilot", message ?: code.toString())
             )
         }
         watcher.stop()
