@@ -67,7 +67,7 @@ import java.util.concurrent.Executors
  * rbac迁移服务
  */
 @Suppress("LongParameterList", "ReturnCount")
-class RbacPermissionMigrateService (
+class RbacPermissionMigrateService(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
