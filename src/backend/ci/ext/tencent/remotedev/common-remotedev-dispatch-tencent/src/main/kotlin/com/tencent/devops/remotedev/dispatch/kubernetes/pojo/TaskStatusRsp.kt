@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-
 data class TaskStatusRsp(
     val result: Boolean? = false,
     val code: Int,
