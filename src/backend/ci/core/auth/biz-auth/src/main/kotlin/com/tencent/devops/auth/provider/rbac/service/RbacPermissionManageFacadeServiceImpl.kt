@@ -977,7 +977,7 @@ class RbacPermissionManageFacadeServiceImpl(
     }
 
     private fun isNeedToRenewal(expiredAt: Long): Boolean {
-        return expiredAt < PERMANENT_EXPIRED_TIME
+        return expiredAt < PERMANENT_EXPIRED_TIME / 1000
     }
 
     override fun batchRenewalGroupMembersFromManager(
