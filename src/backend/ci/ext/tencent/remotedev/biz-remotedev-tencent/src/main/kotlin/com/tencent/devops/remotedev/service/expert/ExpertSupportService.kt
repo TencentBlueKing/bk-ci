@@ -818,8 +818,7 @@ class ExpertSupportService @Autowired constructor(
                 "taskStatus" to (taskInfo.status?.name ?: ""),
                 "taskLogs" to taskInfo.logs.joinToString(";"),
                 "host" to (workspace.hostIp ?: ""),
-                // TODO: 需要改成创建磁盘的模板
-                "notifyTemplateCode" to "REMOTEDEV_EXPAND_DISK_DONE",
+                "notifyTemplateCode" to "REMOTEDEV_CREATE_DISK_DONE",
                 "dsize" to dSize
             )
         )

@@ -278,7 +278,6 @@ class StartCloudRemoteDevService @Autowired constructor(
     ): ExpandDiskValidateResp {
         val envId = getEnvironmentUid(workspaceName)
         val expandData = EnvironmentOperateExpandDisk(uid = envId, size = size, pvcId = pvcId)
-        // TODO: 判断扩容也要加pvcId
         val validateRes = workspaceBcsClient.expandDiskValidate(expandData) ?: run {
             logger.warn("expandDiskValidate $workspaceName|$size validateRes is null")
             return ExpandDiskValidateResp(false, "validateRes is null")
