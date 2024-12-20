@@ -105,6 +105,7 @@ class StartCloudService @Autowired constructor(
         return Result(tasks.asSequence().map { task ->
             val taskStatus = workspaceBcsClient.startGetTaskStatus(userId = "system", taskId = task.taskId)
             "id(${task.workspaceName}) " +
+                "操作人(${task.operator}) " +
                 "操作类型(${task.action}) " +
                 "运行时长(${
                     Duration.between(task.createdTime, now).toMinutes().let { "${it / 60}小时${it % 60}分" }
