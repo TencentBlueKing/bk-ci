@@ -412,7 +412,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         validateTaskJsonField(
             dataMap = executionInfoMap,
             fieldName = KEY_LANGUAGE,
-            parentFieldName = KEY_EXECUTION,
             expectedType = String::class,
             supportedFieldTypeCheck = true,
             supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
