@@ -133,7 +133,7 @@ class UserAuthResourceMemberResourceImpl(
         userId: String,
         projectId: String,
         removeMemberDTO: GroupMemberRemoveConditionReq
-    ): Result<String?> {
+    ): Result<String> {
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
             projectCode = projectId,

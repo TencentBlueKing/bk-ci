@@ -123,7 +123,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         userId: String,
         projectCode: String,
         removeMemberDTO: GroupMemberRemoveConditionReq
-    ): String? = null
+    ): String = "true"
 
     override fun deleteResourceGroupMembers(
         userId: String,

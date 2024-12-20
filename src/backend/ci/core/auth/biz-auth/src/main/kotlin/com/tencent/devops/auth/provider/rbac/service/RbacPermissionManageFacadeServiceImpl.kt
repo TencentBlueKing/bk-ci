@@ -1343,13 +1343,13 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String,
         projectCode: String,
         removeMemberDTO: GroupMemberRemoveConditionReq
-    ): String? {
+    ): String {
         logger.info("batch delete group members from personal $userId|$projectCode|$removeMemberDTO")
         // 根据条件获取成员直接加入的用户组
         val groupIds = getGroupIdsByGroupMemberCondition(
             projectCode = projectCode,
             commonCondition = removeMemberDTO
-        )[MemberType.USER]?.toMutableList() ?: return null
+        )[MemberType.USER]?.toMutableList() ?: return "true"
 
         // 过滤掉审核中的用户组
         val beingHandoverGroups = permissionHandoverApplicationService.listMemberHandoverDetails(
@@ -1402,7 +1402,7 @@ class RbacPermissionManageFacadeServiceImpl(
             operateGroupMemberTask = ::deleteTask
         )
         if (toHandoverGroups.isEmpty() && invalidPipelines.isEmpty() && invalidRepertoryIds.isEmpty() && invalidEnvNodeIds.isEmpty()) {
-            return null
+            return "true"
         }
         val handoverDetails = buildHandoverDetails(
             projectCode = projectCode,

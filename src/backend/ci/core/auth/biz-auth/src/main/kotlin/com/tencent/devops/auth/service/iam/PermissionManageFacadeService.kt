@@ -180,7 +180,7 @@ interface PermissionManageFacadeService {
         userId: String,
         projectCode: String,
         removeMemberDTO: GroupMemberRemoveConditionReq
-    ): String?
+    ): String
 
     /**
      * 退出单个组
