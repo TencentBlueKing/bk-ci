@@ -309,26 +309,14 @@
             </div>
           </div>
           <div :class="[{'main-line-remove': !checkData.canHandoverCount}, 'main-line']">
-            <p
-              v-if="batchFlag === 'handover' && invalidAuthorizationCount"
-              class="main-text"
-            >
-              {{ t('移交以上用户组，将导致') }}
-              <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
-                <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
-              </i18n-t>
-
-              <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
-                <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
-              </i18n-t>
-              {{ t('请确认是否同步移交授权。') }}
-            </p>
-            <div v-if="batchFlag === 'remove'">
+            <div v-if="batchFlag === 'remove' || batchFlag === 'handover'">
               <p
                 v-if="checkData.canHandoverCount && invalidAuthorizationCount"
                 class="main-text"
               >
-                {{ t('退出以上用户组，将导致') }}
+                <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
+                <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
+
                 <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
                   <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
                 </i18n-t>
@@ -337,17 +325,20 @@
                   <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
                 </i18n-t>
 
-                <i18n-t v-if="checkData.uniqueManagerCount" keypath="X个资源没有拥有者，" tag="span">
+                <i18n-t v-if="checkData.uniqueManagerCount && batchFlag === 'remove'" keypath="X个资源没有拥有者，" tag="span">
                   <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
                 </i18n-t>
 
                 <i18n-t v-if="checkData.invalidEnvNodeAuthorizationCount" keypath="X个环境节点授权失效，" tag="span">
                   <span class="remove-num">{{ checkData.invalidEnvNodeAuthorizationCount }}</span>
                 </i18n-t>
-                {{ t('请填写交接人，完成交接后才能成功退出。') }}
+                
+                <span v-if="batchFlag === 'remove'">{{ t('请填写交接人，完成交接后才能成功退出。') }}</span>
+                
+                <span v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</span>
               </p>
               <p v-else class="main-label-remove">
-                <i18n-t  keypath="确认从以上X个用户组中移出X吗？" tag="div">
+                <i18n-t v-if="batchFlag === 'remove'" keypath="确认从以上X个用户组中移出X吗？" tag="div">
                   <span class="remove-num">{{ checkData.operableCount }}</span><span class="remove-person">{{ userName }}</span>
                 </i18n-t>
               </p>
@@ -386,7 +377,7 @@
             @click="batchConfirm(batchFlag)"
             :loading="batchBtnLoading"
           >
-            {{batchFlag === 'remove' && checkData.canHandoverCount ? t("确认交接") : t(btnTexts[batchFlag])}}
+            {{batchFlag === 'remove' && checkData.needToHandover ? t("确认交接") : t(btnTexts[batchFlag])}}
           </bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>

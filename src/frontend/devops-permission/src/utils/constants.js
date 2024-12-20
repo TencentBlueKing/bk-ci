@@ -27,5 +27,5 @@ export const batchTitle = {
 export const unableText = {
   renewal: '无法续期',
   handover: '无法移交',
-  remove: '无法退出',
+  remove: '无法直接退出',
 }

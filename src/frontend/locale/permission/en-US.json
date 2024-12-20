@@ -127,7 +127,7 @@
     "所在用户组": "User Group",
     "已选择X个用户组": "{0} user groups selected",
     "；其中X个用户组X，本次操作将忽略": "; among them, {0} user groups {1} will be ignored in this operation",
-    "无法退出": "Cannot Exit",
+    "无法直接退出": "Cannot exit directly.",
     "确认退出以上X个用户组吗？": "Are you sure you want to exit the above {0} user groups?",
     "移交以上用户组，将导致": "Transferring the above user group will cause",
     "X个流水线权限代持失效，": " {0} pipeline delegation permissions to become invalid,",
