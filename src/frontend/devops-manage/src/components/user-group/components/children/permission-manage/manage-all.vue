@@ -308,10 +308,10 @@
               <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
-          <div :class="[{'main-line-remove': !checkData.canHandoverCount}, 'main-line']">
+          <div :class="[{'main-line-remove': !invalidAuthorizationCount}, 'main-line']">
             <div v-if="batchFlag === 'remove' || batchFlag === 'handover'">
               <p
-                v-if="checkData.canHandoverCount && invalidAuthorizationCount"
+                v-if="invalidAuthorizationCount"
                 class="main-text"
               >
                 <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
@@ -346,7 +346,7 @@
 
             <div
               class="main-line main-line-handover"
-              v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.canHandoverCount)"
+              v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.needToHandover)"
             >
               <p class="main-label">{{t("移交给")}}</p>
               <bk-form
@@ -642,7 +642,10 @@ async function batchOperator (flag) {
 
     const res = await http.batchOperateCheck(projectId.value, batchOperateTypes[flag], params);
     checkData.value = res;
-    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount + res.invalidRepositoryAuthorizationCount + res.uniqueManagerCount
+    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount
+      + res.invalidRepositoryAuthorizationCount
+      + res.uniqueManagerCount
+      + res.invalidEnvNodeAuthorizationCount
     loadingMap[flag].value = false;
 
     sliderTitle.value = t(batchTitle[flag]);
@@ -749,7 +752,7 @@ async function validateFormAndUser() {
 }
 
 async function validateRemoveCondition() {
-  if (!checkData.value.canHandoverCount && checkData.value.operableCount) return true;
+  if (!checkData.value.needToHandover && checkData.value.operableCount) return true;
 
   return await validateFormAndUser();
 }

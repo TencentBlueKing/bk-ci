@@ -238,7 +238,7 @@
           <div class="footer-main" :class="authorizationInvalid ? '' : 'main-line-handover'">
             <div class="main-line">
               <p
-                v-if="checkData.canHandoverCount && authorizationInvalid"
+                v-if="authorizationInvalid"
                 class="main-text"
               >
                 <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
@@ -276,7 +276,7 @@
                 </i18n-t>
               </p>
 
-              <div v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.canHandoverCount)">
+              <div v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.needToHandover)">
                 <p class="main-label">{{t("移交给")}}</p>
                 <bk-form
                   ref="formRef"
@@ -310,7 +310,7 @@
               {{batchFlag === 'remove' && checkData.needToHandover ? t("申请交接") : t(btnTexts[batchFlag])}}
             </bk-button>
             <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
-            <p v-if="batchFlag === 'remove' && checkData.canHandoverCount">
+            <p v-if="batchFlag === 'remove' && checkData.needToHandover">
               <img src="@/css/svg/info-circle.svg" class="info-circle">
               <span>{{ t("完成交接后，将自动退出用户组") }}</span>
             </p>
@@ -396,7 +396,12 @@ const title = computed(() => {
     )
   }
 })
-const authorizationInvalid = computed(()=> checkData.value.invalidPipelineAuthorizationCount + checkData.value.invalidRepositoryAuthorizationCount + checkData.value.uniqueManagerCount)
+const authorizationInvalid = computed(() => {
+  return checkData.value.invalidPipelineAuthorizationCount
+    + checkData.value.invalidRepositoryAuthorizationCount
+    + checkData.value.uniqueManagerCount
+    + checkData.value.invalidEnvNodeAuthorizationCount
+})
 const {
   projectId,
   sourceList,
@@ -700,7 +705,7 @@ function cancelClear(batchFlag) {
     if (res) {
       batchCancel();
       fetchUserGroupList(user.value.id, projectId.value, searchGroup.value);
-      if (!checkData.value.canHandoverCount && checkData.value.operableCount) {
+      if (!checkData.value.needToHandover && checkData.value.operableCount) {
         showMessage('success', t(batchMassageText[batchFlag]));
       }
     }
@@ -723,7 +728,7 @@ async function validateFormAndUser() {
 }
 
 async function validateRemoveCondition() {
-  if (!checkData.value.canHandoverCount && checkData.value.operableCount) return true;
+  if (!checkData.value.needToHandover && checkData.value.operableCount) return true;
   return await validateFormAndUser();
 }
 
