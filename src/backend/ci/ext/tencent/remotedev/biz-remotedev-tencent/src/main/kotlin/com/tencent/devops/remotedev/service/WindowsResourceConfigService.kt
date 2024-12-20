@@ -69,7 +69,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val client: Client,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val permissionService: PermissionService
 ) {
 
     companion object {
@@ -510,6 +511,16 @@ class WindowsResourceConfigService @Autowired constructor(
             )
         }
         return curQuota + quota
+    }
+
+    fun addProjectRemotedevManagerWithPermission(
+        userId: String,
+        projectId: String,
+        manager: String,
+        delete: Boolean?
+    ): Boolean {
+        permissionService.checkUserProjectManager(userId, projectId)
+        return addProjectRemotedevManager(userId, projectId, manager, delete)
     }
 
     fun addProjectRemotedevManager(

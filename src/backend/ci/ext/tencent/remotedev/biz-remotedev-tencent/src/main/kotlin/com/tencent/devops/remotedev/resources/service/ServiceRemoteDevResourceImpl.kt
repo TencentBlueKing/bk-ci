@@ -804,7 +804,7 @@ class ServiceRemoteDevResourceImpl(
 
     override fun enableProjectRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
         return Result(
-            remotedevProjectService.enableRemotedev(
+            remotedevProjectService.enableRemotedevWithPermission(
                 userId = userId,
                 projectId = data.projectId,
                 enable = data.enable,
@@ -815,7 +815,7 @@ class ServiceRemoteDevResourceImpl(
 
     override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
         return Result(
-            windowsResourceConfigService.addProjectRemotedevManager(
+            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
                 userId = userId,
                 projectId = data.projectId,
                 manager = data.managers.joinToString(";"),

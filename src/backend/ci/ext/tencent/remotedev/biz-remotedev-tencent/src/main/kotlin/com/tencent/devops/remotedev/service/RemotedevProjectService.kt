@@ -18,8 +18,19 @@ class RemotedevProjectService @Autowired constructor(
     private val client: Client,
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
-    private val projectStartAppLinkDao: ProjectStartAppLinkDao
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao,
+    private val permissionService: PermissionService
 ) {
+    fun enableRemotedevWithPermission(
+        userId: String,
+        projectId: String,
+        enable: Boolean,
+        quota: Int?
+    ): Boolean {
+        permissionService.checkUserProjectManager(userId, projectId)
+        return enableRemotedev(userId, projectId, enable, quota)
+    }
+
     fun enableRemotedev(
         userId: String,
         projectId: String,
