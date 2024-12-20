@@ -124,7 +124,6 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
@@ -188,8 +187,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
     lateinit var storeFileService: StoreFileService
-    @Autowired
-    lateinit var marketAtomService: MarketAtomService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -977,10 +974,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             hashKey = VersionUtils.convertLatestVersion(record.version),
             values = "false"
         )
-//        redisOperation.hdelete(
-//            key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-//            hashKey = record.version
-//        )
+        redisOperation.hdelete(
+            key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+            hashKey = record.version
+        )
         checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
@@ -1452,7 +1449,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     hashKey = VersionUtils.convertLatestVersion(version),
                     values = "true"
                 )
-                marketAtomService.updateAtomSensitiveCacheConfig(atomCode, version)
             }
             // 更新标签信息
             val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
