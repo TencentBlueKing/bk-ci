@@ -64,8 +64,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     override fun supportAtomCode(atomCode: String): Boolean {
-        return subPipelineCheckService.supportAtomCode(atomCode) ||
-                atomCode == SubPipelineCallElement.classType
+        return subPipelineCheckService.supportAtomCode(atomCode)
     }
 
     override fun beforeDelete(element: Element, param: BeforeDeleteParam) {

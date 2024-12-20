@@ -46,7 +46,8 @@ class SubPipelineTaskService @Autowired constructor(
     /**
      * 子流水线插件atomCode
      */
-    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
+    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE) ||
+            atomCode == SubPipelineCallElement.classType
 
     @Suppress("UNCHECKED_CAST")
     fun getSubPipelineParam(
