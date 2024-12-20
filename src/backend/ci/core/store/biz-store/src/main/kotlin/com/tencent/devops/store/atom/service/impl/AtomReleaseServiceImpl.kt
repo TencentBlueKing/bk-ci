@@ -974,10 +974,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             hashKey = VersionUtils.convertLatestVersion(record.version),
             values = "false"
         )
-        redisOperation.hdelete(
-            key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-            hashKey = record.version
-        )
+//        redisOperation.hdelete(
+//            key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+//            hashKey = record.version
+//        )
         checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
