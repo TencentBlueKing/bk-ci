@@ -17,7 +17,7 @@ const permissionMenus = computed(() => {
   return [
     { key: t('代码库授权'), value: 'repertory' },
     { key: t('流水线执行授权'), value: 'pipeline' },
-    { key: t('部署节点授权'), value: 'envNode' },
+    { key: t('部署节点授权'), value: 'env_node' },
   ]
 })
 

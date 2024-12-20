@@ -254,7 +254,7 @@
   const searchName = computed(() => {
     const nameMap = {
       'pipeline': t('流水线执行授权'),
-      'envNode': t('部署节点授权'),
+      'env_node': t('部署节点授权'),
       'repertory': t('代码库授权')
     }
     return nameMap[resourceType.value]
@@ -453,6 +453,7 @@
     try {
       if (!projectId.value) return
       isLoading.value = true;
+      console.log(resourceType.value,"??????????");
       const res = await http.getResourceAuthList(projectId.value, {
         page: pagination.value.current,
         pageSize: pagination.value.limit,

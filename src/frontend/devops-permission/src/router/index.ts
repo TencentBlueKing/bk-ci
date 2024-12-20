@@ -79,8 +79,8 @@ const router = createRouter({
               component: MyAuth,
             },
             {
-              path: 'envNode',
-              name: 'envNode',
+              path: 'env_node',
+              name: 'env_node',
               component: MyAuth,
             }
           ]
