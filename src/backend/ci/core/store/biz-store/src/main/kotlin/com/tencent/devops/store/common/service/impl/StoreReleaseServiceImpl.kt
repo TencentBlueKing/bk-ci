@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
@@ -74,13 +75,13 @@ import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -103,7 +104,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeUpdateParamCheckHandler: StoreUpdateParamCheckHandler,
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
-    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
+    private val redisOperation: RedisOperation
 ) : StoreReleaseService {
 
     private val logger = LoggerFactory.getLogger(StoreReleaseServiceImpl::class.java)
@@ -395,6 +397,15 @@ class StoreReleaseServiceImpl @Autowired constructor(
                             modifier = userId
                         )
                     )
+                    if (newestUndercarriagedRecord.storeType == StoreTypeEnum.ATOM.type.toByte()) {
+                        val hashKey = "${newestUndercarriagedRecord.version.substring(
+                            0, newestUndercarriagedRecord.version.indexOf(".") + 1)}latest"
+                        redisOperation.hset(
+                            key = "ATOM_LATEST_VERSION_KEY_PREFIX:${newestUndercarriagedRecord.storeCode}",
+                            hashKey = hashKey,
+                            values = newestUndercarriagedRecord.version
+                        )
+                    }
                 }
             }
         }

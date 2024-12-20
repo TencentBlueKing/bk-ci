@@ -975,7 +975,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         redisOperation.hdelete(
             key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-            hashKey = VersionUtils.convertLatestVersion(record.version)
+            hashKey = record.version
         )
         checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)
@@ -1100,6 +1100,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         pubTime = pubTime
                     )
                 )
+                if (latestFlag == true) {
+                    val hashKey = "${atomReleaseRequest.version.substring(
+                        0, atomReleaseRequest.version.indexOf(".") + 1)}latest"
+                    redisOperation.hset(
+                        key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
+                        hashKey = hashKey,
+                        values = atomReleaseRequest.version
+                    )
+                }
                 // 处理插件缓存
                 marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
@@ -1195,6 +1204,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                             latestFlag = true
                         )
                     )
+                    val hashKey = "${newestUndercarriagedAtom.version.substring(
+                            0, newestUndercarriagedAtom.version.indexOf(".") + 1)}latest"
+                    redisOperation.hset(
+                        key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
+                        hashKey = hashKey,
+                        values = newestUndercarriagedAtom.version
+                    )
                 }
             }
         }
@@ -1226,8 +1242,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason,
-                version = version
+                reason = reason
             )
         }
     }
@@ -1237,8 +1252,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?,
-        version: String
+        reason: String?
     ) {
         // 查找插件最近二个已经发布的版本
         val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
@@ -1257,16 +1271,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {
                 var tmpAtomId: String? = null
+                var version: String? = null
                 if (releaseAtomRecords.size == 1) {
                     val newestUndercarriagedAtom =
                         marketAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
                     if (null != newestUndercarriagedAtom) {
                         tmpAtomId = newestUndercarriagedAtom.id
+                        version = newestUndercarriagedAtom.version
                     }
                 } else {
                     // 把前一个发布的版本的latestFlag置为true
                     val tmpAtomRecord = releaseAtomRecords[1]
                     tmpAtomId = tmpAtomRecord.id
+                    version = tmpAtomRecord.version
                     // 处理插件缓存(保证用户用到当前大版本中已发布的版本)
                     marketAtomCommonService.handleAtomCache(
                         atomId = tmpAtomId,
@@ -1284,6 +1301,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                             latestFlag = true
                         )
                     )
+                    version?.let {
+                        val hashKey = "${version.substring(0, version.indexOf(".") + 1)}latest"
+                        redisOperation.hset(
+                            key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
+                            hashKey = hashKey,
+                            values = it
+                        )
+                    }
                 }
             }
         }

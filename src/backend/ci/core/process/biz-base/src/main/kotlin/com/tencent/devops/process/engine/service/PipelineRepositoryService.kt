@@ -1319,7 +1319,8 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         version: Int? = null,
-        includeDraft: Boolean? = false
+        includeDraft: Boolean? = false,
+        checkPermission: Boolean? = false
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
@@ -1363,7 +1364,9 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
-                        transferSensitiveParam(e)
+                        if (checkPermission == true) {
+                            transferSensitiveParam(e)
+                        }
                     }
                 }
             }
@@ -1371,14 +1374,21 @@ class PipelineRepositoryService constructor(
         return resource
     }
 
+    // 敏感入参解析
     private fun transferSensitiveParam(atomElement: Element) {
         if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
             val atomCode = atomElement.getAtomCode()
-            val version = atomElement.version
-            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
+            val hashKey = if (atomElement.version.contains("*") || atomElement.version.contains("latest")) {
+                redisOperation.hget(
+                    key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
+                    hashKey = "${atomElement.version.substring(0, atomElement.version.indexOf(".") + 1)}latest"
+                )
+            } else {
+                atomElement.version
+            }
             val param = redisOperation.hget(
                 key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = "$versionPrefix*"
+                hashKey = hashKey ?: return
             )
             if (!param.isNullOrBlank()) {
                 atomElement.transferSensitiveParam(param.split(","))

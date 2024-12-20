@@ -1605,13 +1605,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (params.isNotEmpty()) {
             redisOperation.hset(
                 key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                hashKey = atomVersion,
                 values = params.joinToString(",")
             )
         } else {
             redisOperation.hdelete(
                 key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(atomVersion)
+                hashKey = atomVersion
             )
         }
     }
