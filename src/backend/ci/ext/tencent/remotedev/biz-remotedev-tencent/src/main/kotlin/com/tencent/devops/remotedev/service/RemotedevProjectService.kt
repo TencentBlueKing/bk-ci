@@ -20,12 +20,17 @@ class RemotedevProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao
 ) {
-    fun enableRemotedev(userId: String, projectId: String, enable: Boolean): Boolean {
+    fun enableRemotedev(
+        userId: String,
+        projectId: String,
+        enable: Boolean,
+        quota: Int?
+    ): Boolean {
         // 调用project逻辑
         val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
             userId = userId,
             projectCode = projectId,
-            addcloudDesktopNum = null,
+            addcloudDesktopNum = quota,
             enable = enable
         ).data
 

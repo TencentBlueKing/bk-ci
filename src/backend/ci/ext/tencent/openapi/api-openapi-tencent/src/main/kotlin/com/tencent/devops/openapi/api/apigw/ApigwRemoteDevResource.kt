@@ -28,8 +28,10 @@ import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -811,7 +813,6 @@ interface ApigwRemoteDevResource {
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
 
-
     @Operation(
         summary = "获取工作空间录屏密钥",
         tags = ["v4_app_get_workspace_record_ticket"]
@@ -829,4 +830,24 @@ interface ApigwRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "蓝盾项目开启或关闭云研发", tags = ["v4_app_remotedev_enable_remotedev"])
+    @POST
+    @Path("/enable_remotedev")
+    fun enableRemotedev(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: EnableRemotedevData
+    ): Result<Boolean>
+
+    @Operation(summary = "修改项目云研发管理员", tags = ["v4_app_remotedev_update_remotedev_managers"])
+    @POST
+    @Path("/update_remotedev_managers")
+    fun updateRemotedevManager(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: UpdateRemotedevDataManagers
+    ): Result<Boolean>
 }

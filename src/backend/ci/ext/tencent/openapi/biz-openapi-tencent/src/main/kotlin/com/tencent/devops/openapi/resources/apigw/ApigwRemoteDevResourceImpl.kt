@@ -27,8 +27,10 @@ import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -577,5 +579,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
+
+    override fun enableRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
+        logger.info("enableRemotedev |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).enableProjectRemotedev(userId, data)
+    }
+
+    override fun updateRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
+        logger.info("updateRemotedevManager |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).updateProjectRemotedevManager(userId, data)
     }
 }

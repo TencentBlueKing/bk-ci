@@ -39,8 +39,10 @@ import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -53,6 +55,7 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -112,7 +115,8 @@ class ServiceRemoteDevResourceImpl(
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val remotedevProjectService: RemotedevProjectService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -177,7 +181,11 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
-    override fun getRemotedevProjectsNew(projectId: String?, page: Int, pageSize: Int): Result<List<RemotedevProjectNew>> {
+    override fun getRemotedevProjectsNew(
+        projectId: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>> {
         return Result(workspaceService.getWorkspaceProjectNew(projectId, page, pageSize))
     }
 
@@ -774,7 +782,12 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
         return Result(
             workspaceService.getWorkspaceTimeline(
                 userId = userId,
@@ -787,5 +800,27 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
+
+    override fun enableProjectRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
+        return Result(
+            remotedevProjectService.enableRemotedev(
+                userId = userId,
+                projectId = data.projectId,
+                enable = data.enable,
+                quota = data.quota ?: 1000
+            )
+        )
+    }
+
+    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
+        return Result(
+            windowsResourceConfigService.addProjectRemotedevManager(
+                userId = userId,
+                projectId = data.projectId,
+                manager = data.managers.joinToString(";"),
+                delete = !data.add
+            )
+        )
     }
 }
