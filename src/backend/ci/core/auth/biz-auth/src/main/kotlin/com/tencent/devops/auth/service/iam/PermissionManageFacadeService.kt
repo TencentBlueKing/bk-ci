@@ -97,6 +97,7 @@ interface PermissionManageFacadeService {
         operateChannel: OperateChannel? = OperateChannel.MANAGER,
         filterMemberType: MemberType? = null,
         excludeIamGroupIds: List<Int>? = null,
+        /*与excludeIamGroupIds参数搭配使用，用于排除用户直接加入的组*/
         onlyExcludeUserDirectlyJoined: Boolean? = false,
         start: Int? = null,
         limit: Int? = null
@@ -110,7 +111,11 @@ interface PermissionManageFacadeService {
     ): SQLPage<ResourceMemberInfo>
 
     /**
-     * 为了避免流水线代持人/代码库oauth权限失效，需要对用户退出/交接用户组进行检查。
+     * 为了避免流授权失效，需要对用户退出/交接用户组进行检查。
+     * 入参：
+     * 1、项目ID
+     * 2、用户交接/移除的用户组（直接加入）
+     * 3、用户ID
      * 返回结果：
      * 1、引起代持人权限失效的用户组。
      * 2、引起代持人权限失效的流水线。
@@ -119,7 +124,7 @@ interface PermissionManageFacadeService {
      **/
     fun listInvalidAuthorizationsAfterOperatedGroups(
         projectCode: String,
-        iamGroupIds: List<Int>,
+        iamGroupIdsOfDirectlyJoined: List<Int>,
         memberId: String
     ): InvalidAuthorizationsDTO
 

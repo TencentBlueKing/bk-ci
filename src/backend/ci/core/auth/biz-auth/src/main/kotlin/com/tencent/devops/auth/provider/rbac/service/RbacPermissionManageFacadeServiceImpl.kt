@@ -668,7 +668,7 @@ class RbacPermissionManageFacadeServiceImpl(
 
     override fun listInvalidAuthorizationsAfterOperatedGroups(
         projectCode: String,
-        iamGroupIds: List<Int>,
+        iamGroupIdsOfDirectlyJoined: List<Int>,
         memberId: String
     ): InvalidAuthorizationsDTO {
         val startEpoch = System.currentTimeMillis()
@@ -677,13 +677,13 @@ class RbacPermissionManageFacadeServiceImpl(
             val iamGroupIdsOfNotExpired = getNotExpiredIamGroupIds(
                 projectCode = projectCode,
                 memberId = memberId,
-                iamGroupIds = iamGroupIds
+                iamGroupIds = iamGroupIdsOfDirectlyJoined
             )
-            // 获取用户退出/交接以上用户组后，还未退出的用户组
+            // 获取用户退出/交接以上用户组后，还未退出的用户组（包含组织/直接/模板加入的组）
             val (count, userGroupsJoinedAfterOperatedGroups) = listResourceGroupMembers(
                 projectCode = projectCode,
                 memberId = memberId,
-                excludeIamGroupIds = iamGroupIds,
+                excludeIamGroupIds = iamGroupIdsOfDirectlyJoined,
                 onlyExcludeUserDirectlyJoined = true,
                 operateChannel = OperateChannel.PERSONAL,
                 minExpiredAt = LocalDateTime.now().timestampmilli()
@@ -696,26 +696,33 @@ class RbacPermissionManageFacadeServiceImpl(
             )
             logger.debug("whether the user has project visit perm after operated groups: {}", isHasProjectVisitPermAfterOperatedGroups)
 
-            if (count == 0L || !isHasProjectVisitPermAfterOperatedGroups) {
-                return getInvalidAuthorizationsAfterAllGroupsRemoved(projectCode, memberId, iamGroupIdsOfNotExpired)
+            val invalidAuthorizationsDTO = if (count == 0L || !isHasProjectVisitPermAfterOperatedGroups) {
+                // 若用户已退出了所有的用户组或失去了项目访问权限，则直接返回项目下所有的授权
+                getInvalidAuthorizationsAfterAllGroupsRemoved(
+                    projectCode = projectCode,
+                    memberId = memberId,
+                    iamGroupIdsOfNotExpired = iamGroupIdsOfNotExpired
+                )
+            } else {
+                val (invalidGroups, invalidPipelines) = getInvalidPipelinesAfterOperatedGroups(
+                    projectCode = projectCode,
+                    iamGroupIds = iamGroupIdsOfDirectlyJoined,
+                    memberId = memberId,
+                    iamGroupIdsOfNotExpired = iamGroupIdsOfNotExpired
+                )
+                InvalidAuthorizationsDTO(
+                    invalidGroupIds = invalidGroups,
+                    invalidPipelineIds = invalidPipelines
+                )
             }
-            val (invalidGroups, invalidPipelines) = listInvalidPipelinesAfterOperatedGroups(
-                projectCode = projectCode,
-                iamGroupIds = iamGroupIds,
-                memberId = memberId
-            )
-            val invalidAuthorizationsDTO = InvalidAuthorizationsDTO(
-                invalidGroupIds = invalidGroups,
-                invalidPipelineIds = invalidPipelines
-            )
             logger.info(
-                "invalid authorizations after operated groups|$projectCode|$iamGroupIds|$memberId|$invalidAuthorizationsDTO"
+                "invalid authorizations after operated groups|$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId|$invalidAuthorizationsDTO"
             )
             return invalidAuthorizationsDTO
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations after operated groups" +
-                    "|$projectCode|$iamGroupIds|$memberId"
+                    "|$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId"
             )
         }
     }
@@ -779,19 +786,14 @@ class RbacPermissionManageFacadeServiceImpl(
         )
     }
 
-    private fun listInvalidPipelinesAfterOperatedGroups(
+    private fun getInvalidPipelinesAfterOperatedGroups(
         projectCode: String,
         iamGroupIds: List<Int>,
-        memberId: String
+        memberId: String,
+        iamGroupIdsOfNotExpired: List<Int>
     ): InvalidAuthorizationsDTO {
         logger.info("list invalid authorizations after operated groups:$projectCode|$iamGroupIds|$memberId")
         val now = LocalDateTime.now()
-        // 0.筛选出本次操作中的用户未过期用户组ID
-        val iamGroupIdsOfNotExpired = getNotExpiredIamGroupIds(
-            projectCode = projectCode,
-            memberId = memberId,
-            iamGroupIds = iamGroupIds
-        )
         logger.debug("list iam group ids of not expired:{}", iamGroupIdsOfNotExpired)
         // 1.筛选出本次退出/交接中包含流水线执行权限的用户组
         val operatedGroupsWithExecutePerm = groupPermissionService.listGroupsByPermissionConditions(
@@ -830,7 +832,6 @@ class RbacPermissionManageFacadeServiceImpl(
         logger.debug("list pipeline and project groups joined after operated groups:{}", userGroupsJoinedAfterOperatedGroups)
 
         // 3.查询未退出的流水线/项目级别的用户组中是否包含项目级别的流水线执行权限。
-        // 查询用户在未退出的用户组中否还有整个项目的流水线执行权限。若有的话，则对流水线的代持人权限未造成影响。
         val hasAllPipelineExecutePermAfterOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
             projectCode = projectCode,
             filterIamGroupIds = userGroupsJoinedAfterOperatedGroups,
@@ -842,7 +843,7 @@ class RbacPermissionManageFacadeServiceImpl(
         if (hasAllPipelineExecutePermAfterOperateGroups)
             return InvalidAuthorizationsDTO(emptyList(), emptyList())
 
-        // 3.2.若没有的话，查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
+        // 3.2.若不包含整个项目的流水线执行权限，需查询本次退出/交接的用户组中是否包含项目级别的流水线执行权限。
         val hasAllPipelineExecutePermInOperateGroups = groupPermissionService.isGroupsHasProjectLevelPermission(
             projectCode = projectCode,
             filterIamGroupIds = operatedGroupsWithExecutePerm,
@@ -1020,7 +1021,7 @@ class RbacPermissionManageFacadeServiceImpl(
         val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
             listInvalidAuthorizationsAfterOperatedGroups(
                 projectCode = projectCode,
-                iamGroupIds = groupIds,
+                iamGroupIdsOfDirectlyJoined = groupIds,
                 memberId = handoverMemberDTO.targetMember.id
             )
         // 检查授予人是否有代码库oauth权限
@@ -1139,7 +1140,7 @@ class RbacPermissionManageFacadeServiceImpl(
         // 本次操作导致失效的授权
         val invalidAuthorizations = listInvalidAuthorizationsAfterOperatedGroups(
             projectCode = projectCode,
-            iamGroupIds = groupIds,
+            iamGroupIdsOfDirectlyJoined = groupIds,
             memberId = handoverMemberDTO.targetMember.id
         )
 
@@ -1267,7 +1268,7 @@ class RbacPermissionManageFacadeServiceImpl(
 
         val invalidAuthorizationsDTO = listInvalidAuthorizationsAfterOperatedGroups(
             projectCode = projectCode,
-            iamGroupIds = groupIdsDirectlyJoined,
+            iamGroupIdsOfDirectlyJoined = groupIdsDirectlyJoined,
             memberId = removeMemberDTO.targetMember.id
         )
         val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) = invalidAuthorizationsDTO
@@ -1361,7 +1362,7 @@ class RbacPermissionManageFacadeServiceImpl(
         val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
             listInvalidAuthorizationsAfterOperatedGroups(
                 projectCode = projectCode,
-                iamGroupIds = groupIds,
+                iamGroupIdsOfDirectlyJoined = groupIds,
                 memberId = removeMemberDTO.targetMember.id
             )
 
@@ -1442,7 +1443,7 @@ class RbacPermissionManageFacadeServiceImpl(
             val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
                 listInvalidAuthorizationsAfterOperatedGroups(
                     projectCode = projectCode,
-                    iamGroupIds = listOf(groupId),
+                    iamGroupIdsOfDirectlyJoined = listOf(groupId),
                     memberId = targetMember.id
                 )
             if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() ||
@@ -1618,7 +1619,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     val (invalidGroups, invalidPipelines, invalidRepositoryIds, invalidEnvNodeIds) =
                         listInvalidAuthorizationsAfterOperatedGroups(
                             projectCode = projectCode,
-                            iamGroupIds = groupsOfDirectlyJoined,
+                            iamGroupIdsOfDirectlyJoined = groupsOfDirectlyJoined,
                             memberId = conditionReq.targetMember.id
                         )
                     // 当批量移出时，
@@ -1701,7 +1702,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     val (invalidGroups, invalidPipelines, invalidRepositoryIds, invalidEnvNodeIds) =
                         listInvalidAuthorizationsAfterOperatedGroups(
                             projectCode = projectCode,
-                            iamGroupIds = groupsOfDirectlyJoined,
+                            iamGroupIdsOfDirectlyJoined = groupsOfDirectlyJoined,
                             memberId = conditionReq.targetMember.id
                         )
 
@@ -1937,7 +1938,7 @@ class RbacPermissionManageFacadeServiceImpl(
         val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
             listInvalidAuthorizationsAfterOperatedGroups(
                 projectCode = projectCode,
-                iamGroupIds = groupIdsDirectlyJoined,
+                iamGroupIdsOfDirectlyJoined = groupIdsDirectlyJoined,
                 memberId = previewConditionReq.targetMember.id
             )
         if (batchOperateType == BatchOperateType.REMOVE) {
@@ -2008,7 +2009,7 @@ class RbacPermissionManageFacadeServiceImpl(
         val (invalidGroups, invalidPipelines, invalidRepertoryIds, invalidEnvNodeIds) =
             listInvalidAuthorizationsAfterOperatedGroups(
                 projectCode = projectCode,
-                iamGroupIds = groupIdsDirectlyJoined,
+                iamGroupIdsOfDirectlyJoined = groupIdsDirectlyJoined,
                 memberId = previewConditionReq.targetMember.id
             )
 
@@ -2084,7 +2085,7 @@ class RbacPermissionManageFacadeServiceImpl(
         )[MemberType.USER] ?: return SQLPage(0, emptyList())
         val invalidGroupIds = listInvalidAuthorizationsAfterOperatedGroups(
             projectCode = projectCode,
-            iamGroupIds = groupIdsDirectlyJoined,
+            iamGroupIdsOfDirectlyJoined = groupIdsDirectlyJoined,
             memberId = previewConditionReq.targetMember.id
         ).invalidGroupIds
         // 只有一个成员的管理员组

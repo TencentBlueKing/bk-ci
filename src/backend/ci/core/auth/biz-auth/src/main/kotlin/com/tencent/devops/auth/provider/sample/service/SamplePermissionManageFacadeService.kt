@@ -85,7 +85,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
 
     override fun listInvalidAuthorizationsAfterOperatedGroups(
         projectCode: String,
-        iamGroupIds: List<Int>,
+        iamGroupIdsOfDirectlyJoined: List<Int>,
         memberId: String
     ): InvalidAuthorizationsDTO = InvalidAuthorizationsDTO(emptyList(), emptyList())
 
