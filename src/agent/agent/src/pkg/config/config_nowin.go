@@ -1,3 +1,5 @@
+//go:build linux || darwin
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,23 +27,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package config
 
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-
-@Schema(title = "用户和组件可见范围校验请求报文")
-data class UserStoreDeptInfoRequest(
-    @get:Schema(title = "用户ID", required = true)
-    val userId: String,
-    @get:Schema(title = "用户机构ID列表", required = true)
-    val userDeptIdList: List<Int>,
-    @get:Schema(title = "store组件代码", required = true)
-    val storeCode: String,
-    @get:Schema(title = "store组件类型", required = true)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "公共组件标识", required = true)
-    val publicFlag: Boolean,
-    @get:Schema(title = "store组件机构信息列表", required = true)
-    val storeDepInfoList: List<DeptInfo>?
-)
+func GetWinTaskType() string {
+	return ""
+}

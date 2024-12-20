@@ -28,6 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreManagementExtraService {
@@ -41,6 +43,37 @@ interface StoreManagementExtraService {
      * 删除组件仓库文件
      */
     fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 删除组件代码库
+     */
+    fun deleteComponentCodeRepository(
+        userId: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 添加组件代码库成员
+     */
+    fun addComponentRepositoryUser(
+        memberType: StoreMemberTypeEnum,
+        members: List<String>,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 删除组件代码库成员
+     */
+    fun deleteComponentRepositoryUser(
+        member: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 
     /**
      * 检查卸载组件请求合法性

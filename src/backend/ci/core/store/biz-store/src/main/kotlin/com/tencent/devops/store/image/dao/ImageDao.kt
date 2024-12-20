@@ -863,9 +863,12 @@ class ImageDao {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val templateStatusList =
             listOf(ImageStatusEnum.UNDERCARRIAGING.status.toByte(), ImageStatusEnum.UNDERCARRIAGED.status.toByte())
-        return dslContext.selectCount().from(tImage).join(tStoreProjectRel)
+        return dslContext.select(DSL.countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tImage).join(tStoreProjectRel)
             .on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
-            .where(tImage.IMAGE_STATUS.`in`(templateStatusList).and(tImage.CLASSIFY_ID.eq(classifyId)))
+            .where(
+                tImage.IMAGE_STATUS.`in`(templateStatusList).and(tImage.CLASSIFY_ID.eq(classifyId))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            )
             .fetchOne(0, Int::class.java)!!
     }
 

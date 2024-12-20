@@ -1,3 +1,5 @@
+//go:build windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,32 +25,60 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.webhook
+package wintask
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.permission.PipelinePermissionService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import (
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/capnspacehook/taskmaster"
+	"golang.org/x/sys/windows/svc/mgr"
+	"strings"
+)
 
-@Service
-class PipelineBuildPermissionService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService
-) {
-    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        )
-    }
+type StartType string
+
+const (
+	// ServiceStart 服务
+	ServiceStart StartType = "SERVICE"
+	// TaskStart 执行计划
+	TaskStart StartType = "TASK"
+	// ManualStart 手动
+	ManualStart StartType = "MANUAL"
+)
+
+// FindService 查找windows服务
+func FindService(name string) bool {
+	m, err := mgr.Connect()
+	if err != nil {
+		logs.WithError(err).Error("connect manager failed")
+		return false
+	}
+	defer m.Disconnect()
+
+	service, err := m.OpenService(name)
+	if err != nil {
+		logs.WithError(err).Error("open manager failed")
+		return false
+	}
+	defer service.Close()
+
+	return true
+}
+
+// FindTask 查找windows执行计划
+func FindTask(name string) (*taskmaster.RegisteredTask, bool) {
+	service, err := taskmaster.Connect()
+	if err != nil {
+		logs.WithError(err).Error("connect taskmaster failed")
+		return nil, false
+	}
+
+	task, err := service.GetRegisteredTask("\\" + name)
+	if err != nil && !strings.Contains(err.Error(), "error parsing registered task") {
+		logs.WithError(err).Error("get registered task failed")
+		return nil, false
+	}
+
+	return &task, true
 }

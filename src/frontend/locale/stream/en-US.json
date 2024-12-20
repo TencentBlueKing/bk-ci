@@ -459,7 +459,8 @@
             "set": "Set",
             "remaining": "Remaining",
             "canApplyCount": "Can apply count",
-            "selectNewNode": "Select new Agent"
+            "selectNewNode": "Select new Agent",
+            "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
         }
     },
     "清空筛选条件": "Clear Search Conditions",

@@ -327,6 +327,25 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             approveReq.result == PASS
         }
+        // 入库信息，并设置当前版本的LATEST_FLAG
+        marketAtomDao.approveAtomFromOp(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomStatus = atomStatus,
+            approveReq = approveReq,
+            latestFlag = latestFlag,
+            pubTime = LocalDateTime.now()
+        )
+        if (latestFlag == true) {
+            val hashKey = "${atom.version.substring(
+                0, atom.version.indexOf(".") + 1)}latest"
+            redisOperation.hset(
+                key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
+                hashKey = hashKey,
+                values = atom.version
+            )
+        }
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,
@@ -346,25 +365,6 @@ class OpAtomServiceImpl @Autowired constructor(
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
             // 发送通知消息
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
-        }
-        // 入库信息，并设置当前版本的LATEST_FLAG
-        marketAtomDao.approveAtomFromOp(
-            dslContext = dslContext,
-            userId = userId,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
-        )
-        if (latestFlag == true) {
-            val hashKey = "${atom.version.substring(
-                0, atom.version.indexOf(".") + 1)}latest"
-            redisOperation.hset(
-                key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
-                hashKey = hashKey,
-                values = atom.version
-            )
         }
         // 更新默认插件缓存
         if (approveReq.defaultFlag) {
