@@ -124,6 +124,7 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
@@ -187,6 +188,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
     lateinit var storeFileService: StoreFileService
+    @Autowired
+    lateinit var marketAtomService: MarketAtomService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -1449,6 +1452,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     hashKey = VersionUtils.convertLatestVersion(version),
                     values = "true"
                 )
+                marketAtomService.updateAtomSensitiveCacheConfig(atomCode, version)
             }
             // 更新标签信息
             val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
