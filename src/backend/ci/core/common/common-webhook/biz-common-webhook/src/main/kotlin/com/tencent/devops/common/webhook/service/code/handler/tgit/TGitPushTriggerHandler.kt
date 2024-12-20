@@ -166,8 +166,9 @@ class TGitPushTriggerHandler(
     override fun preMatch(event: GitPushEvent): WebhookMatchResult {
         val isMatch = when {
             event.total_commits_count <= 0 -> {
-                logger.info("Git web hook no commit(${event.total_commits_count})")
-                false
+                val operationKind = event.operation_kind
+                logger.info("Git web hook no commit(${event.total_commits_count})|operationKind=$operationKind")
+                operationKind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value
             }
             GitUtils.isPrePushBranch(event.ref) -> {
                 logger.info("Git web hook is pre-push event|branchName=${event.ref}")
@@ -220,13 +221,13 @@ class TGitPushTriggerHandler(
             val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
                 keyWord = KEYWORD_SKIP_CI,
-                triggerOnMessage = event.commits?.get(0)?.message ?: ""
+                triggerOnMessage = event.commits?.firstOrNull()?.message ?: ""
             )
             val commits = event.commits
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
-                commits?.first()?.message ?: "",
+                commits?.firstOrNull()?.message ?: "",
                 pipelineId
             )
             val eventPaths = if (tryGetChangeFilePath(this, event.operation_kind)) {

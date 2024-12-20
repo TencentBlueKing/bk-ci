@@ -13,5 +13,7 @@ data class ProjectByConditionDTO(
     @get:Schema(title = "环境路由")
     val routerTag: String?,
     @get:Schema(title = "bgId")
-    val bgId: Long? = null
+    val bgId: Long? = null,
+    @get:Schema(title = "remotedev管理员")
+    val remotedevManager: String? = null
 )

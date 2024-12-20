@@ -149,13 +149,28 @@ class RbacPermissionProjectService(
         }
     }
 
-    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
-        return resourceGroupMemberService.getResourceGroupMembers(
+    override fun isProjectMember(
+        userId: String,
+        projectCode: String
+    ): Boolean {
+        return resourceMemberService.isProjectMember(
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            group = null
-        ).contains(userId)
+            userId = userId
+        )
+    }
+
+    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
+        // todo 下个迭代改回
+//        return resourceGroupMemberService.getResourceGroupMembers(
+//            projectCode = projectCode,
+//            resourceType = AuthResourceType.PROJECT.value,
+//            resourceCode = projectCode,
+//            group = null
+//        ).contains(userId)
+        return resourceMemberService.isProjectMember(
+            projectCode = projectCode,
+            userId = userId
+        )
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
