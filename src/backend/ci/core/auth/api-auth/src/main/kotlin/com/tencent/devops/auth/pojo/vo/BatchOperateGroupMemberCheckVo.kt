@@ -21,5 +21,7 @@ data class BatchOperateGroupMemberCheckVo(
     @get:Schema(title = "无效的环境节点授权数量")
     val invalidEnvNodeAuthorizationCount: Int? = 0,
     @get:Schema(title = "可交接的组数量")
-    val canHandoverCount: Int? = 0
+    val canHandoverCount: Int? = 0,
+    @get:Schema(title = "是否需要交接")
+    val needToHandover: Boolean? = null
 )

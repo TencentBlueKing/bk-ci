@@ -1616,19 +1616,20 @@ class RbacPermissionManageFacadeServiceImpl(
                         iamGroupIds = groupsOfDirectlyJoined
                     )
                     // 本次操作导致流水线代持人权限受到影响的用户组及流水线/代码库oauth/环境节点
-                    val (invalidGroups, invalidPipelines, invalidRepositoryIds, invalidEnvNodeIds) =
-                        listInvalidAuthorizationsAfterOperatedGroups(
-                            projectCode = projectCode,
-                            iamGroupIdsOfDirectlyJoined = groupsOfDirectlyJoined,
-                            memberId = conditionReq.targetMember.id
-                        )
+                    val invalidAuthorizationsDTO = listInvalidAuthorizationsAfterOperatedGroups(
+                        projectCode = projectCode,
+                        iamGroupIdsOfDirectlyJoined = groupsOfDirectlyJoined,
+                        memberId = conditionReq.targetMember.id
+                    )
+                    val (invalidGroups, invalidPipelines, invalidRepositoryIds, invalidEnvNodeIds) = invalidAuthorizationsDTO
+
                     // 当批量移出时，
                     // 直接加入的组中，唯一管理员组/影响流水线代持权限不允许被移出
                     // 间接加入的组中，通过组织、模板加入的组不允许被移出
                     val groupsOfInOperableWhenBatchRemove = groupsOfDirectlyJoined.count {
                         groupsOfUniqueManager.contains(it) || invalidGroups.contains(it)
                     } + groupsOfTemplateOrDeptJoined.size
-
+                    val canHandoverCount = groupsOfUniqueManager.union(invalidGroups).size
                     BatchOperateGroupMemberCheckVo(
                         totalCount = totalCount,
                         operableCount = totalCount - groupsOfInOperableWhenBatchRemove,
@@ -1638,7 +1639,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         invalidPipelineAuthorizationCount = invalidPipelines.size,
                         invalidRepositoryAuthorizationCount = invalidRepositoryIds.size,
                         invalidEnvNodeAuthorizationCount = invalidEnvNodeIds.size,
-                        canHandoverCount = groupsOfUniqueManager.union(invalidGroups).size
+                        canHandoverCount = canHandoverCount,
+                        needToHandover = invalidAuthorizationsDTO.isHasInvalidAuthorizations() || canHandoverCount > 0
                     )
                 }
             }
