@@ -467,6 +467,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 validateTaskJsonField(
                     dataMap = osExecutionInfoMap,
                     fieldName = KEY_TARGET,
+                    parentFieldName = KEY_OS,
                     expectedType = String::class
                 )
                 val target = osExecutionInfoMap[KEY_TARGET].toString()
@@ -583,18 +584,32 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
         val fieldValue = dataMap[fieldName]
         if (checkForBlank) {
-            if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    params = arrayOf(fieldName)
-                )
+            if (fieldValue == null || (fieldValue is String && fieldValue.isBlank())) {
+                if (parentFieldName != null) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_NULL,
+                        params = arrayOf(parentFieldName,fieldName)
+                    )
+                }else{
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                        params = arrayOf(fieldName)
+                    )
+                }
             }
         }
         if (!expectedType.isInstance(fieldValue)) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                params = arrayOf(fieldName)
-            )
+            if (parentFieldName != null) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_INVALID,
+                    params = arrayOf(parentFieldName,fieldName)
+                )
+            }else{
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                    params = arrayOf(fieldName)
+                )
+            }
         }
 
         if (supportedFieldTypeCheck) {
