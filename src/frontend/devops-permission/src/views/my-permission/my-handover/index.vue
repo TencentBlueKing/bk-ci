@@ -333,6 +333,11 @@
         default: true,
       },
       {
+        name: t('项目名称'),
+        id: 'projectName',
+        default: true,
+      },
+      {
         name: isGiven.value ? t('审批人') : t('提单人'),
         id: isGiven.value ? 'approver' : 'applicant',
       },

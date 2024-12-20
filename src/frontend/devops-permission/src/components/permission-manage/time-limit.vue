@@ -23,9 +23,9 @@
       class="custom-time-select"
       type="number"
       :showControl="false"
-      placeholder="1-365"
+      placeholder="1-3650"
       :min="1"
-      :max="365"
+      :max="3650"
       @input="handleChangeCustomTime"
     >
       <template #suffix>
@@ -81,8 +81,8 @@ const handleChangeCustomTime = (value) => {
   let newValue = value;
   if (!/^[0-9]*$/.test(value)) {
     newValue = 1;
-  } else if (value > 365) {
-    newValue = 365;
+  } else if (value > 3650) {
+    newValue = 3650;
   }
   nextTick(() => {
     emit('changeTime', newValue);

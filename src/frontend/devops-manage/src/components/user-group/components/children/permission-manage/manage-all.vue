@@ -386,7 +386,7 @@
             @click="batchConfirm(batchFlag)"
             :loading="batchBtnLoading"
           >
-            {{batchFlag === 'remove' && checkData.canHandoverCount ? t("申请交接") : t(btnTexts[batchFlag])}}
+            {{batchFlag === 'remove' && checkData.canHandoverCount ? t("确认交接") : t(btnTexts[batchFlag])}}
           </bk-button>
           <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
