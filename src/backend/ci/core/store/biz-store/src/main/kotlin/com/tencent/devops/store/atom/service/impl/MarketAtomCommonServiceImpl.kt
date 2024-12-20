@@ -395,9 +395,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
         if (!keyInputGroupMapList.isNullOrEmpty()) {
             keyInputGroupMapList.forEach { inputGroupMap ->
-                validateTaskJsonField(inputGroupMap, NAME, String::class)
-                validateTaskJsonField(inputGroupMap, LABEL, String::class)
-                validateTaskJsonField(inputGroupMap, IS_EXPANDED, Boolean::class)
+                validateTaskJsonField(dataMap = inputGroupMap, fieldName = NAME, expectedType = String::class)
+                validateTaskJsonField(dataMap = inputGroupMap, fieldName = LABEL, expectedType = String::class)
+                validateTaskJsonField(dataMap = inputGroupMap, fieldName = IS_EXPANDED, expectedType = Boolean::class)
             }
         }
         var atomPostInfo: AtomPostInfo? = null
@@ -409,20 +409,15 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         // pref:完善研发商店组件配置文件参数校验 #11269
-        val supportedLanguages = setOf(JAVA, PYTHON, GOLANG, NODEJS)
-        val language = executionInfoMap[KEY_LANGUAGE]?.toString()?.let { language ->
-            if (language in supportedLanguages) {
-                language
-            } else {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                    params = arrayOf(KEY_EXECUTION, KEY_LANGUAGE, supportedLanguages.joinToString(separator = ", "))
-                )
-            }
-        } ?: throw ErrorCodeException(
-            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-            params = arrayOf(KEY_LANGUAGE)
+        validateTaskJsonField(
+            dataMap = executionInfoMap,
+            fieldName = KEY_LANGUAGE,
+            parentFieldName = KEY_EXECUTION,
+            expectedType = String::class,
+            supportedFieldTypeCheck = true,
+            supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         )
+        val language = executionInfoMap[KEY_LANGUAGE].toString()
         val config = taskDataMap[KEY_CONFIG] as? Map<String, Any>
         config?.let { validateConfigMap(config) }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
@@ -464,10 +459,17 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (!osList.isNullOrEmpty()) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
-                validateTaskJsonField(osExecutionInfoMap, KEY_OS_NAME, String::class)
+                validateTaskJsonField(
+                    dataMap = osExecutionInfoMap,
+                    fieldName = KEY_OS_NAME,
+                    expectedType = String::class
+                )
                 val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
-
-                validateTaskJsonField(osExecutionInfoMap, KEY_TARGET, String::class)
+                validateTaskJsonField(
+                    dataMap = osExecutionInfoMap,
+                    fieldName = KEY_TARGET,
+                    expectedType = String::class
+                )
                 val target = osExecutionInfoMap[KEY_TARGET].toString()
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
@@ -507,7 +509,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            validateTaskJsonField(executionInfoMap, KEY_TARGET, String::class)
+            validateTaskJsonField(dataMap = executionInfoMap, fieldName = KEY_TARGET, expectedType = String::class)
             val target = executionInfoMap[KEY_TARGET] as String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
@@ -528,60 +530,92 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
 
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
-        inputDataMap?.let { validateInputOutputData(it, maxInputNum) }
-
-        val supportedTypes = setOf(STRING, ARTIFACT, REPORT)
-        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
-        outputDataMap?.let { validateInputOutputData(it, maxInputNum, supportedTypes, isInput = false) }
-        return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
-    }
-
-    private fun <T : Any> validateTaskJsonField(
-        inputGroupMap: Map<String, Any>,
-        fieldName: String,
-        expectedType: KClass<T>
-    ) {
-        val fieldValue = inputGroupMap[fieldName]
-        if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                params = arrayOf(fieldName)
-            )
-        } else if (!expectedType.isInstance(fieldValue)) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                params = arrayOf(fieldName)
-            )
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun validateInputOutputData(
-        dataMap: Map<String, Any>,
-        maxInputNum: Int,
-        supportedTypes: Set<String>? = null,
-        isInput: Boolean = true
-    ) {
-        if (dataMap.size > maxInputNum) {
+        if (inputDataMap != null && inputDataMap.size > maxInputNum) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_INPUT_NUM_IS_TOO_MANY,
                 params = arrayOf(maxInputNum.toString())
             )
         }
+        inputDataMap?.let { dataMap ->
+            dataMap.values.mapNotNull { value ->
+                value as? Map<String, Any>
+            }.forEach { map ->
+                validateTaskJsonField(
+                    dataMap = map,
+                    fieldName = KEY_TYPE,
+                    parentFieldName = KEY_INPUT,
+                    expectedType = String::class
+                )
+            }
+        }
+        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+        if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxOutputNum.toString())
+            )
+        }
+        outputDataMap?.let { dataMap ->
+            dataMap.values.mapNotNull { value ->
+                value as? Map<String, Any>
+            }.forEach { map ->
+                validateTaskJsonField(
+                    dataMap = map,
+                    fieldName = KEY_TYPE,
+                    parentFieldName = KEY_OUTPUT,
+                    expectedType = String::class,
+                    supportedFieldTypeCheck = true,
+                    supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
+                )
+            }
+        }
+        return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
+    }
 
-        dataMap.values
-            .mapNotNull { it as? Map<String, Any> }
-            .forEach { map ->
-                validateTaskJsonField(map, KEY_TYPE, String::class)
-                val type = map[KEY_TYPE].toString()
-                if (!isInput && (supportedTypes != null && type !in supportedTypes)) {
+    private fun <T : Any> validateTaskJsonField(
+        dataMap: Map<String, Any>,
+        fieldName: String,
+        parentFieldName: String? = null,
+        expectedType: KClass<T>,
+        checkForBlank: Boolean = true,
+        supportedFieldTypeCheck: Boolean = false,
+        supportedFieldTypes: Set<String>? = null
+    ) {
+
+        val fieldValue = dataMap[fieldName]
+        if (checkForBlank) {
+            if (fieldValue == null || (fieldValue is String && fieldValue.isEmpty())) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    params = arrayOf(fieldName)
+                )
+            }
+        }
+        if (!expectedType.isInstance(fieldValue)) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf(fieldName)
+            )
+        }
+
+        if (supportedFieldTypeCheck) {
+            if (supportedFieldTypes != null && fieldValue !in supportedFieldTypes) {
+                if (parentFieldName != null) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_NOT_SUPPORT,
+                        params = arrayOf(parentFieldName, fieldName, supportedFieldTypes.joinToString(separator = ","))
+                    )
+                } else {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                        params = arrayOf(KEY_OUTPUT, KEY_TYPE, supportedTypes.joinToString(separator = ","))
+                        params = arrayOf(fieldName, supportedFieldTypes.joinToString(separator = ","))
                     )
                 }
             }
+        }
+
     }
+
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
         val message: String?
