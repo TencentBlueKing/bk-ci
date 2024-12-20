@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -594,5 +595,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
+        logger.info("getTaskStatus |$userId|$taskId")
+        return client.get(ServiceRemoteDevResource::class).getTaskStatus(userId, taskId)
     }
 }

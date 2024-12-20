@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -179,7 +180,11 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
-    override fun getRemotedevProjectsNew(projectId: String?, page: Int, pageSize: Int): Result<List<RemotedevProjectNew>> {
+    override fun getRemotedevProjectsNew(
+        projectId: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>> {
         return Result(workspaceService.getWorkspaceProjectNew(projectId, page, pageSize))
     }
 
@@ -706,7 +711,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
-                message = data.message
+                message = data.message,
+                taskId = data.taskId
             )
         )
     }
@@ -817,5 +823,9 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
+        return Result(expertSupportService.getTaskStatus(userId, taskId))
     }
 }

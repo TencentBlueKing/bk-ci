@@ -18,7 +18,8 @@ data class ExpandDiskData(
  */
 data class ExpandDiskValidateResp(
     val valid: Boolean,
-    val message: String?
+    val message: String?,
+    val taskId: String?
 )
 
 /**

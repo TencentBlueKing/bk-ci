@@ -7,7 +7,9 @@ data class CreateDiskResp(
     @get:Schema(title = "创建任务发起是否成功")
     val result: Boolean,
     @get:Schema(title = "创建发起不成功原因")
-    val message: String?
+    val message: String?,
+    @get:Schema(title = "任务流ID")
+    val taskId: String?
 )
 
 /**

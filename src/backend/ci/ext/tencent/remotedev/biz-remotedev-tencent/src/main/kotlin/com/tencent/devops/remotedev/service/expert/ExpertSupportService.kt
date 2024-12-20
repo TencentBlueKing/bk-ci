@@ -53,6 +53,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -851,6 +852,13 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = workspaceName,
             userId = userId
         )
+    }
+
+    fun getTaskStatus(
+        userId: String,
+        taskId: String
+    ): WorkspaceTaskStatus? {
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).taskStatus(taskId)
     }
 
     companion object {

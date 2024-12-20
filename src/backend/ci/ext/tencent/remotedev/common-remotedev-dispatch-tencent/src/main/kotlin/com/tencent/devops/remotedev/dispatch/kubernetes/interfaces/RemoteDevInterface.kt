@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -142,4 +143,8 @@ interface RemoteDevInterface {
         workspaceName: String,
         userId: String
     ): List<VmDiskInfo>
+
+    fun taskStatus(
+        taskId: String
+    ): WorkspaceTaskStatus?
 }

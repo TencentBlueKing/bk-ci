@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -860,4 +861,16 @@ interface ApigwRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "查询任务状态", tags = ["v4_app_remotedev_get_task_status"])
+    @GET
+    @Path("/get_task_status")
+    fun getTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "taskId", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<WorkspaceTaskStatus?>
 }

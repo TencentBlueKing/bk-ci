@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchE
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -280,18 +281,18 @@ class StartCloudRemoteDevService @Autowired constructor(
         val expandData = EnvironmentOperateExpandDisk(uid = envId, size = size, pvcId = pvcId)
         val validateRes = workspaceBcsClient.expandDiskValidate(expandData) ?: run {
             logger.warn("expandDiskValidate $workspaceName|$size validateRes is null")
-            return ExpandDiskValidateResp(false, "validateRes is null")
+            return ExpandDiskValidateResp(false, "validateRes is null", null)
         }
         if (!validateRes.valid) {
             return validateRes
         }
-        workspaceBcsClient.startOperateWorkspace(
+        val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.EXPAND_DISK,
             workspaceName = workspaceName,
             environmentOperate = expandData
         )
-        return validateRes
+        return ExpandDiskValidateResp(true, null, resp.taskID)
     }
 
     override fun createDisk(workspaceName: String, userId: String, size: String): CreateDiskResp {
@@ -299,21 +300,25 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 存在hdd就不能挂盘了
         val hdd = workspaceBcsClient.fetchDiskList(envId)?.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }
         if (hdd != null) {
-            return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}")
+            return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}", null)
         }
         val data = EnvironmentOperateCreateDisk(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
-        workspaceBcsClient.startOperateWorkspace(
+        val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.EXPAND_DISK,
             workspaceName = workspaceName,
             environmentOperate = data
         )
-        return CreateDiskResp(true, null)
+        return CreateDiskResp(true, null, resp.taskID)
     }
 
     override fun fetchDiskList(workspaceName: String, userId: String): List<VmDiskInfo> {
         val envId = getEnvironmentUid(workspaceName)
         return workspaceBcsClient.fetchDiskList(envId) ?: emptyList()
+    }
+
+    override fun taskStatus(taskId: String): WorkspaceTaskStatus? {
+        return workspaceBcsClient.getTaskStatus(taskId)
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
