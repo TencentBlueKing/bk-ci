@@ -338,7 +338,7 @@ class SubPipelineTaskService @Autowired constructor(
      */
     private fun PipelineModelTask.taskEnable(): Boolean {
         val elementEnable = (this.stageEnable && this.containerEnable && this.additionalOptions?.enable ?: true)
-        val supportElement = supportAtomCode(this.atomCode) || this.atomCode == SubPipelineCallElement.TASK_ATOM
+        val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
         return elementEnable && supportElement
     }
 
