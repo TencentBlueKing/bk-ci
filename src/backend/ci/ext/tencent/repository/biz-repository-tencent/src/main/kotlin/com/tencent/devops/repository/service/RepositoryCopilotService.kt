@@ -62,10 +62,11 @@ class RepositoryCopilotService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String
+        elementId: String,
+        accessToken: String? = null
     ): CodeGitCopilotSummary {
         logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId")
-        val accessToken = getAccessToken(userId)
+        val token = accessToken ?: getAccessToken(userId)
         val (projectName, sourceSha, targetSha) = resolveSummaryParams(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -77,7 +78,7 @@ class RepositoryCopilotService @Autowired constructor(
             projectName = projectName,
             source = sourceSha,
             target = targetSha,
-            token = accessToken
+            token = token
         ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
         logger.info("save summary|$copilotSummary")
         copilotSummaryDao.create(
@@ -102,6 +103,8 @@ class RepositoryCopilotService @Autowired constructor(
         buildId: String,
         elementId: String
     ): CodeGitCopilotSummary {
+        // 引导用户进行oauth
+        val accessToken = getAccessToken(userId)
         // 没有生成摘要，则先生成
         val record = copilotSummaryDao.get(
             dslContext = dslContext,
@@ -109,7 +112,6 @@ class RepositoryCopilotService @Autowired constructor(
             buildId = buildId,
             elementId = elementId
         )
-        val accessToken = getAccessToken(userId)
         return when {
             record == null ->
                 createSummary(
@@ -117,7 +119,8 @@ class RepositoryCopilotService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    elementId = elementId
+                    elementId = elementId,
+                    accessToken = accessToken
                 )
 
             CopilotSummaryCreateStatus.isFinal(record.status) ->
