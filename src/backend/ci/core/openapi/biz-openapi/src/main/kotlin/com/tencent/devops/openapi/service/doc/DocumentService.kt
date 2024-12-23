@@ -324,7 +324,7 @@ class DocumentService {
                         getI18n(BK_HAVE_TO),
                         getI18n(BK_PARAM_ILLUSTRATE)
                     ),
-                    rows = tableRows,
+                    rows = tableRows.sortedBy { it.columns[0] },
                     key = "model_$key"
                 )
             }, key)
@@ -350,7 +350,7 @@ class DocumentService {
                         getI18n(BK_HAVE_TO),
                         getI18n(BK_PARAM_ILLUSTRATE)
                     ),
-                    rows = tableRows,
+                    rows = tableRows.sortedBy { it.columns[0] },
                     key = "model_$it"
                 )
             }, it).apply {
@@ -509,7 +509,7 @@ class DocumentService {
                 TableRow(httpStatus, loadModelType(schema), response.description)
             )
         }
-        return tableRow
+        return tableRow.sortedBy { it.columns[0] }
     }
 
     private fun parseRequestBody(requestBody: RequestBody?): List<TableRow> {
@@ -550,7 +550,7 @@ class DocumentService {
                 )
             }
         }
-        return tableRow
+        return tableRow.sortedBy { it.columns[0] }
     }
 
     private fun loadSwagger(): OpenAPI {
@@ -612,7 +612,7 @@ class DocumentService {
                                 getI18n(BK_HAVE_TO),
                                 getI18n(BK_PARAM_ILLUSTRATE)
                             ),
-                            rows = table,
+                            rows = table.sortedBy { it.columns[0] },
                             key = "model_$key"
                         )
                     }, key
