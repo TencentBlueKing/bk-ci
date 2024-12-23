@@ -178,7 +178,7 @@
         type: 'AUTHORIZATION',
         key: 'auth',
         data: authTable.value,
-        title: t('资源权限代持'),
+        title: t('授权资源'),
         isAuthorizations: true
       }
     ]
@@ -235,7 +235,7 @@
     } else if (props.data?.groupCount) {
       return '移交X个用户组权限'
     } else if (props.data?.authorizationCount) {
-      return '移交X个权限代持人'
+      return '移交X个授权资源'
     }
     return ''
   })
