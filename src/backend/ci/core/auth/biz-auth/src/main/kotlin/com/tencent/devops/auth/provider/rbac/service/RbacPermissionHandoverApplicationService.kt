@@ -39,6 +39,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 class RbacPermissionHandoverApplicationService(
     private val dslContext: DSLContext,
     private val handoverOverviewDao: AuthHandoverOverviewDao,
@@ -124,8 +125,8 @@ class RbacPermissionHandoverApplicationService(
         var handoverOverviewContentOfRtx = ""
         when {
             groupCount > 0 && authorizationCount > 0 -> {
-                titleOfApplication = titleOfApplication.plus(groupCount).plus(
-                    bkHandoverGroups.plus("，").plus(authorizationCount).plus(bkHandoverAuthorizations)
+                titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(
+                    bkHandoverGroups.plus("，").plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
                 )
                 handoverOverviewContentOfEmail = """<span class="num">$groupCount</span>$bkHandoverGroups，<span class="num">$authorizationCount</span>$bkHandoverAuthorizations""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(
@@ -134,13 +135,13 @@ class RbacPermissionHandoverApplicationService(
             }
 
             groupCount > 0 -> {
-                titleOfApplication = titleOfApplication.plus(groupCount).plus(bkHandoverGroups)
+                titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(bkHandoverGroups)
                 handoverOverviewContentOfEmail = """<span class="num">$groupCount</span>$bkHandoverGroups""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(bkHandoverGroups)
             }
 
             else -> {
-                titleOfApplication = titleOfApplication.plus(authorizationCount).plus(bkHandoverAuthorizations)
+                titleOfApplication = titleOfApplication.plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
                 handoverOverviewContentOfEmail = """<span class="num">$authorizationCount</span>$bkHandoverAuthorizations""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(authorizationCount).plus(bkHandoverAuthorizations)
             }
@@ -156,7 +157,9 @@ class RbacPermissionHandoverApplicationService(
      * */
     override fun generateFlowNo(): String {
         val currentTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDD)
-        val incrementedValue = redisOperation.increment(String.format(FLOW_NO_KEY, currentTime), 1)
+        val key = String.format(FLOW_NO_KEY, currentTime)
+        val incrementedValue = redisOperation.increment(key, 1)
+        redisOperation.expire(key, 3600 * 24)
         val formattedIncrementedValue = String.format("%05d", incrementedValue)
         return FLOW_NO_PREFIX + currentTime + formattedIncrementedValue
     }
@@ -353,7 +356,8 @@ class RbacPermissionHandoverApplicationService(
         ).map { it.copy(approver = flowNo2Approver[it.flowNo]) }
     }
 
-    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
+    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?" +
+        "type=handoverToMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)

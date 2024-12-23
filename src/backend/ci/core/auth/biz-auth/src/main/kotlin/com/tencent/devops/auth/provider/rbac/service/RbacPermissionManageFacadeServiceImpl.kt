@@ -1480,35 +1480,16 @@ class RbacPermissionManageFacadeServiceImpl(
         )
         val currentTimeSeconds = System.currentTimeMillis() / 1000
         var finalExpiredAt = expiredAt
-        when {
-            // 若权限已过期，如果是唯一管理员组，允许交接，交接人将获得半年权限；其他的直接删除。
-            expiredAt < currentTimeSeconds -> {
-                val isUniqueManagerGroup = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
-                    dslContext = dslContext,
-                    projectCode = projectCode,
-                    iamGroupIds = listOf(groupId)
-                ).isNotEmpty()
-                if (isUniqueManagerGroup) {
-                    finalExpiredAt = currentTimeSeconds + TimeUnit.DAYS.toSeconds(180)
-                } else {
-                    deleteTask(
-                        projectCode = projectCode,
-                        groupId = groupId,
-                        removeMemberDTO = GroupMemberRemoveConditionReq(
-                            targetMember = handoverMemberDTO.targetMember
-                        ),
-                        expiredAt = finalExpiredAt
-                    )
-                    return
-                }
-            }
-            // 若交接人已经在用户组内，无需交接。
-            authResourceGroupMemberDao.isMemberInGroup(
+        // 若交接人的权限已过期，如果是唯一管理员组，允许交接，接收人将获得半年权限；其他的直接删除。
+        if (expiredAt < currentTimeSeconds) {
+            val isUniqueManagerGroup = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                iamGroupId = groupId,
-                memberId = handoverMemberDTO.handoverTo.id
-            ) -> {
+                iamGroupIds = listOf(groupId)
+            ).isNotEmpty()
+            if (isUniqueManagerGroup) {
+                finalExpiredAt = currentTimeSeconds + TimeUnit.DAYS.toSeconds(180)
+            } else {
                 deleteTask(
                     projectCode = projectCode,
                     groupId = groupId,
@@ -1521,18 +1502,33 @@ class RbacPermissionManageFacadeServiceImpl(
             }
         }
 
+        val isHandoverToInGroup = authResourceGroupMemberDao.isMemberInGroup(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupId = groupId,
+            memberId = handoverMemberDTO.handoverTo.id
+        )
+        if (isHandoverToInGroup) {
+            deleteTask(
+                projectCode = projectCode,
+                groupId = groupId,
+                removeMemberDTO = GroupMemberRemoveConditionReq(
+                    targetMember = handoverMemberDTO.handoverTo
+                ),
+                expiredAt = finalExpiredAt
+            )
+        }
+        if (finalExpiredAt < currentTimeSeconds) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER
+            )
+        }
         val members = listOf(
             ManagerMember(
                 handoverMemberDTO.handoverTo.type,
                 handoverMemberDTO.handoverTo.id
             )
         )
-        if (finalExpiredAt < currentTimeSeconds) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER
-            )
-        }
-
         permissionResourceMemberService.addIamGroupMember(
             groupId = groupId,
             members = members,
@@ -2329,7 +2325,8 @@ class RbacPermissionManageFacadeServiceImpl(
         }
     }
 
-    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?type=handoverFromMe&flowNo=%s"
+    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?" +
+        "type=handoverFromMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)

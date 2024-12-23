@@ -64,7 +64,9 @@ interface PermissionHandoverApplicationService {
     /**
      * 获取交接单中授权相关
      * */
-    fun listAuthorizationsOfHandoverApplication(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo>
+    fun listAuthorizationsOfHandoverApplication(
+        queryReq: HandoverDetailsQueryReq
+    ): SQLPage<HandoverAuthorizationDetailVo>
 
     /**
      * 获取交接单中用户组相关
