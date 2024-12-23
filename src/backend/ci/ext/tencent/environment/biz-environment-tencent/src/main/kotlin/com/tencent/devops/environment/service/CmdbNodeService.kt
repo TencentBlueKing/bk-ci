@@ -739,11 +739,10 @@ class CmdbNodeService @Autowired constructor(
                     osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
                 )
             } ?: listOf()
-            if (logger.isDebugEnabled)
-                logger.debug(
-                    "[addNodeToCCByIpMap]addToCCInfo: " +
-                        addToCCInfoList.joinToString(separator = ", ", transform = { it.toString() })
-                )
+            logger.info(
+                "[addNodeToCCByIpMap]addToCCInfo: " +
+                    addToCCInfoList.joinToString(separator = ", ", transform = { it.toString() })
+            )
         }
         return queryCCInfoList + addToCCInfoList
     }
@@ -799,11 +798,10 @@ class CmdbNodeService @Autowired constructor(
                     osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
                 )
             } ?: emptyList()
-            if (logger.isDebugEnabled)
-                logger.debug(
-                    "[addNodeToCCByServerIdMap]addToCCInfo: " +
-                        addToCCHostList.joinToString(separator = ", ", transform = { it.toString() })
-                )
+            logger.info(
+                "[addNodeToCCByServerIdMap]addToCCInfo: " +
+                    addToCCHostList.joinToString(separator = ", ", transform = { it.toString() })
+            )
         }
         return queryCCInfoList + addToCCHostList
     }
