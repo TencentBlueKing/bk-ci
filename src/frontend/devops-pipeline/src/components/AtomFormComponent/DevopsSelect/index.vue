@@ -161,7 +161,9 @@
                     params.push(key)
                 }
                 this.displayName = keyArr.join(',')
-                this.handleChange(this.name, params)
+                if (this.isMultiple && !this.isEqualArray(this.value, params)) {
+                    this.handleChange(this.name, params)
+                }
             },
             value (newValue) {
                 if (this.isMultiple) {
@@ -197,6 +199,10 @@
             this.handleBlur()
         },
         methods: {
+            isEqualArray (arr1, arr2) { // 判断两个数组是否相等
+                if (arr1.length !== arr2.length) return false
+                return arr1.every((item, index) => item === arr2[index])
+            },
             handleInput (e) {
                 // const { name, value } = e.target
                 this.optionListVisible = true
