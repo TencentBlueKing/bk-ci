@@ -73,7 +73,7 @@
       <bk-table-column :label="t('状态')" prop="beingHandedOver" v-if="isShowOperation">
         <template #default="{row}">
           <span @click="handleToHandoverPage(row.flowNo)" :class="row.flowNo ? 'hover-link' : ''">
-            {{ row.beingHandedOver ? t('移交中') : '' }}
+            {{ row.beingHandedOver ? t('移交中') : '--' }}
           </span>
         </template>
       </bk-table-column>

@@ -157,7 +157,7 @@
         :loading="operatorLoading"
         @click="handleHandoverConfirm"
       >
-        {{t('移交')}}
+        {{t('申请移交')}}
       </bk-button>
       <bk-button
         class="btn-margin"
@@ -347,7 +347,6 @@ import manageSearch from "@/components/permission-manage/manage-search.vue";
 import DetailGroupTab from "@/components/permission-manage/detail-group-tab.vue";
 import { OPERATE_CHANNEL } from "@/utils/constants";
 import { AngleRight  } from 'bkui-vue/lib/icon';
-import { useRouter } from 'vue-router';
 
 const user = ref();
 const { t } = useI18n();
@@ -530,13 +529,24 @@ async function handleHandoverConfirm() {
 
   try {
     operatorLoading.value = true;
-    const res = await http.batchHandover(projectId.value, param);
-    if (res) {
+    const flowNo = await http.batchHandover(projectId.value, param);
+    if (flowNo) {
       await handleReplaceRow(user.value.id);
 
       isShowHandover.value = false;
       cancelClear('handover');
-      showMessage('success', t('已成功提交移交权限申请，等待交接人确定。可在我的交接中查看进度。'));
+
+      InfoBox({
+        width: 500,
+        type: 'success',
+        confirmText: t('查看进度'),
+        cancelText: t('关闭'),
+        class: 'info-box',
+        content: h('div', {style: { fontSize: '16px', color: '#313238' }}, t('已成功提交移交权限申请，等待交接人确定。可在我的交接中查看进度。')),
+        onConfirm() {
+          window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
+        }
+      });
     }
   } catch (error) {
     console.log(error)

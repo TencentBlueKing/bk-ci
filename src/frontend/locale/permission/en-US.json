@@ -241,5 +241,6 @@
     "当前处理人": "Current handler",
     "审批": "Approval",
     "已撤销": "Revoked",
-    "选择全量数据X条": "Select all {0} data entries"
+    "选择全量数据X条": "Select all {0} data entries",
+    "申请移交": "Application transfer"
 }
