@@ -270,12 +270,17 @@ export function showLoginPopup () {
         iframe.style.border = 'none'
         document.getElementById('devops-login-modal').appendChild(iframe)
     
+        const abortController = new AbortController()
+        const option = {
+            signal: abortController.signal
+        } as AddEventListenerOptions
         // 监听子页面的消息
-        window.addEventListener('message', function (event) {
+        window.addEventListener('message', (event: any) => {
             if (event.data === 'loginSuccess') {
                 modal.style.display = 'none'
                 iframe.remove() // 移除iframe
+                abortController.abort()
             }
-        }, { once: true })
+        }, option)
     }
 }
