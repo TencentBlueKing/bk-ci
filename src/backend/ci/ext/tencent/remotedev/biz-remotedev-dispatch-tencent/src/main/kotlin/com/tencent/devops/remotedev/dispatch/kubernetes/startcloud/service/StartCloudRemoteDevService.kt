@@ -292,8 +292,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         return workspaceBcsClient.fetchImages(data)
     }
 
-    override fun deleteImage(imageId: String, delaySeconds: Int): String? {
-        return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskUid
+    override fun deleteImage(imageId: String, delaySeconds: Int?): String? {
+        return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

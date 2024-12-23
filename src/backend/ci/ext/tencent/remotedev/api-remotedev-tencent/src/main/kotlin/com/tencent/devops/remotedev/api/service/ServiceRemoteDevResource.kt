@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
@@ -754,4 +755,22 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: ListImagesData
     ): Result<ListImagesResp?>
+
+    @Operation(summary = "删除镜像")
+    @DELETE
+    @Path("/delete_image")
+    fun deleteImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像 ID", required = true)
+        @QueryParam("imageId")
+        imageId: String,
+        @Parameter(description = "延迟删除时间，单位秒", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int?
+    ): Result<DeleteImageResp>
 }

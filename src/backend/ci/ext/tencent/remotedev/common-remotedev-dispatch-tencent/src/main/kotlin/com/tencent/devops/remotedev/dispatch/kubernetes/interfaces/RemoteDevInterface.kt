@@ -138,6 +138,6 @@ interface RemoteDevInterface {
 
     fun deleteImage(
         imageId: String,
-        delaySeconds: Int
+        delaySeconds: Int?
     ): String?
 }

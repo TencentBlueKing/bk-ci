@@ -35,6 +35,9 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -788,5 +791,20 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        return Result(imageManageService.fetchImages(userId, data))
+    }
+
+    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+        return Result(
+            imageManageService.deleteImage(
+                userId = userId,
+                projectId = projectId,
+                imageId = imageId,
+                delaySeconds = delaySeconds
+            )
+        )
     }
 }

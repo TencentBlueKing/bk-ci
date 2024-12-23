@@ -25,6 +25,9 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -828,4 +831,32 @@ interface ApigwRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "获取镜像列表", tags = ["v4_app_remotedev_get_images"])
+    @POST
+    @Path("/images")
+    fun fetchImages(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?>
+
+    @Operation(summary = "删除镜像", tags = ["v4_app_remotedev_delete_image"])
+    @DELETE
+    @Path("/delete_image")
+    fun deleteImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像 ID", required = true)
+        @QueryParam("imageId")
+        imageId: String,
+        @Parameter(description = "延迟删除时间，单位秒", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int?
+    ): Result<DeleteImageResp>
 }

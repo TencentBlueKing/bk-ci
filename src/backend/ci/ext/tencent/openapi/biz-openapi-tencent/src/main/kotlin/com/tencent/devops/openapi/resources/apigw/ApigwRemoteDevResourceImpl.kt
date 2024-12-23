@@ -24,6 +24,9 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -577,5 +580,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        logger.info("fetchImages |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, data)
+    }
+
+    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+        logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
 }
