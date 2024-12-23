@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -48,7 +49,7 @@ interface ServiceCopilotResource {
 
     @Operation(summary = "生成AI摘要")
     @GET
-    @Path("/createSummary")
+    @Path("/summary")
     fun createSummary(
         @Parameter(description = "token", required = true)
         @QueryParam("token")
@@ -66,7 +67,7 @@ interface ServiceCopilotResource {
 
     @Operation(summary = "获取AI摘要结果")
     @GET
-    @Path("/getSummary")
+    @Path("/summary/status")
     fun getSummary(
         @Parameter(description = "token", required = true)
         @QueryParam("token")
@@ -80,8 +81,8 @@ interface ServiceCopilotResource {
     ): Result<CodeGitCopilotSummary?>
 
     @Operation(summary = "评论AI摘要")
-    @GET
-    @Path("/getUserInfoByToken")
+    @POST
+    @Path("/summary/rate")
     fun rateSummary(
         @Parameter(description = "token", required = true)
         @QueryParam("token")

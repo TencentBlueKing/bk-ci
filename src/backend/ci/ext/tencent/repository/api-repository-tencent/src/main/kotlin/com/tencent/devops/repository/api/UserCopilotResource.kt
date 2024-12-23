@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -62,8 +63,8 @@ interface UserCopilotResource {
     ): Result<String>
 
     @Operation(summary = "生成AI摘要（异步）")
-    @GET
-    @Path("/createSummary")
+    @POST
+    @Path("/summary")
     fun createSummary(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -84,7 +85,7 @@ interface UserCopilotResource {
 
     @Operation(summary = "获取AI摘要结果")
     @GET
-    @Path("/getSummary")
+    @Path("/summary/status")
     fun getSummary(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -104,7 +105,7 @@ interface UserCopilotResource {
     ): Result<CodeGitCopilotSummary>
 
     @Operation(summary = "评价AI结果")
-    @GET
+    @POST
     @Path("/summary/rate")
     fun rateSummary(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
