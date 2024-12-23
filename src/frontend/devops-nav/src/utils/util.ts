@@ -258,7 +258,7 @@ export function showLoginPopup () {
 
     // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
     const modal = document.getElementById('devops-login-modal-overlay')
-    if (modal.style.display === 'none') {
+    if (modal.style.display !== 'flex') {
         modal.style.display = 'flex'
     
         // 动态创建iframe
