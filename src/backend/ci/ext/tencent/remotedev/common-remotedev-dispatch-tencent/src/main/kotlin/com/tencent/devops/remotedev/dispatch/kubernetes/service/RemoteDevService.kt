@@ -88,8 +88,9 @@ class RemoteDevService @Autowired constructor(
             workspaceName = event.workspaceName,
             environmentUid = result.enviromentUid,
             operator = event.userId,
-            uid = result.taskId,
-            action = EnvironmentAction.CREATE
+            uid = result.taskUid,
+            action = EnvironmentAction.CREATE,
+            taskId = result.taskId
         )
 
         // 记录创建历史
@@ -97,18 +98,18 @@ class RemoteDevService @Autowired constructor(
             userId = event.userId,
             event = event,
             environmentUid = result.enviromentUid,
-            regionId = result.regionId,
-            taskId = result.taskId,
+            regionId = 0,
+            taskUid = result.taskUid,
             dslContext = dslContext
         )
         if (event.devFile.checkWorkspaceAutomaticCorrection()) {
-            val taskStatus = workspaceRedisUtils.getTaskStatus(result.taskId)
+            val taskStatus = workspaceRedisUtils.getTaskStatus(result.taskUid)
             if (taskStatus != null) {
                 remoteDevServiceFactory.loadRemoteDevService(mountType)
                     .workspaceTaskCreate(taskStatus, event.workspaceName, event.userId)
                 dispatchWorkspaceOpHisDao.update(
                     dslContext = dslContext,
-                    uid = result.taskId,
+                    uid = result.taskUid,
                     status = EnvironmentActionStatus.AUTOMATIC_CORRECTION,
                     workspaceName = event.workspaceName
                 )
