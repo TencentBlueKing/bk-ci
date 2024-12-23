@@ -818,7 +818,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 userId = userId,
                 accessToken = accessToken
             ).toSet()
-
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }
