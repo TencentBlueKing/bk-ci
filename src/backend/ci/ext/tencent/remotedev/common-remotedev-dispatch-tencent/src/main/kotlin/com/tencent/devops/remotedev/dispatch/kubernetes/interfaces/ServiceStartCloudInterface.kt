@@ -74,4 +74,6 @@ interface ServiceStartCloudInterface {
     ): Result<TaskStatus?>
 
     fun getVmStandardImages(): Result<List<StandardVmImage>?>
+
+    fun pendingCheck(userId: String): Result<String>
 }

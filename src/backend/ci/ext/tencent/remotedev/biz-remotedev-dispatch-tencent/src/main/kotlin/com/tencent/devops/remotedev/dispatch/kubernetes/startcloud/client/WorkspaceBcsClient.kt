@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpH
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatusRsp
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.TaskStatusRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.APP_NOT_BIND_CGS
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.NO_CGS_CHOOSE
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
@@ -155,10 +156,11 @@ class WorkspaceBcsClient @Autowired constructor(
                         operator = userId,
                         uid = environmentOpRsp.data!!.taskUid,
                         action = action,
-                        actionMsg = actionMsg
+                        actionMsg = actionMsg,
+                        taskId = environmentOpRsp.data.taskID,
                     )
 
-                    return environmentOpRsp.data!!
+                    return environmentOpRsp.data
                 } else {
                     throw WorkspaceDispatchException(
                         "操作环境接口返回失败: ${environmentOpRsp.code}-${environmentOpRsp.message}"
@@ -208,6 +210,44 @@ class WorkspaceBcsClient @Autowired constructor(
             logger.error("$userId get workspace info SocketTimeoutException.", e)
             throw WorkspaceDispatchException(
                 errorMessage = "获取工作空间信息接口异常:  接口超时, url: $url"
+            )
+        }
+    }
+
+    fun startGetTaskStatus(
+        userId: String,
+        taskId: String
+    ): TaskStatusRsp.TaskStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/task/status?taskID=$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$userId get task status taskId: $taskId response: ${response.rid()}|$responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "获取实例任务状态接口异常: ${response.code}"
+                    )
+                }
+
+                val taskStatusRsp: TaskStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == taskStatusRsp.code) {
+                    return taskStatusRsp.data!!
+                } else {
+                    throw WorkspaceDispatchException(
+                        "获取实例任务状态接口异常: ${taskStatusRsp.code}-${taskStatusRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get task status SocketTimeoutException.", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "获取实例任务状态接口异常:  接口超时, url: $url"
             )
         }
     }
