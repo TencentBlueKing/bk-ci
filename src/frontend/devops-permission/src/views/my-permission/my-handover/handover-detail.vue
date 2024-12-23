@@ -54,8 +54,8 @@
                 <template #header>
                   <p class="group-title">
                     <i :class="{
-                      'manage-icon manage-icon-down-shape': item.activeFlag, 
-                      'manage-icon manage-icon-right-shape': !item.activeFlag,
+                      'permission-icon permission-icon-down-shape': item.activeFlag, 
+                      'permission-icon permission-icon-right-shape': !item.activeFlag,
                       'shape-icon': true,
                     }" />
                     <img
