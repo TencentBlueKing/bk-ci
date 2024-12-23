@@ -17,6 +17,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
@@ -33,6 +34,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -43,6 +45,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -56,7 +59,8 @@ class RbacPermissionResourceMemberService(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
-    private val syncIamGroupMemberService: PermissionResourceGroupSyncService
+    private val syncIamGroupMemberService: PermissionResourceGroupSyncService,
+    private val rbacCacheService: RbacCacheService
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -70,27 +74,26 @@ class RbacPermissionResourceMemberService(
             BkAuthGroup.CIADMIN, BkAuthGroup.CI_MANAGER -> emptyList()
             // 获取特定资源下全部成员
             null -> {
-                getResourceGroupAndMembers(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode
-                ).flatMap { it.userIdList }.distinct()
-            }
-            // 获取特定资源下特定用户组成员
-            else -> {
-                val dbGroupInfo = authResourceGroupDao.get(
+                authResourceGroupMemberDao.listResourceGroupMember(
                     dslContext = dslContext,
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    groupCode = group.value
-                ) ?: return emptyList()
-                val groupInfo = getResourceGroupAndMembers(
+                    minExpiredTime = LocalDateTime.now(),
+                    memberType = MemberType.USER.type
+                ).map { it.memberId }.distinct()
+            }
+            // 获取特定资源下特定用户组成员
+            else -> {
+                authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = dslContext,
                     projectCode = projectCode,
                     resourceType = resourceType,
-                    resourceCode = resourceCode
-                ).find { it.roleId == dbGroupInfo.relationId.toInt() }
-                groupInfo?.userIdList ?: emptyList()
+                    resourceCode = resourceCode,
+                    minExpiredTime = LocalDateTime.now(),
+                    groupCode = group.value,
+                    memberType = MemberType.USER.type
+                ).map { it.memberId }
             }
         }
     }
@@ -100,27 +103,42 @@ class RbacPermissionResourceMemberService(
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList> {
-        // 1、获取管理员id
-        val managerId = authResourceService.get(
+        val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
-            resourceCode = resourceCode
-        ).relationId
-        // 2、获取分级管理员下所有的用户组
-        val groupInfoList = getGroupInfoList(
-            resourceType = resourceType,
-            managerId = managerId
+            resourceCode = resourceCode,
+            minExpiredTime = LocalDateTime.now()
+        ).groupBy { it.iamGroupId }
+        val resourceGroupInfos = authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = groupId2Members.keys.map { it.toString() }
         )
-        logger.info(
-            "[RBAC-IAM] getResourceGroupAndMembers: projectCode = $projectCode |" +
-                " managerId = $managerId | groupInfoList: $groupInfoList"
-        )
-        // 3、获取组成员
-        return groupInfoList.map {
-            executorService.submit<BkAuthGroupAndUserList> {
-                getUsersUnderGroup(groupInfo = it)
-            }
-        }.map { it.get() }
+        val result = mutableListOf<BkAuthGroupAndUserList>()
+
+        groupId2Members.forEach { (groupId, members) ->
+            val userMembers = members.filter { it.memberType == MemberType.USER.type }
+            val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
+            val groupName = resourceGroupInfos.firstOrNull { it.relationId.toInt() == groupId }?.groupName
+                ?: return@forEach
+            result.add(
+                BkAuthGroupAndUserList(
+                    displayName = groupName,
+                    roleId = groupId,
+                    roleName = groupName,
+                    userIdList = userMembers.map { it.memberId },
+                    deptInfoList = deptMembers.map { deptInfo ->
+                        RoleGroupMemberInfo().apply {
+                            id = deptInfo.memberId
+                            name = deptInfo.memberName
+                        }
+                    },
+                    type = ""
+                )
+            )
+        }
+        return result
     }
 
     override fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO {
@@ -156,7 +174,7 @@ class RbacPermissionResourceMemberService(
             userName = userName,
             deptName = deptName
         )
-        val records = authResourceGroupMemberDao.listProjectMember(
+        val records = authResourceGroupMemberDao.listProjectMembers(
             dslContext = dslContext,
             projectCode = projectCode,
             memberType = memberType,
@@ -344,6 +362,33 @@ class RbacPermissionResourceMemberService(
             )
         }
         return true
+    }
+
+    override fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Boolean {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = userId
+        )
+        val memberDeptInfos = deptService.getUserInfo(
+            userId = "admin",
+            name = userId
+        )?.deptInfo?.map { it.name!! }
+
+        return authResourceGroupMemberDao.isMemberInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            userId = userId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
+        ) || rbacCacheService.validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectCode,
+            permission = AuthPermission.VISIT
+        )
     }
 
     private fun verifyGroupBelongToProject(

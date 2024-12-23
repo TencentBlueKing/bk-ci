@@ -68,4 +68,13 @@ interface StoreComponentManageService {
         version: String,
         installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean>
+
+    /**
+     * 更改组件授权人信息
+     */
+    fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Boolean>
 }

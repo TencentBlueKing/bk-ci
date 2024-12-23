@@ -212,7 +212,8 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineId,
                         userId = userId,
                         buildId = build.buildId,
-                        status = BuildStatus.TERMINATE
+                        status = BuildStatus.TERMINATE,
+                        executeCount = build.executeCount
                     )
                 )
             }
@@ -701,7 +702,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 status = buildStatus,
-                actionType = actionType
+                actionType = actionType,
+                executeCount = executeCount
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",

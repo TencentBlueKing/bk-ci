@@ -1439,6 +1439,16 @@
                   "type" : "number"
                 }, {
                   "type" : "boolean"
+                }, {
+                  "type" : "object",
+                  "properties" : {
+                    "repo-name" : {
+                      "type" : "string"
+                    },
+                    "branch" : {
+                      "type" : "string"
+                    }
+                  }
                 } ]
               },
               "readonly" : {
@@ -1462,7 +1472,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1595,6 +1605,16 @@
                 "type" : "number"
               }, {
                 "type" : "boolean"
+              }, {
+                "type" : "object",
+                "properties" : {
+                  "repo-name" : {
+                    "type" : "string"
+                  },
+                  "branch" : {
+                    "type" : "string"
+                  }
+                }
               } ]
             },
             "readonly" : {
@@ -1621,7 +1641,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                 },
                 "options" : {
                   "type" : "array",

@@ -56,6 +56,7 @@ import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
+import com.tencent.devops.auth.service.lock.GroupAndPermissionsByGroupCodeCreateLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -64,6 +65,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.GroupType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -80,7 +82,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceDao: AuthResourceDao,
-    private val resourceGroupSyncService: PermissionResourceGroupSyncService
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val redisOperation: RedisOperation
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -468,48 +471,55 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         } else {
             Triple(groupConfig.groupName, groupConfig.groupCode, groupConfig.description)
         }
-
-        val resourceGroupInfo = authResourceGroupDao.get(
-            dslContext = dslContext,
+        GroupAndPermissionsByGroupCodeCreateLock(
+            redisOperation = redisOperation,
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode,
-            groupCode = finalGroupCode,
-            groupName = finalGroupName
-        )
-        if (resourceGroupInfo != null) {
-            return resourceGroupInfo.relationId.toInt()
+            groupCode = finalGroupCode
+        ).use { lock ->
+            lock.lock()
+            val resourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = finalGroupCode,
+                groupName = finalGroupName
+            )
+            if (resourceGroupInfo != null) {
+                return resourceGroupInfo.relationId.toInt()
+            }
+            val iamGroupId = createGroupToIam(
+                resourceType = resourceType,
+                managerId = resourceInfo.relationId.toInt(),
+                groupName = finalGroupName,
+                description = description
+            )
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode,
+                groupCode = finalGroupCode,
+                groupName = finalGroupName,
+                defaultGroup = false,
+                relationId = iamGroupId.toString()
+            )
+            permissionResourceGroupPermissionService.grantGroupPermission(
+                authorizationScopesStr = groupConfig.authorizationScopes,
+                projectCode = projectId,
+                projectName = projectInfo.resourceName,
+                resourceType = groupConfig.resourceType,
+                groupCode = finalGroupCode,
+                iamResourceCode = resourceInfo.iamResourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamGroupId = iamGroupId
+            )
+            return iamGroupId
         }
-
-        val iamGroupId = createGroupToIam(
-            resourceType = resourceType,
-            managerId = resourceInfo.relationId.toInt(),
-            groupName = finalGroupName,
-            description = description
-        )
-        authResourceGroupDao.create(
-            dslContext = dslContext,
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceInfo.resourceName,
-            iamResourceCode = resourceInfo.iamResourceCode,
-            groupCode = finalGroupCode,
-            groupName = finalGroupName,
-            defaultGroup = false,
-            relationId = iamGroupId.toString()
-        )
-        permissionResourceGroupPermissionService.grantGroupPermission(
-            authorizationScopesStr = groupConfig.authorizationScopes,
-            projectCode = projectId,
-            projectName = projectInfo.resourceName,
-            resourceType = groupConfig.resourceType,
-            groupCode = finalGroupCode,
-            iamResourceCode = resourceInfo.iamResourceCode,
-            resourceName = resourceInfo.resourceName,
-            iamGroupId = iamGroupId
-        )
-        return iamGroupId
     }
 
     override fun createCustomGroupAndPermissions(

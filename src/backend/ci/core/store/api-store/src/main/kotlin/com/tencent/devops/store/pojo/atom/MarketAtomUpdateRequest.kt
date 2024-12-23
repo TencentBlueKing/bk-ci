@@ -73,7 +73,7 @@ data class MarketAtomUpdateRequest(
     @get:Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false,
     @get:Schema(title = "分支", required = false)
-    val branch: String? = null,
+    var branch: String? = null,
     @get:Schema(title = "是否属于分支测试版本", required = false)
     var isBranchTestVersion: Boolean = false
 )

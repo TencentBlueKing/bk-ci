@@ -27,16 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.media.MediaInfoReq
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "机构信息报文体")
-data class DeptInfo(
-    @get:Schema(title = "机构ID", required = true)
-    val deptId: Int,
-    @get:Schema(title = "机构名称", required = true)
-    val deptName: String,
-    @get:Schema(title = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String? = null,
-    @get:Schema(title = "批注", required = false)
-    val comment: String? = null
+@Schema(title = "研发商店-组件发布信息修改请求报文体")
+data class StoreReleaseInfoUpdateRequest(
+    @get:Schema(title = "媒体信息", required = false)
+    val mediaInfoList: List<MediaInfoReq>? = null,
+    @get:Schema(title = "机构列表", required = true)
+    val deptInfoList: List<DeptInfo>? = null
 )

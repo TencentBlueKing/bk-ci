@@ -351,6 +351,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank() ||
             releaseType != ReleaseTypeEnum.HIS_VERSION_UPGRADE
         ) {
+            marketAtomUpdateRequest.branch = MASTER
             MASTER
         } else {
             marketAtomUpdateRequest.branch

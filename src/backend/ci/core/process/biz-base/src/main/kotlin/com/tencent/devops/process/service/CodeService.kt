@@ -59,9 +59,8 @@ class CodeService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val client: Client
 ) {
-    fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
-        val repositoryConfig = getRepositoryConfig(repoHashId, null)
-
+    fun getSvnDirectories(projectId: String, repositoryConfig: RepositoryConfig, relativePath: String?): List<String> {
+        val repoHashId = repositoryConfig.getRepositoryId()
         val repository = (client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
@@ -70,13 +69,13 @@ class CodeService @Autowired constructor(
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = GIT_NOT_FOUND,
-                    params = arrayOf("$repoHashId")
+                    params = arrayOf(repoHashId)
                 )
             )) as? CodeSvnRepository
             ?: throw IllegalArgumentException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = NOT_SVN_CODE_BASE,
-                    params = arrayOf("$repoHashId")
+                    params = arrayOf(repoHashId)
                 )
             )
 
@@ -119,8 +118,12 @@ class CodeService @Autowired constructor(
         }
     }
 
-    fun getGitRefs(projectId: String, repoHashId: String?, search: String? = null): List<String> {
+    fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
+        return getSvnDirectories(projectId, repositoryConfig, relativePath)
+    }
+
+    fun getGitRefs(projectId: String, repositoryConfig: RepositoryConfig, search: String? = null): List<String> {
         val result = mutableListOf<String>()
         val branches = scmProxyService.listBranches(projectId, repositoryConfig, search).data ?: listOf()
         val tags = scmProxyService.listTags(projectId, repositoryConfig, search).data ?: listOf()
@@ -128,6 +131,11 @@ class CodeService @Autowired constructor(
         result.addAll(branches)
         result.addAll(tags)
         return result
+    }
+
+    fun getGitRefs(projectId: String, repoHashId: String?, search: String? = null): List<String> {
+        val repositoryConfig = getRepositoryConfig(repoHashId, null)
+        return getGitRefs(projectId, repositoryConfig, search)
     }
 
     fun listRepository(projectId: String, scmType: ScmType): List<RepositoryInfoWithPermission> {
@@ -232,7 +240,7 @@ class CodeService @Autowired constructor(
         )
     }
 
-    private fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {
+    fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {
         if (!repoHashId.isNullOrBlank()) {
             return RepositoryConfig(repoHashId, null, RepositoryType.ID)
         }
