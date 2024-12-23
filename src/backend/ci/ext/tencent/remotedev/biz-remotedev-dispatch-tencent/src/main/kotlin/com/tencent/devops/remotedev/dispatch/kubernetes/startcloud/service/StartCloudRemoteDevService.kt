@@ -76,7 +76,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             }
             // 迁移orderId
             workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
-            return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
+            return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, "")
         }
 
         // 生产创建start资源的订单号
@@ -115,7 +115,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 创建成功后保存pipelineId
         workspaceRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
-        return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
+        return CreateWorkspaceRes(res.environmentUid, res.taskUid, res.taskID)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
