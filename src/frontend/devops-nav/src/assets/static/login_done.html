@@ -12,32 +12,34 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
         }
         .message {
             text-align: center;
             background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            animation: fadeIn 1s ease-in-out;
         }
         .icon {
             display: inline-block;
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background-color: #4caf50;
             border-radius: 50%;
             position: relative;
             margin-bottom: 20px;
+            animation: bounce 1s infinite;
         }
         .icon::before {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 15px;
-            height: 30px;
+            width: 20px;
+            height: 40px;
             border-right: 5px solid white;
             border-bottom: 5px solid white;
             transform: translate(-50%, -50%) rotate(45deg);
@@ -45,9 +47,33 @@
         h1 {
             color: #333;
             margin: 0;
+            font-size: 24px;
         }
         p {
             color: #666;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
         }
     </style>
 </head>
@@ -56,12 +82,37 @@
         <div class="icon"></div>
         <h1>Login Successful!</h1>
         <p>This page will close automatically in 3 seconds.</p>
+        <p id="countdown"></p>
+
+        <button onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
     </div>
 
     <script>
          function loginSuccess() {
             // 向父窗口发送登录成功的消息
             window.parent.postMessage('loginSuccess', '*');
+        }
+        // 倒计时3秒后自动关闭窗口
+        function startCountdown() {
+            let countdownElement = document.getElementById('countdown');
+            let seconds = 3;
+            countdownElement.textContent = `Closing in ${seconds} seconds...`;
+
+            let interval = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = `Closing in ${seconds} seconds...`;
+
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    loginSuccess();
+                }
+            }, 1000);
+        }
+
+        // 开始倒计时
+        
+        window.onload = function() {
+            startCountdown();
         }
     </script>
 </body>

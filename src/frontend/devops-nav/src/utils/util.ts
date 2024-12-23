@@ -257,16 +257,23 @@ export function showLoginPopup () {
     const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
 
     // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-    const modal = document.getElementById('devops-login-modal')
-    const iframe = document.getElementById('devops-login-iframe')
-    iframe.setAttribute('src', loginUrl)
+    const modal = document.getElementById('devops-login-modal-overlay')
     modal.style.display = 'flex'
+
+    // 动态创建iframe
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('id', 'devops-login-iframe')
+    iframe.setAttribute('src', loginUrl)
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
+    iframe.style.border = 'none'
+    document.getElementById('devops-login-modal').appendChild(iframe)
 
     // 监听子页面的消息
     window.addEventListener('message', function (event) {
         if (event.data === 'loginSuccess') {
             modal.style.display = 'none'
-            iframe.setAttribute('src', '')
+            iframe.remove() // 移除iframe
         }
     }, { once: true })
 }
