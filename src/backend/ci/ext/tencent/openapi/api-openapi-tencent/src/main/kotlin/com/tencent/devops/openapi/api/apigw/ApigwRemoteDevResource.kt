@@ -811,7 +811,6 @@ interface ApigwRemoteDevResource {
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
 
-
     @Operation(
         summary = "获取工作空间录屏密钥",
         tags = ["v4_app_get_workspace_record_ticket"]

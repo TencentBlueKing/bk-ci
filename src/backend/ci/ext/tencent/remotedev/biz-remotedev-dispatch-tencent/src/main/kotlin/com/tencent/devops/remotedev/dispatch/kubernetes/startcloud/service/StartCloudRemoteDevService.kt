@@ -40,6 +40,8 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -203,7 +205,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         workspaceName: String,
         gameId: String,
         cgsId: String,
-        imageId: String
+        imageId: String,
+        imageName: String
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -214,7 +217,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 appName = gameId,
                 userId = userId,
                 pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
-                cgsId = cgsId
+                cgsId = cgsId,
+                imageName = imageName
             ),
             actionMsg = imageId
         )
@@ -282,6 +286,14 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentOperate = expandData
         )
         return validateRes
+    }
+
+    override fun fetchImages(data: ListImagesData): ListImagesResp? {
+        return workspaceBcsClient.fetchImages(data)
+    }
+
+    override fun deleteImage(imageId: String, delaySeconds: Int): String? {
+        return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskUid
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

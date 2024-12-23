@@ -551,6 +551,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    @Deprecated("老的下掉，要被新的代替")
     override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }

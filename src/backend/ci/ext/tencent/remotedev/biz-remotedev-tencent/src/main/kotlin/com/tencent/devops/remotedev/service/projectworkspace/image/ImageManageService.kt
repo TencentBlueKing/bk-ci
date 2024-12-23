@@ -39,6 +39,8 @@ import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.service.PermissionService
@@ -136,5 +138,11 @@ class ImageManageService @Autowired constructor(
             imageId = null,
             imageCosfile = imageCosFile
         ).isNotEmpty
+    }
+
+    fun fetchImages(
+        userId: String,
+        data: ListImagesData
+    ): ListImagesResp? {
     }
 }

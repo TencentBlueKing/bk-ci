@@ -20,6 +20,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -394,6 +396,7 @@ interface ServiceRemoteDevResource {
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
 
+    @Deprecated(message = "老的下掉，要被新的代替")
     @Operation(summary = "获取镜像列表")
     @GET
     @Path("/image/list")
@@ -741,4 +744,14 @@ interface ServiceRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "获取镜像列表")
+    @POST
+    @Path("/images")
+    fun fetchImages(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?>
 }
