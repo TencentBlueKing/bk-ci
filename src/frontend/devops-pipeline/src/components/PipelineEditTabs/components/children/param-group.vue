@@ -74,11 +74,7 @@
                                             class="default-value"
                                             v-bk-overflow-tips
                                         >
-                                            {{
-                                                param.type === 'REPO_REF'
-                                                    ? `${param.defaultValue['repo-name']} @ ${param?.defaultValue.branch}`
-                                                    : param.defaultValue || '--'
-                                            }}
+                                            {{ param.defaultValue || '--' }}
                                         </span>
                                     </div>
                                     <div
