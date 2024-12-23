@@ -231,7 +231,7 @@
   }) 
   const keyPath = computed(() => {
     if (props.data?.groupCount && props.data?.authorizationCount) {
-      return '移交X个用户组权限，同时移交X个权限代持人'
+      return '移交X个用户组权限，同时移交X个授权资源'
     } else if (props.data?.groupCount) {
       return '移交X个用户组权限'
     } else if (props.data?.authorizationCount) {
