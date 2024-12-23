@@ -1,4 +1,3 @@
-import { showLoginModal } from '@blueking/login-modal'
 import eventBus from './eventBus'
 export function firstUpperCase (str: string): string {
     try {
@@ -258,5 +257,16 @@ export function showLoginPopup () {
     const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
 
     // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-    showLoginModal({ loginUrl })
+    const modal = document.getElementById('devops-login-modal')
+    const iframe = document.getElementById('devops-login-iframe')
+    iframe.setAttribute('src', loginUrl)
+    modal.style.display = 'flex'
+
+    // 监听子页面的消息
+    window.addEventListener('message', function (event) {
+        if (event.data === 'loginSuccess') {
+            modal.style.display = 'none'
+            iframe.setAttribute('src', '')
+        }
+    }, { once: true })
 }

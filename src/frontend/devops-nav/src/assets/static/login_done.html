@@ -1,15 +1,68 @@
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Success</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .message {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .icon {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15px;
+            height: 30px;
+            border-right: 5px solid white;
+            border-bottom: 5px solid white;
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+        p {
+            color: #666;
+        }
+    </style>
 </head>
-<script>
-    if (window.opener) {
-        window.opener.location.reload()
-        window.close()
-    }
-</script>
-
 <body>
+    <div class="message">
+        <div class="icon"></div>
+        <h1>Login Successful!</h1>
+        <p>This page will close automatically in 3 seconds.</p>
+    </div>
+
+    <script>
+         function loginSuccess() {
+            // 向父窗口发送登录成功的消息
+            window.parent.postMessage('loginSuccess', '*');
+        }
+    </script>
 </body>
+</html>

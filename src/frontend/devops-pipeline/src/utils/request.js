@@ -36,7 +36,7 @@ const request = axios.create({
 })
 
 function errorHandler (error) {
-    if (typeof error.response.data === 'undefined') {
+    if (typeof error.response === 'undefined') {
         // HACK REDIRECT 302
         bus.$toggleLoginDialog(true)
     }
@@ -70,8 +70,11 @@ request.interceptors.request.use(config => {
 request.interceptors.response.use(response => {
     const { data: { data, status, message, code, result } } = response
     const httpStatus = response.status
-    if (httpStatus === 401) {
+    if (httpStatus === 302 || httpStatus === 401) {
+        console.log(11111, response)
         bus.$toggleLoginDialog(true)
+        const errorMsg = { httpStatus, message: '登录态已失效' }
+        return Promise.reject(errorMsg)
     } else if (httpStatus === 503) {
         const errMsg = {
             status: httpStatus,
