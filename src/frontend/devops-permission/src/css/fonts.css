@@ -110,3 +110,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-info:before {
 	content: "\e11d";
 }
+.permission-icon-unknown:before {
+	content: "\e11e";
+}
+.permission-icon-abnormal:before {
+	content: "\e11f";
+}
+.permission-icon-warning-2:before {
+	content: "\e120";
+}
+.permission-icon-right-shape:before {
+	content: "\e121";
+}

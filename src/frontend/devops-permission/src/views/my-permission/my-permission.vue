@@ -535,14 +535,19 @@ async function handleHandoverConfirm() {
 
       isShowHandover.value = false;
       cancelClear('handover');
-
       InfoBox({
-        width: 500,
         type: 'success',
+        title: t('移交申请提交成功'),
         confirmText: t('查看进度'),
         cancelText: t('关闭'),
         class: 'info-box',
-        content: h('div', {style: { fontSize: '16px', color: '#313238' }}, t('已成功提交移交权限申请，等待交接人确定。可在我的交接中查看进度。')),
+        content: h(
+          'div', { class: 'info-content' },
+          [
+            h('p', { class: 'info-text' }, t('已成功提交「移交权限」申请，等待交接人确认。')),
+            h('p', { class: 'info-text' }, t('可在“我的交接”中查看进度。'))
+          ]
+        ),
         onConfirm() {
           window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
         }
@@ -709,15 +714,14 @@ function cancelClear(batchFlag) {
       res = await http.batchRemove(projectId.value, params);
       if (res && authorizationInvalid.value) {
         showRemoveSuccessInfoBox(res);
+      } else {
+        showMessage('success', t(batchMassageText[batchFlag]));
       }
     }
 
     if (res) {
       batchCancel();
       fetchUserGroupList(user.value.id, projectId.value, searchGroup.value);
-      if (!checkData.value.needToHandover && checkData.value.operableCount) {
-        showMessage('success', t(batchMassageText[batchFlag]));
-      }
     }
   } catch (error) {
     console.log(error);

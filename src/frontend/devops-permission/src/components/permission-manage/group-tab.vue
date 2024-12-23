@@ -7,8 +7,8 @@
           <template #header>
             <p class="group-title">
               <i :class="{
-                'manage-icon manage-icon-down-shape': projectTable.activeFlag,
-                'manage-icon manage-icon-right-shape': !projectTable.activeFlag,
+                'permission-icon permission-icon-down-shape': projectTable.activeFlag,
+                'permission-icon permission-icon-right-shape': !projectTable.activeFlag,
                 'shape-icon': true,
               }" />
               {{ projectTable.resourceTypeName }} ({{ projectTable.resourceType }})
@@ -53,8 +53,8 @@
           <template #header>
             <p class="group-title">
               <i :class="{
-                'manage-icon manage-icon-down-shape': item.activeFlag,
-                'manage-icon manage-icon-right-shape': !item.activeFlag,
+                'permission-icon permission-icon-down-shape': item.activeFlag,
+                'permission-icon permission-icon-right-shape': !item.activeFlag,
                 'shape-icon': true,
               }" />
               <img

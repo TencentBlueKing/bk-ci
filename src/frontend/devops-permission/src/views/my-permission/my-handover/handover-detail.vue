@@ -54,8 +54,8 @@
                 <template #header>
                   <p class="group-title">
                     <i :class="{
-                      'manage-icon manage-icon-down-shape': item.activeFlag, 
-                      'manage-icon manage-icon-right-shape': !item.activeFlag,
+                      'permission-icon permission-icon-down-shape': item.activeFlag, 
+                      'permission-icon permission-icon-right-shape': !item.activeFlag,
                       'shape-icon': true,
                     }" />
                     <img
@@ -178,7 +178,7 @@
         type: 'AUTHORIZATION',
         key: 'auth',
         data: authTable.value,
-        title: t('资源权限代持'),
+        title: t('授权资源'),
         isAuthorizations: true
       }
     ]
@@ -231,11 +231,11 @@
   }) 
   const keyPath = computed(() => {
     if (props.data?.groupCount && props.data?.authorizationCount) {
-      return '移交X个用户组权限，同时移交X个权限代持人'
+      return '移交X个用户组权限，同时移交X个授权资源'
     } else if (props.data?.groupCount) {
       return '移交X个用户组权限'
     } else if (props.data?.authorizationCount) {
-      return '移交X个权限代持人'
+      return '移交X个授权资源'
     }
     return ''
   })
