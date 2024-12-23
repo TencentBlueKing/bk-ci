@@ -25,24 +25,27 @@ class RemotedevProjectService @Autowired constructor(
         userId: String,
         projectId: String,
         enable: Boolean,
-        quota: Int?
+        quota: Int?,
+        rewriteManages: Set<String>?
     ): Boolean {
         permissionService.checkUserProjectManager(userId, projectId)
-        return enableRemotedev(userId, projectId, enable, quota)
+        return enableRemotedev(userId, projectId, enable, quota, rewriteManages)
     }
 
     fun enableRemotedev(
         userId: String,
         projectId: String,
         enable: Boolean,
-        quota: Int?
+        quota: Int?,
+        rewriteManages: Set<String>?
     ): Boolean {
         // 调用project逻辑
         val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
             userId = userId,
             projectCode = projectId,
             addcloudDesktopNum = quota,
-            enable = enable
+            enable = enable,
+            rewriteManages = rewriteManages
         ).data
 
         if (ok != true) {

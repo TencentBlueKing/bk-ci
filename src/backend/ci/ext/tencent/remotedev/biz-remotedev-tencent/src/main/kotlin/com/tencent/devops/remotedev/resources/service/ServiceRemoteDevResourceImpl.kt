@@ -211,7 +211,8 @@ class ServiceRemoteDevResourceImpl(
                 userId = operator,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null
+                enable = null,
+                rewriteManages = null
             )
         }
         cgsData.forEach { cgs ->
@@ -808,7 +809,8 @@ class ServiceRemoteDevResourceImpl(
                 userId = userId,
                 projectId = data.projectId,
                 enable = data.enable,
-                quota = data.quota ?: 1000
+                quota = data.quota ?: 1000,
+                rewriteManages = data.managers
             )
         )
     }

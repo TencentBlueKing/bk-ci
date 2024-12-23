@@ -61,6 +61,8 @@ data class EnableRemotedevData(
     val projectId: String,
     @get:Schema(title = "true为开启,false为关闭")
     val enable: Boolean,
+    @get:Schema(title = "云研发管理员列表")
+    val managers: Set<String>,
     @get:Schema(title = "总配额，默认1000")
     val quota: Int?
 )
