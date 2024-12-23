@@ -206,7 +206,7 @@ class DocumentService {
                             .setRow(
                                 AUTH_HEADER_USER_ID,
                                 "string",
-                                getI18n(BK_APPLICATION_STATE_REQUIRED),
+                                "√",
                                 getI18n(BK_USER_NAME)
                             )
                             .setRow("Content-Type", "string", "√", "application/json")
