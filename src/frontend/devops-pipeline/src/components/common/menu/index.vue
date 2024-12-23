@@ -1,38 +1,82 @@
 <template>
     <div class="bkc-menu">
         <ul v-if="menuList.length">
-            <li class="bkc-menu-item" v-for="(item, itemIndex) in menuList" :key="itemIndex">
-                <div v-if="(!item.children || !item.children.length || item.showChildren === false) && !item.childrenType" class="bkc-menu-title-wrapper"
+            <li
+                class="bkc-menu-item"
+                v-for="(item, itemIndex) in menuList"
+                :key="itemIndex"
+            >
+                <div
+                    v-if="(!item.children || !item.children.length || item.showChildren === false) && !item.childrenType"
+                    class="bkc-menu-title-wrapper"
                     :class="[item.hide, item.disable, item.id === $route.name || (item.children && item.children.some(child => child.id === $route.name)) ? 'selected' : '']"
-                    @click="(!item.disable && !item.hide) ? handleClick(item, itemIndex, $event) : () => {}">
-                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
-                    <div class="bkc-menu-title">{{item.name}}</div>
-                    <i class="biz-badge" v-if="item.badge !== undefined">{{item.badge}}</i>
+                    @click="(!item.disable && !item.hide) ? handleClick(item, itemIndex, $event) : () => {}"
+                >
+                    <Logo
+                        v-if="item.icon === 'permission'"
+                        class="devops-icon left-icon-permission"
+                        :name="item.icon"
+                    />
+                    <i
+                        v-else
+                        class="devops-icon left-icon"
+                        :class="[item.disable, item.icon]"
+                    ></i>
+                    <div class="bkc-menu-title">{{ item.name }}</div>
+                    <i
+                        class="biz-badge"
+                        v-if="item.badge !== undefined"
+                    >{{ item.badge }}</i>
                 </div>
 
-                <div v-else class="bkc-menu-title-wrapper"
+                <div
+                    v-else
+                    class="bkc-menu-title-wrapper"
                     :class="[item.hide, item.disable, item.isChildSelected ? 'child-selected' : '', item.isOpen ? 'open' : '']"
-                    @click="(!item.disable && !item.hide) ? openChildren(item, itemIndex, $event) : () => {}">
-                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
-                    <div class="bkc-menu-title">{{item.name}}</div>
-                    <i class="devops-icon right-icon icon-angle-down" :class="{ 'open': item.isOpen }"></i>
+                    @click="(!item.disable && !item.hide) ? openChildren(item, itemIndex, $event) : () => {}"
+                >
+                    <Logo
+                        v-if="item.icon === 'permission'"
+                        class="devops-icon left-icon-permission"
+                        :name="item.icon"
+                    />
+                    <i
+                        v-else
+                        class="devops-icon left-icon"
+                        :class="[item.disable, item.icon]"
+                    ></i>
+                    <div class="bkc-menu-title">{{ item.name }}</div>
+                    <i
+                        class="devops-icon right-icon icon-angle-down"
+                        :class="{ 'open': item.isOpen }"
+                    ></i>
                 </div>
                 <collapse-transition
-                    v-if="item.childrenType === 'bk-tree'">
+                    v-if="item.childrenType === 'bk-tree'"
+                >
                     <bk-trees
                         v-show="item.isOpen"
                         :list="item.children"
                         :deep-count="1"
-                        :road-map="itemIndex">
+                        :road-map="itemIndex"
+                    >
                     </bk-trees>
                 </collapse-transition>
                 <collapse-transition
-                    v-else>
+                    v-else
+                >
                     <ul v-show="item.isOpen">
-                        <li class="bkc-menu-child-item" v-for="(child, childIndex) in item.children" :key="childIndex">
-                            <div class="bkc-menu-child-title-wrapper" :class="child.id === $route.name ? 'selected' : ''"
-                                @click="handleChildClick(item, itemIndex, child, childIndex, $event)">
-                                {{child.name}}
+                        <li
+                            class="bkc-menu-child-item"
+                            v-for="(child, childIndex) in item.children"
+                            :key="childIndex"
+                        >
+                            <div
+                                class="bkc-menu-child-title-wrapper"
+                                :class="child.id === $route.name ? 'selected' : ''"
+                                @click="handleChildClick(item, itemIndex, child, childIndex, $event)"
+                            >
+                                {{ child.name }}
                             </div>
                         </li>
                     </ul>
@@ -40,7 +84,10 @@
             </li>
         </ul>
         <template v-else>
-            <div class="biz-no-data" style="margin-top: 100px;">
+            <div
+                class="biz-no-data"
+                style="margin-top: 100px;"
+            >
                 <i class="devops-icon icon-empty"></i>
                 <p>{{ $t('noData') }}</p>
             </div>
@@ -51,11 +98,13 @@
 <script>
     import CollapseTransition from '@/utils/collapse-transition.js'
     import bkTrees from '@/components/common/bk-trees'
+    import Logo from '@/components/Logo'
 
     export default {
         name: 'bkc-menu',
         components: {
             CollapseTransition,
+            Logo,
             'bk-trees': bkTrees
         },
         props: {
@@ -188,8 +237,9 @@
         position: relative;
         &:hover {
             color: $primaryColor;
-            .left-icon {
-                color: $primaryColor;
+            .left-icon,
+            .left-icon-permission {
+                color: #63656E;
             }
         }
 
@@ -204,13 +254,15 @@
         &.selected {
             background-color: $primaryLightColor;
             color: $primaryColor;
-            .left-icon {
-                color: $primaryColor;
+            .left-icon,
+            .left-icon-permission {
+                color: #63656E;
             }
         }
         &.open {
             color: $primaryColor;
-            .left-icon {
+            .left-icon,
+            .left-icon-permission {
                 color: $primaryColor;
             }
         }
@@ -222,16 +274,19 @@
             right: 20px;
             top: 17px;
         }
-        .left-icon {
+        .left-icon,
+        .left-icon-permission {
             vertical-align: middle;
             font-size: 20px;
             position: absolute;
             top: 14px;
-            color: #c4cdd6;
             &.disable {
                 cursor: not-allowed;
                 color: #c3cdd7;
             }
+        }
+        .left-icon-permission {
+            top: 10px !important;
         }
         .right-icon {
             position: absolute;

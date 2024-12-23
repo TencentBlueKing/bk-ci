@@ -1,11 +1,21 @@
 <template>
-    <div class="metadata-select-panel" v-bkloading="{ isLoading: loading }">
+    <div
+        class="metadata-select-panel"
+        v-bkloading="{ isLoading: loading }"
+    >
         <div class="metadata-panel-container">
-            <div :class="{
-                'metadata-main-tab': true,
-                'indicator-list-tab': isIndexList
-            }" v-if="!isCtrPointPanel">
-                <bk-tab :active="currentTab" type="unborder-card" @tab-change="changeTab">
+            <div
+                :class="{
+                    'metadata-main-tab': true,
+                    'indicator-list-tab': isIndexList
+                }"
+                v-if="!isCtrPointPanel"
+            >
+                <bk-tab
+                    :active="currentTab"
+                    type="unborder-card"
+                    @tab-change="changeTab"
+                >
                     <bk-tab-panel
                         v-for="(panel, index) in panels"
                         v-bind="panel"
@@ -16,22 +26,44 @@
             <section class="metadata-main-content">
                 <!-- 控制点选择 -->
                 <template v-if="isCtrPointPanel">
-                    <div class="property-item-wrapper"
-                        v-for="(classify, index) in metaTree" :key="index">
-                        <div class="classify-header"><span class="title">{{classify.stage}}</span></div>
-                        <div class="control-point-wrapper" v-for="(atom, childIndex) in classify.controlPoints" :key="childIndex">
-                            <div :class="{
-                                     'proprety-item-contnet': true,
-                                     'control-point-content': true,
-                                     'optional-item': !atom.isSelected
-                                 }"
-                                v-if="atom.isDisplay">
+                    <div
+                        class="property-item-wrapper"
+                        v-for="(classify, index) in metaTree"
+                        :key="index"
+                    >
+                        <div class="classify-header"><span class="title">{{ classify.stage }}</span></div>
+                        <div
+                            class="control-point-wrapper"
+                            v-for="(atom, childIndex) in classify.controlPoints"
+                            :key="childIndex"
+                        >
+                            <div
+                                :class="{
+                                    'proprety-item-contnet': true,
+                                    'control-point-content': true,
+                                    'optional-item': !atom.isSelected
+                                }"
+                                v-if="atom.isDisplay"
+                            >
                                 <div class="info-title">
-                                    <icon :name="getAtomIcon(atom.type)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{atom.name}}</span>
+                                    <icon
+                                        :name="getAtomIcon(atom.type)"
+                                        size="24"
+                                        style="fill:#C3CDD7"
+                                    /><span class="atom-name">{{ atom.name }}</span>
                                 </div>
-                                <div class="handle-btn selected-btn" v-if="atom.isSelected">{{$t('quality.已选择')}}</div>
-                                <div class="handle-btn select-btn" v-if="!atom.isSelected"
-                                    @click="selectNode(atom, 'controlPoint')">{{$t('quality.选择')}}
+                                <div
+                                    class="handle-btn selected-btn"
+                                    v-if="atom.isSelected"
+                                >
+                                    {{ $t('quality.已选择') }}
+                                </div>
+                                <div
+                                    class="handle-btn select-btn"
+                                    v-if="!atom.isSelected"
+                                    @click="selectNode(atom, 'controlPoint')"
+                                >
+                                    {{ $t('quality.选择') }}
                                 </div>
                             </div>
                         </div>
@@ -40,37 +72,82 @@
 
                 <!-- 指标集选择 -->
                 <template v-if="!isCtrPointPanel && isIndexList">
-                    <div class="task-item-wrapper"
-                        v-for="(task, index) in metaTree" :key="index">
-                        <div :class="{
-                                 'proprety-item-contnet': true,
-                                 'task-item-content': true,
-                                 'optional-item': isIndexList && !task.isSelected,
-                                 'hover': task.isDropdownShow
-                             }"
+                    <div
+                        class="task-item-wrapper"
+                        v-for="(task, index) in metaTree"
+                        :key="index"
+                    >
+                        <div
+                            :class="{
+                                'proprety-item-contnet': true,
+                                'task-item-content': true,
+                                'optional-item': isIndexList && !task.isSelected,
+                                'hover': task.isDropdownShow
+                            }"
                             v-if="task.isDisplay"
-                            @click="toggleDropdown(task.hashId)">
-                            <div class="task-name" :title="task.name">{{task.name}}</div>
-                            <div class="task-desc" :title="task.desc">{{task.desc}}</div>
-                            <div class="dropdown-icon" :class="{ 'hide': !task.indicators.length }">
-                                <i :class="{
-                                    'devops-icon': true,
-                                    'icon-angle-double-right': true,
-                                    'icon-flip': task.isDropdownShow
-                                }"></i>
+                            @click="toggleDropdown(task.hashId)"
+                        >
+                            <div
+                                class="task-name"
+                                :title="task.name"
+                            >
+                                {{ task.name }}
                             </div>
-                            <div class="handle-btn select-btn" v-if="isIndexList && !task.isSelected"
-                                @click.stop="selectNode(task, 'indexList')">{{$t('quality.添加')}}</div>
+                            <div
+                                class="task-desc"
+                                :title="task.desc"
+                            >
+                                {{ task.desc }}
+                            </div>
+                            <div
+                                class="dropdown-icon"
+                                :class="{ 'hide': !task.indicators.length }"
+                            >
+                                <i
+                                    :class="{
+                                        'devops-icon': true,
+                                        'icon-angle-double-right': true,
+                                        'icon-flip': task.isDropdownShow
+                                    }"
+                                ></i>
+                            </div>
+                            <div
+                                class="handle-btn select-btn"
+                                v-if="isIndexList && !task.isSelected"
+                                @click.stop="selectNode(task, 'indexList')"
+                            >
+                                {{ $t('quality.添加') }}
+                            </div>
                         </div>
                         <template v-if="task.isDropdownShow">
-                            <div class="metadata-item-wrapper"
-                                v-for="(metadata, metaIndex) in task.indicators" :key="metaIndex">
-                                <div class="proprety-item-contnet metadata-item-content"
-                                    v-if="task.indicators.length && metadata.isDisplay">
-                                    <div class="meta-name" :title="metadata.cnName">{{metadata.cnName}}</div>
+                            <div
+                                class="metadata-item-wrapper"
+                                v-for="(metadata, metaIndex) in task.indicators"
+                                :key="metaIndex"
+                            >
+                                <div
+                                    class="proprety-item-contnet metadata-item-content"
+                                    v-if="task.indicators.length && metadata.isDisplay"
+                                >
+                                    <div
+                                        class="meta-name"
+                                        :title="metadata.cnName"
+                                    >
+                                        {{ metadata.cnName }}
+                                    </div>
                                     <!-- <div class="meta-desc" :title="getIndicatorDesc(metadata.metadataList)">{{ getIndicatorDesc(metadata.metadataList) }}</div> -->
-                                    <div class="meta-desc" :title="metadata.desc">{{metadata.desc}}</div>
-                                    <div class="handle-btn selected-btn" v-if="metadata.isSelected">{{$t('quality.已选择')}}</div>
+                                    <div
+                                        class="meta-desc"
+                                        :title="metadata.desc"
+                                    >
+                                        {{ metadata.desc }}
+                                    </div>
+                                    <div
+                                        class="handle-btn selected-btn"
+                                        v-if="metadata.isSelected"
+                                    >
+                                        {{ $t('quality.已选择') }}
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -79,50 +156,108 @@
 
                 <!-- 单个指标选择 -->
                 <template v-if="!isCtrPointPanel && !isIndexList">
-                    <div class="property-item-wrapper"
-                        v-for="(classify, index) in metaTree" :key="index">
-                        <div class="classify-header"><span class="title">{{classify.stage}}</span></div>
-                        <div class="control-point-wrapper" v-for="(atom, atomIndex) in classify.controlPoints" :key="atomIndex">
-                            <div class="proprety-item-contnet control-point-content"
-                                v-if="atom.isDisplay">
+                    <div
+                        class="property-item-wrapper"
+                        v-for="(classify, index) in metaTree"
+                        :key="index"
+                    >
+                        <div class="classify-header"><span class="title">{{ classify.stage }}</span></div>
+                        <div
+                            class="control-point-wrapper"
+                            v-for="(atom, atomIndex) in classify.controlPoints"
+                            :key="atomIndex"
+                        >
+                            <div
+                                class="proprety-item-contnet control-point-content"
+                                v-if="atom.isDisplay"
+                            >
                                 <div class="info-title">
-                                    <icon :name="getAtomIcon(atom.controlPoint)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{atom.controlPointName}}</span>
+                                    <icon
+                                        :name="getAtomIcon(atom.controlPoint)"
+                                        size="24"
+                                        style="fill:#C3CDD7"
+                                    /><span class="atom-name">{{ atom.controlPointName }}</span>
                                 </div>
                             </div>
-                            <div class="task-item-wrapper" style="padding-left:10px;"
-                                v-for="(task, taskIndex) in atom.details" :key="taskIndex">
-                                <div :class="{
-                                         'proprety-item-contnet': true,
-                                         'task-item-content': true,
-                                         'hover': task.isDropdownShow
-                                     }"
+                            <div
+                                class="task-item-wrapper"
+                                style="padding-left:10px;"
+                                v-for="(task, taskIndex) in atom.details"
+                                :key="taskIndex"
+                            >
+                                <div
+                                    :class="{
+                                        'proprety-item-contnet': true,
+                                        'task-item-content': true,
+                                        'hover': task.isDropdownShow
+                                    }"
                                     v-if="task.isDisplay || atom.isMatch"
-                                    @click="toggleDropdown(task.hashId)">
-                                    <div class="task-name" :title="task.detail">{{task.detail}}</div>
-                                    <div class="task-desc" :title="task.desc">{{task.desc}}</div>
-                                    <div class="dropdown-icon" :class="{ 'hide': !task.items.length }">
-                                        <i :class="{
-                                            'devops-icon': true,
-                                            'icon-angle-double-right': true,
-                                            'icon-flip': task.isDropdownShow
-                                        }"></i>
+                                    @click="toggleDropdown(task.hashId)"
+                                >
+                                    <div
+                                        class="task-name"
+                                        :title="task.detail"
+                                    >
+                                        {{ task.detail }}
+                                    </div>
+                                    <div
+                                        class="task-desc"
+                                        :title="task.desc"
+                                    >
+                                        {{ task.desc }}
+                                    </div>
+                                    <div
+                                        class="dropdown-icon"
+                                        :class="{ 'hide': !task.items.length }"
+                                    >
+                                        <i
+                                            :class="{
+                                                'devops-icon': true,
+                                                'icon-angle-double-right': true,
+                                                'icon-flip': task.isDropdownShow
+                                            }"
+                                        ></i>
                                     </div>
                                 </div>
                                 <template v-if="task.isDropdownShow">
-                                    <div class="metadata-item-wrapper"
-                                        v-for="(metadata, metaIndex) in task.items" :key="metaIndex">
-                                        <div :class="{
-                                                 'proprety-item-contnet': true,
-                                                 'metadata-item-content': true,
-                                                 'optional-item': !metadata.isSelected && !isIndexList
-                                             }"
-                                            v-if="task.items.length && metadata.isDisplay">
-                                            <div class="meta-name" :title="metadata.cnName">{{metadata.cnName}}</div>
+                                    <div
+                                        class="metadata-item-wrapper"
+                                        v-for="(metadata, metaIndex) in task.items"
+                                        :key="metaIndex"
+                                    >
+                                        <div
+                                            :class="{
+                                                'proprety-item-contnet': true,
+                                                'metadata-item-content': true,
+                                                'optional-item': !metadata.isSelected && !isIndexList
+                                            }"
+                                            v-if="task.items.length && metadata.isDisplay"
+                                        >
+                                            <div
+                                                class="meta-name"
+                                                :title="metadata.cnName"
+                                            >
+                                                {{ metadata.cnName }}
+                                            </div>
                                             <!-- <div class="meta-desc" :title="getIndicatorDesc(metadata.metadataList)">{{ getIndicatorDesc(metadata.metadataList) }}</div> -->
-                                            <div class="meta-desc" :title="metadata.desc">{{metadata.desc}}</div>
-                                            <div class="handle-btn selected-btn" v-if="metadata.isSelected">{{$t('quality.已选择')}}</div>
-                                            <div class="handle-btn select-btn" v-if="!metadata.isSelected && !isIndexList"
-                                                @click="selectNode(metadata, 'singleIndex')">{{$t('quality.添加')}}
+                                            <div
+                                                class="meta-desc"
+                                                :title="metadata.desc"
+                                            >
+                                                {{ metadata.desc }}
+                                            </div>
+                                            <div
+                                                class="handle-btn selected-btn"
+                                                v-if="metadata.isSelected"
+                                            >
+                                                {{ $t('quality.已选择') }}
+                                            </div>
+                                            <div
+                                                class="handle-btn select-btn"
+                                                v-if="!metadata.isSelected && !isIndexList"
+                                                @click="selectNode(metadata, 'singleIndex')"
+                                            >
+                                                {{ $t('quality.添加') }}
                                             </div>
                                         </div>
                                     </div>
@@ -131,7 +266,6 @@
                         </div>
                     </div>
                 </template>
-
             </section>
         </div>
     </div>
@@ -667,7 +801,7 @@
             border-top: none;
             font-size: 12px;
             .meta-name {
-                flex: 2;
+                flex: 4;
                 margin-right: 10px;
                 font-weight: bold;
                 white-space:nowrap;
@@ -675,7 +809,7 @@
                 text-overflow: ellipsis;
             }
             .meta-desc {
-                flex: 4;
+                flex: 2;
                 color: #979BA5;
                 white-space:nowrap;
                 overflow: hidden;

@@ -29,14 +29,19 @@ package com.tencent.devops.process.service
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.ListResourcesAuthorizationDTO
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -54,9 +59,9 @@ class AuthPipelineService @Autowired constructor(
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
-        when (method) {
+        return when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return getPipeline(
+                getPipeline(
                     projectId = projectId,
                     offset = page.offset.toInt(),
                     limit = page.limit.toInt(),
@@ -67,11 +72,11 @@ class AuthPipelineService @Autowired constructor(
 
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return getPipelineInfo(ids, token, returnPipelineId!!)
+                getPipelineInfo(ids, token, returnPipelineId!!)
             }
 
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return searchPipeline(
+                searchPipeline(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.limit.toInt(),
@@ -80,8 +85,15 @@ class AuthPipelineService @Autowired constructor(
                     returnPipelineId = returnPipelineId!!
                 )
             }
-
-            else -> return null
+            CallbackMethodEnum.LIST_RESOURCE_AUTHORIZATION -> {
+                getPipelineAuthorization(
+                    projectId = projectId,
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
+                    token = token
+                )
+            }
+            else -> null
         }
     }
 
@@ -102,7 +114,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId 项目下无流水线")
+            logger.info("project $projectId no pipeline")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -121,6 +133,43 @@ class AuthPipelineService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, pipelineInfos.count)
     }
 
+    private fun getPipelineAuthorization(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListResourcesAuthorizationDTO {
+        authTokenApi.checkToken(token)
+        val pipelineInfos = pipelineListFacadeService.getPipelinePage(
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            limit = limit,
+            offset = offset
+        )
+        val data = BaseDataResponseDTO<ResourceAuthorizationResponse>()
+        val result = ListResourcesAuthorizationDTO(data)
+        if (pipelineInfos.records.isEmpty()) {
+            logger.info("$projectId There is no assembly line under the project")
+            return result.buildResourcesAuthorizationListResult()
+        }
+        val entityInfos = mutableListOf<ResourceAuthorizationResponse>()
+        pipelineInfos.records.map {
+            val entity = ResourceAuthorizationResponse(
+                projectCode = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceName = it.pipelineName,
+                resourceCode = it.pipelineId,
+                handoverTime = it.updateTime,
+                handoverFrom = it.lastModifyUser
+            )
+            entityInfos.add(entity)
+        }
+        logger.info("entityInfo $entityInfos, count ${pipelineInfos.count}")
+        data.result = entityInfos
+        data.count = pipelineInfos.count
+        return result.buildResourcesAuthorizationListResult()
+    }
+
     private fun getPipeline(
         projectId: String,
         offset: Int,
@@ -136,7 +185,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId 项目下无流水线")
+            logger.info("$projectId There is no assembly line under the project")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -167,7 +216,7 @@ class AuthPipelineService @Autowired constructor(
 
         val pipelineInfos = if (idNumType) {
             // 纯数字按自增id获取
-            pipelineListFacadeService.getByAutoIds(ids.map { it.toInt() })
+            pipelineListFacadeService.getByAutoIds(ids.map { it.toLong() })
         } else {
             // 非纯数字按pipelineId获取
             pipelineListFacadeService.getByPipelineIds(pipelineIds = ids.toSet())
@@ -175,7 +224,7 @@ class AuthPipelineService @Autowired constructor(
         val result = FetchInstanceInfo()
 
         if (pipelineInfos.isEmpty()) {
-            logger.info("$ids 未匹配到启用流水线")
+            logger.info("$ids does not match to the enable pipeline")
             return result.buildFetchInstanceFailResult()
         }
 

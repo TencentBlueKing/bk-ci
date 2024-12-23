@@ -27,24 +27,23 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("保存项目下展示插件配置")
+@Schema(title = "保存项目下展示插件配置")
 data class SaveAtomDisplayConfigPO(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("userId")
+    @get:Schema(title = "userId")
     val userId: String,
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

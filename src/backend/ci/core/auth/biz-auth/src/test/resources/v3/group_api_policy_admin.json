@@ -1,0 +1,42 @@
+{
+  "type": "group_api_policy",
+  "project_id": "bkdevops",
+  "subject": {
+    "type": "group",
+    "id": "14417",
+    "name": "bkdevops-CI管理员"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "all_action"
+        }
+      ],
+      "resources": [
+        {
+          "type": "project",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "pk": 10355,
+      "type": "user",
+      "id": "3434",
+      "expired_at": 1713580753,
+      "created_at": "2023-04-21T02:39:13Z"
+    }
+  ]
+}

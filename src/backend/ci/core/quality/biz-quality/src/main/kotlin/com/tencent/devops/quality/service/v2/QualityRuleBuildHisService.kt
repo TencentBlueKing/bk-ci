@@ -28,17 +28,17 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -51,6 +51,8 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
+import com.tencent.devops.quality.constant.QualityMessageCode.CHANGE_QUALITY_GATE_VALUE
+import com.tencent.devops.quality.constant.QualityMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
@@ -58,11 +60,11 @@ import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RunElementType
+import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("NestedBlockDepth")
@@ -175,8 +177,12 @@ class QualityRuleBuildHisService constructor(
                 }
             }
         }
-        throw OperationException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
-            "请修改红线阈值[${requestIndicator.threshold}]")
+        throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = CHANGE_QUALITY_GATE_VALUE,
+                params = arrayOf(requestIndicator.enName, "${indicator.thresholdType}", requestIndicator.threshold)
+            )
+        )
     }
 
     fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {
@@ -202,7 +208,8 @@ class QualityRuleBuildHisService constructor(
                     indicator
                 },
                 controlPoint = QualityRule.RuleControlPoint(
-                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                    "", "", "",
+                    ControlPointPosition.create(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
                 range = if (it.pipelineRange.isNullOrBlank()) {
                     listOf()
@@ -339,9 +346,7 @@ class QualityRuleBuildHisService constructor(
                 if (it.gateKeepers!!.isEmpty() || !(it.gateKeepers!!.contains(userId))) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.FORBIDDEN.statusCode,
-                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                        defaultMessage = "用户($userId)不在当前把关人名单中",
-                        params = null
+                        errorCode = USER_NEED_PIPELINE_X_PERMISSION
                     )
                 }
                 val ruleResult = if (pass) RuleInterceptResult.INTERCEPT_PASS.name
@@ -414,7 +419,8 @@ class QualityRuleBuildHisService constructor(
                 desc = it.ruleDesc,
                 indicators = listOf(),
                 controlPoint = QualityRule.RuleControlPoint(
-                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                    "", "", "",
+                    ControlPointPosition.create(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
                 range = if (it.pipelineRange.isNullOrBlank()) {
                     listOf()

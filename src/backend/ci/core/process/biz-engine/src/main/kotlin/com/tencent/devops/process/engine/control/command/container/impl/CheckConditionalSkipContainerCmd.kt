@@ -32,6 +32,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_CANCEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_SUCCESS
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -57,7 +61,7 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.status.isReadyToRun()
+                commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -77,9 +81,11 @@ class CheckConditionalSkipContainerCmd constructor(
             buildLogPrinter.addErrorLine(
                 buildId = container.buildId,
                 message = "[${e.kind}] condition of job is invalid: ${e.message}",
-                jobId = container.containerHashId,
+                containerHashId = container.containerHashId,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                executeCount = commandContext.executeCount
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "j(${container.containerId}) check condition failed"
@@ -102,6 +108,9 @@ class CheckConditionalSkipContainerCmd constructor(
         val jobControlOption = containerControlOption.jobControlOption
         val conditions = jobControlOption.customVariables ?: emptyList()
 
+        // #10751 如果设置了job不可用，则直接跳过，无需判断后续的条件
+        if (!jobControlOption.enable) return true
+
         val message = StringBuilder()
         val needSkip = if (containerControlOption.inFinallyStage) {
             skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
@@ -113,7 +122,8 @@ class CheckConditionalSkipContainerCmd constructor(
                 stageId = container.stageId,
                 containerId = container.containerId,
                 taskId = null,
-                variables = containerContext.variables
+                variables = containerContext.variables,
+                executeCount = containerContext.executeCount
             )
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
@@ -121,26 +131,27 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 buildId = container.buildId,
                 message = message.toString(),
-                jobId = container.containerHashId
+                containerHashId = container.containerHashId,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
 
         if (needSkip) {
             LOG.info(
                 "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
             )
         }
         return needSkip
@@ -154,17 +165,32 @@ class CheckConditionalSkipContainerCmd constructor(
         // #6366 增加日志明确展示跳过的原因
         val skip = when (jobControlOption.runCondition) {
             JobRunCondition.PREVIOUS_STAGE_CANCEL -> {
-                message.append("[上游 Stage 取消时](Previous Stage Cancel): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_CANCEL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isCancel() // null will pass
             }
 
             JobRunCondition.PREVIOUS_STAGE_FAILED -> {
-                message.append("[上游 Stage 失败时](Previous Stage Failed): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_FAILED,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isFailure() // null will pass
             }
 
             JobRunCondition.PREVIOUS_STAGE_SUCCESS -> { // null will pass
-                message.append("[上游 Stage 成功时](Previous Stage Success): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_SUCCESS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isSuccess() && previousStatus != BuildStatus.STAGE_SUCCESS
             }
 

@@ -41,10 +41,11 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
@@ -70,8 +71,8 @@ open class BaseBuildDetailService constructor(
         const val TRIGGER_STAGE = "stage-1"
     }
 
-    fun getBuildModel(projectId: String, buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String, queryDslContext: DSLContext? = null): Model? {
+        val record = buildDetailDao.get(queryDslContext ?: dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
@@ -179,7 +180,7 @@ open class BaseBuildDetailService constructor(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (stage.id == TRIGGER_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }
@@ -243,17 +244,19 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    protected fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
-        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return
-        // 异步转发，解耦核心
-        pipelineEventDispatcher.dispatch(
+    private fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
+        val pipelineBuildInfo = pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)
+        if (pipelineBuildInfo?.channelCode == ChannelCode.GIT) pipelineEventDispatcher.dispatch(
+            // 异步转发，解耦核心
+            // TODO stream内部和开源前端未更新前，保持推送
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordDetail",
                 projectId = pipelineBuildInfo.projectId,
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary,
+                executeCount = pipelineBuildInfo.executeCount
             )
         )
     }

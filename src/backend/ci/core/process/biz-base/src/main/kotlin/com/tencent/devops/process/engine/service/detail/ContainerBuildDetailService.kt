@@ -70,8 +70,12 @@ class ContainerBuildDetailService(
                 var update = false
                 override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
-                    logger.info("[$buildId]|containerPreparing|j($containerId)|${targetContainer?.startVMStatus}")
-                    if (targetContainer != null) {
+                    val containerStatus = targetContainer?.status
+                    val startVMStatus = targetContainer?.startVMStatus
+                    logger.info("[$buildId]|containerPreparing|j($containerId)|$containerStatus|$startVMStatus")
+                    if (targetContainer != null && (containerStatus == null ||
+                            !BuildStatus.valueOf(containerStatus).isFinish())
+                    ) {
                         targetContainer.startEpoch = System.currentTimeMillis()
                         targetContainer.status = BuildStatus.PREPARE_ENV.name
                         targetContainer.startVMStatus = BuildStatus.RUNNING.name
@@ -189,7 +193,7 @@ class ContainerBuildDetailService(
         modelContainer: Container?
     ) {
         logger.info(
-            "[$buildId]|matrix_group|j(${modelContainer?.containerId})|groupId=$matrixGroupId|status=$buildStatus"
+            "[$buildId]|matrix_group|j(${modelContainer?.id})|groupId=$matrixGroupId|status=$buildStatus"
         )
         update(
             projectId = projectId,

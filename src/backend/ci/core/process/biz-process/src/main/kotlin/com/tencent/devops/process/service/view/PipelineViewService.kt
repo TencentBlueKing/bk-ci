@@ -33,13 +33,15 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATOR
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_NAME
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
@@ -48,7 +50,8 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
@@ -56,6 +59,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
+import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
@@ -88,9 +92,10 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val client: Client
+    private val client: Client,
+    private val pipelineGroupPermissionService: PipelineGroupPermissionService
 ) {
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
@@ -120,15 +125,21 @@ class PipelineViewService @Autowired constructor(
         val systemViewList = listOf(
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+                name = I18nUtil.getCodeLanMessage(
+                    ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                )
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_MY_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+                name = I18nUtil.getCodeLanMessage(
+                    ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                )
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_ALL_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
+                name = I18nUtil.getCodeLanMessage(
+                    ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                )
             )
         )
 
@@ -152,15 +163,21 @@ class PipelineViewService @Autowired constructor(
         }
 
         val systemPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.SYSTEM_VIEW_LABEL),
+            label = I18nUtil.getCodeLanMessage(
+                ProcessMessageCode.SYSTEM_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
+            ),
             viewList = systemViewList
         )
         val projectPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.PROJECT_VIEW_LABEL),
+            label = I18nUtil.getCodeLanMessage(
+                ProcessMessageCode.PROJECT_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
+            ),
             viewList = projectViewList
         )
         val personPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.PERSON_VIEW_LABEL),
+            label = I18nUtil.getCodeLanMessage(
+                ProcessMessageCode.PERSON_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
+            ),
             viewList = personViewList
         )
 
@@ -178,15 +195,21 @@ class PipelineViewService @Autowired constructor(
             listOf(
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+                    name = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                    )
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_MY_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+                    name = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                    )
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_ALL_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
+                    name = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                    )
                 )
             )
         } else {
@@ -219,15 +242,21 @@ class PipelineViewService @Autowired constructor(
                     listOf(
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+                            name = I18nUtil.getCodeLanMessage(
+                                ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                            )
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_MY_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+                            name = I18nUtil.getCodeLanMessage(
+                                ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                            )
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_ALL_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
+                            name = I18nUtil.getCodeLanMessage(
+                                ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
+                            )
                         )
                     )
                 )
@@ -327,7 +356,7 @@ class PipelineViewService @Autowired constructor(
                 ""
             }
             val logic = if (pipelineView.viewType == PipelineViewType.DYNAMIC) pipelineView.logic.name else ""
-            return pipelineViewDao.create(
+            val viewId = pipelineViewDao.create(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
@@ -338,6 +367,16 @@ class PipelineViewService @Autowired constructor(
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data,
                 viewType = pipelineView.viewType
             )
+            if (pipelineView.projected) {
+                // 个人流水线组不需要权限管理
+                pipelineGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    viewId = viewId,
+                    viewName = pipelineView.name
+                )
+            }
+            return viewId
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
@@ -348,7 +387,14 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun deleteView(userId: String, projectId: String, viewId: Long, context: DSLContext? = null): Boolean {
-        return pipelineViewDao.delete(context ?: dslContext, projectId, viewId)
+        val success = pipelineViewDao.delete(context ?: dslContext, projectId, viewId)
+        if (success) {
+            pipelineGroupPermissionService.deleteResource(
+                projectId = projectId,
+                viewId = viewId
+            )
+        }
+        return success
     }
 
     fun updateView(
@@ -360,7 +406,7 @@ class PipelineViewService @Autowired constructor(
     ): Boolean {
         try {
             checkForUpset(context, projectId, userId, pipelineView, false, viewId)
-            return pipelineViewDao.update(
+            val success = pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 viewId = viewId,
@@ -373,11 +419,43 @@ class PipelineViewService @Autowired constructor(
                 ),
                 viewType = pipelineView.viewType
             )
+            if (success && pipelineView.projected) {
+                pipelineGroupPermissionService.modifyResource(
+                    userId = userId,
+                    projectId = projectId,
+                    viewId = viewId,
+                    viewName = pipelineView.name
+                )
+            }
+            return success
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
+            )
+        }
+    }
+
+    fun checkPipelineViewCount(
+        projectId: String,
+        userId: String,
+        projected: Boolean,
+        addCount: Int
+    ) {
+        val countForLimit = pipelineViewDao.countForLimit(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = projected,
+            userId = userId
+        )
+        val limit = if (projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
+
+        if (countForLimit + addCount >= limit) {
+            logger.warn("exceed the limit for create , project:$projectId , user:$userId, addCount:$addCount")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,
+                defaultMessage = "exceed the limit for create , the limit is : $limit"
             )
         }
     }
@@ -390,11 +468,11 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
-        if (pipelineView.name.isEmpty() || pipelineView.name.length > 16) {
+        if (pipelineView.name.isEmpty() || pipelineView.name.length > PIPELINE_VIEW_NAME_LENGTH_MAX) {
             logger.warn("pipeline view name is illegal , user:$userId , project:$projectId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_NAME_ILLEGAL,
-                defaultMessage = "pipeline group name is illegal , the length is limited to 1~16"
+                defaultMessage = "pipeline group name is illegal , the length is limited to 1~32"
             )
         }
         if (isCreate) {
@@ -438,13 +516,14 @@ class PipelineViewService @Autowired constructor(
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
-                defaultMessage = "view name is duplicate , name:${pipelineView.name}"
+                defaultMessage = "view name is duplicate , name:${pipelineView.name}",
+                params = arrayOf(pipelineView.name)
             )
         }
     }
 
     fun getFilters(pipelineNewView: PipelineNewView):
-        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+            Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()
@@ -469,7 +548,10 @@ class PipelineViewService @Autowired constructor(
 
     fun matchView(
         pipelineView: TPipelineViewRecord,
-        pipelineInfo: TPipelineInfoRecord
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String
     ): Boolean {
         val filters = getFilters(
             filterByName = pipelineView.filterByPipeineName,
@@ -478,14 +560,22 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
-                filter.userIds.contains(pipelineInfo.creator)
+                filter.userIds.contains(creator)
             } else if (filter is PipelineViewFilterByLabel) {
                 pipelineGroupService.getViewLabelToPipelinesMap(
-                    pipelineInfo.projectId,
+                    pipelineView.projectId ?: projectId,
                     filter.labelIds
-                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
+                ).values.asSequence().flatten().contains(pipelineId)
+            } else if (filter is PipelineViewFilterByPacRepo) {
+                val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithDirectory(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    repoHashId = filter.repoHashId,
+                    directory = filter.directory
+                )
+                pipelineIds.contains(pipelineId)
             } else {
                 continue
             }
@@ -528,21 +618,14 @@ class PipelineViewService @Autowired constructor(
         return allFilters
     }
 
-    private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.checkProjectManager(
-            userId = userId,
-            projectId = projectId
-        )
-    }
-
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> {
-                MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+                I18nUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
             }
 
-            PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
-            PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
+            PIPELINE_VIEW_MY_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+            PIPELINE_VIEW_ALL_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
             )
@@ -597,7 +680,7 @@ class PipelineViewService @Autowired constructor(
             if (filter is PipelineViewFilterByName) {
                 hitFilters.filters.add(
                     PipelineViewHitFilters.FilterInfo(
-                        key = "流水线名称",
+                        key = MessageUtil.getMessageByLocale(BK_PIPELINE_NAME, I18nUtil.getLanguage(userId)),
                         hits = mutableListOf(
                             PipelineViewHitFilters.FilterInfo.Hit(
                                 hit = StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName),
@@ -610,7 +693,7 @@ class PipelineViewService @Autowired constructor(
                 filter.userIds.forEach {
                     hitFilters.filters.add(
                         PipelineViewHitFilters.FilterInfo(
-                            key = "创建人",
+                            key = MessageUtil.getMessageByLocale(BK_CREATOR, I18nUtil.getLanguage(userId)),
                             hits = mutableListOf(
                                 PipelineViewHitFilters.FilterInfo.Hit(
                                     hit = it == pipelineInfo.creator,
@@ -712,5 +795,6 @@ class PipelineViewService @Autowired constructor(
             listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
         private const val PROJECT_VIEW_LIMIT = 200
         private const val PERSONAL_VIEW_LIMIT = 100
+        const val PIPELINE_VIEW_NAME_LENGTH_MAX = 32
     }
 }

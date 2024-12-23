@@ -27,9 +27,9 @@
 
 package com.tencent.devops.quality.api.v2.pojo.request
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建检查参数")
+@Schema(title = "构建检查参数")
 data class BuildCheckParams(
     val projectId: String,
     val pipelineId: String,

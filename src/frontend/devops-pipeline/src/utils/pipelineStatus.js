@@ -12,13 +12,13 @@ export const statusIconMap = {
     UNEXEC: 'circle', // 10 从未执行（最终态）
     SKIP: 'redo-arrow', // 11 跳过（最终态）
     QUALITY_CHECK_FAIL: 'close-circle', // 12 质量红线检查失败（最终态）
-    QUEUE: 'circle-2-1', // 13 排队（初始状态）
+    QUEUE: 'hourglass', // 13 排队（初始状态）
+    QUEUE_CACHE: 'hourglass', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
     LOOP_WAITING: 'circle-2-1', // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
     CALL_WAITING: 'circle-2-1', // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
     TRY_FINALLY: 'circle-2-1', // 16 不可见的后台状态（未使用）
     QUEUE_TIMEOUT: 'abort', // 17 排队超时（最终态）
     EXEC_TIMEOUT: 'abort', // 18 执行超时（最终态）
-    QUEUE_CACHE: 'circle-2-1', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
     RETRY: 'retry', // 20 重试（中间状态）
     PAUSE: 'play-circle-shape', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
     STAGE_SUCCESS: 'flag', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
@@ -75,12 +75,12 @@ export const statusColorMap = {
     SKIP: '#DCDEE5', // 11 跳过（最终态）
     QUALITY_CHECK_FAIL: '#EA3636', // 12 质量红线检查失败（最终态）
     QUEUE: '#699DF4', // 13 排队（初始状态）
+    QUEUE_CACHE: '#699DF4', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
     LOOP_WAITING: '#699DF4', // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
     CALL_WAITING: '#699DF4', // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
     TRY_FINALLY: '#699DF4', // 16 不可见的后台状态（未使用）
     QUEUE_TIMEOUT: '#FF9C01', // 17 排队超时（最终态）
     EXEC_TIMEOUT: '#FF9C01', // 18 执行超时（最终态）
-    QUEUE_CACHE: '#699DF4', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
     RETRY: '#EA3636', // 20 重试（中间状态）
     PAUSE: '#FF9C01', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
     STAGE_SUCCESS: '#2DCB56', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
@@ -89,4 +89,32 @@ export const statusColorMap = {
     QUALITY_CHECK_PASS: '#699DF4', // 25 质量红线检查通过
     QUALITY_CHECK_WAIT: '#699DF4', // 26 质量红线等待把关
     UNKNOWN: '#699DF4' // 99
+}
+
+export function mapThemeOfStatus (status) {
+    switch (status) {
+        case 'CANCELED':
+        case 'REVIEW_ABORT':
+            return 'warning'
+        case 'SUCCEED':
+        case 'REVIEW_PROCESSED':
+        case 'STAGE_SUCCESS':
+            return 'success'
+        case 'FAILED':
+        case 'TERMINATE':
+        case 'HEARTBEAT_TIMEOUT':
+        case 'QUALITY_CHECK_FAIL':
+        case 'QUEUE_TIMEOUT':
+        case 'EXEC_TIMEOUT':
+            return 'danger'
+        case 'QUEUE':
+        case 'RUNNING':
+        case 'REVIEWING':
+        case 'PREPARE_ENV':
+        case 'LOOP_WAITING':
+        case 'CALL_WAITING':
+            return 'info'
+        default:
+            return ''
+    }
 }

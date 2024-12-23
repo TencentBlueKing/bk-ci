@@ -30,14 +30,20 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -50,15 +56,20 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
+@SuppressWarnings("ALL")
 class OPRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val dslContext: DSLContext,
     private val codeGitLabDao: RepositoryCodeGitLabDao,
     private val codeGitDao: RepositoryCodeGitDao,
+    private val codeGithubDao: RepositoryGithubDao,
     private val scmService: IScmService,
     private val scmOauthService: IScmOauthService,
     private val gitOauthService: IGitOauthService,
-    private val credentialService: CredentialService
+    private val githubTokenService: GithubTokenService,
+    private val githubRepositoryService: GithubRepositoryService,
+    private val credentialService: CredentialService,
+    private val repoPipelineRefDao: RepoPipelineRefDao
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -166,7 +177,7 @@ class OPRepositoryService @Autowired constructor(
         }
     }
 
-    fun updateGitProjectId() {
+    fun updateGitProjectId(updateActions: List<() -> Unit>) {
         val startTime = System.currentTimeMillis()
         logger.info("OPRepositoryService:begin updateGitProjectId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
@@ -181,10 +192,11 @@ class OPRepositoryService @Autowired constructor(
         threadPoolExecutor.submit {
             logger.info("OPRepositoryService:begin updateGitProjectId threadPoolExecutor-----------")
             try {
-                updateGitLabProjectId()
-                updateCodeGitProjectId()
-            } catch (e: Exception) {
-                logger.warn("OpRepositoryService：updateGitProjectId failed | $e ")
+                updateActions.forEach {
+                    it.invoke()
+                }
+            } catch (ignored: Exception) {
+                logger.warn("OpRepositoryService：updateGitProjectId failed | $ignored ")
             } finally {
                 threadPoolExecutor.shutdown()
             }
@@ -330,6 +342,161 @@ class OPRepositoryService @Autowired constructor(
         logger.info("OPRepositoryService:end updateCodeGitProjectId")
     }
 
+    @SuppressWarnings("ComplexMethod")
+    fun updateCodeGithubProjectId() {
+        var offset = 0
+        val limit = 100
+        logger.info("OPRepositoryService:begin updateCodeGithubProjectId")
+        do {
+            val repoRecords = codeGithubDao.getAllRepo(
+                dslContext = dslContext,
+                limit = limit,
+                offset = offset
+            )
+            val repoSize = repoRecords?.size
+            logger.info("repoSize:$repoSize")
+            val repositoryIds = repoRecords?.map { it.repositoryId } ?: ArrayList()
+            val repoMap = mutableMapOf<Long, TRepositoryRecord>()
+            repositoryDao.getRepoByIds(
+                repositoryIds = repositoryIds,
+                dslContext = dslContext
+            )?.forEach { it ->
+                run {
+                    repoMap[it.repositoryId] = it
+                }
+            }
+            repoRecords?.forEach {
+                val repositoryId = it.repositoryId
+                // 基础信息
+                val repositoryInfo = repoMap[repositoryId]
+                if (repositoryInfo == null) {
+                    logger.warn("Invalid codeGithub repository info,repositoryId=[$repositoryId]")
+                    codeGithubDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = 0L
+                    )
+                    return@forEach
+                }
+                // 仅处理未删除代码库信息
+                if (repositoryInfo.isDeleted) {
+                    logger.warn("Invalid codeGithub repository info,repository deleted,repositoryId=[$repositoryId]")
+                    codeGithubDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = 0L
+                    )
+                    return@forEach
+                }
+                // 获取token
+                val token = githubTokenService.getAccessToken(it.userName)?.accessToken
+                if (token.isNullOrBlank()) {
+                    logger.warn("Invalid codeGithub repository token,accessToken is blank|userId[${it.userName}]")
+                    codeGithubDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = 0L
+                    )
+                    return@forEach
+                }
+                // 获取代码库信息
+                val repositoryProjectInfo = try {
+                    githubRepositoryService.getRepository(
+                        request = GetRepositoryRequest(
+                            repoName = it.projectName
+                        ),
+                        token = token
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn(
+                        "get github project info failed,repositoryId=[${repositoryInfo.repositoryId}] | $ignored"
+                    )
+                    null
+                }
+                val gitProjectId = repositoryProjectInfo?.id ?: 0L
+                codeGithubDao.updateGitProjectId(
+                    dslContext = dslContext,
+                    id = repositoryId,
+                    gitProjectId = gitProjectId
+                )
+            }
+            offset += limit
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoSize == 100)
+        logger.info("OPRepositoryService:end updateCodeGithubProjectId")
+    }
+
+    fun updateGitHookUrl(projectId: String, repositoryId: Long, newHookUrl: String, oldHookUrl: String) {
+        if (newHookUrl.isBlank() || oldHookUrl.isBlank()) {
+            logger.info("newHookUrl and oldHookUrl can not empty")
+            return
+        }
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val gitRepo = codeGitDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val isOauth = RepoAuthType.OAUTH.name == gitRepo.authType
+        val token = getToken(isOauth = isOauth, it = gitRepo, repositoryInfo = repository)
+        val existHooks = if (isOauth) {
+            scmOauthService.getWebHooks(
+                projectName = gitRepo.projectName,
+                url = repository.url,
+                token = token,
+                type = ScmType.valueOf(repository.type)
+            )
+        } else {
+            scmService.getWebHooks(
+                projectName = gitRepo.projectName,
+                url = repository.url,
+                token = token,
+                type = ScmType.valueOf(repository.type)
+            )
+        }
+        if (existHooks.isNotEmpty()) {
+            existHooks.forEach {
+                if (it.url.contains(oldHookUrl)) {
+                    val event = when {
+                        it.pushEvents -> CodeGitWebhookEvent.PUSH_EVENTS.value
+                        it.tagPushEvents -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
+                        it.mergeRequestsEvents -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+                        it.issuesEvents -> CodeGitWebhookEvent.ISSUES_EVENTS.value
+                        it.noteEvents -> CodeGitWebhookEvent.NOTE_EVENTS.value
+                        it.reviewEvents -> CodeGitWebhookEvent.REVIEW_EVENTS.value
+                        else -> null
+                    }
+                    if (isOauth) {
+                        scmOauthService.updateWebHook(
+                            hookId = it.id,
+                            projectName = gitRepo.projectName,
+                            url = repository.url,
+                            token = token,
+                            type = ScmType.valueOf(repository.type),
+                            privateKey = null,
+                            passPhrase = null,
+                            region = null,
+                            userName = gitRepo.userName,
+                            event = event,
+                            hookUrl = newHookUrl
+                        )
+                    } else {
+                        scmService.updateWebHook(
+                            hookId = it.id,
+                            projectName = gitRepo.projectName,
+                            url = repository.url,
+                            token = token,
+                            type = ScmType.valueOf(repository.type),
+                            privateKey = null,
+                            passPhrase = null,
+                            region = null,
+                            userName = gitRepo.userName,
+                            event = event,
+                            hookUrl = newHookUrl
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun getToken(isOauth: Boolean, it: Record, repositoryInfo: TRepositoryRecord): String? {
         return try {
             if (isOauth) {
@@ -386,6 +553,17 @@ class OPRepositoryService @Autowired constructor(
             logger.warn("get codeGit project info failed,projectName=[$projectName] | $e ")
             null
         }
+    }
+
+    fun removeRepositoryPipelineRef(projectId: String, repoHashId: String) {
+        logger.info("start remove repository pipeline ref,projectId=[$projectId]|repoHashId=[$repoHashId]")
+        val repositoryId = HashUtil.decodeOtherIdToLong(repoHashId)
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val counts = repoPipelineRefDao.removeRepositoryPipelineRefsById(
+            repoId = repository.repositoryId,
+            dslContext = dslContext
+        )
+        logger.info("end remove repository pipeline ref,change counts=[$counts]")
     }
 
     companion object {

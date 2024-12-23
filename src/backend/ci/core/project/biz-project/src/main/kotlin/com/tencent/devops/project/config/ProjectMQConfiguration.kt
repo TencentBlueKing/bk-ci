@@ -27,140 +27,34 @@
 
 package com.tencent.devops.project.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.project.listener.ProjectEventListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
-@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ProjectMQConfiguration {
+    @EventConsumer
+    fun projectCreateEventConsumer(
+        @Autowired listener: ProjectEventListener
+    ) = ScsConsumerBuilder.build<ProjectCreateBroadCastEvent> { listener.execute(it) }
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
+    @EventConsumer
+    fun projectUpdateEventConsumer(
+        @Autowired listener: ProjectEventListener
+    ) = ScsConsumerBuilder.build<ProjectUpdateBroadCastEvent> { listener.execute(it) }
 
-    @Bean
-    fun projectCreateQueue() = Queue(MQ.QUEUE_PROJECT_CREATE_EVENT)
-
-    @Bean
-    fun projectUpdateQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_EVENT)
-
-    @Bean
-    fun projectUpdateLogoQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_LOGO_EVENT)
-
-    @Bean
-    fun projectCreateExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectUpdateExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectUpdateLogoExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectCreateQueueBind(
-        @Autowired projectCreateQueue: Queue,
-        @Autowired projectCreateExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(projectCreateQueue)
-        .to(projectCreateExchange)
-
-    @Bean
-    fun projectUpdateQueueBind(
-        @Autowired projectUpdateQueue: Queue,
-        @Autowired projectUpdateExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(projectUpdateQueue)
-        .to(projectUpdateExchange)
-
-    @Bean
-    fun projectUpdateLogoQueueBind(
-        @Autowired projectUpdateLogoQueue: Queue,
-        @Autowired projectUpdateLogoExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(projectUpdateLogoQueue)
-        .to(projectUpdateLogoExchange)
-
-    @Bean
-    fun projectCreateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectCreateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectCreateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun projectUpdateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun projectUpdateLogoListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateLogoQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateLogoQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
+    @EventConsumer
+    fun projectUpdateLogoEventConsumer(
+        @Autowired listener: ProjectEventListener
+    ) = ScsConsumerBuilder.build<ProjectUpdateLogoBroadCastEvent> { listener.execute(it) }
 }

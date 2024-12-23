@@ -1,0 +1,89 @@
+{
+   "AttemptToRestoreFailed": {
+      "other": "\n尝试恢复 {{.filename}} 执行文件失败，请到 {{.dir}} 目录下执行 install.sh 或解压 agent.zip 还原安装目录"
+   },
+   "ExecutableFileMissing": {
+      "other": "\n{{.filename}} 执行文件丢失，请到 {{.dir}} 目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"
+   },
+   "CreateTmpDirectoryFailed": {
+      "other": "创建临时目录失败: {{.err}}"
+   },
+   "StartWorkerProcessFailed": {
+      "other": "启动构建进程失败: {{.err}}"
+   },
+   "CreateStartScriptFailed": {
+      "other": "准备构建脚本生成失败: {{.err}}"
+   },
+   "BuilderProcessWasKilled": {
+      "other": "业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，或解压 agent.zip 还原安装后重启agent再重试。"
+   },
+   "BuildProcessErr": {
+      "other": "构建进程运行错误, 进程号: {{.pid}}, 错误: {{.err}}."
+   },
+   "WorkerExit": {
+      "other": "构建进程 {{.pid}} 退出"
+   },
+   "DockerOnlySupportLinux": {
+      "other": "目前仅支持linux系统使用docker构建机"
+   },
+   "DownloadDockerInitScriptError": {
+      "other": "下载Docker构建机初始化脚本失败|{{.err}}"
+   },
+   "StatDockerInitScriptError": {
+      "other": "获取Docker构建机初始化脚本状态失败|{{.err}}"
+   },
+   "CheckDockerInitScriptAuthError": {
+      "other": "校验并修改Docker启动脚本权限失败|{{.err}}"
+   },
+   "GetDockerCertError": {
+      "other": "获取docker凭据错误|{{.err}}"
+   },
+   "LinkDockerError": {
+      "other": "链接docker客户端错误|{{.err}}"
+   },
+   "GetDockerImagesError": {
+      "other": "获取docker镜像列表错误|{{.err}}"
+   },
+   "PullLatest": {
+      "other": "镜像版本为latest默认拉取最新版本"
+   },
+   "StartPullImage": {
+      "other": "开始拉取镜像，镜像名称：{{.name}}"
+   },
+   "FirstPullTips": {
+      "other": "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。"
+   },
+   "PullImageError": {
+      "other": "拉取镜像 {{.name}} 失败|{{.err}}"
+   },
+   "GetPullImageLogError": {
+      "other": "获取拉取镜像信息日志失败：{{.err}}"
+   },
+   "LocalExistImage": {
+      "other": "本地存在镜像，准备启动构建环境..."
+   },
+   "CreateDockerTmpDirError": {
+      "other": "创建Docker构建临时目录失败: {{.err}}"
+   },
+   "CreateContainerError": {
+      "other": "创建容器 {{.name}} 失败|{{.err}}"
+   },
+   "StartContainerError": {
+      "other": "启动容器 {{.name}} 失败|{{.err}}"
+   },
+   "WaitContainerError": {
+      "other": "等待容器 {{.name}} 结束错误|{{.err}}"
+   },
+   "ContainerExitCodeNotZero": {
+      "other": "等待容器 {{.name}} 结束状态码为 {{.code}} 不为0 \n {{.msg}}"
+   },
+   "ReadDockerMountsError": {
+      "other": "准备Docker挂载目录失败: {{.err}}"
+   },
+   "DockerContainerLog": {
+      "other": "Docker容器日志为: \n"
+   },
+   "DockerImageDebugError": {
+      "other": "启动docker登录调试失败: {{.err}}"
+   }
+}

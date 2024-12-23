@@ -17,9 +17,12 @@
                                     v-for="service in recentVisitService"
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
-                                    @click.native="updateDocumnetTitle(service.link_new)"
                                 >
-                                    <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
+                                    <img
+                                        v-if="isAbsoluteUrl(service.logoUrl)"
+                                        :src="service.logoUrl"
+                                        class="recent-logo-icon"
+                                    />
                                     <Logo
                                         v-else
                                         :name="service.logoUrl"
@@ -53,7 +56,6 @@
                             slot="content"
                             class="all-service-list"
                             column-width="190px"
-                            :get-document-title="getDocumentTitle"
                             :with-hover="false"
                             :services="services"
                         />
@@ -66,7 +68,9 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >{{ item.label }}</span>
+                    >
+                        {{ item.label }}
+                    </span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"
@@ -82,7 +86,10 @@
                     </div>
                 </div>
 
-                <div class="devops-news">
+                <div
+                    class="devops-news"
+                    v-if="news.length > 0"
+                >
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -111,7 +118,13 @@
                 <article>
                     <h2>
                         {{ $t("bkdevopsTitle") }}
-                        <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                        <bk-tag
+                            v-if="BK_CI_VERSION"
+                            theme="info"
+                            type="stroke"
+                        >
+                            {{ BK_CI_VERSION.trim() }}
+                        </bk-tag>
                     </h2>
                     <p>
                         {{ $t("bkdevopsDesc") }}
@@ -122,18 +135,7 @@
                         >{{ $t("learnMore") }}</a>
                     </p>
                 </article>
-                <article>
-                    <h2>{{ $t("bkdevopsTarget") }}</h2>
-                    <p>
-                        {{ $t("bkdevopsWay") }}
-                        <!-- <a
-                            :href="BKCI_DOCS.BKCI_DOC"
-                            target="_blank"
-                            class="more"
-                        >{{ $t("learnMore") }}</a> -->
-                    </p>
-                </article>
-                <article>
+                <article v-if="related.length > 0">
                     <h2>{{ $t("relatedLink") }}</h2>
                     <div>
                         <a
@@ -149,26 +151,44 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <div class="item">
-                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
-                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
-                <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
-            </div>
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved v{{ BK_CI_VERSION.trim() }}</p>
+            <template v-if="hasSharedResUrl">
+                <p
+                    class="item"
+                    v-html="platformInfo.i18n.footerInfoHTML"
+                />
+                <p class="bkci-copyright">{{ platformInfo.footerCopyrightContent }}</p>
+            </template>
+            <template v-else>
+                <section class="devops-home-footer">
+                    <div class="item">
+                        <a
+                            href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true"
+                            target="_blank"
+                        >{{ $t('technicalSupport') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/s-mart/community/"
+                            target="_blank"
+                        >{{ $t('communityForum') }}</a> |
+                        <a
+                            href="https://bk.tencent.com/index/"
+                            target="_blank"
+                        >{{ $t('ProductOfficialWebsite') }}</a>
+                    </div>
+                    <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+                </section>
+            </template>
         </section>
     </div>
 </template>
 
 <script lang="ts">
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
-    import NavBox from '../components/NavBox/index.vue'
-    import Logo from '../components/Logo/index.vue'
+    import { Action, Getter, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
-    
-    import { urlJoin, isAbsoluteUrl } from '@/utils/util'
-    import { mapDocumnetTitle } from '@/utils/constants'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
 
     @Component({
         components: {
@@ -183,9 +203,11 @@
         @State news
         @State related
         @Action fetchLinks
+        @Getter platformInfo
         isAllServiceListShow: boolean = false
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
+        hasSharedResUrl: boolean = !!(window.BK_SHARED_RES_URL)
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
@@ -195,23 +217,28 @@
             }))
         }
 
-        get recentVisitService (): object[] {
+        get recentVisitService (): any[] {
             const recentVisitService = localStorage.getItem('recentVisitService')
             const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-            return recentVisitServiceList.map(service => {
+            const serviceList = recentVisitServiceList.map(service => {
                 const serviceObj = window.serviceObject.serviceMap[service.key] || {}
                 return {
                     ...service,
                     ...serviceObj
                 }
-            })
+            }).filter(item => item.status !== 'planning' && item.status !== 'developing')
+            localStorage.setItem('recentVisitService', JSON.stringify(serviceList))
+            return serviceList
         }
 
         get serviceCount (): number {
-            return this.services.reduce((sum, service) => {
-                sum += service.children.length
+            // 减去1是因为项目管理服务是隐藏的
+            const count = this.services.reduce((sum, service) => {
+                sum += (service.children.length - 1)
                 return sum
             }, 0)
+            // 我的项目服务不展示，所以减去1
+            return count - 1
         }
 
         updateShowAllService (show: boolean): void {
@@ -220,15 +247,6 @@
 
         addConsole (link: string): string {
             return urlJoin('/console/', link)
-        }
-        
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            return this.$t(mapDocumnetTitle(title)) as string
-        }
-
-        updateDocumnetTitle (linkNew) {
-            document.title = this.getDocumentTitle(linkNew)
         }
 
         serviceName (name = ''): string {
@@ -253,7 +271,11 @@
 <style lang="scss">
     @import '../assets/scss/conf';
     .devops-home-page {
-        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        width: 100%;
     }
     .devops-home-content {
         display: flex;
@@ -261,7 +283,6 @@
         justify-content: center;
         width: 1280px;
         padding: 30px 0 100px 0;
-        overflow: auto;
 
         > section {
             width: 800px;

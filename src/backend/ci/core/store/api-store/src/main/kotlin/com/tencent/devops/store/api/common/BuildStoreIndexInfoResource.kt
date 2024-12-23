@@ -30,69 +30,37 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.validation.Valid
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_STORE_INDEX_MANAGE"], description = "build_index")
+@Tag(name = "BUILD_STORE_INDEX_MANAGE", description = "build_index")
 @Path("/build/store/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildStoreIndexInfoResource {
 
-    @ApiOperation("添加组件指标计算详情")
+    @Operation(summary = "更新平台组织认证组件信息")
     @POST
-    @Path("/element/detail/add")
-    fun createIndexComputeDetail(
-        @ApiParam("userId", required = true)
+    @Path("/storeTypes/{storeType}/depts/{deptCode}/trustworthy/update")
+    fun updateTrustworthyIndexInfo(
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("指标要素请求报文体", required = true)
-        @Valid
-        storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
-    ): Result<Boolean>
-
-    @ApiOperation("根据组织名称获取组织维护的插件列表")
-    @GET
-    @Path("/element/value/get")
-    fun getCertifiedPlugins(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("指标代码", required = true)
-        @QueryParam("indexCode")
-        indexCode: String,
-        @ApiParam("指标要素名称", required = true)
-        @QueryParam("elementName")
-        elementName: String
-    ): Result<List<String>>
-
-    @ApiOperation("根据组件代码删除指标结果")
-    @DELETE
-    @Path("/types/{storeType}//indexCodes/{indexCode}/result/delete")
-    fun deleteStoreIndexResultByStoreCode(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("指标代码", required = true)
-        @PathParam("indexCode")
-        indexCode: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组织标识", required = true)
+        @PathParam("deptCode")
+        deptCode: String,
+        @Parameter(description = "组织标识", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件代码列表", required = true)
+        @Parameter(description = "组件代码列表", required = true)
         storeCodes: List<String>
     ): Result<Boolean>
 }

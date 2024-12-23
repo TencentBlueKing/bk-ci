@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
@@ -39,9 +40,10 @@ import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record17
+import org.jooq.Record19
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -51,31 +53,57 @@ class BuildRecordTaskDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordTask>) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            records.forEach { record ->
-                dslContext.insertInto(this)
-                    .set(BUILD_ID, record.buildId)
-                    .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.pipelineId)
-                    .set(RESOURCE_VERSION, record.resourceVersion)
-                    .set(STAGE_ID, record.stageId)
-                    .set(CONTAINER_ID, record.containerId)
-                    .set(TASK_ID, record.taskId)
-                    .set(EXECUTE_COUNT, record.executeCount)
-                    .set(CLASS_TYPE, record.classType)
-                    .set(ORIGIN_CLASS_TYPE, record.originClassType)
-                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
-                    .set(STATUS, record.status)
-                    .set(TASK_SEQ, record.taskSeq)
-                    .set(ATOM_CODE, record.atomCode)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .onDuplicateKeyUpdate()
-                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
-                    .set(STATUS, record.status)
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .execute()
-            }
+
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                RESOURCE_VERSION,
+                STAGE_ID,
+                CONTAINER_ID,
+                TASK_ID,
+                EXECUTE_COUNT,
+                CLASS_TYPE,
+                ORIGIN_CLASS_TYPE,
+                TASK_VAR,
+                STATUS,
+                TASK_SEQ,
+                ATOM_CODE,
+                TIMESTAMPS,
+                POST_INFO,
+                START_TIME,
+                END_TIME
+            ).also { insert ->
+                records.forEach { record ->
+                    insert.values(
+                        record.buildId,
+                        record.projectId,
+                        record.pipelineId,
+                        record.resourceVersion,
+                        record.stageId,
+                        record.containerId,
+                        record.taskId,
+                        record.executeCount,
+                        record.classType,
+                        record.originClassType,
+                        JsonUtil.toJson(record.taskVar, false),
+                        record.status,
+                        record.taskSeq,
+                        record.atomCode,
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.elementPostInfo?.let { JsonUtil.toJson(it, false) },
+                        record.startTime,
+                        record.endTime
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
+                .set(TASK_VAR, MySQLDSL.values(TASK_VAR))
+                .execute()
         }
     }
 
@@ -122,14 +150,14 @@ class BuildRecordTaskDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-            update.where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-            )
-            stageId?.let { update.set(STAGE_ID, stageId) }
-            containerId?.let { update.set(CONTAINER_ID, containerId) }
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                )
+            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
+            containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
             update.execute()
         }
     }
@@ -141,7 +169,7 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -150,6 +178,7 @@ class BuildRecordTaskDao {
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
@@ -160,7 +189,8 @@ class BuildRecordTaskDao {
         projectId: String,
         buildId: String,
         executeCount: Int,
-        matrixContainerIds: List<String>
+        matrixContainerIds: List<String>,
+        stageId: String? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -170,6 +200,9 @@ class BuildRecordTaskDao {
             if (matrixContainerIds.isNotEmpty()) {
                 conditions.add(CONTAINER_ID.notIn(matrixContainerIds))
             }
+            if (stageId != null) {
+                conditions.add(STAGE_ID.eq(stageId))
+            }
             // 获取每个最大执行次数
             val max = DSL.select(
                 TASK_ID.`as`(KEY_TASK_ID),
@@ -178,7 +211,7 @@ class BuildRecordTaskDao {
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
-                START_TIME, END_TIME, TIMESTAMPS
+                START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
             ).from(this).join(max).on(
                 TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -205,7 +238,7 @@ class BuildRecordTaskDao {
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
-                START_TIME, END_TIME, TIMESTAMPS
+                START_TIME, END_TIME, TIMESTAMPS, POST_INFO, ASYNC_STATUS
             ).from(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
             return result.map { record ->
                 generateBuildRecordTask(record)
@@ -214,8 +247,9 @@ class BuildRecordTaskDao {
     }
 
     private fun TPipelineBuildRecordTask.generateBuildRecordTask(
-        record: Record17<String, String, String, Int, String,
-            String, String, Int, Int, String, String, String, String, String, LocalDateTime, LocalDateTime, String>
+        record: Record19<String, String, String, Int, String,
+                String, String, Int, Int, String, String, String,
+                String, String, LocalDateTime, LocalDateTime, String, String, String>
     ) =
         BuildRecordTask(
             buildId = record[BUILD_ID],
@@ -238,7 +272,11 @@ class BuildRecordTaskDao {
             endTime = record[END_TIME],
             timestamps = record[TIMESTAMPS]?.let {
                 JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-            } ?: mapOf()
+            } ?: mapOf(),
+            elementPostInfo = record[POST_INFO]?.let {
+                JsonUtil.to(it, object : TypeReference<ElementPostInfo>() {})
+            },
+            asyncStatus = record[ASYNC_STATUS]
         )
 
     fun getRecord(
@@ -258,6 +296,49 @@ class BuildRecordTaskDao {
                         .and(TASK_ID.eq(taskId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun updateAsyncStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            dslContext.update(this)
+                .set(ASYNC_STATUS, asyncStatus)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).execute()
+        }
+    }
+
+    fun flushEndTimeWhenRetry(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            dslContext.update(this)
+                .setNull(END_TIME)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                        .and(TASK_ID.eq(taskId))
+                ).execute()
         }
     }
 
@@ -283,7 +364,10 @@ class BuildRecordTaskDao {
                     endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-                    } ?: mapOf()
+                    } ?: mapOf(),
+                    elementPostInfo = postInfo?.let {
+                        JsonUtil.to(it, object : TypeReference<ElementPostInfo>() {})
+                    }
                 )
             }
         }

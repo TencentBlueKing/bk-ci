@@ -29,7 +29,7 @@ package com.tencent.devops.metrics.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
@@ -58,6 +58,7 @@ object QueryParamCheckUtil {
     }
 
     fun toMinutes(millisecond: Long): Double {
+        if (millisecond == 0L) return 0.0
         val min = TimeUnit.MILLISECONDS.toMinutes(millisecond)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millisecond - min * 60000).toDouble()
         return String.format("%.2f", min.toDouble() + seconds / 60).toDouble()
@@ -105,6 +106,6 @@ object QueryParamCheckUtil {
     }
 
     fun getErrorTypeName(errorType: Int): String {
-        return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
+        return I18nUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
 }

@@ -50,7 +50,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import io.mockk.every
 import io.mockk.mockk
@@ -178,6 +178,7 @@ class DefaultModelCheckPluginTest : TestBase() {
             InstalledAtom(
                 atomId = "atomId",
                 atomCode = atomCode,
+                version = "1.*",
                 name = "atomName",
                 logoUrl = "logoUrl",
                 classifyCode = "classifyCode",
@@ -198,7 +199,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun checkTriggerContainer() {
         // trigger
         val triggerStage = genStages(1, 1, 1)
-        checkPlugin.checkTriggerContainer(triggerStage[0])
+        checkPlugin.checkTriggerContainer(triggerStage[0], false)
     }
 
     @Test
@@ -221,7 +222,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     private fun checkModelIntegrityEmptyElement(): ErrorCodeException? {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
         return Assertions.assertThrows(ErrorCodeException::class.java) {
-            checkPlugin.checkModelIntegrity(model, projectId)
+            checkPlugin.checkModelIntegrity(model, projectId, userId)
         }
     }
 
@@ -271,10 +272,10 @@ class DefaultModelCheckPluginTest : TestBase() {
         setElementTimeoutVar(model, varName)
         return if (illegal) {
             Assertions.assertThrows(ErrorCodeException::class.java) {
-                checkPlugin.checkModelIntegrity(model, projectId)
+                checkPlugin.checkModelIntegrity(model, projectId, userId)
             }
         } else {
-            checkPlugin.checkModelIntegrity(model, projectId)
+            checkPlugin.checkModelIntegrity(model, projectId, userId)
             null
         }
     }
@@ -284,10 +285,10 @@ class DefaultModelCheckPluginTest : TestBase() {
         setJobTimeoutVar(model, varName)
         return if (illegal) {
             Assertions.assertThrows(ErrorCodeException::class.java) {
-                checkPlugin.checkModelIntegrity(model, projectId)
+                checkPlugin.checkModelIntegrity(model, projectId, userId)
             }
         } else {
-            checkPlugin.checkModelIntegrity(model, projectId)
+            checkPlugin.checkModelIntegrity(model, projectId, userId)
             null
         }
     }
@@ -296,7 +297,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
         setJobMutexTimeoutVar(model, varName)
         return Assertions.assertThrows(ErrorCodeException::class.java) {
-            checkPlugin.checkModelIntegrity(model, projectId)
+            checkPlugin.checkModelIntegrity(model, projectId, userId)
         }
     }
 
@@ -321,7 +322,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     private fun checkModelIntegrityVarTimeoutJobMutex(value: String) {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
         setJobMutexTimeoutVar(model, value)
-        checkPlugin.checkModelIntegrity(model, projectId)
+        checkPlugin.checkModelIntegrity(model, projectId, userId)
     }
 
     private fun setJobMutexTimeoutVar(model: Model, varName: String) {
@@ -356,7 +357,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
         val expect = 2 /* TriggerStage */ + (3 /* stageSize */ * (2 /* JobSize */ * 2 /* element */ + 2 /* Job */))
         try {
-            val actualSize = checkPlugin.checkModelIntegrity(fulModel, projectId)
+            val actualSize = checkPlugin.checkModelIntegrity(fulModel, projectId, userId)
             Assertions.assertEquals(expect, actualSize)
         } catch (actual: ErrorCodeException) {
             Assertions.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)

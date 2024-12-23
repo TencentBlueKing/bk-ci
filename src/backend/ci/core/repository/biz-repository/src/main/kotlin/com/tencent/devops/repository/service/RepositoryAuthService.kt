@@ -27,12 +27,16 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.ListResourcesAuthorizationDTO
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +59,7 @@ class RepositoryAuthService @Autowired constructor(
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
         if (repositoryInfos?.records == null) {
-            logger.info("$projectId 项目下无代码库")
+            logger.info("project $projectId no code base")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -77,7 +81,7 @@ class RepositoryAuthService @Autowired constructor(
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             repositoryInfos = repositoryService.getInfoByHashIds(ids as List<String>)
             if (repositoryInfos == null) {
-                logger.info("$ids 未匹配到代码库")
+                logger.info("$ids not matched to the codebase")
                 return result.buildFetchInstanceFailResult()
             }
         }
@@ -120,6 +124,46 @@ class RepositoryAuthService @Autowired constructor(
         logger.info("repositorytInfo $repositorytInfo")
         val result = SearchInstanceInfo()
         return result.buildSearchInstanceResult(repositorytInfo, count)
+    }
+
+    fun getRepositoryAuthorization(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListResourcesAuthorizationDTO {
+        authTokenApi.checkToken(token)
+        val count = repositoryService.listRepositoryAuthorization(
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        ).first
+        val repositoryInfos = repositoryService.listRepositoryAuthorization(
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        ).second
+        val data = BaseDataResponseDTO<ResourceAuthorizationResponse>()
+        val result = ListResourcesAuthorizationDTO(data)
+        if (repositoryInfos.isEmpty()) {
+            logger.info("$projectId There is no assembly line under the project")
+            return result.buildResourcesAuthorizationListResult()
+        }
+        val entityInfos = mutableListOf<ResourceAuthorizationResponse>()
+        repositoryInfos.map {
+            val entity = ResourceAuthorizationResponse(
+                projectCode = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceName = it.aliasName,
+                resourceCode = it.repositoryHashId!!,
+                handoverTime = it.updatedTime,
+                handoverFrom = it.createUser!!
+            )
+            entityInfos.add(entity)
+        }
+        logger.info("entityInfo $entityInfos, count $count")
+        data.result = entityInfos
+        return result.buildResourcesAuthorizationListResult()
     }
 
     companion object {

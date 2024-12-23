@@ -27,15 +27,36 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_ALIAS_OR_PASSWORD_WRONG
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_PASSWORD_WRONG
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_USED_BY_OTHERS
+import com.tencent.devops.ticket.constant.TicketMessageCode.FILE_SIZE_CANT_EXCEED
+import com.tencent.devops.ticket.constant.TicketMessageCode.ILLEGAL_FILE
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_NO_EXISTS
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_SIZE_CANT_EXCEED
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CertEnterpriseDao
 import com.tencent.devops.ticket.dao.CertTlsDao
@@ -81,6 +102,17 @@ class CertServiceImpl @Autowired constructor(
     private val certMaxSize = 64 * 1024
     private val certIdMaxSize = 32
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadIos(
         userId: String,
         projectId: String,
@@ -92,39 +124,80 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream,
         mpDisposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         if (certCredentialId != null) {
+            val use = AuthPermission.USE
             certPermissionService.validatePermission(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                authPermission = AuthPermission.USE,
-                message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
+                authPermission = use,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        certCredentialId,
+                        use.getI18n(I18nUtil.getLanguage(userId))
+                    )
+                )
             )
         }
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val p12FileContent = read(p12InputStream)
         val mpFileContent = read(mpInputStream)
         if (p12FileContent.size > certMaxSize) {
-            throw OperationException("p12文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("p12", "64k")
+                )
+            )
         }
         if (mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
-        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException("不合法的mobileprovision文件")
+        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException(
+            MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+        )
 
         val credentialId = certCredentialId ?: ""
         val remark = certRemark ?: ""
@@ -166,6 +239,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateIos(
         userId: String,
         projectId: String,
@@ -177,38 +261,74 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream?,
         mpDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有证书编辑权限"
+            edit,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(NAME_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         if (certCredentialId != null) {
+            val use = AuthPermission.USE
             certPermissionService.validatePermission(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                authPermission = AuthPermission.USE,
-                message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
+                authPermission = use,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        certCredentialId,
+                        use.getI18n(I18nUtil.getLanguage(userId))
+                    )
+                )
             )
         }
 
         val p12FileContent = if (p12InputStream != null) read(p12InputStream) else null
         val mpFileContent = if (mpInputStream != null) read(mpInputStream) else null
         if (p12FileContent != null && p12FileContent.size > certMaxSize) {
-            throw OperationException("p12文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("p12", "64k")
+                )
+            )
         }
         if (mpFileContent != null && mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
 
         val mpInfo = if (mpFileContent != null) MobileProvisionUtil.parse(mpFileContent)
-            ?: throw OperationException("不合法的mobileprovision文件")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+            )
         else null
 
         val credentialId = certCredentialId ?: ""
@@ -254,6 +374,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadEnterprise(
         userId: String,
         projectId: String,
@@ -262,26 +393,52 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream,
         mpDisposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
 
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val mpFileContent = read(mpInputStream)
         if (mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
-        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException("不合法的mobileprovision文件")
+        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException(
+            MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+        )
 
         val remark = certRemark ?: ""
         val certType = CertType.ENTERPRISE.value
@@ -339,6 +496,17 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateEnterprise(
         userId: String,
         projectId: String,
@@ -347,26 +515,43 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream?,
         mpDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有证书编辑权限"
+            edit,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
+
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val certEnterpriseRecord = certEnterpriseDao.get(dslContext, projectId, certId)
 
         val mpFileContent = if (mpInputStream != null) read(mpInputStream) else null
         if (mpFileContent != null && mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val mpInfo = if (mpFileContent != null) MobileProvisionUtil.parse(mpFileContent)
-            ?: throw OperationException("不合法的mobileprovision文件")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+            )
         else null
 
         val remark = certRemark ?: ""
@@ -425,6 +610,17 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadAndroid(
         userId: String,
         projectId: String,
@@ -436,44 +632,85 @@ class CertServiceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
+        val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
             authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    aliasCredentialId,
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
 
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERT_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val jksFileContent = read(inputStream)
         if (jksFileContent.size > certMaxSize) {
-            throw OperationException("JKS文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("JKS", "64k")
+                )
+            )
         }
 
         val credential = credentialService.serviceGet(projectId, credentialId)
         if (!certHelper.validJksPassword(jksFileContent, credential.v1)) {
-            throw OperationException("证书密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val aliasCredential = credentialService.serviceGet(projectId, aliasCredentialId)
         if (!certHelper.validJksAlias(jksFileContent, credential.v1, alias, aliasCredential.v1)) {
-            throw OperationException("证书别名或者别名密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_ALIAS_OR_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val remark = certRemark ?: ""
@@ -514,6 +751,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateAndroid(
         userId: String,
         projectId: String,
@@ -525,48 +773,88 @@ class CertServiceImpl @Autowired constructor(
         inputStream: InputStream?,
         disposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = certId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有证书编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
-            ?: throw OperationException("证书${certId}不存在")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
 
+        val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
 
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    aliasCredentialId,
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
 
         val jksFileContent =
             if (inputStream != null) read(inputStream)
             else certHelper.decryptBytes(certRecord.certJksFileContent)!!
         if (jksFileContent.size > certMaxSize) {
-            throw OperationException("JKS文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("JKS", "64k")
+                )
+            )
         }
 
         val credential = credentialService.serviceGet(projectId, credentialId)
         if (!certHelper.validJksPassword(jksFileContent, credential.v1)) {
-            throw OperationException("证书密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val aliasCredential = credentialService.serviceGet(projectId, aliasCredentialId)
         if (!certHelper.validJksAlias(jksFileContent, credential.v1, alias, aliasCredential.v1)) {
-            throw OperationException("证书别名或者别名密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_ALIAS_OR_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val remark = certRemark ?: ""
@@ -606,6 +894,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadTls(
         userId: String,
         projectId: String,
@@ -620,17 +919,36 @@ class CertServiceImpl @Autowired constructor(
         clientKeyInputStream: InputStream?,
         clientKeyDisposition: FormDataContentDisposition?
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
+
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}已被他人使用")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERT_USED_BY_OTHERS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
         val serverCrtFileName = String(serverCrtDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
@@ -663,7 +981,13 @@ class CertServiceImpl @Autowired constructor(
             (clientCrtFile != null && clientCrtFile.size > certMaxSize) ||
             (clientKeyFile != null && clientKeyFile.size > certMaxSize)
         ) {
-            throw OperationException("文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("", "64k")
+                )
+            )
         }
 
         val remark = certRemark ?: ""
@@ -722,6 +1046,17 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateTls(
         userId: String,
         projectId: String,
@@ -736,15 +1071,28 @@ class CertServiceImpl @Autowired constructor(
         clientKeyInputStream: InputStream?,
         clientKeyDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = certId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有证书编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
+
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
 
@@ -794,7 +1142,13 @@ class CertServiceImpl @Autowired constructor(
             (clientCrtFile != null && clientCrtFile.size > certMaxSize) ||
             (clientKeyFile != null && clientKeyFile.size > certMaxSize)
         ) {
-            throw OperationException("文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("", "64k")
+                )
+            )
         }
 
         val remark = certRemark ?: ""
@@ -850,15 +1204,36 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_DELETE)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_DELETE_CONTENT
+    )
     override fun delete(userId: String, projectId: String, certId: String) {
+        val delete = AuthPermission.DELETE
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.DELETE,
-            "用户($userId)在工程($projectId)下没有证书($certId)的删除权限"
+            delete,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    certId,
+                    delete.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         certPermissionService.deleteResource(projectId, certId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -878,12 +1253,12 @@ class CertServiceImpl @Autowired constructor(
         val permissionToListMap = certPermissionService.filterCerts(
             userId = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT)
+            authPermissions = setOf(AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT, AuthPermission.USE)
         )
         val hasListPermissionCertIdList = permissionToListMap[AuthPermission.LIST]!!
         val hasDeletePermissionCertIdList = permissionToListMap[AuthPermission.DELETE]!!
         val hasEditPermissionCertIdList = permissionToListMap[AuthPermission.EDIT]!!
-
+        val hasUsePermissionCertIdList = permissionToListMap[AuthPermission.USE]!!
         logger.info("$permissionToListMap $hasListPermissionCertIdList $hasDeletePermissionCertIdList")
 
         val count = certDao.countByProject(dslContext, projectId, certType, hasListPermissionCertIdList.toSet())
@@ -892,6 +1267,7 @@ class CertServiceImpl @Autowired constructor(
         val certList = certRecordList.map {
             val hasDeletePermission = hasDeletePermissionCertIdList.contains(it.certId)
             val hasEditPermission = hasEditPermissionCertIdList.contains(it.certId)
+            val hasUsePermission = hasUsePermissionCertIdList.contains(it.certId)
             CertWithPermission(
                 certId = it.certId,
                 certType = it.certType,
@@ -902,7 +1278,11 @@ class CertServiceImpl @Autowired constructor(
                 credentialId = it.credentialId ?: "",
                 alias = it.certJksAlias ?: "",
                 aliasCredentialId = it.certJksAliasCredentialId ?: "",
-                permissions = CertPermissions(hasDeletePermission, hasEditPermission)
+                permissions = CertPermissions(
+                    delete = hasDeletePermission,
+                    edit = hasEditPermission,
+                    use = hasUsePermission
+                )
             )
         }
         return SQLPage(count, certList)
@@ -913,7 +1293,8 @@ class CertServiceImpl @Autowired constructor(
         val certList = mutableListOf<Cert>()
         val certInfos = certDao.listByProject(dslContext, projectId, offset, limit)
         certInfos.map {
-            certList.add(Cert(
+            certList.add(
+                Cert(
                     certId = it.certId,
                     certType = it.certType,
                     creator = it.certUserId,
@@ -921,12 +1302,13 @@ class CertServiceImpl @Autowired constructor(
                     createTime = it.certCreateTime.timestamp(),
                     certRemark = it.certRemark,
                     expireTime = it.certExpireDate.timestamp()
-            ))
+                )
+            )
         }
 
         return SQLPage(
-                count = count,
-                records = certList
+            count = count,
+            records = certList
         )
     }
 
@@ -957,7 +1339,28 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
-    override fun getIos(projectId: String, certId: String): CertIOSInfo {
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
+    override fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo {
+        certPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = certId,
+            authPermission = AuthPermission.VIEW,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
             certId = certId,
@@ -968,6 +1371,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertEnterpriseInfo(
@@ -977,7 +1391,29 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getAndroid(projectId: String, certId: String): CertAndroidInfo {
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
+    override fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo {
+        certPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = certId,
+            authPermission = AuthPermission.VIEW,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
+
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
             certId = certId,
@@ -989,6 +1425,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getTls(projectId: String, certId: String): CertTlsInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
@@ -1002,6 +1449,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -1060,6 +1518,17 @@ class CertServiceImpl @Autowired constructor(
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise {
         val certRecord = certDao.get(dslContext, projectId, certId)
         // 生成公钥和密钥
@@ -1078,6 +1547,17 @@ class CertServiceImpl @Autowired constructor(
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -1114,6 +1594,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryAndroidByProject(
         projectId: String,
         certId: String,
@@ -1170,6 +1661,17 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls {
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
@@ -1225,14 +1727,19 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getCertByIds(certIds: Set<String>): List<Cert>? {
+    override fun getCertByIds(
+        projectId: String?,
+        certIds: Set<String>
+    ): List<Cert>? {
         val certList = mutableListOf<Cert>()
         val records = certDao.listByIds(
-                dslContext = dslContext,
-                certIds = certIds
+            dslContext = dslContext,
+            projectId = projectId,
+            certIds = certIds
         )
         records.map {
-            certList.add(Cert(
+            certList.add(
+                Cert(
                     certId = it.certId,
                     certType = it.certType,
                     creator = it.certUserId,
@@ -1240,37 +1747,40 @@ class CertServiceImpl @Autowired constructor(
                     createTime = it.certCreateTime.timestamp(),
                     certRemark = it.certRemark,
                     expireTime = it.certExpireDate.timestamp()
-            ))
+                )
+            )
         }
         return certList
     }
 
     override fun searchByCertId(projectId: String, offset: Int, limit: Int, certId: String): SQLPage<Cert> {
-            val count = certDao.countByIdLike(dslContext, projectId, certId)
-            val certList = mutableListOf<Cert>()
-            val certInfos = certDao.searchByIdLike(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    offset = offset,
-                    limit = limit,
-                    certId = certId
+        val count = certDao.countByIdLike(dslContext, projectId, certId)
+        val certList = mutableListOf<Cert>()
+        val certInfos = certDao.searchByIdLike(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            certId = certId
+        )
+        certInfos.map {
+            certList.add(
+                Cert(
+                    certId = it.certId,
+                    certType = it.certType,
+                    creator = it.certUserId,
+                    credentialId = it.credentialId,
+                    createTime = it.certCreateTime.timestamp(),
+                    certRemark = it.certRemark,
+                    expireTime = it.certExpireDate.timestamp()
+                )
             )
-            certInfos.map {
-                certList.add(Cert(
-                        certId = it.certId,
-                        certType = it.certType,
-                        creator = it.certUserId,
-                        credentialId = it.credentialId,
-                        createTime = it.certCreateTime.timestamp(),
-                        certRemark = it.certRemark,
-                        expireTime = it.certExpireDate.timestamp()
-                ))
-            }
+        }
 
-            return SQLPage(
-                    count = count,
-                    records = certList
-            )
+        return SQLPage(
+            count = count,
+            records = certList
+        )
     }
 
     private fun encryptCert(

@@ -33,17 +33,19 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.util.GitCommonUtils
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class StreamLogService @Autowired constructor(
@@ -77,9 +79,11 @@ class StreamLogService @Autowired constructor(
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
             tag = tag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = null,
+            stepId = null
         ).data!!
     }
 
@@ -103,9 +107,11 @@ class StreamLogService @Autowired constructor(
             buildId = buildId,
             start = start,
             tag = tag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = null,
+            stepId = null
         ).data!!
     }
 
@@ -145,5 +151,8 @@ class StreamLogService @Autowired constructor(
 
     private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
-            ?: throw CustomException(Response.Status.FORBIDDEN, "该流水线不存在或已删除，如有疑问请联系蓝盾助手")
+            ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                I18nUtil.getCodeLanMessage(PIPELINE_NOT_FOUND_OR_DELETED)
+            )
 }

@@ -44,47 +44,28 @@ class LogStatusDao {
         buildId: String,
         tag: String?,
         subTags: String?,
-        jobId: String?,
-        executeCount: Int?,
+        containerHashId: String?,
+        executeCount: Int,
         logStorageMode: LogStorageMode,
-        finish: Boolean
+        finish: Boolean,
+        jobId: String?,
+        stepId: String?
     ) {
         with(TLogStatus.T_LOG_STATUS) {
-            val origin = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(SUB_TAG.eq(subTags ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()
-            if (origin == null) {
-                dslContext.insertInto(
-                    this,
-                    BUILD_ID,
-                    TAG,
-                    SUB_TAG,
-                    JOB_ID,
-                    EXECUTE_COUNT,
-                    FINISHED,
-                    MODE
-                ).values(
-                    buildId,
-                    tag ?: "",
-                    subTags ?: "",
-                    jobId,
-                    executeCount ?: 1,
-                    finish,
-                    logStorageMode.name
-                ).execute()
-            } else {
-                dslContext.update(this)
-                    .set(FINISHED, finish)
-                    .set(MODE, logStorageMode.name)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(TAG.eq(tag ?: ""))
-                    .and(SUB_TAG.eq(subTags ?: ""))
-                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                    .execute()
-            }
+            dslContext.insertInto(this)
+                .set(BUILD_ID, buildId)
+                .set(TAG, tag)
+                .set(SUB_TAG, subTags)
+                .set(EXECUTE_COUNT, executeCount)
+                .set(JOB_ID, containerHashId)
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode.name)
+                .set(USER_JOB_ID, jobId)
+                .set(STEP_ID, stepId)
+                .onDuplicateKeyUpdate()
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode.name)
+                .execute()
         }
     }
 
@@ -126,30 +107,56 @@ class LogStatusDao {
     fun isFinish(
         dslContext: DSLContext,
         buildId: String,
-        tag: String?,
-        subTags: String?,
-        executeCount: Int?
+        containerHashId: String?,
+        tag: String,
+        subTags: String,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?
     ): Boolean {
         with(TLogStatus.T_LOG_STATUS) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(SUB_TAG.eq(subTags ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()?.finished ?: false
+                .and(EXECUTE_COUNT.eq(executeCount))
+            when {
+                !containerHashId.isNullOrBlank() -> {
+                    select.and(JOB_ID.eq(containerHashId))
+                        .and(TAG.eq(""))
+                        .and(SUB_TAG.eq(""))
+                }
+
+                !jobId.isNullOrBlank() -> {
+                    select.and(USER_JOB_ID.eq(jobId))
+                        .and(TAG.eq(""))
+                        .and(SUB_TAG.eq(""))
+                }
+
+                !stepId.isNullOrBlank() -> {
+                    select.and(STEP_ID.eq(stepId))
+                        .and(SUB_TAG.eq(subTags))
+                }
+
+                else -> {
+                    select.and(TAG.eq(tag))
+                        .and(SUB_TAG.eq(subTags))
+                }
+            }
+            return select.fetchAny()?.finished == true
         }
     }
 
     fun getStorageMode(
         dslContext: DSLContext,
         buildId: String,
-        tag: String,
-        executeCount: Int?
+        tag: String?,
+        executeCount: Int?,
+        stepId: String?
     ): TLogStatusRecord? {
         with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag))
+                .let { if (tag != null) it.and(TAG.eq(tag)) else it }
+                .let { if (stepId != null) it.and(STEP_ID.eq(stepId)) else it }
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }

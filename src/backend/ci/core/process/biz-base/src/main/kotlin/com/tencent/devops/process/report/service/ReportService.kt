@@ -28,6 +28,8 @@
 package com.tencent.devops.process.report.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -38,8 +40,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.report.dao.ReportDao
@@ -175,7 +175,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             } else {
                 TaskReport(
@@ -184,7 +185,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             }
         }
@@ -195,7 +197,6 @@ class ReportService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         return getRootUrl(

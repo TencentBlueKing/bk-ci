@@ -51,8 +51,11 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs
 
     fun queryLogsBetweenLines(
@@ -65,8 +68,10 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs
 
     fun queryLogsAfterLine(
@@ -76,8 +81,10 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs
 
     fun queryLogsBeforeLine(
@@ -88,8 +95,10 @@ interface LogService {
         size: Int?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs
 
     fun downloadLogs(
@@ -97,9 +106,11 @@ interface LogService {
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        jobId: String?,
+        stepId: String?
     ): Response
 
     fun getEndLogsPage(
@@ -109,9 +120,11 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int
+        size: Int,
+        jobId: String?,
+        stepId: String?
     ): EndPageQueryLogs
 
     fun getBottomLogs(
@@ -121,9 +134,11 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int?
+        size: Int?,
+        jobId: String?,
+        stepId: String?
     ): QueryLogs
 
     fun queryInitLogsPage(
@@ -132,10 +147,12 @@ interface LogService {
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        jobId: String?,
+        stepId: String?
     ): PageQueryLogs
 
     fun reopenIndex(buildId: String): Boolean

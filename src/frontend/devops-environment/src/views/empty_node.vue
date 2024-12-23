@@ -2,16 +2,56 @@
     <div class="empty-node-wrapper">
         <p class="title">{{ emptyInfo.title }}</p>
         <p class="intro-prompt">{{ emptyInfo.desc }}</p>
-        <div class="create-node-row" v-if="isEnv">
-            <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+        <div
+            class="create-node-row"
+            v-if="isEnv"
+        >
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: ENV_RESOURCE_ACTION.CREATE
+                    }
+                }"
+                theme="primary"
+                class="create-env-btn"
+                @click="toCreateNode"
+            >
+                {{ $t('environment.newPool') }}
+            </bk-button>
         </div>
-        <div class="create-node-row" v-else>
-            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+        <div
+            class="create-node-row"
+            v-else
+        >
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: NODE_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: NODE_RESOURCE_ACTION.CREATE
+                    }
+                }"
+                theme="primary"
+                class="import-node-btn"
+                @click="toImportNode('construct')"
+            >
+                {{ $t('environment.nodeInfo.importNode') }}
+            </bk-button>
         </div>
     </div>
 </template>
 
 <script>
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     export default {
         props: {
             isEnv: {
@@ -24,7 +64,16 @@
         },
         data () {
             return {
-                isDropdownShow: false
+                isDropdownShow: false,
+                NODE_RESOURCE_ACTION,
+                NODE_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE
+            }
+        },
+        computed: {
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         methods: {
@@ -58,20 +107,12 @@
         .create-node-row {
             margin-top: 28px;
 
-            .bk-button {
-                width: 120px;
-            }
-
             .create-node-btn {
                 margin-right: 4px;
             }
 
             .create-env-btn {
                 margin-left: 4px;
-            }
-
-            .import-node-btn {
-                width: 100px;
             }
         }
     }

@@ -30,16 +30,9 @@ package com.tencent.devops.stream.service.transfer
 import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.sdk.github.pojo.GithubRepo
-import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
-import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
-import com.tencent.devops.common.sdk.github.request.ListCommitRequest
-import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubAppResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
@@ -50,7 +43,17 @@ import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.sdk.github.pojo.GithubRepo
+import com.tencent.devops.repository.sdk.github.request.CreateOrUpdateFileContentsRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.repository.sdk.github.request.ListCommitRequest
+import com.tencent.devops.repository.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoriesRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.constant.StreamMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -347,7 +350,7 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String
     ): GithubToken {
         return client.get(ServiceGithubResource::class).getAccessToken(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = MessageUtil.getMessageByLocale(NOT_AUTHORIZED_BY_OAUTH, I18nUtil.getLanguage(userId))
         )
     }
 }

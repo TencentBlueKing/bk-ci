@@ -111,6 +111,13 @@ span.skip-name {
     }
 }
 
+.un-exec-this-time {
+    .un-exec-this-time {
+      opacity: 1;
+    }
+    opacity: .5;
+}
+
 .readonly {
     .stage-connector {
         background: $lineColor;
@@ -259,6 +266,7 @@ span.skip-name {
         }
 
         &.QUEUE,
+        &.QUEUE_CACHE,
         &.RUNNING,
         &.REVIEWING,
         &.PREPARE_ENV,
@@ -273,8 +281,7 @@ span.skip-name {
         }
         &.CANCELED,
         &.REVIEW_ABORT,
-        &.TRY_FINALLY,
-        &.QUEUE_CACHE {
+        &.TRY_FINALLY {
             background-color: $cancelColor;
             span.skip-name {
                 color: white;
@@ -314,15 +321,24 @@ span.skip-name {
     }
     
     .bk-pipeline-atom {
+        &.is-sub-pipeline-atom {
+            box-shadow: 4px 4px 0 0 rgba(99, 101, 110, 0.3);
+        }
         &.UNEXEC,
         &.SKIP,
         &.DISABLED {
             color: $fontWeightColor;
+            &.is-sub-pipeline-atom {
+                box-shadow: 4px 4px 0 0 rgba(99, 101, 110, 0.3);
+            }
         }
         &.CANCELED,
         &.REVIEW_ABORT,
         &.REVIEWING {
             border-color: $warningColor;
+            &.is-sub-pipeline-atom {
+                box-shadow: 4px 4px 0 0 rgba(255, 180, 0, 0.3);
+            }
             &:before {
                 background-color: $warningColor;
             }
@@ -336,11 +352,15 @@ span.skip-name {
             }
         }
         &.FAILED,
-        &.QUALITY_CHECK_FAIL,
+        &.TERMINATE,
         &.HEARTBEAT_TIMEOUT,
+        &.QUALITY_CHECK_FAIL,
         &.QUEUE_TIMEOUT,
         &.EXEC_TIMEOUT {
             border-color: $dangerColor;
+            &.is-sub-pipeline-atom {
+                box-shadow: 4px 4px 0 0 rgba(255, 86, 86, 0.3);
+            }
             &:before {
                 background-color: $dangerColor;
             }
@@ -356,6 +376,9 @@ span.skip-name {
         &.SUCCEED,
         &.REVIEW_PROCESSED {
             border-color: $successColor;
+            &.is-sub-pipeline-atom {
+                box-shadow: 4px 4px 0 0 rgba(90, 200, 130, 0.3);
+            }
             &:before {
                 background-color: $successColor;
             }
@@ -374,6 +397,9 @@ span.skip-name {
         &.PAUSE {
             border-color: $pauseColor;
             color: $pauseColor;
+            &.is-sub-pipeline-atom {
+                box-shadow: 4px 4px 0 0 rgba(255, 152, 1, 0.3);
+            }
             &:before {
                 background-color: $pauseColor;
             }

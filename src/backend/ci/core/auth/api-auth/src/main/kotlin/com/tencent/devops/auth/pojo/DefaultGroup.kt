@@ -1,14 +1,13 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("默认组信息")
+@Schema(title = "默认组信息")
 data class DefaultGroup(
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @ApiModelProperty("展示名称")
+    @get:Schema(title = "展示名称")
     val displayName: String,
-    @ApiModelProperty("组编码")
+    @get:Schema(title = "组编码")
     val code: String
 )

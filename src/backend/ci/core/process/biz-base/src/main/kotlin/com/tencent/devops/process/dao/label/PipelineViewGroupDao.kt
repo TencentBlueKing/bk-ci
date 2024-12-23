@@ -61,6 +61,20 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        viewId: Long,
+        offset: Int,
+        limit: Int
+    ): List<TPipelineViewGroupRecord> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.selectFrom(this)
+                .where(VIEW_ID.eq(viewId))
+                .offset(offset).limit(limit)
+                .fetch()
+        }
+    }
+
     fun listByViewIds(
         dslContext: DSLContext,
         projectId: String,
@@ -108,6 +122,32 @@ class PipelineViewGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .fetch()
+        }
+    }
+
+    fun listViewIdByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): List<Long> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.select(VIEW_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetch(0, Long::class.java)
+        }
+    }
+
+    fun listPipelineIdByViewId(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long
+    ): List<String> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .fetch(0, String::class.java)
         }
     }
 
@@ -181,13 +221,15 @@ class PipelineViewGroupDao {
     fun countByViewId(
         dslContext: DSLContext,
         projectId: String,
-        viewIds: Collection<Long>
+        viewIds: Collection<Long>,
+        filterPipelineIds: List<String>? = null
     ): Map<Long, Int> {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             return dslContext.select(VIEW_ID, count())
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VIEW_ID.`in`(viewIds))
+                .let { if (filterPipelineIds != null) it.and(PIPELINE_ID.`in`(filterPipelineIds)) else it }
                 .groupBy(VIEW_ID)
                 .fetch().map { it.value1() to it.value2() }.toMap()
         }

@@ -72,7 +72,7 @@ class P4Server(
                 }
                 server.connect()
                 server.userName = userName
-                server.login(password)
+                server.login(password, true)
             }
         }, retryTime = 3)
     }

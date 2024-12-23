@@ -27,14 +27,13 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.store.pojo.common.DeptInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场-插件可见范围请求报文体")
+@Schema(title = "插件市场-插件可见范围请求报文体")
 data class AtomVisibleDeptReq(
-    @ApiModelProperty("插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

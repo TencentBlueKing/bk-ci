@@ -29,15 +29,17 @@ package com.tencent.devops.misc.config
 
 import com.tencent.devops.common.db.config.DBBaseConfiguration
 import org.jooq.DSLContext
+import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.jooq.impl.DefaultExecuteListenerProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -53,10 +55,11 @@ import javax.sql.DataSource
  */
 @Configuration
 @Import(DataSourceConfig::class, DBBaseConfiguration::class)
+@AutoConfigureAfter(DBBaseConfiguration::class)
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
-    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|gpt)"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -73,11 +76,12 @@ class JooqConfiguration {
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
-            val matchResult = pkgRegex.toRegex().find(packageName)
-            if (matchResult != null) {
-                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+            val matchResult = pkgRegex.toRegex().findAll(packageName)
+            if (matchResult.any()) {
+                val module = matchResult.last().value.substring(1)
+                val configuration = configurationMap["${module}JooqConfiguration"]
                 return if (configuration != null) {
-                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                    LOG.info("dslContext_init|${module}JooqConfiguration|${declaringClass.name}")
                     DSL.using(configuration)
                 } else {
                     null
@@ -91,91 +95,103 @@ class JooqConfiguration {
     fun processJooqConfiguration(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(shardingDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(shardingDataSource, executeListenerProviders)
     }
 
     @Bean
     fun projectJooqConfiguration(
         @Qualifier("projectDataSource")
         projectDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(projectDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(projectDataSource, executeListenerProviders)
     }
 
     @Bean
     fun repositoryJooqConfiguration(
         @Qualifier("repositoryDataSource")
         repositoryDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(repositoryDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(repositoryDataSource, executeListenerProviders)
     }
 
     @Bean
     fun dispatchJooqConfiguration(
         @Qualifier("dispatchDataSource")
         dispatchDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(dispatchDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(dispatchDataSource, executeListenerProviders)
     }
 
     @Bean
     fun pluginJooqConfiguration(
         @Qualifier("pluginDataSource")
         pluginDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(pluginDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(pluginDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun gptJooqConfiguration(
+        @Qualifier("pluginDataSource")
+        pluginDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(pluginDataSource, executeListenerProviders)
     }
 
     @Bean
     fun qualityJooqConfiguration(
         @Qualifier("qualityDataSource")
         qualityDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(qualityDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(qualityDataSource, executeListenerProviders)
     }
 
     @Bean
     fun artifactoryJooqConfiguration(
         @Qualifier("artifactoryDataSource")
         artifactoryDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(artifactoryDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(artifactoryDataSource, executeListenerProviders)
     }
 
     @Bean
     fun environmentJooqConfiguration(
         @Qualifier("environmentDataSource")
         environmentDataSource: DataSource,
-        @Qualifier("bkJooqExecuteListenerProvider")
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        return generateDefaultConfiguration(environmentDataSource, bkJooqExecuteListenerProvider)
+        return generateDefaultConfiguration(environmentDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun imageJooqConfiguration(
+        @Qualifier("imageDataSource")
+        imageDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(imageDataSource, executeListenerProviders)
     }
 
     private fun generateDefaultConfiguration(
         dataSource: DataSource,
-        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
         configuration.set(dataSource)
         configuration.settings().isRenderSchema = false
-        configuration.set(bkJooqExecuteListenerProvider)
+        configuration.set(*executeListenerProviders.stream().toArray { size ->
+            arrayOfNulls<ExecuteListenerProvider>(size)
+        })
         return configuration
     }
 }

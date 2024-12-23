@@ -1,56 +1,159 @@
 <template>
     <section class="g-turbo-box basic-info">
         <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.基本信息') }} </h3>
-        <bk-form class="g-turbo-form-left" :label-width="138" :model="copyFormData" v-bkloading="{ isLoading: isLoadingEngine }" ref="createTask">
-            <bk-form-item :label="$t('turbo.方案ID')" property="openStatus">
-                <template v-if="isEdit">
+        <bk-form
+            class="g-turbo-form-left"
+            :label-width="138"
+            :model="copyFormData"
+            v-bkloading="{ isLoading: isLoadingEngine }"
+            ref="createTask"
+        >
+            <bk-form-item
+                v-if="!isEdit"
+                :label="$t('turbo.方案ID')"
+                property="openStatus"
+            >
+                <!-- <template v-if="isEdit">
                     <bk-input v-model="copyFormData.planId" class="single-width" :placeholder="$t('turbo.系统自动生成，方案的唯一标识')" disabled></bk-input>
                     <bk-checkbox v-model="copyFormData.openStatus" v-bk-tooltips="{ content: $t('turbo.若不开启，配置不生效') }"> {{ $t('turbo.开启方案') }} </bk-checkbox>
-                </template>
-                <span v-else class="g-turbo-text-break plan-id">
+                </template> -->
+                <span class="g-turbo-text-break plan-id">
                     <span>{{ copyFormData.planId }}</span>
-                    <logo name="copy" @click.native="copyValue(copyFormData.planId)" size="16" class="icon-copy"></logo>
-                    <span v-if="copyFormData.openStatus" class="plan-open plan-common" @click="toggleOpen(false)" v-bk-tooltips="{ content: $t('turbo.点击禁用当前方案，禁用后，配置将不再生效') }">
-                        <logo name="check" class="plan-icon" size="10"></logo> {{ $t('turbo.已开启') }}
+                    <logo
+                        name="copy"
+                        @click.native="copyValue(copyFormData.planId)"
+                        size="16"
+                        class="icon-copy"
+                    ></logo>
+                    <span
+                        v-if="copyFormData.openStatus"
+                        class="plan-open plan-common"
+                        @click="toggleOpen(false)"
+                        v-bk-tooltips="{ content: $t('turbo.点击禁用当前方案，禁用后，配置将不再生效') }"
+                    >
+                        <logo
+                            name="check"
+                            class="plan-icon"
+                            size="10"
+                        ></logo> {{ $t('turbo.已开启') }}
                     </span>
-                    <span v-else class="plan-close plan-common" @click="toggleOpen(true)" v-bk-tooltips="{ content: $t('turbo.点击开启方案，可以在构建机或流水线中使用') }">
-                        <logo name="suspend" class="plan-icon"></logo> {{ $t('turbo.已禁用') }}
+                    <span
+                        v-else
+                        class="plan-close plan-common"
+                        @click="toggleOpen(true)"
+                        v-bk-tooltips="{ content: $t('turbo.点击开启方案，可以在构建机或流水线中使用') }"
+                    >
+                        <logo
+                            name="suspend"
+                            class="plan-icon"
+                        ></logo> {{ $t('turbo.已禁用') }}
                     </span>
                 </span>
             </bk-form-item>
-            <bk-form-item :label="$t('turbo.方案名称')" required property="planName" :rules="[requireRule($t('turbo.方案名称')), nameRule]" error-display-type="normal">
+            <bk-form-item
+                :label="$t('turbo.方案名称')"
+                required
+                property="planName"
+                :rules="[requireRule($t('turbo.方案名称')), nameRule]"
+                error-display-type="normal"
+            >
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.planName" class="single-width" :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"></bk-input>
+                    <bk-input
+                        v-model="copyFormData.planName"
+                        @change="handleChange"
+                        class="single-width"
+                        :placeholder="$t('turbo.以汉字、英文字母、数字、连字符(-)、符号(_+#)组成，不超过30个字')"
+                    ></bk-input>
                 </template>
-                <span v-else class="g-turbo-text-break">{{ formData.planName }}</span>
+                <span
+                    v-else
+                    class="g-turbo-text-break"
+                >{{ formData.planName }}</span>
             </bk-form-item>
-            <bk-form-item :label="$t('turbo.加速模式')" required property="engineCode" :rules="[requireRule($t('turbo.加速模式'))]" error-display-type="normal">
+            <bk-form-item
+                :label="$t('turbo.加速模式')"
+                required
+                property="engineCode"
+                :rules="[requireRule($t('turbo.加速模式'))]"
+                error-display-type="normal"
+            >
                 <template v-if="isEdit && onlyEdit">
                     <span> {{ $t('turbo.根据你的加速场景选择适用的模式') }} </span>
                     <ul class="turbo-model-list">
-                        <li v-for="item in engineList"
+                        <li
+                            v-for="item in engineList"
                             :key="item"
                             :class="['single-width', 'turbo-model-item', 'g-turbo-text-overflow', { choose: copyFormData.engineCode === item.engineCode }]"
-                            @click="chooseMode(item)"
+                            @click="chooseMode(item, true)"
                         >
-                            <p class="item-title g-turbo-black-font">{{ item.engineName }}<span class="recommend" v-if="item.recommend"> {{ $t('turbo.（荐）') }} <span></span></span></p>
-                            <span class="item-desc g-turbo-gray-font g-turbo-text-overflow" v-bk-overflow-tips="{ interactive: true }">{{ item.desc }}</span>
-                            <logo name="check" :size="10" class="item-check"></logo>
+                            <p class="item-title g-turbo-black-font">
+                                {{ item.engineName }}<span
+                                    class="recommend"
+                                    v-if="item.recommend"
+                                > {{ $t('turbo.（荐）') }} <span></span></span>
+                            </p>
+                            <span
+                                class="item-desc g-turbo-gray-font g-turbo-text-overflow"
+                                v-bk-overflow-tips="{ interactive: true }"
+                            >{{ item.desc }}</span>
+                            <logo
+                                name="check"
+                                :size="10"
+                                class="item-check"
+                            ></logo>
                         </li>
                     </ul>
                 </template>
-                <span v-else class="turbo-model-engine">{{ formData.engineName }}</span>
+                <span
+                    v-else
+                    class="turbo-model-engine"
+                >{{ formData.engineName }}</span>
             </bk-form-item>
-            <bk-form-item :label="$t('turbo.方案说明')" property="name">
+            <bk-form-item
+                :label="$t('turbo.方案说明')"
+                property="name"
+            >
                 <template v-if="isEdit">
-                    <bk-input v-model="copyFormData.desc" type="textarea" class="double-width" :maxlength="200"></bk-input>
+                    <bk-input
+                        v-model="copyFormData.desc"
+                        type="textarea"
+                        class="double-width"
+                        @change="handleChange"
+                        :maxlength="200"
+                        :placeholder="$t('turbo.请输入')"
+                    ></bk-input>
                 </template>
-                <span v-else class="g-turbo-text-break">{{ formData.desc || '-' }}</span>
+                <span
+                    v-else
+                    class="g-turbo-text-break"
+                >{{ formData.desc || '-' }}</span>
             </bk-form-item>
         </bk-form>
-        <bk-button v-if="isEdit && !onlyEdit" theme="primary" class="g-turbo-bottom-button" @click="save" :loading="isLoading"> {{ $t('turbo.保存') }} </bk-button>
-        <bk-button v-if="isEdit && !onlyEdit" class="g-turbo-bottom-button" @click="cancle" :disabled="isLoading"> {{ $t('turbo.取消') }} </bk-button>
-        <span class="g-turbo-edit-button" @click="isEdit = true" v-if="!onlyEdit && !isEdit"><logo name="edit" size="16"></logo> {{ $t('turbo.编辑') }} </span>
+        <bk-button
+            v-if="isEdit && !onlyEdit"
+            theme="primary"
+            class="g-turbo-bottom-button"
+            @click="save"
+            :loading="isLoading"
+        >
+            {{ $t('turbo.保存') }}
+        </bk-button>
+        <bk-button
+            v-if="isEdit && !onlyEdit"
+            class="g-turbo-bottom-button"
+            @click="cancle"
+            :disabled="isLoading"
+        >
+            {{ $t('turbo.取消') }}
+        </bk-button>
+        <span
+            class="g-turbo-edit-button"
+            @click="isEdit = true"
+            v-if="!onlyEdit && !isEdit"
+        ><logo
+            name="edit"
+            size="16"
+        ></logo> {{ $t('turbo.编辑') }} </span>
     </section>
 </template>
 
@@ -118,7 +221,7 @@
             },
 
             copyValue (planId) {
-                copyText(planId, this.$t.bind(this))
+                copyText(planId, this)
             },
 
             requireRule (name) {
@@ -155,7 +258,12 @@
                 this.isEdit = false
             },
 
-            chooseMode (item) {
+            handleChange () {
+                window.changeFlag = true
+            },
+
+            chooseMode (item, changeFlag) {
+                window.changeFlag = changeFlag
                 const formData = {
                     ...JSON.parse(JSON.stringify(this.copyFormData)),
                     paramConfig: item.paramConfig,
@@ -175,7 +283,7 @@
                     this.engineList = res
                     const engineCode = this.copyFormData.engineCode || this.$route.query.engineCode
                     const curEngine = res.find((item) => (engineCode && item.engineCode === engineCode)) || {}
-                    this.chooseMode(curEngine)
+                    this.chooseMode(curEngine, false)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

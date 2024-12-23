@@ -16,6 +16,5 @@ else
 fi
 yum install -y fontconfig  # v1.5.7前project需要读写字体.
 
-echo "projs is agentless artifactory auth dispatch dispatch-docker dockerhost environment gateway image log misc notify openapi plugin process project quality repository store ticket turbo websocket."
-${BK_CI_SRC_DIR}/scripts/bk-ci-upgrade.sh agentless artifactory auth dispatch dispatch-docker dockerhost environment gateway image log misc notify openapi plugin process project quality repository store ticket turbo websocket
-
+echo "projs is agentless artifactory auth dispatch dockerhost environment gateway image log misc notify openapi plugin process project quality repository store ticket turbo websocket."
+${BK_CI_SRC_DIR}/scripts/bk-ci-upgrade.sh agentless artifactory auth dispatch dockerhost environment gateway image log misc notify openapi plugin process project quality repository store ticket turbo websocket

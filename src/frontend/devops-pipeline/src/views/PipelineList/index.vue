@@ -1,48 +1,62 @@
 <template>
-    <article class="pipeline-content"
+    <article
+        class="pipeline-content"
         v-bkloading="{
             isLoading: pageLoading
         }"
     >
         <pipeline-header>
-            <span class="default-subheader-icon" slot="logo">
-                <logo size="32" name="pipeline" />
-            </span>
-            <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
+            <logo
+                size="24"
+                name="pipeline"
+                slot="logo"
+            />
+            <bk-breadcrumb
+                slot="title"
+                separator-class="devops-icon icon-angle-right"
+            >
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
                     :to="pipelineListRoute"
                 >
-                    {{$t('pipeline')}}
+                    {{ $t('pipeline') }}
                 </bk-breadcrumb-item>
-                <!-- <bk-breadcrumb-item
-                    v-if="$route.meta.breadcrumbs"
-                    class="pipeline-breadcrumb-item"
-                    v-for="(item, index) in $route.meta.breadcrumbs"
-                    :key="index"
-                    :to="item"
-                >
-                    {{item}}
-                </bk-breadcrumb-item>
-                <bk-breadcrumb-item
-                >
-                    {{$t($route.name)}}
-                </bk-breadcrumb-item> -->
+                <template v-if="routeName === 'PipelineListAuth'">
+                    <bk-breadcrumb-item
+                        class="pipeline-breadcrumb-item"
+                    >
+                        {{ $t('pipelineGroup') }}
+                    </bk-breadcrumb-item>
+                    <bk-breadcrumb-item
+                        class="pipeline-breadcrumb-item"
+                    >
+                        {{ groupName }}
+                    </bk-breadcrumb-item>
+                </template>
             </bk-breadcrumb>
 
-            <bk-dropdown-menu slot="right" class="default-link-list" trigger="click">
+            <bk-dropdown-menu
+                slot="right"
+                class="default-link-list"
+                trigger="click"
+            >
                 <div slot="dropdown-trigger">
                     <span
                         class="pipeline-dropdown-trigger"
                         :class="{ 'active': dropTitle !== 'more' }"
                     >
                         {{ $t(dropTitle) }}
-                        <i :class="['devops-icon icon-angle-down', {
-                            'icon-flip': toggleIsMore
-                        }]"></i>
+                        <i
+                            :class="['devops-icon icon-angle-down', {
+                                'icon-flip': toggleIsMore
+                            }]"
+                        ></i>
                     </span>
                 </div>
-                <ul class="bk-dropdown-list" slot="dropdown-content">
+                <ul
+                    class="bk-dropdown-list"
+                    slot="dropdown-content"
+                >
                     <li
                         v-for="menu in dropdownMenus"
                         :class="{
@@ -52,24 +66,20 @@
                         @click="go(menu.routeName)"
                     >
                         <a href="javascript:;">
-                            {{$t(menu.label)}}
+                            {{ $t(menu.label) }}
                         </a>
                     </li>
-
                 </ul>
-
             </bk-dropdown-menu>
         </pipeline-header>
-        <router-view></router-view>
+        <router-view />
     </article>
-
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
-    import { getCacheViewId } from '@/utils/util'
+    import pipelineHeader from '@/components/devops/pipeline-header'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -95,20 +105,18 @@
             routeName () {
                 return this.$route.name
             },
+            groupName () {
+                return this.$route.params.groupName
+            },
             dropTitle () {
                 return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'
             },
             pipelineListRoute () {
                 return {
                     name: 'PipelineManageList',
-                    params: {
-                        viewId: this.viewId,
-                        ...this.$route.params
-                    }
+                    params: this.$route.params,
+                    query: this.$route.query
                 }
-            },
-            viewId () {
-                return getCacheViewId(this.$route.params.projectId)
             },
             dropdownMenus () {
                 return [
@@ -131,17 +139,6 @@
                 ]
             }
 
-        },
-        created () {
-            if (!this.$route.params.viewId) {
-                this.$router.replace({
-                    ...this.$route,
-                    params: {
-                        ...this.$route.params,
-                        viewId: this.viewId
-                    }
-                })
-            }
         },
         methods: {
             go (name) {

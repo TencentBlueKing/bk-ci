@@ -115,6 +115,7 @@ class QualityRuleDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(GATEWAY_ID, ruleRequest.gatewayId)
                 .where(ID.eq(ruleId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
         with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
@@ -129,19 +130,21 @@ class QualityRuleDao {
         }
     }
 
-    fun updateEnable(dslContext: DSLContext, ruleId: Long, enable: Boolean) {
+    fun updateEnable(dslContext: DSLContext, projectId: String, ruleId: Long, enable: Boolean) {
         with(TQualityRule.T_QUALITY_RULE) {
             dslContext.update(this)
                 .set(ENABLE, enable)
                 .where(ID.eq(ruleId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
-    fun delete(dslContext: DSLContext, ruleId: Long) {
+    fun delete(dslContext: DSLContext, projectId: String, ruleId: Long) {
         with(TQualityRule.T_QUALITY_RULE) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(ruleId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
@@ -220,6 +223,18 @@ class QualityRuleDao {
         }
     }
 
+    fun listIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): Result<Record1<Long>> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByPipelineRange(
         dslContext: DSLContext,
         projectId: String,
@@ -282,6 +297,24 @@ class QualityRuleDao {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(ruleIds))
                 .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        rulesId: List<Long>,
+        offset: Int,
+        limit: Int
+    ): Result<TQualityRuleRecord> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(rulesId))
+                .orderBy(CREATE_TIME.desc())
+                .offset(offset)
+                .limit(limit)
                 .fetch()
         }
     }

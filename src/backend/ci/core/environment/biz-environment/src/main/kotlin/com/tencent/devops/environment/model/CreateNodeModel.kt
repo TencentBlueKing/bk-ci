@@ -33,7 +33,7 @@ data class CreateNodeModel(
     var nodeStringId: String? = "",
     var projectId: String,
     var nodeIp: String = "",
-    var nodeName: String = "",
+    var nodeName: String? = "",
     var nodeStatus: String = "",
     var nodeType: String = "",
     var nodeClusterId: String? = null,
@@ -44,9 +44,14 @@ data class CreateNodeModel(
     var operator: String? = null,
     var bakOperator: String? = null,
     var agentStatus: Boolean = false,
+    var agentVersion: String? = null,
     var displayName: String = "",
     var image: String? = "",
     var taskId: Long? = null,
     var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null
+    var lastBuildTime: LocalDateTime? = null,
+    var hostId: Long?,
+    var cloudAreaId: Long?,
+    var osType: String?,
+    val serverId: Long?
 )

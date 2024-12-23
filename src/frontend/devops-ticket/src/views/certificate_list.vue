@@ -6,38 +6,114 @@
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <div v-if="showContent && renderList.length" class="table-container">
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <div
+                v-if="showContent && renderList.length"
+                class="table-container"
+            >
                 <bk-table
                     :data="renderList"
                     size="small"
                     :show-pagination-info="true"
                     :pagination="pagination"
                     @page-change="handlePageChange"
-                    @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.name')" prop="certId"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.type')" prop="certType" :formatter="getShowType"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.cert.uploader')" prop="creator"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.cert.expireDate')" prop="expireTime" :formatter="convertToTime"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.operation')" width="200">
+                    @page-limit-change="handlePageCountChange"
+                >
+                    <bk-table-column
+                        :label="$t('ticket.alias')"
+                        prop="certId"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.type')"
+                        prop="certType"
+                        :formatter="getShowType"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.cert.uploader')"
+                        prop="creator"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.cert.expireDate')"
+                        prop="expireTime"
+                        :formatter="convertToTime"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.remark')"
+                        prop="certRemark"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.operation')"
+                        width="200"
+                    >
                         <template slot-scope="props">
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <template v-if="props.row.permissions.use">
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.edit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    theme="primary"
+                                    text
+                                    @click="handleEditCert(props.row)"
+                                >
+                                    {{ $t('ticket.edit') }}
+                                </bk-button>
+                                
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.delete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    theme="primary"
+                                    text
+                                    @click="handleDeleteCert(props.row)"
+                                >
+                                    {{ $t('ticket.delete') }}
+                                </bk-button>
+                            </template>
+                            <template v-else>
+                                <bk-button
+                                    theme="primary"
+                                    outline
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('ticket.applyPermission') }}
+                                </bk-button>
+                            </template>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
 
-            <empty-tips :title="tip.title" :desc="tip.desc" :btns="tip.btns" v-if="showContent && !renderList.length"></empty-tips>
+            <empty-tips
+                :title="tip.title"
+                :desc="tip.desc"
+                :btns="tip.btns"
+                v-if="showContent && !renderList.length"
+            ></empty-tips>
         </section>
-
     </article>
 </template>
 
 <script>
     import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/devops/emptyTips'
+    import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -45,6 +121,8 @@
         },
         data () {
             return {
+                CERT_RESOURCE_TYPE,
+                CERT_RESOURCE_ACTION,
                 allowInit: false,
                 loading: {
                     isLoading: false,
@@ -172,21 +250,24 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.cert,
-                            instanceId: [{
-                                id: cert.certId,
-                                name: cert.certId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CERT_RESOURCE_TYPE,
+                        resourceCode: cert.certId,
+                        action: CERT_RESOURCE_ACTION.EDIT
                     })
                 }
             },
             hasPermission (permissions, action) {
                 return permissions && permissions[action]
+            },
+            handleApplyPermission (cert) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CERT_RESOURCE_TYPE,
+                    resourceCode: cert.certId,
+                    action: CERT_RESOURCE_ACTION.USE
+                })
             },
             async handleDeleteCert (cert) {
                 if (this.hasPermission(cert.permissions, 'delete')) {
@@ -216,16 +297,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.cert,
-                            instanceId: [{
-                                id: cert.certId,
-                                name: cert.certId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CERT_RESOURCE_TYPE,
+                        resourceCode: cert.certId,
+                        action: CERT_RESOURCE_ACTION.DELETE
                     })
                 }
             },
@@ -238,13 +314,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .cert-operation-btn {
-      &.disabled {
-        color: #C4C6CC;
-        &:hover {
-          color: #C4C6CC;
-        }
-        cursor: url(../images/cursor-lock.png),auto !important;
-      }
-    }
 </style>

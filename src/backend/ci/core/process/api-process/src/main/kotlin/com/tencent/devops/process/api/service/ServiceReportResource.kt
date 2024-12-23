@@ -28,28 +28,31 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_REPORT"], description = "服务-自定义报告")
+@Tag(name = "SERVICE_REPORT", description = "服务-自定义报告")
 @Path("/service/reports")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceReportResource {
 
-    @ApiOperation("获取构建报告列表")
+    @Operation(summary = "获取构建报告列表")
     @Path("/build/list")
     @POST
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun get(
-        @ApiParam("查询参数", required = true)
+        @Parameter(description = "查询参数", required = true)
         reportListDTO: ReportListDTO
     ): Result<List<TaskReport>>
 }

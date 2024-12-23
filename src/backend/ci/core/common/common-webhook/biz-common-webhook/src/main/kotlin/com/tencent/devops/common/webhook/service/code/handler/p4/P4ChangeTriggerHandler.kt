@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -42,6 +44,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.repository.pojo.Repository
 
 @CodeWebhookHandler
@@ -77,7 +80,22 @@ class P4ChangeTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ChangeEvent) = ""
+    override fun getMessage(event: P4ChangeEvent) = event.description
+
+    override fun getEventDesc(event: P4ChangeEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.P4_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                getUsername(event),
+                getFormatEventType(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: P4ChangeEvent): String {
+        return event.p4Port
+    }
 
     override fun getWebhookFilters(
         event: P4ChangeEvent,
@@ -108,20 +126,50 @@ class P4ChangeTriggerHandler(
                     if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
                         return true
                     }
-                    val changeFiles = eventCacheService.getP4ChangelistFiles(
-                        repo = repository,
-                        projectId = projectId,
-                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                        repositoryType = repositoryConfig.repositoryType,
-                        change = event.change
-                    )
+                    // 默认区分大小写
+                    var caseSensitive = true
+                    // 用户配置的脚本触发,变更文件由触发脚本解析
+                    val changeFiles =
+                        if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                            caseSensitive = event.caseSensitive ?: true
+                            event.files ?: emptyList()
+                        } else {
+                            val p4ServerInfo = eventCacheService.getP4ServerInfo(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType
+                            )
+                            p4ServerInfo?.run {
+                                caseSensitive = this.caseSensitive
+                            }
+                            eventCacheService.getP4ChangelistFiles(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType,
+                                change = event.change
+                            )?.run {
+                                event.description = this.description
+                                this.fileList.map { it.depotPathString }
+                            } ?: emptyList()
+                        }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
-                            excludedPaths = WebhookUtils.convert(excludePaths)
+                            excludedPaths = WebhookUtils.convert(excludePaths),
+                            caseSensitive = caseSensitive,
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
@@ -137,6 +185,14 @@ class P4ChangeTriggerHandler(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
+        startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ChangeEvent.DEFAULT_CHANGE_DESCRIPTION
         return startParams
+    }
+
+    private fun getFormatEventType(event: P4ChangeEvent) = when (event.eventType) {
+        CodeEventType.CHANGE_COMMIT.name -> P4ChangeEvent.CHANGE_COMMIT
+        CodeEventType.CHANGE_SUBMIT.name -> P4ChangeEvent.CHANGE_SUBMIT
+        CodeEventType.CHANGE_CONTENT.name -> P4ChangeEvent.CHANGE_CONTENT
+        else -> event.eventType
     }
 }

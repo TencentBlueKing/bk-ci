@@ -27,62 +27,81 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
+import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomMonitorDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
+import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
-import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
+import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
+import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
+import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.math.roundToLong
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.jooq.exception.TooManyRowsException
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
-@Suppress("ComplexMethod", "NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod", "LongParameterList")
 class MetricsDataReportServiceImpl @Autowired constructor(
+    private val bkTag: BkTag,
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
+    private val projectInfoDao: ProjectInfoDao,
+    private val dispatchJobMetricsDao: DispatchJobMetricsDao,
+    private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val projectBuildSummaryService: ProjectBuildSummaryService
 ) : MetricsDataReportService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsDataReportService::class.java)
-        private fun metricsDataReportKey(pipelineId: String) = "metricsDataReport:$pipelineId"
+        private fun metricsDataReportKey(key: String) = "metricsDataReport:$key"
     }
 
     override fun metricsDataReport(buildEndPipelineMetricsData: BuildEndPipelineMetricsData): Boolean {
@@ -94,15 +113,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
         val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-        val lock = RedisLock(redisOperation, metricsDataReportKey(pipelineId), 20)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(pipelineId), 120)
         try {
             // 上锁保证数据计算安全
             lock.lock()
             val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
             val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
             val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
+            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
             val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
-            val saveAtomIndexStatisticsDailyPOs = mutableListOf<SaveAtomIndexStatisticsDailyPO>()
             val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
             val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
             val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
@@ -124,11 +143,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         statisticsTime = statisticsTime,
                         atomCodes = container.atomCodes
                     )
-                    val atomIndexStatisticsDailyRecords = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
-                        dslContext = dslContext,
-                        statisticsTime = statisticsTime,
-                        atomCodes = container.atomCodes
-                    )
                     container.tasks.forEach { task ->
                         atomOverviewDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
@@ -137,8 +151,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
                             currentTime = currentTime,
                             saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
-                            saveAtomIndexStatisticsDailyPOs = saveAtomIndexStatisticsDailyPOs,
-                            atomIndexStatisticsDailyRecords = atomIndexStatisticsDailyRecords
+                            saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
                         )
                         atomFailSummaryDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
@@ -179,14 +192,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 if (saveAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
                 }
-                if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveAtomIndexStatisticsDailyData(
-                        context,
-                        saveAtomIndexStatisticsDailyPOs
-                    )
-                }
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
+                }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(dslContext, saveProjectAtomRelationPOs)
                 }
                 if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
@@ -199,30 +209,60 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveErrorCodeInfoPOs.isNotEmpty()) {
                     saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                        try {
-                            metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.warn("fail to update errorCodeInfo:$saveErrorCodeInfoPO", ignored)
-                            metricsDataReportDao.updateErrorCodeInfo(
-                                dslContext = dslContext,
-                                atomCode = saveErrorCodeInfoPO.atomCode!!,
-                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                    errorType = saveErrorCodeInfoPO.errorType,
-                                    errorCode = saveErrorCodeInfoPO.errorCode,
-                                    errorMsg = saveErrorCodeInfoPO.errorMsg,
-                                    modifier = saveErrorCodeInfoPO.modifier,
-                                    updateTime = LocalDateTime.now()
-                                )
-                            )
-                        }
+                        metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
                     }
                 }
+            }
+            if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
+                projectBuildSummaryService.saveProjectBuildCount(
+                    projectId = projectId,
+                    trigger = buildEndPipelineMetricsData.trigger
+                )
             }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
+
         return true
+    }
+
+    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+        // 批量插入时获取批量的自增ID
+        val idList = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_DISPATCH_JOB_DAILY_METRICS", (dispatchJobMetricsDataList.size))
+            .data?.toMutableList()
+        if (idList == null || idList.size != dispatchJobMetricsDataList.size) {
+            logger.error("SaveDispatchJobMetrics fail to get idList. " +
+                    "${idList?.size ?: 0}|${dispatchJobMetricsDataList.size}")
+            return false
+        }
+
+        dispatchJobMetricsDataList.forEach {
+            fixBkTagMetricsJobDispatchDataReport(it.copy(id = idList.removeAt(0) ?: 0))
+        }
+        return true
+    }
+
+    override fun metricsJobDispatchDataReport(dispatchJobMetricsData: DispatchJobMetricsData): Boolean {
+        dispatchJobMetricsDao.saveDispatchJobMetrics(dslContext, dispatchJobMetricsData)
+        return true
+    }
+
+    private fun fixBkTagMetricsJobDispatchDataReport(dispatchJobMetricsData: DispatchJobMetricsData) {
+        try {
+            val projectId = dispatchJobMetricsData.projectId
+            val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+
+            return bkTag.invokeByTag(projectConsulTag) {
+                val bkFinalTag = bkTag.getFinalTag()
+                logger.info("MetricsJobDispatchDataReport $projectId|$projectConsulTag|$bkFinalTag")
+                client.getGateway(ServiceMetricsDataReportResource::class)
+                    .metricsJobDispatchDataReport(dispatchJobMetricsData).data
+            }
+        } catch (e: Exception) {
+            logger.error("Save dispatchJobMetrics error.", e)
+        }
     }
 
     private fun atomFailSummaryDataReport(
@@ -241,14 +281,34 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val pipelineName = buildEndPipelineMetricsData.pipelineName
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
-        val atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            statisticsTime = statisticsTime,
-            errorType = taskErrorType,
-            atomCode = taskMetricsData.atomCode
-        )
+        var atomFailSummaryDataRecord: TAtomFailSummaryDataRecord? = null
+        try {
+            atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                errorType = taskErrorType,
+                atomCode = taskMetricsData.atomCode
+            )
+        } catch (ignored: TooManyRowsException) {
+            logger.warn("fail to get atomFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
+            metricsDataClearService.metricsDataClear(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                buildId = buildEndPipelineMetricsData.buildId
+            )
+            atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                errorType = taskErrorType,
+                atomCode = taskMetricsData.atomCode
+            )
+        }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomFailSummaryDataPO = updateAtomFailSummaryDataPOs.firstOrNull {
             it.atomCode == taskMetricsData.atomCode
@@ -367,8 +427,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         updateAtomOverviewDataPOs: MutableList<UpdateAtomOverviewDataPO>,
         currentTime: LocalDateTime,
         saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>,
-        saveAtomIndexStatisticsDailyPOs: MutableList<SaveAtomIndexStatisticsDailyPO>,
-        atomIndexStatisticsDailyRecords: Result<TAtomIndexStatisticsDailyRecord>?
+        saveProjectAtomRelationPOs: MutableList<SaveProjectAtomRelationDataPO>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -376,8 +435,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
-        val errorCode = taskMetricsData.errorCode
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
+        val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
             it.atomCode == atomCode
@@ -479,10 +538,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     totalExecuteCount = 1,
                     successExecuteCount = if (taskSuccessFlag) 1 else 0,
                     failExecuteCount = if (taskSuccessFlag) 0 else 1,
-                    statisticsTime = DateTimeUtil.stringToLocalDateTime(
-                        dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
-                        formatStr = YYYY_MM_DD
-                    ),
+                    statisticsTime = statisticsTime,
                     creator = startUser,
                     modifier = startUser,
                     createTime = currentTime,
@@ -490,40 +546,88 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 )
             )
         }
-        val atomIndexStatisticsDailyPO = saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode }
-        val atomIndexStatisticsDailyRecord = atomIndexStatisticsDailyRecords?.firstOrNull { it.atomCode == atomCode }
-        val saveAtomIndexStatisticsDailyPO = atomIndexStatisticsDailyPO ?: atomIndexStatisticsDailyRecord?.let {
-            SaveAtomIndexStatisticsDailyPO(
-                id = it.id,
-                atomCode = it.atomCode,
-                failExecuteCount = it.failExecuteCount,
-                failComplianceCount = it.failComplianceCount,
-                statisticsTime = it.statisticsTime,
-                creator = it.creator,
+
+        if (projectInfoDao.projectAtomRelationCountByAtomCode(
+                dslContext = dslContext,
+                projectId = projectId,
+                atomCode = atomCode,
+                atomName = taskMetricsData.atomCode
+            ) <= 0
+        ) {
+            saveProjectAtomRelationPOs.add(
+                SaveProjectAtomRelationDataPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_PROJECT_ATOM_RELEVANCY_INFO").data ?: 0,
+                    projectId = projectId,
+                    atomCode = atomCode,
+                    atomName = taskMetricsData.atomName,
+                    creator = SYSTEM,
+                    modifier = SYSTEM
+                )
+            )
+        }
+        metricsDataReportDao.saveAtomMonitorDailyData(
+            dslContext = dslContext,
+            saveAtomMonitorDailyPO = SaveAtomMonitorDailyPO(
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("ATOM_MONITOR_DATA_DAILY").data ?: 0,
+                atomCode = taskMetricsData.atomCode,
+                executeCount = 1,
+                errorType = taskMetricsData.errorType ?: -1,
+                statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                    dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                    formatStr = YYYY_MM_DD
+                ),
+                creator = startUser,
                 modifier = startUser,
-                createTime = it.createTime,
+                createTime = currentTime,
                 updateTime = currentTime
             )
-        } ?: SaveAtomIndexStatisticsDailyPO(
-            id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
-            atomCode = taskMetricsData.atomCode,
-            failExecuteCount = 0,
-            failComplianceCount = 0,
-            statisticsTime = DateTimeUtil.stringToLocalDateTime(
-                dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
-                formatStr = YYYY_MM_DD
-            ),
-            creator = startUser,
-            modifier = startUser,
-            createTime = currentTime,
-            updateTime = currentTime
         )
-        saveAtomIndexStatisticsDailyPO.failExecuteCount += if (taskSuccessFlag) 0 else 1
-        saveAtomIndexStatisticsDailyPO.failComplianceCount +=
-            if ((!taskSuccessFlag) && isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
-        if (atomIndexStatisticsDailyPO == null && (!taskSuccessFlag)) {
-            saveAtomIndexStatisticsDailyPOs.add(saveAtomIndexStatisticsDailyPO)
+        if (taskSuccessFlag) return
+        val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 40)
+        try {
+            lock.lock()
+            val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
+                dslContext = dslContext,
+                statisticsTime = statisticsTime,
+                atomCode = atomCode
+            )
+            val failComplianceCount =
+                if (isComplianceErrorCode(atomCode, "${taskMetricsData.errorCode}")) 1 else 0
+            if (atomIndexStatisticsDailyRecord != null) {
+                metricsDataReportDao.updateAtomIndexStatisticsDailyData(
+                    dslContext = dslContext,
+                    updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
+                        id = atomIndexStatisticsDailyRecord.id,
+                        failComplianceCount = atomIndexStatisticsDailyRecord.failComplianceCount + failComplianceCount,
+                        failExecuteCount = atomIndexStatisticsDailyRecord.failExecuteCount + 1,
+                        modifier = startUser,
+                        updateTime = currentTime
+                    )
+                )
+            } else {
+                metricsDataReportDao.saveAtomIndexStatisticsDailyData(
+                    dslContext = dslContext,
+                    saveAtomIndexStatisticsDailyPO = SaveAtomIndexStatisticsDailyPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
+                        atomCode = taskMetricsData.atomCode,
+                        failExecuteCount = 1,
+                        failComplianceCount = failComplianceCount,
+                        statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                            dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                            formatStr = YYYY_MM_DD
+                        ),
+                        creator = startUser,
+                        modifier = startUser,
+                        createTime = currentTime,
+                        updateTime = currentTime
+                    )
+                )
+            }
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -713,13 +817,32 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
         errorTypes.forEach { errorType ->
             // 插入流水线失败汇总数据
-            val pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                statisticsTime = statisticsTime,
-                errorType = errorType
-            )
+            var pipelineFailSummaryDataRecord: TPipelineFailSummaryDataRecord? = null
+            try {
+                pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    errorType = errorType
+                )
+            } catch (ignored: TooManyRowsException) {
+                logger.warn("fail to get pipelineFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
+                metricsDataClearService.metricsDataClear(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    buildId = buildEndPipelineMetricsData.buildId
+                )
+                pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    errorType = errorType
+                )
+            }
             if (pipelineFailSummaryDataRecord == null) {
                 val savePipelineFailSummaryDataPO = SavePipelineFailSummaryDataPO(
                     id = client.get(ServiceAllocIdResource::class)
@@ -756,23 +879,42 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         currentTime: LocalDateTime
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
+        val pipelineId = buildEndPipelineMetricsData.pipelineId
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val buildSuccessFlag = buildEndPipelineMetricsData.successFlag // 流水线构建是否成功标识
         val pipelineBuildCostTime = buildEndPipelineMetricsData.costTime // 流水线构建所耗时间
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
-        val pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = buildEndPipelineMetricsData.pipelineId,
-            statisticsTime = statisticsTime
-        )
+        var pipelineOverviewDataRecord: TPipelineOverviewDataRecord? = null
+        try {
+            pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
+        } catch (ignored: TooManyRowsException) {
+            logger.warn("fail to get pipelineOverviewData of $projectId|$pipelineId|$statisticsTime", ignored)
+            metricsDataClearService.metricsDataClear(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                buildId = buildEndPipelineMetricsData.buildId
+            )
+            pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
+        }
         if (pipelineOverviewDataRecord == null) {
             // db没有记录则插入记录
             val savePipelineOverviewDataPO = SavePipelineOverviewDataPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_OVERVIEW_DATA").data ?: 0,
                 projectId = projectId,
-                pipelineId = buildEndPipelineMetricsData.pipelineId,
+                pipelineId = pipelineId,
                 pipelineName = buildEndPipelineMetricsData.pipelineName,
                 channelCode = buildEndPipelineMetricsData.channelCode,
                 totalAvgCostTime = pipelineBuildCostTime,
@@ -812,7 +954,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val currentTotalAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
             val currentSuccessAvgCostTime = if (buildSuccessFlag) {
                 val currentSuccessCostTime = originSuccessAvgCostTime * originSuccessExecuteCount +
-                    pipelineBuildCostTime
+                        pipelineBuildCostTime
                 currentSuccessCostTime.toDouble().div(currentSuccessExecuteCount).roundToLong()
             } else {
                 originSuccessAvgCostTime
@@ -879,12 +1021,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
+
             errorCodePrefix.startsWith("100") -> {
                 ErrorCodeTypeEnum.GENERAL
             }
+
             errorCodePrefix.toInt() in 101..599 -> {
                 ErrorCodeTypeEnum.PLATFORM
             }
+
             else -> return false
         }
         return client.get(ServiceStoreResource::class).isComplianceErrorCode(

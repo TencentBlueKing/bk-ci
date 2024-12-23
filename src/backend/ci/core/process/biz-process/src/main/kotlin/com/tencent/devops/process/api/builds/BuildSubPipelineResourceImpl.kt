@@ -27,12 +27,12 @@
 
 package com.tencent.devops.process.api.builds
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.BuildApiPermission
-import com.tencent.devops.common.web.constant.BuildApiHandleType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -44,6 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildSubPipelineResourceImpl @Autowired constructor(
     private val subPipeService: SubPipelineStartUpService
 ) : BuildSubPipelineResource {
+
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun callOtherProjectPipelineStartup(
         projectId: String,
         parentPipelineId: String,
@@ -53,7 +55,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         atomCode: String,
         taskId: String,
         runMode: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -64,7 +67,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             atomCode = atomCode,
             taskId = taskId,
             runMode = runMode,
-            values = values
+            values = values,
+            executeCount = executeCount
         )
     }
 
@@ -77,7 +81,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         taskId: String,
         runMode: String,
         channelCode: ChannelCode?,
-        values: Map<String, String>
+        values: Map<String, String>,
+        executeCount: Int?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -88,11 +93,11 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             taskId = taskId,
             runMode = runMode,
             channelCode = channelCode,
-            values = values
+            values = values,
+            executeCount = executeCount
         )
     }
 
-    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getSubPipelineStatus(
         projectId: String,
         pipelineId: String,
@@ -104,10 +109,22 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?,
+        parentProjectId: String,
+        parentPipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
-        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId)
+        return subPipeService.subPipelineManualStartupInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired,
+            parentPipelineId = parentPipelineId,
+            parentProjectId = parentProjectId
+        )
     }
 
     override fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

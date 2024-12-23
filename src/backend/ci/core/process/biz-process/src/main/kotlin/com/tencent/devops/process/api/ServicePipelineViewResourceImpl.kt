@@ -27,11 +27,16 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_VIEW_NOT_FOUND_IN_PROJECT
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -43,8 +48,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineViewResourceImpl @Autowired constructor(
@@ -62,12 +67,15 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         if (!viewId.isNullOrBlank()) return viewId
         if (viewName == null || isProject == null) throw CustomException(
             Response.Status.BAD_REQUEST,
-            "<viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>"
+            I18nUtil.getCodeLanMessage(BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER)
         )
         return pipelineViewService.viewName2viewId(projectId, viewName, isProject)
             ?: throw CustomException(
                 Response.Status.BAD_REQUEST,
-                "在项目 $projectId 下未找到${if (isProject) "项目" else "个人"}视图 $viewName"
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_VIEW_NOT_FOUND_IN_PROJECT,
+                    params = arrayOf(projectId, (if (isProject) "project" else "individual"), viewName)
+                )
             )
     }
 
@@ -123,6 +131,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_CREATE)
     override fun addView(
         userId: String,
         projectId: String,
@@ -155,6 +164,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_DELETE)
     override fun deleteView(
         userId: String,
         projectId: String,
@@ -171,6 +181,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_EDIT)
     override fun updateView(
         userId: String,
         projectId: String,
@@ -186,6 +197,15 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
                 viewIdEncode = getViewId(viewId, viewName, projectId, isProject),
                 pipelineView = pipelineView
             )
+        )
+    }
+
+    override fun listViewIdsByPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): Result<Set<Long>> {
+        return Result(
+            pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId)
         )
     }
 }

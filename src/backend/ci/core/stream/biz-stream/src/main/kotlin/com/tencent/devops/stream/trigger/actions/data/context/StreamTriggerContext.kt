@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.actions.data.context
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -50,6 +51,7 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
  * @param finishData stream在构建结束后的相关逻辑需要的数据
  * @param repoCreatedTime 触发仓库创建时间字符串 如:2017-08-13T07:37:14+0000
  * @param repoCreatorId 触发仓库创建人id， 工蜂侧是数字 id 需要使用时转换为 name
+ * @param triggerOn 触发过程中解析的触发器缓存
  */
 data class StreamTriggerContext(
     var requestEventId: Long? = null,
@@ -69,7 +71,10 @@ data class StreamTriggerContext(
     // 缓存
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null,
-    var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null
+    var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
+    var extensionAction: String? = null,
+    var mrTargetBranch: String? = null,
+    var triggerOn: TriggerOn? = null
 )
 
 /**

@@ -20,6 +20,7 @@ _M = {}
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     local gateway_project = ngx.var.project
+    local devops_project_id = ngx.var.project_id
 
     -- 不走容器化的服务
     local no_container = false
@@ -34,11 +35,27 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
     -- 转发到容器环境里
     if not in_container and string.find(devops_tag, '^kubernetes-') then
+        if config.gw_token ~= nil and ngx.var.devops_token == '' then
+            ngx.var.devops_token = config.gw_token
+        end
         local kubernetes_domain = nil
+
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            kubernetes_domain = config.kubernetes.domain
+            if ngx.var.devops_region == 'DEVNET' then
+                kubernetes_domain = config.kubernetes.devnetDomain
+            elseif self:is_recovery_project(devops_project_id) then
+                kubernetes_domain = config.kubernetes.recovery.domain
+            else
+                kubernetes_domain = config.kubernetes.domain
+            end
+
+        end
+        -- 特殊处理的域名,优先级最高
+        local special_key = gateway_project .. ":" .. devops_tag
+        if config.kubernetes.special_domain[special_key] ~= nil then
+            kubernetes_domain = config.kubernetes.special_domain[special_key]
         end
         return kubernetes_domain .. "/ms/" .. service_name
     end
@@ -46,7 +63,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     -- 容器环境
     if in_container then
         if ngx.var.multi_cluster == 'true' then -- 多集群场景
-            local dns = resolver:new{
+            local dns = resolver:new {
                 nameservers = resolvUtil.nameservers,
                 retrans = 5,
                 timeout = 2000 -- 2 sec
@@ -63,7 +80,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
                 prefix = service_name .. '-' .. ngx.var.chart_name .. '-' .. service_name
             end
             local domain = prefix .. '.' .. devops_tag .. '.svc.cluster.local'
-            local records = dns:query(domain, {qtype = dns.TYPE_A})
+            local records = dns:query(domain, { qtype = dns.TYPE_A })
             -- 兜底策略
             if ngx.var.default_namespace ~= '' and ngx.var.default_namespace ~= nil and not records then
                 domain = prefix .. ngx.var.default_namespace .. '.svc.cluster.local'
@@ -72,14 +89,14 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         else -- 单一集群场景
             return
                 ngx.var.release_name .. '-' .. ngx.var.chart_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
-                    '.svc.cluster.local'
+                '.svc.cluster.local'
         end
     end
 
     -- 获取consul查询域名
     local query_subdomain = devops_tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
 
-    local ips = {} -- address
+    local ips = {}   -- address
     local port = nil -- port
 
     local router_srv_key = query_subdomain .. cache_tail
@@ -91,14 +108,14 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         local dnsIps = {}
         if type(ns_config.ip) == 'table' then
             for i, v in ipairs(ns_config.ip) do
-                table.insert(dnsIps, {v, ns_config.port})
+                table.insert(dnsIps, { v, ns_config.port })
             end
         else
-            table.insert(dnsIps, {ns_config.ip, ns_config.port})
+            table.insert(dnsIps, { ns_config.ip, ns_config.port })
         end
 
         -- 连接consul dns
-        local dns, err = resolver:new{nameservers = dnsIps, retrans = 5, timeout = 2000}
+        local dns, err = resolver:new { nameservers = dnsIps, retrans = 5, timeout = 2000 }
 
         if not dns then
             ngx.log(ngx.ERR, "failed to instantiate the resolver: ", err)
@@ -106,7 +123,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         end
 
         -- 查询dns
-        local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section = true})
+        local records, err = dns:query(query_subdomain, { qtype = dns.TYPE_SRV, additional_section = true })
 
         if not records then
             ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
@@ -116,7 +133,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if records.errcode then
             if records.errcode == 3 then
                 ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr, " , query_subdomain : ",
-                        query_subdomain)
+                    query_subdomain)
                 return nil
             else
                 ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err, " , query_subdomain : ", query_subdomain)
@@ -143,7 +160,6 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         -- set cache
         router_srv_cache:set(router_srv_key, table.concat(ips, ",") .. ":" .. port, 1)
-
     else
         local func_itor = string.gmatch(router_srv_value, "([^:]+)")
         local ips_str = func_itor()
@@ -152,10 +168,40 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         for ip in string.gmatch(ips_str, "([^,]+)") do
             table.insert(ips, ip)
         end
-
     end
 
     return ips[math.random(#ips)] .. ":" .. port
+end
+
+function _M:is_recovery_project(devops_project_id)
+    if config.kubernetes.recovery.switchAll then
+        return true
+    end
+
+    local recovery_project_cache = ngx.shared.router_srv_store
+    local local_cache_key = "ci_recovery_" .. devops_project_id
+    local is_recovery = recovery_project_cache:get(local_cache_key)
+    if is_recovery == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return false
+        end
+        local red_key = "ci:recovery:project:" .. devops_project_id
+        is_recovery = red:get(red_key)
+        if is_recovery ~= "1" then
+            is_recovery = "0"
+        end
+        recovery_project_cache:set(local_cache_key, is_recovery, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
+
+    if is_recovery == "1" then
+        return true
+    else
+        return false
+    end
 end
 
 return _M

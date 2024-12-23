@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -59,6 +60,7 @@ import javax.ws.rs.core.Response
 @Service
 @SuppressWarnings("LongParameterList", "ThrowsCount")
 class OpenApiTriggerService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val actionFactory: EventActionFactory,
@@ -72,6 +74,7 @@ class OpenApiTriggerService @Autowired constructor(
     gitRequestEventBuildDao: GitRequestEventBuildDao,
     streamYamlBuild: StreamYamlBuild
 ) : BaseManualTriggerService(
+    client = client,
     dslContext = dslContext,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
@@ -131,7 +134,7 @@ class OpenApiTriggerService @Autowired constructor(
                 status = Response.Status.BAD_REQUEST,
                 message = "can not load action"
             ),
-            triggerBuildReq.checkPipelineTrigger
+            triggerBuildReq.subPipelineTriggerId
         )
 
         // 仅支持当前仓库下的 event
@@ -214,7 +217,7 @@ class OpenApiTriggerService @Autowired constructor(
                     triggerBuildReq = triggerBuildReq
                 )
             ),
-            triggerBuildReq.checkPipelineTrigger
+            triggerBuildReq.subPipelineTriggerId
         )
         val request = action.buildRequestEvent("")?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
             ?: throw CustomException(

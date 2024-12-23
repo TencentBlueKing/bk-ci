@@ -27,57 +27,72 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("UNUSED")
 @RestResource
 class UserBuildParametersResourceImpl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val scmProxyService: ScmProxyService
 ) : UserBuildParametersResource {
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserBuildParametersResourceImpl::class.java)
+        private val paramToContext = PipelineVarUtil.contextVarMap().map {
+            it.value to it.key
+        }.toMap()
     }
 
-    private val result = Result(
-        data = listOf(
-            BuildEnvParameters(name = PIPELINE_START_USER_NAME, desc = "当前构建的启动人"),
-            BuildEnvParameters(
-                name = PIPELINE_START_TYPE,
-                desc = "当前构建的启动方式，从${StartType.values().joinToString("/") { it.name }}中取值"
-            ),
-            BuildEnvParameters(name = PIPELINE_BUILD_NUM, desc = "当前构建的唯一标示ID，从1开始自增"),
-            BuildEnvParameters(name = PROJECT_NAME, desc = "项目英文名"),
-            BuildEnvParameters(name = PIPELINE_ID, desc = "流水线ID"),
-            BuildEnvParameters(name = PIPELINE_NAME, desc = "流水线名称"),
-            BuildEnvParameters(name = PIPELINE_BUILD_ID, desc = "当前构建ID"),
-            BuildEnvParameters(name = PIPELINE_VMSEQ_ID, desc = "流水线JOB ID"),
-            BuildEnvParameters(name = PIPELINE_ELEMENT_ID, desc = "流水线Task ID")
-        )
-    )
-
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return result
+        return Result(TriggerBuildParamUtils.getBasicBuildParams())
+    }
+
+    override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
+        return Result(
+            listOf(
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getBasicParamName(),
+                    params = TriggerBuildParamUtils.getBasicBuildParams().map {
+                        it.copy(name = paramToContext[it.name] ?: it.name)
+                    }.sortedBy { it.name }
+                )
+            )
+        )
+    }
+
+    override fun getTriggerParams(
+        userId: String,
+        atomCodeList: List<String?>
+    ): Result<List<BuildParameterGroup>> {
+        val buildParameterGroups = mutableListOf<BuildParameterGroup>()
+        atomCodeList.filterNotNull().distinct().forEach { atomCode ->
+            buildParameterGroups.addAll(
+                TriggerBuildParamUtils.getTriggerParamNameMap(
+                    atomCode = atomCode
+                )
+            )
+        }
+        return Result(buildParameterGroups)
     }
 
     override fun listRepositoryAliasName(
@@ -143,5 +158,102 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 aliasName = aliasName
             ).map { BuildFormRepositoryValue(id = it.repositoryHashId!!, name = it.aliasName) }
         )
+    }
+
+    override fun listPermissionPipeline(
+        userId: String,
+        projectId: String,
+        permission: com.tencent.devops.process.pojo.Permission,
+        excludePipelineId: String?,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<BuildFormValue>> {
+        val pipelineList = pipelineListFacadeService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            excludePipelineId = excludePipelineId,
+            filterByPipelineName = pipelineName,
+            page = page,
+            pageSize = pageSize
+        ).records
+        return Result(
+            pipelineList.map { BuildFormValue(it.pipelineName, it.pipelineName) }
+        )
+    }
+
+    override fun listGitRefs(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ): Result<List<BuildFormValue>> {
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
+        return Result(
+            getGitRefs(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                search = search
+            ).map { BuildFormValue(it, it) }
+        )
+    }
+
+    override fun listRepoRefs(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ): Result<List<BuildFormValue>> {
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
+        val repoScmType = scmProxyService.getRepo(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig
+        ).getScmType()
+        val formValues = when (repoScmType) {
+            // Git库需要拉分支和Tag
+            in listOf(ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB) -> {
+                getGitRefs(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    search = search
+                )
+            }
+
+            // Svn库仅拉分支
+            ScmType.CODE_SVN -> {
+                scmProxyService.listBranches(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    search = search
+                ).data ?: listOf()
+            }
+
+            else -> {
+                throw IllegalArgumentException("Unknown repo type($repoScmType)")
+            }
+        }.map { BuildFormValue(it, it) }
+        return Result(formValues)
+    }
+
+    private fun getGitRefs(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        search: String?
+    ): List<String> {
+        val result = mutableListOf<String>()
+        val branches = scmProxyService.listBranches(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        val tags = scmProxyService.listTags(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        result.addAll(branches)
+        result.addAll(tags)
+        return result
     }
 }

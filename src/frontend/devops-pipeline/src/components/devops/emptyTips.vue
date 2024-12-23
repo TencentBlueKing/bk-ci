@@ -1,14 +1,28 @@
 <template>
     <section class="devops-empty-tips">
         <p v-if="showLock">
-            <logo name="locked" size="52" />
+            <logo
+                name="locked"
+                size="52"
+            />
         </p>
         <h2 class="title">{{ title }}</h2>
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
             <slot name="btns">
                 <template v-if="Array.isArray(btns) && btns.length > 0">
-                    <bk-button v-for="(btn, index) in btns" :key="index" :disabled="btn.disabled" :theme="btn.theme" :size="btn.size" :icon="btn.loading ? 'loading' : ''" @click="btn.handler">
+                    <bk-button
+                        v-for="(btn, index) in btns"
+                        v-perm="btn.isCheckPermission ? {
+                            permissionData: btn.permissionData
+                        } : {}"
+                        v-bind="btn.isCheckPermission ? {} : { disabled: btn.disabled }"
+                        :key="index"
+                        :theme="btn.theme"
+                        :size="btn.size"
+                        :icon="btn.loading ? 'loading' : ''"
+                        @click="btn.handler"
+                    >
                         {{ btn.text }}
                     </bk-button>
                 </template>

@@ -2,27 +2,37 @@
     <div class="env-detail-wrapper">
         <content-header class="env-detail-header">
             <template slot="left">
-                <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
+                <i
+                    class="devops-icon icon-arrows-left"
+                    @click="toEnvList"
+                ></i>
                 {{ curEnvDetail.name }}
             </template>
         </content-header>
 
-        <div class="env-detail-container"
+        <div
+            class="env-detail-container"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
+            }"
+        >
             <div class="env-parameter-tab">
                 <div class="env-detail-nav">
                     <div
                         v-for="tab in tabs"
                         :key="tab.tab"
                         :class="['tab-nav-item', tab.cls, { activeItem: curItemTab === tab.tabName }]"
-                        @click="changeTab(tab.tabName)">{{ $t(`environment.${tab.label}`) }}
+                        @click="changeTab(tab.tabName)"
+                    >
+                        {{ $t(`environment.${tab.label}`) }}
                     </div>
                 </div>
                 <component
-                    class="env-detail-tab-content"
+                    
+                    :class="['env-detail-tab-content', {
+                        'auth-manage-content': curItemTab === 'auth'
+                    }]"
                     :is="activeTabComp"
                     :cur-env-detail="curEnvDetail"
                     :request-env-detail="requestEnvDetail"
@@ -31,7 +41,6 @@
                 />
             </div>
         </div>
-       
     </div>
 </template>
 
@@ -41,14 +50,17 @@
     import configTab from '@/components/envTabs/configTab'
     import nodeTab from '@/components/envTabs/nodeTab'
     import settingTab from '@/components/envTabs/settingTab'
+    import authTab from '@/components/envTabs/authTab'
     import { convertTime } from '@/utils/util'
-
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    
     export default {
         components: {
             baseTab,
             configTab,
             nodeTab,
-            settingTab
+            settingTab,
+            authTab
         },
         data () {
             return {
@@ -65,24 +77,35 @@
                 return this.curEnvDetail && this.curEnvDetail.envType === 'BUILD'
             },
             tabs () {
-                const tabs = [{
-                    cls: 'node-list',
-                    tabName: 'node',
-                    label: 'node',
-                    comp: nodeTab
-                }, {
-                    cls: 'config-item',
-                    tabName: 'config',
-                    label: 'configItem',
-                    comp: configTab
-                }, {
-                    cls: 'base-item',
-                    tabName: 'base',
-                    label: 'basicInfo',
-                    comp: baseTab
-                }]
+                const tabs = [
+                    {
+                        cls: 'node-list',
+                        tabName: 'node',
+                        label: 'node',
+                        comp: nodeTab
+                    },
+                    {
+                        cls: 'config-item',
+                        tabName: 'config',
+                        label: 'configItem',
+                        comp: configTab
+                    },
+                    {
+                        cls: 'base-item',
+                        tabName: 'base',
+                        label: 'basicInfo',
+                        comp: baseTab
+                    },
+                    {
+                        cls: 'base-item',
+                        tabName: 'auth',
+                        label: 'authManage',
+                        comp: authTab
+                    }
+                ]
                 if (this.isBuildEnv) {
-                    tabs.push({
+                    const index = tabs.findIndex(tab => tab.tabName === 'auth')
+                    tabs.splice(index, 0, {
                         cls: 'base-item',
                         tabName: 'setting',
                         label: 'setting',
@@ -140,14 +163,16 @@
                             item.isSecure = 'plaintext'
                         }
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: this.envHashId,
+                            action: ENV_RESOURCE_ACTION.VIEW
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                 }
@@ -231,11 +256,15 @@
             padding: 12px;
             overflow: auto;
         }
+        .auth-manage-content {
+            padding: 0;
+        }
 
         .tab-nav-item {
             float: left;
-            width: 100px;
+            min-width: 100px;
             height: 100%;
+            padding: 0 20px;
             line-height: 42px;
             text-align: center;
             background-color: rgb(250, 251, 253);

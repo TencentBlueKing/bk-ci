@@ -27,20 +27,30 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
-import com.tencent.devops.common.expression.expression.ParseExceptionKind
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_JOB_RUN_CONDITION
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_TASK_RUN_CONDITION
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_FAILURE_OR_CANCEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RUNS_EVEN_IF_CANCELED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TASK_DISABLED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
@@ -85,8 +95,8 @@ object ControlUtils {
     }
 
     // 需要暂停，且没有暂停过
-    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: String?): Boolean {
-        return pauseFlag(additionalOptions) && alreadyPauseFlag.isNullOrEmpty()
+    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: Boolean): Boolean {
+        return pauseFlag(additionalOptions) && !alreadyPauseFlag
     }
 
     // 暂停标识位
@@ -104,7 +114,9 @@ object ControlUtils {
         var skip = true // 所有自定义条件都满足，则跳过
         // 自定义变量全部满足时不运行
         if (skipWhenCustomVarMatch(additionalOptions)) {
-            message.append("[自定义变量全部满足时不运行](Don‘t run it when all the custom variables are matched) \n")
+            message.append(
+                I18nUtil.getCodeLanMessage(BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED)
+            )
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
                 val value = EnvUtils.parseEnv(names.value, variables)
@@ -122,7 +134,9 @@ object ControlUtils {
         skip = false // 所有自定义条件都满足，则不能跳过
         // 自定义变量全部满足时运行
         if (notSkipWhenCustomVarMatch(additionalOptions)) {
-            message.append("[自定义变量全部满足时运行](Run it when all the custom variables are matched) \n")
+            message.append(
+                I18nUtil.getCodeLanMessage(BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED)
+            )
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
                 val value = EnvUtils.parseEnv(names.value, variables)
@@ -157,41 +171,44 @@ object ControlUtils {
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
-        message.append("检查插件运行条件/Check Task Run Condition: ")
+        message.append(
+            I18nUtil.getCodeLanMessage(BK_CHECK_TASK_RUN_CONDITION)
+        )
         var skip = false
         val runCondition = additionalOptions?.runCondition
         if (!isEnable(additionalOptions)) {
             skip = true
-            message.append("[插件被禁用](Task disabled) = true")
+            message.append(
+                I18nUtil.getCodeLanMessage(BK_TASK_DISABLED)
+            )
         } else when {
             // [只有前面有任务失败时才运行]，之前存在失败的任务
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
                 skip = !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
-                message.append("[只有前面有任务失败时才运行](Only when a previous task has failed) skip=$skip")
+                message.append("${I18nUtil.getCodeLanMessage(BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED)} skip=$skip")
             }
             // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
             runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
                 skip = containerFinalStatus.isCancel()
                 message.append(
-                    "[即使前面有插件运行失败也运行，除非被取消才不运行]" +
-                        "(Even if a previous task has failed, unless the build was canceled) skip=$skip"
+                    I18nUtil.getCodeLanMessage(BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED) + " skip=$skip"
                 )
             }
             //  即使前面有插件运行失败也运行，即使被取消也运行， 永远不跳过
             runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> {
                 skip = false
                 message.append(
-                    "[即使前面有插件运行失败也运行，即使被取消也运行]" +
-                        "(Run even if a previous plugin failed, and run even if it was cancelled) skip=false"
+                    I18nUtil.getCodeLanMessage(BK_RUNS_EVEN_IF_CANCELED)
                 )
             }
             // 如果容器是失败或者取消状态，[其他条件] 都要跳过不执行
             containerFinalStatus.isFailure() || containerFinalStatus.isCancel() -> {
                 skip = true
-                message.append("Job失败或被取消(Job failure or cancel) skip=true")
+                message.append(
+                    I18nUtil.getCodeLanMessage(BK_JOB_FAILURE_OR_CANCEL)
+                )
             }
 
             runCondition in TaskUtils.customConditionList -> {
@@ -204,8 +221,7 @@ object ControlUtils {
                     buildId = buildId,
                     additionalOptions = additionalOptions,
                     variables = variables,
-                    message = message,
-                    asCodeEnabled = asCodeEnabled
+                    message = message
                 )
             } else -> {
                 message.clear()
@@ -219,17 +235,12 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         variables: Map<String, String>,
-        message: StringBuilder,
-        asCodeEnabled: Boolean
+        message: StringBuilder
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
-            return if (asCodeEnabled) {
-                !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
-            } else {
-                !evalExpression(additionalOptions.customCondition, buildId, variables, message)
-            }
+            return !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
         }
 
         return false
@@ -242,25 +253,24 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
-        message.append("检查Job运行条件/Check Job Run Condition: ")
+        message.append(
+            I18nUtil.getCodeLanMessage(BK_CHECK_JOB_RUN_CONDITION)
+        )
         var skip = when (runCondition) {
             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                message.append("[自定义变量全部满足不运行](Don‘t run it when all the custom variables are matched) ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED)
+                )
                 true
             } // 条件匹配就跳过
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
-                message.append("[自定义变量全部满足时运行](Run it when all the custom variables are matched) ")
+                message.append(I18nUtil.getCodeLanMessage(BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED))
                 false
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return if (asCodeEnabled) {
-                    !evalExpressionAsCode(customCondition, buildId, variables, message)
-                } else {
-                    !evalExpression(customCondition, buildId, variables, message)
-                }
+                return !evalExpressionAsCode(customCondition, buildId, variables, message)
             }
             else -> {
                 message.append(runCondition)
@@ -289,18 +299,13 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return if (asCodeEnabled) {
-                    !evalExpressionAsCode(customCondition, buildId, variables, message)
-                } else {
-                    !evalExpression(customCondition, buildId, variables, message)
-                }
+                return !evalExpressionAsCode(customCondition, buildId, variables, message)
             }
             else -> return false // 其它类型直接返回不跳过
         }
@@ -317,48 +322,6 @@ object ControlUtils {
         return skip
     }
 
-    private fun evalExpression(
-        customCondition: String?,
-        buildId: String,
-        variables: Map<String, Any>,
-        message: StringBuilder
-    ): Boolean {
-        return if (!customCondition.isNullOrBlank()) {
-            try {
-                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
-                )
-                message.append(
-                    "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
-                )
-                expressionResult
-            } catch (ignore: Exception) {
-                // 异常，则任务表达式为false
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
-                    ignore
-                )
-                message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
-                )
-                return false
-            }
-        } else {
-            // 空表达式也认为是false
-            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
-            message.append("Custom condition is empty, will be skipped!")
-            false
-        }
-    }
-
     private fun evalExpressionAsCode(
         customCondition: String?,
         buildId: String,
@@ -367,7 +330,13 @@ object ControlUtils {
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables, false)
+                // 新增的表达式调用需要去掉兼容老流水线变量
+                val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
+                val expressionResult = ExpressionParser.evaluateByMap(
+                    expression = EnvReplacementParser.parse(customCondition, variables),
+                    contextMap = variablesWithOutOld,
+                    fetchValue = false
+                )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
@@ -378,31 +347,44 @@ object ControlUtils {
                     expressionResult.toString().toBoolean()
                 }
                 message.append(
-                    "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!resultIsTrue) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_RESULT,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(customCondition, resultIsTrue.toString())
+                    ) + if (!resultIsTrue) {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_NOT_MATCH,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    } else {
+                        ""
+                    }
                 )
                 resultIsTrue
-            } catch (ignore: ExpressionParseException) {
+            } catch (ignore: Throwable) {
                 // 异常，则任务表达式为false
-                logger.info(
+                logger.warn(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_WITH_ERROR,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(ignore.message ?: "")
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_NOT_MATCH,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
-                throw ignore
+                false
             }
         } else {
             // 空表达式也认为是false
             logger.info("[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
             message.append("Custom condition is empty, will be skipped!")
-            throw ExpressionParseException(ParseExceptionKind.UnexpectedSymbol, null, "Custom condition is empty")
+            false
         }
     }
 

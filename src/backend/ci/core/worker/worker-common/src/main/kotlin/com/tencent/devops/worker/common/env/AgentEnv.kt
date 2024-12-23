@@ -27,12 +27,15 @@
 
 package com.tencent.devops.worker.common.env
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -45,25 +48,30 @@ object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
 
-    private const val PROJECT_ID = "devops.project.id"
-    private const val DOCKER_PROJECT_ID = "devops_project_id"
-    private const val AGENT_ID = "devops.agent.id"
-    private const val DOCKER_AGENT_ID = "devops_agent_id"
-    private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
-    private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
-    private const val AGENT_GATEWAY = "landun.gateway"
-    private const val DOCKER_GATEWAY = "devops_gateway"
-    private const val AGENT_ENV = "landun.env"
-    private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
-    private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    const val PROJECT_ID = "devops.project.id"
+    const val DOCKER_PROJECT_ID = "devops_project_id"
+    const val AGENT_ID = "devops.agent.id"
+    const val DOCKER_AGENT_ID = "devops_agent_id"
+    const val AGENT_SECRET_KEY = "devops.agent.secret.key"
+    const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
+    const val AGENT_GATEWAY = "landun.gateway"
+    const val DOCKER_GATEWAY = "devops_gateway"
+    const val AGENT_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+    const val AGENT_ENV = "landun.env"
+    const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
+    const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    const val BK_TAG = "devops_bk_tag"
+    const val AGENT_JDK_PATH = "DEVOPS_AGENT_JDK_%s_PATH"
 
     private var projectId: String? = null
     private var agentId: String? = null
     private var secretKey: String? = null
     private var gateway: String? = null
+    private var fileGateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
     private var logStorageMode: LogStorageMode? = null
+    private var bkTag: String? = null
 
     private var property: Properties? = null
 
@@ -74,9 +82,12 @@ object AgentEnv {
         if (projectId.isNullOrBlank()) {
             synchronized(this) {
                 if (projectId.isNullOrBlank()) {
-                    projectId = getProperty(if (isDockerEnv()) DOCKER_PROJECT_ID else PROJECT_ID)
+                    projectId = getProperty(DOCKER_PROJECT_ID)
                     if (projectId.isNullOrBlank()) {
-                        throw PropertyNotExistException(PROJECT_ID, "Empty project Id")
+                        projectId = getProperty(PROJECT_ID)
+                    }
+                    if (projectId.isNullOrBlank()) {
+                        throw PropertyNotExistException("$PROJECT_ID|$DOCKER_PROJECT_ID", "Empty project Id")
                     }
                     logger.info("Get the project ID($projectId)")
                 }
@@ -89,37 +100,29 @@ object AgentEnv {
         if (agentId.isNullOrBlank()) {
             synchronized(this) {
                 if (agentId.isNullOrBlank()) {
-                    agentId = getProperty(if (isDockerEnv()) DOCKER_AGENT_ID else AGENT_ID)
+                    agentId = getProperty(DOCKER_AGENT_ID)
                     if (agentId.isNullOrBlank()) {
-                        throw PropertyNotExistException(AGENT_ID, "Empty agent Id")
+                        agentId = getProperty(AGENT_ID)
+                    }
+                    if (agentId.isNullOrBlank()) {
+                        throw PropertyNotExistException("$AGENT_ID|$DOCKER_AGENT_ID", "Empty agent Id")
                     }
                     logger.info("Get the agent id($agentId)")
                 }
             }
         }
+
+        agentId?.let { SensitiveValueService.addSensitiveValue(it) }
         return agentId!!
     }
 
     fun getEnv(): Env {
-        if (env == null) {
-            synchronized(this) {
-                if (env == null) {
-                    val landunEnv = System.getProperty(AGENT_ENV)
-                    env = if (!landunEnv.isNullOrEmpty()) {
-                        Env.parse(landunEnv)
-                    } else {
-                        // Get it from .agent.property
-                        try {
-                            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
-                        } catch (t: Throwable) {
-                            logger.warn("Fail to get the agent env, use prod as default", t)
-                            Env.PROD
-                        }
-                    }
-                }
-            }
+        return try {
+            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
+        } catch (t: Throwable) {
+            logger.warn("Fail to get the agent env, use prod as default", t)
+            Env.PROD
         }
-        return env!!
     }
 
     @Suppress("UNUSED")
@@ -135,14 +138,19 @@ object AgentEnv {
         if (secretKey.isNullOrBlank()) {
             synchronized(this) {
                 if (secretKey.isNullOrBlank()) {
-                    secretKey = getProperty(if (isDockerEnv()) DOCKER_AGENT_SECRET_KEY else AGENT_SECRET_KEY)
+                    secretKey = getProperty(DOCKER_AGENT_SECRET_KEY)
                     if (secretKey.isNullOrBlank()) {
-                        throw PropertyNotExistException(AGENT_SECRET_KEY, "Empty agent secret key")
+                        secretKey = getProperty(AGENT_SECRET_KEY)
+                    }
+                    if (secretKey.isNullOrBlank()) {
+                        throw PropertyNotExistException("$AGENT_SECRET_KEY|$DOCKER_AGENT_SECRET_KEY", "Empty agent secret key")
                     }
                     logger.info("Get the agent secret key($secretKey)")
                 }
             }
         }
+
+        secretKey?.let { SensitiveValueService.addSensitiveValue(it) }
         return secretKey!!
     }
 
@@ -151,7 +159,10 @@ object AgentEnv {
             synchronized(this) {
                 if (gateway.isNullOrBlank()) {
                     try {
-                        gateway = getProperty(if (isDockerEnv()) DOCKER_GATEWAY else AGENT_GATEWAY)
+                        gateway = getProperty(DOCKER_GATEWAY)
+                        if (gateway.isNullOrBlank()) {
+                            gateway = getProperty(AGENT_GATEWAY)
+                        }
                         if (gateway.isNullOrBlank()) {
                             throw PropertyNotExistException(AGENT_GATEWAY, "Empty agent gateway")
                         }
@@ -163,6 +174,18 @@ object AgentEnv {
             }
         }
         return gateway!!
+    }
+
+    fun getFileGateway(): String? {
+        if (fileGateway.isNullOrBlank()) {
+            synchronized(this) {
+                if (fileGateway.isNullOrBlank()) {
+                    fileGateway = getEnvProp(AGENT_FILE_GATEWAY)
+                    logger.info("file gateway: $fileGateway")
+                }
+            }
+        }
+        return fileGateway
     }
 
     fun getOS(): OSType {
@@ -186,12 +209,26 @@ object AgentEnv {
         return os!!
     }
 
+    fun getBkTag(): String? {
+
+        if (bkTag.isNullOrBlank()) {
+            synchronized(this) {
+                if (bkTag.isNullOrBlank()) {
+                    bkTag = getProperty(BK_TAG)
+                    logger.info("Get the bkTag($bkTag)")
+                    return bkTag
+                }
+            }
+        }
+        return bkTag!!
+    }
+
     @Suppress("UNUSED")
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"
 
-    private fun getProperty(prop: String): String? {
+    fun getProperty(prop: String): String? {
         val buildType = BuildEnv.getBuildType()
-        if (buildType == BuildType.DOCKER || buildType == BuildType.MACOS) {
+        if (buildType == BuildType.DOCKER || buildType == BuildType.MACOS || buildType == BuildType.MACOS_NEW) {
             logger.info("buildType is $buildType")
             return getEnvProp(prop)
         }
@@ -242,4 +279,24 @@ object AgentEnv {
     fun setLogMode(storageMode: LogStorageMode) {
         logStorageMode = storageMode
     }
+
+    /**
+     * 获取国际化语言信息
+     * @return 国际化语言信息
+     */
+    fun getLocaleLanguage(): String {
+        return System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
+    }
+
+    fun getRuntimeJdkVersion(): String {
+        val javaVersion = System.getProperty("java.version").substringBefore(".")
+        // 在 Java 8 及之前的版本中的版本格式都是1.xxx.xxx，蓝盾只会使用java8及其以后的版本，故只需对java8环境做兼容处理
+        return if (javaVersion.toInt() > 1) {
+            javaVersion
+        } else {
+            "8"
+        }
+    }
+
+    fun getRuntimeJdkPath(): String = File(System.getProperty("java.home"), "/bin/java").absolutePath
 }

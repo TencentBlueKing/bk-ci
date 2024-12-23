@@ -2,25 +2,54 @@
     <article class="task-list-home">
         <template v-if="hasPermission">
             <header class="task-head">
-                <bk-button theme="primary" @click="addTask"> {{ $t('turbo.新增方案') }} </bk-button>
-                <span class="g-turbo-gray-font task-head-title">{{ $t('turbo.共') }} {{ turboPlanCount }} {{ $t('turbo.个方案') }} </span>
+                <bk-button
+                    theme="primary"
+                    @click="addTask"
+                >
+                    {{ $t('turbo.新增方案') }}
+                </bk-button>
+                <span class="g-turbo-gray-font task-head-title">{{ $t('turbo.共N个方案', [turboPlanCount]) }}</span>
             </header>
 
             <main v-bkloading="{ isLoading }">
-                <section v-for="task in taskList" :key="task" class="g-turbo-box task-card">
-                    <span :class="['open-icon', { 'is-open': task.topStatus === 'true' }]" @click="modifyTurboPlanTopStatus(task)">
-                        <logo name="thumbtack" class="icon-thumbtack"></logo>
+                <section
+                    v-for="task in taskList"
+                    :key="task"
+                    class="g-turbo-box task-card"
+                >
+                    <span
+                        :class="['open-icon', { 'is-open': task.topStatus === 'true' }]"
+                        @click="modifyTurboPlanTopStatus(task)"
+                    >
+                        <logo
+                            name="thumbtack"
+                            class="icon-thumbtack"
+                        ></logo>
                     </span>
 
-                    <h3 :class="['card-head', { 'disabled': !task.openStatus }]" @click="toggleShowCard(task)">
+                    <h3
+                        :class="['card-head', { 'disabled': !task.openStatus }]"
+                        @click="toggleShowCard(task)"
+                    >
                         <p class="task-name">
-                            <span class="g-turbo-deep-black-font name-desc" @click.stop="$router.push({ name: 'taskDetail', params: { id: task.planId } })">
-                                <span class="g-turbo-text-overflow plan-name">{{ task.planName }}</span>
+                            <span
+                                class="g-turbo-deep-black-font name-desc"
+                                @click.stop="$router.push({ name: 'taskDetail', params: { id: task.planId } })"
+                            >
+                                <span
+                                    v-bk-overflow-tips
+                                    class="g-turbo-text-overflow plan-name"
+                                >{{ task.planName }}</span>
                                 <span class="name-detail">{{ task.engineName }}</span>
                             </span>
                             <span class="g-turbo-gray-font name-hash g-turbo-text-overflow">
                                 {{ task.planId }}
-                                <logo name="copy" class="icon-copy" size="16" @click.native.stop="copy(task.planId)"></logo>
+                                <logo
+                                    name="copy"
+                                    class="icon-copy"
+                                    size="16"
+                                    @click.native.stop="copy(task.planId)"
+                                ></logo>
                             </span>
                         </p>
                         <span class="task-line"></span>
@@ -44,44 +73,91 @@
                             <span class="rate-num g-turbo-deep-black-font">{{ task.turboRatio }}</span>
                             <span class="rate-title g-turbo-gray-font"> {{ $t('turbo.节省率') }} </span>
                         </p>
-                        <logo name="right-shape" size="16" :class="showIds.includes(task.planId) ? 'task-right-down task-right-shape' : 'task-right-shape'"></logo>
+                        <logo
+                            name="right-shape"
+                            size="16"
+                            :class="showIds.includes(task.planId) ? 'task-right-down task-right-shape' : 'task-right-shape'"
+                        ></logo>
                     </h3>
 
-                    <bk-table class="task-records g-turbo-scroll-table" v-if="showIds.includes(task.planId)"
+                    <bk-table
+                        class="task-records g-turbo-scroll-table"
+                        v-if="showIds.includes(task.planId)"
                         :data="task.tableList"
                         :outer-border="false"
                         :header-border="false"
                         :header-cell-style="{ background: '#f5f6fa' }"
                         :pagination="task.pagination"
                         v-bkloading="{ isLoading: task.loading }"
+                        :empty-text="$t('turbo.暂无数据')"
                         @page-change="(page) => pageChanged(page, task)"
                         @page-limit-change="(currentLimit) => pageLimitChange(currentLimit, task)"
                         @sort-change="(sort) => sortChange(sort, task)"
                         @row-click="(row) => rowClick(row, task)"
                     >
-                        <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable>
+                        <bk-table-column
+                            :label="$t('turbo.流水线/构建机')"
+                            prop="pipeline_name"
+                            sortable
+                            show-overflow-tooltip
+                        >
                             <template slot-scope="props">
                                 <span v-if="props.row.pipelineName">
                                     {{ props.row.pipelineName }}
-                                    <a @click.stop :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`" target="_blank" class="g-turbo-click-text"><logo name="cc-jump-link" class="jump-link" size="14"></logo></a>
+                                    <a
+                                        @click.stop
+                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`"
+                                        target="_blank"
+                                        class="g-turbo-click-text"
+                                    ><logo
+                                        name="cc-jump-link"
+                                        class="jump-link"
+                                        size="14"
+                                    ></logo></a>
                                 </span>
                                 <span v-else>{{ props.row.clientIp }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('turbo.加速次数')" prop="executeCount" sortable></bk-table-column>
-                        <bk-table-column :label="$t('turbo.平均耗时')" prop="averageExecuteTimeValue" sortable></bk-table-column>
-                        <bk-table-column :label="$t('turbo.节省率')" prop="turboRatio" sortable></bk-table-column>
-                        <bk-table-column :label="$t('turbo.最新开始时间')" prop="latestStartTime" sortable></bk-table-column>
-                        <bk-table-column :label="$t('turbo.最新状态')" prop="latestStatus" sortable>
+                        <bk-table-column
+                            :label="$t('turbo.加速次数')"
+                            prop="executeCount"
+                            sortable
+                        ></bk-table-column>
+                        <bk-table-column
+                            :label="$t('turbo.平均耗时')"
+                            prop="averageExecuteTimeValue"
+                            sortable
+                        ></bk-table-column>
+                        <bk-table-column
+                            :label="$t('turbo.节省率')"
+                            prop="turboRatio"
+                            sortable
+                        ></bk-table-column>
+                        <bk-table-column
+                            :label="$t('turbo.最新开始时间')"
+                            prop="latestStartTime"
+                            sortable
+                        ></bk-table-column>
+                        <bk-table-column
+                            :label="$t('turbo.最新状态')"
+                            prop="latestStatus"
+                            sortable
+                        >
                             <template slot-scope="props">
-                                <task-status :status="props.row.latestStatus" :message="props.row.message"></task-status>
+                                <task-status
+                                    :status="props.row.latestStatus"
+                                    :message="props.row.message"
+                                ></task-status>
                             </template>
                         </bk-table-column>
                     </bk-table>
                 </section>
             </main>
         </template>
-        <permission-exception v-else :message="errMessage" />
+        <permission-exception
+            v-else
+            :message="errMessage"
+        />
     </article>
 </template>
 
@@ -155,7 +231,7 @@
             },
 
             copy (value) {
-                copyText(value, this.$t.bind(this))
+                copyText(value, this)
             },
 
             modifyTurboPlanTopStatus (row) {
@@ -349,6 +425,9 @@
             .name-desc {
                 line-height: 22px;
                 display: inline-block;
+                width: 90%;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .name-hash {
                 font-size: 12px;

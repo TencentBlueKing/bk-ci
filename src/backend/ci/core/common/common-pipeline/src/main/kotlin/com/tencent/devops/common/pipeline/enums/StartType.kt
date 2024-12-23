@@ -28,6 +28,16 @@
 package com.tencent.devops.common.pipeline.enums
 
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import org.slf4j.LoggerFactory
 
 enum class StartType {
@@ -39,26 +49,35 @@ enum class StartType {
     REMOTE;
 
     companion object {
-        fun toReadableString(type: String, channelCode: ChannelCode?): String {
-            return when (type) {
-                StartType.MANUAL.name -> "手动"
-                StartType.TIME_TRIGGER.name -> "定时"
-                StartType.WEB_HOOK.name -> "代码变更"
-                StartType.REMOTE.name -> "远程触发"
+        fun toReadableString(type: String, channelCode: ChannelCode?, language: String): String {
+            var params: Array<String>? = null
+            val name = when (type) {
+                StartType.MANUAL.name -> MANUAL.name
+                StartType.TIME_TRIGGER.name -> TIME_TRIGGER.name
+                StartType.WEB_HOOK.name -> WEB_HOOK.name
+                StartType.REMOTE.name -> REMOTE.name
                 StartType.SERVICE.name -> {
                     if (channelCode != null) {
                         if (channelCode == ChannelCode.BS) {
-                            "OpenAPI启动"
+                            "${SERVICE.name}_${ChannelCode.BS}"
                         } else {
-                            channelCode.name + "启动"
+                            params = arrayOf(channelCode.name)
+                            "${SERVICE.name}_CHANNEL"
                         }
                     } else {
-                        "第三方启动"
+                        "${SERVICE.name}_NOT_CHANNEL"
                     }
                 }
-                StartType.PIPELINE.name -> "流水线"
+                StartType.PIPELINE.name -> PIPELINE.name
                 "" -> ""
                 else -> type
+            }
+            return if (name.isBlank()) name else {
+                MessageUtil.getMessageByLocale(
+                    messageCode = "START_TYPE_$name",
+                    language = language,
+                    params = params
+                )
             }
         }
 
@@ -74,13 +93,34 @@ enum class StartType {
 
         private val logger = LoggerFactory.getLogger(StartType::class.java)
 
-        fun getStartTypeMap(): List<IdValue> {
+        fun getStartTypeMap(language: String): List<IdValue> {
             val result = mutableListOf<IdValue>()
             values().forEach {
-                result.add(IdValue(it.name, toReadableString(it.name, null)))
+                result.add(IdValue(it.name, toReadableString(it.name, null, language)))
             }
 
             return result
+        }
+
+        fun transform(startType: String, webhookType: String?): String {
+            return when (startType) {
+                MANUAL.name -> ManualTriggerElement.classType
+                TIME_TRIGGER.name -> TimerTriggerElement.classType
+                WEB_HOOK.name -> {
+                    when (webhookType) {
+                        CodeType.SVN.name -> CodeSVNWebHookTriggerElement.classType
+                        CodeType.GIT.name -> CodeGitWebHookTriggerElement.classType
+                        CodeType.GITLAB.name -> CodeGitlabWebHookTriggerElement.classType
+                        CodeType.GITHUB.name -> CodeGithubWebHookTriggerElement.classType
+                        CodeType.TGIT.name -> CodeTGitWebHookTriggerElement.classType
+                        else -> RemoteTriggerElement.classType
+                    }
+                }
+
+                else -> { // SERVICE.name,  PIPELINE.name, REMOTE.name
+                    RemoteTriggerElement.classType
+                }
+            }
         }
     }
 }

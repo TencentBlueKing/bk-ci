@@ -75,7 +75,7 @@ onBeforeMount(getDataFromApi);
     class="mt20 stage-average-time"
     :loading="isLoading"
   >
-    <h3 class="stage-time-title">{{ t('Stage average time trend') }}</h3>
+    <h3 class="stage-time-title">{{ t('Average Duration Trend by Stage') }}</h3>
     <section
       class="stage-card overview-card mt20"
       v-for="stage in stageList"

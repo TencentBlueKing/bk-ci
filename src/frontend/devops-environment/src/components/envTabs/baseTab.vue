@@ -1,61 +1,184 @@
 <template>
     <div class="base-message-wrapper">
-        <form class="bk-form base-env-form" ref="modifyEnv">
+        <form
+            class="bk-form base-env-form"
+            ref="modifyEnv"
+        >
             <div class="bk-form-item">
                 <label class="bk-label env-item-label">{{ $t('environment.envInfo.name') }}</label>
                 <div class="bk-form-content env-item-content">
-                    <div class="edit-content" v-if="isEditingName">
-                        <input type="text" class="bk-form-input env-name-input" :placeholder="$t('environment.pleaseEnter')"
+                    <div
+                        class="edit-content"
+                        v-if="isEditingName"
+                    >
+                        <input
+                            type="text"
+                            class="bk-form-input env-name-input"
+                            :placeholder="$t('environment.pleaseEnter')"
                             maxlength="30"
                             name="envName"
                             v-model="editEnvForm.name"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has('envName') }">
+                            :class="{ 'is-danger': errors.has('envName') }"
+                        >
                     </div>
-                    <p v-else class="env-base cur-env-name"><span class="env-name-content">{{ curEnvDetail.name }}</span></p>
+                    <p
+                        v-else
+                        class="env-base cur-env-name"
+                    >
+                        <span class="env-name-content">{{ curEnvDetail.name }}</span>
+                    </p>
                     <div class="handler-btn">
-                        <i class="devops-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
-                        <span class="edit-base" v-if="isEditingName" @click="saveEnvDetail('name')">{{ $t('environment.save') }}</span>
-                        <span class="edit-base" v-if="isEditingName" @click="cancelEnvDetail('name')">{{ $t('environment.cancel') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i
+                                class="devops-icon icon-edit"
+                                v-if="!isEditingName"
+                                @click="toEditBaseForm('name')"
+                            ></i>
+                        </span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingName"
+                            @click="saveEnvDetail('name')"
+                        >{{ $t('environment.save') }}</span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingName"
+                            @click="cancelEnvDetail('name')"
+                        >{{ $t('environment.cancel') }}</span>
                     </div>
                 </div>
             </div>
             <div class="bk-form-item">
                 <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envRemark') }}</label>
                 <div class="bk-form-content env-item-content">
-                    <div class="edit-content" v-if="isEditingDesc">
-                        <textarea class="bk-form-input env-desc-input" :placeholder="$t('environment.pleaseEnter')" name="envDesc" v-if="isEditingDesc"
+                    <div
+                        class="edit-content"
+                        v-if="isEditingDesc"
+                    >
+                        <textarea
+                            class="bk-form-input env-desc-input"
+                            :placeholder="$t('environment.pleaseEnter')"
+                            name="envDesc"
+                            v-if="isEditingDesc"
                             maxlength="100"
-                            v-model="editEnvForm.desc">
+                            v-model="editEnvForm.desc"
+                        >
                                     </textarea>
                     </div>
-                    <p v-else class="env-base cur-env-desc">
-                        <span v-if="curEnvDetail.desc" class="env-desc-content">{{ curEnvDetail.desc }}</span>
+                    <p
+                        v-else
+                        class="env-base cur-env-desc"
+                    >
+                        <span
+                            v-if="curEnvDetail.desc"
+                            class="env-desc-content"
+                        >{{ curEnvDetail.desc }}</span>
                         <span v-else>--</span>
                     </p>
                     <div class="handler-btn">
-                        <i class="devops-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
-                        <span class="edit-base" v-if="isEditingDesc" @click="saveEnvDetail('desc')">{{ $t('environment.save') }}</span>
-                        <span class="edit-base" v-if="isEditingDesc" @click="cancelEnvDetail('desc')">{{ $t('environment.cancel') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i
+                                class="devops-icon icon-edit"
+                                v-if="!isEditingDesc"
+                                @click="toEditBaseForm('desc')"
+                            ></i>
+                        </span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingDesc"
+                            @click="saveEnvDetail('desc')"
+                        >{{ $t('environment.save') }}</span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingDesc"
+                            @click="cancelEnvDetail('desc')"
+                        >{{ $t('environment.cancel') }}</span>
                     </div>
                 </div>
             </div>
             <div class="bk-form-item">
                 <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envType') }}</label>
                 <div class="bk-form-content env-item-content">
-                    <div class="edit-content" v-if="isEditingType">
+                    <div
+                        class="edit-content"
+                        v-if="isEditingType"
+                    >
                         <bk-radio-group v-model="editEnvForm.type">
-                            <bk-radio :value="'DEV'" class="env-type-radio">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
-                            <bk-radio :value="'PROD'" class="env-type-radio">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
+                            <bk-radio
+                                :value="'DEV'"
+                                class="env-type-radio"
+                            >
+                                {{ $t('environment.envInfo.devEnvType') }}
+                            </bk-radio>
+                            <bk-radio
+                                :value="'PROD'"
+                                class="env-type-radio"
+                            >
+                                {{ $t('environment.envInfo.testEnvType') }}
+                            </bk-radio>
                         </bk-radio-group>
                     </div>
-                    <p class="env-base type-content" v-else>
+                    <p
+                        class="env-base type-content"
+                        v-else
+                    >
                         <span>{{ $t(envTypeDesc) }}</span>
                     </p>
-                    <div class="handler-btn" v-if="curEnvDetail.envType !== 'BUILD'">
-                        <i class="devops-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
-                        <span class="edit-base" v-if="isEditingType" @click="saveEnvDetail('type')">{{ $t('environment.save') }}</span>
-                        <span class="edit-base" v-if="isEditingType" @click="cancelEnvDetail('type')">{{ $t('environment.cancel') }}</span>
+                    <div
+                        class="handler-btn"
+                        v-if="curEnvDetail.envType !== 'BUILD'"
+                    >
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i
+                                class="devops-icon icon-edit"
+                                v-if="!isEditingType"
+                                @click="toEditBaseForm('type')"
+                            ></i>
+                        </span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingType"
+                            @click="saveEnvDetail('type')"
+                        >{{ $t('environment.save') }}</span>
+                        <span
+                            class="edit-base"
+                            v-if="isEditingType"
+                            @click="cancelEnvDetail('type')"
+                        >{{ $t('environment.cancel') }}</span>
                     </div>
                 </div>
             </div>
@@ -83,6 +206,7 @@
 
 <script>
     import { convertTime } from '@/utils/util'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'base-tab',
         props: {
@@ -105,6 +229,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 isEditingName: false,
                 isEditingDesc: false,
                 isEditingType: false,
@@ -201,16 +327,22 @@
                             message = this.$t('environment.successfullySaved')
                             theme = 'success'
                         }
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: this.envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        )
                     } finally {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-
                         if (theme === 'success') {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
                             this.requestEnvDetail()
                             if (type === 'name') {
                                 this.curEnvDetail.name = modifyEenv.name

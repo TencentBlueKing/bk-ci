@@ -1,43 +1,88 @@
 <template>
-    <section v-bkloading="{ isLoading }" class="bkdevops-pipeline-edit-wrapper">
+    <section
+        v-bkloading="{ isLoading }"
+        class="bkdevops-pipeline-edit-wrapper"
+    >
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
-            :btns="noPermissionTipsConfig.btns">
+            :btns="noPermissionTipsConfig.btns"
+        >
         </empty-tips>
+        <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
-            <bk-tab :active="currentTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card bkdevops-pipeline-edit-tab" type="unborder-card">
-                <bk-tab-panel
+            <show-variable
+                v-if="currentTab === 'pipeline' && pipeline"
+                :editable="!isTemplatePipeline"
+                :pipeline="pipeline"
+            />
+            <header
+                class="choose-type-switcher"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
+            >
+                <span
                     v-for="panel in panels"
-                    v-bind="{ name: panel.name, label: panel.label }"
-                    render-directive="if"
                     :key="panel.name"
+                    :class="[
+                        'choose-type-switcher-tab',
+                        {
+                            active: currentTab === panel.name
+                        }
+                    ]"
+                    @click="switchTab(panel)"
                 >
-                    <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
-                </bk-tab-panel>
-            </bk-tab>
-            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
+                    {{ panel.label }}
+                </span>
+            </header>
+
+            <div
+                class="edit-content-area"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
+            >
+                <component
+                    :is="curPanel.component"
+                    v-bind="curPanel.bindData"
+                    v-on="curPanel.listeners"
+                ></component>
+                <template v-if="!isLoading && pipeline && currentTab === 'pipeline'">
+                    <!-- <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content"></mini-map> -->
+                </template>
+            </div>
         </template>
     </section>
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
-    import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
+    import {
+        AuthorityTab,
+        BaseSettingTab,
+        NotifyTab,
+        PipelineEditTab,
+        ShowVariable,
+        TriggerTab
+    } from '@/components/PipelineEditTabs/'
+    import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { navConfirm } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import YamlPipelineEditor from './YamlPipelineEditor'
 
     export default {
         components: {
             emptyTips,
             PipelineEditTab,
             BaseSettingTab,
+            TriggerTab,
             NotifyTab,
-            MiniMap
+            ShowVariable,
+            MiniMap,
+            YamlPipelineEditor,
+            AuthorityTab
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -46,10 +91,9 @@
                 hasNoPermission: false,
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                confirmTitle: this.$t('editPage.confirmTitle'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
-                    desc: this.$t('history.noPermissionTips'),
+                    desc: this.$t('history.noEditPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
@@ -61,9 +105,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.edit, {
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
+                                handlePipelineNoPermission({
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
                                 })
                             },
                             text: this.$t('applyPermission')
@@ -73,98 +118,144 @@
             }
         },
         computed: {
-            ...mapState([
-                'fetchError'
-            ]),
+            ...mapState(['fetchError']),
             ...mapState('atom', [
-                'editfromImport'
+                'pipeline',
+                'pipelineInfo',
+                'pipelineWithoutTrigger',
+                'pipelineYaml',
+                'pipelineSetting',
+                'editfromImport',
+                'showVariable'
             ]),
+            ...mapGetters({
+                isCodeMode: 'isCodeMode',
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+            }),
+            pipelineVersion () {
+                return this.pipelineInfo?.version
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
-                return this.$route.params.pipelineId
+                return this.pipelineInfo?.pipelineId
             },
             currentTab () {
-                return this.$route.params.tab || 'pipeline'
+                return this.$route.query.tab || 'pipeline'
             },
-            isDraftEdit () {
-                return this.$route.name === 'pipelineImportEdit'
+            curPanel () {
+                return this.panels.find((panel) => panel.name === this.currentTab)
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             panels () {
-                return [{
-                            name: 'pipeline',
-                            label: this.$t('pipeline'),
-                            component: 'PipelineEditTab',
-                            bindData: {
-                                isEditing: this.isEditing,
-                                pipeline: this.pipeline,
-                                isLoading: !this.pipeline
+                return [
+                    {
+                        name: pipelineTabIdMap.pipeline,
+                        label: this.$t('pipeline'),
+                        component: 'PipelineEditTab',
+                        bindData: {
+                            pipeline: this.pipelineWithoutTrigger,
+                            isLoading: !this.pipelineWithoutTrigger
+                        }
+                    },
+                    {
+                        name: pipelineTabIdMap.trigger,
+                        label: this.$t('settings.trigger'),
+                        component: 'TriggerTab',
+                        bindData: {
+                            editable: !this.isTemplatePipeline,
+                            pipeline: this.pipeline
+                        }
+                    },
+                    {
+                        name: pipelineTabIdMap.notice,
+                        label: this.$t('settings.notify'),
+                        component: 'NotifyTab',
+                        bindData: {
+                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
+                            successSubscriptionList: this.getPipelineSubscriptions('success'),
+                            updateSubscription: (name, value) => {
+                                this.setPipelineEditing(true)
+                                this.updatePipelineSetting({
+                                    setting: this.pipelineSetting,
+                                    param: {
+                                        [name]: value
+                                    }
+                                })
                             }
-                        },
-                        {
-                            name: 'notify',
-                            label: this.$t('settings.notify'),
-                            component: 'NotifyTab',
-                            bindData: {
-                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
-                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
-                                updateSubscription: (container, name, value) => {
-                                    this.setPipelineEditing(true)
-                                    this.updatePipelineSetting({
-                                        container,
-                                        param: {
-                                            [name]: value
-                                        }
-                                    })
-                                }
+                        }
+                    },
+                    {
+                        name: pipelineTabIdMap.setting,
+                        label: this.$t('editPage.baseSetting'),
+                        component: 'BaseSettingTab',
+                        bindData: {
+                            pipelineSetting: this.pipelineSetting,
+                            updatePipelineSetting: (...args) => {
+                                this.setPipelineEditing(true)
+                                this.updatePipelineSetting(...args)
                             }
-                        },
-                        {
-                            name: 'baseSetting',
-                            label: this.$t('editPage.baseSetting'),
-                            component: 'BaseSettingTab',
-                            bindData: {
-                                pipelineSetting: this.pipelineSetting,
-                                updatePipelineSetting: (...args) => {
-                                    this.setPipelineEditing(true)
-                                    this.updatePipelineSetting(...args)
-                                }
-                            }
-                        }]
+                        }
+                    }
+                ]
             }
         },
         watch: {
-            '$route.params.pipelineId': function (pipelineId, oldId) {
-                this.init()
+            pipelineId (pipelineId, oldId) {
+                this.$nextTick(() => {
+                    this.init()
+                })
             },
             pipeline (val) {
-                this.isLoading = false
-                this.requestInterceptAtom()
+                this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
+            },
+            'pipelineInfo.permissions.canEdit': {
+                handler (val) {
+                    if (typeof val === 'boolean') {
+                        this.hasNoPermission = !val
+                        if (!val) {
+                            this.removeLeaveListener()
+                        }
+                    }
+                },
+                immediate: true
             },
             fetchError (error) {
                 if (error.code === 403) {
                     this.hasNoPermission = true
-                    this.removeLeaveListenr()
+                    this.removeLeaveListener()
+                }
+            },
+            isCodeMode: function (val) {
+                this.togglePropertyPanel({
+                    isShow: false
+                })
+                this.setPipelineEditing(false)
+                if (!this.editfromImport) {
+                    this.init()
                 }
             }
         },
         mounted () {
             if (!this.editfromImport) {
                 this.init()
-                this.requestQualityAtom()
             }
-            this.setEditFrom(false)
+            this.getQualityAtom()
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.setPipeline(null)
-            this.resetPipelineSetting()
-            this.removeLeaveListenr()
+            this.removeLeaveListener()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
             this.setEditFrom(false)
+            this.setAtomEditing(false)
+            this.togglePropertyPanel({
+                isShow: false
+            })
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -181,31 +272,31 @@
             ...mapActions('atom', [
                 'requestPipeline',
                 'togglePropertyPanel',
-                'setPipeline',
                 'setPipelineEditing',
                 'setSaveStatus',
-                'setEditFrom'
-            ]),
-            ...mapActions('pipelines', [
-                'requestPipelineSetting',
+                'setEditFrom',
                 'updatePipelineSetting',
-                'resetPipelineSetting'
+                'setAtomEditing'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',
-                'requestInterceptAtom'
+                'requestInterceptAtom',
+                'requestMatchTemplateRuleList'
             ]),
-            init () {
-                if (!this.isDraftEdit) {
+            async init () {
+                if (this.pipelineVersion) {
                     this.isLoading = true
-                    this.requestPipeline(this.$route.params)
-                    this.requestPipelineSetting(this.$route.params)
+                    await this.requestPipeline({
+                        ...this.$route.params,
+                        version: this.pipelineVersion
+                    })
+                    this.isLoading = false
                 }
             },
             switchTab (tab) {
-                this.$router.push({
-                    params: {
-                        tab
+                this.$router.replace({
+                    query: {
+                        tab: tab.name
                     }
                 })
             },
@@ -213,9 +304,13 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning' })
-                            .then(() => {
-                                next(true)
+                        navConfirm({
+                            title: this.$t('leaveConfirmTitle'),
+                            content: this.$t('leaveConfirmTips'),
+                            width: 600
+                        })
+                            .then((result) => {
+                                next(result)
                                 this.leaving = false
                             })
                             .catch(() => {
@@ -225,33 +320,35 @@
                     } else {
                         next(true)
                     }
+                } else {
+                    next(true)
                 }
             },
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)
             },
-            removeLeaveListenr () {
+            removeLeaveListener () {
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
             },
-            requestQualityAtom () {
-                this.$store.dispatch('common/requestQualityAtom', {
+            getQualityAtom () {
+                this.requestQualityAtom({
                     projectId: this.projectId
                 })
             },
-            requestInterceptAtom () {
+            getInterceptAtom () {
                 if (this.projectId && this.pipelineId) {
-                    this.$store.dispatch('common/requestInterceptAtom', {
+                    this.requestInterceptAtom({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     })
                 }
             },
             requestMatchTemplateRules (templateId) {
-                this.$store.dispatch('common/requestMatchTemplateRuleList', {
+                this.requestMatchTemplateRuleList({
                     projectId: this.projectId,
                     templateId
                 })
@@ -261,30 +358,134 @@
 </script>
 
 <style lang="scss">
-    .bkdevops-pipeline-edit-wrapper {
+@import "@/scss/conf";
+
+.new-ui-form {
+
+    .ui-inner-label,
+    .bk-label {
+        font-size: 12px;
+        line-height: 20px;
+        min-height: 20px;
+        margin-bottom: 4px;
+    }
+
+    .ui-inner-label {
         display: flex;
-        .bk-tab-header {
-            padding: 7px 25px 0;
-            box-sizing: content-box;
+        align-items: center;
+    }
+
+    .bk-form-tip,
+    .bk-form-help {
+        margin-bottom: 0;
+        line-height: 18px;
+    }
+
+    i.icon-question-circle-shape {
+        color: #979ba5;
+        font-size: 14px;
+    }
+}
+
+.new-ui-form.bk-form-vertical .bk-form-item+.bk-form-item {
+    margin-top: 24px;
+}
+
+.bkdevops-pipeline-edit-wrapper {
+    .choose-type-switcher {
+        background: #f0f1f5;
+        height: 42px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        margin: 24px 24px 0;
+
+        &.when-show-variable {
+            margin-right: 496px;
         }
-        .bk-tab-section {
-            padding: 0 25px 20px;
-        }
-        .scroll-container {
-            margin-top: -20px;
-            margin-left: -30px;
-            width: fit-content;
-            overflow: visible;
-        }
-        .bkdevops-pipeline-edit-tab {
-            flex: 1;
+
+        .choose-type-switcher-tab {
+            padding: 0 18px;
+            height: 42px;
+            font-size: 14px;
             display: flex;
-            flex-direction: column;
-            width: 100%;
-            overflow: hidden;
-            .bk-tab-content {
-                overflow: auto;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+
+            &:hover {
+                color: $primaryColor;
+            }
+
+            &:not(:first-child)::before {
+                position: absolute;
+                content: "";
+                width: 1px;
+                height: 16px;
+                background-color: #c4c6cc;
+                top: 13px;
+                left: 0;
+            }
+
+            &:last-child::after {
+                position: absolute;
+                content: "";
+                width: 1px;
+                height: 16px;
+                background-color: #c4c6cc;
+                top: 13px;
+                right: 0;
+            }
+
+            &.active {
+                background-color: white;
+                border-radius: 4px 4px 0 0;
+
+                &::before,
+                &::after {
+                    background-color: white;
+                }
+            }
+
+            &.active+ ::before {
+                display: none;
             }
         }
     }
+
+    .edit-content-area {
+        position: relative;
+        background: white;
+        height: calc(100vh - 114px);
+        margin: 0 24px;
+        padding: 24px 24px 40px;
+        overflow-y: auto;
+        flex: 1;
+        box-shadow: 0 2px 2px 0 #00000026;
+
+        &.when-show-variable {
+            margin-right: 496px;
+        }
+    }
+
+    .choose-type-container {
+        margin: 26px 24px 20px;
+    }
+
+    .bk-tab-section {
+        padding: 0 25px 20px;
+    }
+
+    .bkdevops-pipeline-edit-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
+
+        .bk-tab-content {
+            overflow: auto;
+        }
+    }
+}
 </style>

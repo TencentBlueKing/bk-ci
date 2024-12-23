@@ -84,7 +84,7 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }

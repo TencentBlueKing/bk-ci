@@ -165,7 +165,7 @@ class PipelineWebsocketService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        executeCount: Int
+        executeCount: Int?
     ): RecordWebsocketPush {
         val page = recordPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
@@ -173,10 +173,10 @@ class PipelineWebsocketService @Autowired constructor(
                 pipelineId = pipelineId,
                 projectId = projectId,
                 atomId = null,
-                executeCount = null
+                executeCount = executeCount
             )
         )
-        logger.debug("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        logger.debug("record websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
         return RecordWebsocketPush(
             buildId = buildId,
             projectId = projectId,

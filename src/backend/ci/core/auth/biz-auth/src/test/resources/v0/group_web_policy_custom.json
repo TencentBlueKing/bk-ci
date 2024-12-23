@@ -1,0 +1,568 @@
+{
+  "type": "group_web_policy",
+  "project_id": "mht",
+  "subject": {
+    "type": "group",
+    "id": 219,
+    "name": "用户组迁移"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "pipeline_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-665e332fa3bf4df29037de2de0a29f81",
+                "name": "mingshew_event_mr_dev",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "credential_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "credential",
+          "paths": [
+            [
+              {
+                "id": "code_git_token",
+                "name": "code_git_token",
+                "system_id": "bk_ci",
+                "type": "credential"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cert_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cert",
+          "paths": [
+
+          ]
+        }
+      ]
+    },{
+      "actions": [
+        {
+          "id": "env_node_use"
+        },
+        {
+          "id": "env_node_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "env_node",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "repertory_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "repertory",
+          "paths": [
+            [
+              {
+                "id": "2984",
+                "name": "mingshewhe/webhook_test",
+                "system_id": "bk_ci",
+                "type": "repertory"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cluster_test_create"
+        },
+        {
+          "id": "cluster_test_view"
+        },
+        {
+          "id": "cluster_test_delete"
+        },
+        {
+          "id": "cluster_test_list"
+        },
+        {
+          "id": "cluster_test_use"
+        },
+        {
+          "id": "cluster_test_use_web_console"
+        },
+        {
+          "id": "cluster_test_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cluster_test",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cluster_prod_create"
+        },
+        {
+          "id": "cluster_prod_view"
+        },
+        {
+          "id": "cluster_prod_delete"
+        },
+        {
+          "id": "cluster_prod_list"
+        },
+        {
+          "id": "cluster_prod_use"
+        },
+        {
+          "id": "cluster_prod_use_web_console"
+        },
+        {
+          "id": "cluster_prod_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cluster_prod",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "namespace_create"
+        },
+        {
+          "id": "namespace_view"
+        },
+        {
+          "id": "namespace_delete"
+        },
+        {
+          "id": "namespace_list"
+        },
+        {
+          "id": "namespace_use"
+        },
+        {
+          "id": "namespace_use_web_console"
+        },
+        {
+          "id": "namespace_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "namespace",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "templates_create"
+        },
+        {
+          "id": "templates_view"
+        },
+        {
+          "id": "templates_delete"
+        },
+        {
+          "id": "templates_list"
+        },
+        {
+          "id": "templates_use"
+        },
+        {
+          "id": "templates_use_web_console"
+        },
+        {
+          "id": "templates_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "templates",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "metric_create"
+        },
+        {
+          "id": "metric_view"
+        },
+        {
+          "id": "metric_delete"
+        },
+        {
+          "id": "metric_list"
+        },
+        {
+          "id": "metric_use"
+        },
+        {
+          "id": "metric_use_web_console"
+        },
+        {
+          "id": "metric_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "metric",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "dev_image_deploy"
+        }
+      ],
+      "resources": [
+        {
+          "type": "dev_image",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "prod_image_download"
+        }
+      ],
+      "resources": [
+        {
+          "type": "prod_image",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "custom_dir_view"
+        },
+        {
+          "id": "custom_dir_share"
+        },
+        {
+          "id": "custom_dir_delete"
+        },
+        {
+          "id": "custom_dir_copy"
+        },
+        {
+          "id": "custom_dir_list"
+        },
+        {
+          "id": "custom_dir_mkdir"
+        },
+        {
+          "id": "custom_dir_download"
+        },
+        {
+          "id": "custom_dir_move"
+        },
+        {
+          "id": "custom_dir_deploy"
+        }
+      ],
+      "resources": [
+        {
+          "type": "custom_dir",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "job_template_create"
+        },
+        {
+          "id": "job_template_view"
+        },
+        {
+          "id": "job_template_delete"
+        },
+        {
+          "id": "job_template_list"
+        },
+        {
+          "id": "job_template_edit"
+        },
+        {
+          "id": "job_template_execute"
+        }
+      ],
+      "resources": [
+        {
+          "type": "job_template",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "script_create"
+        },
+        {
+          "id": "script_view"
+        },
+        {
+          "id": "script_delete"
+        },
+        {
+          "id": "script_list"
+        },
+        {
+          "id": "script_edit"
+        },
+        {
+          "id": "script_execute"
+        }
+      ],
+      "resources": [
+        {
+          "type": "script",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "gs-apk_task_create"
+        },
+        {
+          "id": "gs-apk_task_view"
+        },
+        {
+          "id": "gs-apk_task_list"
+        },
+        {
+          "id": "gs-apk_task_download"
+        },
+        {
+          "id": "gs-apk_task_edit"
+        },
+        {
+          "id": "gs-apk_task_execute"
+        }
+      ],
+      "resources": [
+        {
+          "type": "gs-apk_task",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "scan_task_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "scan_task",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "wetest_task_view"
+        },
+        {
+          "id": "wetest_task_create"
+        },
+        {
+          "id": "wetest_task_delete"
+        },
+        {
+          "id": "wetest_task_list"
+        },
+        {
+          "id": "wetest_task_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "wetest_task",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "email_group_view"
+        },
+        {
+          "id": "email_group_create"
+        },
+        {
+          "id": "email_group_delete"
+        },
+        {
+          "id": "email_group_list"
+        },
+        {
+          "id": "email_group_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "email_group",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "ios_remove"
+        },
+        {
+          "id": "ios_download"
+        },
+        {
+          "id": "ios_authorize"
+        },
+        {
+          "id": "ios_edit"
+        },
+        {
+          "id": "ios_read"
+        }
+      ],
+      "resources": [
+        {
+          "type": "ios",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "android_remove"
+        },
+        {
+          "id": "android_download"
+        },
+        {
+          "id": "android_authorize"
+        },
+        {
+          "id": "android_edit"
+        },
+        {
+          "id": "android_read"
+        }
+      ],
+      "resources": [
+        {
+          "type": "android",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "macos_remove"
+        },
+        {
+          "id": "macos_download"
+        },
+        {
+          "id": "macos_authorize"
+        },
+        {
+          "id": "macos_edit"
+        },
+        {
+          "id": "macos_read"
+        }
+      ],
+      "resources": [
+        {
+          "type": "macos",
+          "paths": []
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "xinghai_all_use"
+        }
+      ],
+      "resources": [
+        {
+          "type": "xinghai_all",
+          "paths": []
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "type": "user",
+      "id": "345"
+    }
+  ]
+}

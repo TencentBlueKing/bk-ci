@@ -29,20 +29,19 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("远程触发触发")
+@Schema(title = "远程触发触发")
 data class RemoteTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "远程触发",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("是否可跳过插件", required = false)
+    @get:Schema(title = "是否可跳过插件", required = false)
     var canElementSkip: Boolean? = false,
-    @ApiModelProperty("远程触发token", required = true)
+    @get:Schema(title = "远程触发token", required = true)
     var remoteToken: String = ""
 ) : Element(name, id, status) {
     companion object {

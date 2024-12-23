@@ -27,50 +27,54 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目-修改模型")
+@Schema(title = "项目-修改模型")
 data class ProjectUpdateInfo(
-    @ApiModelProperty("项目名称")
-//    @JsonProperty("project_name")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @ApiModelProperty("项目类型")
-//    @JsonProperty("project_type")
+    @get:Schema(title = "项目类型")
     val projectType: Int = 0,
-    @ApiModelProperty("事业群ID")
-//    @JsonProperty("bg_id")
+    @get:Schema(title = "事业群ID")
     val bgId: Long = 0,
-    @ApiModelProperty("事业群名字")
-//    @JsonProperty("bg_name")
+    @get:Schema(title = "事业群名字")
     val bgName: String = "",
-    @ApiModelProperty("中心ID")
-//    @JsonProperty("center_id")
-    val centerId: Long = 0,
-    @ApiModelProperty("中心名称")
-//    @JsonProperty("center_name")
-    val centerName: String = "",
-    @ApiModelProperty("部门ID")
-//    @JsonProperty("dept_id")
-    val deptId: Long = 0,
-    @ApiModelProperty("部门名称")
-//    @JsonProperty("dept_name")
-    val deptName: String = "",
-    @ApiModelProperty("描述")
+    @get:Schema(title = "业务线ID")
+    val businessLineId: Long? = null,
+    @get:Schema(title = "业务线名称")
+    val businessLineName: String? = "",
+    @get:Schema(title = "中心ID")
+    val centerId: Long? = null,
+    @get:Schema(title = "中心名称")
+    val centerName: String? = "",
+    @get:Schema(title = "部门ID")
+    val deptId: Long? = null,
+    @get:Schema(title = "部门名称")
+    val deptName: String? = "",
+    @get:Schema(title = "描述")
     val description: String,
-    @ApiModelProperty("英文缩写")
-//    @JsonProperty("english_name")
+    @get:Schema(title = "英文缩写")
     val englishName: String = "",
-    @ApiModelProperty("cc app id")
-//    @JsonProperty("cc_app_id")
+    @get:Schema(title = "cc app id")
     val ccAppId: Long?,
-    @ApiModelProperty("cc app name")
-//    @JsonProperty("cc_app_name")
+    @get:Schema(title = "cc app name")
     var ccAppName: String?, // APP name 通过调用CC接口同步
-    @ApiModelProperty("容器选择， 0 是不选， 1 是k8s, 2 是mesos")
+    @get:Schema(title = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
     val kind: Int?,
-    @ApiModelProperty("是否保密")
+    @get:Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @ApiModelProperty("项目相关配置")
-    val properties: ProjectProperties? = null
+    @get:Schema(title = "项目相关配置")
+    var properties: ProjectProperties? = null,
+    @get:Schema(title = "项目最大可授权人员范围")
+    val subjectScopes: List<SubjectScopeInfo>? = emptyList(),
+    @get:Schema(title = "logo地址")
+    val logoAddress: String? = null,
+    @get:Schema(title = "项目性质")
+    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
+    @get:Schema(title = "运营产品ID")
+    val productId: Int? = null,
+    @get:Schema(title = "运营产品名称")
+    val productName: String? = null
 )

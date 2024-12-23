@@ -346,10 +346,19 @@ internal class EnvReplacementParserTest {
         val command8 = "echo \${{ variables.hello }}"
 
         val command9 = "echo \${{ ci.workspace }}"
+        val command10 = mutableMapOf(
+            "params" to mutableListOf(
+                mutableMapOf(
+                    "key" to "instance",
+                    "value" to "\${{variables.instance}}"
+                )
+            )
+        )
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha"
+            "variables.hello" to "hahahahaha",
+            "variables.instance" to "{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"
         )
         // 与EnvUtils的差异点：不支持传可空对象
 //        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
@@ -395,6 +404,13 @@ internal class EnvReplacementParserTest {
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )
+        )
+        val command10Expected = """
+            {"params":[{"key":"instance","value":"{\"instances\":[{\"cluster\":\"ci-prod\",\"pod\":\"ci-123\"}]}"}]}
+        """.trimIndent()
+        Assertions.assertEquals(
+            command10Expected,
+            EnvReplacementParser.parse(command10, data, true)
         )
     }
 
@@ -498,6 +514,56 @@ let branchs = branch.split("/")"""
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
+    @Test
+    fun parseExpressionTestData2() {
+        val command1 = """
+# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell
+
+# 旧的${'$'}{}引用变量的方式已升级为${'$'}{{}}，和bash原生引用变量的方式区分开
+
+# 通过::set-variable命令字设置/修改全局变量
+# echo "::set-variable name=<var_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{variables.<var_name>}}引用这个变量
+# 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用
+
+# 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖)
+# echo "::set-output name=<output_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置
+
+# 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值
+# setGateValue "CodeCoverage" ${'$'}myValue
+# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+# cd ${'$'}WORKSPACE 可进入当前工作空间目录
+echo ${'$'}{{variables.is_lint}}"""
+        val result = """
+# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell
+
+# 旧的${'$'}{}引用变量的方式已升级为${'$'}{{}}，和bash原生引用变量的方式区分开
+
+# 通过::set-variable命令字设置/修改全局变量
+# echo "::set-variable name=<var_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{variables.<var_name>}}引用这个变量
+# 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用
+
+# 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖)
+# echo "::set-output name=<output_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置
+
+# 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值
+# setGateValue "CodeCoverage" ${'$'}myValue
+# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+# cd ${'$'}WORKSPACE 可进入当前工作空间目录
+echo true"""
+        val data = mapOf(
+            "variables.is_lint" to "true",
+            "variables.is_build" to "false",
+            "ci.branch" to "master"
+        )
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
+    }
+
     private fun parseAndEquals(
         data: Map<String, String>,
         template: String,
@@ -508,5 +574,53 @@ let branchs = branch.split("/")"""
         val buff = EnvReplacementParser.parse(template, contextMap.plus(data), onlyExpression)
         println("template=$template\nreplaced=$buff\n")
         Assertions.assertEquals(expect, buff)
+    }
+
+    @Test
+    fun containsExpressions() {
+        val command = "{\"age\": \${{age}} , \"sex\": \"boy\", \"name\": \${{name}}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command))
+
+        val command1 = "hello \${{variables.abc}} world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command1))
+
+        val command2 = "\${{variables.abc}}world"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command2))
+
+        val command3 = "hello\${{variables.abc}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command3))
+
+        val command4 = "hello\${{variables.abc"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command4))
+
+        val command5 = "hello\${{variables.abc}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command5))
+
+        val command6 = "hello\${variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command6))
+
+        val command7 = "hello\$variables.abc}}"
+        Assertions.assertFalse(EnvReplacementParser.containsExpressions(command7))
+
+        val command8 = "echo \${{ variables.hello }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command8))
+
+        val command9 = "echo \${{ ci.workspace }} || \${{variables.hello}}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command9))
+
+        val command10 = "echo \${{ ci.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command10))
+
+        val command11 = "echo \${{ variables.xyz == 'zzzz' }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command11))
+
+        val command12 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-16 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command12))
+
+        val command13 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command13))
+
+        val command14 = "\${{ strToTime(\${{variables.date}}) > strToTime('2023-03-14 12:06:21') }}"
+        Assertions.assertTrue(EnvReplacementParser.containsExpressions(command14))
     }
 }

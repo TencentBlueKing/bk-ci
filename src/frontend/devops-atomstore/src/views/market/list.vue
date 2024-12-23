@@ -1,22 +1,61 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
-        <h3 class="list-type" v-bk-clickoutside="closeOrderList">
-            <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{count}}</strong></span>
+        <h3
+            class="list-type"
+            v-bk-clickoutside="closeOrderList"
+        >
+            <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{ count }}</strong></span>
             <span class="list-sort"> {{ $t('store.排序：') }} </span>
-            <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
-            <ul class="list-menu" v-show="showOrderList">
-                <li v-for="(order, index) in orderList" :key="index" @click.stop="chooseOrderType(order)">{{ order.name }}</li>
+            <span
+                :class="[{ 'show-type': showOrderList }, 'list-order']"
+                @click.stop="showOrderList = !showOrderList"
+            >{{ orderType.name }}</span>
+            <ul
+                class="list-menu"
+                v-show="showOrderList"
+            >
+                <li
+                    v-for="(order, index) in orderList"
+                    :key="index"
+                    @click.stop="chooseOrderType(order)"
+                >
+                    {{ order.name }}
+                </li>
             </ul>
         </h3>
 
-        <hgroup class="list-cards" v-if="!isLoading">
-            <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
+        <hgroup
+            class="list-cards"
+            v-if="!isLoading"
+        >
+            <card
+                v-for="card in cards"
+                :key="card.atomCode"
+                :atom="card"
+                :has-summary="true"
+                class="list-card"
+            ></card>
         </hgroup>
-        <p class="g-empty list-empty" v-if="cards.length <= 0"> {{ $t('store.没找到相关结果') }} </p>
+        <div
+            class="g-empty list-empty"
+            v-if="cards.length <= 0"
+        >
+            <p style="margin-top: 50px;"> {{ $t('store.没找到相关结果') }} </p>
+            <div class="empty-tips">
+                {{ $t('store.可以尝试 调整关键词 或') }}
+                <button
+                    class="bk-text-button"
+                    @click="handleClear"
+                >
+                    {{ $t('store.清空筛选条件') }}
+                </button>
+            </div>
+        </div>
     </article>
 </template>
 
 <script>
+    import eventBus from '@/utils/eventBus.js'
     import card from '@/components/common/card'
 
     export default {
@@ -163,6 +202,10 @@
             removeScrollLoadMore () {
                 const mainBody = document.querySelector('.store-main')
                 if (mainBody) mainBody.removeEventListener('scroll', this.scrollLoadMore, { passive: true })
+            },
+
+            handleClear () {
+                eventBus.$emit('clear')
             }
         }
     }

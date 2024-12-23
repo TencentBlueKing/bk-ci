@@ -33,7 +33,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -41,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -51,13 +51,13 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -104,12 +104,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
+        val buildInfo = pipelineBuildDao.getUserBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
         ) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
@@ -127,10 +125,9 @@ class PipelineBuildDetailService @Autowired constructor(
             }
         }
 
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNo = triggerContainer.buildNo
-        if (buildNo != null) {
-            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
+        val triggerContainer = model.getTriggerContainer()
+        triggerContainer.buildNo?.apply {
+            currentBuildNo = buildSummaryRecord?.buildNo ?: buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
@@ -162,7 +159,11 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineName = model.name,
             userId = record.startUser ?: "",
             triggerUser = buildInfo.triggerUser,
-            trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            trigger = StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
             status = record.status ?: "",
@@ -175,7 +176,8 @@ class PipelineBuildDetailService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            triggerReviewers = triggerReviewers
+            triggerReviewers = triggerReviewers,
+            debug = buildInfo.debug
         )
     }
 
@@ -187,7 +189,7 @@ class PipelineBuildDetailService @Autowired constructor(
             model = JsonUtil.toJson(model, formatted = false),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(projectId, buildId)
+//        pipelineDetailChangeEvent(projectId, buildId)
     }
 
     fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {
@@ -362,13 +364,5 @@ class PipelineBuildDetailService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
-    }
-
-    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
-        return pipelineBuildDao.getBuildInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId
-        )?.pipelineId
     }
 }

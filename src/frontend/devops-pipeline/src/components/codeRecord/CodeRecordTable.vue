@@ -1,5 +1,8 @@
 <template>
-    <div class="code-record-table-container" v-if="commitList.length">
+    <div
+        class="code-record-table-container"
+        v-if="commitList.length"
+    >
         <p class="prompt-tips">
             {{ $t('details.commitIdsRange') }}
             <span v-if="commitList.length > 1">
@@ -13,12 +16,17 @@
         </p>
         <bk-table :data="commitList">
             <!-- <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column> -->
-            <bk-table-column :label="$t('history.remark')" prop="comment">
+            <bk-table-column
+                :label="$t('history.remark')"
+                prop="comment"
+            >
                 <template slot-scope="props">
-                    <a class="commit-link"
+                    <a
+                        class="commit-link"
                         :href="props.row.url"
                         target="_blank"
-                        v-if="props.row.type === 2 && props.row.url">{{ props.row.comment }}
+                        v-if="props.row.type === 2 && props.row.url"
+                    >{{ props.row.comment }}
                     </a>
                     <span v-else>{{ props.row.comment }}</span>
                 </template>
@@ -29,7 +37,11 @@
                 prop="commit"
                 :formater="row => formatCommitId(row.commit)"
             ></bk-table-column>
-            <bk-table-column :width="150" :label="$t('details.committer')" prop="committer"></bk-table-column>
+            <bk-table-column
+                :width="150"
+                :label="$t('details.committer')"
+                prop="committer"
+            ></bk-table-column>
             <bk-table-column
                 :width="200"
                 :label="$t('details.commitTime')"
@@ -38,9 +50,15 @@
             ></bk-table-column>
         </bk-table>
     </div>
-    <div v-else class="code-records-empty">
+    <div
+        v-else
+        class="code-records-empty"
+    >
         <div class="no-data-right">
-            <img src="../../images/box.png">
+            <logo
+                name="empty"
+                size="180"
+            />
             <p>
                 <span>{{ label }}</span>{{ $t('details.noCodeRecords') }}
             </p>
@@ -50,8 +68,12 @@
 
 <script>
     import { convertTime } from '@/utils/util'
+    import Logo from '@/components/Logo'
     export default {
         name: 'code-record-table',
+        components: {
+            Logo
+        },
         props: {
             commitList: {
                 type: Array,

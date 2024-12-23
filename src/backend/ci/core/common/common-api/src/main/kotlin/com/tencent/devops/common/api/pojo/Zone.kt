@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.util.MessageUtil
+
 /**
  * 构建机地域
  */
@@ -37,5 +39,12 @@ enum class Zone(name: String) {
     CHENGDU("成都"),
     TIANJIN("天津"),
     GITHUB("GitHub"),
-    EXTERNAL("外网")
+    EXTERNAL("外网");
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "ZONE.${this.name}",
+            language = language
+        )
+    }
 }

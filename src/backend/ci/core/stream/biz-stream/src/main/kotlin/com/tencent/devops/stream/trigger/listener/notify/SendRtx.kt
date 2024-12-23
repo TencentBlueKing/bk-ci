@@ -27,10 +27,12 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyTemplateEnum
@@ -53,7 +55,8 @@ object SendRtx {
         streamUrl: String,
         content: String?,
         gitProjectId: String,
-        scmType: ScmType
+        scmType: ScmType,
+        extensionAction: String
     ): SendNotifyMessageTemplateRequest {
         val titleParams = mapOf(
             "title" to ""
@@ -73,7 +76,8 @@ object SendRtx {
                     buildTime = buildTime,
                     gitUrl = gitUrl,
                     streamUrl = streamUrl,
-                    gitProjectId = gitProjectId
+                    gitProjectId = gitProjectId,
+                    extensionAction = extensionAction
                 )
             } else {
                 getRtxCustomUserContent(
@@ -117,7 +121,8 @@ object SendRtx {
             pipelineId = pipelineId,
             buildId = build.id
         )
-        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
+        return " <font color=\"${state.second}\"> ${state.first} </font>" +
+                " $content \n [${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
@@ -133,7 +138,8 @@ object SendRtx {
         buildTime: Long?,
         gitUrl: String,
         streamUrl: String,
-        gitProjectId: String
+        gitProjectId: String,
+        extensionAction: String
     ): String {
         val state = when {
             status.isSuccess() -> Triple("✔", "info", "success")
@@ -143,7 +149,7 @@ object SendRtx {
 
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                    "opened by $openUser \n"
+                    "$extensionAction by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +
@@ -157,7 +163,7 @@ object SendRtx {
                 "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
                 request +
                 costTime +
-                "[查看详情]" +
+                "[${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]" +
                 "(${
                     StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamUrl,

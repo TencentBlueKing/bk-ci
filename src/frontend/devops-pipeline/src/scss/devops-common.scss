@@ -58,6 +58,10 @@
 .text-link {
     font-size: 12px;
     color: $primaryColor;
+    display: inline-flex;
+    align-items: center;
+    grid-gap: 4px;
+    cursor: pointer;
     &.disabled {
         color: #ccc;
         cursor: not-allowed;
@@ -263,4 +267,11 @@ input[disabled="disabled"] {
 .bk-select.is-default-trigger.is-unselected:before {
     width: calc(100% - 36px);
     @include ellipsis();
+}
+.primary-link,
+.primary-link:visited {
+    color: $primaryColor;
+    &:hover {
+        color: #699df4;
+    }
 }

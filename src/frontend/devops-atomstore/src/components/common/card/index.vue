@@ -1,20 +1,53 @@
 <template>
-    <router-link :to="{ name: 'details', params: { code: atom.code, type: storeType } }" class="card-home">
-        <atom v-if="storeType === 'atom'" :atom="atom" :has-summary="hasSummary" />
+    <router-link
+        :to="{ name: 'details', params: { code: atom.code, type: storeType } }"
+        class="card-home"
+    >
+        <atom
+            v-if="storeType === 'atom'"
+            :atom="atom"
+            :has-summary="hasSummary"
+        />
         <template v-else>
-            <img class="card-pic atom-logo" :src="atom.logoUrl">
-            <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
+            <img
+                class="card-pic atom-logo"
+                :src="atom.logoUrl"
+            >
+            <p
+                v-bk-overflow-tips
+                :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']"
+            >
+                {{ atom.name }}
+            </p>
             <h5 class="card-detail">
                 <span class="text-overflow">{{ atom.publisher }}</span>
                 <span>{{ displayNum }} <i class="devops-icon icon-heat-2"></i></span>
             </h5>
-            <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('store.暂无描述')}}</p>
+            <p
+                v-if="hasSummary"
+                class="card-summary"
+            >
+                {{ atom.summary || $t('store.暂无描述') }}
+            </p>
             <section class="card-rate">
                 <p class="score-group">
-                    <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>
-                    <comment-rate :rate="0" :width="15" :height="16"></comment-rate>
+                    <comment-rate
+                        :rate="5"
+                        :width="15"
+                        :height="16"
+                        :style="{ width: starWidth }"
+                        class="score-real"
+                    ></comment-rate>
+                    <comment-rate
+                        :rate="0"
+                        :width="15"
+                        :height="16"
+                    ></comment-rate>
                 </p>
-                <i class="devops-icon icon-lock-shape" v-if="!atom.flag"></i>
+                <i
+                    class="devops-icon icon-lock-shape"
+                    v-if="!atom.flag"
+                ></i>
             </section>
         </template>
     </router-link>

@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.server.ResourceConfig
 import org.reflections.Reflections
@@ -37,6 +38,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import java.lang.reflect.Modifier
 import javax.ws.rs.ApplicationPath
+import javax.ws.rs.Path
 
 @ApplicationPath("/api")
 open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {
@@ -51,6 +53,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         logger.info("JerseyConfig-register-start")
         register(ValidationConfigurationContextResolver::class.java)
         register(MultiPartFeature::class.java)
+        register(BkWriterInterceptor::class.java)
         logger.info("JerseyConfig-ExceptionMapper-Spring-find-start")
         val mappers = applicationContext.getBeansWithAnnotation(BkExceptionMapper::class.java)
         logger.info("JerseyConfig-ExceptionMapper-register-start")
@@ -69,7 +72,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         }
         logger.info("JerseyConfig-ExceptionMapper-register-end")
         logger.info("JerseyConfig-RestResource-find-start")
-        val restResources = applicationContext.getBeansWithAnnotation(RestResource::class.java)
+        val restResources = applicationContext.getBeansWithAnnotation(Path::class.java)
         logger.info("JerseyConfig-RestResource-register-start")
         restResources.values.forEach {
             logger.info("RestResource: $it")

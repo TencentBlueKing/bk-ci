@@ -30,12 +30,16 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.expression.SpecialFunctions
+import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
@@ -56,8 +60,7 @@ interface ICommand {
         jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null,
-        taskId: String? = null,
-        asCodeEnabled: Boolean? = null
+        taskId: String? = null
     )
 
     fun parseTemplate(
@@ -65,8 +68,7 @@ interface ICommand {
         command: String,
         variables: Map<String, String>,
         dir: File,
-        taskId: String?,
-        asCodeEnabled: Boolean?
+        taskId: String?
     ): String {
         // 解析跨项目模板信息
         val acrossTargetProjectId by lazy {
@@ -78,16 +80,20 @@ interface ICommand {
                 CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
                 JOB_OS_CONTEXT to AgentEnv.getOS().name
             )
-        )
-        return if (asCodeEnabled == true) {
+        ).toMutableMap()
+        // 增加上下文的替换
+        PipelineVarUtil.fillContextVarMap(contextMap)
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+        return if (dialect.supportUseExpression()) {
             EnvReplacementParser.parse(
                 value = command,
                 contextMap = contextMap,
-                onlyExpression = true,
+                dialect = dialect,
                 contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = contextMap,
                     extendNamedValueMap = listOf(
-                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
+                        CIKeywordsService.CIKeywordsRuntimeNamedValue()
                     )
                 ),
                 functions = SpecialFunctions.functions,
@@ -98,13 +104,21 @@ interface ICommand {
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
-                        CredentialUtils.getCredential(
-                            credentialId = key,
-                            showErrorLog = false,
-                            acrossProjectId = acrossTargetProjectId
-                        )[0]
+                        if (key == CI_TOKEN_CONTEXT) {
+                            CIKeywordsService.getOrRequestToken()
+                        } else {
+                            CredentialUtils.getCredential(
+                                credentialId = key,
+                                showErrorLog = false,
+                                acrossProjectId = acrossTargetProjectId
+                            )[0]
+                        }
                     } catch (ignore: Exception) {
-                        CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        if (key == CI_TOKEN_CONTEXT) {
+                            null
+                        } else {
+                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        }
                     }
                 }
             )

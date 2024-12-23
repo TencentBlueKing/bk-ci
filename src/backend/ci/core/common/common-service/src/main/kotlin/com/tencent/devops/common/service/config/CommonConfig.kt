@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.service.config
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -47,6 +48,12 @@ class CommonConfig {
      */
     @Value("\${devopsGateway.host:#{null}}")
     val devopsHostGateway: String? = null
+
+    /**
+     * Devops白名单代理
+     */
+    @Value("\${devopsGateway.whiteProxy:#{null}}")
+    val devopsWhiteProxy: String? = null
 
     /**
      * DevOps API网关地址
@@ -119,4 +126,34 @@ class CommonConfig {
      */
     @Value("\${sharding.routing.cacheSize:50000}")
     val shardingRoutingCacheSize: Long = 50000
+
+    /**
+     * bkrepo DevNet区域网关配置
+     */
+    @Value("\${devopsGateway.fileDevnetGateway:#{null}}")
+    val fileDevnetGateway: String? = null
+
+    /**
+     * bkrepo Idc区域网关配置
+     */
+    @Value("\${devopsGateway.fileIdcGateway:#{null}}")
+    val fileIdcGateway: String? = null
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.defaultLocale:$DEFAULT_LOCALE_LANGUAGE}")
+    val devopsDefaultLocaleLanguage: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.supportLanguages:$DEFAULT_LOCALE_LANGUAGE}")
+    val devopsSupportLanguages: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * codecc 访问地址
+     */
+    @Value("\${devopsGateway.codeccHostGateway:#{null}}")
+    val codeccHostGateway: String? = null
 }

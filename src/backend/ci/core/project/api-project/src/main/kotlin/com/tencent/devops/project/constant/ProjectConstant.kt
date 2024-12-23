@@ -28,6 +28,9 @@
 package com.tencent.devops.project.constant
 
 object ProjectConstant {
-    const val NAME_MAX_LENGTH = 64
+    const val PROJECT_NAME_MAX_LENGTH = 64
+    const val PROJECT_ID_MAX_LENGTH = 32
     const val NAME_MIN_LENGTH = 2
+    // 流水线命名规范
+    const val PIPELINE_NAME_FORMAT_MAX_LENGTH = 200
 }

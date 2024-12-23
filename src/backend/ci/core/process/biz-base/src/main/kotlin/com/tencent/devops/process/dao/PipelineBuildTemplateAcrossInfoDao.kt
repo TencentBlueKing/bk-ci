@@ -102,7 +102,7 @@ class PipelineBuildTemplateAcrossInfoDao {
             dslContext.batched { c ->
                 templateAcrossInfos.forEach { info ->
                     c.dsl().update(this)
-                        .set(TEMPLATE_INSTANCE_IDS, JsonUtil.toJson(info.templateInstancesIds))
+                        .set(TEMPLATE_INSTANCE_IDS, JsonUtil.toJson(info.templateInstancesIds, formatted = false))
                         .where(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(BUILD_ID.eq(buildId))

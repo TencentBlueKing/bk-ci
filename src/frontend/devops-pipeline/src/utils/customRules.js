@@ -35,6 +35,15 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    notInList: {
+        validate: function (value, args) {
+            if (args.indexOf(value) === -1) {
+                return true
+            } else {
+                return false
+            }
+        }
+    },
     // 不同时为空
     atlestNotEmpty: {
         validate: function (value, args) {
@@ -63,6 +72,11 @@ const customeRules = {
             return /^[a-z_][a-z_\d]*$/gi.test(value)
         }
     },
+    constVarRule: {
+        validate: function (value, args) {
+            return /^[A-Z][A-Z_\d]*$/g.test(value)
+        }
+    },
     excludeEmptyCapital: {
         validate: function (value, args) {
             return /^[a-z0-9_\/]+$/g.test(value)
@@ -88,6 +102,11 @@ const customeRules = {
             return /^[a-zA-Z0-9_]+$/g.test(value)
         }
     },
+    paramsIdRule: {
+        validate: function (value, args) {
+            return /^[a-z][a-z\d_]*$/gi.test(value)
+        }
+    },
     buildNumRule: {
         validate: function (value, args) {
             return /^[\w-{}() +?.:$"]{1,256}$/.test(value)
@@ -96,6 +115,21 @@ const customeRules = {
     timeoutsRule: {
         validate: function (value, args) {
             return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+        }
+    },
+    reminderTimeRule: {
+        validate: function (value, args) {
+            return /^(?:[1-9]|[1-9]\d|1[0-5][0-9]|168)$/.test(value)
+        }
+    },
+    maxConcurrencyRule: {
+        validate: function (value, args) {
+            return /^(?:[1-9]|[1-9]\d|[1-9]\d{2}|1000)$/.test(value)
+        }
+    },
+    objectRequired: {
+        validate: function (value, args) {
+            return Object.values(value).every(val => !!val)
         }
     }
 }

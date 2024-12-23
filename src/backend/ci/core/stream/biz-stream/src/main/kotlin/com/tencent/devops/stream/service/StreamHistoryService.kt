@@ -145,15 +145,20 @@ class StreamHistoryService @Autowired constructor(
             )
         }
         val records = mutableListOf<StreamBuildHistory>()
+        val gitRequestEvents = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext, requestIds = gitRequestBuildList.map { it.eventId }.toSet(), hasEvent = true
+        ).associateBy { it.id }
+        val pipelines = pipelineResourceDao.getPipelinesInIds(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineIds = gitRequestBuildList.map { it.pipelineId }
+        ).associateBy { it.pipelineId }
         gitRequestBuildList.forEach {
             val buildHistory = getBuildHistory(
                 buildId = it.buildId,
                 buildHistoryList = buildHistoryList
             ) ?: return@forEach
-            val gitRequestEvent = gitRequestEventDao.getWithEvent(
-                dslContext = dslContext,
-                id = it.eventId
-            ) ?: return@forEach
+            val gitRequestEvent = gitRequestEvents[it.eventId] ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent =
                 if (gitProjectId == gitRequestEvent.gitProjectId) {
@@ -174,8 +179,7 @@ class StreamHistoryService @Autowired constructor(
                     )?.pathWithNamespace
                     GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, pathWithNamespace)
                 }
-            val pipeline =
-                pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
+            val pipeline = pipelines[it.pipelineId] ?: return@forEach
             records.add(
                 StreamBuildHistory(
                     displayName = pipeline.displayName,
@@ -190,7 +194,7 @@ class StreamHistoryService @Autowired constructor(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = totalPage.toLong(),
-            records = records.sortedByDescending { it.buildHistory?.startTime }
+            records = records.sortedByDescending { it.buildHistory?.buildNum }
         )
     }
 

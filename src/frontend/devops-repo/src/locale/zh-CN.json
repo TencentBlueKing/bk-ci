@@ -279,7 +279,7 @@
   "manualConfig": "手动配置",
   "updateRepo": "更新本地的repo信息",
   "artifactSearchPlaceholder": "请输入制品名称，按Enter键搜索",
-  "loginRepo": "在命令行执行以下命令登陆仓库",
+  "loginRepo": "在命令行执行以下命令登录仓库",
   "cmdTag": "在命令行执行以下命令给本地镜像打标签",
   "cmdPush": "在命令行执行以下命令进行推送",
   "cmdPull": "在命令行执行以下命令进行拉取",

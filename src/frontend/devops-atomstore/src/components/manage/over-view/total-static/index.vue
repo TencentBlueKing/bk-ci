@@ -1,12 +1,29 @@
 <template>
-    <ul class="total-static-list" v-bkloading="{ isLoading }">
-        <li v-for="(statistic, index) in statisticList" :key="index" class="static-item">
-            <icon :name="statistic.name" class="item-icon" size="64"></icon>
+    <ul
+        class="total-static-list"
+        v-bkloading="{ isLoading }"
+    >
+        <li
+            v-for="(statistic, index) in statisticList"
+            :key="index"
+            class="static-item"
+        >
+            <icon
+                :name="statistic.name"
+                class="item-icon"
+                size="64"
+            ></icon>
             <h5 class="item-title">
-                <span :class="['item-name', { 'g-store-text-underline': statistic.tips }]"
+                <span
+                    :class="['item-name', { 'g-store-text-underline': statistic.tips }]"
                     v-bk-tooltips="{ content: statistic.tips, disabled: !statistic.tips }"
                 >{{ statistic.label }}</span>
-                <p :class="{ 'item-value': true, 'g-text-link': statistic.linkName }" @click="goToLink(statistic.linkName)">{{ statistic.value }}</p>
+                <p
+                    :class="{ 'item-value': true, 'g-text-link': statistic.linkName }"
+                    @click="goToLink(statistic.linkName)"
+                >
+                    {{ statistic.value }}
+                </p>
             </h5>
         </li>
     </ul>
@@ -108,6 +125,7 @@
                     font-size: .14rem;
                     color: #999;
                     line-height: .2rem;
+                    white-space: nowrap;
                 }
                 .item-value {
                     font-weight: 600;

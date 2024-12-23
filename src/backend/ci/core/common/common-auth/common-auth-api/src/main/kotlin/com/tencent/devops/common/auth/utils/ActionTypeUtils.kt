@@ -27,7 +27,8 @@
 
 package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.constant.CommonMessageCode.NOT_MEMBER_AND_NOT_OPEN_SOURCE
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 
 object ActionTypeUtils {
@@ -164,7 +165,7 @@ object ActionTypeUtils {
             } else if (isPublicProject) {
                 return false
             } else {
-                throw PermissionForbiddenException("非项目成员且项目为非开源项目")
+                throw ErrorCodeException(errorCode = NOT_MEMBER_AND_NOT_OPEN_SOURCE)
             }
             return false
         }

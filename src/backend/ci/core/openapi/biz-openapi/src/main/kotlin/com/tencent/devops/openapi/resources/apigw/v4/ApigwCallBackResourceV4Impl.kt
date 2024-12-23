@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwCallBackResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceCallBackResource
 import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
@@ -101,7 +102,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -152,7 +153,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
                 DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
             },
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

@@ -30,6 +30,7 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -53,10 +54,13 @@ class ProjectVOTest {
             dataId = 768,
             deployType = "n",
             updatedAt = "2019-02-12",
+            updator = "",
             bgId = 6867.toString(),
             bgName = "ssd",
             centerId = 87987.toString(),
             centerName = "fghfg",
+            businessLineId = 123.toString(),
+            businessLineName = "businessLineName",
             deptId = 2.toString(),
             deptName = "",
             description = "job project",
@@ -81,7 +85,9 @@ class ProjectVOTest {
             cc_app_name = "XXG",
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings()),
+            subjectScopes = emptyList(),
+            authSecrecy = ProjectAuthSecrecyStatus.PUBLIC.value
         )
         val message = JsonUtil.toJson(p)
         println(message)
@@ -116,12 +122,15 @@ class ProjectVOTest {
             dataId = 768,
             deployType = "n",
             updatedAt = "2019-02-12",
+            updator = "",
             bgId = 6867.toString(),
             bgName = "ssd",
             centerId = 87987.toString(),
             centerName = "fghfg",
             deptId = 2.toString(),
             deptName = "",
+            businessLineId = 123.toString(),
+            businessLineName = "businessLineName",
             description = "job project",
             englishName = "job",
             extra = "",
@@ -144,7 +153,9 @@ class ProjectVOTest {
             cc_app_name = null,
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings()),
+            subjectScopes = emptyList(),
+            authSecrecy = ProjectAuthSecrecyStatus.PUBLIC.value
         )
         val message = JsonUtil.toJson(p)
         println(message)

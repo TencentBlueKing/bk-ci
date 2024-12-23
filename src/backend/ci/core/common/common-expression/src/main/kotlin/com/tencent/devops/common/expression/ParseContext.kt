@@ -47,7 +47,7 @@ class ParseContext(
     val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null
 ) {
     val extensionFunctions = TreeMap<String, IFunctionInfo>(String.CASE_INSENSITIVE_ORDER)
-    val extensionNamedValues = TreeMap<String, INamedValueInfo>(String.CASE_INSENSITIVE_ORDER)
+    val extensionNamedValues = TreeMap<String, INamedValueInfo>()
     val lexicalAnalyzer: LexicalAnalyzer
     val operands = ArrayDeque<ExpressionNode>()
     val operators = ArrayDeque<Token>()

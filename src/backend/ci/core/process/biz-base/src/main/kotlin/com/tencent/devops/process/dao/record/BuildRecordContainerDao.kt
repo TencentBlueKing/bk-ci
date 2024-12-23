@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.Record15
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -51,29 +52,50 @@ class BuildRecordContainerDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordContainer>) {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
-            records.forEach { record ->
-                dslContext.insertInto(this)
-                    .set(BUILD_ID, record.buildId)
-                    .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.pipelineId)
-                    .set(RESOURCE_VERSION, record.resourceVersion)
-                    .set(STAGE_ID, record.stageId)
-                    .set(CONTAINER_ID, record.containerId)
-                    .set(EXECUTE_COUNT, record.executeCount)
-                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
-                    .set(CONTAINER_TYPE, record.containerType)
-                    .set(MATRIX_GROUP_FLAG, record.matrixGroupFlag)
-                    .set(MATRIX_GROUP_ID, record.matrixGroupId)
-                    .set(STATUS, record.status)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .onDuplicateKeyUpdate()
-                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
-                    .set(STATUS, record.status)
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .execute()
-            }
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                RESOURCE_VERSION,
+                STAGE_ID,
+                CONTAINER_ID,
+                EXECUTE_COUNT,
+                CONTAINER_VAR,
+                CONTAINER_TYPE,
+                MATRIX_GROUP_FLAG,
+                MATRIX_GROUP_ID,
+                STATUS,
+                TIMESTAMPS,
+                START_TIME,
+                END_TIME
+            ).also { insert ->
+                records.forEach { record ->
+                    insert.values(
+                        record.buildId,
+                        record.projectId,
+                        record.pipelineId,
+                        record.resourceVersion,
+                        record.stageId,
+                        record.containerId,
+                        record.executeCount,
+                        JsonUtil.toJson(record.containerVar, false),
+                        record.containerType,
+                        record.matrixGroupFlag,
+                        record.matrixGroupId,
+                        record.status,
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.startTime,
+                        record.endTime
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
+                .set(CONTAINER_VAR, MySQLDSL.values(CONTAINER_VAR))
+                .execute()
         }
     }
 
@@ -107,6 +129,27 @@ class BuildRecordContainerDao {
         }
     }
 
+    fun flushEndTimeWhenRetry(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int
+    ) {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            dslContext.update(this)
+                .setNull(END_TIME)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                        .and(CONTAINER_ID.eq(containerId))
+                ).execute()
+        }
+    }
+
     fun getRecord(
         dslContext: DSLContext,
         projectId: String,
@@ -136,7 +179,7 @@ class BuildRecordContainerDao {
         executeCount: Int,
         stageId: String? = null,
         matrixGroupId: String? = null,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -146,7 +189,7 @@ class BuildRecordContainerDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
             matrixGroupId?.let { conditions.add(MATRIX_GROUP_ID.eq(matrixGroupId)) }
-            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
@@ -164,13 +207,13 @@ class BuildRecordContainerDao {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-            update.where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-            )
-            stageId?.let { update.set(STAGE_ID, stageId) }
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                )
+            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
             update.execute()
         }
     }
@@ -180,7 +223,8 @@ class BuildRecordContainerDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        stageId: String? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = BUILD_ID.eq(buildId)
@@ -188,6 +232,7 @@ class BuildRecordContainerDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(MATRIX_GROUP_ID.isNull)
+                .let { if (stageId != null) it.and(STAGE_ID.eq(stageId)) else it }
             // 获取每个最大执行次数
             val max = DSL.select(
                 CONTAINER_ID.`as`(KEY_CONTAINER_ID),
@@ -219,13 +264,22 @@ class BuildRecordContainerDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(MATRIX_GROUP_ID.isNotNull)
+            // 获取每个最大执行次数
+            val max = DSL.select(
+                CONTAINER_ID.`as`(KEY_CONTAINER_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
                 CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
-            ).from(this).where(conditions).orderBy(CONTAINER_ID.asc()).fetch()
+            ).from(this).join(max).on(
+                CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(CONTAINER_ID.asc())
+                .fetch()
             return result.map { record ->
                 generateBuildRecordContainer(record)
             }

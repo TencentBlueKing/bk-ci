@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -53,11 +53,13 @@ import org.springframework.stereotype.Service
 class GitCheckService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val streamEventDispatcher: MQEventDispatcher
+    private val streamEventDispatcher: SampleEventDispatcher
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCheckService::class.java)
+        // GIT无目标分支，用于工蜂PUSH事件check回写
+        const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
     }
 
     // 针对不同部署环境的check token可以做不同的改动
@@ -84,6 +86,7 @@ class GitCheckService @Autowired constructor(
         mrId: Long?,
         manualUnlock: Boolean? = false,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        targetBranch: String?,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -141,11 +144,12 @@ class GitCheckService @Autowired constructor(
             manualUnlock = manualUnlock,
             buildNum = buildNum,
             reportData = reportData,
+            targetBranch = targetBranch ?: GIT_COMMIT_CHECK_NONE_TARGET_BRANCH,
             addCommitCheck = addCommitCheck
         )
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "ComplexMethod")
     private fun tryAddCommitCheck(
         gitProjectId: String,
         gitProjectName: String,
@@ -163,6 +167,7 @@ class GitCheckService @Autowired constructor(
         manualUnlock: Boolean?,
         buildNum: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        targetBranch: String,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -175,6 +180,7 @@ class GitCheckService @Autowired constructor(
             repositoryName = null,
             repositoryType = RepositoryType.ID
         )
+        var tBranch: String? = targetBranch
 
         while (true) {
             val lockKey = "code_git_commit_check_lock_$pipelineId"
@@ -190,8 +196,19 @@ class GitCheckService @Autowired constructor(
                     pipelineId = pipelineId,
                     repositoryConfig = repositoryConfig,
                     commitId = commitId,
-                    context = context
-                ).data
+                    context = context,
+                    targetBranch = tBranch
+                ).data ?: kotlin.run {
+                    gitCheckClient.getGitCheck(
+                        pipelineId = pipelineId,
+                        repositoryConfig = repositoryConfig,
+                        commitId = commitId,
+                        context = context,
+                        targetBranch = null
+                    ).data?.also {
+                        tBranch = null
+                    }
+                }
 
                 if (record == null) {
                     addCommitCheck(
@@ -206,6 +223,7 @@ class GitCheckService @Autowired constructor(
                         context = context,
                         description = description,
                         mrId = mrId,
+                        targetBranch = targetBranch,
                         addCommitCheck = addCommitCheck
                     )
                     gitCheckClient.createGitCheck(
@@ -217,7 +235,8 @@ class GitCheckService @Autowired constructor(
                             repositoryName = getProjectName(gitProjectId, gitProjectName),
                             commitId = commitId,
                             context = context,
-                            source = ExecuteSource.STREAM
+                            source = ExecuteSource.STREAM,
+                            targetBranch = targetBranch
                         )
                     )
                 } else {
@@ -235,6 +254,7 @@ class GitCheckService @Autowired constructor(
                             description = description,
                             mrId = mrId,
                             reportData = reportData,
+                            targetBranch = tBranch,
                             addCommitCheck = addCommitCheck
                         )
                         gitCheckClient.updateGitCheck(
@@ -286,6 +306,7 @@ class GitCheckService @Autowired constructor(
         description: String,
         mrId: Long?,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf()),
+        targetBranch: String?,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -308,7 +329,8 @@ class GitCheckService @Autowired constructor(
             description = description,
             block = block,
             mrRequestId = mrId,
-            reportData = reportData
+            reportData = reportData,
+            targetBranch = targetBranch?.let { listOf(it) }
         )
         addCommitCheck(request, ApiRequestRetryInfo(true))
     }

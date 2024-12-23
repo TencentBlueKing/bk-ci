@@ -34,9 +34,9 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -49,50 +49,50 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
+@Tag(name = "USER_STORE_INDEX_MANAGE", description = "研发商店指标管理")
 @Path("/user/store/indexs/manage")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStoreIndexManageResource {
 
-    @ApiOperation("新增研发商店指标")
+    @Operation(summary = "新增研发商店指标")
     @POST
     @Path("/add")
     fun add(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("研发商店指标请求报文体", required = true)
+        @Parameter(description = "研发商店指标请求报文体", required = true)
         @Valid
         storeIndexCreateRequest: StoreIndexCreateRequest
     ): Result<Boolean>
 
-    @ApiOperation("删除研发商店指标")
+    @Operation(summary = "删除研发商店指标")
     @DELETE
-    @Path("/indexIds/{indexId}/delete}")
+    @Path("/indexIds/{indexId}/delete")
     fun delete(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("指标ID", required = true)
+        @Parameter(description = "指标ID", required = true)
         @PathParam("indexId")
         indexId: String
     ): Result<Boolean>
 
-    @ApiOperation("查询研发商店指标")
+    @Operation(summary = "查询研发商店指标")
     @GET
     @Path("/list")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询关键字", required = false)
+        @Parameter(description = "查询关键字", required = false)
         @QueryParam("keyWords")
         keyWords: String? = null,
-        @ApiParam("页码", required = true, defaultValue = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数量", required = true, defaultValue = "10")
+        @Parameter(description = "每页数量", required = true, example = "10")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int

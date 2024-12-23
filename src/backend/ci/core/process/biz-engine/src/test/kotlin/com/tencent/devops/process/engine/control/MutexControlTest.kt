@@ -35,6 +35,8 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
+import com.tencent.devops.process.engine.service.EngineConfigService
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Disabled
@@ -43,8 +45,8 @@ import org.junit.jupiter.api.Test
 @Suppress("ALL", "UNUSED")
 class MutexControlTest {
 
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mockk())
-    private val redisOperation: RedisOperation = RedisOperation(mockk())
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mockk(), mockk())
+    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
     private val variables: Map<String, String> = mapOf(Pair("var1", "Test"))
     private val buildId: String = "b-12345678901234567890123456789012"
     private val containerId: String = "1"
@@ -65,6 +67,7 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        jobId = "job-123",
         containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
@@ -73,23 +76,27 @@ class MutexControlTest {
         matrixGroupId = null,
         matrixGroupFlag = false
     )
+    private val engineConfigMock = mockk<EngineConfigService>()
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
         containerBuildRecordService = mockk(),
         pipelineUrlBean = mockk(),
-        pipelineContainerService = mockk()
+        pipelineContainerService = mockk(),
+        engineConfigService = engineConfigMock
     )
 
     @Test
     // 测试MutexControl的初始化功能
     fun initMutexGroup() {
+        every { engineConfigMock.getMutexMaxQueue() } returns 10
         val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )
         Assertions.assertNotNull(initMutexGroup)
-        Assertions.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
+        Assertions.assertEquals("mutexGroupName\${var1}", initMutexGroup!!.mutexGroupName)
+        Assertions.assertEquals("mutexGroupNameTest", initMutexGroup.runtimeMutexGroup)
         Assertions.assertEquals(10080, initMutexGroup.timeout)
         Assertions.assertEquals(10, initMutexGroup.queue)
     }

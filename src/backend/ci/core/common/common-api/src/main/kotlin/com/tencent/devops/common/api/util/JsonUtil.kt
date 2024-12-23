@@ -32,9 +32,11 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.ser.FilterProvider
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
@@ -119,20 +121,38 @@ object JsonUtil {
 
     private val objectMapper = objectMapper()
 
+    private val jsonMapper = jsonMapper()
+
     private fun objectMapper(): ObjectMapper {
         return ObjectMapper().apply {
-            registerModule(javaTimeModule())
-            registerModule(KotlinModule())
-            enable(SerializationFeature.INDENT_OUTPUT)
-            enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-            enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            jsonModules.forEach { jsonModule ->
-                registerModule(jsonModule)
-            }
+            objectMapperInit()
         }
+    }
+
+    private fun ObjectMapper.objectMapperInit() {
+        registerModule(javaTimeModule())
+        registerModule(KotlinModule())
+        enable(SerializationFeature.INDENT_OUTPUT)
+        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+        enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
+        setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        jsonModules.forEach { jsonModule ->
+            registerModule(jsonModule)
+        }
+    }
+
+    private fun jsonMapper(): JsonMapper {
+        return JsonMapper.builder()
+            /* 使得POJO反序列化有序，对性能会有略微影响
+            *  https://github.com/FasterXML/jackson-databind/issues/3900
+            * */
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST).build().apply {
+                objectMapperInit()
+            }
     }
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
@@ -178,6 +198,7 @@ object JsonUtil {
         }
         subModules.forEach { subModule ->
             objectMapper.registerModule(subModule)
+            jsonMapper.registerModule(subModule)
             skipEmptyObjectMapper.registerModule(subModule)
             unformattedObjectMapper.registerModule(subModule)
         }
@@ -191,6 +212,13 @@ object JsonUtil {
             return bean.toString()
         }
         return getObjectMapper(formatted).writeValueAsString(bean)!!
+    }
+
+    fun toSortJson(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return jsonMapper.writeValueAsString(bean)!!
     }
 
     /**
@@ -224,11 +252,11 @@ object JsonUtil {
      * 将对象转不可修改的Map
      * 注意：会忽略掉值为null的属性, 不会忽略空串和空数组/列表对象
      */
-    fun toMutableMap(bean: Any): MutableMap<String, Any> {
+    fun toMutableMap(bean: Any, skipEmpty: Boolean = false): MutableMap<String, Any> {
         return when {
             ReflectUtil.isNativeType(bean) -> mutableMapOf()
             bean is String -> to(bean)
-            else -> to(getObjectMapper().writeValueAsString(bean))
+            else -> to((if (skipEmpty) skipEmptyObjectMapper else getObjectMapper()).writeValueAsString(bean))
         }
     }
 

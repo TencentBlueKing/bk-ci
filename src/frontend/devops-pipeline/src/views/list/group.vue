@@ -1,17 +1,29 @@
 <template>
     <article class="group-list">
-        <section class="loading-wrapper"
+        <section
+            class="loading-wrapper"
             v-bkloading="{
                 isLoading: loading.isLoadings,
                 title: loading.title
-            }">
+            }"
+        >
             <div class="group-list-wrapper">
-                <section v-show="showContent" :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]">
-                    <div class="group-list-hint" v-if="tagList.length > 0">
-                        <logo size="12" name="warning-circle" />
+                <section
+                    v-show="showContent"
+                    :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]"
+                >
+                    <div
+                        class="group-list-hint"
+                        v-if="tagList.length > 0"
+                    >
+                        <logo
+                            size="12"
+                            name="warning-circle"
+                        />
                         <span>{{ $t('group.groupNotice') }}</span>
                     </div>
-                    <div class="group-list-cards"
+                    <div
+                        class="group-list-cards"
                         v-for="(group, groupIndex) in tagList"
                         :key="groupIndex"
                         v-bkloading="{ isLoading: loading.isLoading }"
@@ -24,17 +36,26 @@
                                 </span>
                                 <span v-if="groupIndex !== isShowInputIndex">
                                     <span>
-                                        <a class="entry-link" @click="showInput(groupIndex, group.name)">{{ $t('rename') }}</a>
-                                        <a class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</a>
+                                        <a
+                                            class="entry-link"
+                                            @click="showInput(groupIndex, group.name)"
+                                        >{{ $t('rename') }}</a>
+                                        <a
+                                            class="entry-link"
+                                            @click="deleteGroup(groupIndex)"
+                                        >{{ $t('delete') }}</a>
                                     </span>
                                 </span>
-                                <span v-else class="group-title-input">
+                                <span
+                                    v-else
+                                    class="group-title-input"
+                                >
                                     <span class="bk-form-content">
                                         <bk-input
                                             ref="labelInput"
-                                            style="width: 95%; margin-right: 10px;"
+                                            style="width: 94%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
-                                            v-model="labelValue"
+                                            v-model.trim="labelValue"
                                             v-validate="'required|max:20'"
                                             name="groupName"
                                             @blur="labelInputBlur(groupIndex, group.name)"
@@ -44,23 +65,32 @@
                                         />
                                     </span>
                                     <span>
-                                        <a class="entry-link" @click="handleSave(groupIndex)">{{ $t('save') }}</a>
-                                        <a class="entry-link" @click="handleCancel(groupIndex, group.name)">{{ $t('cancel') }}</a>
+                                        <a
+                                            class="entry-link"
+                                            @click="handleSave(groupIndex)"
+                                        >{{ $t('save') }}</a>
+                                        <a
+                                            class="entry-link"
+                                            @click="handleCancel(groupIndex, group.name)"
+                                        >{{ $t('cancel') }}</a>
                                     </span>
                                     <div :class="errors.has('groupName') ? 'error-tips' : 'normal-tips'">{{ errors.first("groupName") }}</div>
                                 </span>
                             </div>
                         </div>
 
-                        <div :class="['group-card', { 'active': active.isActiveGroup === 's' + groupIndex + tagIndex }, { 'showTips': active.isActiveToops === ('s' + groupIndex + tagIndex) }, { 'group-edit': (active.isGroupEdit === 's' + groupIndex + tagIndex) }]"
-                            v-for="(item, tagIndex) in group.labels" :key="tagIndex"
-                            @mouseleave="inputMouseLeave">
+                        <div
+                            :class="['group-card', { 'active': active.isActiveGroup === 's' + groupIndex + tagIndex }, { 'showTips': active.isActiveToops === ('s' + groupIndex + tagIndex) }, { 'group-edit': (active.isGroupEdit === 's' + groupIndex + tagIndex) }]"
+                            v-for="(item, tagIndex) in group.labels"
+                            :key="tagIndex"
+                            @mouseleave="inputMouseLeave"
+                        >
                             <div class="group-card-title">
                                 <span class="tag-text">{{ item.name }}</span>
                                 <input
                                     ref="tagInput"
                                     class="tag-input"
-                                    v-model="tagValue"
+                                    v-model.trim="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
                                     maxlength="20"
                                     @blur="tagInputBlur($event, groupIndex, tagIndex)"
@@ -69,12 +99,31 @@
                                 />
                             </div>
                             <div class="group-card-tools">
-                                <i class="devops-icon icon-edit2 group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="deleteTag(groupIndex, tagIndex)"></i>
+                                <i
+                                    class="devops-icon icon-edit group-card-icon"
+                                    v-bk-tooltips="toolTips.rename"
+                                    @click="tagEdit($event, groupIndex, tagIndex)"
+                                ></i>
+                                <i
+                                    class="group-card-icon devops-icon icon-delete"
+                                    v-bk-tooltips="toolTips.delete"
+                                    @click="deleteTag(groupIndex, tagIndex)"
+                                ></i>
                             </div>
-                            <div v-show="active.isGroupEdit" class="group-card-edit-tools">
-                                <i class="devops-icon icon-check-1 group-card-edit-icon" v-bk-tooltips="toolTips.save" @click="tagSave(groupIndex, tagIndex)"></i>
-                                <i class="devops-icon icon-close group-card-edit-icon" v-bk-tooltips="toolTips.cancel" @click="tagCancel($event, groupIndex, tagIndex)"></i>
+                            <div
+                                v-show="active.isGroupEdit"
+                                class="group-card-edit-tools"
+                            >
+                                <i
+                                    class="devops-icon icon-check-1 group-card-edit-icon"
+                                    v-bk-tooltips="toolTips.save"
+                                    @click="tagSave(groupIndex, tagIndex)"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-close group-card-edit-icon"
+                                    v-bk-tooltips="toolTips.cancel"
+                                    @click="tagCancel($event, groupIndex, tagIndex)"
+                                ></i>
                             </div>
                         </div>
 
@@ -90,8 +139,14 @@
                         </bk-button>
                     </div>
 
-                    <div class="group-list-cards" v-if="isShowGroupBtn()">
-                        <bk-button size="large" icon="devops-icon icon-plus" class="group-list-creat"
+                    <div
+                        class="group-list-cards"
+                        v-if="isShowGroupBtn()"
+                    >
+                        <bk-button
+                            size="large"
+                            icon="devops-icon icon-plus"
+                            class="group-list-creat"
                             :disabled="btnIsdisable"
                             @click="showDialog"
                         >
@@ -108,7 +163,10 @@
                                     <p>{{ emptyTipsConfig.contentOne }}</p>
                                     <p>{{ emptyTipsConfig.contentTwo }}</p>
                                 </div>
-                                <bk-button theme="primary" @click="showDialog">
+                                <bk-button
+                                    theme="primary"
+                                    @click="showDialog"
+                                >
                                     {{ $t('group.addGroup') }}
                                 </bk-button>
                             </div>
@@ -119,16 +177,18 @@
                     v-model="groupSetting.isShow"
                     :title="groupSetting.title"
                     :close-icon="false"
+                    :cancel-text="$t('cancel')"
                     header-position="left"
                     width="480"
-                    @confirm="dialogCommit">
+                    @confirm="dialogCommit"
+                >
                     <div>
                         <div class="bk-form-item">
                             <label class="bk-label">{{ $t('group.groupName') }}</label>
                             <div class="bk-form-content">
                                 <bk-input
                                     :placeholder="$t('group.groupInputTips')"
-                                    v-model="groupSetting.value"
+                                    v-model.trim="groupSetting.value"
                                     name="groupName"
                                     v-validate="'required|max:20'"
                                     maxlength="20"
@@ -145,9 +205,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
+    import { mapGetters } from 'vuex'
 
     export default {
         directives: {
@@ -271,7 +331,6 @@
             },
             async handleSave (groupIndex) {
                 this.btnIsdisable = false
-
                 const params = {
                     projectId: this.projectId,
                     name: this.labelValue
@@ -354,7 +413,7 @@
                     title: this.$t('labelGroupDeleteConfirm'),
                     confirmFn: async () => {
                         try {
-                            const res = await this.$store.dispatch('pipelines/deleteGroup', {
+                            const res = await this.$store.dispatch('pipelines/deleteLabelGroup', {
                                 projectId: this.projectId,
                                 groupId: this.tagList[groupIndex].id
                             })
@@ -573,7 +632,7 @@
                         this.requestGrouptLists()
                         done?.()
                         this.$showTips({
-                            message: messageMap[method],
+                            message: this.$t(messageMap[method]),
                             theme: 'success'
                         })
                     }
@@ -664,7 +723,6 @@
             color: #979BA5;
         }
         &-content {
-            width: 1700px;
             // display: flex;
             // flex-wrap: wrap;
             margin: 0 auto;

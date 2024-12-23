@@ -27,86 +27,93 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-插件信息")
+@Schema(title = "流水线-插件信息")
 data class AtomRespItem(
-    @ApiModelProperty("原子名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @ApiModelProperty("原子代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("原子默认版本号", required = true)
+    @get:Schema(title = "插件版本", required = true)
+    val version: String,
+    @get:Schema(title = "插件默认版本号", required = true)
     val defaultVersion: String,
-    @ApiModelProperty("原子大类（原子市场发布的原子分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
+    @get:Schema(title = "插件大类（插件市场发布的插件分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
     val classType: String,
-    @ApiModelProperty("服务范围", required = true)
+    @get:Schema(title = "服务范围", required = true)
     val serviceScope: List<String>,
-    @ApiModelProperty("支持的操作系统", required = true)
+    @get:Schema(title = "支持的操作系统", required = true)
     val os: List<String>,
-    @ApiModelProperty("原子logo", required = false)
+    @get:Schema(title = "插件logo", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("原子图标", required = false)
+    @get:Schema(title = "插件图标", required = false)
     val icon: String?,
-    @ApiModelProperty("所属分类编码", required = true)
+    @get:Schema(title = "所属分类编码", required = true)
     val classifyCode: String,
-    @ApiModelProperty("所属分类名称", required = true)
+    @get:Schema(title = "所属分类名称", required = true)
     val classifyName: String,
-    @ApiModelProperty("原子所属范畴，TRIGGER：触发器类原子 TASK：任务类原子", required = true)
+    @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: String,
-    @ApiModelProperty("原子简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @ApiModelProperty("原子说明文档链接", required = false)
+    @get:Schema(title = "插件说明文档链接", required = false)
     val docsLink: String?,
-    @ApiModelProperty("原子类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: String,
-    @ApiModelProperty("原子状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中" +
+    @get:Schema(title = "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中" +
         "|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中" +
         "|UNDERCARRIAGED：已下架", required = true)
     val atomStatus: String,
-    @ApiModelProperty("原子描述", required = false)
+    @get:Schema(title = "插件描述", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
-    @ApiModelProperty("发布者")
+    @get:Schema(title = "发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @ApiModelProperty("创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @ApiModelProperty("是否为默认原子（默认原子默认所有项目可见）true：默认原子 false：普通原子", required = true)
+    @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
     val defaultFlag: Boolean,
-    @ApiModelProperty("是否为最新版本原子 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @ApiModelProperty("前端渲染模板版本（1.0代表历史存量原子渲染模板版本）", required = true)
+    @get:Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）", required = true)
     val htmlTemplateVersion: String,
-    @ApiModelProperty("无构建环境原子是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean?,
-    @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean?,
-    @ApiModelProperty("评分", required = false)
+    @get:Schema(title = "评分", required = false)
     val score: Double? = null,
-    @ApiModelProperty("最近执行次数", required = false)
+    @get:Schema(title = "最近执行次数", required = false)
     val recentExecuteNum: Int? = null,
-    @ApiModelProperty("是否能卸载标识", required = false)
+    @get:Schema(title = "是否能卸载标识", required = false)
     val uninstallFlag: Boolean? = null,
-    @ApiModelProperty("标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelList: List<Label>? = null,
-    @ApiModelProperty("是否有权限安装标识", required = false)
+    @get:Schema(title = "是否有权限安装标识", required = false)
     val installFlag: Boolean? = null,
-    @ApiModelProperty("是否已安装", required = false)
+    @get:Schema(title = "是否已安装", required = false)
     val installed: Boolean? = null,
-    @ApiModelProperty("荣誉信息", required = false)
+    @get:Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
-    @ApiModelProperty("指标信息列表")
+    @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
-    @ApiModelProperty("hotFlag")
+    @get:Schema(title = "hotFlag")
     val hotFlag: Boolean? = null
 )

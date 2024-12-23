@@ -36,22 +36,24 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
-import com.tencent.devops.process.yaml.modelCreate.ModelCreate
-import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
-import com.tencent.devops.process.yaml.modelCreate.inner.GitData
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.modelCreate.inner.PipelineInfo
-import com.tencent.devops.process.yaml.modelCreate.inner.StreamData
+import com.tencent.devops.process.yaml.creator.ModelCreate
+import com.tencent.devops.process.yaml.creator.QualityRulesException
+import com.tencent.devops.process.yaml.creator.inner.GitData
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.creator.inner.PipelineInfo
+import com.tencent.devops.process.yaml.creator.inner.StreamData
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -153,6 +155,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.gitStartBuild")
         logger.info(
             "StreamYamlBuild|gitStartBuild" +
                 "|eventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -185,7 +188,10 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
+                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                            realPipeline.displayName,
+                            action.data.context.pipelineAsCodeSettings
+                        ),
                         updateLastModifyUser = true
                     )
                 }
@@ -233,6 +239,7 @@ class StreamYamlBuild @Autowired constructor(
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )
                 }
+
                 is QualityRulesException -> {
                     Triple(
                         false,
@@ -244,6 +251,7 @@ class StreamYamlBuild @Autowired constructor(
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
+
                 else -> {
                     logger.warn("StreamYamlBuild|gitStartBuild|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
@@ -318,6 +326,7 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?,
         manualInputs: Map<String, String>?
     ): BuildId? {
+        action.data.watcherStart("streamYamlBuild.startBuildPipeline")
         logger.info(
             "StreamYamlBuild|startBuildPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -397,6 +406,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
+        action.data.watcherStart("streamYamlBuild.savePipeline.StreamBuildLock")
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),
@@ -438,6 +448,7 @@ class StreamYamlBuild @Autowired constructor(
         val modelCreateEvent = ModelCreateEvent(
             userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
+            elementInstallUserId = action.data.setting.enableUser,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
                 repositoryUrl = streamGitProjectInfo.gitHttpUrl,
@@ -525,7 +536,12 @@ class StreamYamlBuild @Autowired constructor(
                     ?: throw StreamTriggerException(
                         action,
                         TriggerReason.PIPELINE_PREPARE_ERROR,
-                        listOf("跨项目引用第三方构建资源池错误: 获取远程仓库(${repoNameAndPool[0]})信息失败, 请检查填写是否正确")
+                        listOf(
+                            I18nUtil.getCodeLanMessage(
+                                CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
+                                I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
                     )
 
                 val result = GitCommonUtils.getCiProjectId(

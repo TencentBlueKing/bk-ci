@@ -28,8 +28,10 @@
 package com.tencent.devops.common.service
 
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.filter.RequestChannelFilter
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
+import com.tencent.devops.common.service.prometheus.UndertowThreadMetrics
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import io.micrometer.core.instrument.MeterRegistry
@@ -71,5 +73,11 @@ class ServiceAutoConfiguration {
     fun traceFilter() = TraceFilter()
 
     @Bean
+    fun requestChannelFilter() = RequestChannelFilter()
+
+    @Bean
     fun bkTimedAspect(meterRegistry: MeterRegistry) = BkTimedAspect(meterRegistry)
+
+    @Bean
+    fun undertowThreadMetrics() = UndertowThreadMetrics()
 }

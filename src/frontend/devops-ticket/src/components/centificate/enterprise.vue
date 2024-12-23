@@ -4,10 +4,11 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     name="enterpriseId"
-                    v-validate="{ required: isValidEnterprise, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
+                    v-validate="{ required: isValidEnterprise, regex: /^[a-zA-Z0-9\.\_]{1,30}$/ }"
                     :placeholder="$t('ticket.cert.namePlaceholer')"
                     v-model="formData.certId"
                     :disabled="isEdit"
@@ -21,7 +22,8 @@
         <div class="bk-form-item is-required cert-input-item">
             <label class="bk-label">{{ $t('ticket.cert.remarkFile') }}：</label>
             <div class="bk-form-content">
-                <input type="text"
+                <input
+                    type="text"
                     class="bk-form-input"
                     readonly
                     name="mobileProvisionFileName"
@@ -30,13 +32,25 @@
                     :class="{ 'is-danger': errors.has('mobileProvisionFileName') }"
                     :placeholder="$t('ticket.cert.emptyFile')"
                 />
-                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
+                <a
+                    href="javascript:void(0);"
+                    class="file-input"
+                    :title="$t('ticket.cert.selectFile')"
+                >
                     <div class="file-input-wrap">
-                        <input type="file" class="file-input-btn" @change="handleFileUpload" accept=".mobileprovision" />
+                        <input
+                            type="file"
+                            class="file-input-btn"
+                            @change="handleFileUpload"
+                            accept=".mobileprovision"
+                        />
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.mobileProvisionFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span
+                    v-if="formData.mobileProvisionFileName"
+                    style="position: relative; top: 2px;"
+                ><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('mobileProvisionFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.remarkFileRule') }}</p>
             </div>
         </div>
@@ -45,7 +59,11 @@
         <div class="bk-form-item cert-textarea-item">
             <label class="bk-label">{{ $t('ticket.cert.certRemark') }}：</label>
             <div class="bk-form-content">
-                <textarea class="bk-form-textarea" :placeholder="$t('ticket.cert.certRemarkPlaceHolder')" v-model="formData.remark"></textarea>
+                <textarea
+                    class="bk-form-textarea"
+                    :placeholder="$t('ticket.cert.certRemarkPlaceHolder')"
+                    v-model="formData.remark"
+                ></textarea>
             </div>
         </div>
     </section>

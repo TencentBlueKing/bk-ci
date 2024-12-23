@@ -38,8 +38,9 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:metrics:api-metrics"))
     api("com.tencent.devops:devops-boot-starter-api")
-    api("com.tencent.bk.devops.turbo:api-turbo:0.0.2-RELEASE") {
+    api("com.tencent.bk.devops.turbo:api-turbo:0.0.7-SNAPSHOT") {
         isTransitive = false
     }
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
+    api(project(":core:dispatch:api-dispatch-docker"))
+    api(project(":core:environment:api-environment"))
 }

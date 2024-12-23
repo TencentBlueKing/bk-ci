@@ -27,36 +27,85 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.collect.Maps
+import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
+import com.tencent.devops.quality.constant.BK_CREATE_FAIL
+import com.tencent.devops.quality.constant.BK_CREATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_METRIC_DATA_UPDATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_CCN
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_DEFECT
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_DUPC
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_RIPS
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_SECURITY
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_STANDARD
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_WOODPECKER_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_BKCHECK_CPP
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_BKCHECK_OC
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CCN
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CHECKSTYLE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_COVERITY
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CPPLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DEFECT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DETEKT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DUPC
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_ESLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_GOML
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_KLOCWORK
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_OCCHECK
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_PHPCS
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_PYLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_SECURITY
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_STANDARD
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_STYLECOP
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_WOODPECKER_SENSITIVE
+import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_DESC_KEY
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_ELEMENT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_INDICATOR_NAME_KEY
+import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_CHINESE_NAME_EXISTS
+import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_ENGLISH_NAME_EXISTS
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
+import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import java.io.File
+import java.util.Base64
+import java.util.concurrent.Executors
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Service
 @Suppress("ALL")
@@ -65,13 +114,45 @@ class QualityIndicatorService @Autowired constructor(
     private val dslContext: DSLContext,
     private val indicatorDao: QualityIndicatorDao,
     private val metadataService: QualityMetadataService,
-    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao
+    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
+    private val redisOperation: RedisOperation,
+    val commonConfig: CommonConfig
 ) {
 
     private val encoder = Base64.getEncoder()
 
-    fun listByLevel(projectId: String): List<IndicatorStageGroup> {
+    @PostConstruct
+    fun init() {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_INDICATOR_INIT_LOCK",
+            expiredTimeInSeconds = 60
 
+        )
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
+                try {
+                    logger.info("start init quality indicator")
+                    val classPathResource = ClassPathResource(
+                        "i18n${File.separator}indicator_${commonConfig.devopsDefaultLocaleLanguage}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
+                    indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
+                    logger.info("init quality indicator end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality indicator fail! error:${ignored.message}")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
+    }
+
+    fun listByLevel(projectId: String): List<IndicatorStageGroup> {
+        val codeccToolNameMap = getCodeccToolNameMap()
+        val codeccToolDescMap = getCodeccToolDescMap()
         val indicatorRecords = listIndicatorByProject(projectId)
         val indicators = serviceListIndicatorRecord(indicatorRecords)
 
@@ -129,12 +210,16 @@ class QualityIndicatorService @Autowired constructor(
                     val detailHashId = encoder.encodeToString(elementDetail.toByteArray())
                     IndicatorStageGroup.IndicatorDetailGroup(detailHashId,
                         detailCnName,
-                        codeccToolDescMap[elementDetail]
-                            ?: "",
-                        indicatorList)
+                        codeccToolDescMap[elementDetail] ?: "",
+                        indicatorList
+                    )
                 }
-                IndicatorStageGroup.IndicatorControlPointGroup(encoder.encodeToString(controlPoint.key.toByteArray()),
-                    elementType, ElementUtils.getElementCnName(elementType, projectId), detailGroups)
+                IndicatorStageGroup.IndicatorControlPointGroup(
+                    hashId = encoder.encodeToString(controlPoint.key.toByteArray()),
+                    controlPoint = elementType,
+                    controlPointName = ElementUtils.getElementCnName(elementType, projectId),
+                    details = detailGroups
+                )
             }
             IndicatorStageGroup(
                 hashId = encoder.encodeToString(stage.key.toByteArray()),
@@ -250,7 +335,7 @@ class QualityIndicatorService @Autowired constructor(
                 thresholdType = it.thresholdType,
                 desc = it.desc,
                 readOnly = it.indicatorReadOnly,
-                stage = it.stage,
+                stage = I18nUtil.getCodeLanMessage(messageCode = it.stage, defaultMessage = it.stage),
                 range = it.indicatorRange,
                 type = it.type,
                 tag = it.tag,
@@ -264,9 +349,13 @@ class QualityIndicatorService @Autowired constructor(
     fun opCreate(userId: String, indicatorUpdate: IndicatorUpdate): Msg {
         checkSystemIndicatorExist(indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "创建成功", true)
+            return Msg(0, I18nUtil.getCodeLanMessage(BK_CREATE_SUCCESS), true)
         }
-        return Msg(-1, "未知的异常，创建失败", false)
+        return Msg(
+            -1,
+            I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = I18nUtil.getLanguage(userId)),
+            false
+        )
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
@@ -293,9 +382,13 @@ class QualityIndicatorService @Autowired constructor(
         checkSystemIndicatorExcludeExist(id, indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         if (indicatorDao.update(userId, id, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "更新指标数据成功", true)
+            return Msg(0, I18nUtil.getCodeLanMessage(BK_METRIC_DATA_UPDATE_SUCCESS), true)
         }
-        return Msg(code = -1, msg = "未知的异常，更新失败", flag = false)
+        return Msg(
+            code = -1,
+            msg = I18nUtil.getCodeLanMessage(messageCode = BK_UPDATE_FAIL),
+            flag = false
+        )
     }
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {
@@ -340,7 +433,7 @@ class QualityIndicatorService @Autowired constructor(
         val scriptIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val marketIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
-
+        val codeccToolNameMap = getCodeccToolNameMap()
         listIndicatorByProject(projectId).filter {
             if (keyword.isNullOrBlank()) true
             else it.cnName.contains(keyword!!)
@@ -366,15 +459,24 @@ class QualityIndicatorService @Autowired constructor(
                 val item = IndicatorListResponse.IndicatorListItem(
                     hashId = HashUtil.encodeLongId(indicator.id),
                     name = indicator.enName,
-                    cnName = indicator.cnName,
+                    cnName = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_NAME_KEY.format(indicator.id),
+                        defaultMessage = indicator.cnName
+                    ),
                     elementType = indicator.elementType,
-                    elementName = indicator.elementName,
+                    elementName = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_ELEMENT_NAME_KEY.format(indicator.id),
+                        defaultMessage = indicator.elementName
+                    ),
                     elementDetail = if (indicatorCnName.isNullOrBlank()) indicator.elementDetail else indicatorCnName,
                     metadatas = metadata,
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc ?: "",
+                    desc = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_INDICATOR_DESC_KEY.format(indicator.id),
+                        defaultMessage = indicator.desc ?: ""
+                    ),
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
@@ -414,10 +516,15 @@ class QualityIndicatorService @Autowired constructor(
         return convertRecord(record, metadata)
     }
 
-    fun setTestIndicator(userId: String, elementType: String, indicatorUpdateList: Collection<IndicatorUpdate>): Int {
+    fun setTestIndicator(
+        userId: String,
+        elementType: String,
+        tag: String,
+        indicatorUpdateList: Collection<IndicatorUpdate>
+    ): Int {
         logger.info("QUALITY|setTestIndicator userId: $userId, elementType: $elementType")
         val testIndicatorList = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
-            ?.filter { isTestIndicator(it) } ?: listOf()
+            ?.filter { isTestIndicator(tag, it) } ?: listOf()
         val testIndicatorMap = testIndicatorList.map { it.enName to it }.toMap()
         val lastIndicatorName = testIndicatorList.map { it.enName }
         val newIndicatorName = indicatorUpdateList.map { it.enName }
@@ -443,8 +550,8 @@ class QualityIndicatorService @Autowired constructor(
     fun serviceRefreshIndicator(elementType: String, metadataMap: Map<String /* dataId */, String /* id */>): Int {
         logger.info("QUALITY|refreshIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
-        val testData = data?.filter { isTestIndicator(it) } ?: listOf()
-        val prodData = data?.filter { !isTestIndicator(it) } ?: listOf()
+        val testData = data?.filter { isTestIndicator(IN_READY_TEST, it) } ?: listOf()
+        val prodData = data?.filter { !isTestIndicator(IN_READY_TEST, it) } ?: listOf()
         val userId = testData.firstOrNull()?.createUser ?: ""
 
         // 有则update
@@ -514,17 +621,17 @@ class QualityIndicatorService @Autowired constructor(
         return testData.size
     }
 
-    fun serviceDeleteTestIndicator(elementType: String): Int {
+    fun serviceDeleteTestIndicator(elementType: String, extra: String): Int {
         logger.info("QUALITY|deleteTestIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType)
-        val testData = data?.filter { isTestIndicator(it) } ?: listOf()
+        val testData = data?.filter { isTestIndicator(extra, it) } ?: listOf()
         return indicatorDao.delete(testData.map { it.id }, dslContext)
     }
 
     fun listIndicatorByProject(projectId: String): List<TQualityIndicatorRecord> {
-        val installedAtoms = getProjectAtomCodes(projectId)
-        val atomCodes = installedAtoms.map { it.atomCode }.toSet()
-        val installedAtomMap = installedAtoms.map { it.atomCode to it }.toMap()
+        val projectAtomsMap = getProjectAtomCodes(projectId)
+        logger.info("QUALITY|get project atoms map: $projectAtomsMap")
+        val atomCodes = projectAtomsMap.map { it.key }.toSet()
 
         val result = mutableListOf<TQualityIndicatorRecord>()
         val indicators = indicatorDao.listAll(dslContext)
@@ -533,11 +640,11 @@ class QualityIndicatorService @Autowired constructor(
         indicators.filter { it.type != IndicatorType.CUSTOM.name || it.indicatorRange == projectId } // 过滤调非本项目的脚本插件
             .groupBy { it.elementType }
             .forEach { (type, list) ->
-                val atom = installedAtomMap[type] ?: return@forEach
+                val installType = projectAtomsMap[type] ?: return@forEach
                 // 测试项目和测试指标不为空的话，就只列出插件测试相关的指标
                 val testIndicators = list.filter { isTestIndicator(it) }
-                val isTestProject = atom.installType == StoreProjectTypeEnum.TEST.name ||
-                    atom.installType == StoreProjectTypeEnum.INIT.name
+                val isTestProject = installType == StoreProjectTypeEnum.TEST.name ||
+                        installType == StoreProjectTypeEnum.INIT.name
                 if (isTestProject && testIndicators.isNotEmpty()) {
                     result.addAll(testIndicators)
                 } else {
@@ -548,8 +655,8 @@ class QualityIndicatorService @Autowired constructor(
         return result.filter { it.enable }
     }
 
-    private fun isTestIndicator(qualityIndicator: TQualityIndicatorRecord): Boolean {
-        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag == "IN_READY_TEST"
+    private fun isTestIndicator(tag: String, qualityIndicator: TQualityIndicatorRecord): Boolean {
+        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag == tag
     }
 
     private fun convertRecord(
@@ -561,8 +668,14 @@ class QualityIndicatorService @Autowired constructor(
             elementType = indicator.elementType,
             elementDetail = indicator.elementDetail ?: "",
             enName = indicator.enName,
-            cnName = indicator.cnName,
-            stage = indicator.stage ?: "",
+            cnName = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_NAME_KEY.format(indicator.id),
+                defaultMessage = indicator.cnName
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = indicator.stage,
+                defaultMessage = indicator.stage ?: ""
+            ),
             operation = QualityOperation.valueOf(indicator.defaultOperation),
             operationList = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
             threshold = indicator.threshold,
@@ -571,7 +684,10 @@ class QualityIndicatorService @Autowired constructor(
             type = indicator.type,
             tag = indicator.tag,
             metadataList = metadata,
-            desc = indicator.desc,
+            desc = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_DESC_KEY.format(indicator.id),
+                defaultMessage = indicator.desc
+            ),
             logPrompt = indicator.logPrompt,
             enable = indicator.enable ?: false,
             range = indicator.indicatorRange
@@ -585,16 +701,36 @@ class QualityIndicatorService @Autowired constructor(
 
     private fun checkSystemIndicatorExist(enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
-        if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-        if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+        if (indicators.any { it.enName == enName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
+                params = arrayOf(enName)
+            )
+        )
+        if (indicators.any { it.cnName == cnName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
+                params = arrayOf(cnName)
+            )
+        )
         return false
     }
 
     private fun checkSystemIndicatorExcludeExist(id: Long, enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
         val filterList = indicators.filter { it.id != id }
-        if (filterList.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-        if (filterList.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+        if (filterList.any { it.enName == enName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
+                params = arrayOf(enName)
+            )
+        )
+        if (filterList.any { it.cnName == cnName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
+                params = arrayOf(cnName)
+            )
+        )
         return false
     }
 
@@ -602,8 +738,18 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.indicatorRange != projectId) return@forEach
-            if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-            if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
+                    params = arrayOf(enName)
+                )
+            )
+            if (indicator.cnName == cnName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
+                    params = arrayOf(cnName)
+                )
+            )
         }
         return false
     }
@@ -612,8 +758,16 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.id == id || indicator.indicatorRange != projectId) return@forEach
-            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
-            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException(I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
+                params = arrayOf(enName)
+            ))
+            if (indicator.cnName == cnName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
+                    params = arrayOf(cnName)
+                )
+            )
         }
         return false
     }
@@ -641,7 +795,7 @@ class QualityIndicatorService @Autowired constructor(
             thresholdType = indicatorCreate.dataType.name,
             desc = indicatorCreate.desc,
             readOnly = false,
-            stage = "开发",
+            stage = DEVELOP,
             range = projectId,
             tag = "",
             enable = true,
@@ -649,8 +803,8 @@ class QualityIndicatorService @Autowired constructor(
         )
     }
 
-    private fun getProjectAtomCodes(projectId: String): List<InstalledAtom> {
-        return client.get(ServiceAtomResource::class).getInstalledAtoms(projectId).data ?: listOf()
+    private fun getProjectAtomCodes(projectId: String): Map<String, String> {
+        return client.get(ServiceMarketAtomResource::class).getProjectElementsInfo(projectId).data ?: mutableMapOf()
     }
 
     private fun serviceListIndicatorRecord(qualityIndicators: List<TQualityIndicatorRecord>?): List<QualityIndicator> {
@@ -679,15 +833,15 @@ class QualityIndicatorService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
-        val codeccToolNameMap = mapOf(
-            "STANDARD" to "代码规范",
-            "DEFECT" to "代码缺陷",
-            "SECURITY" to "安全漏洞",
+        fun getCodeccToolNameMap() = mapOf(
+            "STANDARD" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_SECURITY),
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
-            "RIPS" to "啄木鸟漏洞扫描-PHP",
-            "SENSITIVE" to "敏感信息",
-            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息",
+            "RIPS" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_RIPS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_SENSITIVE),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_WOODPECKER_SENSITIVE),
             "BKCHECK-CPP" to "bkcheck-cpp",
             "BKCHECK-OC" to "bkcheck-oc",
             "CHECKSTYLE" to "Checkstyle",
@@ -699,29 +853,33 @@ class QualityIndicatorService @Autowired constructor(
             "PHPCS" to "PHPCS",
             "PYLINT" to "PyLint",
             "STYLECOP" to "StyleCop",
-            "CCN" to "圈复杂度",
-            "DUPC" to "重复率")
+            "CCN" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_DUPC))
 
-        private val codeccToolDescMap = mapOf(
-            "STANDARD" to "按维度(推荐)",
-            "DEFECT" to "按维度(推荐)",
-            "SECURITY" to "按维度(推荐)",
-            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
-            "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
-            "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
-            "CPPLINT" to "谷歌开源的C++代码风格检查工具",
-            "ESLINT" to "JavaScript代码检查工具",
-            "PYLINT" to "Python代码风格检查工具",
-            "GOML" to "Golang静态代码分析工具",
-            "CHECKSTYLE" to "Java代码风格检查工具",
-            "STYLECOP" to "微软开源的C#静态代码分析工具",
-            "DETEKT" to "Kotlin静态代码分析工具 ",
-            "PHPCS" to "PHP代码风格检查工具",
-            "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-            "OCCHECK" to "OC代码风格检查工具",
-            "WOODPECKER_SENSITIVE" to "敏感信息检查工具",
-            "BKCHECK-CPP" to "C++代码风格检查工具",
-            "BKCHECK-OC" to "OC代码风格检查工具")
+        private fun getCodeccToolDescMap() = mapOf(
+            "STANDARD" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_SECURITY),
+            "CCN" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DUPC),
+            "COVERITY" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_COVERITY),
+            "KLOCWORK" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_KLOCWORK),
+            "CPPLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CPPLINT),
+            "ESLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_ESLINT),
+            "PYLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_PYLINT),
+            "GOML" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_GOML),
+            "CHECKSTYLE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CHECKSTYLE),
+            "STYLECOP" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_STYLECOP),
+            "DETEKT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DETEKT),
+            "PHPCS" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_PHPCS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_SENSITIVE),
+            "OCCHECK" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_OCCHECK),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_WOODPECKER_SENSITIVE),
+            "BKCHECK-CPP" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_CPP),
+            "BKCHECK-OC" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_OC))
+    }
+
+    private fun isTestIndicator(qualityIndicator: TQualityIndicatorRecord): Boolean {
+        return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag.startsWith(IN_READY_TEST)
     }
 }

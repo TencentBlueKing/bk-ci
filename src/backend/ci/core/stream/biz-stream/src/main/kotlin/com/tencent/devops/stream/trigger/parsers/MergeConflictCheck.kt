@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.parsers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
@@ -41,12 +42,10 @@ import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrStatus
-import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckDispatcher
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckEvent
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -54,7 +53,7 @@ import org.springframework.stereotype.Component
 class MergeConflictCheck @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate,
+    private val eventDispatcher: SampleEventDispatcher,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val streamEventService: StreamEventService,
     private val streamGitConfig: StreamGitConfig
@@ -157,7 +156,7 @@ class MergeConflictCheck @Autowired constructor(
                 recordId = notBuildRecordId,
                 reason = ErrorCodeEnum.GET_GIT_MERGE_INFO.name,
                 reasonDetail = if (e.defaultMessage.isNullOrBlank()) {
-                    ErrorCodeEnum.GET_GIT_MERGE_INFO.formatErrorMessage
+                    ErrorCodeEnum.GET_GIT_MERGE_INFO.getErrorMessage()
                 } else {
                     e.defaultMessage!!
                 }
@@ -206,6 +205,6 @@ class MergeConflictCheck @Autowired constructor(
     }
 
     private fun dispatchMrConflictCheck(event: StreamMrConflictCheckEvent) {
-        StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
+        eventDispatcher.dispatch(event)
     }
 }

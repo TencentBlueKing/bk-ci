@@ -28,25 +28,24 @@
 package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.log.pojo.enums.LogStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("结尾的日志查询模型")
+@Schema(title = "结尾的日志查询模型")
 data class EndPageQueryLogs(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("开始行号", required = true)
+    @get:Schema(title = "开始行号", required = true)
     var startLineNo: Long = 0L,
-    @ApiModelProperty("结束行号", required = true)
+    @get:Schema(title = "结束行号", required = true)
     var endLineNo: Long = 0L,
-    @ApiModelProperty("日志列表", required = true)
+    @get:Schema(title = "日志列表", required = true)
     var logs: List<LogLine> = listOf(),
-    @ApiModelProperty("所用时间", required = false)
+    @get:Schema(title = "所用时间", required = false)
     var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
+    @get:Schema(title = "日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status
 )

@@ -28,14 +28,16 @@
 package com.tencent.devops.common.web.handler
 
 import com.fasterxml.jackson.databind.JsonMappingException
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_QUERY_PARAM_REQUEST_ERROR
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class JsonMappingExceptionMapper : ExceptionMapper<JsonMappingException> {
@@ -49,7 +51,7 @@ class JsonMappingExceptionMapper : ExceptionMapper<JsonMappingException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "查询参数请求错误"
+            I18nUtil.getCodeLanMessage(BK_QUERY_PARAM_REQUEST_ERROR)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

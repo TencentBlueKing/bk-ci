@@ -6,36 +6,133 @@
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <div v-if="showContent && renderList.length" class="table-container">
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <div
+                v-if="showContent && renderList.length"
+                class="table-container"
+            >
                 <bk-table
                     :data="renderList"
                     size="small"
                     :show-pagination-info="true"
                     :pagination="pagination"
                     @page-change="handlePageChange"
-                    @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.id')" prop="credentialId"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.name')" prop="credentialName"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.type')" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.operation')" width="200">
+                    @page-limit-change="handlePageCountChange"
+                >
+                    <bk-table-column
+                        :label="$t('ticket.id')"
+                        prop="credentialId"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.alias')"
+                        prop="credentialName"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.type')"
+                        prop="credentialType"
+                        :formatter="changeTicketType"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.remark')"
+                        prop="credentialRemark"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.creator')"
+                        prop="createUser"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.creationTime')"
+                        prop="createTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedBy')"
+                        prop="updateUser"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedTime')"
+                        prop="updatedTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.operation')"
+                        width="200"
+                    >
                         <template slot-scope="props">
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <template v-if="props.row.permissions.use">
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.edit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CRED_RESOURCE_TYPE,
+                                            resourceCode: props.row.credentialId,
+                                            action: CRED_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    theme="primary"
+                                    text
+                                    @click="handleEditCredential(props.row)"
+                                >
+                                    {{ $t('ticket.edit') }}
+                                </bk-button>
+    
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.delete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CRED_RESOURCE_TYPE,
+                                            resourceCode: props.row.credentialId,
+                                            action: CRED_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    theme="primary"
+                                    text
+                                    @click="handleDeleteCredentail(props.row)"
+                                >
+                                    {{ $t('ticket.delete') }}
+                                </bk-button>
+                            </template>
+                            <template v-else>
+                                <bk-button
+                                    theme="primary"
+                                    outline
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('ticket.applyPermission') }}
+                                </bk-button>
+                            </template>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
-
-            <empty-tips :title="tip.title" :desc="tip.desc" :btns="tip.btns" v-if="showContent && !renderList.length"></empty-tips>
+            <empty-tips
+                :title="tip.title"
+                :desc="tip.desc"
+                :btns="tip.btns"
+                v-if="showContent && !renderList.length"
+            ></empty-tips>
         </section>
     </article>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
+    import { mapGetters } from 'vuex'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -43,6 +140,8 @@
         },
         data () {
             return {
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
                 viewId: 0,
                 loading: {
                     isLoading: true,
@@ -157,6 +256,14 @@
                 }
                 this.showContent = true
             },
+            handleApplyPermission (credential) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CRED_RESOURCE_TYPE,
+                    resourceCode: credential.credentialId,
+                    action: CRED_RESOURCE_ACTION.USE
+                })
+            },
             async handleDeleteCredentail (credential) {
                 if (this.hasPermission(credential.permissions, 'delete')) {
                     this.$bkInfo({
@@ -187,16 +294,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.credential,
-                            instanceId: [{
-                                id: credential.credentialId,
-                                name: credential.credentialId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CRED_RESOURCE_TYPE,
+                        resourceCode: credential.credentialId,
+                        action: CRED_RESOURCE_ACTION.DELETE
                     })
                 }
             },
@@ -210,16 +312,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.credential,
-                            instanceId: [{
-                                id: credential.credentialId,
-                                name: credential.credentialId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CRED_RESOURCE_TYPE,
+                        resourceCode: credential.credentialId,
+                        action: CRED_RESOURCE_ACTION.EDIT
                     })
                 }
             },
@@ -232,6 +329,9 @@
             },
             addCredentialHandler () {
                 this.$router.push('createCredential')
+            },
+            convertToTime (row, cell, time) {
+                return convertTime(time * 1000)
             }
         }
     }
@@ -239,7 +339,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .credential-operation-btn[disabled] {
-      cursor: url(../images/cursor-lock.png),auto !important;
-    }
 </style>

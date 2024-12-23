@@ -1,48 +1,76 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
-            <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component
-                    :is="obj.component"
+            <template v-if="obj.type === 'group'">
+                <form-field-group
+                    v-if="rely(obj, element)"
                     :name="key"
-                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
-                    :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
                     :value="element[key]"
-                    v-bind="obj">
-                </component>
-            </form-field>
+                    :handle-change="handleMethods"
+                    :key="key"
+                    v-bind="obj"
+                >
+                    <template v-for="(i, index) in obj.children">
+                        <form-field
+                            :key="i.key"
+                            v-if="rely(i, element)"
+                            v-bind="i"
+                            :is-error="errors.has(i.key)"
+                            :error-msg="errors.first(i.key)"
+                        >
+                            <component
+                                :is="i.component"
+                                :name="i.key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
+                                :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
+                                :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                :disabled="disabled"
+                                v-bind="i"
+                            />
+                        </form-field>
+                    </template>
+                </form-field-group>
+            </template>
+            <template v-else>
+                <form-field
+                    v-if="!obj.hidden && rely(obj, element)"
+                    :key="key"
+                    v-bind="obj"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                        :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
+                        :value="element[key]"
+                        :element="element"
+                        :disabled="disabled"
+                        v-bind="obj"
+                    />
+                </form-field>
+            </template>
         </template>
     </div>
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-git-lab-hook-trigger',
         mixins: [atomMixin, validMixins],
         created () {
-            // if (this.element.eventType === 'MERGE_REQUEST') {
-            //     this.atomPropsModel.block.hidden = false
-            //     this.atomPropsModel.webhookQueue.hidden = false
-            // } else {
-            //     this.atomPropsModel.block.hidden = true
-            //     this.atomPropsModel.webhookQueue.hidden = true
-            // }
-            if (!this.element.repositoryType) {
-                this.handleUpdateElement('repositoryType', 'ID')
+            if (!this.atomPropsModel?.userSettings) {
+                if (!this.element.repositoryType) {
+                    this.handleUpdateElement('repositoryType', 'ID')
+                }
+                this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
             }
-            this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
         },
         methods: {
             handleBlockEnable (name, value) {
-                // if (value === 'MERGE_REQUEST') {
-                //     this.atomPropsModel.block.hidden = false
-                //     this.atomPropsModel.webhookQueue.hidden = false
-                // } else {
-                //     this.atomPropsModel.block.hidden = true
-                //     this.atomPropsModel.webhookQueue.hidden = true
-                // }
                 this.handleUpdateElement(name, value)
             },
             handleMethods (name, value) {
@@ -53,12 +81,14 @@
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (value === 'ID') {
-                    this.atomPropsModel.repositoryHashId.hidden = false
-                    this.atomPropsModel.repositoryName.hidden = true
-                } else if (value === 'NAME') {
-                    this.atomPropsModel.repositoryHashId.hidden = true
-                    this.atomPropsModel.repositoryName.hidden = false
+                if (!this.atomPropsModel?.userSettings) {
+                    if (value === 'ID') {
+                        this.atomPropsModel.repositoryHashId.hidden = false
+                        this.atomPropsModel.repositoryName.hidden = true
+                    } else if (value === 'NAME') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = false
+                    }
                 }
                 this.handleUpdateElement(name, value)
             }

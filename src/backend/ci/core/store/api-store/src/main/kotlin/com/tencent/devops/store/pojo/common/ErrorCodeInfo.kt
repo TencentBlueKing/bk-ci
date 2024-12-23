@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("错误码信息")
+@Schema(title = "错误码信息")
 data class ErrorCodeInfo(
-    @ApiModelProperty("错误码")
+    @get:Schema(title = "错误码")
     val errorCode: Int,
-    @ApiModelProperty("中文简体描述信息")
-    val errorMsgZhCn: String,
-    @ApiModelProperty("中文繁体描述信息")
+    @get:Schema(title = "中文简体描述信息")
+    val errorMsgZhCn: String = "",
+    @get:Schema(title = "中文繁体描述信息")
     val errorMsgZhTw: String? = null,
-    @ApiModelProperty("英文描述信息")
+    @get:Schema(title = "英文描述信息")
     val errorMsgEn: String? = null
 )

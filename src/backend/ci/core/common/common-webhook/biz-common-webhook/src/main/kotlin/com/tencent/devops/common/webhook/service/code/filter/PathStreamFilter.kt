@@ -1,5 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
+import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 /**
@@ -11,14 +12,31 @@ class PathStreamFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
-    private val excludedPaths: List<String>
+    private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String = "",
+    // 排除过滤失败原因
+    private val excludedFailedReason: String = ""
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,
     includedPaths = includedPaths,
-    excludedPaths = excludedPaths
+    excludedPaths = excludedPaths,
+    includedFailedReason = includedFailedReason,
+    excludedFailedReason = excludedFailedReason
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PathStreamFilter::class.java)
+    }
+
     override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        if (userPath.endsWith("*")) {
+            logger.info(
+                "PathStreamFilter|path_end_with_*|" +
+                    "$eventPath|$userPath"
+            )
+        }
         val fullPathList = eventPath.removePrefix("/").split("/")
         val prefixPathList = userPath.removePrefix("/").split("/")
         if (fullPathList.size < prefixPathList.size) {

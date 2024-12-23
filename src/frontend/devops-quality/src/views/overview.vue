@@ -1,8 +1,11 @@
 <template>
     <div class="quality-overview-wrapper">
         <div class="inner-header">
-            <div class="title">{{$t('quality.总览')}}</div>
-            <a class="job-guide" @click="linkToDocs">{{$t('quality.了解更多质量红线')}}<i class="devops-icon icon-tiaozhuan"></i></a>
+            <div class="title">{{ $t('quality.总览') }}</div>
+            <a
+                class="job-guide"
+                @click="linkToDocs"
+            >{{ $t('quality.了解更多质量红线') }}<i class="devops-icon icon-tiaozhuan"></i></a>
         </div>
 
         <section
@@ -10,33 +13,45 @@
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
-            <image-empty v-if="showContent && isEmptyRule"
+            }"
+        >
+            <image-empty
+                v-if="showContent && isEmptyRule"
                 :title="emptyInfo.title"
                 :desc="emptyInfo.desc"
-                :btns="emptyInfo.btns">
+                :btns="emptyInfo.btns"
+            >
             </image-empty>
-            <div class="quality-overview-content" :class="{ 'overflow-content': isOverflow }" v-if="showContent && !isEmptyRule">
+            <div
+                class="quality-overview-content"
+                :class="{ 'overflow-content': isOverflow }"
+                v-if="showContent && !isEmptyRule"
+            >
                 <div class="overview-index-list">
-                    <div class="indicator-card" :class="{ 'jumpable-item': index === 0 || index === 2 }"
-                        v-for="(entry, index) in indicatorList" :key="index"
-                        @click="toLink(entry.label)">
+                    <div
+                        class="indicator-card"
+                        :class="{ 'jumpable-item': index === 0 || index === 2 }"
+                        v-for="(entry, index) in indicatorList"
+                        :key="index"
+                        @click="toLink(entry.label)"
+                    >
                         <div class="card-info-title">
                             <i :class="{ 'devops-icon': true, [`icon-${entry.icon}`]: true }"></i>
-                            <span class="title">{{entry.name}}</span>
+                            <span class="title">{{ entry.name }}</span>
                         </div>
                         <div class="card-info-stastics">
-                            <span class="total-count">{{entry.value}}</span>
-                            <span v-if="entry.label === 'ruleCount' || entry.label === 'pipelineCount'">{{$t('quality.条')}}</span>
-                            <span v-if="entry.label === 'indicatoCount'">{{$t('quality.个')}}</span>
-                            <span v-if="entry.label === 'interceptCount'">{{$t('quality.次')}}</span>
+                            <span class="total-count">{{ entry.value }}</span>
+                            <span v-if="entry.label === 'ruleCount' || entry.label === 'pipelineCount'">{{ $t('quality.条') }}</span>
+                            <span v-if="entry.label === 'indicatoCount'">{{ $t('quality.个') }}</span>
+                            <span v-if="entry.label === 'interceptCount'">{{ $t('quality.次') }}</span>
                         </div>
                     </div>
                 </div>
                 <div class="intercept-chart-wrapper">
                     <div class="intercept-item intercept-rank">
-                        <p class="chart-name">{{$t('quality.流水线拦截Top5')}}</p>
-                        <chart class="chart-wrapper rankchart-wrapper"
+                        <p class="chart-name">{{ $t('quality.流水线拦截Top5') }}</p>
+                        <chart
+                            class="chart-wrapper rankchart-wrapper"
                             :loading="loading.isLoading"
                             :option="processOptions('rank')"
                             autoresize
@@ -44,8 +59,9 @@
                         </chart>
                     </div>
                     <div class="intercept-item intercept-trend">
-                        <p class="chart-name">{{$t('quality.生效流水线执行数/拦截数趋势')}}</p>
-                        <chart class="chart-wrapper trend-chart-wrapper"
+                        <p class="chart-name">{{ $t('quality.生效流水线执行数/拦截数趋势') }}</p>
+                        <chart
+                            class="chart-wrapper trend-chart-wrapper"
                             :option="processOptions('trend')"
                             :loading="loading.isLoading"
                             autoresize
@@ -55,12 +71,19 @@
                 </div>
                 <div class="intercept-record-wrapper">
                     <div class="record-list-nav">
-                        <p class="info-title">{{$t('quality.拦截历史')}}</p>
+                        <p class="info-title">{{ $t('quality.拦截历史') }}</p>
                     </div>
-                    <div class="intercept-tips" v-if="interceptRecordList.length">
+                    <div
+                        class="intercept-tips"
+                        v-if="interceptRecordList.length"
+                    >
                         <i class="devops-icon icon-exclamation-circle"></i>
-                        <span class="intercept-count">{{$t('quality.仅展示最近10条。')}}
-                            <span class="more-history" v-if="interceptRecordList.length" @click="toRouteLink('interceptHistory')">{{$t('quality.查看更多')}}</span>
+                        <span class="intercept-count">{{ $t('quality.仅展示最近10条。') }}
+                            <span
+                                class="more-history"
+                                v-if="interceptRecordList.length"
+                                @click="toRouteLink('interceptHistory')"
+                            >{{ $t('quality.查看更多') }}</span>
                         </span>
                     </div>
                     <div class="record-list">
@@ -69,39 +92,66 @@
                             class="record-table"
                             :data="interceptRecordList"
                             :row-class-name="handleRowStyle"
-                            @row-click="handleRowClick">
-                            <bk-table-column :label="$t('quality.流水线')" prop="pipelineName">
+                            @row-click="handleRowClick"
+                        >
+                            <bk-table-column
+                                :label="$t('quality.流水线')"
+                                prop="pipelineName"
+                            >
                                 <template slot-scope="props">
-                                    <a class="item-times item-pipelinename" :title="props.row.pipelineName"
+                                    <a
+                                        class="item-times item-pipelinename"
+                                        :title="props.row.pipelineName"
                                         target="_blank"
                                         :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
-                                    >{{props.row.pipelineName}}</a>
+                                    >{{ props.row.pipelineName }}</a>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('quality.红线规则')" prop="ruleName">
+                            <bk-table-column
+                                :label="$t('quality.红线规则')"
+                                prop="ruleName"
+                            >
                                 <template slot-scope="props">
-                                    <span class="item-times" :title="props.row.ruleName" @click="toRouteLink('ruleList')">{{props.row.ruleName}}</span>
+                                    <span
+                                        class="item-times"
+                                        :title="props.row.ruleName"
+                                        @click="toRouteLink('ruleList')"
+                                    >{{ props.row.ruleName }}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('quality.拦截详情')" prop="resultMsg" min-width="200" class-name="indicator-item">
+                            <bk-table-column
+                                :label="$t('quality.拦截详情')"
+                                prop="resultMsg"
+                                min-width="200"
+                                class-name="indicator-item"
+                            >
                                 <template slot-scope="props">
-                                    <div class="indicator-detail" :title="handleRemark(props.row.resultMsg)">
-                                        <span v-for="(col, key) in props.row.resultMsg" :key="key">
-                                            <span>{{col.indicatorName}}</span>
+                                    <div
+                                        class="indicator-detail"
+                                        :title="handleRemark(props.row.resultMsg)"
+                                    >
+                                        <span
+                                            v-for="(col, key) in props.row.resultMsg"
+                                            :key="key"
+                                        >
+                                            <span>{{ col.indicatorName }}</span>
                                             <span>=</span>
-                                            <span>{{col.actualValue === undefined ? 'null' : col.actualValue}}</span>，
-                                            <span>{{$t('quality.期望')}}
-                                                <span>{{indexHandlerConf[col.operation]}}</span>
-                                                <span>{{col.value}}</span>
+                                            <span>{{ col.actualValue === undefined ? 'null' : col.actualValue }}</span>，
+                                            <span>{{ $t('quality.期望') }}
+                                                <span>{{ indexHandlerConf[col.operation] }}</span>
+                                                <span>{{ col.value }}</span>
                                             </span>
                                             <br>
                                         </span>
                                     </div>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('quality.拦截时间')" prop="interceptTime">
+                            <bk-table-column
+                                :label="$t('quality.拦截时间')"
+                                prop="interceptTime"
+                            >
                                 <template slot-scope="props">
-                                    {{localConvertTime(props.row.interceptTime)}}
+                                    {{ localConvertTime(props.row.interceptTime) }}
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -131,6 +181,7 @@
     } from '@/utils/chart-option'
     import imageEmpty from '@/components/common/imageEmpty'
     import { convertTime } from '@/utils/util'
+    import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
 
     use([
         CanvasRenderer,
@@ -149,6 +200,7 @@
             'image-empty': imageEmpty
         },
         data () {
+            const { projectId } = this.$route.params
             return {
                 showContent: false,
                 isEmptyRule: false,
@@ -185,7 +237,13 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toRouteLink('createRule'),
-                            text: this.$t('quality.创建规则')
+                            text: this.$t('quality.创建规则'),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RULE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: RULE_RESOURCE_ACTION.CREATE
+                            }
                         }
                     ]
                 }

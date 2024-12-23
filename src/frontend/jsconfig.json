@@ -1,0 +1,18 @@
+{
+    "vueCompilerOptions": {
+        "target": 2.7,
+        "include": [
+            "./src/**/*",
+            "./locale/**/*"
+        ],
+        "exclude": [
+            "node_modules"
+        ],
+        "extensions": [
+            ".vue",
+            ".js",
+            ".ts"
+        ]
+        
+    }
+}

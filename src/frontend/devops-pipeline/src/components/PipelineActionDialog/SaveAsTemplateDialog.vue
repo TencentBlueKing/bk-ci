@@ -11,8 +11,14 @@
         :auto-close="false"
         :draggable="false"
         @confirm="submit"
-        @cancel="cancel">
-        <bk-form v-if="isSaveAsTemplateShow" v-bkloading="{ isLoading: isSubmiting }" :model="formModel" label-width="120">
+        @cancel="cancel"
+    >
+        <bk-form
+            v-if="isSaveAsTemplateShow"
+            v-bkloading="{ isLoading: isSubmiting }"
+            :model="formModel"
+            label-width="120"
+        >
             <bk-form-item
                 v-for="item in formModel"
                 :key="item.name"
@@ -26,7 +32,10 @@
                     v-model="model.templateName"
                     :placeholder="$t(`template.${item.placeholder}`)"
                 />
-                <bk-radio-group v-else v-model="model.isCopySetting">
+                <bk-radio-group
+                    v-else
+                    v-model="model.isCopySetting"
+                >
                     <bk-radio
                         v-for="(entry, key) in optionGroups"
                         :key="key"
@@ -80,7 +89,7 @@
                                 message: this.$t('template.nameInputTips')
                             },
                             {
-                                max: 30,
+                                max: 128,
                                 message: this.$t('pipelineNameInputTips')
                             }
                         ]
@@ -94,9 +103,7 @@
             }
         },
         methods: {
-            ...mapActions('pipelines', [
-                'saveAsTemplate'
-            ]),
+            ...mapActions('pipelines', ['saveAsTemplate']),
             reset () {
                 this.model = {
                     templateName: '',
@@ -109,7 +116,8 @@
                 let theme = 'success'
                 try {
                     this.isSubmiting = true
-                    const { projectId, pipelineId } = this.pipeline
+                    const { pipelineId } = this.pipeline
+                    const { projectId } = this.$route.params
                     const postData = {
                         pipelineId,
                         ...this.model
@@ -141,7 +149,7 @@
 </script>
 
 <style lang="scss">
-    .template-copy-setting-radio {
-        margin-right: 12px;
-    }
+.template-copy-setting-radio {
+  margin-right: 12px;
+}
 </style>

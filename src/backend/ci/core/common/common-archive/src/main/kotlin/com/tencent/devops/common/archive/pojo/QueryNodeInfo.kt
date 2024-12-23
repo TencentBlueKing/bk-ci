@@ -43,7 +43,7 @@ data class QueryNodeInfo(
     var md5: String? = null,
     var projectId: String,
     var repoName: String,
-    var metadata: Map<String, String>?
+    var metadata: Map<String, Any>?
 ) {
     fun toFileInfo() = FileInfo(
         createdBy = createdBy,

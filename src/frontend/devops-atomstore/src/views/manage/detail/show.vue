@@ -1,14 +1,18 @@
 <template>
     <article class="manage-detail">
         <header class="manage-detail-header">
-            <router-link :to="detail.editFlag ? { name: 'edit' } : ''"
+            <router-link
+                :to="detail.editFlag ? { name: 'edit' } : ''"
                 :class="{ disable: !detail.editFlag }"
-                :title="!detail.editFlag && $t('store.只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息')"
-            >{{ $t('store.编辑') }}</router-link>
+                :title="!detail.editFlag && $t('store.有新版本正在发布中，请取消发布再编辑，或者等待发布完成后编辑')"
+            >
+                {{ $t('store.编辑') }}
+            </router-link>
         </header>
 
         <main class="detail-main">
-            <component :is="`${$route.params.type}Show`"
+            <component
+                :is="`${$route.params.type}Show`"
                 class="detail-show"
                 :detail="detail"
             ></component>

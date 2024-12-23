@@ -35,11 +35,10 @@ import com.tencent.devops.common.expression.expression.ITraceWriter
 class EvaluationContext(
     val trace: ITraceWriter?,
     val state: Any?,
-    ops: EvaluationOptions?,
+    val options: EvaluationOptions,
     val node: ExpressionNode?,
     val expressionOutput: ExpressionOutput?
 ) {
-    val options: EvaluationOptions = EvaluationOptions(ops)
     val memory: EvaluationMemory
     private val mTraceResults = mutableMapOf<ExpressionNode, String>()
     private val mTraceMemory: MemoryCounter

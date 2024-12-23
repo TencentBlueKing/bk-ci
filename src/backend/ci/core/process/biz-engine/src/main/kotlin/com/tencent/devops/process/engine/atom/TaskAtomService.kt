@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -44,12 +46,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.jmx.elements.JmxElements
@@ -67,7 +71,6 @@ import org.springframework.stereotype.Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
@@ -85,21 +88,18 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
-            if (!VmOperateTaskGenerator.isVmAtom(task)) {
-                dispatchBroadCastEvent(task, ActionType.START)
-            }
+            dispatchBroadCastEvent(task, ActionType.START)
             // 更新状态
             pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
             )
-            // 插件状态变化-启动
-            taskBuildRecordService.taskStart(
+            // 插件状态变化-启动（排除VM控制的启动插件）
+            if (!VMUtils.isVMTask(task.taskId)) taskBuildRecordService.taskStart(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
-                containerId = task.containerId,
                 taskId = task.taskId,
                 executeCount = task.executeCount ?: 1
             )
@@ -111,23 +111,33 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
-            atomResponse.errorMsg = "后台服务任务执行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
-            atomResponse.errorMsg = "后台服务运行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {
             taskAfter(atomResponse, task, startTime)
@@ -137,6 +147,7 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
         pipelineEventDispatcher.dispatch(
+            // 内置task启动/结束，包含 startVM、stopVM
             PipelineBuildStatusBroadCastEvent(
                 source = "task-${task.taskId}",
                 projectId = task.projectId,
@@ -144,7 +155,18 @@ class TaskAtomService @Autowired(required = false) constructor(
                 userId = task.starter,
                 taskId = task.taskId,
                 buildId = task.buildId,
-                actionType = actionType
+                actionType = actionType,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = task.status.name,
+                type = when (actionType) {
+                    ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                    ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    else -> null
+                }
             )
         )
     }
@@ -210,6 +232,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                     buildId = task.buildId,
                     containerId = task.containerId,
                     taskId = task.taskId,
+                    executeCount = task.executeCount ?: 1,
                     buildStatus = atomResponse.buildStatus,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
@@ -223,6 +246,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,
+                            executeCount = task.executeCount ?: 1,
                             taskId = updateTaskStatusInfo.taskId,
                             taskStatus = updateTaskStatusInfo.buildStatus
                         )
@@ -232,8 +256,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                             buildId = task.buildId,
                             message = updateTaskStatusInfo.message!!,
                             tag = updateTaskStatusInfo.taskId,
-                            jobId = updateTaskStatusInfo.containerHashId,
-                            executeCount = updateTaskStatusInfo.executeCount
+                            containerHashId = updateTaskStatusInfo.containerHashId,
+                            executeCount = updateTaskStatusInfo.executeCount,
+                            jobId = null,
+                            stepId = updateTaskStatusInfo.stepId
                         )
                     }
                 }
@@ -254,15 +280,14 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
 
-        if (!VmOperateTaskGenerator.isVmAtom(task)) {
-            dispatchBroadCastEvent(task, ActionType.END)
-        }
+        dispatchBroadCastEvent(task, ActionType.END)
 
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount,
+            stepId = task.stepId
         )
     }
 
@@ -271,8 +296,12 @@ class TaskAtomService @Autowired(required = false) constructor(
      */
     fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
         val startTime = System.currentTimeMillis()
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-
+        // #8879 被动终止的插件应该设为取消状态
+        var atomResponse = if (actionType.isTerminate()) {
+            AtomResponse(BuildStatus.CANCELED)
+        } else {
+            AtomResponse(BuildStatus.FAILED)
+        }
         try {
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑
@@ -286,8 +315,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task[${task.taskName}]", t)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -297,8 +328,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -315,8 +348,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
         } else {
             if (stopFlag) {
@@ -324,8 +359,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                     buildId = task.buildId,
                     message = "Try to Stop Task [${task.taskName}]...",
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
             }
         }

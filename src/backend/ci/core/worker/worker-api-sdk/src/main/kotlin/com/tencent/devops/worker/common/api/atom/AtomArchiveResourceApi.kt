@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -42,8 +43,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
@@ -52,12 +53,20 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_PLUGIN_PLATFORM_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_ATOM_FILE_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_PLUGIN_FILE_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_ENV_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_SENSITIVE_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import java.io.File
-import java.net.URLEncoder
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -85,7 +94,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件执行环境信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_ENV_INFO_FAILED,
+                AgentEnv.getLocaleLanguage()
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -104,7 +119,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
-        val responseContent = request(request, "更新插件执行环境信息失败")
+            val responseContent = request(
+                request,
+                MessageUtil.getMessageByLocale(
+                    UPDATE_PLUGIN_ENV_INFO_FAILED,
+                    AgentEnv.getLocaleLanguage()
+                )
+            )
         return objectMapper.readValue(responseContent)
     }
 
@@ -114,7 +135,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     override fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?> {
         val path = "/ms/store/api/build/store/sensitiveConf/types/ATOM/codes/$atomCode"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件敏感信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_SENSITIVE_INFO_FAILED,
+                AgentEnv.getLocaleLanguage()
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -148,7 +175,12 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             destPath.trim().removePrefix("/") + "/" + file.name
         }
 
-        LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
+        LoggerService.addNormalLine("${
+            MessageUtil.getMessageByLocale(
+                ARCHIVE_PLUGIN_FILE_FAILED,
+                AgentEnv.getLocaleLanguage()
+            )
+        }>>> ${file.name}")
 
         val url = StringBuilder("/ms/artifactory/build/atom/result/$path")
         with(buildVariables) {
@@ -161,7 +193,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
-        val responseContent = request(request, "归档插件文件失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(ARCHIVE_ATOM_FILE_FAIL, language = AgentEnv.getLocaleLanguage())
+        )
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
@@ -208,21 +243,29 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        atomCreateTime: Long,
         file: File,
-        isVmBuildEnv: Boolean
+        authFlag: Boolean
     ) {
         val filePath = when (realm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
             REALM_BK_REPO -> "/bk-store/plugin/$atomFilePath"
             else -> throw IllegalArgumentException("unknown artifactory realm")
         }
+        if (realm == REALM_BK_REPO) {
+            try {
+                val path = "/generic$filePath"
+                val request = buildGet(path, useFileDevnetGateway = true)
+                return download(request, file)
+            } catch (e: Exception) {
+                logger.info("download with fileGateway error: ${e.message}")
+            }
+        }
         val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
             URLEncoder.encode(
                 filePath,
                 "UTF-8"
             )
-        }"
+        }&authFlag=$authFlag"
         val request = buildGet(path)
         download(request, file)
     }
@@ -238,7 +281,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/" +
             "types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED,
+                AgentEnv.getLocaleLanguage()
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -252,7 +301,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)
-        val responseContent = request(request, "添加插件对接平台信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                ADD_PLUGIN_PLATFORM_INFO_FAILED,
+                AgentEnv.getLocaleLanguage()
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 

@@ -7,8 +7,10 @@ type ConfigYaml struct {
 	Kubernetes        Kubernetes        `json:"kubernetes"`
 	Gateway           Gateway           `json:"gateway"`
 	Dispatch          Dispatch          `json:"dispatch"`
+	BuildLess         BuildLess         `json:"buildless"`
 	BuildAndPushImage BuildAndPushImage `json:"buildAndPushImage"`
 	ApiServer         ApiServer         `json:"apiServer"`
+	Docker            Docker            `json:"docker"`
 }
 
 type Server struct {
@@ -134,4 +136,16 @@ type Auth struct {
 type ApiToken struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type BuildLess struct {
+	Enabled     bool        `yaml:"enabled"`
+	Image       string      `yaml:"image"`
+	Replicas    int         `yaml:"replicas"`
+	VolumeMount VolumeMount `json:"volumeMount"`
+	Volume      Volume      `json:"volume"`
+}
+
+type Docker struct {
+	Enable bool `json:"enable"`
 }

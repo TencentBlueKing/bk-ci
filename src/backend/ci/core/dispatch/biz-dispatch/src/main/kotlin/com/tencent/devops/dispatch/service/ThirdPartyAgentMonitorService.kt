@@ -27,25 +27,33 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.BK_BUILD_AGENT_DETAIL_LINK_ERROR
+import com.tencent.devops.dispatch.constants.BK_DOCKER_BUILD_VOLUME
+import com.tencent.devops.dispatch.constants.BK_DOCKER_WAS_RECENTLY_BUILT
+import com.tencent.devops.dispatch.constants.BK_HEARTBEAT_TIME
+import com.tencent.devops.dispatch.constants.BK_MAXIMUM_PARALLELISM
+import com.tencent.devops.dispatch.constants.BK_TASK_FETCHING_TIMEOUT
+import com.tencent.devops.dispatch.constants.BK_UNLIMITED
+import com.tencent.devops.dispatch.constants.BK_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 三方构建机的业务监控拓展
@@ -81,9 +89,10 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         val heartbeatInfo = agentDetail.heartbeatInfo
 
         logMessage.append(
-            MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, agentDetail.nodeId)
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
+                params = arrayOf(event.projectId, agentDetail.nodeId),
+                language = I18nUtil.getDefaultLocaleLanguage()
             )
         )
 
@@ -96,9 +105,19 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         if (record.dockerInfo != null) {
-            logMessage.append("|Docker构建|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DOCKER_BUILD_VOLUME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
         } else {
-            logMessage.append("|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_MAXIMUM_PARALLELISM,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
         }
         if (parallelTaskCount != "0") {
             logMessage.append(parallelTaskCount).append("/")
@@ -106,7 +125,12 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         if (parallelTaskCount == "0") {
-            logMessage.append("无限制(unlimited), 注意负载(Attention)")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_UNLIMITED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
         }
         log(event, logMessage, tag)
 
@@ -115,13 +139,30 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         heartbeatInfo.heartbeatTime?.let { self ->
-            logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_HEARTBEAT_TIME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " ${DateTimeUtil.formatDate(Date(self))}"
+            )
         }
 
         if (record.dockerInfo != null) {
-            logMessage.append("|Docker构建|最近${heartbeatInfo.dockerTaskList?.size ?: 0}次运行中的构建:\n")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DOCKER_WAS_RECENTLY_BUILT,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("${heartbeatInfo.dockerTaskList?.size ?: 0}")
+                )
+            )
         } else {
-            logMessage.append("|最近${heartbeatInfo.taskList?.size ?: 0}次运行中的构建:\n")
+            logMessage.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_WAS_RECENTLY_BUILT,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("${heartbeatInfo.taskList?.size ?: 0}")
+                )
+            )
         }
 
         if (record.dockerInfo != null) {
@@ -131,7 +172,12 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
                         return@dockerInfoFor
                     }
                     logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
-                    logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+                    logMessage.append(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_RUNNING,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + " #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n"
+                    )
                 }
             }
         } else {
@@ -141,7 +187,12 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
                         return@taskInfoFor
                     }
                     logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
-                    logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+                    logMessage.append(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_RUNNING,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + " #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n"
+                    )
                 }
             }
         }
@@ -154,15 +205,17 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             buildId = event.buildId,
             message = sb.toString(),
             tag = tag,
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = null,
+            stepId = event.stepId
         )
         sb.clear()
     }
 
     private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
     /**
@@ -187,7 +240,13 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
             if (outTime) {
                 thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
-                sb.append("任务领取超过$ROLLBACK_MIN 分钟没有启动, 可能存在异常，开始重置")
+                sb.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_TASK_FETCHING_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("$ROLLBACK_MIN")
+                    )
+                )
                     .append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
                 log(event, sb, VMUtils.genStartVMTaskId(event.vmSeqId))
             }

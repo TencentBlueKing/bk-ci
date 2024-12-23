@@ -31,11 +31,12 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineBuildCommitResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -45,12 +46,12 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -154,7 +155,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 // md5不一致时更新蓝盾的model
                 if (oldMd5 != md5) {
                     // 编辑流水线model
-                    processClient.edit(
+                    processClient.editPipeline(
                         userId = userId,
                         projectId = projectCode,
                         pipelineId = pipeline.pipelineId,
@@ -180,7 +181,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
             } else {
                 // 编辑流水线model
-                processClient.edit(
+                processClient.editPipeline(
                     userId = userId,
                     projectId = projectCode,
                     pipelineId = pipeline.pipelineId,
@@ -261,7 +262,10 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(pipeline.displayName),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(
+                        pipeline.displayName,
+                        action.data.context.pipelineAsCodeSettings
+                    ),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -337,6 +341,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
         }
 
+        action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock.locked")
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildLock = StreamBuildLock(
             redisOperation = redisOperation,
@@ -346,6 +351,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         var buildId = ""
         try {
             buildLock.lock()
+            action.data.watcherStart("streamYamlBaseBuild.startBuild.StreamBuildLock")
             logger.info(
                 "StreamYamlBaseBuild|startBuild|start|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId"
@@ -418,8 +424,8 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData
         )
-
-        return BuildId(buildId)
+        // #7983 全新第一次出发执行次数均为1
+        return BuildId(buildId, 1)
     }
 
     private fun errorStartBuild(
@@ -429,6 +435,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         ignore: Throwable,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.errorStartBuild")
         logger.warn(
             "StreamYamlBaseBuild|errorStartBuild|${action.data.getGitProjectId()}|" +
                 "${pipeline.pipelineId}|$gitBuildId",
@@ -467,6 +474,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         yamlTransferData: YamlTransferData?
     ) {
+        action.data.watcherStart("streamYamlBaseBuild.afterStartBuild")
         try {
             val event = gitRequestEventDao.getWithEvent(
                 dslContext = dslContext, id = action.data.context.requestEventId!!
@@ -476,8 +484,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectCode = action.getProjectCode(),
                 event = event,
                 gitProjectId = action.data.getGitProjectId().toLong(),
-                messageType = UserMessageType.ONLY_SUCCESS,
-                isSave = true
+                messageType = UserMessageType.ONLY_SUCCESS
             )
 
             if (action is StreamRepoTriggerAction) {
@@ -514,9 +521,15 @@ class StreamYamlBaseBuild @Autowired constructor(
                     state = StreamCommitCheckState.PENDING,
                     block = action.data.setting.enableMrBlock &&
                         action.metaData.isStreamMr(),
-                    context = "${pipeline.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${pipeline.displayName}@${action.metaData.streamObjectKind.name}",
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                        homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+                        homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = STARTUP_CONFIG_MISSING,
+                                params = arrayOf(" streamUrl"),
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        ),
                         gitProjectId = action.data.getGitProjectId(),
                         pipelineId = pipeline.pipelineId,
                         buildId = buildId
@@ -633,14 +646,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                 if (webhookCommitList.size < pageSize) break
                 page++
             }
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildCommitFinishEvent(
-                    source = "build_commits",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                )
-            )
         } catch (ignore: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }

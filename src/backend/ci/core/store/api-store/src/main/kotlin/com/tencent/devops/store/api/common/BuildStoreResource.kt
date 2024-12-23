@@ -28,14 +28,15 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ENV
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,47 +46,50 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_STORE"], description = "build-store")
+@Tag(name = "BUILD_STORE", description = "build-store")
 @Path("/build/store/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildStoreResource {
 
-    @ApiOperation("获取敏感数据")
+    @Operation(summary = "获取敏感数据")
     @GET
     @Path("/sensitiveConf/types/{storeType}/codes/{storeCode}")
     fun getSensitiveConf(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
 
-    @ApiOperation("获取组件安装包运行时环境信息")
+    @Operation(summary = "获取组件安装包运行时环境信息")
     @GET
     @Path("/pkg/envs/types/{storeType}/languages/{language}/versions/{runtimeVersion}/get")
     fun getStorePkgRunEnvInfo(
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "环境信息", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ENV)
+        devopsEnv: String? = null,
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("开发语言", required = true)
+        @Parameter(description = "开发语言", required = true)
         @PathParam("language")
         language: String,
-        @ApiParam("运行时版本", required = true)
+        @Parameter(description = "运行时版本", required = true)
         @PathParam("runtimeVersion")
         runtimeVersion: String,
-        @ApiParam("支持的操作系统名称", required = true)
+        @Parameter(description = "支持的操作系统名称", required = true)
         @QueryParam("osName")
         osName: String,
-        @ApiParam("支持的操作系统架构", required = true)
+        @Parameter(description = "支持的操作系统架构", required = true)
         @QueryParam("osArch")
         osArch: String
     ): Result<StorePkgRunEnvInfo?>

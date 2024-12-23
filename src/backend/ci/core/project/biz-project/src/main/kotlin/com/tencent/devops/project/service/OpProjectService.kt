@@ -41,4 +41,22 @@ interface OpProjectService {
     fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
 
     fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+
+    fun getProjectListByFlag(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
+        productId: Int?,
+        channelCode: String?
+    ): Map<String, Any?>?
 }

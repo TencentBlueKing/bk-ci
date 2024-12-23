@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_REQUESTED_RESOURCE_DOES_NOT_EXIST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.MediaType
@@ -49,7 +51,7 @@ class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "请求的资源不存在"
+            I18nUtil.getCodeLanMessage(BK_REQUESTED_RESOURCE_DOES_NOT_EXIST)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

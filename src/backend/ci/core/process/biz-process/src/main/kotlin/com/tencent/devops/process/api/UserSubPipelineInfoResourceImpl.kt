@@ -43,11 +43,20 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
+        if (pipelineId.isBlank() || projectId.isBlank()) {
+            return Result(ArrayList())
+        }
         return subPipeService.subPipelineManualStartupInfo(
-            userId = userId, projectId = projectId, pipelineId = pipelineId
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired
         )
     }
 

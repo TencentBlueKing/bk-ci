@@ -52,7 +52,7 @@ class LinuxDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClie
         val queryStr =
             "SELECT non_negative_derivative(mean(\"read_bytes\"), $timeGroupBy) as \"read\" FROM \"diskio\" " +
                 "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); " +
-                "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy)  as \"write\" FROM \"diskio\" " +
+                "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy) as \"write\" FROM \"diskio\" " +
                 "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
 
         val queryResult = try {

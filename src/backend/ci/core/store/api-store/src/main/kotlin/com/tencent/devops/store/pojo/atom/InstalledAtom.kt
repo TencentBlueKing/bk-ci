@@ -27,37 +27,43 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("已安装插件")
+@Schema(title = "已安装插件")
 data class InstalledAtom(
-    @ApiModelProperty("插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @get:Schema(title = "插件版本")
+    val version: String,
+    @get:Schema(title = "插件名称")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("插件分类code")
+    @get:Schema(title = "插件分类code")
     val classifyCode: String?,
-    @ApiModelProperty("插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String?,
-    @ApiModelProperty("插件范畴")
+    @get:Schema(title = "插件范畴")
     val category: String?,
-    @ApiModelProperty("插件简介")
+    @get:Schema(title = "插件简介")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @ApiModelProperty("发布者")
+    @get:Schema(title = "发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @ApiModelProperty("安装者")
+    @get:Schema(title = "安装者")
     val installer: String,
-    @ApiModelProperty("安装时间")
+    @get:Schema(title = "安装时间")
     val installTime: String,
-    @ApiModelProperty("安装类型")
+    @get:Schema(title = "安装类型")
     val installType: String,
-    @ApiModelProperty("流水线个数")
+    @get:Schema(title = "流水线个数")
     val pipelineCnt: Int,
-    @ApiModelProperty("是否有卸载权限")
+    @get:Schema(title = "是否有卸载权限")
     val hasPermission: Boolean
 )

@@ -27,17 +27,16 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-文件托管任务信息")
+@Schema(title = "版本仓库-文件托管任务信息")
 data class FileTaskInfo(
-    @ApiModelProperty("任务Id", required = true)
+    @get:Schema(title = "任务Id", required = true)
     val id: String,
-    @ApiModelProperty("任务状态", required = true)
+    @get:Schema(title = "任务状态", required = true)
     val status: Short,
-    @ApiModelProperty("文件所在机器IP", required = true)
+    @get:Schema(title = "文件所在机器IP", required = true)
     val ip: String,
-    @ApiModelProperty("文件绝对路径", required = true)
+    @get:Schema(title = "文件绝对路径", required = true)
     val path: String
 )

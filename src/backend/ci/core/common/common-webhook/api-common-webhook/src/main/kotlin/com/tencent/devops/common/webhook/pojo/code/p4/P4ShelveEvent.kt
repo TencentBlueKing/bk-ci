@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class P4ShelveEvent(
@@ -37,14 +38,21 @@ data class P4ShelveEvent(
     @JsonProperty("event_type")
     val eventType: String,
     val user: String? = null,
+    @get:Schema(title = "文件变更列表")
+    val files: List<String>? = null,
+    @get:Schema(title = "路径是否区分大小写，默认区分大小写")
+    val caseSensitive: Boolean? = true,
     // 指定项目触发
-    override val projectId: String? = null
+    override val projectId: String? = null,
+    @get:Schema(title = "提交描述", required = false)
+    var description: String? = DEFAULT_SHELVE_DESCRIPTION
 ) : P4Event(projectId = projectId) {
     companion object {
         const val classType = "SHELVE"
         const val SHELVE_COMMIT = "shelve-commit"
         const val SHELVE_DELETE = "shelve-delete"
         const val SHELVE_SUBMIT = "shelve-submit"
+        const val DEFAULT_SHELVE_DESCRIPTION = ""
     }
 
     /**

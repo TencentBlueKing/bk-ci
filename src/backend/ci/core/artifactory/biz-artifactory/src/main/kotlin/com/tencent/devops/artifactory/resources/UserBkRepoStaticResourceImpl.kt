@@ -28,10 +28,10 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
+import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STATIC_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
@@ -47,18 +47,25 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
     override fun uploadStaticFile(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        type: String?
     ): Result<String?> {
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
-        val filePath = "file/$fileSuffix/${UUIDUtil.generate()}.$fileSuffix"
+        val filePathSb = StringBuilder("file/")
+        val filePath = if (type.isNullOrBlank()) {
+            filePathSb.append(fileSuffix)
+        } else {
+            filePathSb.append("${type.lowercase()}/$fileSuffix")
+        }
+        filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = BKREPO_STATIC_PROJECT_ID,
-            filePath = filePath,
+            filePath = filePath.toString(),
             fileType = FileTypeEnum.BK_STATIC,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )

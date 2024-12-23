@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/bash -l
 # 本脚本应该兼容 POSIX shell.
 
-CI_DIR="/data"
+CI_DIR="/data/devops"
 CI_LOG_DIR="$CI_DIR/logs"
 CI_LOG_FILE="$CI_LOG_DIR/docker.log"
 
@@ -13,18 +13,20 @@ ci_log() {
    echo "$msg" >&2
 }
 
-mkdir -p /data/devops
-cd /data/devops
-mkdir -p /data/logs
+mkdir -p "$CI_LOG_DIR"
+cd "$CI_DIR"
 
 ci_log "docker_init.sh was launched."
 
-ci_log "start to download the docker_init.sh..."
+export LANG="zh_CN.UTF-8"
 
-curl -k -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}" -o docker_init.sh "${devops_gateway}/static/local/files/docker_init.sh" -L
+ci_log "start to copy worker-agent.jat as the docker.jar..."
 
-ci_log "download docker_init.sh success, start it..."
-ci_log $(cat docker_init.sh)
+cp /data/worker-agent.jar "$CI_DIR/docker.jar"
+chmod +x docker.jar
 
-chmod +x ./docker_init.sh
-exec ./docker_init.sh "$@"
+ci_log "copy docker.jar finished, ready to start it..."
+
+exec /usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dbuild.type=DOCKER -Dsun.zip.disableMemoryMapping=true -Xmx1024m -Xms128m -jar docker.jar "$@" >>"$CI_LOG_FILE" 2>&1
+
+ci_log "end"

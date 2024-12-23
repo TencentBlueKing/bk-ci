@@ -52,9 +52,25 @@ spec:
       {{- if .Values.websocket.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.websocket.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}        
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              while ! mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}; do
+                echo "mysql connecting.."
+                sleep 3
+              done
+              echo "MySQL is available";
+      {{- end }}
       containers:
         - name: websocket
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           {{- if .Values.websocket.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.websocket.containerSecurityContext "enabled" | toYaml | nindent 12 }}
@@ -79,7 +95,7 @@ spec:
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
             - name: JAVA_TOOL_OPTIONS
-              value: {{ .Values.java.options }}
+              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.websocket.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.websocket.jvm.heapPct }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -98,7 +114,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: {{ .Values.websocket.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -107,7 +123,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: {{ .Values.websocket.jvm.initSecs }}
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -122,7 +138,7 @@ spec:
                   command:
                   - /bin/bash
                   - -c
-                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
+                  - sleep 20 && ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data

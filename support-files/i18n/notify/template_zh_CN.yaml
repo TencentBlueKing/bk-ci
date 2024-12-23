@@ -1,0 +1,1011 @@
+- index: 0
+  id: "13ec2ac58aab4d9bb8a04bbf7a9242f6"
+  templateCode: "STORE_MEMBER_ADD_ATOM"
+  templateName: "研发商店插件成员添加模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "d4c60ef6f52c4afe8429a72c4b4ab425"
+    title: "研发商店插件成员添加通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您添加为该插件的成员"
+    sender: "DevOps"
+    bodyFormat: 0
+    emailType: 0
+  weworkTemplate:
+    id: "d4c60ef6f52c4afe8429a72c4b4ab425"
+    sender: "DevOps"
+    title: "研发商店插件成员添加通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您添加为该插件的成员"
+  creator: "system"
+  modifior: "system"
+- index: 1
+  id: "15a1e5f8642c4d7196270329531bf4cb"
+  templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
+  templateName: "人工审核-reject时发送消息"
+  notifyTypeScope:
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "db7ae51ad64f48fa878d36308cdecb8a"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由: \n${suggest}\n电脑端点击 ${reviewUrl} \n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "b236e73c17cb48bbbd7cc38ffbcae407"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由:  \n${suggest} \n[电脑端点击](${reviewUrl}) \n[手机端点击](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 2
+  id: "168b9b44b7104647b2102355180a2837"
+  templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
+  templateName: "使用模板批量更新流水线的通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "7ff93f9e4d3d4359a1bd7898bb3c2cc7"
+    title: "【${projectName}】项目流水线实例更新"
+    body: "\n<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n               <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n                                                <img src=\"\" width=\"52\" style=\"display: block\">\n                                            </td>\n                                            <td style=\"padding-left: 6px;\">\n                                                <img src=\"\" width=\"176\" style=\"display: block\">\n                                            </td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t【${projectName}】项目流水线实例更新</font>\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!-- 表格内容 -->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr>\n                                                                <td>\n                                                                       <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t   \n   <tr>\n       <td style=\"text-align: right;width: 150px;padding: 10px;font-weight: normal;color: #707070;\">${successPipelineNum}条实例更新成功：</td>\n       <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${successPipelineMsg}</td>\n   </tr>\n   <tr>\n       <td style=\"text-align: right;width: 150px;padding: 10px;font-weight: normal;color: #707070;\">${failurePipelineNum}条实例更新失败：</td>\n       <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${failurePipelineMsg}</td>\n   </tr>\n\n                                                                   </table>\n                                                                </td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\">\n                                                        <div><a href=\"${instanceListUrl}\">查看详情</a></div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你进行了实例更新。</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n               </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "d6c50c2989944c9f8a16aa029ed816b0"
+    sender: "DevOps"
+    title: "【${projectName}】项目流水线实例更新"
+    body: "您在【${projectName}】项目下已成功更新${successPipelineNum}条实例: \n${successPipelineMsg}\n其中${failurePipelineNum}条实例更新失败: \n${failurePipelineMsg}\n\n查看详情: ${instanceListUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 3
+  id: "1be5b658d4aa465a9f9a1d0af44c8384"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
+  templateName: "质量红线审核消息模板V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d57d7358f5034b53acafde62f27d75fc"
+    title: "【蓝盾质量红线】拦截通知-待审核"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            ${title}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!--表格内容-->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    所属项目：${projectName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    触发人：${cc}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截时间：${time}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    ${emailResult}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    流水线链接：<a href=\"${url}\"\n                                                                        style=\"color: #3c96ff\">前往查看</a></td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                        如有问题，请联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${time}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了$BODY_PROJECT_TEMPLATE项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "0696ed183dca43ceb0963c99710f1f25"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知-待审核"
+    body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 4
+  id: "1dd8f74e334e4c41a20f4187b4e0e992"
+  templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
+  templateName: "扩展服务发布成功消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "662162c9e8ff4024925c03bb7d3329ce"
+    title: "研发商店扩展【${name}】V${version} 成功发布"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店扩展【${name}】V${version} <font color=\"green\">成功发布</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "acd5c108730b41babcd57dbf31fda760"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 成功发布"
+    body: "\n研发商店扩展【${name}】V${version} 成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 5
+  id: "20e4ac3f11ff4866b95a82b30b9032a1"
+  templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
+  templateName: "store评论消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "8599414eaeec4791a430594147ded587"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 6
+  id: "2d8c427026b049dc98630507f5e3fa38"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "执行成功的详情通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "VOICE"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "6396345b7fc74421817901c0aa6751dc"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "<table class=\"template-table\"border=\"0\"cellpadding=\"0\"cellspacing=\"0\"width=\"100%\"style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"><tbody><tr><td align=\"center\"valign=\"top\"width=\"100%\"style=\"padding: 16px;\"><table class=\"template-table\"border=\"0\"cellpadding=\"0\"cellspacing=\"0\"width=\"956\"style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tbody><tr><td valign=\"top\"align=\"center\"><table cellpadding=\"0\"cellspacing=\"0\"border=\"0\"bgcolor=\"#f9f8f6\"class=\"layout layout-table root-table\"width=\"100%\"style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tbody><tr style=\"height: 64px; background: #555;\"><td style=\"padding-left: 24px;\"width=\"60\"align=\"center\"><img src=\"\"width=\"52\"style=\"display: block\"></td><td style=\"padding-left: 6px;\"><img src=\"\"width=\"176\"style=\"display: block\"></td></tr></tbody></table></td></tr><tr><td valign=\"top\"align=\"center\"style=\"padding: 24px;\"bgcolor=\"#f9f8f6\"><table cellpadding=\"0\"cellspacing=\"0\"width=\"100%\"style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"><tr><td class=\"email-title\"style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">蓝盾流水线【${pipelineName}】#${buildNum}构建成功</td></tr><tr><td class=\"email-content\"style=\"padding: 0 36px; background: #fff;\"><table cellpadding=\"0\"cellspacing=\"0\"width=\"100%\"style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tr><td class=\"email-source\"style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td></tr><tr class=\"information-item\"><td style=\"padding-top: 20px; color: #707070;\"><div class=\"item-value\"style=\"margin-top: 4px; line-height: 1.5;\">流水线${projectName}-${pipelineName}<br><br>构建号#${buildNum}<br><br>开始时间${startTime}<br><br>耗时${duration}<br><br>触发方式${trigger}（${username}）<br><br>${emailSuccessContent}<br><br><br><a href=\"${detailUrl}\">查看详情</a><br></div></td></tr><tr class=\"prompt-tips\"><td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td></tr></table></td></tr><tr class=\"email-footer\"><td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td></tr></table></td></tr></tbody></table></td></tr></tbody></table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "895ddf2c5ab949d889d988d818981239"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "jgj46v0knzlkhcah57rcutao30tqza5v"
+    taskName: "构建成功"
+    content: "${successContent}"
+  weworkGroupTemplate:
+    id: "3ffdfe998646421ba8672a9268069e4c"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}\n查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 7
+  id: "2e9227b122024a5a83c46a9f41b94aad"
+  templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
+  templateName: "store评论回复消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "e91eeea3f97345e69a19fafec806e75a"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 在 ${storeName} 回复了 ${replyToUser}\n${replyContent}//@${replyToUser}: ${replyComment}\n[去回复 | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 8
+  id: "30c94a920c79453da784124ab41fb068"
+  templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
+  templateName: "插件代码扫描合格模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "0df45f8c430e4aefbff3e67a1b414c55"
+    title: "插件【${storeName}】代码质量检查合格"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            插件【${storeName}】代码质量检查<span>\n                                                <font color=\"green\">合格</font>\n                                            </span></td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自\n                                                        BKDevOps /蓝盾 DevOps 平台的通知推送</td>\n                                                </tr>\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0;\">恭喜你通过 CodeCC\n                                                        代码质量检查，再接再厉！</td>\n                                                </tr>\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 10px; padding-bottom: 14px; color: #707070;\">\n                                                                </td>\n                                                            </tr>\n                                                            <tr>\n                                                                <td>\n                                                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                                        style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n                                                                        <!--<thead style=\"background: #f6f8f8;\">-->\n                                                                        <tr style=\"color: #707070;\">\n                                                                            <th width=\"20%\"\n                                                                                style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                代码安全得分</th>\n                                                                            <th width=\"80%\"\n                                                                                style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                ${codeSecurityScore}</th>\n                                                                        </tr>\n                                                                        <!--</thead>-->\n                                                                        <tbody style=\"color: #707070;\">\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    代码度量和检查得分</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    ${codeMeasureScore}</td>\n                                                                            </tr>\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    代码规范得分</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    ${codeStyleScore}</td>\n                                                                            </tr>\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    操作</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    <a href=\"${codeccDetailUrl}\"\n                                                                                        style=\"color: #3c96ff\">查看CodeCC代码检查结果</a>\n                                                                                </td>\n                                                                            </tr>\n                                                                        </tbody>\n                                                                    </table>\n                                                                </td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        1. 合格标准：各项检查得分100</td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 5px; padding-bottom: 10px; color: #707070;\">\n                                                        2. <a target=\"_blank\"\n                                                            href=\"\"\n                                                            style=\"color: #3c96ff\">得分计算公式</a></td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 5px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 10px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${dataTime}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你是插件发布者。</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  creator: "system"
+  modifior: "system"
+- index: 9
+  id: "37ef4157cc254021ac7278b70f211f5e"
+  templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
+  templateName: "人工审核插件通知"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "380f51cd51e3406abf2cbe99d6ba1e51"
+    title: "${content}"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            【流水线审核通知】你有一个流水线需要审核</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自BKDevOps/蓝盾DevOps平台的通知推送</td>\n                                                </tr>\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 36px; padding-bottom: 14px; color: #707070;\">\n                                                                </td>\n                                                            </tr>\n                                                            <tr>\n                                                                <td>\n                                                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                                        style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n                                                                        <!--<thead style=\"background: #f6f8f8;\">-->\n                                                                        <tr style=\"color: #707070;\">\n                                                                            <th width=\"20%\"\n                                                                                style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">\n                                                                                审核项目</th>\n                                                                            <th width=\"80%\"\n                                                                                style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                ${projectName}</th>\n                                                                        </tr>\n                                                                        <!--</thead>-->\n                                                                        <tbody style=\"color: #707070;\">\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">\n                                                                                    流水线</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    ${pipelineName}</td>\n                                                                            </tr>\n                                                                        </tbody>\n                                                                        <tbody style=\"color: #707070;\">\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">\n                                                                                    构建号</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    #${buildNum}</td>\n                                                                            </tr>\n                                                                        </tbody>\n                    </tbody>\n                    <tbody style=\"color: #707070;\">\n                        <tr>\n                            <td\n                                style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">\n                                审核说明</td>\n                            <td\n                                style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                ${reviewDesc}</td>\n                        </tr>\n                    </tbody>\n    </tbody>\n    <tbody style=\"color: #707070;\">\n        <tr>\n            <td\n                style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">\n                操作</td>\n            <td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\"><a\n                    href=\"${reviewUrl}\" style=\"color: #3c96ff\">去审核</a></td>\n        </tr>\n    </tbody>\n</table>\n</td>\n</tr>\n</table>\n</td>\n</tr>\n<!--空数据-->\n<!--<tr class=\"no-data\"><td style=\"padding-top: 40px; color: #707070;\">敬请期待！</td></tr>-->\n<tr class=\"prompt-tips\">\n    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td>\n</tr>\n<tr class=\"info-remark\">\n    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n        <div>${dataTime}</div>\n    </td>\n</tr>\n</table>\n</td>\n</tr>\n<tr class=\"email-footer\">\n    <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n        你收到此邮件，是因为你关注了 ${projectName} 项目，或其他人@了你</td>\n</tr>\n</table>\n</td>\n</tr>\n</tbody>\n</table>\n</td>\n</tr>\n</tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "930450b9edfe479e8c7504623261584d"
+    sender: "DevOps"
+    title: "${content}"
+    body: "审核说明: ${reviewDesc}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
+    title: "${content}"
+    body: "审核说明: \n${reviewDesc} \n电脑端: [去审核](${reviewUrl}) \n手机端: [去审核](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 10
+  id: "3a39413a67bf404184dbd4e9309ebeb8"
+  templateCode: "QUALITY_NOTIFY_TEMPLATE"
+  templateName: "质量红线消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "7dc06201fbfd44f4b3920aba404982ad"
+    title: "【质量红线审核通知】你有一个流水线需要审核"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            ${title}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!--表格内容-->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    所属项目：${projectName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    流水线：${pipelineName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截时间：${time}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    ${emailResult}</td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                        如有问题，请联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${time}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了$BODY_PROJECT_TEMPLATE项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "ac07cfe86b5040f7abb1280942e2c57c"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】审核通知"
+    body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 11
+  id: "3ea6c5e18d4b41a3890a150d1df16f4d"
+  templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
+  templateName: "镜像执行找不到镜像通知管理员"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "97f1480ba61b4a83947924c6c9dad3e6"
+    sender: "DevOps"
+    title: "${imageCode}(${imageVersion}) 镜像执行异常"
+    body: "[查看构建链接|${url}] ${userId} 的 ${projectCode} 项目下的 ${imageCode}(${imageVersion}) 镜像执行异常，pipelineId:${pipelineId},buildId:${buildId}"
+  creator: "system"
+  modifior: "system"
+- index: 12
+  id: "3fbf09f0511b424ab4480e18d6674349"
+  templateCode: "STREAM_V2_BUILD_TEMPLATE"
+  templateName: "Stream构建结束消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "e1db6972d99d4cccb0793cbd1f12b964"
+    title: "${title}"
+    body: "${content}"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  creator: "system"
+  modifior: "system"
+- index: 13
+  id: "4589771c46b248079444a0e18e46a3fe"
+  templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "研发商店镜像通过审核发布"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "0b35b1c3b0de4df9991139ebe2591d3c"
+    title: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\"> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\"> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店镜像【${name}】V${version} <font color=\"green\">审核通过，成功发布</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布类型</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${releaseType}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </table> </td> </tr> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div><a href=\"${url}\">查看详情</a></div> </td> </tr> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "b4d0f2eb62394a0d9df97b97858adf9f"
+    sender: "DevOps"
+    title: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 14
+  id: "502f34f94a0d4bc7abe7c55f4e93da46"
+  templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "流水线webhook注册失败的通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "094a4cb13de54dc38e034002b01ffbeb"
+    sender: "DevOps"
+    title: "流水线【${pipelineName}】触发器回调注册失败"
+    body: "你刚刚保存的流水线【${pipelineName}】触发器回调注册失败，失败原因: ${elementNames}查看详情: ${pipelineEditUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 15
+  id: "698634fd3bae40378eeb24c8d6a5c91c"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "模板发布审核被拒消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "ada2030e99d743ec800acff31471a612"
+    title: "研发商店模板【${name}】V${version} 审核不通过"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店模板【${name}】<font color=\"red\">审核不通过</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr class=\"table-title\"> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">驳回原因</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${imageStatusMsg}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>"
+    sender: "DevOps"
+    bodyFormat: 0
+    emailType: 1
+  weworkTemplate:
+    id: "756a60da56d345148567fb1465fbb6a7"
+    sender: "DevOps"
+    title: "研发商店模板【${name}】V${version} 审核不通过"
+    body: "研发商店模板【${name}】V${version} 审核不通过"
+  creator: "system"
+  modifior: "system"
+- index: 16
+  id: "6a3db6f561f44d4895518e881a3cb53b"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "执行失败的通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "VOICE"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "0835a28c0d9d4ce68d878a97dc07c106"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}构建失败</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            流水线：${pipelineName}-${projectName}<br><br>构建号：#${buildNum}<br><br>开始时间：${startTime}<br><br>耗时：${duration}<br><br>触发方式：${trigger}（${username}）<br><br>${emailFailContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "607d08cf17424ad483d9bbd57da898d1"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "构建失败"
+    content: "${failContent}"
+  weworkGroupTemplate:
+    id: "3cfc1a1ca58f4b92bf4c6d3fc8bcf790"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}"
+  creator: "system"
+  modifior: "system"
+- index: 17
+  id: "6c00ffb0de6f485eb301940ca639d04d"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "模板发布审核通过消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "f235b3829c6741fc97fdf47ad7674501"
+    title: "研发商店模板【${name}】审核通过，成功发布"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店插件【${name}】 <font color=\"green\">审核通过，成功发布</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>\n"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "9e982e6afc67440cab33604b7ad772b6"
+    sender: "DevOps"
+    title: "研发商店模板【${name}】审核通过，成功发布"
+    body: "研发商店模板【${name}】审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 18
+  id: "7a64b8cd997b49858964ac34079bf234"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
+  templateName: "质量红线消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "36f0e41cf8bc4a47a56dec54d27f434b"
+    title: "【质量红线审核通知】你有一个流水线需要审核"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            ${title}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!--表格内容-->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    所属项目：${projectName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    流水线：${pipelineName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截时间：${time}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    ${emailResult}</td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                        如有问题，请联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${time}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "c7a45d36528a4af784f754017d7e37fe"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】审核通知"
+    body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 19
+  id: "7dee6377c27344818836ef1f035a14d1"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
+  templateName: "stage人工审核用于发给触发者"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "9fb98246b0a2478384c21ba3fb617474"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "当前构建需人工审核通过后才执行后续流程，请耐心等待审核，或联系审核人${reviewers}处理。\n${reviewDesc} \n电脑端点击 ${reviewUrl} \n手机端点击 ${reviewAppUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 20
+  id: "91fb62ef51a24266ae0946112e094190"
+  templateCode: "GITCI_V2_BUILD_TEMPLATE"
+  templateName: "工蜂CI-V2构建结束消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "c9b67c4f64654d709a4b9f75d4cbc41b"
+    title: "${title}"
+    body: "${content}"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  creator: "system"
+  modifior: "system"
+- index: 21
+  id: "92055af946b64850a193e1090865642e"
+  templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
+  templateName: "插件代码扫描不通过模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "22ffd46b84a647fc9cfd354417d711c2"
+    title: "插件【${storeName}】代码质量检查不合格"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            插件【${storeName}】代码质量检查<span>\n                                                <font color=\"red\">不合格</font>\n                                            </span></td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自\n                                                        BKDevOps /蓝盾 DevOps平台的通知推送</td>\n                                                </tr>\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 5px 0;\">请尽快修复 CodeCC\n                                                        代码扫描发现的问题，提升代码质量！</td>\n                                                </tr>\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 5px 0;\">\n                                                        注意：目前仅告警，后续检查不合格时<span>\n                                                            <font color=\"red\">将不能提交发布</font>\n                                                        </span></td>\n                                                </tr>\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 10px; padding-bottom: 14px; color: #707070;\">\n                                                                </td>\n                                                            </tr>\n                                                            <tr>\n                                                                <td>\n                                                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                                        style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n                                                                        <!--<thead style=\"background: #f6f8f8;\">-->\n                                                                        <tr style=\"color: #707070;\">\n                                                                            <th width=\"20%\"\n                                                                                style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                代码安全得分</th>\n                                                                            <th width=\"80%\"\n                                                                                style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                ${codeSecurityScore}</th>\n                                                                        </tr>\n                                                                        <!--</thead>-->\n                                                                        <tbody style=\"color: #707070;\">\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    代码度量和检查得分</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    ${codeMeasureScore}</td>\n                                                                            </tr>\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    代码规范得分</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    ${codeStyleScore}</td>\n                                                                            </tr>\n                                                                            <tr>\n                                                                                <td\n                                                                                    style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: right; font-weight: normal;\">\n                                                                                    操作</td>\n                                                                                <td\n                                                                                    style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">\n                                                                                    <a target=\"_blank\"\n                                                                                        href=\"${codeccDetailUrl}\"\n                                                                                        style=\"color: #3c96ff\">查看CodeCC代码检查结果</a>\n                                                                                </td>\n                                                                            </tr>\n                                                                        </tbody>\n                                                                    </table>\n                                                                </td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        1. 合格标准：各项检查得分100</td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 5px; padding-bottom: 10px; color: #707070;\">\n                                                        2. <a target=\"_blank\"\n                                                            href=\"\"\n                                                            style=\"color: #3c96ff\">得分计算公式</a></td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 5px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${dataTime}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你是插件发布者。</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  creator: "system"
+  modifior: "system"
+- index: 22
+  id: "92c4e65e4cd2432eb326789ce503d698"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "执行失败的详情通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "VOICE"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "282a50d9b8874a3292a4232469462088"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}构建失败</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            流水线：${pipelineName}-${projectName}<br><br>构建号：#${buildNum}<br><br>开始时间：${startTime}<br><br>耗时：${duration}<br><br>触发方式：${trigger}（${username}）<br><br>${emailFailContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "9f1c741fe5df486193971ef5a659f061"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}\n\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "构建失败"
+    content: "${failContent}"
+  weworkGroupTemplate:
+    id: "391b2aed3ca1479b9fd78b609b23f49b"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}\n\n查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 23
+  id: "96c0a1adaca7428eb0b2d69820923d52"
+  templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "研发商店扩展审核拒绝消息"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "abca9d66378c41c8a2dc0fd339a606da"
+    title: "研发商店扩展【${name}】V${version} 审核不通过"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\"> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\"> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店扩展【${name}】V${version} <font color=\"red\">审核不通过</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr class=\"table-title\"> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">驳回原因</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${imageStatusMsg}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </table> </td> </tr> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div><a href=\"${url}\">查看详情</a></div> </td> </tr> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "f5861d3d23604c328aedd74afe73496c"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 审核不通过"
+    body: "研发商店扩展【${name}】V${version} 审核不通过，驳回原因: ${serviceStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 24
+  id: "a9b46a21ed7949ddb946e5186b9102c1"
+  templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
+  templateName: "扩展服务发布失败消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "58888d7053bc4899ad68cc731d120db8"
+    title: "研发商店扩展【${name}】V${version} 发布失败"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店扩展【${name}】V${version} <font color=\"red\">部署失败，请稍后再试</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "ad06d0496fb74f3f8c526e5ffda12d00"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 发布失败"
+    body: "研发商店扩展【${name}】V${version} 发布失败"
+  creator: "system"
+  modifior: "system"
+- index: 25
+  id: "bf0ca37469cf448a86875bb2f11517c5"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "启动的详情通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "36a894471828457ea1ba3336c2b802c3"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始构建"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}开始构建</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            蓝盾流水线【${projectName}】-【${pipelineName}】#${buildNum}构建任务开始执行，<a\n                                                                href=\"${detailUrl}\">点此</a>查看详情</div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "6ea6e1ef451e44059e6d7545892d97f3"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
+    body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 26
+  id: "cbdd75de2c7f40a6a3bc1dfd909020a7"
+  templateCode: "STORE_MEMBER_DELETE_ATOM"
+  templateName: "研发商店插件成员移除模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "7b803d1073014351a8855bcc02629d90"
+    title: "研发商店插件成员移除通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您从该插件的成员列表中移除"
+    sender: "DevOps"
+    bodyFormat: 0
+    emailType: 0
+  weworkTemplate:
+    id: "7b803d1073014351a8855bcc02629d90"
+    sender: "DevOps"
+    title: "研发商店插件成员移除通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您从该插件的成员列表中移除"
+  creator: "system"
+  modifior: "system"
+- index: 27
+  id: "cd7cecc126744f13a60d655d0af116af"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
+  templateName: "启动的通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "607fda76d1954d43ac91862e3c4a2b86"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始构建"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}开始构建</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            蓝盾流水线【${projectName}】-【${pipelineName}】#${buildNum}构建任务开始执行，<a\n                                                                href=\"${detailUrl}\">点此</a>查看详情</div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "252497da08fe4abdae8fa49e05ee8ea8"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
+    body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行"
+  creator: "system"
+  modifior: "system"
+- index: 28
+  id: "cff00f19e6884862b6f9afe0f608e91e"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
+  templateName: "执行成功的通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "VOICE"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "596a3733fb6c4a839ce39c54b32324da"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}构建成功</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            流水线${projectName}-${pipelineName}<br><br>构建号#${buildNum}<br><br>开始时间${startTime}<br><br>耗时${duration}<br><br>触发方式${trigger}（${username}）<br><br>${emailSuccessContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">查看详情</a><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "16b3188f363247ec81923fff2ee4cafd"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}"
+  voiceTemplate:
+    id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
+    taskName: "构建成功"
+    content: "${successContent}"
+  weworkGroupTemplate:
+    id: "9c424b5784f54ba9b75e89a266951659"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}"
+  creator: "system"
+  modifior: "system"
+- index: 29
+  id: "d58e5895dfab4136ac898d93e3bff3ac"
+  templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
+  templateName: "构建触发审核通知"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "1424de9fcb6e4efe860e0b64bbf78002"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建触发审核"
+    body: "触发人: ${triggerUser}\n\n审核人: ${reviewers}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 30
+  id: "d77a91dd09994c54b14f118956e0d6e9"
+  templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
+  templateName: "流水线TASK暂停通知"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "5182f93f61ee416c854b3e4d4e7b0859"
+    sender: "DevOps"
+    title: "蓝盾流水线【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 构建暂停"
+    body: "【${BK_CI_PROJECT_NAME_CN}】-【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 在执行【${taskName}】前暂停，触发人: ${BK_CI_START_USER_ID}[去处理 | ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 31
+  id: "d7d9e1a773fe4a658f6c51b80da282ea"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
+  templateName: "质量红线拦截消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "1588e8288e1145ed9a1ebe521e064603"
+    title: "【质量红线拦截通知】你有一个流水线被拦截"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            ${title}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!--表格内容-->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    所属项目：${projectName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    流水线：${pipelineName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截时间：${time}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截指标：</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 8px; padding-bottom: 0px; color: #707070;\">\n                                                                    ${thresholdListString}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    操作：<a href=\"${url}\" style=\"color: #3c96ff\">查看详情</a>\n                                                                </td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                        如有问题，请联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${time}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\"\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "bd286b16e530440fb5691ab8dc625274"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知"
+    body: "${pipelineName}(#${buildNo})被拦截\n所属项目: ${projectName}\n拦截时间: ${time}\n拦截指标: ${thresholdListString}\n详情链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 32
+  id: "dff46cd92eab458b96b25be0d7a61054"
+  templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "插件发布审核被拒消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "e94162ee8dea4f54bcbb5ebcc172bf63"
+    title: "研发商店插件【${name}】V${version} 审核不通过"
+    body: "<html>\n\t<head>\n\t</head>\n\t<body>\n\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\twidth=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n\t\t\t<tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n\t\t\t\t\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\t\t\t\t\twidth=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\"\n\t\t\t\t\t\t\t\t\t\twidth=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"52\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"176\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t研发商店插件【${name}】V${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<font color=\"red\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t审核不通过\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</font>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t来自蓝盾DevOps平台的推送\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<!-- 表格内容 -->\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t驳回原因\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${atomStatusMsg}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布者\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${publisher}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布类型\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${releaseType}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t版本\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布描述\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${versionDesc}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t如有任何问题，可随时联系管理员。\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; line-height: 24px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<a href=\"${url}\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t查看详情\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t</table>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</body>\n\n</html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "34a071f8d22f4edaba56624df3a0aae2"
+    sender: "DevOps"
+    title: "研发商店插件【${name}】V${version} 审核不通过"
+    body: "研发商店插件【${name}】V${version} 审核不通过"
+  creator: "system"
+  modifior: "system"
+- index: 33
+  id: "e961fd2ccc1c4f5d8eefaac9d51b5cb0"
+  templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "插件发布审核通过消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "6434c949ea1847d69247d68bb0e27ec6"
+    title: "研发商店插件【${name}】V${version} 审核通过，成功发布"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店插件【${name}】V${version} <font color=\"green\">审核通过，成功发布</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布类型</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${releaseType}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>\n"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "48ba65ca230c46f08c6e3ca2da753aee"
+    sender: "DevOps"
+    title: "研发商店插件【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店插件【${name}】V${version} 审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 34
+  id: "ea98239a51a74f8db0a012a809bc1116"
+  templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "研发商店镜像审核驳回"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "5ba4a20a8c194e88866f5f1e304459d4"
+    title: "研发商店镜像【${name}】V${version} 审核不通过"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\"> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\"> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店镜像【${name}】V${version} <font color=\"red\">审核不通过</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tr class=\"table-title\"> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">驳回原因</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${imageStatusMsg}</td> </tr>\t<tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布类型</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${releaseType}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </table> </td> </tr> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div><a href=\"${url}\">查看详情</a></div> </td> </tr> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc4a01"
+    sender: "DevOps"
+    title: "研发商店镜像【${name}】V${version} 审核不通过"
+    body: "研发商店镜像【${name}】V${version} 审核不通过，驳回原因: ${imageStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 35
+  id: "f0663e7ac2b74130ada0408bdce8cd20"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
+  templateName: "质量红线拦截消息模板V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "6cc3c02d639c4b5d827be94f00bbbdbf"
+    title: "【蓝盾质量红线】拦截通知-已终止"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            ${title}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!--表格内容-->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                            style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    所属项目：${projectName}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                                    触发人：${cc}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    拦截时间：${time}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    ${emailResult}</td>\n                                                            </tr>\n                                                            <tr class=\"table-title\">\n                                                                <td\n                                                                    style=\"padding-top: 18px; padding-bottom: 0px; color: #707070;\">\n                                                                    流水线链接：<a href=\"${url}\"\n                                                                        style=\"color: #3c96ff\">前往查看</a></td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 24px; padding-bottom: 0px; color: #707070;\">\n                                                        如有问题，请联系管理员。</td>\n                                                </tr>\n                                                <tr class=\"info-remark\">\n                                                    <td\n                                                        style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n                                                        <div>${time}</div>\n                                                    </td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\"\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "f19f696753f14007b3733e36dcf5d476"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知-已终止"
+    body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 36
+  id: "f0949ab70cc04aa5b1bc787d5a47eba7"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
+  templateName: "阶段审核通知"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "aab3cc905f004b9392773d388d64daef"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建状态为stage success，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "cead07553b364b5a9c3f0290e35c82da"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建状态为stage success，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 37
+  id: "f5c17a3f5dcd4c9ea7cf7a16a16e7135"
+  templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
+  templateName: "插件协作开发申请被拒的消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "8a943ecad5e7490bb04ef1bd7c176568"
+    title: "【蓝盾研发商店】协作申请被驳回"
+    body: "流水线插件【${atomName}】的管理员【${atomAdmin}】驳回了你的协作申请,驳回原因：${approveMsg}"
+    sender: "DevOps"
+    bodyFormat: 0
+    emailType: 0
+  weworkTemplate:
+    id: "8a943ecad5e7490bb04ef1bd7c176568"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】协作申请被驳回"
+    body: "流水线插件【${atomName}】的管理员【${atomAdmin}】驳回了你的协作申请,驳回原因: ${approveMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 38
+  id: "1e7864726dd04311b21019bcceddfee8"
+  templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
+  templateName: "流水线callback禁用通知模板代码"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ca32a24efaf74062a0cd68a24f47e3b4"
+    sender: "DevOps"
+    title: "蓝盾流水线回调接口异常"
+    body: "项目【${projectName}】所注册的【${events}】事件回调接口【${callbackUrl}】因多次调用失败，现已被禁用\n流水线链接：${pipelineListUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 39
+  id: "bbd6cc0244424ebd945168ac28f18184"
+  templateCode: "MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"
+  templateName: "人工审核插件审核提醒"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "65957d6cf0ad48638965a0706648a806"
+    sender: "DevOps"
+    title: "【流水线审核提醒】你有1条流水线等待审核，请及时处理"
+    body: |
+      标题：${title}
+      审核描述：${body}
+
+      若无需提醒，请修改人工审核插件配置
+
+      PC端审核：${reviewUrl} 移动端审核：${reviewAppUrl}
+  creator: "system"
+  modifior: "system"
+- index: 40
+  id: "ea98239a51a74f8db0a012a809bc2016"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据失败提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2001"
+    sender: "DevOps"
+    title: "迁移PROCESS数据库中项目【${projectId}】的数据失败"
+    body: "迁移PROCESS数据库中项目【${projectId}】的数据失败，失败原因: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 41
+  id: "ea98239a51a74f8db0a012a809bc2017"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2002"
+    sender: "DevOps"
+    title: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
+    body: "迁移PROCESS数据库中项目【${projectId}】的数据成功，迁移成功的流水线一共【${pipelineNum}】条。"
+  creator: "system"
+  modifior: "system"
+- index: 42
+  id: "ea98239a51a74f8db0a012a809bc2018"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
+  templateName: "项目下流水线的数据迁移失败提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2003"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败，失败原因: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 43
+  id: "ea98239a51a74f8db0a012a809bc2019"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
+  templateName: "项目下流水线的数据迁移成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2004"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功，迁移成功的流水线一共1条。"
+  creator: "system"
+  modifior: "system"
+- index: 44
+  id: "8565a48174524fedb68bfcccb5305d0c"
+  templateCode: "THIRD_AGENT_WORKER_ERROR"
+  templateName: "第三方构建机worker启动失败模板"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "2513d77c0b6b463f8dff122f975641f0"
+    sender: "DevOps"
+    title: "【项目${projectCode}】第三方构建机${agentId}启动构建失败"
+    body: "[构建链接|${buildUrl}]\n[第三方构建机链接|${agentUrl}]\n构建触发人：${userId}\n构建机拥有者：${agentOwner}"
+  creator: "system"
+  modifior: "system"
+- index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "第三方构建机重复安装告警"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "项目 ${projectId} 第三方构建机 ${agentId} 存在重复安装可能"
+    body: "原 IP ${oldIp} 新启动 IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"
+- index: 46
+  id: "dff46cd92eab458b96b25be0d7a62055"
+  templateCode: "STORE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "研发商店组件发布审核被拒消息通知模板"
+  notifyTypeScope:
+    - "WEWORK"
+    - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "e94162ee8dea4f54bcbb5ebcc171bf60"
+    title: "研发商店组件【${name}】V${version} 审核不通过"
+    body: "<html>\n\t<head>\n\t</head>\n\t<body>\n\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\twidth=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n\t\t\t<tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n\t\t\t\t\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\t\t\t\t\twidth=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\"\n\t\t\t\t\t\t\t\t\t\twidth=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"52\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"176\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t研发商店组件【${name}】V${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<font color=\"red\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t审核不通过\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</font>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t来自蓝盾DevOps平台的推送\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<!-- 表格内容 -->\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t驳回原因\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${statusMsg}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布者\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${publisher}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布类型\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${releaseType}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t版本\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t发布描述\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${versionDesc}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t如有任何问题，可随时联系管理员。\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; line-height: 24px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<a href=\"${url}\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t查看详情\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t</table>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</body>\n\n</html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "34a071f8d22f4edaba56624df3a1aae0"
+    sender: "DevOps"
+    title: "研发商店组件【${name}】V${version} 审核不通过"
+    body: "研发商店组件【${name}】V${version} 审核不通过，请修改正确后重新发布"
+  creator: "system"
+  modifior: "system"
+- index: 47
+  id: "e961fd2ccc1c4f5d8eefaac9d51b1cb1"
+  templateCode: "STORE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "研发商店组件发布审核通过消息通知模板"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "6434c949ea1847d69247d68bb0e37ec0"
+    title: "研发商店组件【${name}】V${version} 审核通过，成功发布"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> 研发商店组件【${name}】V${version} <font color=\"green\">审核通过，成功发布</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td> </tr> <!-- 表格内容 --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布者</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布类型</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${releaseType}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">版本</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">发布描述</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">查看详情</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是 ${nameInBody} 的管理员或者你提交了发布</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>\n"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "48ba65ca230c46f08c6e3ca2da253ae0"
+    sender: "DevOps"
+    title: "研发商店组件【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
+  creator: "system"
+  modifior: "system"

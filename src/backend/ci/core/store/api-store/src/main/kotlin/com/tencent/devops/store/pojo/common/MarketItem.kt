@@ -27,64 +27,77 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店组件信息")
+@Schema(title = "研发商店组件信息")
 data class MarketItem(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID", required = true)
     val id: String,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @ApiModelProperty("标识")
+    @get:Schema(title = "组件标识", required = true)
     val code: String,
-    @ApiModelProperty("类型")
+    @get:Schema(title = "版本号", required = true)
+    val version: String,
+    @get:Schema(title = "状态", required = true)
+    val status: String,
+    @get:Schema(title = "组件类型", required = true)
     val type: String,
-    @ApiModelProperty("研发来源")
-    val rdType: String,
-    @ApiModelProperty("分类")
+    @get:Schema(title = "研发来源类型", required = false)
+    val rdType: String? = null,
+    @get:Schema(title = "分类", required = true)
     val classifyCode: String?,
-    @ApiModelProperty("所属范畴")
+    @get:Schema(title = "所属范畴，多个范畴标识用逗号分隔", required = false)
     val category: String? = null,
-    @ApiModelProperty("logo链接")
-    val logoUrl: String?,
-    @ApiModelProperty("发布者")
+    @get:Schema(title = "logo链接", required = false)
+    val logoUrl: String? = null,
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @ApiModelProperty("操作系统")
-    val os: List<String>?,
-    @ApiModelProperty("下载量")
+    @get:Schema(title = "支持的操作系统", required = false)
+    val os: List<String>? = null,
+    @get:Schema(title = "下载量", required = false)
     val downloads: Int?,
-    @ApiModelProperty("评分")
+    @get:Schema(title = "评分", required = false)
     val score: Double?,
-    @ApiModelProperty("简介")
+    @get:Schema(title = "简介", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @ApiModelProperty("是否有权限安装标识")
+    @get:Schema(title = "是否有权限安装标识", required = true)
     val flag: Boolean,
-    @ApiModelProperty("是否公共标识")
+    @get:Schema(title = "是否公共标识", required = true)
     val publicFlag: Boolean,
-    @ApiModelProperty("无编译环境插件是否可以在编译环境下执行标识")
-    val buildLessRunFlag: Boolean?,
-    @ApiModelProperty("帮助文档")
+    @get:Schema(title = "无编译环境组件是否可以在编译环境下执行标识", required = false)
+    val buildLessRunFlag: Boolean? = null,
+    @get:Schema(title = "帮助文档", required = false)
     val docsLink: String?,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @ApiModelProperty("yaml可用标识 true：是，false：否")
+    @get:Schema(title = "yaml可用标识 true：是，false：否", required = false)
     val yamlFlag: Boolean? = null,
-    @ApiModelProperty("是否已在该项目安装 true：是，false：否")
+    @get:Schema(title = "是否已在该项目安装 true：是，false：否", required = false)
     val installed: Boolean? = null,
-    @ApiModelProperty("每日统计信息列表")
+    @get:Schema(title = "每日统计信息列表", required = false)
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @ApiModelProperty("荣誉信息列表")
+    @get:Schema(title = "荣誉信息列表", required = false)
     val honorInfos: List<HonorInfo>? = null,
-    @ApiModelProperty("指标信息列表")
+    @get:Schema(title = "指标信息列表", required = false)
     val indexInfos: List<StoreIndexInfo>? = null,
-    @ApiModelProperty("最近执行次数")
+    @get:Schema(title = "最近执行次数", required = false)
     val recentExecuteNum: Int? = null,
-    @ApiModelProperty("是否为受欢迎组件")
-    val hotFlag: Boolean? = null
+    @get:Schema(title = "是否为受欢迎组件", required = false)
+    val hotFlag: Boolean? = null,
+    @get:Schema(title = "是否需要更新", required = false)
+    val updateFlag: Boolean? = null,
+    @get:Schema(title = "扩展字段集合", required = false)
+    val extData: Map<String, Any>? = null
 )

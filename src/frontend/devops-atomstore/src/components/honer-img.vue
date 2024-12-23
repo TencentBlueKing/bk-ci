@@ -1,11 +1,17 @@
 <template>
     <section class="honer-img">
         <section class="img-wrapper">
-            <img class="img-self" :src="detail.logoUrl">
+            <img
+                class="img-self"
+                :src="detail.logoUrl"
+            >
             <template v-if="recentHoner">
-                <img class="honer-self" src="../images/honer.png">
+                <img
+                    class="honer-self"
+                    src="../images/honer.png"
+                >
                 <span
-                    v-bk-overflow-tips="{ extCls: 'tippy-padding' }"
+                    v-bk-tooltips="honorTips"
                     :class="{
                         'text-overflow': true,
                         'honer-txt': true,
@@ -27,12 +33,21 @@
         computed: {
             recentHoner () {
                 return this.detail?.honorInfos?.[0]
+            },
+
+            honorTips () {
+                return {
+                    theme: 'light',
+                    allowHTML: true,
+                    zIndex: 10000,
+                    content: `<section class="honor-gaps"><span class="honor-title text-overflow" title=${this.recentHoner.honorTitle}>${this.recentHoner.honorTitle}</span><span class="honor-name">${this.recentHoner.honorName}</span></section>`
+                }
             }
         }
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .honer-img {
         width: 100%;
         height: 100%;
@@ -67,10 +82,27 @@
             font-size: 12px;
             scale: 83%;
             width: 69%;
+            text-align: center;
             &.is-big {
                 scale: 100%;
                 bottom: 6%;
             }
+        }
+    }
+    .honor-title {
+        display: inline-block;
+        padding: 1px 4px;
+        background: #F0F1F5;
+        margin-right: 4px;
+        width: 60px;
+        text-align: center;
+    }
+    .honor-gaps {
+        display: flex;
+        align-items: center;
+        margin-top: 4px;
+        &:last-child {
+            margin-bottom: 4px;
         }
     }
 </style>

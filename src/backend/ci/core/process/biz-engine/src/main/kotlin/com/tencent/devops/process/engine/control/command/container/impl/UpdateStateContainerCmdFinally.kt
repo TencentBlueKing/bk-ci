@@ -29,8 +29,11 @@ package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.MutexControl
@@ -41,6 +44,8 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.utils.BuildUtils
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -53,7 +58,8 @@ class UpdateStateContainerCmdFinally(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val dispatchQueueControl: DispatchQueueControl
+    private val dispatchQueueControl: DispatchQueueControl,
+    private val redisOperation: RedisOperation
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.FINALLY && !commandContext.container.status.isFinish()
@@ -69,6 +75,8 @@ class UpdateStateContainerCmdFinally(
             mutexRelease(commandContext = commandContext)
             // 释放互斥组
             dispatchDequeue(commandContext = commandContext)
+            // 释放redis中取消任务的缓存
+            canceledTaskCacheRelease(commandContext = commandContext)
         }
         // 发送回Stage
         if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
@@ -85,15 +93,33 @@ class UpdateStateContainerCmdFinally(
             if (matrixGroupId.isNullOrBlank()) {
                 sendBackStage(commandContext = commandContext)
             } else {
-                pipelineEventDispatcher.dispatch(
-                    commandContext.event.copy(
-                        actionType = ActionType.REFRESH,
-                        containerId = matrixGroupId,
-                        containerHashId = null,
-                        source = commandContext.latestSummary,
-                        reason = "Matrix(${commandContext.container.containerId}) inner container finished"
+                with(commandContext.event) {
+                    pipelineEventDispatcher.dispatch(
+                        commandContext.event.copy(
+                            actionType = ActionType.REFRESH,
+                            containerId = matrixGroupId,
+                            containerHashId = null,
+                            source = commandContext.latestSummary,
+                            reason = "Matrix(${commandContext.container.containerId}) inner container finished"
+                        ),
+                        // matrix job 结束
+                        PipelineBuildStatusBroadCastEvent(
+                            source = "StartActionTaskContainerCmd",
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            buildId = buildId,
+                            actionType = ActionType.END,
+                            stageId = stageId,
+                            containerHashId = containerHashId,
+                            jobId = commandContext.container.jobId,
+                            stepId = null,
+                            executeCount = executeCount,
+                            buildStatus = commandContext.buildStatus.name,
+                            type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -122,6 +148,18 @@ class UpdateStateContainerCmdFinally(
     private fun dispatchDequeue(commandContext: ContainerContext) {
         // 返回stage的时候，需要解锁
         dispatchQueueControl.dequeueDispatch(commandContext.container)
+    }
+
+    /**
+     * 清除redis中取消任务的缓存
+     */
+    private fun canceledTaskCacheRelease(commandContext: ContainerContext) {
+        // 清除redis中取消任务的缓存
+        val buildId = commandContext.event.buildId
+        val containerId = commandContext.event.containerId
+        redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
+        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId))
     }
 
     /**
@@ -193,6 +231,22 @@ class UpdateStateContainerCmdFinally(
                     buildId = buildId,
                     stageId = stageId,
                     actionType = ActionType.REFRESH
+                ),
+                // job 结束
+                PipelineBuildStatusBroadCastEvent(
+                    source = "StartActionTaskContainerCmd",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    actionType = ActionType.END,
+                    stageId = stageId,
+                    containerHashId = containerHashId,
+                    jobId = commandContext.container.jobId,
+                    stepId = null,
+                    executeCount = executeCount,
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
                 )
             )
 
@@ -200,8 +254,10 @@ class UpdateStateContainerCmdFinally(
                 buildId = buildId,
                 message = "[$executeCount]| Finish Job#${this.containerId}| ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId ?: "",
-                executeCount = executeCount
+                containerHashId = containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
         }
     }

@@ -207,13 +207,13 @@ input[disabled="disabled"] {
 .g-empty {
     display: block;
     margin: 0 auto;
-    padding-top: 75px;
+    padding-top: 120px;
     width: 220px;
     line-height: 21px;
     font-size: 14px;
     color: $fontGray;
     text-align: center;
-    background: url('../../images/box.png') center top no-repeat;
+    background: url('../../images/search-empty.svg') center top no-repeat;
 }
 
 .g-confirm-buttom {
@@ -504,7 +504,7 @@ input[disabled="disabled"] {
     }
     .detail-label {
         color: #999;
-        min-width: 100px;
+        min-width: 150px;
     }
     .item-name {
         font-size: 20px;

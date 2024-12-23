@@ -35,13 +35,16 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_DEL_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_SAVE_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode.TIMER_PARAM_TOO_LONG
 import com.tencent.devops.stream.dao.StreamTimerDao
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamChangeEvent
@@ -96,7 +99,10 @@ class StreamTimerService @Autowired constructor(
                         actionType = ActionType.TERMINATE
                     )
                 )
-                Result(ERROR_SAVE_PIPELINE_TIMER.toInt(), "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
+                Result(
+                    ERROR_SAVE_PIPELINE_TIMER.toInt(),
+                    MessageUtil.getMessageByLocale(TIMER_PARAM_TOO_LONG, I18nUtil.getLanguage(userId))
+                )
             }
         }
     }
@@ -106,23 +112,20 @@ class StreamTimerService @Autowired constructor(
         val newCrontabExpressions = mutableSetOf<String>()
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "定时触发器的定时参数不合法",
-                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
+                errorCode = StreamMessageCode.ILLEGAL_TIMER_CRONTAB
             )
         }
         crontabExpressions.forEach { crontabExpression ->
             val newConvertExpression = convertExpression(crontabExpression)
             if (!CronExpression.isValidExpression(newConvertExpression)) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数[$crontabExpression]不合法",
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                    errorCode = StreamMessageCode.ILLEGAL_TIMER_CRONTAB,
                     params = arrayOf(crontabExpression)
                 )
             }
             if (!CronExpressionUtils.isValidTimeInterval(newConvertExpression)) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数[$crontabExpression]不能秒级触发",
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
+                    errorCode = StreamMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
                     params = arrayOf(crontabExpression)
                 )
             }
@@ -163,7 +166,14 @@ class StreamTimerService @Autowired constructor(
         return if (count > 0) {
             Result(true)
         } else {
-            Result(ERROR_DEL_PIPELINE_TIMER.toInt(), "删除流水线${pipelineId}定时触发调度失败！")
+            Result(
+                ERROR_DEL_PIPELINE_TIMER.toInt(),
+                MessageUtil.getMessageByLocale(
+                    ERROR_DEL_PIPELINE_TIMER,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(pipelineId)
+                )
+            )
         }
     }
 

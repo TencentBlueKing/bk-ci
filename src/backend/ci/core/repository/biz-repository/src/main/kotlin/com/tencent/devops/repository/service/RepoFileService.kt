@@ -32,12 +32,16 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
+import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
@@ -56,21 +60,26 @@ import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.util.Base64
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.NotFoundException
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
 class RepoFileService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val gitTokenDao: GitTokenDao,
+    private val tGitTokenDao: TGitTokenDao,
     private val dslContext: DSLContext,
     private val client: Client,
     private val githubService: IGithubService,
@@ -92,9 +101,10 @@ class RepoFileService @Autowired constructor(
         reversion: String?,
         branch: String?,
         subModule: String? = null,
-        svnFullPath: Boolean = false
+        svnFullPath: Boolean = false,
+        projectId: String = ""
     ): String {
-        val repo = repositoryService.serviceGet("", repositoryConfig)
+        val repo = repositoryService.serviceGet(projectId, repositoryConfig)
         return getFileContent(
             repo = repo,
             filePath = filePath,
@@ -338,6 +348,30 @@ class RepoFileService @Autowired constructor(
         )
     }
 
+    fun downloadTGitRepoFile(
+        repo: Repository,
+        sha: String?,
+        tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
+        response: HttpServletResponse
+    ) {
+        val token = client.get(ServiceOauthResource::class).gitGet(repo.userName).data?.accessToken ?: ""
+        gitService.downloadGitRepoFile(
+            token = token,
+            tokenType = tokenType,
+            request = DownloadGitRepoFileRequest(
+                repoName = repo.projectName,
+                sha = sha,
+                filePath = filePath,
+                format = format,
+                isProjectPathWrapped = isProjectPathWrapped ?: false
+            ),
+            response = response
+        )
+    }
+
     private fun getTGitSingleFile(
         repo: CodeTGitRepository,
         filePath: String,
@@ -345,13 +379,21 @@ class RepoFileService @Autowired constructor(
         subModule: String?
     ): String {
         logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
-        val token = getCredential(repo.projectId ?: "", repo).privateKey
+        val token = if (repo.authType == RepoAuthType.OAUTH) {
+            AESUtil.decrypt(
+                key = aesKey,
+                content = tGitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
+                    ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
+            )
+        } else {
+            getCredential(repo.projectId ?: "", repo).privateKey
+        }
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         return gitService.getGitFileContent(
             repoUrl = repo.url,
             repoName = projectName ?: "",
             filePath = filePath,
-            authType = RepoAuthType.HTTPS,
+            authType = repo.authType,
             token = token,
             ref = ref
         )
@@ -360,9 +402,10 @@ class RepoFileService @Autowired constructor(
     fun updateTGitFileContent(
         repositoryConfig: RepositoryConfig,
         userId: String,
-        gitOperationFile: GitOperationFile
+        gitOperationFile: GitOperationFile,
+        projectId: String = ""
     ): Result<Boolean> {
-        val repo = repositoryService.serviceGet("", repositoryConfig)
+        val repo = repositoryService.serviceGet(projectId, repositoryConfig)
         return updateTGitSingleFile(
             repoUrl = repo.url,
             repoName = repo.projectName,
@@ -382,7 +425,7 @@ class RepoFileService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = I18nUtil.getCodeLanMessage(NOT_AUTHORIZED_BY_OAUTH)
         )
     }
 
@@ -405,7 +448,16 @@ class RepoFileService @Autowired constructor(
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
-        return githubService.getFileContent(projectName!!, ref, filePath)
+        return githubService.getFileContent(
+            projectName = projectName!!,
+            ref = ref,
+            filePath = filePath,
+            token = if (repo.credentialId.isNotBlank()) {
+                getCredential(repo.projectId ?: "", repo).privateKey
+            } else {
+                ""
+            }
+        )
     }
 
     private fun getP4SingleFile(
@@ -456,6 +508,26 @@ class RepoFileService @Autowired constructor(
                 partAPrivateKey = pair.privateKey
             )
         )
+
+        // username+password 关联的git代码库
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getLoginSession(
+                RepoSessionRequest(
+                    type = repository.getScmType(),
+                    username = privateKey,
+                    password = passPhrase,
+                    url = repository.url
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

@@ -27,13 +27,14 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("证书-证书权限")
+@Schema(title = "证书-证书权限")
 data class CertPermissions(
-    @ApiModelProperty("删除权限", required = true)
+    @get:Schema(title = "删除权限", required = true)
     val delete: Boolean,
-    @ApiModelProperty("编辑权限", required = true)
-    val edit: Boolean
+    @get:Schema(title = "编辑权限", required = true)
+    val edit: Boolean,
+    @get:Schema(title = "使用权限", required = true)
+    val use: Boolean
 )

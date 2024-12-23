@@ -1,64 +1,9 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_log?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_log?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
-  cloud:
-    stream:
-      function:
-        definition: logOriginEventIn;logOriginEventOut;logStorageEventIn;logStorageEventOut;logStatusEventIn;logStatusEventOut
-      bindings:
-        # 配置MQ的绑定关系：destination为目标Exchange，group为该单例所在订阅组，binder为使用的组件类型
-        # 参数值：<单例名称>-<消费者in或生产者out，默认in>-<编号，默认0>
-        ## 预处理队列
-        logOriginEventIn-in-0:                      # 消费者Bean声明，in-0表示该作为0号消费者，可以配置多个（不建议）
-          destination: e.build.log.origin.event     # 消费者绑定的topic，同RabbitMQ中的Exchange
-          group: log-serivce                        # 消费者所在订阅组，对于同个destination，共享队列填相同group，广播则填不同group
-          binder: extend-rabbit                     # 对应的binder，在上面全局yaml配置的组件别名
-          consumer:                                 # 生产者Bean声明，类似上述消费者，out-0可缺省
-            concurrency: 10                         # 生产者绑定的topic
-        logOriginEventOut:                          # 对应的binder，在上面全局yaml配置的组件别名
-          destination: e.build.log.origin.event
-          binder: extend-rabbit
-        ## 入库队列
-        logStorageEventIn-in-0:
-          destination: e.build.log.storage.event
-          group: log-serivce
-          binder: extend-rabbit
-          consumer:
-            concurrency: 10
-        logStorageEventOut:
-          destination: e.build.log.storage.event
-          binder: extend-rabbit
-        ## 状态队列
-        logStatusEventIn-in-0:
-          destination: e.build.log.status.event
-          group: log-serivce
-          binder: extend-rabbit
-          consumer:
-            concurrency: 10
-        logStatusEventOut:
-          destination: e.build.log.status.event
-          binder: extend-rabbit
-      # spring-cloud-starter-stream-rabbit框架中的配置项，用于定义每个bindings的rabbitmq连接参数
-      rabbit:
-        bindings:
-          logOriginEventIn-in-0:
-            consumer:
-              prefetch: 1
-              x-delayed-type: true
-              max-concurrency: 100
-          logStorageEventIn-in-0:
-            consumer:
-              prefetch: 1
-              x-delayed-type: true
-              max-concurrency: 100
-          logStatusEventOut-in-0:
-            consumer:
-              prefetch: 1
-              x-delayed-type: true
-              max-concurrency: 10
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21914
 server:

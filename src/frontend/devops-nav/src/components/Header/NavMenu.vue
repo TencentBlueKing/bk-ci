@@ -1,7 +1,7 @@
 <template>
     <nav
         v-clickoutside="hideNavMenu"
-        :class="{ &quot;devops-header-nav&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-header-nav': true, 'active': show }"
     >
         <p
             class="nav-entry"
@@ -36,7 +36,11 @@
                                 :key="service.id"
                                 class="collect-item"
                             >
-                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="service-logo" />
+                                <img
+                                    v-if="isAbsoluteUrl(service.logoUrl)"
+                                    :src="service.logoUrl"
+                                    class="service-logo"
+                                />
                                 <logo
                                     v-else
                                     class="service-logo"
@@ -67,7 +71,6 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
-                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
@@ -79,13 +82,12 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Getter, Action } from 'vuex-class'
-    import { getServiceLogoByPath, urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
+    import { Action, Getter, State } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         name: 'nav-menu',
@@ -164,11 +166,6 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            return this.$t(mapDocumnetTitle(title)) as string
-        }
-
         gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
@@ -180,7 +177,6 @@
             }
             
             (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
-            document.title = this.getDocumentTitle(linkNew)
         }
 
         created () {

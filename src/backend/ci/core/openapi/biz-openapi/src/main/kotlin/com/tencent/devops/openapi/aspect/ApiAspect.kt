@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.aspect
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -34,10 +35,18 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
+import com.tencent.devops.openapi.es.ESMessage
+import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import io.swagger.v3.oas.annotations.Operation
+import javax.ws.rs.core.Response
+import kotlin.reflect.jvm.kotlinFunction
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -46,8 +55,8 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
-import kotlin.reflect.jvm.kotlinFunction
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Aspect
 @Component
@@ -56,7 +65,8 @@ class ApiAspect(
     private val apiGatewayUtil: ApiGatewayUtil,
     private val redisOperation: RedisOperation,
     private val bkTag: BkTag,
-    private val permissionService: OpenapiPermissionService
+    private val permissionService: OpenapiPermissionService,
+    private val esService: IESService
 ) {
 
     companion object {
@@ -65,6 +75,10 @@ class ApiAspect(
 
     @Value("\${openapi.verify.project: #{null}}")
     val verifyProjectFlag: String = "false"
+
+    private val apiTagCache = Caffeine.newBuilder()
+        .maximumSize(500)
+        .build<String/*method-name*/, String/*api-tag*/>()
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -98,17 +112,39 @@ class ApiAspect(
             }
         }
 
+        kotlin.runCatching {
+            if (esService.esReady()) {
+                val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+                val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
+                esService.addMessage(
+                    ESMessage(
+                        api = getApiTag(jp = jp, apiType = apiType),
+                        key = when {
+                            apiType.isBlank() -> "null"
+                            apiType.contains("user") -> "user:$userId"
+                            else -> "app:$appCode"
+                        },
+                        projectId = projectId ?: "",
+                        path = request.requestURI,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+        }.onFailure {
+            logger.error("es add message error ${it.message}", it)
+        }
+
         if (logger.isDebugEnabled) {
 
             val methodName: String = jp.signature.name
-            logger.debug("【前置增强】the method 【{}】", methodName)
+            logger.debug("【before advice】the method 【{}】", methodName)
 
             parameterNames.forEach {
-                logger.debug("参数名[{}]", it)
+                logger.debug("param name[{}]", it)
             }
 
             parameterValue.forEach {
-                logger.debug("参数值[{}]", it)
+                logger.debug("param value[{}]", it)
             }
             logger.debug("ApiAspect|apigwType[$apigwType],appCode[$appCode],projectId[$projectId]")
         }
@@ -128,7 +164,11 @@ class ApiAspect(
         }
 
         if (projectId != null) {
-
+            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
+            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+            if (!projectConsulTag.isNullOrEmpty()) {
+                bkTag.setGatewayTag(projectConsulTag)
+            }
             permissionService.validProjectPermission(
                 appCode = appCode,
                 apigwType = apigwType,
@@ -144,13 +184,12 @@ class ApiAspect(
 
             if (appCode != null && apigwType == "apigw-app" && !appCodeService.validAppCode(appCode, projectId)) {
                 throw PermissionForbiddenException(
-                    message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
+                    message = "Permission denied: apigwType[$apigwType]," +
+                        "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
+                        messageCode = OpenAPIMessageCode.APP_CODE_PERMISSION_DENIED_MESSAGE,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 )
-            }
-            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
-            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
-            if (!projectConsulTag.isNullOrEmpty()) {
-                bkTag.setGatewayTag(projectConsulTag)
             }
         }
     }
@@ -178,7 +217,10 @@ class ApiAspect(
             throw error
         } catch (ignored: ParamBlankException) {
             logger.info("openapi check parameters error| error info:${ignored.message}")
-            throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: ${ignored.message}")
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL) + " ${ignored.message}"
+            )
         } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传
             val parameterValue = pdj.args
@@ -192,13 +234,19 @@ class ApiAspect(
                     parameterMap.containsKey(kParameter.name) && // 检查参数集合中是否存在对应key，避免直接拿取到null
                     parameterMap[kParameter.name] == null // 判断用户传参是否为为null
                 ) {
-                    throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: 请求参数${kParameter.name} 不能为空")
+                    throw CustomException(
+                        Response.Status.BAD_REQUEST,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = PARAM_VERIFY_FAIL,
+                            params = arrayOf("request param ${kParameter.name} cannot be empty")
+                        )
+                    )
                 }
             }
             throw error
         } finally {
             afterMethod()
-            logger.info("$methodName 方法耗时${System.currentTimeMillis() - begin}毫秒")
+            logger.info("$methodName function execution time${System.currentTimeMillis() - begin}millisecond")
         }
 
         return res
@@ -212,5 +260,23 @@ class ApiAspect(
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
         bkTag.removeGatewayTag()
+    }
+
+    private fun getApiTag(jp: JoinPoint, apiType: String): String {
+        val method = (jp.signature as MethodSignature).method
+        val methodName = method.declaringClass.typeName + "." + method.name
+        return apiTagCache.get(methodName) {
+            jp.target
+                ?.javaClass
+                ?.interfaces
+                ?.first()
+                ?.getDeclaredMethod(
+                    method.name, *method.parameterTypes
+                )
+                ?.getAnnotation(Operation::class.java)
+                ?.tags
+                ?.first()
+                ?.replace(Regex("app|user"), apiType) ?: methodName
+        } ?: methodName
     }
 }

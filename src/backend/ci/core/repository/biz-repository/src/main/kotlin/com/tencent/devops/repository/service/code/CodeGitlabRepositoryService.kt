@@ -26,20 +26,25 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -71,7 +76,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GITLAB
+                type = ScmType.CODE_GITLAB,
+                enablePac = repository.enablePac
             )
             // Git项目ID
             val gitProjectId: Long = getGitProjectId(
@@ -100,14 +106,29 @@ class CodeGitlabRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GITLAB.name) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITLAB_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        var gitProjectId = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
-        if (record.url != repository.url) {
+        if (record.url != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[${record.url}] " +
                     "targetUrl=[${repository.url}]"
@@ -124,7 +145,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitLabDao.edit(
                 dslContext = transactionContext,
@@ -132,7 +154,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 projectName = GitUtils.getProjectName(repository.url),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                authType = repository.authType?.name ?: RepoAuthType.HTTP.name
             )
         }
     }
@@ -147,7 +170,15 @@ class CodeGitlabRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            // gitlab代码库的老数据authType字段为null
+            authType = if (record.authType.isNullOrBlank()) {
+                RepoAuthType.HTTP
+            } else {
+                RepoAuthType.valueOf(record.authType)
+            },
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -159,12 +190,12 @@ class CodeGitlabRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(
@@ -228,17 +259,34 @@ class CodeGitlabRepositoryService @Autowired constructor(
         return repoCredentialInfo
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeGitLabDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(
                 authType = it.authType ?: RepoAuthType.HTTP.name,
                 credentialId = it.credentialId
             )
         }) ?: mapOf()
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
     /**
      * 获取凭证信息
@@ -250,6 +298,13 @@ class CodeGitlabRepositoryService @Autowired constructor(
             repository = repository
         )
     }
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeGitlabRepository
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitlabRepositoryService::class.java)

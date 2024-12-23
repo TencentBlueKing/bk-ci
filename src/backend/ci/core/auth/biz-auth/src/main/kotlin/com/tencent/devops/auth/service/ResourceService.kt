@@ -34,11 +34,14 @@ import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
+import com.tencent.devops.common.auth.callback.ListResourcesAuthorizationDTO
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -59,7 +62,10 @@ class ResourceService @Autowired constructor(
             gateway = projectInfo.gateway,
             token = token
         )
-        val response = authHttpClientService.request(request, "调用回调接口失败")
+        val response = authHttpClientService.request(
+            request,
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API)
+        )
         return buildResult(callBackInfo.method, response)
     }
 
@@ -88,9 +94,13 @@ class ResourceService @Autowired constructor(
             path = resourceInfo.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
             gateway = resourceInfo.gateway,
-            token = token
+            token = token,
+            system = resourceInfo.system
         )
-        val response = authHttpClientService.request(request, "调用回调接口失败")
+        val response = authHttpClientService.request(
+            request,
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API)
+        )
 
         logger.info("getInstanceByResource response: $response")
 
@@ -111,18 +121,13 @@ class ResourceService @Autowired constructor(
         return true
     }
 
+    @Suppress("MaxLineLength")
     private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
         return when (method) {
-            CallbackMethodEnum.SEARCH_INSTANCE -> {
-                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
-                if (searchResult.data?.count!! > 100L) {
-                    searchResult.buildSearchInstanceResultFailResult()
-                } else {
-                    searchResult
-                }
-            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> objectMapper.readValue<SearchInstanceInfo>(response)
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
             CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
+            CallbackMethodEnum.LIST_RESOURCE_AUTHORIZATION -> objectMapper.readValue<ListResourcesAuthorizationDTO>(response)
             else -> objectMapper.readValue(response)
         }
     }

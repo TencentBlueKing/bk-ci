@@ -3,7 +3,12 @@
         <header class="manage-detail-header">
             <span @click="$router.back()">{{ $t('store.取消编辑') }}</span>
         </header>
-        <component :is="`${$route.params.type}Edit`" :detail="detail" class="edit-main" ref="edit"></component>
+        <component
+            :is="`${$route.params.type}Edit`"
+            :detail="detail"
+            class="edit-main"
+            ref="edit"
+        ></component>
     </article>
 </template>
 
@@ -27,7 +32,7 @@
         created () {
             window.onbeforeunload = () => {
                 const vm = this.$refs.edit
-                if (vm.hasChange) return this.$t('store.有修改的数据未保存，是否离开当前页面')
+                if (vm.hasChange) return this.$t('store.离开将会导致未保存信息丢失')
             }
         },
 
@@ -39,8 +44,8 @@
             const vm = this.$refs.edit
             if (vm.hasChange) {
                 this.$bkInfo({
-                    title: this.$t('store.确定离开？'),
-                    subTitle: this.$t('store.有修改的数据未保存，是否离开当前页面'),
+                    title: this.$t('store.确认离开当前页？'),
+                    subTitle: this.$t('store.离开将会导致未保存信息丢失'),
                     confirmFn: () => next(),
                     onClose: () => next(false)
                 })

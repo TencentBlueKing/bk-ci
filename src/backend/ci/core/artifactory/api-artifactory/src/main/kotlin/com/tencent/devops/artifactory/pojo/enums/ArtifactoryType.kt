@@ -27,18 +27,32 @@
 
 package com.tencent.devops.artifactory.pojo.enums
 
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.constant.REPO_NAME_REPORT
 import java.lang.UnsupportedOperationException
 
 enum class ArtifactoryType {
     PIPELINE,
     CUSTOM_DIR,
-    IMAGE;
+    IMAGE,
+    REPORT;
 
     fun toFileType(): FileTypeEnum {
         return when (this) {
             PIPELINE -> FileTypeEnum.BK_ARCHIVE
             CUSTOM_DIR -> FileTypeEnum.BK_CUSTOM
             else -> throw UnsupportedOperationException("unsupported file type")
+        }
+    }
+
+    fun toBkrepoName(): String {
+        return when (this) {
+            PIPELINE -> REPO_NAME_PIPELINE
+            CUSTOM_DIR -> REPO_NAME_CUSTOM
+            IMAGE -> REPO_NAME_IMAGE
+            REPORT -> REPO_NAME_REPORT
         }
     }
 }

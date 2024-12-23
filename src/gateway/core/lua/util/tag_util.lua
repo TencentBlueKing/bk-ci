@@ -18,94 +18,101 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
-    if ngx.var.use_default_tag == 'true' then
-        return ns_config.tag
-    end
-
-    local devops_project_id = ngx.var.project_id
-    local devops_project = ngx.var.project
+    local gateway_project = ngx.var.project
     local devops_service = ngx.var.service
-    local default_tag = ns_config.tag
+    local devops_project_id = ngx.var.project_id
     local tag = nil
 
-    -- 根据header强制路由tag
-    if ngx.var.http_x_gateway_tag ~= nil then
-        self:set_header(ngx.var.http_x_gateway_tag)
-        return ngx.var.http_x_gateway_tag
+    local default_tag = ns_config.tag
+    if gateway_project == 'codecc' then
+        default_tag = ns_config.codecc_tag
     end
 
-    -- 获取本地缓存
-    local tag_cache = ngx.shared.tag_project_store
-    local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
-                              tostring(devops_project)
-    local tag_cache_value = tag_cache:get(tag_cache_key)
+    if ngx.var.use_default_tag == 'true' then
+        return "kubernetes-" .. default_tag
+    end
 
-    -- 如果有缓存 ,则使用缓存变量
-    if tag_cache_value ~= nil and tag_cache_value ~= '' then
-        tag = tag_cache_value
-    else -- 否则从redis中拿到策略
-        local red, err = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "tag failed to new redis ", err)
-            return tag
-        end
-        -- 根据project_id路由
-        if devops_project_id ~= nil and devops_project_id ~= '' then
-            local redis_key = nil
-            if devops_project == 'codecc' then
-                redis_key = 'project:setting:tag:codecc:v2'
-            else
-                redis_key = "project:setting:tag:v2"
+    -- 根据header强制路由tag
+    local x_gateway_tag = ngx.var.http_x_gateway_tag
+    if x_gateway_tag == nil then
+        x_gateway_tag = ngx.var["arg_x-gateway-tag"]
+    end
+
+    if x_gateway_tag ~= nil then
+        tag = x_gateway_tag
+    else
+        -- 获取本地缓存
+        local tag_cache = ngx.shared.tag_project_store
+        local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
+            tostring(gateway_project)
+        local tag_cache_value = tag_cache:get(tag_cache_key)
+
+        -- 如果有缓存 ,则使用缓存变量
+        if tag_cache_value ~= nil and tag_cache_value ~= '' then
+            tag = tag_cache_value
+        else -- 否则从redis中拿到策略
+            local red, err = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "tag failed to new redis ", err)
+                return "kubernetes-" .. default_tag
             end
-            -- 从redis获取tag
-            local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
-            local redRes = red:hget(redis_key, hash_key)
-            if redRes and redRes ~= ngx.null then
-                local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                tag_cache:set(devops_project_id, hash_val, 5)
-                tag = hash_val
-            end
-        end
-        -- 根据service路由
-        if tag == nil and devops_service ~= '' then
-            local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
-            if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                tag = service_redis_cache_value
-            end
-        end
-        -- 根据ngx.var.project路由
-        if tag == nil and devops_project then
-            local project_redis_cache_value = red:get("project:setting:project:tag:" .. devops_project)
-            if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
-                tag = project_redis_cache_value
-            end
-        end
-        -- 使用默认值
-        if tag == nil then
-            tag = default_tag
-        end
-        -- 是否使用kubernetes
-        if not string.find(tag, '^kubernetes-') then
-            if config.kubernetes.switchAll == true then
-                tag = "kubernetes-" .. tag
-            else
-                local k8s_redis_key = nil
-                if devops_project == 'codecc' then
-                    k8s_redis_key = 'project:setting:k8s:codecc'
+            -- 根据project_id路由
+            if devops_project_id ~= nil and devops_project_id ~= '' then
+                local redis_key = nil
+                if gateway_project == 'codecc' then
+                    redis_key = 'project:setting:tag:codecc:v2'
                 else
-                    k8s_redis_key = "project:setting:k8s"
+                    redis_key = "project:setting:tag:v2"
                 end
-                local k8s_redRes = red:sismember(k8s_redis_key, devops_project_id)
-                if k8s_redRes == 1 then
-                    tag = "kubernetes-" .. tag
+                -- 从redis获取tag
+                local hash_key = '\xAC\xED\x00\x05t\x00' ..
+                    string.char(devops_project_id:len()) ..
+                    devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
+                local redRes = red:hget(redis_key, hash_key)
+                if redRes and redRes ~= ngx.null then
+                    local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
+                    tag_cache:set(devops_project_id, hash_val, 5)
+                    tag = hash_val
                 end
             end
-        end
-        --- 将redis连接放回pool中
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            -- 根据service路由
+            if tag == nil and devops_service ~= '' then
+                local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
+                if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
+                    tag = service_redis_cache_value
+                end
+            end
+            -- 根据ngx.var.project路由
+            if tag == nil and gateway_project then
+                local project_redis_cache_value = red:get("project:setting:project:tag:" .. gateway_project)
+                if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
+                    tag = project_redis_cache_value
+                end
+            end
+            -- 使用默认值
+            if tag == nil then
+                tag = default_tag
+            end
+            --- 将redis连接放回pool中
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
-        -- 将redis拿到的tag保存在缓存
-        tag_cache:set(tag_cache_key, tag, 5)
+            -- 将redis拿到的tag保存在缓存
+            tag_cache:set(tag_cache_key, tag, 5)
+        end
+    end
+
+    -- 容器化切换已经完成
+    if type(tag) == "string" and not string.find(tag, '^kubernetes-') then
+        tag = "kubernetes-" .. tag
+    end
+
+    -- DEVNET区域对tag的转换
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+        if string.find(tag, '^kubernetes-') then
+            tag = string.sub(tag, 12)
+        end
+        tag = 'ieg-codeccsvr-bkci-' .. tag
     end
 
     -- 设置tag到http请求头
@@ -166,6 +173,9 @@ end
 
 -- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
+    if string.find(tag, '^kubernetes-') then
+        tag = string.sub(tag, 12) -- 去掉 "kubernetes-" 头部
+    end
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store
     local sub_path = sub_path_cache:get(tag)

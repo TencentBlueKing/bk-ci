@@ -27,18 +27,18 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * Container事件
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_CONTAINER)
+@Event(StreamBinding.PIPELINE_BUILD_CONTAINER)
 data class PipelineBuildContainerEvent(
     override val source: String,
     override val projectId: String,
@@ -47,6 +47,7 @@ data class PipelineBuildContainerEvent(
     val buildId: String,
     val stageId: String,
     val containerId: String, // model中的container.id，CONTAINER表中的seq id，TASK表中的containerId
+    val executeCount: Int?,
     val containerHashId: String?,
     val containerType: String,
     val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null

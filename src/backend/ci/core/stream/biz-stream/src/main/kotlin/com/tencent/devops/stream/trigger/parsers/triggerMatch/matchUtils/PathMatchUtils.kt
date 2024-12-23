@@ -27,7 +27,7 @@ object PathMatchUtils {
             // 包含匹配失败
             val includePathsMatch = pathIgnoreList.isEmpty() &&
                 pathList.isNotEmpty() &&
-                response.getParam()[MATCH_PATHS] == null
+                response.params[MATCH_PATHS] == null
             return if (includePathsMatch) {
                 TriggerBody().triggerFail("on.push.paths", "change path($pathList) not match")
             } else {
@@ -88,6 +88,12 @@ object PathMatchUtils {
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
         logger.info("PathMatchUtils|isPathMatch|fullPath|$fullPath|prefixPath|$prefixPath")
+        if (prefixPath.endsWith("*")) {
+            logger.info(
+                "PathStreamFilter|path_end_with_*|" +
+                    "$fullPath|$prefixPath"
+            )
+        }
         val fullPathList = fullPath.removePrefix("/").split("/")
         val prefixPathList = prefixPath.removePrefix("/").split("/")
         if (fullPathList.size < prefixPathList.size) {

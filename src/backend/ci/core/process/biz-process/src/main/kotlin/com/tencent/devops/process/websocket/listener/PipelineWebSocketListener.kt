@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.websocket.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -44,7 +44,7 @@ class PipelineWebSocketListener @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
-) : BaseListener<PipelineBuildWebSocketPushEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildWebSocketPushEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildWebSocketPushEvent) {
 
@@ -90,12 +90,20 @@ class PipelineWebSocketListener @Autowired constructor(
         if (event.refreshTypes and RefreshType.RECORD.binary == RefreshType.RECORD.binary) {
             event.executeCount?.let { executeCount ->
                 webSocketDispatcher.dispatch(
+                    // #8955 增加对没有执行次数的默认页面的重复推送
                     pipelineWebsocketService.buildRecordMessage(
                         buildId = event.buildId,
                         projectId = event.projectId,
                         pipelineId = event.pipelineId,
                         userId = event.userId,
                         executeCount = executeCount
+                    ),
+                    pipelineWebsocketService.buildRecordMessage(
+                        buildId = event.buildId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        userId = event.userId,
+                        executeCount = null
                     )
                 )
             }

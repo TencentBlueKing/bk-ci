@@ -105,7 +105,7 @@
     "mirrorTagRule": "只允许包含大小写英文，数字，下划线和点",
     "selectModel": "选择机型",
     "confirmInfo": "确认信息",
-    "setting": "设置",
+    "setting": "共享设置",
     "removeShareEnvProjectSuc": "项目 {0} 移除成功",
     "shareEnvSuc": "共享环境成功",
     "removeShareProjectConfirm": "是否移除项目 {0}",
@@ -138,7 +138,7 @@
         "notyetNode": "暂未选取节点",
         "clickSelectNode": "点击选取节点",
         "haveToNeedNode": "节点不能为空",
-        "cpuName": "主机名",
+        "hostName": "主机名",
         "displayName": "别名",
         "intranet": "内网",
         "ram": "内存",
@@ -152,7 +152,7 @@
         "modifyImporter": "修改导入人",
         "owner": "拥有者",
         "importTime": "导入时间",
-        "lastModifyTime": "最后修改时间",
+        "lastModifyTime": "最近修改时间",
         "os": "操作系统",
         "gateway": "区域",
         "cpuStatus": "主机状态",
@@ -180,7 +180,7 @@
         "enterDisplayName": "请输入别名",
         "buildTask": "构建任务",
         "buildTaskStatus": "构建任务状态",
-        "machineActivityRecord": "机器上下线记录",
+        "machineActivityRecord": "Agent上下线记录",
         "oneHour": "1小时",
         "oneDay": "24小时",
         "oneWeek": "近7天",
@@ -195,7 +195,7 @@
         "maxParallelTaskCount": "最大构建并发数",
         "parallelTaskCountTips": "请输入100及以下的数值， 0表示不限制",
         "lastActiveTime": "上次心跳时间",
-        "ownJob": "所属Job",
+        "ownJob": "动作",
         "online": "上线",
         "offline": "下线",
         "buildNo": "构建号",
@@ -211,6 +211,7 @@
         "location": "地点",
         "buildMachineLocationTips": "请根据构建机的归属地选择最近的接入点，这样可以提高构建机的归档和拉取构建产物的速度，并增加构建机的连接稳定性。PS:北京地区请选择天津。",
         "referenceStep": "请参考以下步骤",
+        "fetchInstallCommandTips": "请先选择地点获取安装命令",
         "executeCommandPrompt": "请在合适的位置为Agent创建工作目录，并在该目录下执行安装命令",
         "installBuildMachineTips": "如何在Windows上安装Agent",
         "connectedNodes": "已连接的节点",
@@ -231,7 +232,8 @@
         "set": "台",
         "remaining": "还剩",
         "canApplyCount": "台可申请",
-        "selectNewNode": "请选择你的新节点"
+        "selectNewNode": "请选择你的新节点",
+        "dockerMaxConcurrency": "docker构建最大并发数"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -259,5 +261,11 @@
         "BUILD_IMAGE_SUCCESS": "制作镜像成功",
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知"
-    }
+    },
+    "newPool": "创建",
+    "启用": "启用",
+    "停用": "停用",
+    "启用成功": "启用成功",
+    "停用成功": "停用成功",
+    "authManage": "权限管理"
 }

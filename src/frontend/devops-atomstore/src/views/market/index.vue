@@ -1,13 +1,25 @@
 <template>
     <article class="store-home">
-        <bread-crumbs :bread-crumbs="navList" :type="filterData.pipeType">
-            <router-link :to="{ name: `${filterData.pipeType || 'atom'}Work` }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="filterData.pipeType"
+        >
+            <router-link
+                :to="{ name: `${filterData.pipeType || 'atom'}Work` }"
+                class="g-title-work"
+            >
+                {{ $t('store.工作台') }}
+            </router-link>
         </bread-crumbs>
 
-        <main class="store-main" @scroll.passive="mainScroll">
+        <main
+            class="store-main"
+            @scroll.passive="mainScroll"
+        >
             <section class="home-main">
                 <nav class="home-nav">
-                    <bk-input class="nav-input"
+                    <bk-input
+                        class="nav-input"
                         :placeholder="$t('store.请输入关键字')"
                         :clearable="true"
                         right-icon="bk-icon icon-search"
@@ -15,20 +27,26 @@
                         @change="changeSearchStr"
                     ></bk-input>
                     <section class="nav-pipetype">
-                        <p v-for="storeType in storeTypes"
+                        <p
+                            v-for="storeType in storeTypes"
                             :key="storeType.type"
                             class="pipe-type"
                             :class="{ 'active-tab': filterData.pipeType === storeType.type }"
                             @click="changePipeType(storeType.type)"
                         >
-                            <icon class="title-icon" :name="`store-${storeType.type}`" size="18" />
-                            <span>{{storeType.des}}</span>
+                            <icon
+                                class="title-icon"
+                                :name="`store-${storeType.type}`"
+                                size="18"
+                            />
+                            <span>{{ storeType.des }}</span>
                         </p>
                     </section>
 
                     <section class="nav-fliter">
                         <h3> {{ $t('store.分类') }} </h3>
-                        <bk-select :value="`${filterData.classifyValue}${filterData.classifyKey || ''}`"
+                        <bk-select
+                            :value="`${filterData.classifyValue}${filterData.classifyKey || ''}`"
                             class="filter-select"
                             :scroll-height="500"
                             :clearable="false"
@@ -36,8 +54,10 @@
                             <bk-option-group
                                 v-for="(group, index) in categories"
                                 :name="group.name"
-                                :key="index">
-                                <bk-option v-for="(option, key) in group.children"
+                                :key="index"
+                            >
+                                <bk-option
+                                    v-for="(option, key) in group.children"
                                     :key="key"
                                     :id="option.id"
                                     :name="option.name"
@@ -47,20 +67,46 @@
                             </bk-option-group>
                         </bk-select>
 
-                        <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="filterData.features.length"> {{ $t('store.清除') }} </span></h3>
+                        <h3>
+                            {{ $t('store.特性') }} <span
+                                @click="clearFliterData('features')"
+                                v-show="filterData.features.length"
+                            > {{ $t('store.清除') }} </span>
+                        </h3>
                         <ul class="market-check-group">
-                            <li v-for="(feature, index) in features.filter(x => !x.hidden)" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
+                            <li
+                                v-for="(feature, index) in features.filter(x => !x.hidden)"
+                                :key="index"
+                                class="market-checkbox-li"
+                                @click="chooseFeature(feature)"
+                            >
                                 <span :class="[filterData.features.some((x) => (x.key === feature.key && String(x.value) === String(feature.value))) ? 'checked' : '', 'market-checkbox']"></span>
                                 <span>{{ feature.name }}</span>
                             </li>
                         </ul>
 
-                        <h3> {{ $t('store.评分') }} <span @click="clearFliterData('rates')" v-show="showRateClear"> {{ $t('store.清除') }} </span></h3>
+                        <h3>
+                            {{ $t('store.评分') }} <span
+                                @click="clearFliterData('rates')"
+                                v-show="showRateClear"
+                            > {{ $t('store.清除') }} </span>
+                        </h3>
                         <ul class="rate-ul">
-                            <li v-for="(rate, index) in rates" :key="rate.value" class="rate-li" @click="chooseRate(rate)">
+                            <li
+                                v-for="(rate, index) in rates"
+                                :key="rate.value"
+                                class="rate-li"
+                                @click="chooseRate(rate)"
+                            >
                                 <span :class="[{ checked: rate.checked }, 'rate-radio']"></span>
-                                <comment-rate :rate="rate.value" class="rate-star"></comment-rate>
-                                <span class="rate-above" v-if="index !== 0"> {{ $t('store.及以上') }} </span>
+                                <comment-rate
+                                    :rate="rate.value"
+                                    class="rate-star"
+                                ></comment-rate>
+                                <span
+                                    class="rate-above"
+                                    v-if="index !== 0"
+                                > {{ $t('store.及以上') }} </span>
                             </li>
                         </ul>
                     </section>
@@ -72,13 +118,20 @@
         </main>
 
         <transition name="atom-fade">
-            <icon v-if="showToTop" class="list-top" name="toTop" style="fill:#C3CDD7" @click.native="scrollToTop" />
+            <icon
+                v-if="showToTop"
+                class="list-top"
+                name="toTop"
+                style="fill:#C3CDD7"
+                @click.native="scrollToTop"
+            />
         </transition>
     </article>
 </template>
 
 <script>
     import { debounce } from '@/utils/index'
+    import eventBus from '@/utils/eventBus'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
     import breadCrumbs from '@/components/bread-crumbs.vue'
@@ -128,7 +181,7 @@
             features () {
                 return [
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
-                    { name: this.$t('store.质量红线指标'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.质量红线服务'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
                     { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
                 ]
             },
@@ -174,6 +227,16 @@
                 },
                 immediate: true
             }
+        },
+
+        created () {
+            eventBus.$off('clear')
+            eventBus.$on('clear', () => {
+                this.filterData.classifyValue = 'all'
+                this.filterData.searchStr = ''
+                this.clearFliterData('rates')
+                this.clearFliterData('features')
+            })
         },
 
         methods: {
@@ -383,6 +446,7 @@
 
     .store-main {
         overflow-y: scroll;
+        height: calc(100% - 52px);
     }
 
     .home-main {

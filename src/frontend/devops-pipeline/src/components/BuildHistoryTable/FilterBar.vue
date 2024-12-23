@@ -1,237 +1,314 @@
 <template>
     <div class="build-history-filter-bar">
-        <div class="history-filter-select" v-for="item in filterConfig" :key="item.id">
-            <label :for="item.id">{{item.label}}：</label>
-            <component :is="item.component"
-                :style="`width: ${item.width}px`"
-                :name="item.name"
-                :id="item.id"
-                :value="item.value"
-                :options-conf="item.optionsConf"
-                :date-picker-conf="item.datePickerConf"
-                :handle-change="item.handleChange"
-            />
-        </div>
-        <bk-search-select
-            class="search-select"
-            :placeholder="$t('history.filterTips')"
+        <bk-date-picker
+            :value="historyPageStatus.dateTimeRange"
+            :placeholder="$t('pickTimeRange')"
+            type="datetimerange"
+            @change="handleDateRangeChange"
+        />
+        <search-select
+            class="pipeline-history-search-select"
+            :placeholder="filterTips"
             :data="filterData"
-            :show-condition="false"
-            :strink="false"
-            display-key="value"
-            :values="searchKey"
-            :remote-method="handleRemoteMethod"
-            @input-change="handleSearchInput"
+            :values="historyPageStatus.searchKey"
             @change="updateSearchKey"
-        ></bk-search-select>
-        <span type="default" class="search-history-btn" @click="resetQueryCondition">{{ $t('history.reset') }}</span>
+        >
+        </search-select>
     </div>
 </template>
 
 <script>
-    import Selector from '@/components/AtomFormComponent/Selector'
-    import SelectInput from '@/components/AtomFormComponent/SelectInput'
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { getQueryParamList, debounce } from '../../utils/util'
-    import moment from 'moment'
+    import { coverStrTimer } from '@/utils/util'
+    import SearchSelect from '@blueking/search-select'
+    import { mapActions, mapGetters } from 'vuex'
+
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'filter-bar',
         components: {
-            Selector,
-            SelectInput,
-            TimePicker
+            SearchSelect
         },
         props: {
-            setHistoryPageStatus: Function,
-            resetQueryCondition: Function,
-            query: Array,
-            searchKey: Array
+            resetQueryCondition: Function
         },
         data () {
             return {
+                statusList: [],
                 triggerList: []
             }
         },
         computed: {
-            filterConfig () {
-                return [{
-                    id: 'status',
-                    label: this.$t('status'),
-                    name: 'status',
-                    value: this.query.status,
-                    width: 160,
-                    handleChange: this.handleFilterItemChange,
-                    component: 'selector',
-                    optionsConf: {
-                        url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/status`,
-                        searchable: true,
-                        multiple: true,
-                        clearable: true,
-                        placeholder: this.$t('status'),
-                        searchPlaceholder: this.$t('status'),
-                        paramName: 'value'
-                    }
-
-                }, {
-                    id: 'materialAlias',
-                    label: this.$t('history.repo'),
-                    name: 'materialAlias',
-                    width: 220,
-                    value: this.query.materialAlias,
-                    component: 'select-input',
-                    handleChange: debounce((...args) => {
-                        this.query.materialBranch = []
-                        this.handleFilterItemChange(...args)
-                    }, 500),
-                    optionsConf: {
-                        url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/repo`,
-                        searchable: true,
-                        multiple: true,
-                        clearable: true,
-                        placeholder: 'materialAlias'
-                    }
-
-                }, {
-                    id: 'materialBranch',
-                    label: this.$t('history.branch'),
-                    name: 'materialBranch',
-                    width: 160,
-                    value: this.query.materialBranch,
-                    component: 'select-input',
-                    handleChange: debounce(this.handleFilterItemChange, 500),
-                    optionsConf: {
-                        url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/branchName?${getQueryParamList(this.query.materialAlias, 'alias')}`,
-                        searchable: true,
-                        multiple: true,
-                        clearable: true,
-                        placeholder: 'materialBranch'
-                    }
-                }, {
-                    id: 'dateTimeRange',
-                    label: this.$t('history.date'),
-                    name: 'dateTimeRange',
-                    width: 320,
-                    value: this.query.dateTimeRange,
-                    component: 'time-picker',
-                    handleChange: debounce(this.handleDateRangeChange, 500),
-                    datePickerConf: {
-                        format: 'yyyy-MM-dd HH:mm:ss',
-                        type: 'datetimerange'
-                    }
-                }]
+            ...mapGetters({
+                historyPageStatus: 'pipelines/getHistoryPageStatus'
+            }),
+            datePickerConf () {
+                return {
+                    format: 'yyyy-MM-dd HH:mm:ss',
+                    type: 'datetimerange'
+                }
             },
             filterData () {
                 return [
                     {
-                        value: 'commitid',
+                        name: this.$t('status'),
+                        id: 'status',
+                        multiable: true,
+                        children: this.statusList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
+                    },
+                    {
+                        name: this.$t('materialRepo'),
+                        id: 'materialAlias',
+                        // multiable: true,
+                        remoteMethod:
+                            async (search) => {
+                                const repoList = await this.getConditionList('repo', {
+                                    type: 'MATERIAL',
+                                    search
+                                })
+                                return repoList.map(item => ({
+                                    name: item,
+                                    id: item
+                                }))
+                            },
+                        inputInclude: true
+                    },
+                    {
+                        name: this.$t('triggerRepo'),
+                        id: 'triggerAlias',
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('repo', {
+                                type: 'TRIGGER',
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
+                    },
+                    {
+                        name: 'Commit ID',
                         id: 'materialCommitId'
                     },
                     {
-                        value: 'commitMessage',
+                        name: 'Commit Message',
                         id: 'materialCommitMessage'
                     },
                     {
-                        value: this.$t('history.triggerType'),
-                        id: 'trigger',
-                        remote: true,
-                        multiable: true,
-                        children: this.triggerList
+                        name: this.$t('details.trigger'),
+                        id: 'triggerUser'
                     },
                     {
-                        value: this.$t('history.remark'),
+                        name: this.$t('history.triggerType'),
+                        id: 'trigger',
+                        multiable: true,
+                        children: this.triggerList.map(item => ({
+                            id: item.id,
+                            name: item.value
+                        }))
+                    },
+                    {
+                        name: this.$t('materialBranch'),
+                        id: 'materialBranch',
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'MATERIAL',
+                                alias: this.getSearchKeyById('materialAlias'),
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
+                    },
+                    {
+                        name: this.$t('triggerBranch'),
+                        id: 'triggerBranch',
+                        // multiable: true,
+                        remoteMethod: async (search) => {
+                            const repoList = await this.getConditionList('branchName', {
+                                type: 'TRIGGER',
+                                alias: this.getSearchKeyById('triggerAlias'),
+                                search
+                            })
+                            return repoList.map(item => ({
+                                name: item,
+                                id: item
+                            }))
+                        },
+                        inputInclude: true
+                    },
+                    {
+                        name: this.$t('history.remark'),
                         id: 'remark'
                     }
                 ]
+            },
+            filterTips () {
+                return this.filterData.map(item => item.name).join('/')
             }
         },
+        created () {
+            this.init()
+        },
         methods: {
-            handleFilterItemChange (name, value) {
-                this.setHistoryPageStatus({
-                    queryMap: {
-                        searchKey: this.searchKey,
-                        query: {
-                            ...this.query,
-                            [name]: value
-                        }
+            ...mapActions('pipelines', [
+                'setHistoryPageStatus'
+            ]),
+            async init () {
+                try {
+                    const [statusList, triggerList] = await Promise.all([
+                        'status',
+                        'trigger'
+                    ].map(this.getConditionList))
+                    const conditionsMap = {
+                        status: statusList,
+                        trigger: triggerList
                     }
-                })
-                this.startQuery()
-            },
-            handleDateRangeChange (name, value) {
-                const newQuery = {
-                    ...this.query,
-                    [name]: value,
-                    startTimeStartTime: undefined,
-                    endTimeEndTime: undefined
+                    this.statusList = statusList
+                    this.triggerList = triggerList
+                    this.handlePathQuery(conditionsMap)
+                } catch (error) {
+                    console.error(error)
                 }
-                if (!!value[0] && !!value[1]) {
-                    const startTime = moment(value[0]).valueOf() || ''
-                    const endTime = moment(value[1]).valueOf() || ''
+            },
+            handlePathQuery (conditionsMap) {
+                // TODO 筛选参数目前不支持带#字符串回填
+                const { $route, historyPageStatus } = this
+                const pathQuery = $route.query
+                const queryArr = Object.keys(pathQuery)
+                const page = pathQuery?.page ? parseInt(pathQuery?.page, 10) : 1
+                const pageSize = pathQuery?.pageSize ? parseInt(pathQuery?.pageSize, 10) : 20
 
+                if (queryArr.length) {
+                    const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
+                    const newSearchKey = queryArr.map(key => {
+                        const newItem = this.filterData.find(item => item.id === key)
+                        if (!newItem) return null
+                        const valueMap = conditionsMap[key]?.reduce((acc, item) => {
+                                acc[item.id] = item.value
+                                return acc
+                            }, {})
+
+                        newItem.values = newItem.multiable
+                            ? pathQuery[key].split(',').map(v => ({
+                                id: v,
+                                name: valueMap?.[v] ?? v
+                            }))
+                            : [{ id: pathQuery[key], name: valueMap?.[pathQuery[key]] ?? pathQuery[key] }]
+                        return newItem
+                    }).filter(item => !!item)
+
+                    this.setHistoryPageStatus({
+                        page,
+                        pageSize,
+                        dateTimeRange: hasTimeRange
+                            ? [
+                                coverStrTimer(parseInt(pathQuery.startTimeStartTime)),
+                                coverStrTimer(parseInt(pathQuery.endTimeEndTime))
+                            ]
+                            : [],
+                        query: {
+                            ...historyPageStatus.query,
+                            ...(hasTimeRange
+                                ? {
+                                    startTimeStartTime: pathQuery.startTimeStartTime,
+                                    endTimeEndTime: pathQuery.endTimeEndTime
+                                }
+                                : {})
+                        },
+                        searchKey: newSearchKey
+                    })
+                }
+                this.startQuery(page)
+            },
+            formatTime (date) {
+                try {
+                    return +new Date(date)
+                } catch (e) {
+                    return ''
+                }
+            },
+            handleDateRangeChange (value) {
+                const name = 'dateTimeRange'
+                const { startTimeStartTime, endTimeEndTime, ...newQuery } = this.historyPageStatus.query
+                const startTime = this.formatTime(value[0])
+                const endTime = this.formatTime(value[1])
+                if (startTime) {
                     newQuery.startTimeStartTime = [startTime]
+                }
+                if (endTime) {
                     newQuery.endTimeEndTime = [endTime]
                 }
                 this.setHistoryPageStatus({
-                    queryMap: {
-                        searchKey: this.searchKey,
-                        query: newQuery
-                    }
+                    [name]: value,
+                    query: newQuery
                 })
-
                 this.startQuery()
             },
-            async handleRemoteMethod (...args) {
-                if (this.triggerList.length > 0) return this.triggerList
+
+            async getConditionList (condition, query = {}) {
                 try {
                     const { $route: { params }, $ajax } = this
-                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/trigger`
+                    const querySearch = new URLSearchParams(query)
+                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/${condition}?${querySearch}`
                     const res = await $ajax.get(url)
-                    this.triggerList = res.data
+
                     return res.data
                 } catch (e) {
-
+                    console.error(e)
                 }
             },
-            startQuery () {
-                this.$emit('query')
+            startQuery (page = 1) {
+                this.$emit('query', page)
             },
             updateSearchKey (searchKey) {
                 this.setHistoryPageStatus({
-                    queryMap: {
-                        searchKey,
-                        query: this.query
-                    }
+                    searchKey
                 })
                 this.startQuery()
+            },
+            getSearchKeyById (id) {
+                try {
+                    const values = this.historyPageStatus.searchKey.find(item => item.id === id)?.values
+                    return Array.isArray(values) ? values.map(i => i.id).join(',') : ''
+                } catch (error) {
+                    return ''
+                }
             }
         }
     }
 </script>
 
 <style lang="scss">
-    div {
-        outline: none;
-    }
+
     .build-history-filter-bar {
-        display: flex;
+        display: grid;
         align-items: center;
-        margin: 0 0 10px 0;
+        grid-gap: 8px;
+        grid-auto-flow: column;
+        grid-template-columns: min-content 1fr;
+        margin: 0 0 16px 0;
         max-height: 66px;
-        .history-filter-select {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            margin-right: 12px;
-            .bk-selector{
-                flex: 1;
+        flex-shrink: 0;
+
+        .pipeline-history-search-select {
+            background-color: white;
+            ::placeholder {
+                color: #c4c6cc;
             }
         }
-        .search-select {
-            flex: 1;
-            margin-right: 12px
-        }
+
         .search-history-btn {
             cursor: pointer;
             padding: 0 10px;

@@ -2,12 +2,16 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCert') }}</span>
+                <span class="inner-header-title">{{ isEdit ? $t('ticket.editCert') : $t('ticket.createCert') }}</span>
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <empty-tips v-if="!hasPermission && showContent"
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <empty-tips
+                v-if="!hasPermission && showContent"
                 :title="emptyTipsConfig.title"
                 :desc="emptyTipsConfig.desc"
                 :btns="emptyTipsConfig.btns"
@@ -15,17 +19,36 @@
             </empty-tips>
             <!-- <div class="bk-form cert-setting" v-if="certType">
                 <div class="bk-form-wrapper" v-if="hasPermission && showContent"> -->
-            <div class="cert-setting" v-if="certType">
-                <div class="bk-form" v-if="hasPermission && showContent">
+            <div
+                class="cert-setting"
+                v-if="certType"
+            >
+                <div
+                    class="bk-form"
+                    v-if="hasPermission && showContent"
+                >
                     <!-- 证书类型 start -->
                     <div class="bk-form-item is-required cert-input-item">
                         <label class="bk-label">{{ $t('ticket.cert.certType') }}：</label>
                         <div class="bk-form-content">
                             <!-- <bk-radio-group v-model="certType" @change="changeType">
                                 <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
-                            <bk-radio-group class="cert-type-group" v-model="certType" @change="changeType">
-                                <bk-radio class="cert-type-group-item" v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
-                                    <i class="devops-icon" :class="item.icon"></i>
+                            <bk-radio-group
+                                class="cert-type-group"
+                                v-model="certType"
+                                @change="changeType"
+                            >
+                                <bk-radio
+                                    class="cert-type-group-item"
+                                    v-for="(item, index) in certTypeList"
+                                    :key="index"
+                                    :value="item.value"
+                                    :disabled="isEdit"
+                                >
+                                    <i
+                                        class="devops-icon"
+                                        :class="item.icon"
+                                    ></i>
                                     {{ item.label }}
                                 </bk-radio>
                             </bk-radio-group>
@@ -33,7 +56,8 @@
                     </div>
 
                     <transition name="fade">
-                        <ios v-if="certType === 'ios'"
+                        <ios
+                            v-if="certType === 'ios'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -43,7 +67,8 @@
                         </ios>
                     </transition>
                     <transition name="fade">
-                        <android v-if="certType === 'android'"
+                        <android
+                            v-if="certType === 'android'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :apply-cre-url="applyCreUrl"
@@ -53,7 +78,8 @@
                         </android>
                     </transition>
                     <transition name="fade">
-                        <ssl v-if="certType === 'tls'"
+                        <ssl
+                            v-if="certType === 'tls'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"
@@ -62,7 +88,8 @@
                         </ssl>
                     </transition>
                     <transition name="fade">
-                        <enterprise v-if="certType === 'enterprise'"
+                        <enterprise
+                            v-if="certType === 'enterprise'"
                             @requestCertDetail="requestCertDetail"
                             :is-edit="isEdit"
                             :cert-data="certData"
@@ -72,7 +99,20 @@
                     </transition>
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <bk-button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CERT_RESOURCE_TYPE,
+                                    resourceCode: isEdit ? certId : projectId,
+                                    action: isEdit ? CERT_RESOURCE_ACTION.EDIT : CERT_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary"
+                            @click="submit"
+                        >
+                            {{ $t('ticket.comfirm') }}
+                        </bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -87,6 +127,7 @@
     import android from '../components/centificate/android'
     import ssl from '../components/centificate/ssl'
     import enterprise from '../components/centificate/enterprise'
+    import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -99,6 +140,8 @@
 
         data () {
             return {
+                CERT_RESOURCE_ACTION,
+                CERT_RESOURCE_TYPE,
                 showContent: false,
                 isEdit: false,
                 credentialList: [],
@@ -145,7 +188,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('ticket.applyPermission')
                         }
                     ]
@@ -159,7 +202,7 @@
             },
 
             certId () {
-                return this.$route.parmas.certId
+                return this.$route.params.certId
             },
 
             applyCreUrl () {
@@ -198,13 +241,13 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            goToApplyPerm () {
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
-                // window.open(url, '_blank')
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CERT_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: CERT_RESOURCE_ACTION.CREATE
+                })
             },
 
             async requestCertDetail (callBack) {
@@ -217,10 +260,16 @@
                         certType,
                         certId
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-                    this.$bkMessage({ message, theme })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: CERT_RESOURCE_TYPE,
+                            resourceCode: certId,
+                            action: CERT_RESOURCE_ACTION.VIEW
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                     this.showContent = true
@@ -240,8 +289,7 @@
                 const formData = this.$refs[this.certType].postData
                 const config = { headers: { } }
                 let message = ''
-                let theme = 'success'
-
+                let theme = ''
                 try {
                     if (this.isEdit) {
                         await this.$store.dispatch('ticket/editCert', { url, formData, config })
@@ -250,24 +298,20 @@
                         await this.$store.dispatch('ticket/createCert', { url, formData, config })
                         message = this.$t('ticket.cert.successfullyCreatedCert')
                     }
-                } catch (err) {
-                    if (err.code === 403) {
-                        const actionId = this.isEdit ? this.$permissionActionMap.edit : this.$permissionActionMap.create
-                        const instanceId = this.isEdit
-                            ? [{
-                                id: formData.certId,
-                                type: this.$permissionResourceTypeMap.TICKET_CERT
-                            }]
-                            : []
-                        this.applyPermission(actionId, this.$permissionResourceMap.cert, [{
-                            id: this.projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, ...instanceId])
-                    }
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
+                    theme = 'success'
                     this.$bkMessage({ message, theme })
+                } catch (e) {
+                    const resourceCode = this.isEdit ? this.$route.params.certId : this.projectId
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: CERT_RESOURCE_TYPE,
+                            resourceCode,
+                            action: CERT_RESOURCE_ACTION.EDIT
+                        }
+                    )
+                } finally {
                     if (theme === 'success') this.$router.push({ name: 'certList' })
                 }
             },
@@ -279,13 +323,16 @@
                         projectId: this.projectId
                     })
                     this.hasPermission = res
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: CERT_RESOURCE_TYPE,
+                            resourceCode: this.projectId,
+                            action: CERT_RESOURCE_ACTION.CREATE
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                     this.showContent = true

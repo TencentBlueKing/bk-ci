@@ -48,14 +48,16 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -71,12 +73,13 @@ import org.slf4j.LoggerFactory
 open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineElementService: PipelineElementService
 ) {
 
@@ -93,6 +96,7 @@ open class BaseBuildRecordService(
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
         val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
+        var startUser: String? = null
         try {
             watcher.start("lock")
             lock.lock()
@@ -102,21 +106,19 @@ open class BaseBuildRecordService(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount
             ) ?: run {
-                message = "Will not update"
+                message = "Model record is empty"
                 return
             }
+            startUser = record.startUser
 
             watcher.start("refreshOperation")
             refreshOperation()
             watcher.stop()
 
-            watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
-
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
-            if (!change) {
-                message = "Will not update"
+            if (!change && cancelUser.isNullOrBlank()) {
+                message = "Build status did not change"
                 return
             }
             buildRecordModelDao.updateRecord(
@@ -126,7 +128,7 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
                 errorInfoList = null,
@@ -140,8 +142,10 @@ open class BaseBuildRecordService(
             logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
-            watcher.stop()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
+            watcher.start("dispatchEvent")
+            pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
         return
@@ -154,12 +158,27 @@ open class BaseBuildRecordService(
         buildId: String,
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
-        executeCount: Int?
+        executeCount: Int?,
+        queryDslContext: DSLContext? = null,
+        debug: Boolean? = false
     ): Model? {
-        val resourceStr = pipelineResVersionDao.getVersionModelString(
-            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
-        ) ?: pipelineResDao.getVersionModelString(
-            dslContext = dslContext,
+        val watcher = Watcher(id = "getRecordModel#$buildId")
+        watcher.start("getVersionModelString")
+        val resourceStr = if (debug == true) {
+            pipelineBuildDao.getDebugResourceStr(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        } else {
+            pipelineResourceVersionDao.getVersionModelString(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        } ?: pipelineResourceDao.getVersionModelString(
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
@@ -169,10 +188,12 @@ open class BaseBuildRecordService(
         )
         var recordMap: Map<String, Any>? = null
         return try {
+            watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
-            val baseModelMap = JsonUtil.toMutableMap(fullModel)
+            fullModel.stages.forEach {
+                PipelineUtils.transformUserIllegalReviewParams(it.checkIn?.reviewParams)
+            }
+            val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -181,17 +202,23 @@ open class BaseBuildRecordService(
                 recordModelMap = buildRecordModel.modelVar,
                 pipelineBaseModelMap = baseModelMap
             )
-            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            watcher.start("generateFieldRecordModelMap")
+            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam, queryDslContext)
+            watcher.start("generatePipelineBuildModel")
             ModelUtils.generatePipelineBuildModel(
                 baseModelMap = baseModelMap,
                 modelFieldRecordMap = recordMap
             )
-        } catch (t: Throwable) {
-            PipelineBuildRecordService.logger.warn(
+        } catch (ignore: Throwable) {
+            logger.warn(
                 "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ", t
+                    "-$executeCount with error: ",
+                ignore
             )
             null
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
@@ -207,19 +234,22 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineDetailChangeEvent(
+    protected fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        startUser: String,
+        startUser: String?,
         executeCount: Int
     ) {
+        val userId = startUser
+            ?: pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)?.startUser
+            ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = startUser,
+                userId = userId,
                 buildId = buildId,
                 executeCount = executeCount,
                 refreshTypes = RefreshType.RECORD.binary
@@ -264,7 +294,7 @@ open class BaseBuildRecordService(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.stageId == StageBuildRecordService.TRIGGER_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }
@@ -283,9 +313,9 @@ open class BaseBuildRecordService(
             newTimestamps.forEach { (type, new) ->
                 val old = oldTimestamps[type]
                 result[type] = if (old != null) {
-                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    // 如果时间戳已存在，开始时间不变，则结束时间将新值覆盖旧值
                     BuildRecordTimeStamp(
-                        startTime = new.startTime ?: old.startTime,
+                        startTime = old.startTime ?: new.startTime,
                         endTime = new.endTime ?: old.endTime
                     )
                 } else {

@@ -1,9 +1,18 @@
 <template>
     <div class="empty-data-wrapper">
-        <p class="title">{{emptyInfo.title}}</p>
-        <p class="intro-prompt">{{emptyInfo.desc}}</p>
+        <p class="title">{{ emptyInfo.title }}</p>
+        <p class="intro-prompt">{{ emptyInfo.desc }}</p>
         <div class="create-node-row">
-            <bk-button theme="primary" class="create-node-btn" @click="toCreateFn">{{$t('quality.新增')}}</bk-button>
+            <bk-button
+                v-perm="{
+                    permissionData: emptyInfo.permissionData
+                }"
+                theme="primary"
+                class="create-node-btn"
+                @click="toCreateFn"
+            >
+                {{ emptyInfo.btnText || $t('quality.新增') }}
+            </bk-button>
         </div>
     </div>
 </template>
@@ -36,10 +45,6 @@
 
         .create-node-row {
             margin-top: 28px;
-
-            .bk-button {
-                width: 120px;
-            }
 
             .create-node-btn {
                 margin-right: 4px;

@@ -27,26 +27,29 @@
 
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GET_TICKET_FAIL
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import java.util.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Service
 class CredentialService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val scmService: IScmService
 ) {
 
     companion object {
@@ -61,9 +64,23 @@ class CredentialService @Autowired constructor(
     /**
      * 获取凭证基础信息
      */
-    fun getCredentialInfo(projectId: String, repository: Repository): RepoCredentialInfo {
+    fun getCredentialInfo(
+        projectId: String,
+        repository: Repository,
+        tryGetSession: Boolean = false
+    ): RepoCredentialInfo {
         val (pair, credential: CredentialInfo) = get(projectId, repository)
-        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        val repoCredentialInfo = buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        if (tryGetSession && repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+            logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
+            repoCredentialInfo.token = scmService.getLoginSession(
+                type = repository.getScmType(),
+                username = repoCredentialInfo.username,
+                password = repoCredentialInfo.password,
+                url = repository.url
+            )?.privateToken ?: ""
+        }
+        return repoCredentialInfo
     }
 
     fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {
@@ -72,7 +89,7 @@ class CredentialService @Autowired constructor(
         val result = client.get(ServiceCredentialResource::class)
             .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
-            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
+            throw ErrorCodeException(errorCode = GET_TICKET_FAIL)
         }
         val credential = result.data!!
         logger.info("Get the credential($credential)")
@@ -192,7 +209,7 @@ class CredentialService @Autowired constructor(
     fun checkUsername(username: String?) {
         if (username.isNullOrEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
             )
         }
     }
@@ -200,7 +217,7 @@ class CredentialService @Autowired constructor(
     fun checkPassword(password: String?) {
         if (password.isNullOrBlank()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
             )
         }
     }

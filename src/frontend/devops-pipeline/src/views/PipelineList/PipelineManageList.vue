@@ -1,59 +1,125 @@
 <template>
     <main class="pipeline-list-main">
-        <div class="recycle-bin-header" v-if="isDeleteView">
-            <h5>{{$t('restore.recycleBin')}}</h5>
-            <bk-input :placeholder="$t('restore.restoreSearchTips')" />
+        <div
+            class="recycle-bin-header"
+            v-if="isDeleteView"
+        >
+            <h5>{{ $t('restore.recycleBin') }}</h5>
+            <bk-input
+                clearable
+                :placeholder="$t('restore.restoreSearchTips')"
+                right-icon="bk-icon icon-search"
+                :value="filters.filterByPipelineName"
+                @enter="handleSearch"
+                @clear="handleSearch"
+                @right-icon-click="handleSearch"
+            />
         </div>
         <template v-else>
-
             <h5 class="current-pipeline-group-name">
-                <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
-                <span>{{currentViewName}}</span>
+                <bk-tag
+                    v-bk-tooltips="pipelineGroupType.tips"
+                    v-if="pipelineGroupType"
+                    type="stroke"
+                >
+                    {{ pipelineGroupType.label }}
+                </bk-tag>
+                <span>{{ currentViewName }}</span>
             </h5>
             <header class="pipeline-list-main-header">
-                <div>
+                <div class="pipeline-list-main-header-left-area">
                     <bk-dropdown-menu trigger="click">
-                        <bk-button theme="primary" icon="plus" slot="dropdown-trigger">
-                            {{$t('newlist.addPipeline')}}
+                        <bk-button
+                            v-perm="{
+                                hasPermission: hasCreatePermission,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: projectId,
+                                    action: RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary"
+                            icon="plus"
+                            slot="dropdown-trigger"
+                        >
+                            {{ $t('newlist.addPipeline') }}
                         </bk-button>
-                        <ul class="bk-dropdown-list" slot="dropdown-content">
-                            <li v-for="(item, index) of newPipelineDropdown" :key="index">
-                                <a href="javascript:;" @click="item.action">{{ item.text }}</a>
+                        <ul
+                            class="bk-dropdown-list"
+                            slot="dropdown-content"
+                        >
+                            <li
+                                v-for="(item, index) of newPipelineDropdown"
+                                :key="index"
+                            >
+                                <a
+                                    href="javascript:;"
+                                    @click="item.action"
+                                >{{ item.text }}</a>
                             </li>
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
                         <bk-button
+                            v-perm="{
+                                hasPermission: !canNotMangeProjectedGroup,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'project',
+                                    resourceCode: projectId,
+                                    action: PROJECT_RESOURCE_ACTION.MANAGE
+                                }
+                            }"
                             v-if="pipelineGroupType"
+                            :disabled="isPacGroup"
                             @click="handleAddToGroup"
-                            :disabled="canNotMangeProjectedGroup"
                         >
-                            {{$t('pipelineCountEdit')}}
+                            {{ $t('pipelineCountEdit') }}
                         </bk-button>
                     </span>
-                    <bk-button @click="goPatchManage">{{$t('patchManage')}}</bk-button>
+                    <bk-button @click="goPatchManage">{{ $t('patchManage') }}</bk-button>
                 </div>
                 <div class="pipeline-list-main-header-right-area">
                     <pipeline-searcher
                         v-if="allPipelineGroup.length"
                         v-model="filters"
                     />
-                    <bk-dropdown-menu trigger="click" class="pipeline-sort-dropdown-menu" align="right">
+                    <bk-dropdown-menu
+                        trigger="click"
+                        class="pipeline-sort-dropdown-menu"
+                        align="right"
+                    >
                         <template slot="dropdown-trigger">
                             <bk-button class="icon-button">
-                                <logo :name="currentSortIconName" size="12" />
+                                <logo
+                                    :name="currentSortIconName"
+                                    size="12"
+                                />
                             </bk-button>
                         </template>
-                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                        <ul
+                            class="bk-dropdown-list"
+                            slot="dropdown-content"
+                        >
                             <li
                                 v-for="item in sortList"
                                 :key="item.id"
                                 :active="item.active"
                                 @click="changeSortType(item.id)"
                             >
-                                <a class="pipeline-sort-item" href="javascript:;">
+                                <a
+                                    class="pipeline-sort-item"
+                                    href="javascript:;"
+                                >
                                     {{ item.name }}
-                                    <logo class="pipeline-sort-item-icon" :name="item.sortIcon" size="12" />
+                                    <logo
+                                        class="pipeline-sort-item-icon"
+                                        :name="item.sortIcon"
+                                        size="12"
+                                    />
                                 </a>
                             </li>
                         </ul>
@@ -66,7 +132,10 @@
                             }"
                             @click="switchLayout('table')"
                         >
-                            <logo name="list" size="14" />
+                            <logo
+                                name="list"
+                                size="14"
+                            />
                         </bk-button>
                         <bk-button
                             :class="{
@@ -75,16 +144,23 @@
                             }"
                             @click="switchLayout('card')"
                         >
-                            <logo name="card" size="14" />
+                            <logo
+                                name="card"
+                                size="14"
+                            />
                         </bk-button>
                     </div>
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box">
+        <div
+            class="pipeline-list-box"
+            ref="tableBox"
+        >
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
+                :max-height="tableHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -92,7 +168,6 @@
                 :filter-params="filters"
                 ref="pipelineBox"
             />
-
         </div>
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
@@ -121,10 +196,7 @@
             @cancel="closeSaveAsDialog"
             @done="refresh"
         />
-        <pipeline-template-popup
-            :toggle-popup="toggleTemplatePopup"
-            :is-show.sync="templatePopupShow"
-        />
+
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
@@ -133,31 +205,42 @@
             @close="handleCloseEditCount"
             @done="refresh"
         />
+        <disable-dialog
+            v-model="pipelineActionState.isDisableDialogShow"
+            v-bind="pipelineActionState.activePipeline"
+            @close="closeDisableDialog"
+            :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
+            @done="refresh"
+        />
     </main>
 </template>
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import webSocketMessage from '@/utils/webSocketMessage'
-    import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
-    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import PipelineSearcher from './PipelineSearcher'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
-    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import { mapActions, mapState } from 'vuex'
+    import PipelineSearcher from './PipelineSearcher'
 
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
-    import { PIPELINE_SORT_FILED, ORDER_ENUM } from '@/utils/pipelineConst'
-    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
-    import { getCacheViewId } from '@/utils/util'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import { ADD_TO_PIPELINE_GROUP, bus } from '@/utils/bus'
+    import {
+        PROJECT_RESOURCE_ACTION,
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -171,9 +254,9 @@
             PipelinesCardView,
             PipelineTableView,
             PipelineSearcher,
-            PipelineTemplatePopup,
             ImportPipelinePopup,
-            PipelineGroupEditDialog
+            PipelineGroupEditDialog,
+            DisableDialog
         },
         mixins: [piplineActionMixin],
         data () {
@@ -182,16 +265,22 @@
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
                 filters: restQuery,
-                templatePopupShow: false,
                 importPipelinePopupShow: false,
                 activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
-                    action: this.toggleTemplatePopup
+                    action: () => {
+                        this.$router.push({
+                            name: 'createPipeline'
+                        })
+                    }
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
-                }]
+                }],
+                RESOURCE_ACTION,
+                PROJECT_RESOURCE_ACTION,
+                tableHeight: null
             }
         },
         computed: {
@@ -200,6 +289,9 @@
                 'pipelineActionState',
                 'isManage'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
             },
@@ -218,6 +310,9 @@
             currentViewName () {
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
+            isPacGroup () {
+                return this.currentGroup?.pac
+            },
             canNotMangeProjectedGroup () {
                 return this.currentGroup?.projected && !this.isManage
             },
@@ -235,8 +330,10 @@
             },
             noManagePermissionTips () {
                 return {
-                    content: this.$t('groupEditDisableTips'),
-                    disabled: !this.canNotMangeProjectedGroup
+                    content: this.$t(this.isPacGroup ? 'pacGroupDisableTips' : 'groupEditDisableTips'),
+                    maxWidth: 360,
+                    disabled: !this.canNotMangeProjectedGroup && !this.isPacGroup,
+                    delay: [300, 0]
                 }
             },
             sortList () {
@@ -263,30 +360,24 @@
             currentSortIconName () {
                 return this.getSortIconName(this.$route.query.sortType)
             }
-
         },
         watch: {
             '$route.params.projectId': function () {
                 this.filters = {}
                 this.$nextTick(() => {
-                    if (!this.isAllPipelineView) {
-                        this.goList()
-                    } else {
-                        this.$refs.pipelineBox?.requestList?.({
-                            page: 1,
-                            pageSize: 50
-                        })
-                    }
+                    this.goList()
                     this.checkHasCreatePermission()
                     this.handleCloseEditCount()
                     this.templatePopupShow = false
                 })
             },
-            '$route.params.viewId': function () {
+            '$route.params.viewId' () {
                 this.filters = {}
             }
         },
+
         created () {
+            this.$updateTabTitle?.()
             this.goList()
             this.checkHasCreatePermission()
         },
@@ -295,17 +386,23 @@
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            window.removeEventListener('resize', this.updateTableHeight)
         },
 
         methods: {
             ...mapActions('pipelines', [
                 'requestHasCreatePermission'
             ]),
+            updateTableHeight () {
+                this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
             },
@@ -316,25 +413,16 @@
                 return 'sort'
             },
             goList () {
-                if (!this.$route.params.viewId) {
-                    const viewId = getCacheViewId(this.$route.params.projectId)
-                    this.$router.replace({
-                        name: 'PipelineManageList',
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
-                    })
-                } else {
-                    this.$refs.pipelineBox?.requestList?.({
-                        page: 1,
-                        pageSize: 50
-                    })
-                }
+                this.$refs.pipelineBox?.requestList?.({
+                    page: 1
+                })
             },
             goPatchManage () {
                 this.$router.push({
-                    name: 'patchManageList'
+                    params: {
+                        ...this.$route.params,
+                        type: 'patch'
+                    }
                 })
             },
             getLs (key) {
@@ -345,14 +433,13 @@
                 localStorage.setItem('pipelineLayout', layout)
             },
             changeSortType (sortType) {
-                this.$refs?.pipelineBox?.clearSort?.()
                 const { sortType: currentSort, collation, ...restQuery } = this.$route.query
                 const newSortQuery = {
                     ...restQuery,
                     sortType,
                     collation
                 }
-                
+
                 if (sortType === currentSort) {
                     newSortQuery.collation = collation === ORDER_ENUM.descending ? ORDER_ENUM.ascending : ORDER_ENUM.descending
                 } else {
@@ -369,9 +456,12 @@
                 }
                 localStorage.setItem('pipelineSortType', sortType)
                 localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
-                this.$router.push({
-                    ...this.$route,
-                    query: newSortQuery
+                this.$router.replace({
+                    query: {
+                        ...(this.$route.query ?? {}),
+                        sortType,
+                        collation: newSortQuery.collation
+                    }
                 })
             },
 
@@ -380,13 +470,6 @@
                 this.hasCreatePermission = res
             },
 
-            toggleTemplatePopup () {
-                if (!this.hasCreatePermission) {
-                    this.toggleCreatePermission()
-                } else {
-                    this.templatePopupShow = !this.templatePopupShow
-                }
-            },
             handleAddToGroup () {
                 if (this.currentGroup) {
                     this.activeGroup = this.currentGroup
@@ -398,14 +481,27 @@
             },
 
             toggleImportPipelinePopup () {
-                this.importPipelinePopupShow = !this.importPipelinePopupShow
+                if (!this.hasCreatePermission) {
+                    this.toggleCreatePermission()
+                } else {
+                    this.importPipelinePopupShow = !this.importPipelinePopupShow
+                }
             },
 
             toggleCreatePermission () {
-                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+                handlePipelineNoPermission({
+                    projectId: this.$route.params.projectId,
+                    resourceCode: this.$route.params.projectId,
+                    action: RESOURCE_ACTION.CREATE
+                })
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
+            },
+            handleSearch (filterByPipelineName) {
+                this.filters = {
+                    filterByPipelineName
+                }
             }
         }
     }
@@ -421,6 +517,11 @@
         align-items: center;
         > h5 {
             color: #313238;
+        }
+    }
+    .pipeline-list-main-header {
+        .bk-dropdown-menu {
+            top: -1px;
         }
     }
     .pipeline-sort-dropdown-menu {
@@ -480,9 +581,8 @@
         @include ellipsis();
         flex-shrink: 0;
         max-width: 100px;
-    }
-    .pipeline-list-box {
-        flex: 1;
-        overflow: hidden;
+        &.pipeline-group-more-tag {
+            cursor: pointer;
+        }
     }
 </style>

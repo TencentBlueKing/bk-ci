@@ -30,12 +30,12 @@ package com.tencent.devops.repository.service.github
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
@@ -64,7 +64,7 @@ class GithubTokenService @Autowired constructor(
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ) {
-        val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
+        val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
         if (githubTokenDao.getOrNull(dslContext, userId, githubTokenType) == null) {
             githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
@@ -81,9 +81,8 @@ class GithubTokenService @Autowired constructor(
         tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, tokenType) ?: return null
-        logger.info("github aesKey:$aesKey")
         return GithubToken(
-            AESUtil.decrypt(aesKey, githubTokenRecord.accessToken),
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
@@ -104,7 +103,7 @@ class GithubTokenService @Autowired constructor(
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
                 params = arrayOf(userId, buildBasicInfo.projectId)
             )
         }

@@ -1,9 +1,9 @@
 import Vue from 'vue'
-import Router, { RouteMeta } from 'vue-router'
-import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle, ifShowNotice } from '../utils/util'
+import Router from 'vue-router'
+import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
-import compilePath from '../utils/pathExp'
 import cookie from 'js-cookie'
+import compilePath from '../utils/pathExp'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -16,13 +16,14 @@ const ProjectManage = () => import('../views/ProjectManage.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
+const UnDeploy = () => import('../views/UnDeploy.vue')
+
 Vue.use(Router)
 
 let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
-
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -63,6 +64,11 @@ const routes = [
                 path: 'maintaining',
                 name: '503',
                 component: Maintaining
+            },
+            {
+                path: 'undeploy/:id',
+                name: 'undeploy',
+                component: UnDeploy
             }
         ]
     }
@@ -90,7 +96,14 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-
+        const { platformInfo } = (store.state as any).platFormConfig
+        if (to.name !== from.name && platformInfo) {
+            let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            }
+            document.title = platformTitle
+        }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
@@ -129,6 +142,13 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         } else {
             goNext(to, next)
         }
+
+        const devopsApp = window.document.getElementsByClassName('devops-app')[0]
+        if (to.name === 'my-project') {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app permission-model')
+        } else {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app')
+        }
     })
 
     router.afterEach(route => {
@@ -142,7 +162,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     return router
 }
 
-function updateHeaderConfig (routeMeta: RouteMeta) {
+function updateHeaderConfig (routeMeta: any) {
     return {
         showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
         showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')

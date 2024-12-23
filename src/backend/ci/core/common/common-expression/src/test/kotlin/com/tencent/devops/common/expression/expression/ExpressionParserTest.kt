@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.expression.expression
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
@@ -67,7 +68,7 @@ class ExpressionParserTest {
             "jobs.build.0.steps.runStep.outputs.myoutput" to "build_0",
             "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1",
             "depends.job1.outputs.matrix_include" to
-                """[{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]""",
+                    """[{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]""",
             "project.name.chinese" to "蓝盾项目"
         )
         val expected = listOf(
@@ -113,6 +114,182 @@ class ExpressionParserTest {
         println(ExpressionParser.evaluateByMap("variables.pipeline_id2", variables, true) ?: "variables.pipeline_id2")
     }
 
+    @DisplayName("测试流水线变量中对象的转换")
+    @Test
+    fun variablesObjectConvert() {
+        val variables = mapOf(
+            "matrix.power" to "{ \"url\" : \"cn.com\", \"project\": \"p-xxx\" }",
+            "matrix.power.url" to "cn.com",
+            "matrix.power.project" to "p-xxx",
+            "name" to "John Doe",
+            "age" to "30",
+            "address.street" to "123 Main St",
+            "address.city" to "New York",
+            "address.state" to "NY",
+            "address.coordinates.latitude" to "40.7128",
+            "address.coordinates.longitude" to "-74.006",
+            "address.coordinates" to "{\"latitude\":40.7128,\"longitude\":-74.006}",
+            "address" to "{\"street\":\"123 Main St\",\"city\":\"New York\",\"state\":\"NY\",\"coordinates\":{\"latitude\":40.7128,\"longitude\":-74.006}}",
+            "phoneNumbers.0.type" to "home",
+            "phoneNumbers.0.number" to "555-1234",
+            "phoneNumbers.0" to "{\"type\":\"home\",\"number\":\"555-1234\"}",
+            "phoneNumbers.1.type" to "work",
+            "phoneNumbers.1.number" to "555-5678",
+            "phoneNumbers.1.extensions.0" to "100",
+            "phoneNumbers.1.extensions.1" to "101",
+            "phoneNumbers.1.extensions.2" to "102",
+            "phoneNumbers.1.extensions" to "[100,101,102]",
+            "phoneNumbers.1" to "{\"type\":\"work\",\"number\":\"555-5678\",\"extensions\":[100,101,102]}",
+            "phoneNumbers" to "[{\"type\":\"home\",\"number\":\"555-1234\"},{\"type\":\"work\",\"number\":\"555-5678\",\"extensions\":[100,101,102]}]",
+            "friends.0.name" to "Jane Smith",
+            "friends.0.age" to "28",
+            "friends.0.address.street" to "456 Elm St",
+            "friends.0.address.city" to "San Francisco",
+            "friends.0.address.state" to "CA",
+            "friends.0.address.coordinates.latitude" to "37.7749",
+            "friends.0.address.coordinates.longitude" to "-122.4194",
+            "friends.0.address.coordinates" to "{\"latitude\":37.7749,\"longitude\":-122.4194}",
+            "friends.0.address" to "{\"street\":\"456 Elm St\",\"city\":\"San Francisco\",\"state\":\"CA\",\"coordinates\":{\"latitude\":37.7749,\"longitude\":-122.4194}}",
+            "friends.0.phoneNumbers.0.type" to "home",
+            "friends.0.phoneNumbers.0.number" to "555-9876",
+            "friends.0.phoneNumbers.0" to "{\"type\":\"home\",\"number\":\"555-9876\"}",
+            "friends.0.phoneNumbers.1.type" to "work",
+            "friends.0.phoneNumbers.1.number" to "555-5432",
+            "friends.0.phoneNumbers.1" to "{\"type\":\"work\",\"umber\":\"555-5432\"}",
+            "friends.0.phoneNumbers" to "[{\"type\":\"home\",\"number\":\"555-9876\"},{\"type\":\"work\",\"number\":\"555-5432\"}]",
+            "friends.0" to "{\"name\":\"Jane Smith\",\"age\":28,\"address\":{\"street\":\"456 Elm St\",\"city\":\"San Francisco\",\"state\":\"CA\",\"coordinates\":{\"latitude\":37.7749,\"longitude\":-122.4194}},\"phoneNumbers\":[{\"type\":\"home\",\"number\":\"555-9876\"},{\"type\":\"work\",\"number\":\"555-5432\"}]}",
+            "friends.1.name" to "Bob Johnson",
+            "friends.1.age" to "32",
+            "friends.1.address.street" to "789 Oak St",
+            "friends.1.address.city" to "Chicago",
+            "friends.1.address.state" to "IL",
+            "friends.1.address.coordinates.latitude" to "41.8781",
+            "friends.1.address.coordinates.longitude" to "-87.6298",
+            "friends.1.address.coordinates" to "{\"latitude\":41.8781,\"longitude\":-87.6298}",
+            "friends.1.address" to "{\"street\":\"789 Oak St\",\"city\":\"Chicago\",\"state\":\"IL\",\"coordinates\":{\"latitude\":41.8781,\"longitude\":-87.6298}}",
+            "friends.1.phoneNumbers.0.type" to "home",
+            "friends.1.phoneNumbers.0.number" to "555-1111",
+            "friends.1.phoneNumbers.0" to "{\"type\":\"home\",\"number\":\"555-1111\"}",
+            "friends.1.phoneNumbers.1.type" to "work",
+            "friends.1.phoneNumbers.1.number" to "555-2222",
+            "friends.1.phoneNumbers.1.extensions.0" to "200",
+            "friends.1.phoneNumbers.1.extensions.1" to "201",
+            "friends.1.phoneNumbers.1.extensions" to "[200,201]",
+            "friends.1.phoneNumbers.1" to "{\"type\":\"work\",\"number\":\"555-2222\",\"extensions\":[200,201]}",
+            "friends.1.phoneNumbers" to "[{\"type\":\"home\",\"number\":\"555-1111\"},{\"type\":\"work\",\"number\":\"555-2222\",\"extensions\":[200,201]}]",
+            "friends.1.friends.0.name" to "Alice Brown",
+            "friends.1.friends.0.age" to "29",
+            "friends.1.friends.0.address.street" to "321 Pine St",
+            "friends.1.friends.0.address.city" to "Seattle",
+            "friends.1.friends.0.address.state" to "WA",
+            "friends.1.friends.0.address.coordinates.latitude" to "47.6062",
+            "friends.1.friends.0.address.coordinates.longitude" to "-122.3321",
+            "friends.1.friends.0.address.coordinates" to "{\"latitude\":47.6062,\"longitude\":-122.3321}",
+            "friends.1.friends.0.address" to "{\"street\":\"321 Pine St\",\"city\":\"Seattle\",\"state\":\"WA\",\"coordinates\":{\"latitude\":47.6062,\"longitude\":-122.3321}}",
+            "friends.1.friends.0" to "{\"name\":\"Alice Brown\",\"age\":29,\"address\":{\"street\":\"321 Pine St\",\"city\":\"Seattle\",\"state\":\"WA\",\"coordinates\":{\"latitude\":47.6062,\"longitude\":-122.3321}}}",
+            "friends.1.friends.1.name" to "Eve Green",
+            "friends.1.friends.1.age" to "31",
+            "friends.1.friends.1.address.street" to "654 Cedar St",
+            "friends.1.friends.1.address.city" to "Austin",
+            "friends.1.friends.1.address.state" to "TX",
+            "friends.1.friends.1.address.coordinates.latitude" to "30.2672",
+            "friends.1.friends.1.address.coordinates.longitude" to "-97.7431",
+            "friends.1.friends.1.address.coordinates" to "{\"latitude\":30.2672,\"longitude\":-97.7431}",
+            "friends.1.friends.1.address" to "{\"street\":\"654 Cedar St\",\"city\":\"Austin\",\"state\":\"TX\",\"coordinates\":{\"latitude\":30.2672,\"longitude\":-97.7431}}",
+            "friends.1.friends.1" to "{\"name\":\"Eve Green\",\"age\":31,\"address\":{\"street\":\"654 Cedar St\",\"city\":\"Austin\",\"state\":\"TX\",\"coordinates\":{\"latitude\":30.2672,\"longitude\":-97.7431}}}",
+            "friends.1.friends" to "[{\"name\":\"Alice Brown\",\"age\":29,\"address\":{\"street\":\"321 Pine St\",\"city\":\"Seattle\",\"state\":\"WA\",\"coordinates\":{\"latitude\":47.6062,\"longitude\":-122.3321}}},{\"name\":\"Eve Green\",\"age\":31,\"address\":{\"street\":\"654 Cedar St\",\"city\":\"Austin\",\"state\":\"TX\",\"coordinates\":{\"latitude\":30.2672,\"longitude\":-97.7431}}}]",
+            "friends.1" to "{\"name\":\"Bob Johnson\",\"age\":32,\"address\":{\"street\":\"789 Oak St\",\"city\":\"Chicago\",\"state\":\"IL\",\"coordinates\":{\"latitude\":41.8781,\"longitude\":-87.6298}},\"phoneNumbers\":[{\"type\":\"home\",\"number\":\"555-1111\"},{\"type\":\"work\",\"number\":\"555-2222\",\"extensions\":[200,201]}],\"friends\":[{\"name\":\"Alice Brown\",\"age\":29,\"address\":{\"street\":\"321 Pine St\",\"city\":\"Seattle\",\"state\":\"WA\",\"coordinates\":{\"latitude\":47.6062,\"longitude\":-122.3321}}},{\"name\":\"Eve Green\",\"age\":31,\"address\":{\"street\":\"654 Cedar St\",\"city\":\"Austin\",\"state\":\"TX\",\"coordinates\":{\"latitude\":30.2672,\"longitude\":-97.7431}}}]}",
+            "friends" to "[{\"name\":\"Jane Smith\",\"age\":28,\"address\":{\"street\":\"456 Elm St\",\"city\":\"San Francisco\",\"state\":\"CA\",\"coordinates\":{\"latitude\":37.7749,\"longitude\":-122.4194}},\"phoneNumbers\":[{\"type\":\"home\",\"number\":\"555-9876\"},{\"type\":\"work\",\"number\":\"555-5432\"}]},{\"name\":\"Bob Johnson\",\"age\":32,\"address\":{\"street\":\"789 Oak St\",\"city\":\"Chicago\",\"state\":\"IL\",\"coordinates\":{\"latitude\":41.8781,\"longitude\":-87.6298}},\"phoneNumbers\":[{\"type\":\"home\",\"number\":\"555-1111\"},{\"type\":\"work\",\"number\":\"555-2222\",\"extensions\":[200,201]}],\"friends\":[{\"name\":\"Alice Brown\",\"age\":29,\"address\":{\"street\":\"321 Pine St\",\"city\":\"Seattle\",\"state\":\"WA\",\"coordinates\":{\"latitude\":47.6062,\"longitude\":-122.3321}}},{\"name\":\"Eve Green\",\"age\":31,\"address\":{\"street\":\"654 Cedar St\",\"city\":\"Austin\",\"state\":\"TX\",\"coordinates\":{\"latitude\":30.2672,\"longitude\":-97.7431}}}]}]",
+            "ep_rsp_result" to "true"
+        )
+        val jsonKeys = setOf(
+            "matrix.power",
+            "address.coordinates",
+            "address",
+            "phoneNumbers.0",
+            "phoneNumbers.1",
+            "phoneNumbers.1.extensions",
+            "phoneNumbers",
+            "friends.0.address.coordinates",
+            "friends.0.address",
+            "friends.0.phoneNumbers.0",
+            "friends.0.phoneNumbers.1",
+            "friends.0.phoneNumbers",
+            "friends.0",
+            "friends.1.address.coordinates",
+            "friends.1.address",
+            "friends.1.phoneNumbers.0",
+            "friends.1.phoneNumbers.1.extensions",
+            "friends.1.phoneNumbers.1",
+            "friends.1.phoneNumbers",
+            "friends.1.friends.0.address.coordinates",
+            "friends.1.friends.0.address",
+            "friends.1.friends.0",
+            "friends.1.friends.1.address.coordinates",
+            "friends.1.friends.1.address",
+            "friends.1.friends.1",
+            "friends.1.friends",
+            "friends.1",
+            "friends"
+        )
+        variables.forEach { (k, v) ->
+            if (k in jsonKeys) {
+                Assertions.assertEquals(
+                    JsonUtil.getObjectMapper().readTree(v),
+                    JsonUtil.getObjectMapper().readTree(
+                        ExpressionParser.evaluateByMap(k, variables, true).toString()
+                    )
+                )
+                return@forEach
+            }
+            Assertions.assertEquals(v, ExpressionParser.evaluateByMap(k, variables, true))
+        }
+    }
+
+    @DisplayName("测试流水线变量中对象的转换2")
+    @Test
+    fun variablesObjectConvert2() {
+        val variables = mapOf(
+            "matrix.power" to "{ \"url\" : \"cn.com\", \"project\": \"p-xxx\" }",
+            "matrix.power.url" to "c1.com",
+            "matrix.power.project" to "p-xxx",
+            "jsonStr" to "{ \"url\" : \"cn.com\", \"project\": \"p-1xx\" }"
+        )
+        val jsonKeys = setOf(
+            "matrix.power"
+        )
+        val mapKeys = setOf(
+            "matrix"
+        )
+        val expAndExpect = mapOf(
+            "matrix.power" to "{ \"url\" : \"cn.com\", \"project\": \"p-xxx\" }",
+            "matrix.power.url" to "c1.com",
+            "matrix.power.project" to "p-xxx",
+            "matrix" to mapOf("power" to mapOf("url" to "c1.com", "project" to "p-xxx")),
+            "fromJSON(toJSON(matrix.power)).url" to "c1.com",
+            "fromJSON(jsonStr).project" to "p-1xx"
+        )
+        expAndExpect.forEach { (exp, expect) ->
+            if (exp in jsonKeys) {
+                Assertions.assertEquals(
+                    JsonUtil.getObjectMapper().readTree(expect.toString()),
+                    JsonUtil.getObjectMapper().readTree(
+                        ExpressionParser.evaluateByMap(exp, variables, true).toString()
+                    )
+                )
+                return@forEach
+            }
+            if (exp in mapKeys) {
+                Assertions.assertEquals(
+                    JsonUtil.getObjectMapper().readTree(JsonUtil.toJson(expect)),
+                    JsonUtil.getObjectMapper()
+                        .readTree(JsonUtil.toJson(ExpressionParser.evaluateByMap(exp, variables, true)!!))
+                )
+            }
+            Assertions.assertEquals(expect, ExpressionParser.evaluateByMap(exp, variables, true))
+        }
+    }
+
     @DisplayName("测试解析文字")
     @Test
     fun literalsTest() {
@@ -126,7 +303,8 @@ class ExpressionParserTest {
         )
 
         literals.forEach { (exp, v) ->
-            val res = ExpressionParser.createTree(exp, null, null, null)!!.evaluate(null, null, null, null).value
+            val res = ExpressionParser.createTree(exp, null, null, null)!!
+                .evaluate(null, null, EvaluationOptions(false), null).value
             Assertions.assertEquals(v, res)
         }
     }
@@ -346,7 +524,7 @@ class ExpressionParserTest {
     @ValueSource(
         strings = [
             "1 => fromJson('{\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\"," +
-                "\"config\":\"Release\"}]}')",
+                    "\"config\":\"Release\"}]}')",
             "2 => fromJson(funcTest.json.strJson)",
             "3 => fromJson(funcTest.json.boolJson)",
             "4 => fromJson(funcTest.json.numJson)"
@@ -354,7 +532,8 @@ class ExpressionParserTest {
     )
     fun functionFromJsonTest(fromJson: String) {
         val (index, exp) = fromJson.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!
+            .evaluate(null, ev, EvaluationOptions(false), null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertTrue(res is DictionaryContextData)
@@ -395,7 +574,8 @@ class ExpressionParserTest {
     )
     fun functionJoinTest(join: String) {
         val (index, exp) = join.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!
+            .evaluate(null, ev, EvaluationOptions(false), null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertEquals("push|mr|tag", res)
@@ -442,7 +622,13 @@ class ExpressionParserTest {
         val result = items[1]
         val subInfo = SubNameValueEvaluateInfo()
         val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
-        var (res, isComplete, type) = tree.subNameValueEvaluate(null, parametersEv, null, subInfo, null)
+        var (res, isComplete, type) = tree.subNameValueEvaluate(
+            null,
+            parametersEv,
+            EvaluationOptions(false),
+            subInfo,
+            null
+        )
         if (isComplete && (type == SubNameValueResultType.ARRAY || type == SubNameValueResultType.DICT)) {
             res = res.replace("\\\"", "\"")
         }
@@ -457,7 +643,8 @@ class ExpressionParserTest {
 
     private fun valuesTest(param: String) {
         val (exp, result) = param.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!
+            .evaluate(null, ev, EvaluationOptions(false), null).value
         Assertions.assertEquals(
             when (result) {
                 "true", "false" -> {

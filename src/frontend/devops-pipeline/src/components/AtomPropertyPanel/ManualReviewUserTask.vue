@@ -1,29 +1,101 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
-            <form-field v-if="!isHidden(obj, element)" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+            <form-field
+                v-if="!isHidden(obj, element)"
+                :key="key"
+                :desc="obj.desc"
+                :required="obj.required"
+                :label="obj.label"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
                 <component
                     :is="obj.component"
                     v-bind="obj"
-                    v-model="element[key]"
+                    :value="element[key]"
                     :disabled="disabled"
                     :handle-change="handleChange"
                     :show-content="disabled"
-                    :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
+                    :name="key"
+                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })"
+                />
             </form-field>
         </template>
-        <accordion show-content show-checkbox>
-            <header class="var-header" slot="header">
-                <span>{{ $t('editPage.atomOutput') }}</span>
-                <i class="devops-icon icon-angle-down" style="display: block" />
+        <accordion
+            v-if="reminderTimeCom"
+            show-checkbox
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
+                <span>{{ reminderTimeCom.label }}</span>
+                <i
+                    class="devops-icon icon-angle-down"
+                    style="display: block"
+                />
             </header>
             <div slot="content">
-                <form-field class="output-namespace" :desc="$t('editPage.namespaceTips')" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
-                    <vuex-input name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateElement" :value="namespace" placeholder="" />
+                <form-field
+                    class="review-remind"
+                    :label="reminderTimeCom.label"
+                    :desc="reminderTimeCom.desc"
+                    :is-error="errors.has('reminderTime')"
+                    :error-msg="errors.first('reminderTime')"
+                >
+                    <div>
+                        {{ $t('editPage.every') }}
+                        <vuex-input
+                            :value="element.reminderTime"
+                            class="remind-number-input"
+                            v-validate.initial="{ reminderTimeRule: true }"
+                            name="reminderTime"
+                            :placeholder="' '"
+                            :disabled="disabled"
+                            :handle-change="handleUpdateElement"
+                        />
+                        {{ $t('editPage.remindTime') }}
+                    </div>
+                </form-field>
+            </div>
+        </accordion>
+        <accordion
+            show-content
+            show-checkbox
+        >
+            <header
+                class="var-header"
+                slot="header"
+            >
+                <span>{{ $t('editPage.atomOutput') }}</span>
+                <i
+                    class="devops-icon icon-angle-down"
+                    style="display: block"
+                />
+            </header>
+            <div slot="content">
+                <form-field
+                    class="output-namespace"
+                    :desc="$t('outputNameSpaceDescTips')"
+                    :label="$t('editPage.outputNamespace')"
+                    :is-error="errors.has('namespace')"
+                    :error-msg="errors.first('namespace')"
+                >
+                    <vuex-input
+                        name="namespace"
+                        v-validate.initial="{ varRule: true }"
+                        :handle-change="handleUpdateElement"
+                        :value="namespace"
+                        placeholder=""
+                    />
                 </form-field>
                 <div class="atom-output-var-list">
-                    <h4>{{ $t('editPage.outputItemList') }}：</h4>
-                    <p v-for="(output, key) in outputProps" :key="key">
+                    <h4>{{ $t('editPage.outputItemList') }}</h4>
+                    <p
+                        v-for="(output, key) in outputProps"
+                        :key="key"
+                    >
                         {{ namespace ? `${namespace}_` : '' }}{{ key }}
                         <bk-popover placement="right">
                             <i class="bk-icon icon-info-circle" />
@@ -40,9 +112,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'manual-review-user-task',
@@ -61,6 +133,9 @@
         computed: {
             namespace () {
                 return this.element.namespace
+            },
+            reminderTimeCom () {
+                return this.atomPropsModel.reminderTime
             }
         },
         watch: {
@@ -90,3 +165,12 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .remind-number-input {
+        width: 60px;
+        .input-number-option {
+            display: none;
+        }
+    }
+</style>

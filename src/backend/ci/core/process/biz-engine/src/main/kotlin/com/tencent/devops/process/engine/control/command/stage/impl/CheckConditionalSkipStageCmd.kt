@@ -53,8 +53,8 @@ class CheckConditionalSkipStageCmd constructor(
     override fun canExecute(commandContext: StageContext): Boolean {
         // 仅在初次进入Stage
         return commandContext.stage.controlOption?.finally != true &&
-            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.buildStatus.isReadyToRun()
+                commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+                commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -72,7 +72,9 @@ class CheckConditionalSkipStageCmd constructor(
                 buildId = stage.buildId,
                 message = "[${e.kind}] condition of stage is invalid: ${e.message}",
                 tag = stage.stageId,
-                executeCount = commandContext.executeCount
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = null
             )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "s(${stage.stageId}) check condition failed"
@@ -97,6 +99,7 @@ class CheckConditionalSkipStageCmd constructor(
         // condition check
         val variables = commandContext.variables
         var skip = false
+        val message = StringBuilder()
         if (controlOption != null) {
             val conditions = controlOption.customVariables ?: emptyList()
             val contextMap = pipelineContextService.buildContext(
@@ -106,16 +109,27 @@ class CheckConditionalSkipStageCmd constructor(
                 stageId = stage.stageId,
                 containerId = null,
                 taskId = null,
-                variables = variables
+                variables = variables,
+                executeCount = commandContext.executeCount
             )
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
                 variables = variables.plus(contextMap),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                asCodeEnabled = commandContext.pipelineAsCodeEnabled == true
+                customCondition = controlOption.customCondition
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
+            if (message.isNotBlank()) {
+                // #6366 增加日志明确展示跳过的原因
+                buildLogPrinter.addWarnLine(
+                    executeCount = commandContext.executeCount,
+                    tag = "",
+                    buildId = stage.buildId,
+                    message = message.toString(),
+                    jobId = null,
+                    stepId = null
+                )
+            }
         }
         if (skip) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CONDITION_SKIP|${event.stageId}|$controlOption")

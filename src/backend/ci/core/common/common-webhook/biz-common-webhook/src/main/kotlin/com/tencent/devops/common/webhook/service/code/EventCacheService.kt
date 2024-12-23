@@ -2,12 +2,20 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
+import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.WebhookCommit
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -110,17 +118,144 @@ class EventCacheService @Autowired constructor(
         repositoryId: String,
         repositoryType: RepositoryType?,
         change: Int
-    ): List<String> {
+    ): P4ChangeList? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.p4ChangeFiles ?: run {
-            val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
+            val changeFiles = client.get(ServiceP4Resource::class).getChangelist(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType,
                 change = change
-            ).data?.map { it.depotPathString } ?: emptyList()
+            ).data
             eventCache?.p4ChangeFiles = changeFiles
             changeFiles
         }
+    }
+
+    fun getP4ShelvedChangelistFiles(
+        repo: Repository,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.p4ShelveChangeFiles ?: run {
+            val changeFiles = client.get(ServiceP4Resource::class).getShelvedChangeList(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType,
+                change = change
+            ).data
+            eventCache?.p4ShelveChangeFiles = changeFiles
+            changeFiles
+        }
+    }
+
+    fun getP4ServerInfo(
+        repo: Repository,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): P4ServerInfo? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.serverInfo ?: run {
+            val p4ServerInfo = client.get(ServiceP4Resource::class).getServerInfo(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType
+            ).data
+            eventCache?.serverInfo = p4ServerInfo
+            p4ServerInfo
+        }
+    }
+
+    /**
+     * 获取日常评审信息
+     */
+
+    fun getCommitReviewInfo(
+        projectId: String,
+        commitReviewId: Long?,
+        repo: Repository
+    ): GitCommitReviewInfo? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.gitCommitReviewInfo ?: run {
+            val commitReviewInfo = gitScmService.getCommitReviewInfo(
+                projectId = projectId,
+                commitReviewId = commitReviewId,
+                repo = repo
+            )
+            eventCache?.gitCommitReviewInfo = commitReviewInfo
+            commitReviewInfo
+        }
+    }
+
+    fun getPrInfo(
+        githubRepoName: String,
+        pullNumber: String,
+        repo: Repository,
+        projectId: String
+    ): PullRequestResponse? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.githubPrInfo ?: run {
+            val prInfo = gitScmService.getPrInfo(
+                repo = repo,
+                githubRepoName = githubRepoName,
+                pullNumber = pullNumber
+            )
+            eventCache?.githubPrInfo = prInfo
+            prInfo
+        }
+    }
+
+    @SuppressWarnings("NestedBlockDepth")
+    fun getWebhookCommitList(
+        repo: Repository,
+        matcher: ScmWebhookMatcher,
+        projectId: String,
+        pipelineId: String
+    ): List<WebhookCommit> {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        // 缓存第一页的数据
+        return eventCache?.webhookCommitList ?: run {
+            try {
+                val webhookCommitList = matcher.getWebhookCommitList(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repository = repo,
+                    page = 1,
+                    size = WEBHOOK_COMMIT_PAGE_SIZE
+                )
+                eventCache?.webhookCommitList = webhookCommitList
+                webhookCommitList
+            } catch (ignored: Throwable) {
+                logger.info("fail to get webhook commit list | err is $ignored")
+                emptyList()
+            }
+        }
+    }
+
+    fun getGithubCommitInfo(
+        githubRepoName: String,
+        commitId: String,
+        repo: Repository,
+        projectId: String
+    ): CommitResponse? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.githubCommitInfo ?: run {
+            val githubCommitInfo = gitScmService.getGithubCommitInfo(
+                githubRepoName = githubRepoName,
+                commitId = commitId,
+                repo = repo
+            )
+            eventCache?.githubCommitInfo = githubCommitInfo
+            githubCommitInfo
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
+        private const val WEBHOOK_COMMIT_PAGE_SIZE = 500
     }
 }

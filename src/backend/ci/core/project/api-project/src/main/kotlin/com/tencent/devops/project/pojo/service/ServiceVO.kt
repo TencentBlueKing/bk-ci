@@ -28,63 +28,66 @@
 package com.tencent.devops.project.pojo.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("服务-显示模型")
+@Schema(title = "服务-显示模型")
 data class ServiceVO(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @ApiModelProperty("链接")
+    @get:Schema(title = "链接")
     val link: String,
-    @ApiModelProperty("新链接", name = "link_new")
+    @get:Schema(title = "新链接", description = "link_new")
     @JsonProperty("link_new")
     val linkNew: String,
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @ApiModelProperty("注入类型", name = "inject_type")
+    @get:Schema(title = "注入类型", description = "inject_type")
     @JsonProperty("inject_type")
     val injectType: String,
-    @ApiModelProperty("框架URL", name = "iframe_url")
+    @get:Schema(title = "框架URL", description = "iframe_url")
     @JsonProperty("iframe_url")
     val iframeUrl: String,
-    @ApiModelProperty("grayIframeUrl")
+    @get:Schema(title = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @ApiModelProperty("cssURL", name = "css_url")
+    @get:Schema(title = "cssURL", description = "css_url")
     @JsonProperty("css_url")
     val cssUrl: String,
-    @ApiModelProperty("jsURL", name = "js_url")
+    @get:Schema(title = "jsURL", description = "js_url")
     @JsonProperty("js_url")
     val jsUrl: String,
-    @ApiModelProperty("grayCssURL", name = "gray_css_url")
+    @get:Schema(title = "grayCssURL", description = "gray_css_url")
     @JsonProperty("gray_css_url")
     val grayCssUrl: String,
-    @ApiModelProperty("grayJsURL", name = "gray_js_url")
+    @get:Schema(title = "grayJsURL", description = "gray_js_url")
     @JsonProperty("gray_js_url")
     val grayJsUrl: String,
-    @ApiModelProperty("显示项目列表", name = "show_project_list")
+    @get:Schema(title = "显示项目列表", description = "show_project_list")
     @JsonProperty("show_project_list")
     val showProjectList: Boolean,
-    @ApiModelProperty("显示导航", name = "show_nav")
+    @get:Schema(title = "显示导航", description = "show_nav")
     @JsonProperty("show_nav")
     val showNav: Boolean,
-    @ApiModelProperty("项目ID类型", name = "project_id_type")
+    @get:Schema(title = "项目ID类型", description = "project_id_type")
     @JsonProperty("project_id_type")
     val projectIdType: String,
-    @ApiModelProperty("是否收藏")
+    @get:Schema(title = "是否收藏")
     val collected: Boolean,
-    @ApiModelProperty("权重")
+    @get:Schema(title = "权重")
     val weigHt: Int,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("支持webSocket的页面")
+    @get:Schema(title = "支持webSocket的页面")
     val webSocket: String?,
-    @ApiModelProperty("是否可见")
+    @get:Schema(title = "是否可见")
     val hidden: Boolean? = false,
-    @ApiModelProperty("new_window")
+    @get:Schema(title = "new_window")
     val newWindow: Boolean? = false,
-    @ApiModelProperty("new_window_url")
-    val newWindowUrl: String? = null
+    @get:Schema(title = "new_window_url")
+    val newWindowUrl: String? = null,
+    @get:Schema(title = "集群类型")
+    val clusterType: String = "",
+    @get:Schema(title = "文档链接")
+    val docUrl: String = ""
 )

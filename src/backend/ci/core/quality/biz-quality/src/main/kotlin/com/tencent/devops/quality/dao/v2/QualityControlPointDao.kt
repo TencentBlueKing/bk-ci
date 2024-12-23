@@ -27,19 +27,21 @@
 
 package com.tencent.devops.quality.dao.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.quality.tables.TQualityControlPoint
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
+import com.tencent.devops.quality.pojo.po.ControlPointPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -62,7 +64,7 @@ class QualityControlPointDao {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectFrom(this)
-                .where((TAG.isNull).or(TAG.ne("IN_READY_TEST")))
+                .where((TAG.isNull).or(TAG.notContains(IN_READY_TEST)))
                 .orderBy(CREATE_TIME.desc())
                 .limit(sqlLimit.offset, sqlLimit.limit)
                 .fetch()
@@ -81,7 +83,7 @@ class QualityControlPointDao {
     fun count(dslContext: DSLContext): Long {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectCount().from(this)
-                .where((TAG.isNull).or(TAG.ne("IN_READY_TEST")))
+                .where((TAG.isNull).or(TAG.notContains(IN_READY_TEST)))
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -109,7 +111,7 @@ class QualityControlPointDao {
     fun getStages(dslContext: DSLContext): Result<Record1<String>> {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.select(STAGE).from(this)
-                .where(STAGE.isNotNull.and(TAG.ne("IN_READY_TEST")))
+                .where(STAGE.isNotNull.and(TAG.notContains(IN_READY_TEST)))
                 .groupBy(STAGE)
                 .fetch()
         }
@@ -122,17 +124,22 @@ class QualityControlPointDao {
     fun getElementNames(dslContext: DSLContext): Result<Record2<String, String>> {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.select(ELEMENT_TYPE, NAME).from(this)
-                .where(NAME.isNotNull.and(TAG.ne("IN_READY_TEST")))
+                .where(NAME.isNotNull.and(TAG.notContains(IN_READY_TEST)))
                 .groupBy(ELEMENT_TYPE, NAME)
                 .fetch()
         }
     }
 
-    fun setTestControlPoint(dslContext: DSLContext, userId: String, controlPoint: QualityControlPoint): Long {
+    fun setTestControlPoint(
+        dslContext: DSLContext,
+        userId: String,
+        tag: String,
+        controlPoint: QualityControlPoint
+    ): Long {
         var pointId = 0L
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             val testControlPoint = dslContext.selectFrom(this)
-                .where(ELEMENT_TYPE.eq(controlPoint.type).and(TAG.eq("IN_READY_TEST")))
+                .where(ELEMENT_TYPE.eq(controlPoint.type).and(TAG.eq(tag)))
                 .fetchOne()
             if (testControlPoint != null) {
                 dslContext.update(this)
@@ -176,7 +183,7 @@ class QualityControlPointDao {
                         LocalDateTime.now(),
                         controlPoint.atomVersion,
                         controlPoint.testProject,
-                        "IN_READY_TEST"
+                        tag
                     ).returning(ID).fetchOne()!!.id
                 val hashId = HashUtil.encodeLongId(pointId)
                 dslContext.update(this)
@@ -196,8 +203,8 @@ class QualityControlPointDao {
                     .where(ELEMENT_TYPE.eq(elementType))
                     .fetch()
 
-                val testControlPoint = controlPoints.firstOrNull { it.tag == "IN_READY_TEST" }
-                val prodControlPoint = controlPoints.firstOrNull { it.tag != "IN_READY_TEST" }
+                val testControlPoint = controlPoints.firstOrNull { it.tag == IN_READY_TEST }
+                val prodControlPoint = controlPoints.firstOrNull { it.tag != IN_READY_TEST }
 
                 // 测试为空，代表quality.json被删了，直接把生产的也删了
                 if (testControlPoint == null) {
@@ -226,10 +233,10 @@ class QualityControlPointDao {
         return 0
     }
 
-    fun deleteTestControlPoint(dslContext: DSLContext, elementType: String): Int {
+    fun deleteTestControlPoint(dslContext: DSLContext, elementType: String, tag: String): Int {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.deleteFrom(this)
-                .where(ELEMENT_TYPE.eq(elementType).and(TAG.eq("IN_READY_TEST")))
+                .where(ELEMENT_TYPE.eq(elementType).and(TAG.eq(tag)))
                 .execute()
         }
     }
@@ -266,6 +273,21 @@ class QualityControlPointDao {
                 .where(ID.eq(id))
                 .and(CONTROL_POINT_HASH_ID.isNull)
                 .execute()
+        }
+    }
+
+    fun batchCrateControlPoint(dslContext: DSLContext, controlPointPOs: List<ControlPointPO>) {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            dslContext.batch(
+                controlPointPOs.map { controlPointPO ->
+                    dslContext.insertInto(this)
+                        .set(dslContext.newRecord(this, controlPointPO))
+                        .onDuplicateKeyUpdate()
+                        .set(NAME, controlPointPO.name)
+                        .set(STAGE, controlPointPO.stage)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                }
+            ).execute()
         }
     }
 }

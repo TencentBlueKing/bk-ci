@@ -89,7 +89,10 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
-            publicPath: '__BK_CI_PUBLIC_PATH__/console/',
+            publicPath: `${isDev ? '' : '__BK_CI_PUBLIC_PATH__'}/console/`,
+            templateParameters: {
+                PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__'
+            },
             minify: {
                 removeComments: false
             },
@@ -102,7 +105,7 @@ module.exports = (env = {}, argv) => {
         new AddAssetHtmlPlugin([
             {
                 filepath: require.resolve('./src/assets/static/main.dll.js'),
-                publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/console/', 'static/'),
+                publicPath: path.posix.join((isDev ? '' : '__BK_CI_PUBLIC_PATH__'), '/console/', 'static/'),
                 hash: true,
                 includeSourcemap: false
             }

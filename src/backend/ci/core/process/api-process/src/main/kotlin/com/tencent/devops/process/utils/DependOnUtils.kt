@@ -221,7 +221,6 @@ object DependOnUtils {
                 val jobName = getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
                 val dependJobName = getContainerName(stage, allJobId2JobMap[dependOnJobId], jobId = dependOnJobId)
                 throw ErrorCodeException(
-                    defaultMessage = "($jobName)与($dependJobName)的jobId循环依赖",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE,
                     params = arrayOf(jobName, dependJobName)
                 )

@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import org.springframework.beans.factory.annotation.Autowired
@@ -78,5 +79,33 @@ class ServiceVarResourceImpl @Autowired constructor(
                 Result(mapOf(contextName to context))
             }
         }
+    }
+
+    override fun setContextVar(data: SetContextVarData) {
+        buildVariableService.setVariable(
+            projectId = data.projectId,
+            pipelineId = data.pipelineId,
+            buildId = data.buildId,
+            varName = data.contextName,
+            varValue = data.contextVal,
+            readOnly = data.readOnly,
+            rewriteReadOnly = data.rewriteReadOnly
+        )
+    }
+
+    override fun getBuildVars(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>?
+    ): Result<Map<String, String>> {
+        return Result(
+            buildVariableService.getAllVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                keys = keys
+            )
+        )
     }
 }

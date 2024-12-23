@@ -1,12 +1,26 @@
 <template>
     <article class="create-task-home">
-        <bk-breadcrumb separator-class="bk-icon icon-angle-right" class="bread-crumb">
+        <bk-breadcrumb
+            separator-class="bk-icon icon-angle-right"
+            class="bread-crumb"
+        >
             <bk-breadcrumb-item :to="{ name: 'taskList' }"> {{ $t('turbo.方案列表') }} </bk-breadcrumb-item>
             <bk-breadcrumb-item> {{ $t('turbo.新增加速方案') }} </bk-breadcrumb-item>
         </bk-breadcrumb>
-        <task-basic :form-data.sync="formData" ref="basic" />
-        <task-param :form-data.sync="formData" ref="param" />
-        <bk-button theme="primary" @click="submit"> {{ $t('turbo.提交') }} </bk-button>
+        <task-basic
+            :form-data.sync="formData"
+            ref="basic"
+        />
+        <task-param
+            :form-data.sync="formData"
+            ref="param"
+        />
+        <bk-button
+            theme="primary"
+            @click="submit"
+        >
+            {{ $t('turbo.提交') }}
+        </bk-button>
         <bk-button @click="cancel"> {{ $t('turbo.取消') }} </bk-button>
     </article>
 </template>
@@ -68,7 +82,25 @@
             },
 
             cancel () {
-                this.$router.back()
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            window.changeFlag = false
+                            this.$router.back()
+                        }
+                    })
+                } else {
+                    this.$router.back()
+                }
             }
         }
     }

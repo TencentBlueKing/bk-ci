@@ -26,10 +26,43 @@
  */
 package com.tencent.devops.openapi.service.doc
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_APPLICATION_STATE_REQUIRED
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_CURL_PROMPT
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DEFAULT_VALUE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DISCRIMINATOR_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ERROR_PROMPT
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HAVE_TO
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HEADER_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HTTP_CODE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_INPUT_PARAMETER_DESCRIPTION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_MUST_BE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_NO
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_OBJECT_PROPERTY_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_NAME
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_TYPE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PATH_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PAYLOAD_REQUEST_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_POLYMORPHIC_CLASS_IMPLEMENTATION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_POLYMORPHISM_MODEL_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_QUERY_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_REQUEST_METHOD
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_REQUEST_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RESOURCE_DESCRIPTION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RESPONSE_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RETURNS_THE_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_THE_FIELD_IS_READ_ONLY
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_USER_NAME
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_YES
 import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
 import com.tencent.devops.openapi.pojo.SwaggerDocResponse
 import com.tencent.devops.openapi.utils.markdown.Code
@@ -38,37 +71,32 @@ import com.tencent.devops.openapi.utils.markdown.MarkdownElement
 import com.tencent.devops.openapi.utils.markdown.Table
 import com.tencent.devops.openapi.utils.markdown.TableRow
 import com.tencent.devops.openapi.utils.markdown.Text
-import io.swagger.jaxrs.config.BeanConfig
-import io.swagger.models.ArrayModel
-import io.swagger.models.ComposedModel
-import io.swagger.models.Model
-import io.swagger.models.ModelImpl
-import io.swagger.models.RefModel
-import io.swagger.models.Response
-import io.swagger.models.Swagger
-import io.swagger.models.parameters.AbstractSerializableParameter
-import io.swagger.models.parameters.BodyParameter
-import io.swagger.models.parameters.HeaderParameter
-import io.swagger.models.parameters.Parameter
-import io.swagger.models.parameters.PathParameter
-import io.swagger.models.parameters.QueryParameter
-import io.swagger.models.parameters.RefParameter
-import io.swagger.models.parameters.SerializableParameter
-import io.swagger.models.properties.ArrayProperty
-import io.swagger.models.properties.BooleanProperty
-import io.swagger.models.properties.DoubleProperty
-import io.swagger.models.properties.FloatProperty
-import io.swagger.models.properties.IntegerProperty
-import io.swagger.models.properties.LongProperty
-import io.swagger.models.properties.MapProperty
-import io.swagger.models.properties.ObjectProperty
-import io.swagger.models.properties.PasswordProperty
-import io.swagger.models.properties.Property
-import io.swagger.models.properties.RefProperty
-import io.swagger.models.properties.StringProperty
-import io.swagger.models.properties.UUIDProperty
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder
+import io.swagger.v3.oas.integration.SwaggerConfiguration
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.ComposedSchema
+import io.swagger.v3.oas.models.media.MapSchema
+import io.swagger.v3.oas.models.media.NumberSchema
+import io.swagger.v3.oas.models.media.ObjectSchema
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.parameters.Parameter
+import io.swagger.v3.oas.models.parameters.RequestBody
+import io.swagger.v3.oas.models.responses.ApiResponse
+import kotlin.jvm.internal.DefaultConstructorMarker
+import kotlin.reflect.KFunction
+import kotlin.reflect.KType
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaConstructor
+import kotlin.reflect.jvm.javaType
+import org.apache.commons.lang3.StringUtils
+import org.reflections.Reflections
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import io.swagger.v3.oas.annotations.media.Schema as SchemaAnnotation
 
 @Service
 @Suppress("ComplexMethod")
@@ -87,7 +115,7 @@ class DocumentService {
 
     private val onLoadTable = mutableMapOf<String, Table>()
 
-    private val definitions = mutableMapOf<String, Model>()
+    private val definitions = mutableMapOf<String, Schema<*>>()
 
     private lateinit var polymorphismMap: Map<String, Map<String, String>>
 
@@ -104,71 +132,108 @@ class DocumentService {
     ): Map<String, SwaggerDocResponse> {
         val response = mutableMapOf<String, SwaggerDocResponse>()
         val swagger = loadSwagger()
-        definitions.putAll(swagger.definitions)
+        definitions.putAll(swagger.components.schemas)
         polymorphismMap = polymorphism
         loadAllDefinitions(parametersInfo)
         swagger.paths.forEach { (path, body) ->
+            body.parameters
             // 遍历并生成每一path 不同 HttpMethod 下的文档
-            body.operationMap.forEach { (httpMethod, operation) ->
+            body.readOperationsMap().forEach { (httpMethod, operation) ->
                 val loadMarkdown = mutableListOf<MarkdownElement>()
                 // 该path 需要组装的model
                 val onLoadModel = mutableListOf<String>()
                 // 该path 已组装的model
                 val loadedModel = mutableListOf<String>()
 //                loadMarkdown.add(Text(level = 1, body = "资源文档: ${operation.tags}", key = "resource_documentation"))
-                loadMarkdown.add(Text(level = 3, body = "请求方法/请求路径", key = "request_method"))
+                loadMarkdown.add(Text(level = 3, body = getI18n(BK_REQUEST_METHOD), key = "request_method"))
                 loadMarkdown.add(Text(level = 4, body = "$httpMethod $path", key = "http_method_path"))
-                loadMarkdown.add(Text(level = 3, body = "资源描述", key = "resource_description"))
+                loadMarkdown.add(Text(level = 3, body = getI18n(BK_RESOURCE_DESCRIPTION), key = "resource_description"))
                 loadMarkdown.add(Text(level = 4, body = operation.summary ?: "", key = "summary"))
-                loadMarkdown.add(Text(level = 3, body = "输入参数说明", key = "input_parameter_description"))
-                loadMarkdown.add(Text(level = 4, body = "Path参数", key = "path_parameter_title"))
+                loadMarkdown.add(
+                    Text(level = 3, body = getI18n(BK_INPUT_PARAMETER_DESCRIPTION), key = "input_parameter_description")
+                )
+                loadMarkdown.add(Text(level = 4, body = getI18n(BK_PATH_PARAMETER), key = "path_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
-                            rows = parseParameters(operation.parameters.filterIsInstance<PathParameter>()),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == PATH_PARAM } ?: emptyList()
+                            ),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
                 )
-                loadMarkdown.add(Text(4, "Query参数", "query_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_QUERY_PARAMETER), "query_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
-                            rows = parseParameters(operation.parameters.filterIsInstance<QueryParameter>()),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == QUERY_PARAM } ?: emptyList()
+                            ),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
                 )
-                loadMarkdown.add(Text(4, "Header参数", "header_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_HEADER_PARAMETER), "header_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
-                            rows = parseParameters(operation.parameters.filterIsInstance<HeaderParameter>()),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == HEADER_PARAM } ?: emptyList()
+                            ),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
-                            .setRow(AUTH_HEADER_USER_ID, "string", "应用态必填、用户态不填", "用户名", "{X-DEVOPS-UID}")
-                            .setRow("Content-Type", "string", "是", "", "application/json")
+                            .setRow(
+                                AUTH_HEADER_USER_ID,
+                                "string",
+                                getI18n(BK_APPLICATION_STATE_REQUIRED),
+                                getI18n(BK_USER_NAME),
+                                "{X-DEVOPS-UID}"
+                            )
+                            .setRow("Content-Type", "string", getI18n(BK_YES), "", "application/json")
                             .removeRow(AUTH_HEADER_DEVOPS_APP_CODE)
                     }, path + httpMethod + "header")
                 )
-                loadMarkdown.add(Text(4, "Body参数", "body_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_BODY_PARAMETER), "body_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
-                            rows = parseParameters(operation.parameters.filterIsInstance<BodyParameter>()),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO)
+                            ),
+                            rows = parseRequestBody(operation.requestBody),
                             "body_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "body")
                 )
-                loadMarkdown.add(Text(4, "响应参数", "response_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_RESPONSE_PARAMETER), "response_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("HTTP代码", "参数类型", "说明"),
+                            header = TableRow(getI18n(BK_HTTP_CODE), getI18n(BK_PARAM_TYPE), getI18n(BK_ILLUSTRATE)),
                             rows = parseResponse(operation.responses),
                             "response_parameter"
                         ).checkLoadModel(onLoadModel)
@@ -177,10 +242,12 @@ class DocumentService {
                 // payload 样例
                 loadMarkdown.addAll(
                     parsePayloadExample(
-                        operation.parameters.filterIsInstance<BodyParameter>()
+                        operation.requestBody
                     )
                 )
-                loadMarkdown.add(Text(3, "Curl 请求样例", "curl_request_sample_title"))
+                loadMarkdown.add(
+                    Text(3, "Curl ${getI18n(BK_REQUEST_SAMPLE)}", "curl_request_sample_title")
+                )
                 loadMarkdown.add(
                     Code(
                         "Json",
@@ -196,7 +263,7 @@ class DocumentService {
                 loadMarkdown.addAll(
                     parseRequestExampleJson(
                         httpMethod.name,
-                        operation.parameters.filterIsInstance<BodyParameter>()
+                        operation.requestBody
                     )
                 )
                 // 组装返回样例
@@ -205,7 +272,7 @@ class DocumentService {
                         operation.responses
                     )
                 )
-                loadMarkdown.add(Text(3, "相关模型数据", "all_model_data"))
+                loadMarkdown.add(Text(3, getI18n(BK_ALL_MODEL_DATA), "all_model_data"))
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 operation.tags.forEach { tag ->
@@ -245,16 +312,22 @@ class DocumentService {
                 val tableRows = mutableListOf<TableRow>()
                 loadModelDefinitions(model, tableRows)
                 tableRows.forEach { table ->
-                    val reflectInfo = parametersInfo?.get(key)?.get(table.columns[0])
+                    val reflectInfo = parametersInfo?.get("${model.title}@${model.name}")?.get(table.columns[0])
                     if (reflectInfo != null) {
                         val column = table.columns.toMutableList()
-                        column[2] = if (reflectInfo.markedNullable.not()) "是" else "否"
+                        column[2] = if (reflectInfo.markedNullable.not()) getI18n(BK_YES) else getI18n(BK_NO)
                         column[4] = if (reflectInfo.markedNullable) reflectInfo.defaultValue ?: "" else column[4]
                         table.columns = column
                     }
                 }
                 Table(
-                    header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                    header = TableRow(
+                        getI18n(BK_PARAM_NAME),
+                        getI18n(BK_PARAM_TYPE),
+                        getI18n(BK_HAVE_TO),
+                        getI18n(BK_PARAM_ILLUSTRATE),
+                        getI18n(BK_DEFAULT_VALUE)
+                    ),
                     rows = tableRows,
                     key = "model_$key"
                 )
@@ -267,42 +340,55 @@ class DocumentService {
         loadedModel: MutableList<String>
     ): List<MarkdownElement> {
         val markdownElement = mutableListOf<MarkdownElement>()
-        modelList.forEach {
+        modelList.forEach { model ->
+            val it = model.removePrefix("#/components/schemas/")
             if (it in loadedModel) return@forEach
             val onLoadModel = mutableListOf<String>()
             val model = cacheOrLoad({
                 val tableRows = mutableListOf<TableRow>()
                 definitions[it]?.let { model -> loadModelDefinitions(model, tableRows) }
                 Table(
-                    header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                    header = TableRow(
+                        getI18n(BK_PARAM_NAME),
+                        getI18n(BK_PARAM_TYPE),
+                        getI18n(BK_HAVE_TO),
+                        getI18n(BK_PARAM_ILLUSTRATE),
+                        getI18n(BK_DEFAULT_VALUE)
+                    ),
                     rows = tableRows,
                     key = "model_$it"
                 )
             }, it).apply {
                 if (it in polymorphismMap) {
                     this.setRow(
-                        (definitions[it] as ModelImpl).discriminator,
+                        (definitions[it] as Schema).discriminator.propertyName,
                         "string",
-                        "是",
-                        "用于指定实现某一多态类, 可选${polymorphismMap[it]?.keys},具体实现见下方",
+                        getI18n(BK_YES),
+                        getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}")),
                         ""
                     )
                 }
             }.checkLoadModel(onLoadModel)
             markdownElement.add(Text(level = 4, body = it, key = "model_${it}_title"))
+            markdownElement.add(Text(level = 5, body = definitions[it]?.title ?: "", key = "model_${it}_title_alis"))
             markdownElement.add(model)
             loadedModel.add(it)
 
             // 多态类展示
             polymorphismMap[it]?.forEach { (child, value) ->
-                val discriminator = (definitions[it] as ModelImpl).discriminator
+                val discriminator = (definitions[it] as Schema).discriminator.propertyName
                 val childModel = cacheOrLoad({ null }, child)
-                    .setRow(discriminator, "string", "必须是[$value]", "多态类实现", value)
-                    .checkLoadModel(onLoadModel)
+                    .setRow(
+                        discriminator,
+                        "string",
+                        getI18n(BK_MUST_BE, arrayOf(value)),
+                        getI18n(BK_POLYMORPHIC_CLASS_IMPLEMENTATION),
+                        value
+                    ).checkLoadModel(onLoadModel)
                 markdownElement.add(Text(4, child, "polymorphism_model_${child}_title"))
                 markdownElement.add(
                     Text(
-                        level = 0, body = "*多态基类 <$it> 的实现处, 其中当字段 $discriminator = [$value] 时指定为该类实现*",
+                        level = 0, body = getI18n(BK_POLYMORPHISM_MODEL_ILLUSTRATE, arrayOf(it, discriminator, value)),
                         key = "polymorphism_model_$child"
                     )
                 )
@@ -318,13 +404,17 @@ class DocumentService {
         return markdownElement
     }
 
-    private fun parseResponseExampleJson(responses: Map<String, Response>): List<MarkdownElement> {
+    private fun parseResponseExampleJson(responses: Map<String, ApiResponse>): List<MarkdownElement> {
         val markdownElement = mutableListOf<MarkdownElement>()
         responses.forEach { (httpStatus, response) ->
             val loadJson = mutableMapOf<String, Any>()
-            loadModelJson(response.responseSchema, loadJson)
+            loadModelJson(response.content.values.first().schema, loadJson)
             markdownElement.add(
-                Text(level = 3, body = "$httpStatus 返回样例", key = "${httpStatus}_return_example_title")
+                Text(
+                    level = 3,
+                    body = "$httpStatus ${getI18n(BK_RETURNS_THE_SAMPLE)}",
+                    key = "${httpStatus}_return_example_title"
+                )
             )
             markdownElement.add(
                 Code(language = "Json", body = JsonUtil.toJson(loadJson), key = "${httpStatus}_return_example")
@@ -333,69 +423,76 @@ class DocumentService {
         return markdownElement
     }
 
-    private fun parsePayloadExample(body: List<BodyParameter>): List<MarkdownElement> {
-        if (body.getOrNull(0)?.examples?.isEmpty() != false) return emptyList()
+    private fun parsePayloadExample(body: RequestBody?): List<MarkdownElement> {
+        val examples = body?.content?.values?.first()?.examples
+        if (examples.isNullOrEmpty()) return emptyList()
         val res = mutableListOf<MarkdownElement>()
         res.add(Text(level = 3, body = "Request Payload 举例", key = "Payload_request_sample_title"))
         res.add(
             Text(
                 level = 0,
-                body = "**注意: 确保 header 中存在 Content-Type: application/json ,否则请求返回415错误码**",
+                body = getI18n(BK_ERROR_PROMPT),
                 key = "Payload_request_sample_explain"
             )
         )
-        body[0].examples.forEach { (texplain, jsonSimple) ->
+        examples.forEach { (texPlain, jsonSimple) ->
             res.add(
                 Text(
                     level = 4,
-                    body = "< $texplain >, 那么请求应该为:",
-                    key = "Payload_request_sample_title_$texplain"
+                    body = getI18n(BK_PAYLOAD_REQUEST_SAMPLE, arrayOf(texPlain)),
+                    key = "Payload_request_sample_title_$texPlain"
                 )
             )
             val jsonString = try {
-                JsonUtil.toJson(JsonUtil.to(jsonSimple))
+                JsonUtil.toJson(jsonSimple)
             } catch (e: Throwable) {
-                jsonSimple
+                jsonSimple.toString()
             }
-            res.add(Code(language = "Json", body = jsonString, key = "Payload_request_sample_json_$texplain"))
+            res.add(Code(language = "Json", body = jsonString, key = "Payload_request_sample_json_$texPlain"))
         }
         return res
     }
 
-    private fun parseRequestExampleJson(httpMethod: String, body: List<BodyParameter>): List<MarkdownElement> {
-        if (body.isEmpty()) return emptyList()
-        val schema = body[0].schema
-        val outJson: Any = when (schema) {
-            is ComposedModel -> {
+    private fun parseRequestExampleJson(httpMethod: String, body: RequestBody?): List<MarkdownElement> {
+        if (body == null) return emptyList()
+        val schema = body.content.values.first().schema
+        val outJson: Any = if (StringUtils.isNotBlank(schema.`$ref`)) {
+            val loadJson = mutableMapOf<String, Any>()
+            loadModelJson(schema, loadJson)
+            loadJson
+        } else when (schema) {
+            is ComposedSchema -> {
                 val loadJson = mutableMapOf<String, Any>()
                 schema.allOf?.forEach {
                     loadModelJson(it, loadJson)
                 }
                 loadJson
             }
-            is ModelImpl -> {
+
+            is ArraySchema -> {
+                val loadJson = mutableListOf<Any>()
+                loadJson.add(loadPropertyJson(schema.items))
+                loadJson
+            }
+
+            is Schema<*> -> {
                 val loadJson = mutableMapOf<String, Any>()
                 schema.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property)
                 }
                 loadJson
             }
-            is RefModel -> {
-                val loadJson = mutableMapOf<String, Any>()
-                loadModelJson(schema, loadJson)
-                loadJson
-            }
-            is ArrayModel -> {
-                val loadJson = mutableListOf<Any>()
-                loadJson.add(loadPropertyJson(schema.items))
-                loadJson
-            }
+
             else -> {
                 emptyMap<String, String>()
             }
         }
         return listOf(
-            Text(level = 3, body = "$httpMethod 请求样例", key = "${httpMethod}_request_sample_title"),
+            Text(
+                level = 3,
+                body = "$httpMethod ${getI18n(BK_REQUEST_SAMPLE)}",
+                key = "${httpMethod}_request_sample_title"
+            ),
             Code(language = "Json", body = JsonUtil.toJson(outJson), key = "${httpMethod}_request_sample")
         )
     }
@@ -407,302 +504,291 @@ class DocumentService {
         val headerString = header.rows.takeIf { it.isNotEmpty() }?.joinToString(prefix = "\\\n", separator = "\\\n") {
             "-H '${it.columns[0]}: ${it.columns[4]}' "
         } ?: ""
-        return "curl -X ${httpMethod.toUpperCase()} '[请替换为上方API地址栏请求地址]$queryString' $headerString"
+        return "curl -X ${httpMethod.toUpperCase()} '${getI18n(BK_CURL_PROMPT, arrayOf(queryString))}' $headerString"
     }
 
-    private fun parseResponse(responses: Map<String, Response>): List<TableRow> {
+    private fun parseResponse(responses: Map<String, ApiResponse>): List<TableRow> {
         val tableRow = mutableListOf<TableRow>()
         responses.forEach { (httpStatus, response) ->
+            val schema = response.content.values.first().schema
             tableRow.addNoRepeat(
-                TableRow(httpStatus, loadModelType(response.responseSchema), response.description)
+                TableRow(httpStatus, loadModelType(schema), response.description)
             )
         }
+        return tableRow
+    }
+
+    private fun parseRequestBody(requestBody: RequestBody?): List<TableRow> {
+        val tableRow = mutableListOf<TableRow>()
+        if (requestBody == null) return tableRow
+        tableRow.addNoRepeat(
+            TableRow(
+                requestBody.description,
+                loadModelType(requestBody.content.values.first().schema),
+                requestBody.required
+            )
+        )
+
         return tableRow
     }
 
     private fun parseParameters(parameters: List<Parameter>): List<TableRow> {
         val tableRow = mutableListOf<TableRow>()
         parameters.forEach {
-            when (it) {
-                is BodyParameter -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            loadModelType(it.schema),
-                            if (it.required) "是" else "否",
-                            it.description,
-                            ""
-                        )
+            if (StringUtils.isNotBlank(it.`$ref`)) {
+                val key = it.`$ref`.removePrefix("#/components/schemas/")
+                tableRow.addNoRepeat(
+                    TableRow(
+                        it.name,
+                        Link(key, "#$key").toString(),
+                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
+                        it.description,
+                        ""
                     )
-                }
-                is AbstractSerializableParameter<*> -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            loadSerializableParameter(it),
-                            if (it.required) "是" else "否",
-                            it.description,
-                            it.defaultValue
-                        )
+                )
+            } else {
+                tableRow.addNoRepeat(
+                    TableRow(
+                        it.name,
+                        loadSerializableParameter(it.schema),
+                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
+                        it.description,
+                        it.schema.default?.toString() ?: ""
                     )
-                }
-//                is PathParameter -> {}
-//                is QueryParameter -> {}
-                is RefParameter -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            Link(it.originalRef, '#' + it.originalRef).toString(),
-                            if (it.required) "是" else "否",
-                            it.description,
-                            ""
-                        )
-                    )
-                }
-                else -> {}
+                )
             }
         }
         return tableRow
     }
 
-    private fun loadSwagger(): Swagger {
-        val bean = BeanConfig().apply {
-            title = applicationDesc
-            version = applicationVersion
-            resourcePackage = packageName
-            scan = true
-            basePath = "/$service/api"
-        }
-        return bean.swagger
+    private fun loadSwagger(): OpenAPI {
+        val bean = SwaggerConfiguration()
+            .resourcePackages(setOf(packageName))
+            .readAllResources(true)
+        val res = JaxrsOpenApiContextBuilder<JaxrsOpenApiContextBuilder<*>>()
+            .openApiConfiguration(bean)
+//            .resourcePackages(setOf(packageName))
+            .buildContext(true)
+        return res.read()
     }
 
-    private fun loadSerializableParameter(parameter: SerializableParameter): String {
-        return when (parameter.type) {
-            "string" -> {
-                val enum = parameter.enumValue
+    private fun loadSerializableParameter(schema: Schema<*>): String {
+        return when (schema) {
+            is StringSchema -> {
+                val enum = schema.enum
                 if (enum.isNullOrEmpty()) {
-                    parameter.type
+                    "String"
                 } else {
                     val str = enum.toEnumString()
                     "ENUM($str)"
                 }
             }
-            "array" -> {
-                "List<" + loadPropertyType(parameter.items) + ">"
+
+            is ArraySchema -> {
+                "List<" + loadPropertyType(schema.items) + ">"
             }
-            "integer" -> {
-                when (parameter.format) {
+
+            is NumberSchema -> {
+                when (schema.format) {
                     "int32" -> "Int"
                     "int64" -> "Long"
                     else -> "integer"
                 }
             }
-            else -> parameter.type
+
+            else -> schema.type
         }
     }
 
     private fun loadModelDefinitions(
-        model: Model,
+        model: Schema<*>,
         tableRow: MutableList<TableRow>
     ) {
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
+            tableRow.addAll(
+                cacheOrLoad(
+                    {
+                        val table = mutableListOf<TableRow>()
+                        definitions[key]?.let {
+                            loadModelDefinitions(it, table)
+                        }
+                        Table(
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
+                            rows = table,
+                            key = "model_$key"
+                        )
+                    }, key
+                ).rows
+            )
+        }
         when (model) {
-            is ComposedModel -> {
+            is ComposedSchema -> {
                 model.allOf?.forEach {
                     loadModelDefinitions(it, tableRow)
                 }
-//
-//                // 初始化多态类
-//                if (model.parent is RefModel && model.child is ModelImpl) {
-//                    val ref = model.parent as RefModel
-//                    val impl = model.child as ModelImpl
-//                    polymorphismMap[ref.originalRef].apply {
-//                        if (this == null) {
-//                            polymorphismMap[ref.originalRef] = mutableListOf(impl.name)
-//                        } else {
-//                            this.addNoRepeat(impl.name)
-//                        }
-//                    }
-//                }
             }
 
-            is ModelImpl -> {
+            else -> {
                 model.properties?.forEach { (key, property) ->
                     tableRow.addNoRepeat(
                         TableRow(
                             key,
                             loadPropertyType(property),
-                            if (property.required) "是" else "否",
+                            if (model.required != null && key in model.required) getI18n(BK_YES) else getI18n(BK_NO),
                             loadDescriptionInfo(property),
                             loadPropertyDefault(property)
                         )
                     )
                 }
             }
-
-            is RefModel -> {
-                tableRow.addAll(
-                    cacheOrLoad(
-                        {
-                            val table = mutableListOf<TableRow>()
-                            definitions[model.originalRef]?.let {
-                                loadModelDefinitions(it, table)
-                            }
-                            Table(
-                                header = TableRow("参数名称", "参数类型", "必须", "参数说明"),
-                                rows = table,
-                                key = "model_${model.originalRef}"
-                            )
-                        }, model.originalRef
-                    ).rows
-                )
-            }
-            else -> {}
         }
     }
 
-    private fun loadDescriptionInfo(property: Property?): String {
+    private fun loadDescriptionInfo(property: Schema<*>?): String {
         if (property == null) return ""
         val res = StringBuffer()
         if (property.readOnly == true) {
-            res.append("(该字段只读)")
+            res.append(getI18n(BK_THE_FIELD_IS_READ_ONLY))
         }
-        res.append(property.description ?: "")
+        res.append(property.title ?: "")
         return res.toString()
     }
 
-    private fun loadModelType(model: Model?): String {
+    private fun loadModelType(model: Schema<*>?): String {
         if (model == null) return ""
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
+            return Link(key, "#$key").toString()
+        }
         return when (model) {
-//            is ComposedModel -> {}
-            is ModelImpl -> {
-                "Map<String, " + loadPropertyType(model.additionalProperties) + ">"
-            }
-            is RefModel -> {
-                Link(model.originalRef, '#' + model.originalRef).toString()
-            }
-            is ArrayModel -> {
+            is ArraySchema -> {
                 "List<" + loadPropertyType(model.items) + ">"
             }
+
+            is MapSchema -> {
+                "Map<String, " + loadPropertyType(model.additionalProperties as Schema<*>) + ">"
+            }
+
             else -> {
-                "parse error"
+                "Map<String, String>"
             }
         }
     }
 
-    private fun loadModelJson(model: Model?, loadJson: MutableMap<String, Any>) {
+    private fun loadModelJson(
+        model: Schema<*>?,
+        loadJson: MutableMap<String, Any>,
+        deep: MutableSet<String> = mutableSetOf()
+    ) {
         if (model == null) return
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
+            definitions[key]?.let { loadModelJson(it, loadJson, deep) }
+        }
         when (model) {
-            is ComposedModel -> {
+            is ComposedSchema -> {
                 model.allOf?.forEach {
-                    loadModelJson(it, loadJson)
+                    loadModelJson(it, loadJson, deep)
                 }
             }
-            is ModelImpl -> {
+
+            else -> {
                 if (model.discriminator != null) {
-                    loadJson[model.discriminator] = "string"
+                    loadJson[model.discriminator.propertyName] = "string"
                 }
                 model.properties?.forEach { (key, property) ->
-                    loadJson[key] = loadPropertyJson(property)
+                    loadJson[key] = loadPropertyJson(property, deep)
                 }
             }
-            is RefModel -> {
-                definitions[model.originalRef]?.let { loadModelJson(it, loadJson) }
-            }
-            else -> {}
         }
     }
 
-    private fun loadPropertyJson(property: Property): Any {
-        return when (property) {
-            is RefProperty -> {
+    private fun loadPropertyJson(property: Schema<*>, deep: MutableSet<String> = mutableSetOf()): Any {
+        if (StringUtils.isNotBlank(property.`$ref`)) {
+            if (property.`$ref` !in deep) {
+                deep.add(property.`$ref`)
                 val loadJson = mutableMapOf<String, Any>()
-                definitions[property.originalRef]?.let { loadModelJson(it, loadJson) }
-                loadJson
+                val key = property.`$ref`.removePrefix("#/components/schemas/")
+                definitions[key]?.let { loadModelJson(it, loadJson, deep) }
+                deep.remove(property.`$ref`)
+                return loadJson
+            } else {
+                return property.`$ref`
             }
+        }
+        return when (property) {
             // swagger无法获取到map的key类型
-            is MapProperty -> {
-                mapOf("string" to loadPropertyJson(property.additionalProperties))
+            is MapSchema -> {
+                mapOf("string" to loadPropertyJson(property.additionalProperties as Schema<*>, deep))
             }
-            is ObjectProperty -> {
-                "Any 任意类型，参照实际请求或返回"
+
+            is ObjectSchema -> {
+                getI18n(BK_OBJECT_PROPERTY_ILLUSTRATE)
             }
-            is ArrayProperty -> {
-                listOf(loadPropertyJson(property.items))
+
+            is ArraySchema -> {
+                listOf(loadPropertyJson(property.items, deep))
             }
-            is StringProperty -> {
+
+            is StringSchema -> {
                 if (property.enum == null) {
                     property.type
                 } else {
                     "enum"
                 }
             }
-            is BooleanProperty -> false
-            is IntegerProperty -> 0
-            is LongProperty -> 0L
-            is DoubleProperty -> 0.0
-            is FloatProperty -> 0f
+
+            is BooleanSchema -> false
             else -> {
-                property.type
+                val result = when (property.type) {
+                    "integer" -> 0
+                    else -> property.type
+                }
+                result
             }
         }
     }
 
-    private fun loadPropertyDefault(property: Property?): String? {
-        if (property == null) return null
-        return when (property) {
-            is BooleanProperty -> {
-                property.default?.toString()
-            }
-            is DoubleProperty -> {
-                property.default?.toString()
-            }
-            is FloatProperty -> {
-                property.default?.toString()
-            }
-            is IntegerProperty -> {
-                property.default?.toString()
-            }
-            is LongProperty -> {
-                property.default?.toString()
-            }
-            is StringProperty -> {
-                property.default?.toString()
-            }
-            is PasswordProperty -> {
-                property.default?.toString()
-            }
-            is UUIDProperty -> {
-                property.default?.toString()
-            }
-            else -> {
-                null
-            }
-        }
+    private fun loadPropertyDefault(property: Schema<*>?): String? {
+        if (property == null || property.default == null) return null
+        return property.default.toString()
     }
 
-    private fun loadPropertyType(property: Property?): String {
+    private fun loadPropertyType(property: Schema<*>?): String {
         if (property == null) return ""
+        if (StringUtils.isNotBlank(property.`$ref`)) {
+            val key = property.`$ref`.removePrefix("#/components/schemas/")
+            return Link(key, "#$key").toString()
+        }
         return when (property) {
-            is RefProperty -> {
-                Link(property.originalRef, '#' + property.originalRef).toString()
-            }
             // swagger无法获取到map的key类型
-            is MapProperty -> {
-                "Map<String, " + loadPropertyType(property.additionalProperties) + ">"
+            is MapSchema -> {
+                "Map<String, " + loadPropertyType(property.additionalProperties as Schema<*>) + ">"
             }
-            is ObjectProperty -> {
+
+            is ObjectSchema -> {
                 "Any"
             }
-            is ArrayProperty -> {
+
+            is ArraySchema -> {
                 "List<" + loadPropertyType(property.items) + ">"
             }
-            is StringProperty -> {
+
+            is StringSchema -> {
                 if (property.enum.isNullOrEmpty()) {
                     property.type
                 } else {
                     "ENUM(" + property.enum.toEnumString() + ")"
                 }
             }
+
             else -> {
                 property.type
             }
@@ -727,5 +813,186 @@ class DocumentService {
             this.remove(row)
         }
         this.add(table)
+    }
+
+    private fun getI18n(code: String, params: Array<String>? = null): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = code,
+            language = "zh_CN",
+            params = params
+        )
+    }
+
+    companion object {
+        private const val QUERY_PARAM = "query"
+        private const val HEADER_PARAM = "header"
+        private const val COOKIE_PARAM = "cookie"
+        private const val PATH_PARAM = "path"
+
+        /**
+         *  获取所有多态类的实现信息
+         */
+        fun getAllSubType(reflections: Reflections): Map<String, Map<String, String>> {
+            val subTypesClazz = reflections.getTypesAnnotatedWith(JsonSubTypes::class.java)
+            val res = mutableMapOf<String, Map<String, String>>()
+            subTypesClazz.forEach {
+                val infoMap = mutableMapOf<String, String>()
+                val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
+//            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
+                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
+                    ?: it.name.split(".").last()
+                subTypes.forEach { child ->
+                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
+                        ?: child.value.java.name.split(".").last()
+                    infoMap[childName] = child.name
+                }
+                res[name] = infoMap
+            }
+            return res
+        }
+
+        fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
+            val clazz = reflections.getTypesAnnotatedWith(SchemaAnnotation::class.java).toList()
+            val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
+            for (i in clazz.indices) {
+                val it = clazz.getOrNull(i) ?: continue
+
+                println("$i${it.name}")
+                try {
+                    val name = it.getAnnotation(SchemaAnnotation::class.java).title
+                    res["$name@${it.simpleName}"] = getDataClassParameterDefault(it)
+                } catch (e: Throwable) {
+                    println("error: " + it.name)
+                    println(e)
+//                    throw e
+                }
+            }
+            return res
+        }
+
+        /**
+         * 例子:
+         * ```java
+         *  getDataClassParameterDefault(Class.forName("com.tencent.devops.openapi.pojo.SwaggerDocResponse"))
+         * ```
+         *  @param clazz 目标类
+         *  @return 带默认值的map
+         */
+        @Suppress("ComplexMethod")
+        fun getDataClassParameterDefault(clazz: Class<*>): Map<String, SwaggerDocParameterInfo> {
+            val nullable = mutableMapOf<String, Boolean>()
+            val kClazz = clazz.kotlin
+            val mock = mockModel(clazz, nullable)
+//        val mock = try {
+            val res = mutableMapOf<String, SwaggerDocParameterInfo>()
+            kClazz.memberProperties.forEach {
+                // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
+                it.isAccessible = true
+                res[it.name] = SwaggerDocParameterInfo(
+                    markedNullable = nullable[it.name] ?: false,
+                    defaultValue = checkDefaultValue(it.call(mock).toString())
+                )
+            }
+            return res
+        }
+
+        private fun mockModel(clazz: Class<*>, nullable: MutableMap<String, Boolean> = mutableMapOf()): Any? {
+            if (clazz.simpleName == "Object") {
+                return ""
+            }
+            if (clazz.isEnum) {
+                return clazz.enumConstants.first()
+            }
+            if (clazz.simpleName == "GithubRepository") {
+                println()
+            }
+            println(clazz.name)
+            val kClazz = clazz.kotlin
+            if (!kClazz.isData) {
+                return null
+            }
+            val constructor = kClazz.constructors.maxByOrNull { it.parameters.size }!!
+            val parameters = constructor.parameters
+            val syntheticInit = clazz.declaredConstructors.find { it.modifiers == 4097 }
+            val argumentsSize = syntheticInit?.parameterTypes?.size ?: parameters.size
+            val arguments = arrayOfNulls<Any>(argumentsSize)
+            var index = 0
+            var offset = 0
+            parameters.forEach {
+                if (it.isOptional) {
+                    offset += 1 shl index
+                }
+                nullable[it.name ?: ""] = it.type.isMarkedNullable
+                arguments[index++] = makeStandardArgument(it.type, constructor)
+            }
+            for (i in index until argumentsSize - 2) {
+                arguments[i] = 0
+            }
+            if (syntheticInit != null) {
+                arguments[argumentsSize - 2] = offset
+                arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
+            }
+            val javaConstructor = constructor.javaConstructor
+            javaConstructor?.isAccessible = true
+            return (syntheticInit ?: javaConstructor)!!.newInstance(*arguments)
+        }
+
+        @Suppress("ComplexCondition")
+        private fun checkDefaultValue(v: String): String? {
+            if (v.startsWith("Mock") || v.isBlank() || v == "[]" || v == "{=}" || v == "{}") return null
+            return v
+        }
+
+        @Suppress("ComplexMethod")
+        private fun makeStandardArgument(type: KType, debug: KFunction<*>): Any? {
+            if (type.isMarkedNullable) return null
+            return when (type.classifier) {
+                Boolean::class -> false
+                Byte::class -> 0.toByte()
+                Short::class -> 0.toShort()
+                Char::class -> 0.toChar()
+                Int::class -> 0
+                Long::class -> 0L
+                Float::class -> 0f
+                Double::class -> 0.0
+                String::class -> ""
+                Enum::class -> {
+                    null
+                }
+
+                Set::class -> {
+                    type.arguments.firstOrNull()?.let { setOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                List::class -> {
+                    type.arguments.firstOrNull()?.let { listOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                ArrayList::class -> {
+                    type.arguments.firstOrNull()?.let { arrayListOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Array::class -> {
+                    type.arguments.firstOrNull()?.let { arrayOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Map::class -> {
+                    mapOf(
+                        makeStandardArgument(
+                            type.arguments[0].type!!,
+                            debug
+                        ) to makeStandardArgument(type.arguments[1].type!!, debug)
+                    )
+                }
+
+                else -> {
+                    if (type.javaType is Class<*>) {
+                        mockModel(type.javaType as Class<*>)
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
     }
 }

@@ -28,76 +28,85 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("项目信息请求实体")
+@Schema(title = "项目信息请求实体")
 data class OpProjectUpdateInfoRequest(
     @JsonProperty(value = "project_id", required = true)
-    @ApiModelProperty("项目ID", name = "project_id")
+    @get:Schema(title = "项目ID", description = "project_id")
     val projectId: String,
-    @ApiModelProperty("项目名称", name = "project_name")
+    @get:Schema(title = "项目名称", description = "project_name")
     @JsonProperty(value = "project_name", required = true)
     val projectName: String,
     @JsonProperty(value = "bg_id", required = true)
-    @ApiModelProperty("项目所属一级机构ID", name = "bg_id")
+    @get:Schema(title = "项目所属一级机构ID", description = "bg_id")
     val bgId: Long,
     @JsonProperty(value = "bg_name", required = true)
-    @ApiModelProperty("项目所属一级机构名称", name = "bg_name")
+    @get:Schema(title = "项目所属一级机构名称", description = "bg_name")
     val bgName: String,
+    @JsonProperty(value = "business_line_id", required = true)
+    @get:Schema(title = "业务线ID")
+    val businessLineId: Long? = null,
+    @JsonProperty(value = "business_line_name", required = true)
+    @get:Schema(title = "业务线名称")
+    val businessLineName: String? = "",
     @JsonProperty(value = "dept_id", required = true)
-    @ApiModelProperty("项目所属二级机构ID", name = "dept_id")
-    val deptId: Long,
+    @get:Schema(title = "项目所属二级机构ID", description = "dept_id")
+    val deptId: Long? = null,
     @JsonProperty(value = "dept_name", required = true)
-    @ApiModelProperty("项目所属二级机构名称", name = "dept_name")
-    val deptName: String,
+    @get:Schema(title = "项目所属二级机构名称", description = "dept_name")
+    val deptName: String? = null,
     @JsonProperty(value = "center_id", required = true)
-    @ApiModelProperty("项目所属三级机构ID", name = "center_id")
-    val centerId: Long,
+    @get:Schema(title = "项目所属三级机构ID", description = "center_id")
+    val centerId: Long? = null,
     @JsonProperty(value = "center_name", required = true)
-    @ApiModelProperty("项目所属三级机构名称", name = "center_name")
-    val centerName: String,
+    @get:Schema(title = "项目所属三级机构名称", description = "center_name")
+    val centerName: String? = null,
     @JsonProperty(value = "project_type", required = true)
-    @ApiModelProperty("项目类型", name = "project_type")
+    @get:Schema(title = "项目类型", description = "project_type")
     val projectType: Int,
     @JsonProperty(value = "approver", required = false)
-    @ApiModelProperty("审批人", name = "approver")
+    @get:Schema(title = "审批人", description = "approver")
     var approver: String?,
     @JsonProperty(value = "updator", required = true)
-    @ApiModelProperty("更新人", name = "updator")
+    @get:Schema(title = "更新人", description = "updator")
     var updator: String,
     @JsonProperty(value = "approval_status", required = true)
-    @ApiModelProperty("审批状态", name = "approval_status")
+    @get:Schema(title = "审批状态", description = "approval_status")
     val approvalStatus: Int,
     @JsonProperty(value = "approval_time", required = false)
-    @ApiModelProperty("审批时间", name = "approval_time")
+    @get:Schema(title = "审批时间", description = "approval_time")
     var approvalTime: Long?,
     @JsonProperty(value = "is_secrecy", required = true)
-    @ApiModelProperty("保密性", name = "is_secrecy")
+    @get:Schema(title = "保密性", description = "is_secrecy")
     val secrecyFlag: Boolean,
     @JsonProperty(value = "cc_app_id", required = false)
-    @ApiModelProperty("应用ID", name = "cc_app_id")
+    @get:Schema(title = "应用ID", description = "cc_app_id")
     val ccAppId: Long?,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     var cc_app_name: String?,
-    @ApiModelProperty("容器类型， 1 - k8s; 2 - mesos")
+    @get:Schema(title = "容器类型， 1 - k8s; 2 - mesos")
     val kind: Int?,
     @JsonProperty(value = "enabled")
-    @ApiModelProperty("启用", name = "enabled")
+    @get:Schema(title = "启用", description = "enabled")
     val enabled: Boolean,
     @JsonProperty(value = "use_bk", required = true)
-    @ApiModelProperty("是否用蓝鲸", name = "use_bk")
+    @get:Schema(title = "是否用蓝鲸", description = "use_bk")
     val useBk: Boolean,
     @JsonProperty(value = "labelIdList", required = false)
-    @ApiModelProperty("标签id集合", name = "labelIdList")
+    @get:Schema(title = "标签id集合", description = "labelIdList")
     val labelIdList: List<String>?,
-    @ApiModelProperty("混合云CC业务ID")
+    @get:Schema(title = "混合云CC业务ID")
     val hybridCCAppId: Long?,
-    @ApiModelProperty("支持构建机访问外网")
+    @get:Schema(title = "支持构建机访问外网")
     val enableExternal: Boolean?,
-    @ApiModelProperty(value = "支持IDC构建机", required = false)
+    @get:Schema(title = "支持IDC构建机", required = false)
     val enableIdc: Boolean? = false,
-    @ApiModelProperty(value = "流水线数量上限", required = false)
-    val pipelineLimit: Int? = 500
+    @get:Schema(title = "流水线数量上限", required = false)
+    val pipelineLimit: Int? = 500,
+    @get:Schema(title = "项目相关配置")
+    val properties: ProjectProperties? = null,
+    @get:Schema(title = "运营产品id")
+    val productId: Int? = null
 )

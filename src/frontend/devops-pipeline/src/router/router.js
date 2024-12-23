@@ -19,12 +19,12 @@
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
-const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
-const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
-const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
-const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
+const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
 
-const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
+const pipelineListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList')
+const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
+const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
+
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
 const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
@@ -34,24 +34,38 @@ const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'..
 const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
 const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
 const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
 
 const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/list/atomManage.vue')
 
 // 客户端流水线任务子页 - subpages
 const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../views/subpages')
+
 // 客户端流水线任务历史 - history
-const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/history.vue')
+const HistoryHeader = () => import(/* webpackChunkName: "pipelinesHistory" */'../components/PipelineHeader/HistoryHeader.vue')
+const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/History.vue')
 // 客户端流水线任务详情 - detail
-const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/exec_detail.vue')
+const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/ExecDetail.vue')
+const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../components/PipelineHeader/DetailHeader.vue')
+
 // 客户端流水线编辑 - edit
+
+const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
+const DraftDebugRecord = () => import(/* webpackChunkName: "draftDebug" */'../views/subpages/DraftDebugRecord.vue')
+const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../components/PipelineHeader/DraftDebugHeader.vue')
+
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
+const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
+
 // 插件前端task.json在线调试
 // docker console
 const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
-const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
+
+// 流水线导入
+const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
 
 const routes = [
     {
@@ -59,16 +73,26 @@ const routes = [
         component: pipelines,
         name: 'pipelineRoot',
         redirect: {
-            name: 'pipelineListEntry'
+            name: 'PipelineManageList'
         },
         children: [
             {
+                path: 'create',
+                component: CreatePipeline,
+                name: 'createPipeline'
+            },
+            {
+                path: 'import',
+                component: ImportPipelineEdit,
+                children: [{
+                    path: ':tab',
+                    name: 'pipelineImportEdit',
+                    component: pipelinesEdit
+                }]
+            },
+            {
                 path: 'list',
                 component: pipelineListEntry,
-                name: 'pipelineListEntry',
-                redirect: {
-                    name: 'PipelineManageList'
-                },
                 children: [
                     {
                         path: 'group',
@@ -91,28 +115,17 @@ const routes = [
                         component: pipelinesAudit
                     },
                     {
-                        path: 'new',
-                        name: 'addPipeline',
-                        component: AddPipeline
+                        path: 'listAuth/:id/:groupName',
+                        name: 'PipelineListAuth',
+                        component: PipelineListAuth
                     },
                     {
-                        path: ':viewId',
-                        component: pipelinesNewList,
-                        children: [
-                            {
-                                path: '',
-                                name: 'PipelineManageList',
-                                component: PipelineManageList,
-                                meta: {
-                                    webSocket: true
-                                }
-                            },
-                            {
-                                path: 'patch',
-                                name: 'patchManageList',
-                                component: PatchManageList
-                            }
-                        ]
+                        path: ':viewId?/:type?',
+                        name: 'PipelineManageList',
+                        component: PipelineManageList,
+                        meta: {
+                            webSocket: true
+                        }
                     }
                 ]
             },
@@ -139,6 +152,11 @@ const routes = [
                         path: 'createInstance/:curVersionId/:pipelineName?',
                         name: 'createInstance',
                         component: templateInstanceCreate
+                    },
+                    {
+                        path: 'permission',
+                        name: 'templatePermission',
+                        component: templatePermission
                     }
                 ]
             },
@@ -154,30 +172,6 @@ const routes = [
                 component: atomDebug
             },
             {
-                path: 'import',
-                component: ImportPipelineEdit,
-                children: [
-                    {
-                        path: '',
-                        redirect: {
-                            name: 'pipelineImportEdit'
-                        }
-                    },
-                    {
-                        // 流水线编辑
-                        path: 'edit/:tab?',
-                        name: 'pipelineImportEdit',
-                        meta: {
-                            icon: 'pipeline',
-                            title: 'pipeline',
-                            header: 'pipeline',
-                            to: 'PipelineManageList'
-                        },
-                        component: pipelinesEdit
-                    }
-                ]
-            },
-            {
                 path: ':pipelineId',
                 component: pipelinesEntry,
                 children: [
@@ -189,9 +183,12 @@ const routes = [
                     },
                     {
                         // 详情
-                        path: 'detail/:buildNo/:type?',
+                        path: 'detail/:buildNo/:type?/:executeCount?',
                         name: 'pipelinesDetail',
-                        component: pipelinesDetail,
+                        components: {
+                            header: DetailHeader,
+                            default: pipelinesDetail
+                        },
                         meta: {
                             title: 'pipeline',
                             header: 'pipeline',
@@ -207,39 +204,74 @@ const routes = [
                     },
                     {
                         // 执行历史
-                        path: 'history/:type?',
+                        path: 'history/:type?/:version?',
                         name: 'pipelinesHistory',
-                        component: pipelinesHistory,
+                        components: {
+                            header: HistoryHeader,
+                            default: pipelinesHistory
+                        },
                         meta: {
                             title: 'pipeline',
                             header: 'pipeline',
                             icon: 'pipeline',
                             to: 'PipelineManageList'
+                        },
+                        beforeEnter (to, from, next) {
+                            if (!to.params.type) {
+                                next({
+                                    name: to.name,
+                                    params: Object.assign(to.params, {
+                                        type: 'history'
+                                    })
+                                })
+                            } else {
+                                next(true)
+                            }
                         }
                     },
                     {
                         // 流水线编辑
-                        path: 'edit/:tab?',
+                        path: 'edit/:version?',
                         name: 'pipelinesEdit',
+                        components: {
+                            header: EditHeader,
+                            default: pipelinesEdit
+                        },
                         meta: {
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
-                        },
-                        component: pipelinesEdit
+                        }
                     },
                     {
                         // 流水线执行可选插件
-                        path: 'preview',
-                        name: 'pipelinesPreview',
+                        path: 'preview/:version?',
+                        name: 'executePreview',
+                        components: {
+                            header: PreviewHeader,
+                            default: pipelinesPreview
+                        },
+                        meta: {
+                            icon: 'pipeline',
+                            title: 'pipeline',
+                            header: 'pipeline',
+                            to: 'PipelineManageList'
+                        }
+                    },
+                    {
+                        path: 'draftDebug',
+                        name: 'draftDebugRecord',
                         meta: {
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
                         },
-                        component: pipelinesPreview
+                        components: {
+                            header: DraftDebugHeader,
+                            default: DraftDebugRecord
+                        }
                     }
                 ]
             }

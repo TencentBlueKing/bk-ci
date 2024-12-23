@@ -1,9 +1,23 @@
 <template>
-    <bk-checkbox :disabled="disabled" :title="title" :value="value" @change="handleSwitch">
+    <bk-checkbox
+        :disabled="disabled"
+        :title="title"
+        :value="value"
+        @change="handleSwitch"
+    >
         {{ text ? text : $t('editPage.checkOrNot') }}
-        <bk-popover v-if="desc" placement="top">
-            <i class="bk-icon icon-info-circle"></i>
-            <div slot="content" style="white-space: pre-wrap;max-width: 300px">
+        <bk-popover
+            v-if="desc"
+            placement="top"
+        >
+            <i
+                @click.stop
+                class="bk-icon icon-info-circle"
+            ></i>
+            <div
+                slot="content"
+                style="white-space: pre-wrap;max-width: 300px"
+            >
                 <div :class="{ 'disabled-color': disabled }"> {{ desc }} </div>
             </div>
         </bk-popover>
@@ -26,11 +40,7 @@
             },
             desc: {
                 type: String,
-                default: false
-            },
-            title: {
-                type: String,
-                default: false
+                default: ''
             },
             disabled: {
                 type: Boolean,

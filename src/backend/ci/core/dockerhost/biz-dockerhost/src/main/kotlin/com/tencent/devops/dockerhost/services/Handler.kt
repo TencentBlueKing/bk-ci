@@ -34,6 +34,8 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
+import com.tencent.devops.common.api.constant.BK_PULLING_IMAGE
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import org.slf4j.LoggerFactory
@@ -133,7 +135,10 @@ abstract class Handler<T : HandlerContext> constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_PULLING_IMAGE,
+                            params = arrayOf("$lays", "$currentProgress")
+                        ),
                         tag = startTaskId,
                         jobId = containerHashId
                     )

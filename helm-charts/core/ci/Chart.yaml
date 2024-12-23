@@ -8,37 +8,37 @@ home: "https://github.com/Tencent/bk-ci"
 
 dependencies:
 - name: common
-  version: 1.10.0
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.19.1
+- condition: mysql.enabled
+  name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.3.0
+- condition: redis.enabled
+  name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.13.2
+- condition: elasticsearch.enabled
+  name: elasticsearch
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-- name: mysql
-  version: 8.8.3
+  version: 17.5.4
+- condition: rabbitmq.enabled
+  name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.3.9
+- condition: influxdb.enabled
+  name: influxdb
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: mysql.enabled
-- name: redis
-  version: 14.8.8
+  version: 5.3.1
+- condition: nginx-ingress-controller.enabled
+  name: nginx-ingress-controller
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: redis.enabled
-- name: elasticsearch
-  version: 17.5.2
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: elasticsearch.enabled
-- name: rabbitmq
-  version: 8.20.1
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: rabbitmq.enabled
-- name: influxdb
-  version: 2.3.7
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: influxdb.enabled
-- name: nginx-ingress-controller
   version: 7.6.21
+- condition: mongodb.enabled
+  name: mongodb
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: nginx-ingress-controller.enabled
-- name: mongodb
   version: 10.30.6
-  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-  condition: mongodb.enabled
-- name: kubernetes-manager
-  version: 0.0.36
-  repository: "file://./local_chart/kubernetes-management"
-  condition: kubernetes-manager.enabled
+- condition: kubernetes-manager.enabled
+  name: kubernetes-manager
+  repository: file://./local_chart/kubernetes-management
+  version: 0.0.45

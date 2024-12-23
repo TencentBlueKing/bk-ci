@@ -1,11 +1,27 @@
 <template>
     <div class="config-content-wrapper">
         <div class="config-content-header">
-            <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
-                @click="createConfigItem">{{ $t('environment.addConfItem') }}
+            <bk-button
+                v-perm="{
+                    tooltips: $t('environment.noPermission'),
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+                theme="primary"
+                :disabled="lastselectConfIndex > -1"
+                @click="createConfigItem"
+            >
+                {{ $t('environment.addConfItem') }}
             </bk-button>
         </div>
-        <div class="config-table" v-if="configList.length">
+        <div
+            class="config-table"
+            v-if="configList.length"
+        >
             <div class="table-head config-head">
                 <div class="table-config-item config-item-key">{{ $t('environment.envInfo.key') }}</div>
                 <div class="table-config-item config-item-value">{{ $t('environment.envInfo.value') }}</div>
@@ -13,57 +29,132 @@
                 <div class="table-config-item config-item-handler">{{ $t('environment.operation') }}</div>
             </div>
             <div class="table-config-body">
-                <div class="table-row config-row" v-for="(row, index) of configList" :key="index">
+                <div
+                    class="table-row config-row"
+                    v-for="(row, index) of configList"
+                    :key="index"
+                >
                     <div class="table-config-item config-item-key">
-                        <input type="text" class="bk-form-input config-input config-key-input" :placeholder="$t('environment.pleaseEnter')"
+                        <input
+                            type="text"
+                            class="bk-form-input config-input config-key-input"
+                            :placeholder="$t('environment.pleaseEnter')"
                             v-if="row.isCreateItem || row.isEditItem"
                             v-model="row.name"
                             name="confName"
                             @input="errorHandler.nameError = false"
-                            :class="{ 'is-danger': errorHandler.nameError }">
-                        <span class="config-name" v-else>{{ row.name }}</span>
+                            :class="{ 'is-danger': errorHandler.nameError }"
+                        >
+                        <span
+                            class="config-name"
+                            v-else
+                        >{{ row.name }}</span>
                     </div>
                     <div class="table-config-item config-item-value">
-                        <input type="password" class="bk-form-input config-input config-value-input" :placeholder="$t('environment.pleaseEnter')"
+                        <input
+                            type="password"
+                            class="bk-form-input config-input config-value-input"
+                            :placeholder="$t('environment.pleaseEnter')"
                             v-if="(!curIsPlaintext && (row.isCreateItem || row.isEditItem) && (row.isSecure === 'ciphertext'))"
                             v-model="row.value"
                             name="confvalue"
                             @input="errorHandler.valueError = false"
-                            :class="{ 'is-danger': errorHandler.valueError }">
-                        <input type="text" class="bk-form-input config-input config-value-input" :placeholder="$t('environment.pleaseEnter')"
+                            :class="{ 'is-danger': errorHandler.valueError }"
+                        >
+                        <input
+                            type="text"
+                            class="bk-form-input config-input config-value-input"
+                            :placeholder="$t('environment.pleaseEnter')"
                             v-if="(curIsPlaintext || row.isSecure === 'plaintext') && (row.isCreateItem || row.isEditItem)"
                             v-model="row.value"
                             name="confvalue"
                             @input="errorHandler.valueError = false"
-                            :class="{ 'is-danger': errorHandler.valueError }">
-                        <i class="devops-icon" :class="curIsPlaintext ? 'icon-eye' : 'icon-hide'"
+                            :class="{ 'is-danger': errorHandler.valueError }"
+                        >
+                        <i
+                            class="devops-icon"
+                            :class="curIsPlaintext ? 'icon-eye' : 'icon-hide'"
                             v-if="(row.isCreateItem || row.isEditItem) && row.isSecure === 'ciphertext'"
-                            @click="curIsPlaintext = !curIsPlaintext"></i>
-                        <span class="config-name"
-                            v-if="(!row.isCreateItem && !row.isEditItem)">{{ row.secure ? '******' : row.value }}</span>
+                            @click="curIsPlaintext = !curIsPlaintext"
+                        ></i>
+                        <span
+                            class="config-name"
+                            v-if="(!row.isCreateItem && !row.isEditItem)"
+                        >{{ row.secure ? '******' : row.value }}</span>
                     </div>
                     <div class="table-config-item config-item-type">
-                        <bk-select v-if="row.isCreateItem"
+                        <bk-select
+                            v-if="row.isCreateItem"
                             class="config-text-type"
                             popover-min-width="120"
                             v-model="row.isSecure"
-                            @item-selected="secureSelected">
-                            <bk-option v-for="(option, cindex) in confTextType"
+                            @item-selected="secureSelected"
+                        >
+                            <bk-option
+                                v-for="(option, cindex) in confTextType"
                                 :key="cindex"
                                 :id="option.label"
-                                :name="option.name">
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
-                        <span class="config-type" v-else>{{ row.secure ? $t('environment.envInfo.cipherText') : $t('environment.envInfo.clearText') }}</span>
+                        <span
+                            class="config-type"
+                            v-else
+                        >{{ row.secure ? $t('environment.envInfo.cipherText') : $t('environment.envInfo.clearText') }}</span>
                     </div>
                     <div class="table-config-item config-item-handler">
-                        <div class="editing-handler" v-if="(row.isCreateItem || row.isEditItem)">
-                            <span class="config-edit" @click="saveEditConfig(row, index)">{{ $t('environment.save') }}</span>
-                            <span class="text-type" @click="cancelEdit(row, index)">{{ $t('environment.cancel') }}</span>
+                        <div
+                            class="editing-handler"
+                            v-if="(row.isCreateItem || row.isEditItem)"
+                        >
+                            <span
+                                class="config-edit"
+                                @click="saveEditConfig(row, index)"
+                            >{{ $t('environment.save') }}</span>
+                            <span
+                                class="text-type"
+                                @click="cancelEdit(row, index)"
+                            >{{ $t('environment.cancel') }}</span>
                         </div>
-                        <div class="preview-handler" v-else>
-                            <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
-                            <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
+                        <div
+                            class="preview-handler"
+                            v-else
+                        >
+                            <span
+                                v-perm="{
+                                    hasPermission: curEnvDetail.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span
+                                    class="config-edit"
+                                    @click="changeConfig(row, index)"
+                                >{{ $t('environment.edit') }}</span>
+                            </span>
+                            <span
+                                v-perm="{
+                                    hasPermission: curEnvDetail.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span
+                                    class="config-edit"
+                                    @click="deleteConfig(row, index)"
+                                >{{ $t('environment.delete') }}</span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -71,12 +162,15 @@
         </div>
         <bk-exception
             v-else
-            class="exception-wrap-item exception-part" type="empty" scene="part"
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
         />
     </div>
 </template>
 
 <script>
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'config-tab',
         props: {
@@ -99,6 +193,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 curIsPlaintext: false, // 明文/密文
                 lastselectConfIndex: -1, // 最后选中的配置项索引
                 lastSelectConfig: {},
@@ -228,15 +324,12 @@
 
                     message = this.$t('environment.successfullySaved')
                     theme = 'success'
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
+
                     this.$bkMessage({
                         message,
                         theme
                     })
-
+                } finally {
                     this.lastselectConfIndex = -1
                     this.requestEnvDetail()
                 }
@@ -278,15 +371,12 @@
 
                                 message = this.$t('environment.successfullyDeleted')
                                 theme = 'success'
-                            } catch (err) {
-                                message = err.message ? err.message : err
-                                theme = 'error'
-                            } finally {
+
                                 this.$bkMessage({
                                     message,
                                     theme
                                 })
-
+                            } finally {
                                 this.lastselectConfIndex = -1
                                 this.requestEnvDetail()
                             }

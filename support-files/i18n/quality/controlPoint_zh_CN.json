@@ -1,0 +1,49 @@
+[ {
+  "id" : 1,
+  "elementType" : "CodeccCheckAtomDebug",
+  "name" : "腾讯代码分析",
+  "stage" : "开发",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-02-28T15:58:26",
+  "updateTime" : "2019-02-28T15:58:26"
+}, {
+  "id" : 3,
+  "elementType" : "jobDevOpsFastPushFile",
+  "name" : "作业平台-构件分发",
+  "stage" : "测试",
+  "availablePosition" : "BEFORE",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-26T17:11:44"
+}, {
+  "id" : 12,
+  "elementType" : "linuxScript",
+  "name" : "脚本任务（linux和macOS环境）",
+  "stage" : "开发",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:26"
+}, {
+  "id" : 13,
+  "elementType" : "windowsScript",
+  "name" : "脚本任务（windows环境）",
+  "stage" : "开发",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:28"
+} ]

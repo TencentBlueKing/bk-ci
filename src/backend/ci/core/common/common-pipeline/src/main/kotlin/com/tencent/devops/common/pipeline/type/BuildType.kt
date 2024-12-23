@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.MessageUtil
 
 enum class BuildType(
     val value: String,
@@ -37,7 +38,7 @@ enum class BuildType(
     val visable: Boolean? = true // 是否页面可见
 ) {
     ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
+    MACOS("云托管: MacOS on DevCloud", listOf(OS.MACOS), false, false, false),
     WINDOWS("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, false, false),
     KUBERNETES("Kubernetes构建资源", listOf(OS.LINUX), false, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
@@ -49,5 +50,12 @@ enum class BuildType(
     GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false),
     DOCKER("Docker公共构建机", listOf(OS.LINUX), true, true, true),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
-    AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
+    AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false);
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "buildType.${this.name}",
+            language = language
+        )
+    }
 }

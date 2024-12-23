@@ -146,13 +146,13 @@ class MetricsDataQueryDao {
     fun getAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
         statisticsTime: LocalDateTime,
-        atomCodes: List<String>
-    ): Result<TAtomIndexStatisticsDailyRecord> {
+        atomCode: String
+    ): TAtomIndexStatisticsDailyRecord? {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
             return dslContext.selectFrom(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
-                .and(ATOM_CODE.`in`(atomCodes))
-                .fetch()
+                .and(ATOM_CODE.eq(atomCode))
+                .fetchOne()
         }
     }
 }

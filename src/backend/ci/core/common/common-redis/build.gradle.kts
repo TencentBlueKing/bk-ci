@@ -26,6 +26,8 @@
  */
 
 dependencies {
+    implementation("io.micrometer:micrometer-core")
     api("org.springframework.boot:spring-boot-starter-data-redis")
     api("org.apache.commons:commons-pool2")
+    api("com.github.ben-manes.caffeine:caffeine")
 }

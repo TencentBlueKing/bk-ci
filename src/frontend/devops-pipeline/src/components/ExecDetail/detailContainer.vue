@@ -1,8 +1,17 @@
 <template>
     <article class="log-home">
-        <section :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
+        <!-- <span @click="closeLog" class="log-home-close-bar">
+            <i class="devops-icon icon-angle-right"></i>
+        </span> -->
+        <section
+            v-bk-clickoutside="closeLog"
+            :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']"
+        >
             <header class="log-head">
-                <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
+                <span class="log-title"><status-icon
+                    :status="status"
+                    :is-hook="isHook"
+                ></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -35,18 +44,9 @@
             }
         },
 
-        mounted () {
-            document.addEventListener('mousedown', this.closeLog)
-        },
-
-        beforeDestroy () {
-            document.removeEventListener('mousedown', this.closeLog)
-        },
-
         methods: {
             closeLog (event) {
-                const curTarget = event.target
-                if (curTarget.classList.contains('log-home')) this.$emit('close')
+                this.$emit('close')
             }
         }
     }
@@ -84,10 +84,10 @@
 
     .log-home {
         position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
+        width: 100vw;
+        height: 100vh;
         right: 0;
+        top: 0;
         background-color: rgba(0, 0, 0, .2);
         z-index: 1000;
         .scroll-loading {
@@ -97,10 +97,10 @@
             height: 16px;
         }
         .log-main {
-            position: relative;
-            width: 80%;
-            height: calc(100% - 32px);
-            float: right;
+            position: absolute;
+            right: 26px;
+            width: 80vw;
+            height: calc(100vh - 32px);
             display: flex;
             flex-direction: column;
             margin: 16px;
@@ -111,7 +111,7 @@
                 overflow: hidden;
             }
             .log-head {
-                background-color: rgb(37, 41, 53);
+                background-color: #2E2E2E;
                 line-height: 48px;
                 padding: 5px 20px;
                 border-bottom: 1px solid;
@@ -121,6 +121,7 @@
                 justify-content: space-between;
                 color: #d4d4d4;
                 position: relative;
+                flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
                     position: absolute;
                     left: 50%;
@@ -132,16 +133,31 @@
                 }
             }
             &.black-theme {
-                background: #1e1e1e;
+                background: #1A1A1A;
             }
             &.white-theme {
                 background: #fff;
                 overflow: auto;
+                box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
                 &.log-main .log-head {
-                    border-top-left-radius: 6px;
                     border-top-right-radius: 6px;
                 }
             }
         }
+    }
+    .log-home-close-bar {
+        cursor: pointer;
+        height: 59px;
+        width: 26px;
+        position: absolute;
+        right: calc(80vw + 42px);
+        top: 16px;
+        background: #464953;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-top-left-radius: 6px;
+        border-bottom-left-radius: 6px;
     }
 </style>

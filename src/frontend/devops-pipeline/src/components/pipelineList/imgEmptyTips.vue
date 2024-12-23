@@ -1,13 +1,31 @@
 <template>
     <section class="devops-empty-tips">
-        <img v-if="imgType !== 'noCollect'" :src="noDataSrc" alt="" class="no-data-pic">
-        <img v-if="imgType === 'noCollect'" :src="noCollect" alt="" class="no-collect-pic">
+        <img
+            v-if="imgType !== 'noCollect'"
+            :src="noDataSrc"
+            alt=""
+            class="no-data-pic"
+        >
+        <img
+            v-if="imgType === 'noCollect'"
+            :src="noCollect"
+            alt=""
+            class="no-collect-pic"
+        >
         <p class="title">{{ title }}</p>
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
             <slot name="btns">
                 <template v-if="btns.length">
-                    <bk-button v-for="(btn, index) of btns" :disabled="btnDisabled" :theme="btn.theme" :size="btn.size" :key="index" @click="btn.handler">
+                    <bk-button
+                        v-perm="permissionData ? permParams : {}"
+                        v-bind="btnParams"
+                        v-for="(btn, index) of btns"
+                        :theme="btn.theme"
+                        :size="btn.size"
+                        :key="index"
+                        @click="btn.handler"
+                    >
                         {{ btn.text }}
                     </bk-button>
                 </template>
@@ -41,17 +59,40 @@
             btnDisabled: {
                 type: Boolean,
                 default: false
+            },
+            hasPermission: {
+                type: Boolean
+            },
+            disablePermissionApi: {
+                type: Boolean
+            },
+            permissionData: {
+                type: Object
             }
         },
         data () {
             return {
                 noDataSrc: '',
-                noCollect: ''
+                noCollect: '',
+                permParams: {}
+            }
+        },
+        computed: {
+            btnParams () {
+                return !this.permissionData
+                    ? {
+                        disabled: this.btnDisabled
+                    }
+                    : {}
             }
         },
         created () {
             this.noDataSrc = noData
             this.noCollect = require(`../../images/${this.$i18n.locale}-no-collect.png`)
+            
+            if (this.permissionData) this.permParams.permissionData = this.permissionData
+            if (this.hasPermission !== 'undefined') this.permParams.hasPermission = this.hasPermission
+            if (this.disablePermissionApi !== 'undefined') this.permParams.disablePermissionApi = this.disablePermissionApi
         }
     }
 </script>
@@ -61,15 +102,15 @@
 
     .devops-empty-tips {
         text-align: center;
+        margin: 6% auto !important;
         .title {
             color: #333C48;
             font-size: 18px;
             line-height: 26px;
+            margin: 10px 0 20px;
             // font-weight: bold;
         }
         .desc {
-            margin-top: 10px;
-            margin-bottom: 20px;
             color: $fontWeightColor;
             font-size: 14px;
         }

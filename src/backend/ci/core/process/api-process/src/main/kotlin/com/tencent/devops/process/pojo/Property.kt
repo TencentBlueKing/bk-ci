@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("属性")
+@Schema(title = "属性")
 data class Property(
-    @ApiModelProperty("健", required = false)
+    @get:Schema(title = "健", required = false)
     val key: String,
-    @ApiModelProperty("值", required = false)
+    @get:Schema(title = "值", required = false)
     val value: String
 )

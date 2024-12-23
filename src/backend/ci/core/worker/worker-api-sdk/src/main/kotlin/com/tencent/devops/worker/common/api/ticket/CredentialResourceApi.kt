@@ -29,10 +29,12 @@ package com.tencent.devops.worker.common.api.ticket
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CREDENTIAL_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
@@ -40,7 +42,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
-                method = HttpMethod.GET.name,
+                method = "GET",
                 url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
                 token = signToken
             )
@@ -48,7 +50,10 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
             emptyMap()
         }
         val request = buildGet(path, signHeaders)
-        val responseContent = request(request, "获取凭据失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -62,15 +67,18 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
             "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
-                method = HttpMethod.GET.name,
-                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                method = "GET",
+                url = path.removePrefix("/ms/ticket"),
                 token = signToken
             )
         } else {
             emptyMap()
         }
         val request = buildGet(path, signHeaders)
-        val responseContent = request(request, "获取凭据失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

@@ -52,7 +52,7 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
-                          FROM information_schema.COLUMNS
+                          FROM information_schema.statistics
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_DOCKING_PLATFORM'
                             AND INDEX_NAME = 'UNI_INX_TSDP_ERROR') THEN
@@ -60,7 +60,7 @@ BEGIN
     END IF;
 
     IF EXISTS(SELECT 1
-                              FROM information_schema.COLUMNS
+                              FROM information_schema.statistics
                               WHERE TABLE_SCHEMA = db
                                 AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
                                 AND INDEX_NAME = 'T_STORE_ERROR_CODE_INFO_UN') THEN
@@ -68,10 +68,10 @@ BEGIN
     END IF;
 
      IF NOT EXISTS(SELECT 1
-                          FROM information_schema.COLUMNS
+                          FROM information_schema.statistics
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
-                            AND INDEX_NAME = 'UNI_INX_TSDP_PLATFORM_ERROR') THEN
+                            AND INDEX_NAME = 'UNI_TSECI_STORE_TYPE_ERROR') THEN
     ALTER TABLE T_STORE_ERROR_CODE_INFO ADD UNIQUE INDEX `UNI_TSECI_STORE_TYPE_ERROR` (`STORE_CODE`,`STORE_TYPE`,`ERROR_CODE`);
     END IF;
 
@@ -81,6 +81,30 @@ BEGIN
                             AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
                             AND COLUMN_NAME = 'HOT_FLAG') THEN
     ALTER TABLE T_STORE_STATISTICS_TOTAL ADD HOT_FLAG bit(1) DEFAULT b'0' NULL COMMENT '是否为受欢迎组件';
+    END IF;
+	
+	IF EXISTS(SELECT 1
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
+                AND COLUMN_NAME = 'ERROR_MSG_ZH_CN') THEN
+        ALTER TABLE T_STORE_ERROR_CODE_INFO DROP COLUMN `ERROR_MSG_ZH_CN`;
+    END IF;
+	
+	IF EXISTS(SELECT 1
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
+                AND COLUMN_NAME = 'ERROR_MSG_ZH_TW') THEN
+        ALTER TABLE T_STORE_ERROR_CODE_INFO DROP COLUMN `ERROR_MSG_ZH_TW`;
+    END IF;
+	
+	IF EXISTS(SELECT 1
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
+                AND COLUMN_NAME = 'ERROR_MSG_EN') THEN
+        ALTER TABLE T_STORE_ERROR_CODE_INFO DROP COLUMN `ERROR_MSG_EN`;
     END IF;
 
     COMMIT;

@@ -38,10 +38,23 @@ import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CLICK
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CURRENT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CURRENT_NUMBER_OF_QUEUES
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ENQUEUE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_GET_LOCKED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_LOCKED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTUALLY_EXCLUSIVE_GROUPS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_DISABLED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_FULL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RELEASE_LOCK
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -58,63 +71,65 @@ class MutexControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineUrlBean: PipelineUrlBean,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val engineConfigService: EngineConfigService
 ) {
 
     companion object {
         private const val DELIMITERS = "_"
-        private const val SECOND_TO_PRINT = 19
-        private const val MUTEX_MAX_QUEUE = 10
+        const val SECOND_TO_PRINT = 19
         private val LOG = LoggerFactory.getLogger(MutexControl::class.java)
         private fun getMutexContainerId(buildId: String, containerId: String) = "${buildId}$DELIMITERS$containerId"
         private fun getBuildIdAndContainerId(mutexId: String): List<String> = mutexId.split(DELIMITERS)
+
+        fun parseTimeoutVar(timeout: Int, timeoutVar: String?, variables: Map<String, String>) =
+            (
+                if (!timeoutVar.isNullOrBlank()) {
+                    try {
+                        if (PipelineVarUtil.isVar(timeoutVar)) { // ${{ xx }} 变量
+                            EnvReplacementParser.parse(timeoutVar, contextMap = variables).toInt()
+                        } else {
+                            timeoutVar.toInt()
+                        }
+                    } catch (ignore: NumberFormatException) { // 解析失败，以timeout为准
+                        timeout
+                    }
+                } else {
+                    timeout
+                }
+                ).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
     }
 
     internal fun decorateMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
-        if (mutexGroup == null || mutexGroup.inited == true) {
+        if (mutexGroup == null || !mutexGroup.runtimeMutexGroup.isNullOrBlank()) {
             return mutexGroup
         }
         // 超时时间限制，0表示排队不等待直接超时
-        val timeOut = parseTimeoutVar(mutexGroup, variables)
+        val timeOut = parseTimeoutVar(mutexGroup.timeout, mutexGroup.timeoutVar, variables)
         // 排队任务数量限制，0表示不排队
-        val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(MUTEX_MAX_QUEUE)
+        val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
         // 替换环境变量
-        val mutexGroupName = if (!mutexGroup.mutexGroupName.isNullOrBlank()) {
+        val mutexLockedGroup = if (!mutexGroup.mutexGroupName.isNullOrBlank()) {
             EnvUtils.parseEnv(mutexGroup.mutexGroupName, variables)
         } else {
             mutexGroup.mutexGroupName
         }
 
         return if (
-            mutexGroupName != mutexGroup.mutexGroupName ||
+            mutexLockedGroup != mutexGroup.mutexGroupName ||
             timeOut != mutexGroup.timeout ||
             queue != mutexGroup.queue
         ) {
-            mutexGroup.copy(mutexGroupName = mutexGroupName, timeout = timeOut, queue = queue, inited = true)
+            mutexGroup.copy(runtimeMutexGroup = mutexLockedGroup, timeout = timeOut, queue = queue)
         } else {
-            mutexGroup.inited = true // 初始化过
+            mutexGroup.runtimeMutexGroup = mutexLockedGroup // 初始化过
             mutexGroup
         }
     }
 
-    private fun parseTimeoutVar(mutexGroup: MutexGroup, variables: Map<String, String>) =
-        (if (!mutexGroup.timeoutVar.isNullOrBlank()) {
-            try {
-                if (PipelineVarUtil.isVar(mutexGroup.timeoutVar)) { // ${{ xx }} 变量
-                    EnvReplacementParser.parse(mutexGroup.timeoutVar, contextMap = variables).toInt()
-                } else {
-                    mutexGroup.timeoutVar!!.toInt()
-                }
-            } catch (ignore: NumberFormatException) { // 解析失败，以timeout为准
-                mutexGroup.timeout
-            }
-        } else {
-            mutexGroup.timeout
-        }).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
-
     internal fun acquireMutex(mutexGroup: MutexGroup?, container: PipelineBuildContainer): ContainerMutexStatus {
         // 当互斥组为空为空或互斥组名称为空或互斥组没有启动的时候，不做互斥行为
-        if (mutexGroup == null || mutexGroup.mutexGroupName.isNullOrBlank() || !mutexGroup.enable) {
+        if (mutexGroup == null || mutexGroup.fetchRuntimeMutexGroup().isBlank() || !mutexGroup.enable) {
             return ContainerMutexStatus.READY
         }
         // 每次都对Job互斥组的redis key和queue都进行清理
@@ -167,8 +182,10 @@ class MutexControl @Autowired constructor(
         executeCount: Int?
     ) {
         if (mutexGroup != null && mutexGroup.enable) {
-            val mutexGroupName = mutexGroup.mutexGroupName
-            LOG.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|project=$projectId|[$mutexGroupName]")
+            val runtimeMutexGroup = mutexGroup.fetchRuntimeMutexGroup()
+            LOG.info(
+                "[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|project=$projectId|[$runtimeMutexGroup]"
+            )
             val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
             val lockKey = mutexGroup.genMutexLockKey(projectId)
             val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 1)
@@ -186,10 +203,15 @@ class MutexControl @Autowired constructor(
             // 完善日志
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "释放互斥组锁(Release Lock) Mutex[$mutexGroupName]",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_RELEASE_LOCK,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " Mutex[$runtimeMutexGroup]",
                 tag = VMUtils.genStartVMTaskId(containerId),
+                containerHashId = null,
+                executeCount = executeCount ?: 1,
                 jobId = null,
-                executeCount = executeCount ?: 1
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
         }
     }
@@ -236,7 +258,13 @@ class MutexControl @Autowired constructor(
             mutexGroup.linkTip?.let {
                 redisOperation.set(mutexGroup.genMutexLinkTipKey(containerMutexId), mutexGroup.linkTip!!, expireSec)
             }
-            logContainerMutex(container, mutexGroup, null, msg = "获得锁定(Matched) 锁定期(Exp): ${expireSec}s")
+            logContainerMutex(
+                container, mutexGroup, null,
+                msg = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_GET_LOCKED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " ${expireSec}s"
+            )
         }
 
         return lockResult
@@ -261,7 +289,13 @@ class MutexControl @Autowired constructor(
         val lockedContainerMutexId = redisOperation.get(lockKey)
         // 当没有启用互斥组排队或者互斥组名字为空的时候，则直接排队失败
         if (!mutexGroup.queueEnable) {
-            logContainerMutex(container, mutexGroup, lockedContainerMutexId, "未开启排队(Queue disabled)", isError = true)
+            logContainerMutex(container, mutexGroup, lockedContainerMutexId,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_QUEUE_DISABLED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                isError = true
+            )
             return ContainerMutexStatus.CANCELED
         }
         val containerMutexId = getMutexContainerId(buildId = container.buildId, containerId = container.containerId)
@@ -282,7 +316,10 @@ class MutexControl @Autowired constructor(
                 } "
                 logContainerMutex(
                     container = container, mutexGroup = mutexGroup, lockedContainerMutexId = lockedContainerMutexId,
-                    msg = "排队超时(Queue timeout): $desc", isError = true
+                    msg = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUEUE_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + " $desc", isError = true
                 )
                 quitMutexQueue(
                     projectId = container.projectId,
@@ -299,7 +336,11 @@ class MutexControl @Autowired constructor(
                 if (timeDiffMod <= SECOND_TO_PRINT) {
                     logContainerMutex(
                         container, mutexGroup, lockedContainerMutexId,
-                        msg = "当前排队数(Queuing)[$queueSize], 已等待(Waiting)[$timeDiff seconds]"
+                        msg = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CURRENT_NUMBER_OF_QUEUES,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf(queueSize.toString(), timeDiff.toString())
+                        )
                     )
                 }
                 ContainerMutexStatus.WAITING
@@ -308,12 +349,21 @@ class MutexControl @Autowired constructor(
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
             if (mutexGroup.queue == 0 || queueSize >= mutexGroup.queue) {
-                logContainerMutex(container, mutexGroup, lockedContainerMutexId, "队列满(Queue full)", isError = true)
+                logContainerMutex(container, mutexGroup, lockedContainerMutexId,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUEUE_FULL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
+                    isError = true)
                 ContainerMutexStatus.CANCELED
             } else {
                 logContainerMutex(
                     container, mutexGroup, lockedContainerMutexId,
-                    msg = "当前排队数(Queuing)[${queueSize + 1}]. 入队等待(Enqueue)"
+                    msg = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_ENQUEUE,
+                        params = arrayOf("${queueSize + 1}"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
                 // 则进入队列,并返回成功
                 enterMutexQueue(
@@ -375,7 +425,7 @@ class MutexControl @Autowired constructor(
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_MUTEX_QUEUE to
-                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             )
         )
     }
@@ -388,8 +438,10 @@ class MutexControl @Autowired constructor(
         isError: Boolean = false
     ) {
 
-        val message = "Job#${container.containerId}|互斥组Mutex[${mutexGroup.mutexGroupName}]|" +
-            if (!lockedContainerMutexId.isNullOrBlank()) {
+        val message = I18nUtil.getCodeLanMessage(
+            messageCode = BK_MUTUALLY_EXCLUSIVE_GROUPS,
+            params = arrayOf(container.containerId, "${mutexGroup.runtimeMutexGroup}")
+        ) + if (!lockedContainerMutexId.isNullOrBlank()) {
                 // #5454 拿出占用锁定的信息
                 redisOperation.get(mutexGroup.genMutexLinkTipKey(lockedContainerMutexId))?.let { s ->
                     val endIndex = s.indexOf("_")
@@ -405,9 +457,19 @@ class MutexControl @Autowired constructor(
                         needShortUrl = false
                     )
                     if (cs[0] != container.buildId) {
-                        "锁定中(Running): $linkTip<a target='_blank' href='$link'>查看(Click)</a> | $msg"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_LOCKED,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + ": $linkTip<a target='_blank' href='$link'>" +
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_CLICK,
+                                    language = I18nUtil.getDefaultLocaleLanguage()
+                                ) + "</a> | $msg"
                     } else {
-                        "当前(Current): $linkTip| $msg"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CURRENT,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + ": $linkTip| $msg"
                     }
                 } ?: msg
             } else {
@@ -419,16 +481,20 @@ class MutexControl @Autowired constructor(
                 buildId = container.buildId,
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
+                containerHashId = null,
+                executeCount = container.executeCount,
                 jobId = null,
-                executeCount = container.executeCount
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         } else {
             buildLogPrinter.addYellowLine(
                 buildId = container.buildId,
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
+                containerHashId = null,
+                executeCount = container.executeCount,
                 jobId = null,
-                executeCount = container.executeCount
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
     }

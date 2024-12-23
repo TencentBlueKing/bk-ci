@@ -26,12 +26,14 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryResourceV4
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -106,6 +108,52 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
             projectId = projectId,
             repositoryHashId = repositoryHashId,
             repository = repository
+        )
+    }
+
+    override fun get(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Result<Repository> {
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|get repo in project|$projectId|$repositoryId|$repositoryType")
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryType = repositoryType
+        )
+    }
+
+    override fun enablePac(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|enable PAC of repo in project|$projectId|$repositoryHashId")
+        return client.get(ServiceRepositoryPacResource::class).enablePac(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId
+        )
+    }
+
+    override fun disablePac(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|disable PAC of repo in project|$projectId|$repositoryHashId")
+        return client.get(ServiceRepositoryPacResource::class).disablePac(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId
         )
     }
 

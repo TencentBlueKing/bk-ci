@@ -30,7 +30,9 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_SCRIPT_TASK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
@@ -38,10 +40,12 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SCRIPT_EXECUTION_FAIL
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -58,6 +62,7 @@ import java.net.URLDecoder
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -73,6 +78,7 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
+        val enableArchiveFile = taskParams["enableArchiveFile"]?.toBooleanStrictOrNull()
         val script = URLDecoder.decode(
             taskParams["script"]
                 ?: throw TaskExecuteException(
@@ -113,14 +119,19 @@ open class ScriptTask : ITask() {
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
                 charsetType = charsetType,
-                taskId = buildTask.taskId,
-                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+                taskId = buildTask.taskId
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
-            if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addErrorLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
-                val token = RepoServiceFactory.getInstance().getRepoToken(
+            if (enableArchiveFile == true && !archiveFileIfExecFail.isNullOrBlank()) {
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(
+                        SCRIPT_EXECUTION_FAIL,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(archiveFileIfExecFail)
+                    )
+                )
+                val token = archiveApi.getRepoToken(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
                     repoName = "pipeline",
@@ -135,12 +146,20 @@ open class ScriptTask : ITask() {
                     token = token
                 )
                 if (count == 0) {
-                    LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, AgentEnv.getLocaleLanguage())
+                    )
                 }
             }
-            val errorMsg = if (ignore is TaskExecuteException) {
-                ignore.errorMsg
-            } else ""
+            val errorMsg = (
+                if (ignore is TaskExecuteException) {
+                    ignore.errorMsg
+                } else ""
+                ) + MessageUtil.getMessageByLocale(
+                messageCode = "$USER_SCRIPT_TASK_FAIL",
+                language = AgentEnv.getLocaleLanguage(),
+                checkUrlDecoder = true
+            )
 
             throw TaskExecuteException(
                 errorMsg = errorMsg,

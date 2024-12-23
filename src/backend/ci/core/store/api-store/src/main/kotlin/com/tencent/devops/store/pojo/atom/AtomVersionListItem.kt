@@ -27,32 +27,35 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件版本列表")
+@Schema(title = "插件版本列表")
 data class AtomVersionListItem(
-    @ApiModelProperty("插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+    @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
     val category: String?,
-    @ApiModelProperty("版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @ApiModelProperty("版本内容")
+    @get:Schema(title = "版本内容")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
-    @ApiModelProperty(
+    @get:Schema(title =
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
             "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
     val atomStatus: String,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String
 )

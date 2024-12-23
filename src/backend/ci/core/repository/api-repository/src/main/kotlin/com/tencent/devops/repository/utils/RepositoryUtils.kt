@@ -114,7 +114,8 @@ object RepositoryUtils {
                     userName = userName,
                     projectName = projectName,
                     projectId = projectId,
-                    repoHashId = null
+                    repoHashId = null,
+                    credentialId = realCredentialId
                 )
             }
             ScmType.CODE_P4 -> {

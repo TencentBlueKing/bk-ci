@@ -32,7 +32,6 @@ import com.tencent.devops.auth.dao.AuthIamCallBackDao
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -123,12 +122,7 @@ class CallBackService @Autowired constructor(
                 val relatedResourceRecord = iamCallBackDao.get(dslContext, it)
                 if (relatedResourceRecord == null) {
                     logger.warn("resource[$it] related not exist")
-                    throw ErrorCodeException(
-                        errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
-                        )
-                    )
+                    throw ErrorCodeException(errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL)
                 }
             }
         }
@@ -137,20 +131,14 @@ class CallBackService @Autowired constructor(
     private fun checkPath(path: String) {
         // auth回调接口通道校验
         if (!path.contains("api/open")) {
-            throw ErrorCodeException(
-                defaultMessage = AuthMessageCode.PATH_CHECK_FAIL,
-                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.PATH_CHECK_FAIL)
-            )
+            throw ErrorCodeException(errorCode = AuthMessageCode.PATH_CHECK_FAIL)
         }
     }
 
     private fun checkGateway(gateway: String) {
         // gateway校验https,http
         if (!gateway.contains("http://") && !gateway.contains("https://")) {
-            throw ErrorCodeException(
-                defaultMessage = AuthMessageCode.HOST_CHECKOU_FAIL,
-                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.HOST_CHECKOU_FAIL)
-            )
+            throw ErrorCodeException(errorCode = AuthMessageCode.HOST_CHECKOU_FAIL)
         }
     }
 

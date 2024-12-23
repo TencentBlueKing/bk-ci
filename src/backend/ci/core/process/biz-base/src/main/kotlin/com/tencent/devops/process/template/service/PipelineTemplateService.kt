@@ -34,11 +34,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -67,7 +67,8 @@ class PipelineTemplateService @Autowired constructor(
                 templateModel = if (!StringUtils.isEmpty(templateRecord.template)) JsonUtil.to(
                     templateRecord.template,
                     Model::class.java
-                ) else null
+                ) else null,
+                templateVersion = templateRecord.version
             )
         )
     }
@@ -75,7 +76,10 @@ class PipelineTemplateService @Autowired constructor(
     fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
         logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            ?: return I18nUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         var code: String? = null
         val images = mutableSetOf<String>()
         run releaseStatus@{

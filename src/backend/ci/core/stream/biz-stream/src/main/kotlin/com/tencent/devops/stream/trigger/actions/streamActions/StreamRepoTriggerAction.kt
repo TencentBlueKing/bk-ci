@@ -334,7 +334,7 @@ class StreamRepoTriggerAction(
                         value = "\${{ $condition }}",
                         contextMap = supportVar,
                         onlyExpression = true
-                    ).contains("false")
+                    ).contains("true")
                 ) {
                     return TriggerBody().triggerFail(
                         "repo_hook.repos_ignore_condition",

@@ -32,5 +32,5 @@ data class BuildPageInfo(
     val pipelineId: String?,
     val projectId: String?,
     val atomId: String?,
-    val executeCount: String?
+    val executeCount: Int?
 )

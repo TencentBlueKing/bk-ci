@@ -17,12 +17,87 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import Vue from 'vue'
+import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
-import { getAtomModalKey, isVmContainer, isTriggerContainer, isNormalContainer, isCodePullAtom, isNewAtomTemplate } from './atomUtil'
-import { jobConst, buildEnvMap } from '@/utils/pipelineConst'
+
+function isSkip (status) {
+    return status === 'SKIP'
+}
 
 export default {
+    isCurPipelineLocked: state => {
+        return state.pipelineInfo?.locked ?? false
+    },
+    hasDraftPipeline: state => {
+        return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
+    },
+    getDraftBaseVersionName: (state, getters) => {
+        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
+    },
+    pipelineHistoryViewable: state => {
+        return [
+            VERSION_STATUS_ENUM.BRANCH,
+            VERSION_STATUS_ENUM.RELEASED
+        ].includes(state.pipelineInfo?.latestVersionStatus)
+    },
+    isBranchVersion: state => {
+        return state.activePipelineVersion?.status === VERSION_STATUS_ENUM.BRANCH
+    },
+    isReleasePipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED
+    },
+    onlyBranchPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
+    },
+    isCommittingPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+    },
+    isReleaseVersion: state => {
+        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
+    },
+    isOutdatedVersion: state => {
+        return state.activePipelineVersion?.version < state.pipelineInfo?.releaseVersion
+    },
+    isActiveDraftVersion: state => {
+        return state.activePipelineVersion?.isDraft ?? false
+    },
+    pacEnabled: state => {
+        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    yamlInfo: state => {
+        return state.pipelineInfo?.yamlInfo
+    },
+    getPipelineSubscriptions: state => type => {
+        return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
+    },
+    curPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
+    },
+    curPipelineBuildNoConfig: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        const semver = firstJob?.params?.filter(param => semverVersionKeySet.has(param.id))
+        return firstJob?.buildNo
+            ? {
+                ...firstJob.buildNo,
+                semver: semver.reduce((acc, cur) => ({
+                    ...acc,
+                    [cur.id]: cur.defaultValue
+                }), {})
+            }
+            : null
+    },
+    fullPipeline: state => {
+        return {
+            ...state.pipeline,
+            stages: [
+                state.pipeline.stages[0],
+                ...state.pipelineWithoutTrigger.stages
+            ]
+        }
+    },
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
             const atom = state.atomMap[atomCode]
@@ -42,7 +117,7 @@ export default {
         })
         return list
     },
-    
+
     isAtomDisabled: state => ({ os, atom, category }) => {
         if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
@@ -106,7 +181,7 @@ export default {
     },
     getEditingElementPos: state => state.editingElementPos,
     isEditing: state => {
-        return state.pipeline && state.pipeline.editing
+        return state.isPipelineEditing
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {
@@ -118,7 +193,7 @@ export default {
             if (pipelineSetting && !pipelineSetting.pipelineName) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
             }
-           
+
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -131,6 +206,7 @@ export default {
                 if (index !== 0 && stage.checkIn) {
                     const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
                     if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                        Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
                 }
@@ -197,6 +273,7 @@ export default {
                 message: ''
             }
         } catch (e) {
+            console.trace(e)
             return {
                 message: e.message,
                 inValid: true
@@ -236,7 +313,7 @@ export default {
         } catch (_) {
             container = null
         }
-        if (container !== null) {
+        if (container) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
             }
@@ -288,12 +365,17 @@ export default {
     isBcsContainer: state => container => { // 是否是第三方构建机
         return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
     },
+    isThirdDockerContainer: state => container => {
+        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
+    },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
-        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        const isThirdDocker = getters.isThirdDockerContainer(container)
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
+
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
@@ -305,8 +387,8 @@ export default {
             : []
     },
     getElement: state => (container, index) => {
-        const element = container && Array.isArray(container.elements) ? container.elements[index] : null
-        if (element !== null) {
+        const element = Array.isArray(container?.elements) ? container.elements[index] : null
+        if (element) {
             typeof element.isError === 'undefined' && Vue.set(element, 'isError', false)
         }
         return element
@@ -318,12 +400,55 @@ export default {
         }
     }),
     isVmContainer: state => container => isVmContainer(container['@type']),
-    isTriggerContainer: state => container => isTriggerContainer(container['@type']),
+    isTriggerContainer: state => container => isTriggerContainer(container?.['@type']),
     isCodePullAtom: state => atom => isCodePullAtom(atom['@type']),
     isNormalContainer: state => container => isNormalContainer(container['@type']),
     defaultBuildNo: state => defaultBuildNo,
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,
     isNewAtomTemplate: state => isNewAtomTemplate,
-    atomVersionChangedKeys: state => state.atomVersionChangedKeys
+    atomVersionChangedKeys: state => state.atomVersionChangedKeys,
+    getExecDetail: state => {
+        if (!state.execDetail) return null
+        if (!state.hideSkipExecTask) {
+            return state.execDetail
+        }
+
+        const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
+            const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
+                const elements = container.elements.filter(
+                    (element) => !isSkip(element.status)
+                )
+                if (container.matrixGroupFlag && Array.isArray(container.groupContainers)) {
+                    return {
+                        ...container,
+                        elements,
+                        groupContainers: container.groupContainers.filter(groupContainer => !isSkip(groupContainer.status)).map(groupContainer => {
+                            const subElements = groupContainer.elements.filter(
+                                (element, index) => !isSkip(element.status ?? elements[index]?.status)
+                            )
+                            return {
+                                ...groupContainer,
+                                elements: subElements
+                            }
+                        })
+                    }
+                }
+                return {
+                    ...container,
+                    elements
+                }
+            })
+            return {
+                ...stage,
+                containers
+            }
+        })
+        return Object.assign({}, state.execDetail, {
+            model: {
+                ...state.execDetail.model,
+                stages
+            }
+        })
+    }
 }

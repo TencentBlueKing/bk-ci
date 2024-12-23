@@ -30,20 +30,25 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -56,243 +61,297 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_TEMPLATE"], description = "用户-流水模板资源")
+@Tag(name = "USER_TEMPLATE", description = "用户-流水模板资源")
 @Path("/user/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserPTemplateResource {
 
-    @ApiOperation("创建流水线模板")
+    @Operation(summary = "创建流水线模板")
     @POST
     @Path("/projects/{projectId}/templates")
     fun createTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板", required = true)
+        @Parameter(description = "模板", required = true)
         template: Model
     ): Result<TemplateId>
 
-    @ApiOperation("删除流水线模板")
+    @Operation(summary = "删除流水线模板")
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}")
     fun deleteTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线模板")
+    @Operation(summary = "删除流水线模板")
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}/versions/{version}")
     fun deleteTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: Long
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线模板")
+    @Operation(summary = "删除流水线模板")
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}/deletetemplate")
     fun deleteTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 34)
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
         versionName: String
     ): Result<Boolean>
 
-    @ApiOperation("更新流水线模板")
+    @Operation(summary = "更新流水线模板")
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}")
     fun updateTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 34)
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
-        @ApiParam("版本名", required = true)
+        @Parameter(description = "版本名", required = true)
         @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
         versionName: String,
-        @ApiParam("模板", required = true)
+        @Parameter(description = "模板", required = true)
         template: Model
     ): Result<Boolean>
 
-    @ApiOperation("模版管理-获取模版列表")
+    @Operation(summary = "模版管理-获取模版列表")
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @ApiParam("是否已关联到store", required = false)
+        @Parameter(description = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "模版排序字段", required = false, example = "CREATE_TIME")
+        @QueryParam("orderBy")
+        orderBy: PTemplateOrderByType? = null,
+        @Parameter(description = "orderBy排序顺序", required = false)
+        @QueryParam("sort")
+        sort: PTemplateSortType? = null,
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<TemplateListModel>
 
-    @ApiOperation("创建流水线-获取模版列表")
+    @Operation(summary = "创建流水线-获取模版列表")
     @GET
     @Path("/projects/{projectId}/allTemplates")
     fun listAllTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<OptionalTemplateList>
 
-    @ApiOperation("获取列表流水线模板")
+    @Operation(summary = "获取列表流水线模板")
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("模板版本", required = false)
+        @Parameter(description = "模板版本", required = false)
         @QueryParam("version")
         version: Long?
     ): Result<TemplateModelDetail>
 
-    @ApiOperation("更新流水线模板设置")
+    @Operation(summary = "更新流水线模板设置")
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}/settings")
     fun updateTemplateSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("模板设置", required = true)
+        @Parameter(description = "模板设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线模板设置")
+    @Operation(summary = "获取流水线模板设置")
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/settings")
     fun getTemplateSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<PipelineSetting>
 
-    @ApiOperation("复制流水线模板")
+    @Operation(summary = "复制流水线模板")
     @POST
     @Path("/projects/{projectId}/templates/{templateId}/copy")
     fun copyTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("复制模版请求包体", required = true)
+        @Parameter(description = "复制模版请求包体", required = true)
         copyTemplateReq: CopyTemplateReq
     ): Result<TemplateId>
 
-    @ApiOperation("流水线另存为模版")
+    @Operation(summary = "流水线另存为模版")
     @POST
     @Path("/projects/{projectId}/templates/saveAsTemplate")
     fun saveAsTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "另存为模版包体", required = true)
+        @Parameter(description = "另存为模版包体", required = true)
         saveAsTemplateReq: SaveAsTemplateReq
     ): Result<TemplateId>
 
-    @ApiOperation("是否有管理权限")
+    @Operation(summary = "是否有管理权限")
     @GET
     @Path("/projects/{projectId}/templates/hasManagerPermission")
     fun hasManagerPermission(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @Operation(summary = "是否有特定模板权限")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/hasPipelineTemplatePermission")
+    fun hasPipelineTemplatePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String?,
+        @Parameter(description = "操作", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
+    ): Result<Boolean>
+
+    @Operation(summary = "是否开启模板管理权限")
+    @GET
+    @Path("/projects/{projectId}/templates/enableTemplatePermissionManage")
+    fun enableTemplatePermissionManage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    // PAC新增
+    @Operation(summary = "获取列表流水线预览")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/preview")
+    fun previewTemplate(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @QueryParam("highlightType")
+        highlightType: HighlightType?
+    ): Result<TemplatePreviewDetail>
 }

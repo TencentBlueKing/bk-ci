@@ -29,9 +29,9 @@ package com.tencent.devops.auth.api.login
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_CI_LOGIN_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,7 +41,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["AUTH_THIRD_LOGIN"], description = "权限-第三方登陆")
+@Tag(name = "AUTH_THIRD_LOGIN", description = "权限-第三方登录")
 @Path("/external/third/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,28 +49,28 @@ interface ExternalThirdLoginResource {
 
     @Path("/")
     @GET
-    @ApiOperation("第三方登录")
+    @Operation(summary = "第三方登录")
     fun thirdLogin(
         @QueryParam("code")
-        @ApiParam("验证code")
+        @Parameter(description = "验证code")
         code: String,
         @QueryParam("userId")
-        @ApiParam("用户ID")
+        @Parameter(description = "用户ID")
         userId: String,
         @QueryParam("type")
-        @ApiParam("登陆类型")
+        @Parameter(description = "登录类型")
         type: String,
         @QueryParam("email")
-        @ApiParam("邮箱")
+        @Parameter(description = "邮箱")
         email: String? = null
     ): Response
 
     @Path("/verifyToken")
     @GET
-    @ApiOperation("校验凭证")
+    @Operation(summary = "校验凭证")
     fun verifyToken(
         @HeaderParam(AUTH_HEADER_BK_CI_LOGIN_TOKEN)
-        @ApiParam("凭证")
+        @Parameter(description = "凭证")
         token: String
     ): Result<String>
 }

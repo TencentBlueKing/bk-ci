@@ -27,14 +27,13 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.DeptInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板可见范围请求报文体")
+@Schema(title = "模板可见范围请求报文体")
 data class TemplateVisibleDeptReq(
-    @ApiModelProperty("模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @ApiModelProperty("机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

@@ -34,6 +34,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -44,6 +46,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
+import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
@@ -56,6 +59,7 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -65,10 +69,22 @@ import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
+import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
+import com.tencent.devops.common.archive.pojo.defender.ScanTask
+import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
+import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
+import com.tencent.devops.common.archive.pojo.replica.ReplicaType
+import com.tencent.devops.common.archive.pojo.replica.objects.PathConstraint
+import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
+import com.tencent.devops.common.archive.pojo.replica.setting.ConflictStrategy
+import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -95,6 +111,7 @@ import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
+import java.util.UUID
 import javax.ws.rs.NotFoundException
 
 @Component
@@ -137,14 +154,24 @@ class BkRepoClient constructor(
             displayName = projectId,
             description = projectId
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project")
-            .header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+    }
+
+    fun enableProject(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("enableProject, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val requestData = BKRepoProjectUpdateRequest(metadata = listOf(ProjectMetadata(key = "enabled", value = enabled)))
+        val request = Request.Builder()
+            .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId")
+            .headers(getCommonHeaders(SYSTEM_USER, projectId).toHeaders())
+            .put(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
+        return true
     }
 
     private fun createGenericRepo(
@@ -165,11 +192,9 @@ class BkRepoClient constructor(
             storageCredentialsKey = storageCredentialsKey,
             display = display
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/repo")
-            .header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_REPO_EXISTED)
@@ -178,12 +203,9 @@ class BkRepoClient constructor(
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
         logger.info("getFileSize, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<NodeSizeInfo>>()!!.data!!
@@ -198,12 +220,9 @@ class BkRepoClient constructor(
         val requestData = UserMetadataSaveRequest(
             metadata = metadata
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -211,12 +230,9 @@ class BkRepoClient constructor(
     fun listMetadata(userId: String, projectId: String, repoName: String, path: String): Map<String, String> {
         logger.info("listMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
@@ -237,12 +253,9 @@ class BkRepoClient constructor(
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path" +
                 "?deep=$deep&includeFolder=$includeFolders"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<List<FileInfo>>>()!!.data!!
@@ -267,12 +280,9 @@ class BkRepoClient constructor(
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/page/$projectId/$repoName/$path" +
                 "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize" +
                 "&sortProperty=lastModifiedDate&direction=$direction"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Page<NodeInfo>>>()!!.data!!
@@ -328,14 +338,8 @@ class BkRepoClient constructor(
         }
 
         // 生成归档头部
-        val header = mutableMapOf<String, String>()
-        header[BK_REPO_UID] = userId
-        header[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
+        val header = getCommonHeaders(userId, projectId)
         header[BK_REPO_OVERRIDE] = "true"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        if (devopsToken != null) {
-            header["X-DEVOPS-TOKEN"] = devopsToken
-        }
         properties?.forEach {
             header["$METADATA_PREFIX${it.key}"] = it.value
         }
@@ -384,17 +388,11 @@ class BkRepoClient constructor(
         val requestBuilder = Request.Builder()
             .url(url)
         // 生成归档头部
-        val header = mutableMapOf<String, String>()
+        val header = getCommonHeaders(userId, projectId)
         if (userName != null && password != null) {
             header["Authorization"] = Credentials.basic(userName, password)
         }
-        header[BK_REPO_UID] = userId
-        header[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
         header[BK_REPO_OVERRIDE] = "true"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        if (devopsToken != null) {
-            header["X-DEVOPS-TOKEN"] = devopsToken
-        }
         properties?.forEach {
             header["$METADATA_PREFIX${it.key}"] = tryEncode(it.value)
         }
@@ -415,12 +413,9 @@ class BkRepoClient constructor(
     fun delete(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("delete, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -429,13 +424,10 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header("Authorization", authorization)
-            .header(BK_REPO_UID, userName)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userName, projectId).toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -456,12 +448,9 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(
                 objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)
             ).build()
@@ -508,12 +497,9 @@ class BkRepoClient constructor(
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/rename"
         val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -522,12 +508,9 @@ class BkRepoClient constructor(
     fun mkdir(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("mkdir, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(RequestBody.create(null, ""))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -541,12 +524,9 @@ class BkRepoClient constructor(
                 "%23"
             )
         }"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data
@@ -616,18 +596,10 @@ class BkRepoClient constructor(
 
     fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
-        val headers = mutableMapOf(
-            BK_REPO_UID to userId,
-            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
-        )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        if (devopsToken != null) {
-            headers["X-DEVOPS-TOKEN"] = devopsToken
-        }
         OkhttpUtils.downloadFile(
             url,
             destFile,
-            headers
+            getCommonHeaders(userId, projectId)
         )
     }
 
@@ -639,11 +611,8 @@ class BkRepoClient constructor(
         outputStream: OutputStream
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder().url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -742,14 +711,22 @@ class BkRepoClient constructor(
         fullPath: String,
         downloadUsers: List<String>,
         downloadIps: List<String>,
-        timeoutInSeconds: Long
+        timeoutInSeconds: Long,
+        bkrepoPrefixUrl: String? = null,
+        userName: String? = null,
+        password: String? = null
     ): String {
         logger.info(
             "createShareUri, creatorId: $creatorId, projectId: $projectId, repoName: $repoName, " +
                     "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
                     "timeoutInSeconds: $timeoutInSeconds"
         )
-        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
+        val repoUrlPrefix = if (bkrepoPrefixUrl.isNullOrBlank()) {
+            "${getGatewayUrl()}/bkrepo/api/service"
+        } else {
+            bkrepoPrefixUrl
+        }
+        val url = "$repoUrlPrefix/repository/api/share/$projectId/$repoName/${
             fullPath.removePrefix("/").replace(
                 "#",
                 "%23"
@@ -761,15 +738,74 @@ class BkRepoClient constructor(
             expireSeconds = timeoutInSeconds
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        val header = getCommonHeaders(creatorId, projectId)
+        if (userName != null && password != null) {
+            header[AUTH_HEADER_IAM_TOKEN] = Credentials.basic(userName, password)
+        }
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, creatorId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(header.toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<ShareRecordInfo>>()!!.data!!.shareUrl
+    }
+
+    fun createTemporaryAccessUrl(
+        temporaryUrlCreateRequest: TemporaryUrlCreateRequest,
+        bkrepoPrefixUrl: String,
+        userName: String,
+        password: String
+    ): List<TemporaryAccessUrl> {
+        val url = "$bkrepoPrefixUrl/generic/temporary/url/create"
+        val requestBody = objectMapper.writeValueAsString(temporaryUrlCreateRequest)
+        val header = mutableMapOf<String, String>()
+        header[AUTH_HEADER_IAM_TOKEN] = Credentials.basic(userName, password)
+        val request = Request.Builder()
+            .url(url)
+            .headers(header.toHeaders())
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<List<TemporaryAccessUrl>>>()!!.data!!
+    }
+
+    fun apkDefender(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        userIds: Collection<String>,
+        batchSize: Int
+    ): ApkDefenderTasks {
+        logger.info(
+            "apkDefender , projectId: $projectId , repoName: $repoName , fullPath: $fullPath , " +
+                    "userIds: $userIds, batchSize: $batchSize"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/ext/apk/defender"
+        val apkDefenderRequest = ApkDefenderRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPath = fullPath,
+            users = userIds,
+            batchSize = batchSize
+        )
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(objectMapper.writeValueAsString(apkDefenderRequest).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<ApkDefenderTasks>>()!!.data!!
+    }
+
+    fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Boolean {
+        logger.info("checkApkDefenderTask , taskId : $taskId")
+        val url = "${getGatewayUrl()}/bkrepo/api/external/analyst/api/scan/tasks/$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        val data = doRequest(request).resolveResponse<Response<ScanTask>>()!!.data!!
+        return data.status == "FINISHED"
     }
 
     fun createTemporaryToken(
@@ -789,11 +825,8 @@ class BkRepoClient constructor(
             type = type
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder().url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<List<TemporaryAccessToken>>>()!!.data!!.first().token
@@ -826,12 +859,9 @@ class BkRepoClient constructor(
             type = TokenType.DOWNLOAD
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE)).build()
         return doRequest(request).resolveResponse<Response<List<TemporaryAccessUrl>>>()!!.data!!
             .map { "${it.url}&download=true" }
@@ -927,7 +957,9 @@ class BkRepoClient constructor(
         pathNamePairs: List<Pair<String, String>>, // (path eq and name match) or
         metadata: Map<String, String>, // eq and
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
     ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
@@ -956,7 +988,7 @@ class BkRepoClient constructor(
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, projectId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize, sortBy, direction)
     }
 
     fun queryByPattern(
@@ -1030,11 +1062,9 @@ class BkRepoClient constructor(
         expires: Int
     ) {
         logger.info("update , userId:$userId, projectId:$projectId , repo:$repoName , path:$path , expires:$expires")
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/node/update/$projectId/$repoName/$path")
-            .header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(
                 objectMapper.writeValueAsString(mapOf("expires" to expires))
                     .toRequestBody(JSON_MEDIA_TYPE)
@@ -1053,17 +1083,85 @@ class BkRepoClient constructor(
     ): PackageVersionInfo {
         val url = "${getGatewayUrl()}/bkrepo/api/service/docker/ext/version/detail/$projectId/$repoName" +
                 "?packageKey=$packageKey&version=$version"
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }.get().build()
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders()).get().build()
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
+    fun listDir(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String?,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): QueryData {
+        if (path.isNullOrBlank() && name.isNullOrBlank()) {
+            throw IllegalArgumentException()
+        }
+        val projectRule = Rule.QueryRule("projectId", projectId)
+        val repoRule = Rule.QueryRule("repoName", repoName)
+        val folderRule = Rule.QueryRule("folder", true)
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, folderRule)
+        if (!path.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("path", PathUtils.normalizePath(path)))
+        }
+        if (!name.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("name", name, OperationType.MATCH))
+        }
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        return query(userId, projectId, rule, page, pageSize)
+    }
+
+    fun createReplicaTask(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        taskType: ReplicaType = ReplicaType.EDGE_PULL
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/replication/api/task/edge/create"
+        val taskCreateRequest = ReplicaTaskCreateRequest(
+            name = "$fullPath-${UUID.randomUUID()}",
+            localProjectId = projectId,
+            replicaObjectType = ReplicaObjectType.PATH,
+            replicaTaskObjects = listOf(
+                ReplicaObjectInfo(
+                    localRepoName = repoName,
+                    remoteProjectId = projectId,
+                    remoteRepoName = repoName,
+                    repoType = RepositoryType.GENERIC,
+                    packageConstraints = null,
+                    pathConstraints = listOf(PathConstraint(fullPath))
+                )
+            ),
+            replicaType = taskType,
+            setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
+            remoteClusterIds = emptySet()
+        )
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    private fun query(
+        userId: String,
+        projectId: String,
+        rule: Rule,
+        page: Int,
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
+    ): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
-            sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
+            sort = if (!sortBy.isNullOrBlank() && direction != null) {
+                Sort(listOf(sortBy), direction)
+            } else {
+                Sort(listOf("fullPath"), Sort.Direction.ASC)
+            },
             select = mutableListOf(),
             rule = rule
         )
@@ -1075,15 +1173,22 @@ class BkRepoClient constructor(
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/search"
         val requestBody = objectMapper.writeValueAsString(queryModel)
         logger.info("requestBody: $requestBody")
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+    }
+
+    private fun getCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
+        val headers = mutableMapOf<String, String>()
+        headers[BK_REPO_UID] = userId
+        headers[BK_REPO_PROJECT_ID] = projectId
+        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        devopsToken?.let { headers[DEVOPS_TOKEN] = it }
+        return headers
     }
 
     private fun doRequest(request: Request): okhttp3.Response {
@@ -1121,12 +1226,15 @@ class BkRepoClient constructor(
 
         private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+        private const val BK_REPO_PROJECT_ID = "X-BKREPO-PROJECT-ID"
+
+        private const val DEVOPS_TOKEN = "X-DEVOPS-TOKEN"
 
         private const val ERROR_PROJECT_EXISTED = 251005
         private const val ERROR_REPO_EXISTED = 251007
 
+        private const val SYSTEM_USER = "system"
         private const val BKREPO_REALM = "bkrepo"
-
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
         const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
     }

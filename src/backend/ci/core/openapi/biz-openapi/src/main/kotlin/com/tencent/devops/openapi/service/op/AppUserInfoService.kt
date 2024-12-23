@@ -2,7 +2,7 @@ package com.tencent.devops.openapi.service.op
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.dao.AppManagerUserDao
 import com.tencent.devops.openapi.pojo.AppManagerInfo
@@ -34,14 +34,24 @@ class AppUserInfoService @Autowired constructor(
         logger.info("BIND_APP_MANAGER_USER|$userId|$appManagerInfo")
         if (!opAppUserService.checkUser(appManagerInfo.managerUser)) {
             logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser check fail")
-            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(OpenAPIMessageCode.USER_CHECK_FAIL))
+            throw ParamBlankException(
+                I18nUtil.getCodeLanMessage(
+                    OpenAPIMessageCode.USER_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
 
         val appManagerRecord = appManagerUserDao.get(dslContext, appManagerInfo.appCode)
         val exist = if (appManagerRecord != null) {
             if (appManagerInfo.managerUser == appManagerRecord.managerId) {
                 logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser ${appManagerInfo.managerUser} is exist")
-                throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(OpenAPIMessageCode.ERROR_USER_EXIST))
+                throw ParamBlankException(
+                    I18nUtil.getCodeLanMessage(
+                        OpenAPIMessageCode.ERROR_USER_EXIST,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             } else {
                 true
             }

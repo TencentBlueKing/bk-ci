@@ -30,14 +30,12 @@ package com.tencent.devops.common.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Contract
 import feign.Feign
@@ -51,22 +49,20 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.context.annotation.DependsOn
-import org.springframework.core.annotation.AnnotationUtils
-import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import kotlin.reflect.KClass
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.context.annotation.DependsOn
+import org.springframework.stereotype.Component
 
 /**
  *
@@ -93,8 +89,6 @@ class Client @Autowired constructor(
 
     private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE).build { key -> getImpl(key) }
-
-    private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
     private val trustAllCerts: Array<TrustManager> = arrayOf(object : X509TrustManager {
         @Throws(CertificateException::class)
@@ -142,9 +136,6 @@ class Client @Autowired constructor(
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
-    @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
-    private val assemblyServiceName: String? = null
-
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
 
@@ -187,7 +178,7 @@ class Client @Autowired constructor(
             .retryer(WithoutRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -223,7 +214,7 @@ class Client @Autowired constructor(
      */
     fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
             .client(feignClient)
@@ -238,7 +229,7 @@ class Client @Autowired constructor(
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         // 获取为feign定义的拦截器
         val requestInterceptor = SpringContextUtil.getBeansWithClass(RequestInterceptor::class.java)
         return Feign.builder()
@@ -271,7 +262,7 @@ class Client @Autowired constructor(
             .retryer(HttpGetRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -279,38 +270,19 @@ class Client @Autowired constructor(
             )
     }
 
+    // devnet区域的，只能直接通过ip访问
+    fun <T : Any> getScmUrl(clz: KClass<T>): String {
+        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        return buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY)
+    }
+
     fun getServiceUrl(clz: KClass<*>): String {
         return MicroServiceTarget(
-            serviceName = findServiceName(clz),
+            serviceName = BkServiceUtil.findServiceName(clz = clz),
             type = clz.java,
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
         ).url()
-    }
-
-    private fun findServiceName(clz: KClass<*>): String {
-        // 单体结构，不分微服务的方式
-        if (!assemblyServiceName.isNullOrBlank()) {
-            return assemblyServiceName
-        }
-        val serviceName = interfaces.getOrPut(clz) {
-            val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
-            if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
-                serviceInterface.value
-            } else {
-                val packageName = clz.qualifiedName.toString()
-                val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
-                val matches = regex.find(packageName)
-                    ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
-                matches.groupValues[1]
-            }
-        }
-
-        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
-            serviceName
-        } else {
-            "$serviceName$serviceSuffix"
-        }
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {

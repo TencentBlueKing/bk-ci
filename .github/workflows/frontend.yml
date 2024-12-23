@@ -5,37 +5,55 @@ name: Frontend CI
 
 on:
   push:
-    branches: [master]
+    branches: ["*"]
     paths:
       - "src/frontend/**"
   pull_request:
     branches: [master, release-*]
     paths:
       - "src/frontend/**"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      upload:
+        required: true
+        type: string
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
         with:
-          node-version: 16
-      - uses: actions/checkout@v2
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - run: yarn install && yarn start && yarn public
+          version: 9.5.0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: src/frontend/pnpm-lock.yaml
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
+      - run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
+      - run: |
+          pnpm install
+          export NODE_OPTIONS=--openssl-legacy-provider
+          pnpm public
         working-directory: src/frontend
-      - uses: actions/upload-artifact@v1
+      - name: generate version log
+        run: |
+          python genBundledVersionLog.py 1
+          cp bundledVersionLog*.json ../src/frontend/frontend/
+        working-directory: CHANGELOG
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.upload == 'true'  }}
         with:
           name: frontend
           path: src/frontend/frontend/

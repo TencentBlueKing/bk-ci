@@ -30,7 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -60,7 +60,7 @@ class OpenapiPermissionService(
         method: MethodSignature
     ) {
         if (userId == null) {
-            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
+            val tags = method.method.getAnnotation(Operation::class.java)?.tags?.joinToString(separator = "|")
             logger.warn(
                 "validProjectPermission|user_is_null|" +
                     "$apigwType|$appCode|$projectId|${tags ?: method}"
@@ -77,7 +77,7 @@ class OpenapiPermissionService(
         val hasViewPermission = kotlin.runCatching {
             client.get(ServiceProjectAuthResource::class)
                 .isProjectUser(
-                    token = clientTokenService.getSystemToken(null) ?: "",
+                    token = clientTokenService.getSystemToken() ?: "",
                     type = null,
                     userId = userId,
                     projectCode = projectId
@@ -85,7 +85,7 @@ class OpenapiPermissionService(
         }.getOrNull() ?: false
 
         if (!hasViewPermission) {
-            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
+            val tags = method.method.getAnnotation(Operation::class.java)?.tags?.joinToString(separator = "|")
             logger.warn(
                 "validProjectManagerPermission|permission_is_false|" +
                     "$apigwType|$appCode|$userId|$projectId|${tags ?: method}"
@@ -119,7 +119,7 @@ class OpenapiPermissionService(
         val hasViewPermission = kotlin.runCatching {
             client.get(ServiceProjectAuthResource::class)
                 .checkManager(
-                    token = clientTokenService.getSystemToken(null) ?: "",
+                    token = clientTokenService.getSystemToken() ?: "",
                     userId = userId,
                     projectId = projectId
                 ).data

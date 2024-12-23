@@ -27,5 +27,4 @@
 
 dependencies {
     api(project(":core:auth:biz-auth"))
-    api(project(":core:auth:biz-auth-blueking"))
 }

@@ -4,7 +4,7 @@ spring:
     # 数据源配置（勿随便变更配置项的顺序）
     dataSourceConfigs:
       - index: 0
-        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_metrics?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_metrics?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
         password: __BK_CI_MYSQL_PASSWORD__
     # 数据库表分片规则配置
@@ -48,6 +48,12 @@ spring:
       - index: 12
         name: T_ATOM_INDEX_STATISTICS_DAILY
         broadcastFlag: true
+      - index: 13
+        name: T_ATOM_MONITOR_DATA_DAILY
+        broadcastFlag: true
+      - index: 14
+        name: T_PROJECT_ATOM
+        broadcastFlag: true
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21990
 server:
@@ -57,8 +63,9 @@ metrics:
   devopsUrl: __BK_CI_PUBLIC_URL__
   streamUrl: __BK_CI_STREAM_URL__
   queryDaysMax: 180
-  queryCountMax: 10000
+  queryCountMax: 100000
   defaultLimitNum: 10
+  maxThreadHandleProjectNum: 10
 
 sharding:
   routing:

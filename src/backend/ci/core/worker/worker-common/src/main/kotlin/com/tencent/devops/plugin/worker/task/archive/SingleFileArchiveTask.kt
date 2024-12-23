@@ -32,11 +32,15 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.SingleArchiveElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.service.RepoServiceFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.NO_MATCHING_ARCHIVE_FILE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archiveCustomFiles
@@ -47,12 +51,14 @@ import java.io.File
 @TaskClassType(classTypes = [SingleArchiveElement.classType])
 class SingleFileArchiveTask : ITask() {
 
+    private val api = ArtifactApiFactory.create(ArchiveSDKApi::class)
+
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val filePath = taskParams["filePath"] ?: throw ParamBlankException("param [filePath] is empty")
         val isCustomize = taskParams["customize"] ?: throw ParamBlankException("param [isCustomize] is empty")
         TaskUtil.setTaskId(buildTask.taskId ?: "")
-        val token = RepoServiceFactory.getInstance().getRepoToken(
+        val token = api.getRepoToken(
             userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
             projectId = buildVariables.projectId,
             repoName = if (isCustomize.toBoolean()) "custom" else "pipeline",
@@ -82,7 +88,10 @@ class SingleFileArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = "没有匹配到任何待归档文件，请检查工作空间下面的文件"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        NO_MATCHING_ARCHIVE_FILE,
+                        AgentEnv.getLocaleLanguage()
+                    )
                 )
             }
         } finally {

@@ -29,5 +29,5 @@ package com.tencent.devops.stream.common.exception
 
 class StreamNoEnableException(project: String) : StreamCustomException(
     status = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
-    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project)
+    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.getErrorMessage(arrayOf(project))
 )

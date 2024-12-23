@@ -1,5 +1,5 @@
 # 初始化构建镜像
-{{ if .Values.init.defaultImage }}
+{{ if .Values.init.defaultImage.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,14 +18,14 @@ spec:
     spec:
       containers:
         - name: init-default-image
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/
           command:
             - "/bin/bash"
             - "-c"
             - |
-              services="store project"
+              services="store project auth"
               for service in $services
               do
                 until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
@@ -37,6 +37,6 @@ spec:
               done
 
               echo "{{ include "bkci.names.fullname" . }}-store is available";
-              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
+              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST -d '{"imageRepoName":"{{ .Values.init.defaultImage.image.registry }}/{{ .Values.init.defaultImage.image.repository }}" , "imageTag":"{{ .Values.init.defaultImage.image.tag }}"}'
       restartPolicy: OnFailure
 {{- end -}}

@@ -47,8 +47,9 @@ object BuildTimeCostUtils {
 
     fun BuildRecordModel.generateBuildTimeCost(stageRecords: List<BuildRecordStage>): BuildRecordTimeCost {
         val startTime = startTime ?: return BuildRecordTimeCost()
+        // 构建级别的总耗时从触发入队列算起
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
+        val totalCost = Duration.between(queueTime, endTime).toMillis()
         var executeCost = 0L
         var waitCost = 0L
         var queueCost = 0L
@@ -66,7 +67,9 @@ object BuildTimeCostUtils {
             totalCost = totalCost,
             executeCost = executeCost,
             waitCost = waitCost,
-            queueCost = queueCost,
+            // 给前端展示的构建排队时间为触发-开始,
+            // 上面的queueCost用于systemCost的差值
+            queueCost = Duration.between(queueTime, startTime).toMillis(),
             systemCost = systemCost.notNegative()
         )
     }
@@ -89,10 +92,17 @@ object BuildTimeCostUtils {
                 record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}
             )
+            // 计算等到耗时需要将率先执行完毕的container追加无状态区间
+            record.endTime?.let {
+                val fixedMoment = BuildRecordTimeLine.Moment(it.timestampmilli(), endTime.timestampmilli())
+                containerTimeLine.waitCostMoments.add(fixedMoment)
+                containerTimeLine.queueCostMoments.add(fixedMoment)
+            }
             // 执行时间取并集
             containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
+            val mergedWaitCost = mergeTimeLine(containerTimeLine.waitCostMoments, containerTimeLine.queueCostMoments)
             // 等待时间取交集
-            containerWaitCost = intersectionTimeLine(containerWaitCost, containerTimeLine.waitCostMoments)
+            containerWaitCost = intersectionTimeLine(containerWaitCost, mergedWaitCost)
             // 排队时间取交集
             containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
         }
@@ -105,7 +115,7 @@ object BuildTimeCostUtils {
             )
             return@sumOf time.between()
         } + containerWaitCost.sumOf { it.endTime - it.startTime }
-        val systemCost = totalCost - executeCost - queueCost - waitCost
+        val systemCost = totalCost - executeCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
             executeCost = executeCost,
@@ -162,7 +172,7 @@ object BuildTimeCostUtils {
         taskRecords: List<BuildRecordTask>
     ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
         val containerTimeLine = BuildRecordTimeLine()
-        val startTime = startTime ?: return Pair(null, containerTimeLine)
+        val startTime = startTime ?: taskRecords.first().startTime ?: return Pair(null, containerTimeLine)
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L

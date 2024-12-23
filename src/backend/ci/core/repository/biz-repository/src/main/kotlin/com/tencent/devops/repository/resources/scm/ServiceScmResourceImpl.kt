@@ -36,9 +36,12 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.LoginSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
@@ -314,6 +317,37 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 size = size
             )
         )
+    }
+
+    override fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): Result<GitCommitReviewInfo?> {
+        return Result(
+            scmService.getCommitReviewInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                crId = crId
+            )
+        )
+    }
+
+    override fun getLoginSession(reposSessionRequest: RepoSessionRequest): Result<LoginSession?> {
+        return with(reposSessionRequest) {
+            Result(
+                scmService.getLoginSession(
+                    type = type,
+                    username = username,
+                    password = password,
+                    url = url
+                )
+            )
+        }
     }
 
     companion object {

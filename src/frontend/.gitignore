@@ -7,3 +7,14 @@ yarn.lock
 yarn-error.log
 devops-gitci/src/conf
 */webpack_cache
+.codecc
+.idea
+.vscode
+*.pem
+dist/
+.pnpm-global/
+
+
+
+.nx/cache
+.nx/workspace-data

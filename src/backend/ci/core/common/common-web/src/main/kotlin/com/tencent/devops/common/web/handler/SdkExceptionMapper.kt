@@ -27,15 +27,17 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.SdkException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.common.sdk.exception.SdkException
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class SdkExceptionMapper : ExceptionMapper<SdkException> {
@@ -48,7 +50,7 @@ class SdkExceptionMapper : ExceptionMapper<SdkException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "访问后台数据失败，已通知产品、开发，请稍后重试"
+            I18nUtil.getCodeLanMessage(CommonMessageCode.BK_FAILED_ACCESS_BACKGROUND_DATA)
         }
         return Response.status(exception.errCode).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = exception.errCode, message = message, data = exception.message)).build()

@@ -1,18 +1,40 @@
 <template>
-    <div class="biz-container pipeline-subpages create-instance-wrapper"
+    <div
+        class="biz-container pipeline-subpages create-instance-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <inner-header>
-            <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
+            <div
+                class="instance-header"
+                slot="left"
+            >
+                <span
+                    class="inner-header-title"
+                    slot="left"
+                ><i
+                    class="devops-icon icon-angle-left"
+                    @click="toInstanceManage()"
+                ></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
-        <div class="sub-view-port" v-if="showContent">
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
+        <div
+            class="sub-view-port"
+            v-if="showContent"
+        >
             <div class="template-information">
                 <div class="template-introduction">
-                    <logo name="pipeline" class="template-logo"></logo>
+                    <logo
+                        name="pipeline"
+                        class="template-logo"
+                    ></logo>
                     <div class="template-name">{{ template.templateName }}</div>
                     <div class="template-creator"><span>{{ $t('creator') }}：</span>{{ template.creator }}</div>
                     <div class="template-brief">
@@ -29,33 +51,101 @@
                                 @change="changeVersion"
                                 style="width: 320px"
                             >
-                                <bk-option v-for="option in versionList" :key="option.version" :id="option.version" :name="option.versionName">
+                                <bk-option
+                                    v-for="option in versionList"
+                                    :key="option.version"
+                                    :id="option.version"
+                                    :name="option.versionName"
+                                >
                                 </bk-option>
                             </bk-select>
                             <label class="bk-form-checkbox template-setting-checkbox">
                                 <bk-checkbox
-                                    v-model="isTemplateSetting">
+                                    v-model="isTemplateSetting"
+                                >
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle"></i>
-                                    <div slot="content" style="white-space: pre-wrap; min-width: 200px">
+                                    <i class="devops-icon icon-info-circle"></i>
+                                    <div
+                                        slot="content"
+                                        style="white-space: pre-wrap; min-width: 200px"
+                                    >
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>
                                 </bk-popover>
                             </label>
                         </div>
-                        <div v-if="!instanceVersion" class="error-tips">{{ $t('template.templateVersionErrTips') }}</div>
+                        <div
+                            v-if="!instanceVersion"
+                            class="error-tips"
+                        >
+                            {{ $t('template.templateVersionErrTips') }}
+                        </div>
                     </div>
                     <div class="cut-line"></div>
                     <div class="instance-pipeline">
                         <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
-                            <div :class="{ &quot;pipeline-item&quot;: true, &quot;active-item&quot;: entry.selected, &quot;unselect-hover&quot;: !entry.selected }"
-                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastCilckPipeline(index)">{{ entry.pipelineName }}
-                                <i class="delete-btn" v-if="!hashVal" @click="deletePipelineName(index)"></i>
+                            <div
+                                :class="{
+                                    'pipeline-item': !entry.isEditing,
+                                    'active-item': entry.selected && !entry.isEditing,
+                                    'unselect-hover': !entry.selected,
+                                    'edit-item': entry.isEditing
+                                }"
+                                v-for="(entry, index) in pipelineNameList"
+                                :key="index"
+                                @click="lastClickPipeline(index)"
+                            >
+                                <div v-show="entry.isEditing">
+                                    <bk-input
+                                        ref="pipelineNameInput"
+                                        class="pipeline-name-input"
+                                        v-model="displayName"
+                                        :maxlength="128"
+                                        :placeholder="$t('pipelineNameInputTips')"
+                                    />
+                                    <div class="edit-tools">
+                                        <i
+                                            class="devops-icon icon-check-1 group-card-edit-icon mr10"
+                                            @click="handelSavePipelineName(index)"
+                                            v-bk-tooltips="$t('save')"
+                                        />
+                                        <i
+                                            class="devops-icon icon-close group-card-edit-icon"
+                                            @click="handelCancelSave(index)"
+                                            v-bk-tooltips="$t('cancel')"
+                                        />
+                                    </div>
+                                </div>
+                                <div v-show="!entry.isEditing">
+                                    <div
+                                        class="pipeline-name"
+                                        v-bk-overflow-tips
+                                    >
+                                        {{ entry.pipelineName }}
+                                    </div>
+                                    <bk-icon
+                                        class="edit-btn"
+                                        type="edit"
+                                        size="12"
+                                        @click="handleChangePipelineName(index)"
+                                        v-bk-tooltips="$t('rename')"
+                                    />
+                                    <i
+                                        class="delete-btn"
+                                        v-if="!hashVal && !isCopyInstance"
+                                        @click="deletePipelineName(index)"
+                                        v-bk-tooltips="$t('delete')"
+                                    />
+                                </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
+                            <div
+                                class="pipeline-item add-item"
+                                @click="addPipelineName"
+                                v-if="!hashVal && !isCopyInstance"
+                            >
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -64,50 +154,65 @@
                 </div>
             </div>
 
-            <div class="pipeline-instance-conf" v-if="pipelineNameList.length && instanceVersion ">
-                <section v-for="(param, index) in pipelineNameList" :key="index">
+            <div
+                class="pipeline-instance-conf"
+                v-if="pipelineNameList.length && instanceVersion "
+            >
+                <section
+                    v-for="(param, index) in pipelineNameList"
+                    :key="index"
+                >
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
-                        <section class="params-item" v-if="param.buildParams">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.newPipelineName') }}</div>
-                            <div v-if="param.buildParams" class="build-params-content">
-                                <div class="buildNo-params-content">
-                                    <pipeline-params-form
-                                        :ref="`paramsForm${index}`"
-                                        :param-values="param.paramValues"
-                                        :handle-param-change="handleParamChange"
-                                        :params="param.versionParams">
-                                    </pipeline-params-form>
-                                </div>
-                                <div class="params-flex-col" ref="buildForm">
-                                    <form-field :required="true" :label="$t('buildNum')">
-                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
-                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
-                                    </form-field>
-                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
-                                    </form-field>
-                                </div>
+                        <section
+                            class="params-item"
+                            v-if="param.buildParams"
+                        >
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('versionNum') }}</div>
+                            <div
+                                v-if="param.buildParams"
+                                class="build-params-content"
+                            >
+                                <pipeline-versions-form
+                                    :ref="`paramsForm${index}`"
+                                    :build-no="param.buildParams"
+                                    :disabled="disabled"
+                                    :is-instance="true"
+                                    :is-init-instance="!hashVal"
+                                    :reset-build-no="param.resetBuildNo"
+                                    :version-param-values="param.paramValues"
+                                    :handle-version-change="handleParamChange"
+                                    :handle-build-no-change="handleBuildNoChange"
+                                    :handle-check-change="handleCheckChange"
+                                ></pipeline-versions-form>
                             </div>
                         </section>
-                        <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
+                        <section
+                            class="params-item"
+                            v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length"
+                        >
                             <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.pipelineVar') }}</div>
                             <div class="pipeline-params-content">
                                 <pipeline-params-form
                                     :ref="`paramsForm${index}`"
                                     :param-values="param.paramValues"
                                     :handle-param-change="handleParamChange"
-                                    :params="param.pipelineParams">
+                                    :params="param.pipelineParams"
+                                >
                                 </pipeline-params-form>
                             </div>
                         </section>
-                        <section class="params-item" v-if="templateParamList.length">
+                        <section
+                            class="params-item"
+                            v-if="templateParamList.length"
+                        >
                             <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.templateConst') }}</div>
                             <div class="pipeline-params-content template-params-content">
                                 <pipeline-params-form
                                     :disabled="true"
                                     :ref="`paramsForm${index}`"
                                     :param-values="templateParamValues"
-                                    :params="templateParamList">
+                                    :params="templateParamList"
+                                >
                                 </pipeline-params-form>
                             </div>
                         </section>
@@ -115,27 +220,49 @@
                 </section>
             </div>
             <div class="create-instance-footer">
-                <bk-button theme="primary" size="normal" @click="submit()"><span>{{ $t('template.instantiate') }}</span></bk-button>
-                <span class="cancel-btn" @click="toInstanceManage()">{{ $t('cancel') }}</span>
+                <bk-button
+                    theme="primary"
+                    size="normal"
+                    @click="submit()"
+                >
+                    <span>{{ $t('template.instantiate') }}</span>
+                </bk-button>
+                <span
+                    class="cancel-btn"
+                    @click="toInstanceManage()"
+                >{{ $t('cancel') }}</span>
             </div>
         </div>
-        <instance-pipeline-name :show-instance-create="showInstanceCreate"
-            @comfire="comfireHandler"
-            @cancel="cancelHandler"></instance-pipeline-name>
-        <instance-message :show-instance-message="showInstanceMessage"
+        <instance-pipeline-name
+            :show-instance-create="showInstanceCreate"
+            @confirm="confirmHandler"
+            @cancel="cancelHandler"
+        >
+        </instance-pipeline-name>
+        <instance-message
+            :show-instance-message="showInstanceMessage"
             :success-list="successList"
             :fail-list="failList"
             :fail-message="failMessage"
-            @cancel="cancelMessage">
+            @cancel="cancelMessage"
+        >
         </instance-message>
-        <bk-dialog v-model="showUpdateDialog"
+        <bk-dialog
+            v-model="showUpdateDialog"
             :close-icon="false"
             header-position="left"
-            :title="$t('template.updateDialogTitle')">
+            :title="$t('template.updateDialogTitle')"
+        >
             <div style="padding: 10px 0px 20px">{{ $t('template.updateDialogContent') }}</div>
-            <div slot="footer" class="container-footer">
+            <div
+                slot="footer"
+                class="container-footer"
+            >
                 <div class="footer-wrapper">
-                    <bk-button theme="primary" @click="toInstanceManage(true)">
+                    <bk-button
+                        theme="primary"
+                        @click="toInstanceManage(true)"
+                    >
                         {{ $t('confirm') }}
                     </bk-button>
                 </div>
@@ -145,16 +272,16 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
-    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import Logo from '@/components/Logo'
+    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
+    import AlertTips from '@/components/AlertTips.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { mapGetters } from 'vuex'
+    import { getParamsValuesMap, isObject } from '@/utils/util'
 
     export default {
         components: {
@@ -162,10 +289,9 @@
             PipelineParamsForm,
             instancePipelineName,
             instanceMessage,
-            VuexInput,
-            FormField,
-            EnumInput,
-            Logo
+            Logo,
+            PipelineVersionsForm,
+            AlertTips
         },
         data () {
             return {
@@ -193,7 +319,9 @@
                 buildParams: {},
                 paramValues: {},
                 templateParamValues: {},
-                showUpdateDialog: false
+                showUpdateDialog: false,
+                displayName: '',
+                resetInstanceName: []
             }
         },
         computed: {
@@ -212,6 +340,9 @@
             curVersionId () {
                 return this.$route.params.curVersionId
             },
+            type () {
+                return this.$route.params.type
+            },
             hashVal () {
                 if (this.$route.hash) {
                     const hashVal = this.$route.hash.substr(1, this.$route.hash.length)
@@ -219,16 +350,33 @@
                     return pipeline
                 }
                 return ''
+            },
+            copyPipelineName () {
+                return this.$route.params.pipelineName
+            },
+            queryPipelineId () {
+                return this.$route.query?.pipelineId ?? ''
+            },
+            isCopyInstance () {
+                return !!(this.copyPipelineName && this.queryPipelineId)
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
             }
         },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
-            this.handlePipeLineName()
-            if (this.hashVal) {
-                this.requestPipelineParams(this.hashVal, this.curVersionId)
-            }
-            if (this.$route.query.useTemplateSettings === 'true') {
+            if (this.$route.query.useTemplateSettings) {
                 this.isTemplateSetting = true
+            }
+            if (this.curVersionId) {
+                this.instanceVersion = this.curVersionId
             }
         },
         methods: {
@@ -252,7 +400,12 @@
                     this.template.creator = res.creator
                     this.template.description = res.description
                     this.versionList = res.versions
-                    this.handleParams(res.template.stages)
+
+                    if (this.hashVal || this.isCopyInstance) {
+                        await this.requestPipelineParams(versionId)
+                    } else {
+                        this.handleParams(res.template.stages)
+                    }
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -263,16 +416,9 @@
                     this.showContent = true
                 }
             },
-            async requestPipelineParams (pipeline, versionId) {
+            async requestPipelineParams (versionId) {
                 const { $store, loading } = this
-                const params = []
-
-                pipeline.forEach(item => {
-                    params.push({
-                        id: item
-                    })
-                })
-
+                const pipelines = this.isCopyInstance ? [this.queryPipelineId] : this.hashVal
                 loading.isLoading = true
 
                 try {
@@ -280,9 +426,11 @@
                         projectId: this.projectId,
                         templateId: this.templateId,
                         versionId: versionId,
-                        params
+                        params: pipelines.map(id => ({
+                            id
+                        }))
                     })
-                    this.handlePipelineParams(res)
+                    this.handlePipelineParams(pipelines, res)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -294,24 +442,24 @@
             },
             handleParams (stages) {
                 this.paramList = stages[0].containers[0].params || []
-                this.paramValues = this.paramList.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
+                this.paramValues = getParamsValuesMap(this.paramList)
                 this.templateParamList = stages[0].containers[0].templateParams || []
-                this.templateParamValues = this.templateParamList.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
+                this.templateParamValues = getParamsValuesMap(this.templateParamList)
                 if (stages[0].containers[0].buildNo) {
                     this.buildParams = stages[0].containers[0].buildNo
                 } else {
                     this.buildParams = {}
                 }
 
-                if (!this.hashVal) {
+                if (!this.hashVal && !this.isCopyInstance) {
+                    if (this.copyPipelineName) {
+                        this.pipelineNameList.push({
+                            pipelineName: this.copyPipelineName,
+                            selected: true
+                        })
+                    }
                     this.pipelineNameList.forEach(item => {
-                        item.params = [].concat(this.deepCopy(this.paramList))
+                        item.params = this.deepCopyParams(this.paramList)
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                         item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         item.paramValues = this.deepCopy(this.paramValues)
@@ -320,37 +468,27 @@
                 }
             },
 
-            /**
-             * 初次进来的时候，如果有需要实例化流水线的名字，就带上
-             */
-            handlePipeLineName () {
-                const params = this.$route.params || {}
-                const name = params.pipelineName
-                if (name) this.comfireHandler(name)
-            },
-
-            handlePipelineParams (data) {
-                this.pipelineNameList.splice(0, this.pipelineNameList.length)
-                this.hashVal.forEach((item, index) => {
+            handlePipelineParams (pipelines, data) {
+                this.pipelineNameList = pipelines.map((id, index) => {
+                    const item = data[id]
                     const pipelineItem = {
-                        pipelineId: data[item].pipelineId,
-                        pipelineName: data[item].pipelineName,
+                        pipelineId: id,
+                        pipelineName: id === this.queryPipelineId ? this.copyPipelineName : item.pipelineName,
                         selected: index === 0
                     }
-                    if (data[item].buildNo) {
-                        pipelineItem.buildParams = data[item].buildNo
+                    if (item.buildNo) {
+                        pipelineItem.buildParams = item.buildNo
+                        pipelineItem.resetBuildNo = false
+                        pipelineItem.initBuildNo = item.buildNo.buildNo
                     }
-                    if (data[item].param.length) {
-                        const paramValues = data[item].param.reduce((values, param) => {
-                            values[param.id] = param.defaultValue
-                            return values
-                        }, {})
-                        pipelineItem.params = [].concat(this.deepCopy(data[item].param))
-                        pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                        pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
+                    if (item.param.length) {
+                        const paramValues = getParamsValuesMap(item.param)
+                        pipelineItem.params = this.deepCopyParams(item.param)
+                        pipelineItem.pipelineParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) === -1)
+                        pipelineItem.versionParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) > -1)
                         pipelineItem.paramValues = paramValues
                     }
-                    this.pipelineNameList.push(pipelineItem)
+                    return pipelineItem
                 })
                 this.currentPipelineParams = this.pipelineNameList[0]
             },
@@ -368,10 +506,21 @@
                 this.$router.push(route)
             },
             changeVersion (newVal) {
-                this.requestTemplateDatail(newVal)
-                if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
+                if (newVal && newVal !== this.curVersionId) {
+                    this.$router.push({
+                        ...this.$route,
+                        params: {
+                            ...this.$route.params,
+                            curVersionId: newVal
+                        }
+                    })
+                    this.requestTemplateDatail(newVal)
+                }
             },
             addPipelineName () {
+                this.pipelineNameList.forEach(pipeline => {
+                    this.$set(pipeline, 'isEditing', false)
+                })
                 if (!this.instanceVersion) {
                     this.$showTips({
                         message: this.$t('template.templateVersionErrTips'),
@@ -385,9 +534,9 @@
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.paramValues[name] = value
-                        item.params.forEach(val => {
-                            if (val.id === name) {
-                                val.defaultValue = value
+                        item.params.forEach((i) => {
+                            if (i.id === name) {
+                                i.defaultValue = value
                             }
                         })
                     }
@@ -397,10 +546,20 @@
                 this.pipelineNameList.forEach(item => {
                     if (item.pipelineName === this.currentPipelineParams.pipelineName) {
                         item.buildParams[name] = value
+                        if (this.hashVal || this.isCopyInstance) {
+                            item.resetBuildNo = item.initBuildNo !== Number(value)
+                        }
                     }
                 })
             },
-            lastCilckPipeline (key) {
+            handleCheckChange (value) {
+                this.pipelineNameList.forEach(item => {
+                    if (item.pipelineName === this.currentPipelineParams.pipelineName) {
+                        item.resetBuildNo = value
+                    }
+                })
+            },
+            lastClickPipeline (key) {
                 this.pipelineNameList.forEach((item, index) => {
                     item.selected = index === key
                     if (index === key) {
@@ -411,8 +570,26 @@
             deletePipelineName (key) {
                 this.pipelineNameList.splice(key, 1)
             },
-            comfireHandler (data) {
-                const tmpParam = [].concat(this.deepCopy(this.paramList))
+
+            async handleChangePipelineName (index) {
+                this.pipelineNameList.forEach((pipeline, i) => {
+                    if (i === index) {
+                        this.displayName = pipeline.pipelineName
+                        this.$set(pipeline, 'isEditing', true)
+                    } else {
+                        this.$set(pipeline, 'isEditing', false)
+                    }
+                })
+            },
+            handelSavePipelineName (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
+                this.$set(this.pipelineNameList[index], 'pipelineName', this.displayName)
+            },
+            handelCancelSave (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
+            },
+            confirmHandler (data) {
+                const tmpParam = this.deepCopyParams(this.paramList)
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
@@ -445,6 +622,67 @@
             deepCopy (value, target) {
                 return JSON.parse(JSON.stringify(value))
             },
+            deepCopyParams (params) {
+                return [].concat(this.deepCopy(params)).map(p => ({
+                    ...p,
+                    readOnly: false
+                }))
+            },
+            async handleInstance (params) {
+                let message, theme
+                const { $store, loading } = this
+
+                loading.isLoading = true
+
+                try {
+                    let res
+                    const payload = {
+                        projectId: this.projectId,
+                        templateId: this.templateId,
+                        versionId: this.instanceVersion,
+                        useTemplateSettings: this.isTemplateSetting,
+                        params
+                    }
+                    if (this.hashVal) {
+                        res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
+                        if (res) {
+                            this.showUpdateDialog = true
+                        }
+                    } else {
+                        res = await $store.dispatch('pipelines/createTemplateInstance', payload)
+                        if (res) {
+                            const successCount = res.successPipelines.length
+                            const failCount = res.failurePipelines.length
+
+                            if (successCount && !failCount) {
+                                message = this.$t('template.submitSucTips', [successCount])
+                                theme = 'success'
+
+                                this.$showTips({
+                                    message: message,
+                                    theme: theme
+                                })
+                                this.toInstanceManage()
+                            } else if (failCount) {
+                                this.successList = res.successPipelines || []
+                                this.failList = res.failurePipelines || []
+                                this.failMessage = res.failureMessages || []
+                                this.showInstanceMessage = true
+                            }
+                        }
+                    }
+                } catch (err) {
+                    message = err.message || err
+                    theme = 'error'
+
+                    this.$showTips({
+                        message: message,
+                        theme: theme
+                    })
+                } finally {
+                    this.loading.isLoading = false
+                }
+            },
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
@@ -458,67 +696,68 @@
                     })
                 } else {
                     const params = []
-                    let message, theme
-                    const { $store, loading } = this
+                    const h = this.$createElement
+                    let isEmptyValue
 
                     this.pipelineNameList.forEach(pipeline => {
+                        let buildNo
+                        if (pipeline.buildParams && typeof pipeline.buildParams === 'object') {
+                            const { currentBuildNo, ...buildParams } = pipeline.buildParams
+                            buildNo = buildParams
+                        }
                         params.push({
                             pipelineName: pipeline.pipelineName,
                             pipelineId: this.hashVal ? pipeline.pipelineId : undefined,
-                            buildNo: pipeline.buildParams || undefined,
-                            param: pipeline.params
+                            buildNo,
+                            param: pipeline.params,
+                            resetBuildNo: pipeline.resetBuildNo
+                        })
+                        isEmptyValue = pipeline?.params?.some(item => {
+                            return isObject(item.defaultValue)
+                                ? Object.values(item.defaultValue).every(val => !val)
+                                : false
                         })
                     })
-
-                    loading.isLoading = true
-
-                    try {
-                        let res
-                        const payload = {
-                            projectId: this.projectId,
-                            templateId: this.templateId,
-                            versionId: this.instanceVersion,
-                            useTemplateSettings: this.isTemplateSetting,
-                            params
-                        }
-                        if (this.hashVal) {
-                            res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
-                            if (res) {
-                                this.showUpdateDialog = true
-                            }
-                        } else {
-                            res = await $store.dispatch('pipelines/createTemplateInstance', payload)
-                            if (res) {
-                                const successCount = res.successPipelines.length
-                                const failCount = res.failurePipelines.length
-
-                                if (successCount && !failCount) {
-                                    message = this.$t('template.submitSucTips', [successCount])
-                                    theme = 'success'
-
-                                    this.$showTips({
-                                        message: message,
-                                        theme: theme
-                                    })
-                                    this.toInstanceManage()
-                                } else if (failCount) {
-                                    this.successList = res.successPipelines || []
-                                    this.failList = res.failurePipelines || []
-                                    this.failMessage = res.failureMessages || []
-                                    this.showInstanceMessage = true
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        message = err.message || err
-                        theme = 'error'
-
+                    if (isEmptyValue) {
                         this.$showTips({
-                            message: message,
-                            theme: theme
+                            message: this.$t('newlist.paramsErr'),
+                            theme: 'error'
                         })
-                    } finally {
-                        this.loading.isLoading = false
+                        return
+                    }
+                    const isRequired = params.some(item => item.buildNo && (typeof item.buildNo.buildNo === 'undefined' || item.buildNo.buildNo === ''))
+                 
+                    if (isRequired) {
+                        this.$showTips({
+                            message: this.$t('template.buildNumErrTips'),
+                            theme: 'error'
+                        })
+                        return
+                    }
+                    this.resetInstanceName = params.filter(item => item.resetBuildNo).map(item => item.pipelineName)
+  
+                    if (this.resetInstanceName.length) {
+                        this.$bkInfo({
+                            width: 600,
+                            type: 'warning',
+                            title: this.$t('buildNoBaseline.forthcomingReset'),
+                            okText: this.$t('buildNoBaseline.instanceConfirm'),
+                            cancelText: this.$t('cancel'),
+                            subHeader: h('div', { class: 'reset-content' }, [
+                                h('div', { class: 'reset-pipeline-name' }, [
+                                    h('p', { class: 'reset-info' }, this.$t('buildNoBaseline.forthcomingResetPipeline')),
+                                    h('ul', { class: 'pipeline-list' }, this.resetInstanceName.map(
+                                        name => h('li', `- ${name}`)
+                                    ))
+                                ]),
+                                h('p', { class: 'reset-info' }, this.$t('buildNoBaseline.uncheck'))
+                            ]),
+                            confirmFn: () => {
+                                this.handleInstance(params)
+                            }
+                        })
+                    } else {
+                        this.handleInstance(params)
                     }
                 }
             }
@@ -532,9 +771,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .create-instance-wrapper {
         flex-direction: column;
@@ -623,6 +859,30 @@
                 .pipeline-name-box {
                     margin-top: 12px;
                 }
+                .edit-item {
+                    position: relative;
+                    float: left;
+                    margin-bottom: 12px;
+                    margin-right: 20px;
+                }
+                .edit-tools {
+                    position: absolute;
+                    top: 13px;
+                    right: 20px;
+                    font-size: 10px;
+                }
+                .group-card-edit-icon {
+                    cursor: pointer;
+                }
+                .pipeline-name-input {
+                    width: 200px;
+                    margin-right: 10px;
+                    input {
+                        height: 36px;
+                        line-height: 36px;
+                        padding-right: 60px !important;
+                    }
+                }
                 .pipeline-item {
                     float: left;
                     position: relative;
@@ -630,21 +890,33 @@
                     line-height: 36px;
                     margin-bottom: 12px;
                     margin-right: 20px;
-                    padding: 0 32px 0 18px;
+                    padding: 0 50px 0 18px;
                     background-color: #fff;
                     border: 1px solid #c3cdd7;
                     // color: #fff;
                     font-size: 14px;
                     cursor: pointer;
+                    max-width: 200px;
+                }
+                .pipeline-name {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+                .edit-btn {
+                    position: absolute;
+                    top: 12px;
+                    right: 30px;
+                    cursor: pointer;
                 }
                 .delete-btn {
                     display: inline-block;
-                    width: 10px;
-                    height: 10px;
+                    width: 14px;
+                    height: 14px;
                     overflow: hidden;
                     position: absolute;
-                    top: 14px;
-                    right: 15px;
+                    top: 12px;
+                    right: 10px;
                     cursor: pointer;
                 }
                 .delete-btn::before,
@@ -761,48 +1033,8 @@
             border: 1px solid #EBF0F5;
         }
         .build-params-content {
-            padding-bottom: 20px;
+            padding: 20px 0 20px 20px;
             background: #fff;
-        }
-        .buildNo-params-content {
-            min-width: 940px;
-            padding: 20px 0 0;
-            padding-left: 20px;
-            .bk-form-item {
-                float: left;
-                width: 320px;
-                margin-top: 20px;
-                margin-left: 10px;
-                .bk-label {
-                    width: 160px;
-                }
-                .bk-form-input {
-                    width: 145px !important;
-                }
-            }
-        }
-        .params-flex-col {
-            display: flex;
-            padding: 0 40px;
-            background: #fff;
-            .bk-form-item {
-                display: flex;
-                margin: 20px 30px 0 20px;
-                font-size: 14px;
-                .bk-label {
-                    width: 108px;
-                    margin-right: 22px;
-                    line-height: 36px;
-                    text-align: right;
-                    font-weight: bold;
-                }
-                .bk-form-input {
-                    width: 145px;
-                }
-                &:last-child {
-                    min-width: 420px;
-                }
-            }
         }
         .create-instance-footer {
             margin-top: 20px;
@@ -816,5 +1048,23 @@
                 cursor: pointer;
             }
         }
+    }
+    .reset-content {
+        font-size: 14px;
+        text-align: left;
+        .reset-pipeline-name {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+            background-color: #f5f6fa;
+            .reset-info {
+                margin-bottom: 20px;
+            }
+            li {
+                margin: 8px 0;
+            }
+        }
+
     }
 </style>

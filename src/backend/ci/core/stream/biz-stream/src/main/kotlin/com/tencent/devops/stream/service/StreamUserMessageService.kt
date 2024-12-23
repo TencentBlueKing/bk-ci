@@ -154,7 +154,7 @@ class StreamUserMessageService @Autowired constructor(
             )!!
         }
 
-        val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
+        val requestIds = messageRecords.map { it.messageId.toLong() }.toSet()
         val eventMap = getRequestMap(userId, gitProjectId, requestIds)
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
@@ -199,7 +199,6 @@ class StreamUserMessageService @Autowired constructor(
         id: Int,
         projectCode: String?
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
@@ -207,7 +206,6 @@ class StreamUserMessageService @Autowired constructor(
         projectCode: String?,
         userId: String
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return if (projectCode != null) {
             streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,
@@ -241,10 +239,11 @@ class StreamUserMessageService @Autowired constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun getRequestMap(
         userId: String,
         gitProjectId: Long?,
-        requestIds: Set<Int>
+        requestIds: Set<Long>
     ): Map<Long, List<RequestMessageContent>> {
         val eventList = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,

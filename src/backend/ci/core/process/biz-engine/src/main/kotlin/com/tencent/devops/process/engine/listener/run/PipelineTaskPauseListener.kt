@@ -28,21 +28,21 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -59,7 +59,6 @@ import org.springframework.stereotype.Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
@@ -67,7 +66,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter
-) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
         val taskRecord = pipelineTaskService.getBuildTask(event.projectId, event.buildId, event.taskId)
@@ -90,7 +89,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(taskRecord, event.userId)
             } else if (event.actionType == ActionType.END) {
-                taskCancel(task = taskRecord, userId = event.userId)
+                taskPauseCancel(task = taskRecord, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
@@ -107,7 +106,8 @@ class PipelineTaskPauseListener @Autowired constructor(
         val newElementRecord = pipelineTaskPauseService.getPauseTask(
             projectId = task.projectId,
             buildId = task.buildId,
-            taskId = task.taskId
+            taskId = task.taskId,
+            executeCount = task.executeCount
         )
         if (newElementRecord != null) {
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
@@ -123,7 +123,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         // 修改详情model
-        taskBuildRecordService.taskContinue(
+        taskBuildRecordService.taskPauseContinue(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
@@ -155,6 +155,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 userId = userId,
                 projectId = task.projectId,
                 actionType = ActionType.REFRESH,
+                executeCount = task.executeCount,
                 containerType = ""
             )
         )
@@ -162,18 +163,20 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
     }
 
-    private fun taskCancel(task: PipelineBuildTask, userId: String) {
+    private fun taskPauseCancel(task: PipelineBuildTask, userId: String) {
         logger.info("${task.buildId}|task cancel|${task.taskId}|CANCELED")
         // 修改插件状态位运行
         pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        taskBuildRecordService.taskCancel(
+        taskBuildRecordService.taskPauseCancel(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
@@ -188,8 +191,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
         val containerRecord = pipelineContainerService.getContainer(
             projectId = task.projectId,
@@ -210,17 +215,26 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 stageId = task.stageId,
+                executeCount = task.executeCount,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
+            // pause task 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "pauseCancel-${task.containerId}-${task.buildId}",
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 userId = task.starter,
                 buildId = task.buildId,
-                taskId = null,
-                stageId = null,
-                actionType = ActionType.END
+                taskId = task.taskId,
+                stageId = task.stageId,
+                actionType = ActionType.END,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = BuildStatus.CANCELED.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
             )
         )
     }
