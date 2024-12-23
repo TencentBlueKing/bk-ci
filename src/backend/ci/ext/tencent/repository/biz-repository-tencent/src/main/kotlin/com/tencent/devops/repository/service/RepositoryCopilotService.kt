@@ -80,6 +80,7 @@ class RepositoryCopilotService @Autowired constructor(
             target = targetSha,
             token = token
         ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+        copilotSummary.projectName = projectName
         logger.info("save summary|$copilotSummary")
         copilotSummaryDao.create(
             dslContext = dslContext,
@@ -135,6 +136,7 @@ class RepositoryCopilotService @Autowired constructor(
                 ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
                 // 更新processId
                 copilotSummary.processId = summary.processId
+                copilotSummary.projectName = summary.projectName
                 if (CopilotSummaryCreateStatus.isFinal(copilotSummary.status)) {
                     // 成功获取摘要
                     logger.info("success get summary|$summary")
