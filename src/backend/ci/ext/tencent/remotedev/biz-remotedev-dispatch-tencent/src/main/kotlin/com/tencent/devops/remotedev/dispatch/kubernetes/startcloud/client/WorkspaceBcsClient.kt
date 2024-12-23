@@ -231,7 +231,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 logger.info("$userId get task status taskId: $taskId response: ${response.rid()}|$responseContent")
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
-                        "获取工作空间信息接口异常: ${response.code}"
+                        "获取实例任务状态接口异常: ${response.code}"
                     )
                 }
 
@@ -240,14 +240,14 @@ class WorkspaceBcsClient @Autowired constructor(
                     return taskStatusRsp.data!!
                 } else {
                     throw WorkspaceDispatchException(
-                        "获取工作空间信息接口异常: ${taskStatusRsp.code}-${taskStatusRsp.message}"
+                        "获取实例任务状态接口异常: ${taskStatusRsp.code}-${taskStatusRsp.message}"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
             logger.error("$userId get task status SocketTimeoutException.", e)
             throw WorkspaceDispatchException(
-                errorMessage = "获取工作空间信息接口异常:  接口超时, url: $url"
+                errorMessage = "获取实例任务状态接口异常:  接口超时, url: $url"
             )
         }
     }
