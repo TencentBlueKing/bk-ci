@@ -1,9 +1,10 @@
 package com.tencent.devops.remotedev.pojo.expert
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 // 透传用，全可空防止解析异常
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class WorkspaceTaskStatus(
     val callbackName: String?,
     val commonParams: Map<String, Any>?,
@@ -32,6 +33,7 @@ data class WorkspaceTaskStatus(
     val updater: String?
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class WorkspaceTaskStatusStep(
     val alias: String?,
     val end: String?,
