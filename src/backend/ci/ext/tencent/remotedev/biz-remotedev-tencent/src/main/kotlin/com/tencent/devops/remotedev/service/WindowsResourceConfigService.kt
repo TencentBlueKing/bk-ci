@@ -542,7 +542,8 @@ class WindowsResourceConfigService @Autowired constructor(
             logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
             return false
         }
-        val oldManagers = projectProperties.remotedevManager?.split(";")?.toMutableSet() ?: mutableSetOf()
+        val oldManagers = projectProperties.remotedevManager?.split(";")
+            ?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
         if (delete == true) {
             oldManagers.removeAll(manager.split(",").toSet())
         } else {
