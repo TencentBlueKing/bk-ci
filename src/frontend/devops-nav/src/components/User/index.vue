@@ -31,7 +31,7 @@
                 <span
                     v-else-if="item.cb"
                     class="user-menu-item"
-                    @click.stop="item.cb"
+                    @click.stop="item.cb(item.name)"
                 >{{ item.label }}</span>
             </li>
         </template>
