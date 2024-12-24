@@ -528,13 +528,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = if (detail?.hostIp != null) {
-                        /*后续直接取windows表中的zoneId，不通过ip进行解析*/
-                        val zoneId = detail.hostIp!!.substringBefore(".")
-                        specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId.removeSuffixNumb()]
-                    } else {
-                        null
-                    },
+                    zoneConfig = allWindows[it.workspaceName]?.let { i -> specZoneConfig[i.zoneId] ?: defaultZoneConfig[i.zoneId.removeSuffixNumb()] },
                     owner = owners[it.workspaceName],
                     viewers = viewers[it.workspaceName],
                     ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
