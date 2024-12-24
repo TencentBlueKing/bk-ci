@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -621,16 +620,15 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE
             )
-        )
+        ) {
+            logger.warn("BKSystemErrorMonitor|BAD_USER|$userId|$projectId|$pipelineId")
+        }
     }
 
     private fun uploadProjectUserMetrics(

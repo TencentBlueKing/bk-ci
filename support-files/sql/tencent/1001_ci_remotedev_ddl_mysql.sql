@@ -496,6 +496,7 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     ACTION_MSG      varchar(256) default ''                not null comment '操作行为描述',
     CREATED_TIME    timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
     UID             varchar(128) default ''                not null comment 'task id',
+    TASK_ID         varchar(64)                                null comment '任务id',
     STATUS          varchar(32)  default ''                not null comment '操作状态',
     UPDATE_TIME     timestamp    default CURRENT_TIMESTAMP null comment '修改时间',
     KEY `uni_1` (`WORKSPACE_NAME`),
