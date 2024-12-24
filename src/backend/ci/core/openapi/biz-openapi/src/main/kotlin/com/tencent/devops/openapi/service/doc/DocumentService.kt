@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_APPLICATION_STATE_REQUIRED
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_CURL_PROMPT
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DISCRIMINATOR_ILLUSTRATE
@@ -274,20 +273,22 @@ class DocumentService {
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 operation.tags.forEach { tag ->
-                    response[tag] = SwaggerDocResponse(
+                    val res = SwaggerDocResponse(
                         path = path,
                         httpMethod = httpMethod.name,
                         markdown = if (checkMDData) loadMarkdown.joinToString(separator = "") else null,
                         metaData = if (checkMetaData) loadMarkdown else null
                     )
+                    response[tag] = res
                     if (!outputPath.isNullOrBlank()) {
                         FileUtil.outFile(outputPath, "$tag.md", loadMarkdown.joinToString(separator = ""))
                     }
+
+                    if (!outputPath.isNullOrBlank()) {
+                        FileUtil.outFile("$outputPath/json", "$tag.json", JsonUtil.toJson(res))
+                    }
                 }
             }
-        }
-        if (!outputPath.isNullOrBlank()) {
-            FileUtil.outFile(outputPath, "all.json", JsonUtil.toJson(response))
         }
         onLoadTable.clear()
         definitions.clear()
