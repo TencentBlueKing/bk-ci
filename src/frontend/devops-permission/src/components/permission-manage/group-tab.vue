@@ -214,7 +214,6 @@ function collapseClick(resourceType) {
   }
   
   .project-group {
-    font-family: MicrosoftYaHei-Bold;
     font-weight: 700;
     font-size: 14px;
     color: #63656E;

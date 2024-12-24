@@ -609,7 +609,6 @@
         }
         
         span{
-          font-family: MicrosoftYaHei;
           font-size: 12px;
           color: #3A84FF;
           letter-spacing: 0;

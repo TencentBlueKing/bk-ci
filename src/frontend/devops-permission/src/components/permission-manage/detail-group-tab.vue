@@ -170,7 +170,6 @@ function collapseClick(resourceType, flag) {
   
   .project-group {
     display: flex;
-    font-family: MicrosoftYaHei-Bold;
     font-weight: 700;
     font-size: 14px;
     color: #63656E;

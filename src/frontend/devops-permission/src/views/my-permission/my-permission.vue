@@ -922,14 +922,12 @@ function goBack() {
   padding-left: 17px;
   margin-left: 17px;
   border-left: 1px solid #C4C6CC;
-  font-family: MicrosoftYaHei;
   font-size: 12px;
   color: #63656E;
   letter-spacing: 0;
 }
 
 .dialog-text-common {
-  font-family: MicrosoftYaHei;
   font-size: 12px;
   color: #313238;
   line-height: 20px;
@@ -971,7 +969,6 @@ function goBack() {
 
     span {
       display: inline-block;
-      font-family: MicrosoftYaHei;
       text-align: right;
       font-size: 12px;
       color: #63656E;
@@ -1027,7 +1024,6 @@ function goBack() {
 .remove-dialog {
 
   .dialog-header {
-    font-family: MicrosoftYaHei;
     font-size: 20px;
     color: #313238;
     letter-spacing: 0;
@@ -1150,7 +1146,6 @@ function goBack() {
         .main-label {
           margin-bottom: 6px;
           line-height: 22px;
-          font-family: MicrosoftYaHei-Bold;
           font-weight: 700;
           font-size: 14px;
           color: #63656E;
