@@ -134,6 +134,8 @@ const handleConfirmDelete = () => {
     console.error(e);
   } finally {
     isLoading.value = false;
+    showDeleteDialog.value = false;
+    fetchRelSourceList();
   }
 };
 
