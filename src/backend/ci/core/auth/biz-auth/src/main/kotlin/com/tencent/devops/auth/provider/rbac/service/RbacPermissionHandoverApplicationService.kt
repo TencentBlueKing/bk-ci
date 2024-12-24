@@ -103,7 +103,7 @@ class RbacPermissionHandoverApplicationService(
             templateCode = HANDOVER_APPLICATION_TEMPLATE_CODE,
             bodyParams = bodyParams,
             titleParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.RTX.name, NotifyType.EMAIL.name),
+            notifyType = mutableSetOf(NotifyType.WEWORK.name, NotifyType.EMAIL.name),
             receivers = mutableSetOf(overview.approver)
         )
         kotlin.runCatching {
