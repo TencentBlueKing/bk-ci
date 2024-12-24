@@ -587,7 +587,12 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).fetchImages(userId, data)
     }
 
-    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+    override fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): Result<DeleteImageResp> {
         logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
