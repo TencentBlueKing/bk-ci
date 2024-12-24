@@ -75,32 +75,73 @@
             40% { transform: translateY(-20px); }
             60% { transform: translateY(-10px); }
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="message">
+    <div class="message hidden" id="message-container">
         <div class="icon"></div>
-        <h1>Login Successful!</h1>
-        <p>This page will close automatically in 3 seconds.</p>
+        <h1 id="login-success-title">Login Successful!</h1>
+        <p id="auto-close-message">This page will close automatically in 3 seconds.</p>
         <p id="countdown"></p>
 
-        <button onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
+        <button id="close-button" onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
     </div>
 
     <script>
-         function loginSuccess() {
+        const translations = {
+            'en-US': {
+                title: "Login Successful!",
+                autoClose: "This page will close automatically in 3 seconds.",
+                closeButton: "Close",
+                countdown: "Closing in {seconds} seconds..."
+            },
+            'zh-CN': {
+                title: "登录成功!",
+                autoClose: "此页面将在3秒后自动关闭。",
+                closeButton: "关闭",
+                countdown: "将在 {seconds} 秒后关闭..."
+            }
+        };
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function getLanguage() {
+            const lang = getCookie('blueking_language');
+            return translations[lang] ? lang : 'zh-CN';
+        }
+
+        function translatePage() {
+            const lang = getLanguage();
+            const translation = translations[lang];
+
+            document.getElementById('login-success-title').textContent = translation.title;
+            document.getElementById('auto-close-message').textContent = translation.autoClose;
+            document.getElementById('close-button').textContent = translation.closeButton;
+        }
+
+        function loginSuccess() {
             // 向父窗口发送登录成功的消息
             window.parent.postMessage('loginSuccess', '*');
         }
+
         // 倒计时3秒后自动关闭窗口
         function startCountdown() {
+            const lang = getLanguage();
+            const translation = translations[lang];
             let countdownElement = document.getElementById('countdown');
             let seconds = 3;
-            countdownElement.textContent = `Closing in ${seconds} seconds...`;
+            countdownElement.textContent = translation.countdown.replace('{seconds}', seconds);
 
             let interval = setInterval(() => {
                 seconds--;
-                countdownElement.textContent = `Closing in ${seconds} seconds...`;
+                countdownElement.textContent = translation.countdown.replace('{seconds}', seconds);
 
                 if (seconds <= 0) {
                     clearInterval(interval);
@@ -109,9 +150,10 @@
             }, 1000);
         }
 
-        // 开始倒计时
-        
+        // 开始倒计时和翻译页面
         window.onload = function() {
+            translatePage();
+            document.getElementById('message-container').classList.remove('hidden');
             startCountdown();
         }
     </script>
