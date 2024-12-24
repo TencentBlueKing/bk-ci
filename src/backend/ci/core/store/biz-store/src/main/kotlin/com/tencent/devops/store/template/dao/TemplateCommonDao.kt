@@ -142,4 +142,10 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
             }
         }
     }
+
+    override fun getStoreCodeById(dslContext: DSLContext, storeId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(TEMPLATE_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
 }
