@@ -87,19 +87,23 @@ class AuthHandoverOverviewDao {
                 .where(buildQueryConditions(queryRequest))
                 .let {
                     when {
-                        queryRequest.sortType == SortType.FLOW_NO && queryRequest.collationType == CollationType.ASC -> {
+                        queryRequest.sortType == SortType.FLOW_NO &&
+                            queryRequest.collationType == CollationType.ASC -> {
                             it.orderBy(FLOW_NO.asc())
                         }
 
-                        queryRequest.sortType == SortType.FLOW_NO && queryRequest.collationType == CollationType.DESC -> {
+                        queryRequest.sortType == SortType.FLOW_NO &&
+                            queryRequest.collationType == CollationType.DESC -> {
                             it.orderBy(FLOW_NO.desc())
                         }
 
-                        queryRequest.sortType == SortType.CREATE_TIME && queryRequest.collationType == CollationType.ASC -> {
+                        queryRequest.sortType == SortType.CREATE_TIME &&
+                            queryRequest.collationType == CollationType.ASC -> {
                             it.orderBy(CREATE_TIME.asc())
                         }
 
-                        queryRequest.sortType == SortType.CREATE_TIME && queryRequest.collationType == CollationType.DESC -> {
+                        queryRequest.sortType == SortType.CREATE_TIME &&
+                            queryRequest.collationType == CollationType.DESC -> {
                             it.orderBy(CREATE_TIME.desc())
                         }
 
@@ -147,8 +151,20 @@ class AuthHandoverOverviewDao {
             queryRequest.applicant?.let { conditions.add(APPLICANT.like("%${queryRequest.applicant}%")) }
             queryRequest.approver?.let { conditions.add(APPROVER.like("%${queryRequest.approver}%")) }
             queryRequest.handoverStatus?.let { conditions.add(STATUS.eq(queryRequest.handoverStatus!!.value)) }
-            queryRequest.minCreatedTime?.let { conditions.add(CREATE_TIME.ge(DateTimeUtil.convertTimestampToLocalDateTime(it / 1000))) }
-            queryRequest.maxCreatedTime?.let { conditions.add(CREATE_TIME.le(DateTimeUtil.convertTimestampToLocalDateTime(it / 1000))) }
+            queryRequest.minCreatedTime?.let {
+                conditions.add(
+                    CREATE_TIME.ge(
+                        DateTimeUtil.convertTimestampToLocalDateTime(it / 1000)
+                    )
+                )
+            }
+            queryRequest.maxCreatedTime?.let {
+                conditions.add(
+                    CREATE_TIME.le(
+                        DateTimeUtil.convertTimestampToLocalDateTime(it / 1000)
+                    )
+                )
+            }
             return conditions
         }
     }

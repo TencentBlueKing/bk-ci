@@ -155,11 +155,15 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
 
     override fun batchHandleHanoverApplications(request: HandoverOverviewBatchUpdateReq): Boolean = true
 
-    override fun getResourceType2CountOfHandover(queryReq: ResourceType2CountOfHandoverQuery): List<ResourceType2CountVo> {
+    override fun getResourceType2CountOfHandover(
+        queryReq: ResourceType2CountOfHandoverQuery
+    ): List<ResourceType2CountVo> {
         return emptyList()
     }
 
-    override fun listAuthorizationsOfHandover(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverAuthorizationDetailVo> {
+    override fun listAuthorizationsOfHandover(
+        queryReq: HandoverDetailsQueryReq
+    ): SQLPage<HandoverAuthorizationDetailVo> {
         return SQLPage(0, emptyList())
     }
 
