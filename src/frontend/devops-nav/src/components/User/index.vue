@@ -24,7 +24,7 @@
                     v-if="item.to"
                     class="user-menu-item"
                     :to="item.to"
-                    @click.native="hideUserInfo"
+                    @click="hideUserInfo"
                 >
                     {{ item.label }}
                 </router-link>
