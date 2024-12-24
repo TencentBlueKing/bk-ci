@@ -16,6 +16,11 @@ const menuGroups = [
         icon: 'permission-icon-wodequanxian',
       },
       {
+        name: t('申请权限'),
+        code: 'apply',
+        icon: 'permission-icon-quanxianshenqing',
+      },
+      {
         name: t('我的申请'),
         code: 'my-apply',
         icon: 'permission-icon-wodeshenqing',
@@ -24,11 +29,6 @@ const menuGroups = [
         name: t('我的审批'),
         code: 'my-approval',
         icon: 'permission-icon-wodeshenpi',
-      },
-      {
-        name: t('申请权限'),
-        code: 'apply',
-        icon: 'permission-icon-quanxianshenqing',
       },
       {
         name: t('我的交接'),
@@ -70,7 +70,8 @@ const handleChangeMenu = (menu: any) => {
           @click="handleChangeMenu(menu)"
           :class="{
             'menu-item': true,
-            'active': route.name === menu.code
+            'active': route.name === menu.code,
+            'item-border': menu.code === 'apply'
           }"
         >
           <bk-badge
@@ -122,6 +123,9 @@ const handleChangeMenu = (menu: any) => {
       line-height: 40px;
       color: #979BA5;
       margin: 0 18px 0 25px;
+    }
+    .item-border {
+      border-bottom: 1px solid #e4e4e4;
     }
   }
 </style>

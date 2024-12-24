@@ -214,7 +214,7 @@
     :before-close="beforeClose"
   >
     <template #default>
-      <div v-if="!isDetail" class="slider-content">
+      <div v-if="!isDetail" class="slider-content" :style="{height: authorizationInvalid ? 'calc(100vh - 282px)' : 'calc(100vh - 300px)'}">
         <div class="slider-main">
           <p class="main-desc">
             <i18n-t keypath="已选择X个用户组" tag="div">
@@ -234,7 +234,7 @@
             />
           </div>
         </div>
-        <div class="slider-footer">
+        <div class="slider-footer" :style="{height: authorizationInvalid ? '230px' : '170px'}">
           <div class="footer-main" :class="authorizationInvalid ? '' : 'main-line-handover'">
             <div class="main-line">
               <p
@@ -268,10 +268,10 @@
               </p>
 
               <p
-                v-else
+                v-else-if="batchFlag === 'remove'"
                 class="main-label-remove"
               >
-                <i18n-t v-if="batchFlag === 'remove'" keypath="确认退出以上X个用户组吗？" tag="div">
+                <i18n-t keypath="确认退出以上X个用户组吗？" tag="span">
                   <span class="remove-num">{{ checkData.operableCount }}</span>
                 </i18n-t>
               </p>
@@ -1071,7 +1071,6 @@ function goBack() {
 
   .slider-content {
     overflow: auto;
-    height: calc(100vh - 282px);
 
       &::-webkit-scrollbar-thumb {
         background-color: #c4c6cc !important;
@@ -1139,7 +1138,6 @@ function goBack() {
     bottom: 0;
     z-index: 9;
     width: 960px;
-    height: 230px;
     padding: 24px 48px;
     background: #FFFFFF;
     box-shadow: 0 -1px 6px 0 #DCDEE5;
@@ -1175,6 +1173,7 @@ function goBack() {
         .main-label-remove {
           color: #63656e;
           font-size: 16px;
+          margin-top: 24px;
 
           .remove-person {
             color: #63656e;
@@ -1223,9 +1222,9 @@ function goBack() {
   }
 }
 
-.main-line-handover {
-  margin-top: 36px;
-}
+// .main-line-handover {
+//   margin-top: 36px;
+// }
 
 .text-blue {
   color: #699DF4;
