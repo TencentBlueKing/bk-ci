@@ -214,7 +214,7 @@
     :before-close="beforeClose"
   >
     <template #default>
-      <div v-if="!isDetail" class="slider-content" :style="{height: authorizationInvalid ? 'calc(100vh - 282px)' : 'calc(100vh - 300px)'}">
+      <div v-if="!isDetail" class="slider-content" :style="{height: authorizationInvalid ? 'calc(100vh - 282px)' : 'calc(100vh - 226px)'}">
         <div class="slider-main">
           <p class="main-desc">
             <i18n-t keypath="已选择X个用户组" tag="div">
