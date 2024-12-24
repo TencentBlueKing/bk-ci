@@ -89,7 +89,6 @@ import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
@@ -163,7 +162,6 @@ class PipelineBuildFacadeService(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
-    private val buildDetailService: PipelineBuildDetailService,
     private val buildRecordService: PipelineBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val containerBuildRecordService: ContainerBuildRecordService,
@@ -442,7 +440,13 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 
-            val model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
+            val model = buildRecordService.getRecordModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = buildInfo.version,
+                buildId = buildId,
+                executeCount = buildInfo.executeCount
+            ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
@@ -993,7 +997,13 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
+        val model = buildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1302,14 +1312,19 @@ class PipelineBuildFacadeService(
         elementId: String
     ): ReviewParam {
 
-        pipelineRuntimeService.getBuildInfo(projectId, buildId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(buildId)
-            )
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
+        )
 
-        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
+        val model = buildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1452,21 +1467,35 @@ class PipelineBuildFacadeService(
         buildId: String,
         channelCode: ChannelCode
     ): ModelDetail {
-        val newModel = buildDetailService.get(projectId, buildId) ?: throw ErrorCodeException(
+        val newModel = buildRecordService.getBuildRecord(projectId, pipelineId, buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
-        if (newModel.pipelineId != pipelineId) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
-        }
-
         pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
 
-        return newModel
+        return ModelDetail(
+            id = newModel.id,
+            pipelineId = newModel.pipelineId,
+            pipelineName = newModel.pipelineName,
+            userId = newModel.userId,
+            triggerUser = newModel.triggerUser,
+            trigger = newModel.trigger,
+            startTime = newModel.startTime ?: 0,
+            endTime = newModel.endTime ?: 0,
+            status = newModel.status,
+            model = newModel.model,
+            currentTimestamp = newModel.currentTimestamp,
+            buildNum = newModel.buildNum,
+            cancelUserId = newModel.cancelUserId ?: "",
+            curVersion = newModel.curVersion,
+            latestVersion = newModel.latestVersion,
+            latestBuildNum = newModel.latestBuildNum,
+            lastModifyUser = newModel.lastModifyUser,
+            executeTime = newModel.executeTime,
+            triggerReviewers = newModel.triggerReviewers,
+            debug = newModel.debug
+        )
     }
 
     fun getBuildDetailByBuildNo(
@@ -1573,7 +1602,9 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
-            buildInfo = buildInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
             executeCount = executeCount,
             queryDslContext = queryDslContext
         ) ?: throw ErrorCodeException(
