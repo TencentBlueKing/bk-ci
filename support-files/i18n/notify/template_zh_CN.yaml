@@ -1009,3 +1009,49 @@
     body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
   creator: "system"
   modifior: "system"
+- index: 48
+  id: "0f7204084e7c46da8702e3a5c377cd31"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION"
+  templateName: "蓝盾权限交接申请"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d57d7358f5034b21acafde62f27d75fd"
+    title: "蓝盾权限交接申请"
+    body: "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\"content=\"width=device-width,initial-scale=1.0\"><title>蓝盾DevOps平台</title><style>*{box-sizing:border-box}.content-wrapper.num{color:#4e90ff}td,th{padding:5px}</style></head><body><table class=\"template-table\"border=\"0\"cellpadding=\"0\"cellspacing=\"0\"width=\"1000\"style=\"margin:0 auto;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#fff;background:#fff;\"><tbody><tr><td align=\"center\"valign=\"top\"width=\"100%\"style=\"padding:16px;\"><table><tbody><tr><td valign=\"top\"align=\"center\"><table cellpadding=\"0\"cellspacing=\"0\"border=\"0\"bgcolor=\"#f9f8f6\"class=\"layout layout-table root-table\"width=\"100%\"style=\"mso-table-lspace:0pt;mso-table-rspace:0pt;\"><tbody><tr style=\"height:150px;background:#252935;\"><td style=\"padding-left:24px;\"width=\"60\"align=\"center\"><img src=\"http:</td><td style=\"padding-left:6px;\"><img src=\"http:</td></tr></tbody></table></td></tr><tr><td valign=\"top\"style=\"padding:0 24px;\"bgcolor=\"#f9f8f6\"align=\"center\"><table cellpadding=\"0\"cellspacing=\"0\"width=\"100%\"style=\"font-size:16px;margin:0 auto;mso-table-lspace:0pt;mso-table-rspace:0pt;\"><tr><td style=\"background:#fff;border-radius:10px;position:relative;top:-30px;\"><div style=\"padding:20px 36px;background-color:#fff;box-shadow:0 2px 10px 0#19192926;border-radius:10px;\"><p style=\"padding-bottom:20px;line-height:2;border-bottom:1px solid#e6e6e6;font-size:24px;\">蓝盾权限交接申请</p><div class=\"content-wrapper\"style=\"color:#313238;font-size:18px;line-height:2;\"><p style=\"margin:0;padding:0;\">您好，${handoverTo}:</p><p style=\"margin:0;padding:0;text-indent:2em;\"><span>${handoverFrom}</span>已申请将蓝盾项目【${projectName}】下的${handoverOverviews}移交给您，请确认是否接收。</p></div><table style=\"border-collapse:collapse;width:100%;\"bgcolor=\"#fff\"><thead><tr><th style=\"background:#FAFBFD;padding:10px;text-align:center;border-bottom:1px solid#ddd;\">交接类型</th><th style=\"background:#FAFBFD;padding:10px;text-align:center;border-bottom:1px solid#ddd;\">资源类型</th><th style=\"background:#FAFBFD;padding:10px;text-align:center;border-bottom:1px solid#ddd;\">数量</th></tr></thead><tbody>${table}</tbody></table><a href=${url}style=\"display:block;width:300px;padding:10px;margin:0 auto;background-color:#3498db;color:#fff;text-align:center;text-decoration:none;border-radius:30px;margin-top:50px;\">马上处理</a></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "84f28ea9f6c44afaa3b7777cc286c18c"
+    sender: "DevOps"
+    title: "【蓝盾权限】移交通知"
+    body: "${handoverFrom}已申请将蓝盾项目【${projectName}】下的 ${handoverOverviewContentOfRtx}移交给您，请确认是否接收 \n去处理：${url}"
+  creator: "system"
+  modifior: "system"
+- index: 49
+  id: "1519a9a0b92b44fe8e8e813f2b52e012"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION_RESULT"
+  templateName: "蓝盾权限交接审批结果"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "902b30b05d184f478ea8eaaea53533f1"
+    title: "蓝盾权限交接审批结果"
+    body: "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\"content=\"width=device-width,initial-scale=1.0\"><title>蓝盾DevOps平台</title><style>*{box-sizing:border-box}.content-wrapper.num{color:#4e90ff}td,th{padding:5px}</style></head><body><table class=\"template-table\"border=\"0\"cellpadding=\"0\"cellspacing=\"0\"width=\"1000\"style=\"margin:0 auto;mso-table-lspace:0pt;mso-table-rspace:0pt;background-color:#fff;background:#fff;\"><tbody><tr><td align=\"center\"valign=\"top\"width=\"100%\"style=\"padding:16px;\"><table><tbody><tr><td valign=\"top\"align=\"center\"><table cellpadding=\"0\"cellspacing=\"0\"border=\"0\"bgcolor=\"#f9f8f6\"class=\"layout layout-table root-table\"width=\"100%\"style=\"mso-table-lspace:0pt;mso-table-rspace:0pt;\"><tbody><tr style=\"height:150px;background:#252935;\"><td style=\"padding-left:24px;\"width=\"60\"align=\"center\"><img src=\"http:</td><td style=\"padding-left:6px;\"><img src=\"http:</td></tr></tbody></table></td></tr><tr><td valign=\"top\"style=\"padding:0 24px;\"bgcolor=\"#f9f8f6\"align=\"center\"><table cellpadding=\"0\"cellspacing=\"0\"width=\"100%\"style=\"font-size:16px;margin:0 auto;mso-table-lspace:0pt;mso-table-rspace:0pt;\"><tr><td style=\"background:#fff;border-radius:10px;position:relative;top:-30px;\"><div style=\"padding:20px 36px;background-color:#fff;box-shadow:0 2px 10px 0#19192926;border-radius:10px;\"><p style=\"padding-bottom:20px;line-height:2;border-bottom:1px solid#e6e6e6;font-size:24px;\">蓝盾权限交接审批结果</p><div class=\"content-wrapper\"style=\"color:#313238;font-size:18px;line-height:2;\"><p style=\"margin:0;padding:0;text-indent:2em;\">您在蓝盾项目【${projectName}】下的权限移交${result}</p></div><a href=${url}style=\"display:block;width:300px;padding:10px;margin:0 auto;background-color:#3498db;color:#fff;text-align:center;text-decoration:none;border-radius:30px;margin-top:50px;\">查看更多详情</a></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "4ead2e88f2a94fcbb7b1ffc5c523f742"
+    sender: "DevOps"
+    title: "【蓝盾权限】移交审批结果通知"
+    body: "您在蓝盾项目【${projectName}】下的权限移交${result}，更多详情查看：${url}"
+  creator: "system"
+  modifior: "system"
