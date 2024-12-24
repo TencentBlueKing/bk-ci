@@ -84,7 +84,6 @@
     <div class="message hidden" id="message-container">
         <div class="icon"></div>
         <h1 id="login-success-title">Login Successful!</h1>
-        <p id="auto-close-message">This page will close automatically in 3 seconds.</p>
         <p id="countdown"></p>
 
         <button id="close-button" onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
@@ -94,15 +93,13 @@
         const translations = {
             'en-US': {
                 title: "Login Successful!",
-                autoClose: "This page will close automatically in 3 seconds.",
-                closeButton: "Close",
-                countdown: "Closing in {seconds} seconds..."
+                countdown: "This page will close automatically in {seconds} seconds.",
+                closeButton: "Close"
             },
             'zh-CN': {
                 title: "登录成功!",
-                autoClose: "此页面将在3秒后自动关闭。",
-                closeButton: "关闭",
-                countdown: "将在 {seconds} 秒后关闭..."
+                countdown: "此页面将在 {seconds} 秒后自动关闭。",
+                closeButton: "关闭"
             }
         };
 
@@ -122,7 +119,6 @@
             const translation = translations[lang];
 
             document.getElementById('login-success-title').textContent = translation.title;
-            document.getElementById('auto-close-message').textContent = translation.autoClose;
             document.getElementById('close-button').textContent = translation.closeButton;
         }
 
