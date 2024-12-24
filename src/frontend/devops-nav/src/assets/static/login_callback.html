@@ -53,18 +53,27 @@
             color: #666;
             font-size: 16px;
         }
-        button {
+        .button {
             padding: 10px 20px;
-            background-color: #4caf50;
-            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
             transition: background-color 0.3s;
         }
-        button:hover {
+        .close-button {
+            background-color: #4caf50;
+            color: white;
+        }
+        .close-button:hover {
             background-color: #45a049;
+        }
+        .refresh-button {
+            background-color: #2196f3;
+            color: white;
+        }
+        .refresh-button:hover {
+            background-color: #1e88e5;
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -72,7 +81,7 @@
         }
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
+            40% { transform: translateY(-20px); } 
             60% { transform: translateY(-10px); }
         }
         .hidden {
@@ -86,7 +95,8 @@
         <h1 id="login-success-title">Login Successful!</h1>
         <p id="countdown"></p>
 
-        <button id="close-button" onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
+        <button id="close-button" class="button close-button" onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
+        <button id="refresh-button" class="button refresh-button" onclick="refreshParent()">Refresh Page</button> <!-- 新增刷新按钮 -->
     </div>
 
     <script>
@@ -94,12 +104,14 @@
             'en-US': {
                 title: "Login Successful!",
                 countdown: "This page will close automatically in {seconds} seconds.",
-                closeButton: "Close"
+                closeButton: "Close",
+                refreshButton: "Refresh Page"
             },
             'zh-CN': {
                 title: "登录成功!",
                 countdown: "此页面将在 {seconds} 秒后自动关闭。",
-                closeButton: "关闭"
+                closeButton: "关闭",
+                refreshButton: "刷新页面"
             }
         };
 
@@ -120,11 +132,16 @@
 
             document.getElementById('login-success-title').textContent = translation.title;
             document.getElementById('close-button').textContent = translation.closeButton;
+            document.getElementById('refresh-button').textContent = translation.refreshButton;
         }
 
         function loginSuccess() {
             // 向父窗口发送登录成功的消息
             window.parent.postMessage('loginSuccess', '*');
+        }
+
+        function refreshParent() {
+            window.parent.location.reload();
         }
 
         // 倒计时3秒后自动关闭窗口
