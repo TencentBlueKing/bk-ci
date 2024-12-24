@@ -145,6 +145,7 @@
                             <div
                                 class="table-node-item node-item-agstatus"
                                 :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }"
+                                v-bk-overflow-tips="{ content: col.gateway }"
                             >
                                 <span>{{ col.gateway }}</span>
                             </div>
@@ -552,6 +553,9 @@
         .node-item-agstatus {
             flex: 1;
             min-width: 82px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .prompt-operator,

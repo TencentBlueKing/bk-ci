@@ -4,6 +4,7 @@ import {
   PROJECT_PERFIX,
   STORE_PERFIX,
   USER_PERFIX,
+  OPERATE_CHANNEL,
 } from './constants';
 import http from './fetch';
 export default {
@@ -367,4 +368,10 @@ export default {
   syncDeleteGroupPermissions (projectId: string, groupId: any) {
     return http.delete(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/deleteGroupPermissions`);
   },
+  /**
+  * 单条移出
+  */
+  getIsDirectRemove(projectId: string, groupId: number, params: any) {
+    return http.DELETE(`${IAM_PERFIX}/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
+  }
 };

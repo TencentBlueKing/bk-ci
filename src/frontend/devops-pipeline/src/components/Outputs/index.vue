@@ -89,7 +89,9 @@
                     <div class="pipeline-exec-output-header">
                         <span class="pipeline-exec-output-header-name">
                             <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
-                            {{ activeOutputDetail.name }}
+                            <span v-bk-tooltips="activeOutputDetail.name">
+                                {{ activeOutputDetail.name }}
+                            </span>
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
@@ -867,10 +869,16 @@
 
             &-name {
                 display: flex;
+                max-width: 60%;
                 align-items: center;
                 font-size: 16px;
                 color: #313238;
                 padding-right: 16px;
+                >span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
 
                 >i {
                     padding-right: 12px;

@@ -142,13 +142,6 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         } else {
             goNext(to, next)
         }
-
-        const devopsApp = window.document.getElementsByClassName('devops-app')[0]
-        if (to.name === 'my-project') {
-            devopsApp && devopsApp.setAttribute('class', 'devops-app permission-model')
-        } else {
-            devopsApp && devopsApp.setAttribute('class', 'devops-app')
-        }
     })
 
     router.afterEach(route => {
