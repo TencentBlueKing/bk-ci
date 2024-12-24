@@ -38,7 +38,8 @@ const request = axios.create({
 function errorHandler (error) {
     if (typeof error.response === 'undefined') {
         // HACK REDIRECT 302
-        dealLogin(401, error)
+        const err = dealLogin(401, error)
+        return Promise.reject(err)
     }
     return Promise.reject(error)
 }
@@ -71,7 +72,8 @@ request.interceptors.response.use(response => {
     const { data: { data, status, message, code, result } } = response
     const httpStatus = response.status
     if (httpStatus === 302 || httpStatus === 401) {
-        dealLogin(httpStatus, response)
+        const err = dealLogin(httpStatus, response)
+        return Promise.reject(err)
     } else if (httpStatus === 503) {
         const errMsg = {
             status: httpStatus,
@@ -139,8 +141,7 @@ request.jsonp = (url, data, {
 
 function dealLogin (httpStatus, error) {
     bus.$toggleLoginDialog(true)
-    const errorMsg = { httpStatus, message: '登录态已失效' }
-    return Promise.reject(errorMsg)
+    return { httpStatus, message: '登录态已失效' }
 }
 
 Vue.prototype.$ajax = request
