@@ -687,8 +687,8 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "扩容大小", required = true)
         @QueryParam("size")
         size: String,
-        @Parameter(description = "请求报文", required = true)
-        @QueryParam("磁盘唯一标识")
+        @Parameter(description = "磁盘唯一标识", required = true)
+        @QueryParam("pvcId")
         pvcId: String?
     ): Result<ExpandDiskValidateResp?>
 
