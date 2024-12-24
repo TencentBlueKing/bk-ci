@@ -477,7 +477,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         size: String,
         pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
-        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size|$pvcId")
         return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, pvcId)
     }
 
