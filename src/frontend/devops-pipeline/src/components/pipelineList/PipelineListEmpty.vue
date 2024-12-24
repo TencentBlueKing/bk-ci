@@ -23,8 +23,8 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import { ADD_TO_PIPELINE_GROUP, bus } from '@/utils/bus'
     import { mapGetters } from 'vuex'
-    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
 
     export default {
         components: {
@@ -42,6 +42,10 @@
             hasFilter: {
                 type: Boolean,
                 default: false
+            },
+            refreshList: {
+                type: Function,
+                default: () => {}
             }
         },
         computed: {
@@ -79,7 +83,13 @@
                                     text: this.$t('newlist.addPipelineToGroup')
                                 }
                             ]
-                            : []
+                            : [
+                                {
+                                    btnProps,
+                                    handler: this.refreshList,
+                                    text: this.$t('retry')
+                                }
+                            ]
                     }
             }
         }

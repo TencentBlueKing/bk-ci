@@ -22,6 +22,7 @@
         <PipelineListEmpty
             slot="empty"
             :is-patch="isPatchView"
+            :refresh-list="refresh"
         ></PipelineListEmpty>
         <div
             v-if="selectionLength > 0"
