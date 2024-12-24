@@ -134,7 +134,4 @@ class GitConfig {
 
     @Value("\${scm.git.copilot.url:}")
     val copilotUrl: String = ""
-
-    @Value("\${scm.git.copilot.supportHost:}")
-    val supportHost: List<String> = listOf()
 }
