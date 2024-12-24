@@ -997,7 +997,7 @@
   templateName: "BK-CI Permission handover application"
   notifyTypeScope:
     - "EMAIL"
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -1020,7 +1020,7 @@
   templateName: "BK-CI Permission handover application result"
   notifyTypeScope:
     - "EMAIL"
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:

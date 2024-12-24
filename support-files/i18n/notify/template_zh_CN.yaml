@@ -997,7 +997,7 @@
   templateName: "蓝盾权限交接申请"
   notifyTypeScope:
     - "EMAIL"
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -1020,7 +1020,7 @@
   templateName: "蓝盾权限交接审批结果"
   notifyTypeScope:
     - "EMAIL"
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
