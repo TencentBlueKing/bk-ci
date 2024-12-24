@@ -38,7 +38,8 @@ class UserExpertSupportResourceImpl @Autowired constructor(
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
-                message = data.message
+                message = data.message,
+                taskId = data.taskId
             )
         )
     }
