@@ -26,17 +26,15 @@
  */
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CopilotSummaryDao
 import com.tencent.devops.repository.enums.CopilotSummaryCreateStatus
-import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.scm.api.ServiceCopilotResource
-import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.AISummaryRateType
 import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -49,9 +47,7 @@ import org.springframework.stereotype.Service
 @SuppressWarnings("LongParameterList", "LongMethod")
 class RepositoryCopilotService @Autowired constructor(
     val client: Client,
-    val gitConfig: GitConfig,
     val dslContext: DSLContext,
-    val repositoryService: RepositoryService,
     val commitService: CommitService,
     val gitOauthService: IGitOauthService,
     val copilotSummaryDao: CopilotSummaryDao
@@ -68,7 +64,6 @@ class RepositoryCopilotService @Autowired constructor(
         logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId")
         val token = accessToken ?: getAccessToken(userId)
         val (projectName, sourceSha, targetSha) = resolveSummaryParams(
-            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             elementId = elementId
@@ -185,7 +180,6 @@ class RepositoryCopilotService @Autowired constructor(
      * 提取摘要参数
      */
     private fun resolveSummaryParams(
-        projectId: String,
         pipelineId: String,
         buildId: String,
         elementId: String
@@ -200,29 +194,13 @@ class RepositoryCopilotService @Autowired constructor(
                 errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD
             )
         }
-        val (repoId, repoUrl) = commitRecords.first().let { it.repoId to it.url }
-        val projectName = if (repoId == 0L) { // url拉取
-            val (host, projectName) = GitUtils.getDomainAndRepoName(repoUrl)
-            if (!gitConfig.supportHost.contains(host)) {
-                throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPOSITORY_NO_SUPPORT_AI_SUMMARY
-                )
-            }
-            projectName
-        } else {
-            val repository = repositoryService.getRepository(
-                projectId = projectId,
-                repositoryHashId = HashUtil.encodeOtherLongId(repoId),
-                repoAliasName = null
+        val (type, repoUrl) = commitRecords.first().let { it.type to it.url }
+        if (type != ScmType.parse(ScmType.CODE_GIT)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPOSITORY_NO_SUPPORT_AI_SUMMARY
             )
-            // 仅支持code git
-            if (repository !is CodeGitRepository) {
-                throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPOSITORY_NO_SUPPORT_AI_SUMMARY
-                )
-            }
-            repository.projectName
         }
+        val projectName = GitUtils.getDomainAndRepoName(repoUrl).second
         val (sourceSha, targetSha) = commitRecords.first().commit to commitRecords.last().commit
         return Triple(projectName, sourceSha, targetSha)
     }

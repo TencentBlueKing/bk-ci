@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.repository.dao.CommitDao
@@ -93,10 +94,13 @@ class CommitService @Autowired constructor(
             val repoName = a.value[0].repoName
             // 代码库URL
             val repoUrl = a.value[0].repoUrl
+            // 代码库URL
+            val scmType = ScmType.parseShort(a.value[0].type ?: 0)
             CommitResponse(
                 name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoUrl ?: "unknown repo"),
                 elementId = elementId,
-                records = a.value.filter { it.commit.isNotBlank() }
+                records = a.value.filter { it.commit.isNotBlank() },
+                scmType = scmType
             )
         } ?: listOf()
     }
