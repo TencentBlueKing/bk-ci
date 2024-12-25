@@ -242,5 +242,9 @@
     "审批": "Approval",
     "已撤销": "Revoked",
     "选择全量数据X条": "Select all {0} data entries",
-    "申请移交": "Application transfer"
+    "申请移交": "Application transfer",
+    "审批结果": "Approval Result",
+    "请输入审核意见，拒绝时必填": "Please enter review comments, mandatory when rejecting",
+    "拒绝时，审批意见必填": "When rejecting, approval comments are mandatory",
+    "已成功提交「重置授权」申请，等待交接人确认。": "The Reset Authorization request has been successfully submitted, awaiting confirmation from the handover person."
 }

@@ -32,6 +32,7 @@
     <bk-dialog
       v-model:is-show="showBatchApproval"
       class="batch-approval-dialog"
+      :width="600"
       :title="t('审批')"
       header-align="center"
       quick-close
@@ -41,7 +42,7 @@
         label-width="100"
       >
         <bk-form-item
-          :label="t('审批意见')"
+          :label="t('审批结果')" 
           property="name"
         >
           <bk-radio-group
@@ -53,11 +54,11 @@
           
         </bk-form-item>
         <bk-form-item
-          :label="t('备注')"
+          :label="t('审批意见')"
         >
           <bk-input
             v-model="batchApprovalData.remark"
-            placeholder="请输入"
+            :placeholder="t('请输入审核意见，拒绝时必填')"
             clearable
             type="textarea"
             :rows="3"
@@ -70,6 +71,11 @@
           :loading="isFetchLoading"
           class="mr5"
           theme="primary"
+          :disabled="batchApprovalData.handoverAction === 'REJECT' && !batchApprovalData.remark"
+          v-bk-tooltips="{
+            content: t('拒绝时，审批意见必填'),
+            disabled: batchApprovalData.handoverAction === 'REJECT' && !!batchApprovalData.remark
+          }"
           @click="handleConfirmBatch"
         >
           {{ t('确定') }}

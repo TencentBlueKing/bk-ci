@@ -95,10 +95,11 @@
         class="slider-footer approval-wrapper"
         v-if="showApproval"
       >
-        <p class="field">{{ t('备注') }}</p>
+        <p class="field">{{ t('审批意见') }}</p>
         <bk-input
           class="remark-input"
           v-model="remark"
+          :placeholder="t('请输入审核意见，拒绝时必填')"
           type="textarea"
           :rows="3"
           :maxlength="100"
@@ -112,7 +113,12 @@
           {{ t('通过') }}
         </bk-button>
         <bk-button
+          :disabled="!remark"
           :loading="approvalLoading"
+          v-bk-tooltips="{
+            content: t('拒绝时，审批意见必填'),
+            disabled: !!remark
+          }"
           @click="handleApproval('REJECT')"
         >
           {{ t('拒绝') }}
@@ -461,19 +467,20 @@
       position: fixed;
       bottom: 0;
       width: 960px;
-      height: 200px;
+      min-height: 200px;
       background: #FFFFFF;
-      padding: 24px 48px;
+      padding: 20px 48px;
       .field {
         color: #4D4F56;
         font-weight: 700;
         margin-bottom: 6px;
       }
-      .remark-input {
-        margin-bottom: 20px;
-      }
       .agree-btn {
+        margin-top: 20px;
         margin-right: 10px;
+      }
+      .error-text {
+        color: #ff5656;
       }
     }
   }
