@@ -12,7 +12,7 @@ enum class HandoverAction(
     REJECT(2, "已拒绝", "您提交的权限交接单 %s 已被 %s 拒绝。请重新交接。"),
 
     // 撤销
-    REVOKE(3, "撤销","已撤销");
+    REVOKE(3, "撤销", "已撤销");
 
     companion object {
         fun get(value: Int): HandoverAction {
