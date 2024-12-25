@@ -673,6 +673,15 @@ class RbacPermissionManageFacadeServiceImpl(
     ): InvalidAuthorizationsDTO {
         val startEpoch = System.currentTimeMillis()
         try {
+            if (iamGroupIdsOfDirectlyJoined.isEmpty()) {
+                return InvalidAuthorizationsDTO(
+                    invalidGroupIds = emptyList(),
+                    invalidPipelineIds = emptyList(),
+                    invalidRepertoryIds = emptyList(),
+                    invalidEnvNodeIds = emptyList()
+                )
+            }
+
             // 筛选出本次操作中未过期的用户组
             val iamGroupIdsOfNotExpired = getNotExpiredIamGroupIds(
                 projectCode = projectCode,
