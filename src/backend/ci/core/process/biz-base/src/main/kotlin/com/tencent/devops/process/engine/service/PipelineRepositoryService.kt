@@ -1309,7 +1309,7 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         version: Int? = null,
         includeDraft: Boolean? = false,
-        checkPermission: Boolean? = false
+        checkPermission: Boolean? = true
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
