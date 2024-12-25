@@ -1353,7 +1353,7 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
-                        if (checkPermission == true) {
+                        if (checkPermission != true) {
                             transferSensitiveParam(e)
                         }
                     }
