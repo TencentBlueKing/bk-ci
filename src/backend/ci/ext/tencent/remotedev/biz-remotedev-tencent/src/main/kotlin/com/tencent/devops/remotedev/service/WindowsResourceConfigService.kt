@@ -69,7 +69,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val client: Client,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val permissionService: PermissionService
 ) {
 
     companion object {
@@ -512,12 +513,23 @@ class WindowsResourceConfigService @Autowired constructor(
         return curQuota + quota
     }
 
+    fun addProjectRemotedevManagerWithPermission(
+        userId: String,
+        projectId: String,
+        manager: String,
+        delete: Boolean?
+    ): Boolean {
+        permissionService.checkUserProjectManager(userId, projectId)
+        return addProjectRemotedevManager(userId, projectId, manager, delete)
+    }
+
     fun addProjectRemotedevManager(
         userId: String,
         projectId: String,
-        user: String
+        manager: String,
+        delete: Boolean?
     ): Boolean {
-        logger.info("addProjectTotalQuota|projectId|$projectId|user|$user")
+        logger.info("addProjectTotalQuota|projectId|$projectId|manager|$manager|delete=$delete")
         // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
@@ -530,17 +542,17 @@ class WindowsResourceConfigService @Autowired constructor(
             logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
             return false
         }
-        val remotedevManager = projectProperties.remotedevManager
+        val oldManagers = projectProperties.remotedevManager?.split(";")
+            ?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
+        if (delete == true) {
+            oldManagers.removeAll(manager.split(",").toSet())
+        } else {
+            oldManagers.addAll(manager.split(",").toSet())
+        }
         return client.get(OPProjectResource::class).setProjectProperties(
             userId = userId,
             projectCode = projectId,
-            properties = projectProperties.copy(
-                remotedevManager = if (remotedevManager.isNullOrBlank()) {
-                    user
-                } else {
-                    ("$remotedevManager;$user")
-                }
-            )
+            properties = projectProperties.copy(remotedevManager = oldManagers.joinToString(";"))
         ).data == true
     }
 

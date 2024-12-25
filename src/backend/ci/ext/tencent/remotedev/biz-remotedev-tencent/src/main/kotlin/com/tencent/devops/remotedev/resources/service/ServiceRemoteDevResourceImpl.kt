@@ -41,8 +41,10 @@ import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -56,6 +58,7 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -115,7 +118,8 @@ class ServiceRemoteDevResourceImpl(
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val remotedevProjectService: RemotedevProjectService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -210,7 +214,8 @@ class ServiceRemoteDevResourceImpl(
                 userId = operator,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null
+                enable = null,
+                rewriteManages = null
             )
         }
         cgsData.forEach { cgs ->
@@ -827,5 +832,28 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
         return Result(expertSupportService.getTaskStatus(userId, taskId))
+    }
+
+    override fun enableProjectRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
+        return Result(
+            remotedevProjectService.enableRemotedevWithPermission(
+                userId = userId,
+                projectId = data.projectId,
+                enable = data.enable,
+                quota = data.quota ?: 1000,
+                rewriteManages = data.managers
+            )
+        )
+    }
+
+    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
+        return Result(
+            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
+                userId = userId,
+                projectId = data.projectId,
+                manager = data.managers.joinToString(";"),
+                delete = !data.add
+            )
+        )
     }
 }
