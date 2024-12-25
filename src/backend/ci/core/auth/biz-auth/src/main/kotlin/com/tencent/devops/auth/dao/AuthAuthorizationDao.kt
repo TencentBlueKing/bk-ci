@@ -157,7 +157,7 @@ class AuthAuthorizationDao {
         return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
             dslContext.selectFrom(this)
                 .where(buildQueryCondition(condition))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(HANDOVER_TIME.desc())
                 .let {
                     if (condition.page != null && condition.pageSize != null) {
                         it.limit((condition.page!! - 1) * condition.pageSize!!, condition.pageSize)
