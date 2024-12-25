@@ -121,7 +121,7 @@ interface ServiceStoreResource {
     @Operation(summary = "校验流水线用户访问组件信息权限")
     @GET
     @Path("/codes/{storeCode}/pipeline/visit/validate")
-    fun validatePipelineUserAtomPermission(
+    fun validatePipelineUserStorePermission(
         @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,

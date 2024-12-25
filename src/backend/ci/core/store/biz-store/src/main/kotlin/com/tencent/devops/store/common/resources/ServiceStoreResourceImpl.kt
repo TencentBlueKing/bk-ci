@@ -88,7 +88,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
         )
     }
 
-    override fun validatePipelineUserAtomPermission(
+    override fun validatePipelineUserStorePermission(
         storeCode: String,
         storeType: StoreTypeEnum,
         userId: String
