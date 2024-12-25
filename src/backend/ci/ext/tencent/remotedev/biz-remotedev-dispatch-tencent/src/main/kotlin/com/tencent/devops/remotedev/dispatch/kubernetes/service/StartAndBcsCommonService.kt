@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.S
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.START
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.STOP
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.UPGRADE_VM
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CREATE_DISK
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
@@ -89,6 +90,7 @@ class StartAndBcsCommonService @Autowired constructor(
             EXPAND_DISK -> expandDisk(taskStatus, task)
             UPGRADE_VM -> bakOldCreateNewVm(task, taskStatus)
             CLONE_VM -> cloneCreateNewVm(task, taskStatus)
+            CREATE_DISK -> createDisk(taskStatus, task)
         }
     }
 
@@ -457,6 +459,31 @@ class StartAndBcsCommonService @Autowired constructor(
             )
         }.onFailure {
             logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
+        }
+        dispatchWorkspaceOpHisDao.update(
+            dslContext = dslContext,
+            uid = task.uid,
+            status = if (taskStatus.status == TaskStatusEnum.successed) {
+                EnvironmentActionStatus.SUCCEEDED
+            } else {
+                EnvironmentActionStatus.FAILED
+            },
+            actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+        )
+    }
+
+    fun createDisk(
+        taskStatus: TaskStatus,
+        task: DispatchWorkspaceOpHisRecord
+    ) {
+        kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceCreateDiskCallback(
+                taskId = taskStatus.uid,
+                workspaceName = task.workspaceName,
+                operator = task.operator
+            )
+        }.onFailure {
+            logger.warn("workspaceTaskCallback|workspaceCreateDiskCallback fail ${it.message}", it)
         }
         dispatchWorkspaceOpHisDao.update(
             dslContext = dslContext,

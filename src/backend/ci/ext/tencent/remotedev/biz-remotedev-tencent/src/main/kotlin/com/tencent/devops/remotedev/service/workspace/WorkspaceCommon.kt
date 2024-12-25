@@ -118,7 +118,8 @@ class WorkspaceCommon @Autowired constructor(
     private val config: RemoteDevCommonConfig,
     private val streamBridge: StreamBridge,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao
+    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
+    private val remoteDevCommonConfig: RemoteDevCommonConfig
 ) {
 
     companion object {
@@ -702,12 +703,13 @@ class WorkspaceCommon @Autowired constructor(
         )
         // 通知
         notifyControl.notify4SystemAdministrator(
-            notifyTemplateCode,
-            mapOf(
+            notifyTemplateCode = notifyTemplateCode,
+            bodyParams = mapOf(
                 WorkspaceRecord::workspaceName.name to workspace.workspaceName,
                 WorkspaceRecord::projectId.name to workspace.projectId,
                 WorkspaceRecord::createUserId.name to workspace.createUserId
-            ).plus(noticeParams)
+            ).plus(noticeParams),
+            weworkId = remoteDevCommonConfig.weworkId
         )
     }
 

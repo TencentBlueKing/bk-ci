@@ -42,7 +42,7 @@ class DispatchWorkspaceDao {
         event: WorkspaceCreateEvent,
         environmentUid: String,
         regionId: Int,
-        taskId: String? = "",
+        taskUid: String? = "",
         dslContext: DSLContext
     ): Long {
         return with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
@@ -63,7 +63,7 @@ class DispatchWorkspaceDao {
                     environmentUid,
                     -1,
                     regionId,
-                    taskId
+                    taskUid
                 )
                 .returning(ID)
                 .fetchOne()!!.id

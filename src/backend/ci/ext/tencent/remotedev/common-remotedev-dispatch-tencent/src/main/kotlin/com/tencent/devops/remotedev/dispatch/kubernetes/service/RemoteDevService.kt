@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDe
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
@@ -87,8 +88,9 @@ class RemoteDevService @Autowired constructor(
             workspaceName = event.workspaceName,
             environmentUid = result.enviromentUid,
             operator = event.userId,
-            uid = result.taskId,
-            action = EnvironmentAction.CREATE
+            uid = result.taskUid,
+            action = EnvironmentAction.CREATE,
+            taskId = result.taskId
         )
 
         // 记录创建历史
@@ -96,18 +98,18 @@ class RemoteDevService @Autowired constructor(
             userId = event.userId,
             event = event,
             environmentUid = result.enviromentUid,
-            regionId = result.regionId,
-            taskId = result.taskId,
+            regionId = 0,
+            taskUid = result.taskUid,
             dslContext = dslContext
         )
         if (event.devFile.checkWorkspaceAutomaticCorrection()) {
-            val taskStatus = workspaceRedisUtils.getTaskStatus(result.taskId)
+            val taskStatus = workspaceRedisUtils.getTaskStatus(result.taskUid)
             if (taskStatus != null) {
                 remoteDevServiceFactory.loadRemoteDevService(mountType)
                     .workspaceTaskCreate(taskStatus, event.workspaceName, event.userId)
                 dispatchWorkspaceOpHisDao.update(
                     dslContext = dslContext,
-                    uid = result.taskId,
+                    uid = result.taskUid,
                     status = EnvironmentActionStatus.AUTOMATIC_CORRECTION,
                     workspaceName = event.workspaceName
                 )
@@ -158,9 +160,10 @@ class RemoteDevService @Autowired constructor(
         workspaceName: String,
         userId: String,
         size: String,
+        pvcId: String?,
         mountType: WorkspaceMountType
     ): ExpandDiskValidateResp {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size, pvcId)
     }
 
     fun getLastExpandDiskStatusAndTime(
@@ -173,5 +176,14 @@ class RemoteDevService @Autowired constructor(
         ) ?: return Pair(null, null)
 
         return Pair(EnvironmentActionStatus.parse(record.status), record.updateTime)
+    }
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): CreateDiskResp {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).createDisk(workspaceName, userId, size)
     }
 }

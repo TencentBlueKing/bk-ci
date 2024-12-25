@@ -22,9 +22,11 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -38,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -683,10 +686,40 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "请求报文", required = true)
+        @Parameter(description = "扩容大小", required = true)
+        @QueryParam("size")
+        size: String,
+        @Parameter(description = "磁盘唯一标识", required = true)
+        @QueryParam("pvcId")
+        pvcId: String?
+    ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "创建磁盘", tags = ["v4_app_remotedev_workspace_create_disk"])
+    @POST
+    @Path("/workspace_create_disk")
+    fun createWorkspaceDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "磁盘大小", required = true)
         @QueryParam("size")
         size: String
-    ): Result<ExpandDiskValidateResp?>
+    ): Result<CreateDiskResp>
+
+    @Operation(summary = "获取工作空间磁盘列表", tags = ["v4_app_remotedev_workspace_disk_list"])
+    @GET
+    @Path("/workspace_disk_list")
+    fun fetchWorkspaceDiskList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<List<VmDiskInfo>?>
 
     @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
     @POST
@@ -830,6 +863,18 @@ interface ApigwRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "查询任务状态", tags = ["v4_app_remotedev_get_task_status"])
+    @GET
+    @Path("/get_task_status")
+    fun getTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "taskId", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<WorkspaceTaskStatus?>
 
     @Operation(summary = "蓝盾项目开启或关闭云研发", tags = ["v4_app_remotedev_enable_remotedev"])
     @POST

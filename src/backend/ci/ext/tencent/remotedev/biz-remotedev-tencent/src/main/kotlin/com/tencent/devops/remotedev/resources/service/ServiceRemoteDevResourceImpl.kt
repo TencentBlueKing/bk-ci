@@ -33,8 +33,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -49,6 +51,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -698,19 +701,43 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 
-    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+    override fun expandDisk(
+        userId: String,
+        workspaceName: String,
+        size: String,
+        pvcId: String?
+    ): Result<ExpandDiskValidateResp?> {
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
-            size = size
+            size = size,
+            pvcId = pvcId
         ) ?: return Result(null)
-
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
-                message = data.message
+                message = data.message,
+                taskId = data.taskId
             )
         )
+    }
+
+    override fun createDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.createDisk(
+                workspaceName = workspaceName,
+                userId = userId,
+                size = size
+            )
+        )
+    }
+
+    override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
+        return Result(expertSupportService.fetchDiskList(userId, workspaceName))
     }
 
     override fun upgradeWorkspace(
@@ -801,6 +828,10 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
+        return Result(expertSupportService.getTaskStatus(userId, taskId))
     }
 
     override fun enableProjectRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {

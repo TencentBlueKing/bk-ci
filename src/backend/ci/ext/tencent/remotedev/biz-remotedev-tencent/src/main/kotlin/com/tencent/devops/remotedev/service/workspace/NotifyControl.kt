@@ -73,7 +73,6 @@ import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -93,9 +92,6 @@ class NotifyControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao
 ) {
-
-    @Value("\${notice.wework:#{null}}")
-    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyControl::class.java)
@@ -577,7 +573,8 @@ class NotifyControl @Autowired constructor(
      */
     fun notify4SystemAdministrator(
         notifyTemplateCode: String,
-        bodyParams: Map<String, String>
+        bodyParams: Map<String, String>,
+        weworkId: String?
     ) {
         // 通知
         if (!weworkId.isNullOrBlank()) {
@@ -585,7 +582,7 @@ class NotifyControl @Autowired constructor(
                 sendNotifyMessageTemplateRequest(
                     notifyTemplateCode = notifyTemplateCode,
                     bodyParams = bodyParams.plus(
-                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                        NotifyUtils.WEWORK_GROUP_KEY to weworkId
                     ),
                     notifyType = setOf(NotifyType.WEWORK_GROUP.name),
                     markdownContent = false

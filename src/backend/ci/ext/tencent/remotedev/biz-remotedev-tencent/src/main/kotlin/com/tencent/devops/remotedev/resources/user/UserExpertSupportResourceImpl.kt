@@ -3,8 +3,10 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -32,13 +34,19 @@ class UserExpertSupportResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.CGS_EXPAND_DISK)
     override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
-        val data = expertSupportService.expandDisk(workspaceName, userId, size) ?: return Result(null)
+        val data = expertSupportService.expandDisk(workspaceName, userId, size, null) ?: return Result(null)
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
-                message = data.message
+                message = data.message,
+                taskId = data.taskId
             )
         )
+    }
+
+    @AuditEntry(actionId = TencentActionId.CGS_CREATE_DISK)
+    override fun createDisk(userId: String, workspaceName: String, size: String): Result<CreateDiskResp> {
+        return Result(expertSupportService.createDisk(workspaceName = workspaceName, userId = userId, size = size))
     }
 
     override fun expandDiskDetail(userId: String, workspaceName: String): Result<ExpandDiskTaskDetail?> {
