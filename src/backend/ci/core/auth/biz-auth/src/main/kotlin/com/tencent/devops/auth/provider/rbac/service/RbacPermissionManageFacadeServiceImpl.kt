@@ -531,7 +531,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
     private fun getGroupIdsByGroupMemberCondition(
         projectCode: String,
-        commonCondition: GroupMemberCommonConditionReq
+        commonCondition: GroupMemberCommonConditionReq,
+        minExpiredAt: Long? = null
     ): Map<MemberType, List<Int>> {
         val finalMemberGroups = mutableListOf<AuthResourceGroupMember>()
 
@@ -540,7 +541,8 @@ class RbacPermissionManageFacadeServiceImpl(
                 listResourceGroupMembers(
                     projectCode = projectCode,
                     memberId = commonCondition.targetMember.id,
-                    operateChannel = commonCondition.operateChannel
+                    operateChannel = commonCondition.operateChannel,
+                    minExpiredAt = minExpiredAt
                 ).second
             }
 
@@ -550,7 +552,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         projectCode = projectCode,
                         memberId = commonCondition.targetMember.id,
                         resourceType = resourceType,
-                        operateChannel = commonCondition.operateChannel
+                        operateChannel = commonCondition.operateChannel,
+                        minExpiredAt = minExpiredAt
                     ).second
                 }
             }
@@ -567,7 +570,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     memberId = commonCondition.targetMember.id,
                     iamGroupIds = groupIds.map { it.id },
                     operateChannel = commonCondition.operateChannel,
-                    filterMemberType = memberType
+                    filterMemberType = memberType,
+                    minExpiredAt = minExpiredAt
                 ).second
                 finalMemberGroups.addAll(groupsOfSelect)
             }
@@ -1147,7 +1151,8 @@ class RbacPermissionManageFacadeServiceImpl(
         // 成员直接加入的组
         val groupIds = getGroupIdsByGroupMemberCondition(
             projectCode = projectCode,
-            commonCondition = handoverMemberDTO
+            commonCondition = handoverMemberDTO,
+            minExpiredAt = LocalDateTime.now().timestampmilli()
         )[MemberType.get(MemberType.USER.type)]?.toMutableList()
         if (groupIds.isNullOrEmpty()) {
             throw ErrorCodeException(
