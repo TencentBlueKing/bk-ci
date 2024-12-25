@@ -366,7 +366,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         val str = "#{$KEY_PIPELINE_NAME}"
         var model = pipelineModel
         val suffix = storeCode ?: "PUBLIC"
-        var pipelineName = getPublicPipelineName(storeType, suffix)
+        val pipelineName = getPublicPipelineName(storeType, suffix)
         val projectCode = storeInnerPipelineConfig.innerPipelineProject
         if (pipelineModel.contains(str)) {
             model = pipelineModel.replace(
