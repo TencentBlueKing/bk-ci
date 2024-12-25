@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
@@ -47,7 +48,8 @@ class ExtServiceEnvService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val extServiceEnvDao: ExtServiceEnvDao,
-    private val storeProjectRelDao: StoreProjectRelDao
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) {
 
     private val logger = LoggerFactory.getLogger(ExtServiceEnvService::class.java)
@@ -72,20 +74,13 @@ class ExtServiceEnvService @Autowired constructor(
             )
         }
         val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
-        if (!extServiceFeatureRecord.publicFlag) {
-            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+        if (!extServiceFeatureRecord.publicFlag && projectCode != storeInnerPipelineConfig.innerPipelineProject) {
+            val flag = storeProjectRelDao.isInstalledByProject(
                 dslContext = dslContext,
+                projectCode = projectCode,
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
-            val flag = initProjectCode?.let {
-                storeProjectRelDao.isInstalledByProject(
-                    dslContext = dslContext,
-                    projectCode = it,
-                    storeCode = serviceCode,
-                    storeType = StoreTypeEnum.SERVICE.type.toByte()
-                )
-            } ?: false
             if (!flag) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
