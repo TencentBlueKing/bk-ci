@@ -363,7 +363,7 @@ class RbacPermissionHandoverApplicationService(
         private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)
         private const val FLOW_NO_PREFIX = "REQ"
         private const val FLOW_NO_KEY = "AUTH:HANDOVER:FLOW:NO:%s"
-        private const val HANDOVER_APPLICATION_TABLE_OF_EMAIL = "<tr><td style=\"font-size: 14px;\">%s</td><td style=\"font-size: 14px;\">%s</td><td style=\"font-size: 14px;\">%s</td></tr>"
+        private const val HANDOVER_APPLICATION_TABLE_OF_EMAIL = "<tr><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td></tr>"
         private const val HANDOVER_APPLICATION_TEMPLATE_CODE = "BK_PERMISSIONS_HANDOVER_APPLICATION"
     }
 }
