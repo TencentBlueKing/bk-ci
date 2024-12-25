@@ -1873,9 +1873,22 @@ class RbacPermissionManageFacadeServiceImpl(
                     resourceType = ResourceTypeId.PROJECT,
                     resourceCode = request.projectCode
                 ).resourceName
+                val handoverFromCnName = deptService.getMemberInfo(
+                    overview.applicant, ManagerScopesEnum.USER
+                ).displayName
+                val handoverToCnName = deptService.getMemberInfo(
+                    overview.approver, ManagerScopesEnum.USER
+                ).displayName
                 val bodyParams = mapOf(
                     "projectName" to projectName,
                     "result" to request.handoverAction.alias,
+                    "handoverFrom" to overview.applicant.plus("($handoverFromCnName)"),
+                    "remark" to request.remark!!,
+                    "content" to String.format(
+                        request.handoverAction.content,
+                        request.flowNo,
+                        overview.approver.plus("($handoverToCnName)"),
+                    ),
                     "url" to String.format(handoverApplicationUrl, request.flowNo)
                 )
                 // 发邮件

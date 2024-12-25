@@ -14,5 +14,5 @@ data class HandoverOverviewUpdateReq(
     @get:Schema(title = "审批操作")
     val handoverAction: HandoverAction,
     @get:Schema(title = "备注")
-    val remark: String? = null
+    val remark: String? = ""
 )
