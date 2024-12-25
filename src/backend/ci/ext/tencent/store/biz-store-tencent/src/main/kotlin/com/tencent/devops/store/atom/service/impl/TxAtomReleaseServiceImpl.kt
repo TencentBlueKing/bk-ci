@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
 import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
@@ -712,6 +713,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
         startParams[KEY_CODE_SRC] = atomRecord.codeSrc
         startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
+        startParams[KEY_REPOSITORY_HASH_ID] = atomRecord.repositoryHashId
         startParams[KEY_LANGUAGE] = language
         startParams[KEY_SCRIPT] = buildInfo.value1()
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
