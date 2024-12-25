@@ -128,7 +128,7 @@ class RbacPermissionHandoverApplicationService(
                 titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(
                     bkHandoverGroups.plus("，").plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
                 )
-                handoverOverviewContentOfEmail = """<span class="num">$groupCount</span>$bkHandoverGroups，<span class="num">$authorizationCount</span>$bkHandoverAuthorizations""".trimMargin()
+                handoverOverviewContentOfEmail = """<span class="num"> $groupCount </span>$bkHandoverGroups，<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(
                     bkHandoverGroups.plus("，").plus(authorizationCount).plus(bkHandoverAuthorizations)
                 )
@@ -136,13 +136,13 @@ class RbacPermissionHandoverApplicationService(
 
             groupCount > 0 -> {
                 titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(bkHandoverGroups)
-                handoverOverviewContentOfEmail = """<span class="num">$groupCount</span>$bkHandoverGroups""".trimMargin()
+                handoverOverviewContentOfEmail = """<span class="num"> $groupCount </span>$bkHandoverGroups""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(bkHandoverGroups)
             }
 
             else -> {
                 titleOfApplication = titleOfApplication.plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
-                handoverOverviewContentOfEmail = """<span class="num">$authorizationCount</span>$bkHandoverAuthorizations""".trimMargin()
+                handoverOverviewContentOfEmail = """<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(authorizationCount).plus(bkHandoverAuthorizations)
             }
         }
@@ -356,8 +356,7 @@ class RbacPermissionHandoverApplicationService(
         ).map { it.copy(approver = flowNo2Approver[it.flowNo]) }
     }
 
-    private val handoverApplicationUrl =
-        "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
+    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)
