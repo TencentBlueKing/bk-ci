@@ -51,6 +51,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -407,6 +408,22 @@ class ServiceRemoteDevResourceImpl(
             rebuildReq = req
         )
         return Result(true)
+    }
+
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        return Result(
+            cloneWorkspaceHandler.cloneWorkspaceWithTask(
+                userId = userId,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                rebuildReq = req
+            )
+        )
     }
 
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {

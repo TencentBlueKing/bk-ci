@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -258,6 +259,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
         return client.get(ServiceRemoteDevResource::class).workspaceClone(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            req = req
+        )
+    }
+
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        return client.get(ServiceRemoteDevResource::class).workspaceCloneTask(
             userId = userId,
             projectId = projectId,
             workspaceName = workspaceName,
