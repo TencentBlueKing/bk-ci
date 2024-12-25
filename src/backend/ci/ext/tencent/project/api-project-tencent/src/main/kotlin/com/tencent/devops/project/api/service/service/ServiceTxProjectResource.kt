@@ -426,7 +426,8 @@ interface ServiceTxProjectResource {
         addcloudDesktopNum: Int?,
         @Parameter(description = "开启或关闭云研发", required = false)
         @QueryParam("enable")
-        enable: Boolean?
+        enable: Boolean?,
+        rewriteManages: Set<String>?
     ): Result<Boolean>
 
     @Operation(summary = "按项目扩展系统设置consul Tag")

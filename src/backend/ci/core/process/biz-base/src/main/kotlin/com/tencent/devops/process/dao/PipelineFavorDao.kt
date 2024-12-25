@@ -29,11 +29,12 @@ package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 用户收藏流水线
@@ -135,6 +136,14 @@ class PipelineFavorDao {
             return dslContext.selectFrom(this)
                 .where(CREATE_USER.eq(userId).and(PIPELINE_ID.eq(pipelineId)).and(PROJECT_ID.eq(projectId)))
                 .fetch()
+        }
+    }
+
+    fun getMaxId(
+        dslContext: DSLContext
+    ): Long {
+        with(TPipelineFavor.T_PIPELINE_FAVOR) {
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)!!
         }
     }
 

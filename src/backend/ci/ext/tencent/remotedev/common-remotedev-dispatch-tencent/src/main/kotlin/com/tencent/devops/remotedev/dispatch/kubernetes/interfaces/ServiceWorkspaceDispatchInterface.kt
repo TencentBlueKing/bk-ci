@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 
@@ -56,6 +57,14 @@ interface ServiceWorkspaceDispatchInterface {
         workspaceName: String,
         userId: String,
         size: String,
+        pvcId: String?,
         mountType: WorkspaceMountType
     ): Result<ExpandDiskValidateResp>
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): Result<CreateDiskResp>
 }

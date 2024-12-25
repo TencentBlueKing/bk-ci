@@ -24,21 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.devx.service
 
-package com.tencent.devops.remotedev.dispatch.kubernetes.pojo
+import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.store.common.service.AbstractDomainService
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
-enum class EnvironmentActionStatus {
-    PENDING,
-    SUCCEEDED,
-    FAILED,
-    WAIT_TIMEOUT, // 已废弃，看后续是否能下掉
-    AUTOMATIC_CORRECTION;
+@Service("DEVX_DOMAIN_SERVICE")
+class DevxDomainServiceImpl : AbstractDomainService() {
 
-    fun needFix() = this == FAILED || this == WAIT_TIMEOUT
+    @Value("\${bkrepo.devxStaticRepoPrefixUrl:#{null}}")
+    val devxStaticRepoPrefixUrl: String? = null
 
-    companion object {
-        fun parse(status: String): EnvironmentActionStatus {
-            return values().find { it.name == status } ?: SUCCEEDED
+    override fun convertDomain(url: String): String {
+        if (devxStaticRepoPrefixUrl.isNullOrBlank()) {
+            // 如果配置不存在则不进行域名替换
+            return url
         }
+        // 进行域名替换
+        val urlHost = RegexUtils.splitDomainContextPath("$url/")?.first ?: ""
+        val devxHost = RegexUtils.splitDomainContextPath("$devxStaticRepoPrefixUrl/")?.first ?: ""
+        return url.replace(urlHost, devxHost)
     }
 }

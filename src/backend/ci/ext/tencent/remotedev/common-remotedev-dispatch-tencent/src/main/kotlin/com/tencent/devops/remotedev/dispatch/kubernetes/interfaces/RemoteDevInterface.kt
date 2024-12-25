@@ -28,11 +28,14 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
@@ -126,6 +129,22 @@ interface RemoteDevInterface {
     fun expandDisk(
         workspaceName: String,
         userId: String,
-        size: String
+        size: String,
+        pvcId: String?
     ): ExpandDiskValidateResp
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): CreateDiskResp
+
+    fun fetchDiskList(
+        workspaceName: String,
+        userId: String
+    ): List<VmDiskInfo>
+
+    fun taskStatus(
+        taskId: String
+    ): WorkspaceTaskStatus?
 }
