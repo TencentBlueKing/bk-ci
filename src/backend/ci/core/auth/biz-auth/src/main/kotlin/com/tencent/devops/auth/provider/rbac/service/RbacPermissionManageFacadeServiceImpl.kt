@@ -2379,8 +2379,8 @@ class RbacPermissionManageFacadeServiceImpl(
         }
     }
 
-    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?" +
-        "type=handoverFromMe&flowNo=%s"
+    private val handoverApplicationUrl =
+        "${config.devopsHostGateway}/console/permission/my-handover?type=handoverFromMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)

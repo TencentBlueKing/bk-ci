@@ -356,8 +356,8 @@ class RbacPermissionHandoverApplicationService(
         ).map { it.copy(approver = flowNo2Approver[it.flowNo]) }
     }
 
-    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?" +
-        "type=handoverToMe&flowNo=%s"
+    private val handoverApplicationUrl =
+        "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)
