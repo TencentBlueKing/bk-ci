@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
@@ -70,8 +69,7 @@ class TxStoreIndexCronService(
     private val atomDao: AtomDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val codeccApi: CodeccApi,
-    private val client: Client,
-    private val gray: Gray
+    private val client: Client
 ) {
 
     /**
@@ -217,9 +215,6 @@ class TxStoreIndexCronService(
     @Scheduled(cron = "0 0 1 * * ?")
     @Suppress("NestedBlockDepth")
     fun computeAtomQualityIndexInfo() {
-        if (!gray.isGray()) {
-            return
-        }
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
         val storeIndexBaseInfoId =
