@@ -33,7 +33,7 @@
       v-model:is-show="showBatchApproval"
       class="batch-approval-dialog"
       :width="600"
-      :title="t('审批')"
+      :title="t('批量审批')"
       header-align="center"
       quick-close
     >
