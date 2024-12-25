@@ -491,15 +491,6 @@ class StoreReleaseServiceImpl @Autowired constructor(
                             modifier = userId
                         )
                     )
-                    if (newestUndercarriagedRecord.storeType == StoreTypeEnum.ATOM.type.toByte()) {
-                        val hashKey = "${newestUndercarriagedRecord.version.substring(
-                            0, newestUndercarriagedRecord.version.indexOf(".") + 1)}latest"
-                        redisOperation.hset(
-                            key = "ATOM_LATEST_VERSION_KEY_PREFIX:${newestUndercarriagedRecord.storeCode}",
-                            hashKey = hashKey,
-                            values = newestUndercarriagedRecord.version
-                        )
-                    }
                 }
             }
         }
