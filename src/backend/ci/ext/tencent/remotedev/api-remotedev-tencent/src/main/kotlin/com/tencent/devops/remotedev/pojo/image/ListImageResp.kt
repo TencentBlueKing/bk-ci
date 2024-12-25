@@ -21,6 +21,7 @@ data class StandardVmImage(
     val size: String? = null
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "镜像查询参数")
 data class ListImagesData(
     @get:Schema(title = "架构，x86_64 aarch64", required = false)
@@ -46,6 +47,7 @@ data class ListImagesData(
     val zoneId: String?
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(title = "镜像查询返回")
 data class ListImagesResp(
     @get:Schema(title = "镜像总数")
@@ -54,6 +56,7 @@ data class ListImagesResp(
     val items: List<ListImagesRespItem>?
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ListImagesRespItem(
     val architecture: String?,
     val createdAt: String?,
