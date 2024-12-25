@@ -1052,6 +1052,6 @@
     id: "4ead2e88f2a94fcbb7b1ffc5c523f742"
     sender: "DevOps"
     title: "蓝盾权限交接申请 - ${result}"
-    body: "您好，${handoverFrom} \n ${content} \n审核意见：${remark} \n 更多详情查看：${url}"
+    body: "您好，${handoverFrom} \n${content} \n审核意见：${remark} \n更多详情查看：${url}"
   creator: "system"
   modifior: "system"
