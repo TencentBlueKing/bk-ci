@@ -57,7 +57,7 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
     override fun get(userId: String, scmCode: String): Oauth2AccessToken? {
         return githubTokenDao.getOrNull(
             dslContext = dslContext,
-            operator = userId,
+            userId = userId,
             githubTokenType = GithubTokenType.GITHUB_APP
         )?.let {
             Oauth2AccessToken(
