@@ -44,7 +44,7 @@ data class ExtServiceBaseInfoDTO(
     val extServiceDeployInfo: DeployApp,
     @get:Schema(title = "分支", required = false)
     val branch: String? = null,
-    @get:Schema(title = "代码库哈希ID", required = true)
+    @get:Schema(title = "代码库链接", required = true)
     val codeSrc: String,
     @get:Schema(title = "代码库路径", required = false)
     val repositoryPath: String? = null

@@ -727,20 +727,20 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
         val pipelineId: String?
         var projectCode = innerPipelineProject
-        var userName = innerPipelineUser
+        var pipelineUser = innerPipelineUser
         if (atomPipelineRelRecord == null) {
             pipelineId = storePipelineService.creatStorePipelineByStoreCode(storeType = StoreTypeEnum.ATOM.name)
         } else {
             pipelineId = atomPipelineRelRecord.pipelineId
             if (atomPipelineRelRecord.projectCode != innerPipelineProject) {
                 projectCode = atomPipelineRelRecord.projectCode
-                userName = userId
+                pipelineUser = userId
             }
             val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
                 client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
-                    userId = userName,
+                    userId = pipelineUser,
                     projectId = projectCode,
                     pipelineId = buildInfoRecord.pipelineId,
                     buildId = buildInfoRecord.buildId,
@@ -762,7 +762,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         // 触发执行流水线
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
-            userId = userName,
+            userId = pipelineUser,
             projectId = projectCode,
             pipelineId = pipelineId!!,
             values = startParams,

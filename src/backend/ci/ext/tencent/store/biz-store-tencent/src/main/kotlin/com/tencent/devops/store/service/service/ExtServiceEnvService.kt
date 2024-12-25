@@ -71,15 +71,21 @@ class ExtServiceEnvService @Autowired constructor(
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
-        // 判断用户的项目是否安装了该扩展服务
         val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
         if (!extServiceFeatureRecord.publicFlag) {
-            val flag = storeProjectRelDao.isInstalledByUser(
+            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                 dslContext = dslContext,
-                userId = updateExtServiceEnvInfo.userId,
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
+            val flag = initProjectCode?.let {
+                storeProjectRelDao.isInstalledByProject(
+                    dslContext = dslContext,
+                    projectCode = it,
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.SERVICE.type.toByte()
+                )
+            } ?: false
             if (!flag) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,

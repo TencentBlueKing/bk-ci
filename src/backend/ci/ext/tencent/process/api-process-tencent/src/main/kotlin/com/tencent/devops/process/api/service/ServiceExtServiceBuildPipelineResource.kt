@@ -60,7 +60,7 @@ interface ServiceExtServiceBuildPipelineResource {
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "扩展服务构建流水线请求报文体", required = true)
