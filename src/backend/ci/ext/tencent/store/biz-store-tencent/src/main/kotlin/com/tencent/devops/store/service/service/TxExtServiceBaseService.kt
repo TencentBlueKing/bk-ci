@@ -190,7 +190,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         )
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
-        val script = buildInfo.value1()
+        val script = Regex("\\r\\n").replace(buildInfo.value1(), "\n")
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
