@@ -38,6 +38,15 @@ BEGIN
         ADD COLUMN `OPERATOR` varchar(64) DEFAULT NULL COMMENT '操作人';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPOSITORY_SCM_TOKEN'
+                        AND COLUMN_NAME = 'OPERATOR') THEN
+    ALTER TABLE T_REPOSITORY_SCM_TOKEN
+        ADD COLUMN `OPERATOR` varchar(64) DEFAULT NULL COMMENT '操作人';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

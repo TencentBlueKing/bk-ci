@@ -9,11 +9,9 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
-import com.tencent.devops.repository.service.scm.IGitService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service
 @Service
 class OauthRepositoryService @Autowired constructor(
     val oauth2TokenStoreManager: Oauth2TokenStoreManager,
-    val gitService: IGitService,
     val gitOauthService: IGitOauthService,
     val githubOAuthService: GithubOAuthService,
     val repositoryService: RepositoryService
@@ -45,7 +42,10 @@ class OauthRepositoryService @Autowired constructor(
                         userId = userId,
                         scmType = scmCode.convertScmType()
                     ),
-                    type = scmCode,
+                    scmCode = scmCode.value,
+                    scmType = scmCode.convertScmType(),
+                    name = scmCode.name,
+                    operator = it.operator ?: "",
                     createTime = it.createTime,
                     expired = it.expiresIn?.let { expiresIn ->
                         (it.createTime ?: 0L) + expiresIn * 1000 <= System.currentTimeMillis()
@@ -55,9 +55,12 @@ class OauthRepositoryService @Autowired constructor(
             } ?: UserOauthRepositoryInfo(
                 username = userId,
                 repoCount = 0L,
-                type = scmCode,
+                scmCode = scmCode.value,
                 expired = true,
-                authorized = false
+                authorized = false,
+                scmType = scmCode.convertScmType(),
+                name = scmCode.scmName,
+                operator = userId
             )
             list.add(userOauthInfo)
         }
@@ -120,37 +123,10 @@ class OauthRepositoryService @Autowired constructor(
                     repoHashId = null
                 ).redirectUrl
             }
+
+            else -> ""
         }
         return OauthResetUrl(url)
-    }
-
-    /**
-     * 获取git server端真实用户名
-     */
-    private fun getRealUsername(
-        scmCode: ScmCode,
-        accessToken: String
-    ): Pair<Boolean, String?> {
-        var expired = false
-        val username = try {
-            when (scmCode) {
-                ScmCode.TGIT -> {
-                    gitService.getUserInfoByToken(
-                        token = accessToken,
-                        tokenType = TokenTypeEnum.OAUTH
-                    ).name
-                }
-
-                ScmCode.GITHUB -> {
-                    githubOAuthService.getUser(accessToken).login
-                }
-            }
-        } catch (ignored: Exception) {
-            logger.warn("get [$scmCode] user info failed", ignored)
-            expired = true
-            null
-        }
-        return expired to username
     }
 
     companion object {

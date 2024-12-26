@@ -66,7 +66,8 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
                 null,
                 null,
                 it.createTime.timestampmilli(),
-                it.userId
+                it.userId,
+                it.operator
             )
         }
     }

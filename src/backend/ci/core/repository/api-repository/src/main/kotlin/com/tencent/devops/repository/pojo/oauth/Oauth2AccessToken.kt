@@ -36,5 +36,7 @@ data class Oauth2AccessToken(
     val refreshToken: String? = null,
     val createTime: Long? = 0L,
     @get:Schema(title = "server端用户名")
-    val userId: String? = null
+    val userId: String? = null,
+    @get:Schema(title = "操作者")
+    val operator: String? = null
 )

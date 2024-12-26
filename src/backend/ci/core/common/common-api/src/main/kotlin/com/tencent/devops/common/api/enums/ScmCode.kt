@@ -30,14 +30,16 @@ package com.tencent.devops.common.api.enums
 /**
  * 代码库类型
  */
-enum class ScmCode {
-    TGIT, // 内部工蜂
-    GITHUB; // github
+enum class ScmCode(val scmName: String, val value: String) {
+    TGIT("GIT", "TGIT"), // 内部工蜂
+    GITHUB("GITHUB", "GITHUB"), // github
+    TGIT_CO("TGIT_CO", "TGIT-CO"); // github
 
     fun convertScmType(): ScmType {
         return when (this) {
             TGIT -> ScmType.CODE_GIT
             GITHUB -> ScmType.GITHUB
+            TGIT_CO -> ScmType.CODE_TGIT
         }
     }
 }
