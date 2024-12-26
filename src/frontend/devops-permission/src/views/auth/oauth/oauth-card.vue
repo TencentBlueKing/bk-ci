@@ -26,7 +26,7 @@ const props = defineProps({
   oauth: Object,
 });
 
-const oauthType = computed(() => props.oauth.type);
+const oauthType = computed(() => props.oauth.scmType);
 const showDeleteDialog = ref(false);
 const showRefreshDialog = ref(false);
 const showAuthorizeDialog = ref(false);
@@ -52,16 +52,16 @@ const getCodeIcon = (type: string, expired: boolean) => {
   const expiredIconMap = {
     'GITLAB': GitlabExpireIcon,
     'GITHUB': GithubExpireIcon,
-    'TGIT': TgitExpireIcon,
-    'GIT': GitExpireIcon,
+    'TGIT-CO': TgitExpireIcon,
+    'TGIT': GitExpireIcon,
     'SVN': SvnExpireIcon,
     'P4': P4ExpireIcon,
   };
   const iconMap = {
     'GITLAB': GitlabIcon,
     'GITHUB': GithubIcon,
-    'TGIT': TgitIcon,
-    'GIT': GitIcon,
+    'TGIT-CO': TgitIcon,
+    'TGIT': GitIcon,
     'SVN': SvnIcon,
     'P4': P4Icon,
   };
@@ -187,9 +187,9 @@ const handleAuthorize = () => {
   <section>
     <div :class="['oauth-card', { 'expired': oauth.expired }]">
       <div class="code-info">
-        <img class="code-icon" :src="getCodeIcon(oauth.type, oauth.expired)" />
+        <img class="code-icon" :src="getCodeIcon(oauth.scmType, oauth.expired)" />
         <div>
-          <p class="code-type">{{ oauth.type }}</p>
+          <p class="code-type">{{ oauth.name }}</p>
           <div class="code-creator">
             <span class="name" v-bk-tooltips="t('授权账号')">
               <i class="permission-icon permission-icon-user"></i>
@@ -251,7 +251,7 @@ const handleAuthorize = () => {
       <div class="content">
         <div class="title">{{ t(' OAUTH授权') }}</div>
         <div class="oauth-tips">
-          <template v-if="oauth.type !== 'GITHUB'">
+          <template v-if="oauth.scmType !== 'GITHUB'">
             <p>{{ t('此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
             <p>1.{{ t('回写 Commit statuses 到 Github') }}</p>
             <p>2.{{ t('流水线中 Checkout 代码') }}</p>
@@ -281,7 +281,7 @@ const handleAuthorize = () => {
         <div class="title">{{ t('确认删除 OAUTH?') }}</div>
         <div class="content">
           <span>{{ t('OAUTH 授权:') }}</span>
-          <span>{{ oauth.type }}</span>
+          <span>{{ oauth.scmType }}</span>
         </div>
       </template>
       <template v-else>
@@ -289,7 +289,7 @@ const handleAuthorize = () => {
         <div class="title">{{ t('无法删除 OAUTH') }}</div>
         <div class="cannot-delete-content">
           <span>{{ t('OAUTH 授权:') }}</span>
-          <span>{{ oauth.type }}</span>
+          <span>{{ oauth.scmType }}</span>
           <div class="tips">
             <p>{{ t('有 X 个代码库正在使用此 OAUTH 授权，无法直接删除。', [oauth.repoCount]) }}</p>
             <p>{{ t('请先修改对应代码库的授权方式，或者请新的负责人重置代码库授权后重试。') }}</p>
@@ -349,7 +349,7 @@ const handleAuthorize = () => {
       <div class="title">{{ t('确认刷新 OAUTH?') }}</div>
       <div class="refresh-content">
         <span>{{ t('OAUTH 授权:') }}</span>
-        <span>{{ oauth.type }}</span>
+        <span>{{ oauth.scmType }}</span>
         <div class="tips">
           {{ t('刷新过程中可能会导致正在使用此 OAUTH 授权的流水线运行失败。') }}
         </div>
