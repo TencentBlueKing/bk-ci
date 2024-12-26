@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 
 /**
@@ -103,7 +104,7 @@ interface RemoteDevInterface {
         machineType: String?,
         zoneId: String?,
         live: Boolean?
-    ): String
+    ): TaskCommonResp
 
     /**
      * 获取工作空间web端链接

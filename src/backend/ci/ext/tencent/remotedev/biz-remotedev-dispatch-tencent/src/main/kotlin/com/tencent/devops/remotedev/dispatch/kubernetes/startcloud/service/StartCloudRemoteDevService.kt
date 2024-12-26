@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -258,7 +259,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         machineType: String?,
         zoneId: String?,
         live: Boolean?
-    ): String {
+    ): TaskCommonResp {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
@@ -272,7 +273,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 live = live
             )
         )
-        return resp.taskUid
+        return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)
     }
 
     override fun expandDisk(

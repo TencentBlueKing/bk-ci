@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -278,6 +279,22 @@ interface ServiceRemoteDevResource {
         workspaceName: String,
         req: WorkspaceCloneReq
     ): Result<Boolean>
+
+    @Operation(summary = "克隆windows工作空间，返回任务ID")
+    @POST
+    @Path("/workspace_clone_task")
+    fun workspaceCloneTask(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp>
 
     @Operation(summary = "删除windows工作空间-项目")
     @DELETE
