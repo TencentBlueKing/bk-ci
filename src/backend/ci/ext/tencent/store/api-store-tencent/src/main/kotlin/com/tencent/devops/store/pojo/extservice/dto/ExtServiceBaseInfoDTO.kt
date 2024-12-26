@@ -46,6 +46,6 @@ data class ExtServiceBaseInfoDTO(
     val branch: String? = null,
     @get:Schema(title = "代码库链接", required = true)
     val codeSrc: String,
-    @get:Schema(title = "代码库路径", required = false)
+    @get:Schema(title = "代码库保存路径", required = false)
     val repositoryPath: String? = null
 )
