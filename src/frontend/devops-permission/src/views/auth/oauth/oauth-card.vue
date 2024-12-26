@@ -251,7 +251,7 @@ const handleAuthorize = () => {
       <div class="content">
         <div class="title">{{ t(' OAUTH授权') }}</div>
         <div class="oauth-tips">
-          <template v-if="oauth.scmType !== 'GITHUB'">
+          <template v-if="oauth.scmType === 'GITHUB'">
             <p>{{ t('此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
             <p>1.{{ t('回写 Commit statuses 到 Github') }}</p>
             <p>2.{{ t('流水线中 Checkout 代码') }}</p>
