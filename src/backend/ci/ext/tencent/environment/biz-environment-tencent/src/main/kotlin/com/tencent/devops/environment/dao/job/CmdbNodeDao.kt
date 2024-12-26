@@ -725,7 +725,10 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun getNodesBaseInfoByHostIds(dslContext: DSLContext, hostList: List<Host>): Result<Record4<Long, String, Long, Long>> {
+    fun getNodesBaseInfoByHostIds(
+        dslContext: DSLContext,
+        hostList: List<Host>
+    ): Result<Record4<Long, String, Long, Long>> {
         val hostIdList = hostList.map { it.bkHostId }
         return with(TNode.T_NODE) {
             dslContext.select(
