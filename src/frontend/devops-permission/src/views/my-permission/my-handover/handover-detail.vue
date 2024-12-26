@@ -230,7 +230,7 @@
       },
       {
         field: 'remark',
-        label: t('备注'),
+        label: t('审核意见'),
         value: props.data?.remark || '--'
       },
     ]

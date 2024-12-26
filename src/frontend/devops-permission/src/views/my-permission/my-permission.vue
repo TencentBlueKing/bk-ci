@@ -220,9 +220,17 @@
             <i18n-t keypath="已选择X个用户组" tag="div">
               <span class="desc-primary">{{ checkData.totalCount }}</span>
             </i18n-t>
-            <i18n-t v-if="checkData.inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-              <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
-            </i18n-t>
+
+            <template v-if="checkData.inoperableCount">
+              <i18n-t keypath="；其中X个用户组X，" tag="span">
+                <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
+              </i18n-t>
+              <span v-if="batchFlag === 'remove' && checkData.needToHandover">
+                {{ t("需先完成交接。") }}
+                <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+              </span>
+              <span v-else>{{ t("本次操作将忽略。") }}</span>
+            </template>
           </p>
           <div>
             <GroupTab
@@ -244,27 +252,16 @@
                 <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
                 <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
 
-                <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
-                </i18n-t>
+                <span v-for="(item, index) in activeItems" :key="item.key">
+                  <i18n-t :keypath="item.keypath" tag="span">
+                    <span class="remove-num">{{ item.count }}</span>
+                  </i18n-t>
+                  <span>{{ index === activeItems.length - 1 ? '。' : '，' }}</span>
+                </span>
 
-                <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="checkData.uniqueManagerCount && batchFlag === 'remove'" keypath="X个资源没有拥有者，" tag="span">
-                  <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="checkData.invalidEnvNodeAuthorizationCount" keypath="X个环境节点授权失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidEnvNodeAuthorizationCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="batchFlag === 'remove'" keypath="查看详情, 请填写交接人，完成交接后才能成功退出。" tag="span">
-                  <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
-                </i18n-t>
-                
-                <span v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</span>
+                <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+                <p v-if="batchFlag === 'remove'">{{ t("请填写交接人，完成交接后才能成功退出。") }}</p>
+                <p v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</p>
               </p>
 
               <p
@@ -324,8 +321,10 @@
           :page-value-change="detailPageValueChange"
           @collapse-click="detailCollapseClick"
         />
-        <bk-button class="go-back" @click="goBack">{{t("返回")}}</bk-button>
       </div>
+    </template>
+    <template #footer>
+      <bk-button v-if="isDetail" class="go-back" @click="goBack">{{t("返回")}}</bk-button>
     </template>
   </bk-sideslider>
 </template>
@@ -443,6 +442,34 @@ const {
   detailPageLimitChange,
   detailPageValueChange,
 } = detailGroupTable;
+
+const activeItems = computed(() => {
+  const items = [
+    {
+      key: 'pipeline',
+      keypath: 'X个流水线权限代持失效',
+      count: checkData.value.invalidPipelineAuthorizationCount
+    },
+    {
+      key: 'repository',
+      keypath: 'X个代码库授权失效',
+      count: checkData.value.invalidRepositoryAuthorizationCount
+    },
+    {
+      key: 'manager',
+      keypath: 'X个资源没有拥有者',
+      count: checkData.value.uniqueManagerCount,
+      condition: batchFlag.value === 'remove'
+    },
+    {
+      key: 'envNode',
+      keypath: 'X个环境节点授权失效',
+      count: checkData.value.invalidEnvNodeAuthorizationCount
+    }
+  ];
+
+  return items.filter(item => item.count && (item.condition === undefined || item.condition));
+})
 
 onMounted(() => {
   getUser();
@@ -1083,9 +1110,9 @@ function goBack() {
   }
 
   .slider-detail {
-    margin: 16px 24px;
+    margin: 15px 0 24px;
     overflow: auto;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 135px);
 
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -1099,10 +1126,11 @@ function goBack() {
       width: 8px !important;
       height: 8px !important;
     }
+  }
 
-    .go-back {
-      margin-top: 18px;
-    }
+  .go-back {
+    position: absolute;
+    bottom: 5px;
   }
 
   .slider-main {
@@ -1153,7 +1181,7 @@ function goBack() {
 
         .main-text {
           font-size: 14px;
-          margin-bottom: 24px;
+          margin-bottom: 20px;
           color: #63656E;
         }
 
@@ -1176,11 +1204,6 @@ function goBack() {
             font-weight: 700;
           }
         }
-      }
-      .remove-num {
-        color: #3a84ff;
-        font-size: 14px;
-        font-weight: 700;
       }
 
       .main-line-remove {
@@ -1217,12 +1240,14 @@ function goBack() {
   }
 }
 
-// .main-line-handover {
-//   margin-top: 36px;
-// }
-
 .text-blue {
   color: #699DF4;
+}
+
+.remove-num {
+  color: #3a84ff;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .remove-detail {

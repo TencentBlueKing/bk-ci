@@ -317,21 +317,12 @@
                 <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
                 <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
 
-                <i18n-t v-if="checkData.invalidPipelineAuthorizationCount" keypath="X个流水线权限代持失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidPipelineAuthorizationCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="checkData.invalidRepositoryAuthorizationCount" keypath="X个代码库授权失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidRepositoryAuthorizationCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="checkData.uniqueManagerCount && batchFlag === 'remove'" keypath="X个资源没有拥有者，" tag="span">
-                  <span class="remove-num">{{ checkData.uniqueManagerCount }}</span>
-                </i18n-t>
-
-                <i18n-t v-if="checkData.invalidEnvNodeAuthorizationCount" keypath="X个环境节点授权失效，" tag="span">
-                  <span class="remove-num">{{ checkData.invalidEnvNodeAuthorizationCount }}</span>
-                </i18n-t>
+                <span v-for="(item, index) in activeItems" :key="item.key">
+                  <i18n-t :keypath="item.keypath" tag="span">
+                    <span class="remove-num">{{ item.count }}</span>
+                  </i18n-t>
+                  <span>{{ index === activeItems.length - 1 ? '。' : '，' }}</span>
+                </span>
                 
                 <span v-if="batchFlag === 'remove'">{{ t('请填写交接人，完成交接后才能成功退出。') }}</span>
                 
@@ -503,13 +494,40 @@ const {
   handleAsideRemoveConfirm,
   getProjectMembers,
 } = manageAsideStore;
+const activeItems = computed(() => {
+  const items = [
+    {
+      key: 'pipeline',
+      keypath: 'X个流水线权限代持失效',
+      count: checkData.value.invalidPipelineAuthorizationCount
+    },
+    {
+      key: 'repository',
+      keypath: 'X个代码库授权失效',
+      count: checkData.value.invalidRepositoryAuthorizationCount
+    },
+    {
+      key: 'manager',
+      keypath: 'X个资源没有拥有者',
+      count: checkData.value.uniqueManagerCount,
+      condition: batchFlag.value === 'remove'
+    },
+    {
+      key: 'envNode',
+      keypath: 'X个环境节点授权失效',
+      count: checkData.value.invalidEnvNodeAuthorizationCount
+    }
+  ];
 
+  return items.filter(item => item.count && (item.condition === undefined || item.condition));
+})
 onMounted(() => {
   init(true);
 });
 watch(projectId, () => {
   init(true);
 });
+
 function init (flag, searchValue) {
   searchGroup.value = searchValue
   memberPagination.value.current = 1;

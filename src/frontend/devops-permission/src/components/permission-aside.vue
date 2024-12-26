@@ -79,7 +79,7 @@ const handleChangeMenu = (menu: any) => {
             theme="danger"
             dot
             :visible="true"
-            style="margin: 0 18px 0 25px"
+            style="margin: 0 18px 0 22px"
           >
             <i class="permission-icon" :class="menu.icon"></i>
           </bk-badge>
@@ -107,6 +107,7 @@ const handleChangeMenu = (menu: any) => {
       align-items: center;
       width: 240px;
       height: 40px;
+      margin-top: 4px;
       cursor: pointer;
       &:hover {
         color: #3A84FF;
@@ -118,11 +119,10 @@ const handleChangeMenu = (menu: any) => {
       background-color: #E1ECFF;
     }
     .menu-theme {
-      width: 240px;
       height: 40px;
       line-height: 40px;
       color: #979BA5;
-      margin: 0 18px 0 25px;
+      margin: 8px 0 0 22px;
     }
     .item-border {
       border-bottom: 1px solid #e4e4e4;
