@@ -73,8 +73,8 @@ class TxStoreIndexCronService(
     private val client: Client
 ) {
 
-    @Value("\${codecc.tag:#{null}}")
-    private val codeccTag: String = ""
+    @Value("\${codecc.opensource.tag:#{null}}")
+    private val codeccOpensourceTag: String = ""
 
     /**
      * 计算插件SLA指标数据
@@ -406,7 +406,7 @@ class TxStoreIndexCronService(
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
             val result =
-                codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, codeccTag).data?.get("rdIndicatorsScore")
+                codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, codeccOpensourceTag).data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0
