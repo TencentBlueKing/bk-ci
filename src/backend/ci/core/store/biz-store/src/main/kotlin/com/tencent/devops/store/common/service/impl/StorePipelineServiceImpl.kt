@@ -471,7 +471,9 @@ class StorePipelineServiceImpl @Autowired constructor(
                 businessValue = "PIPELINE_ID"
             )
             pipelineIdConfig?.let {
-                return it.configValue
+                if (storeCode.isNullOrBlank()) {
+                    return it.configValue
+                }
             }
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = dslContext,
