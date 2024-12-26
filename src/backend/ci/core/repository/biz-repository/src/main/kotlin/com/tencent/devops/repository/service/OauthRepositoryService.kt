@@ -44,7 +44,7 @@ class OauthRepositoryService @Autowired constructor(
                     ),
                     scmCode = scmCode.value,
                     scmType = scmCode.convertScmType(),
-                    name = scmCode.name,
+                    name = scmCode.scmName,
                     operator = it.operator ?: "",
                     createTime = it.createTime,
                     expired = it.expiresIn?.let { expiresIn ->
