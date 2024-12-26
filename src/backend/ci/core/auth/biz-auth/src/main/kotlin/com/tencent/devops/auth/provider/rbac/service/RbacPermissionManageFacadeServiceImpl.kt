@@ -1899,7 +1899,7 @@ class RbacPermissionManageFacadeServiceImpl(
                         request.flowNo,
                         overview.approver.plus("($handoverToCnName)"),
                     ),
-                    "url" to String.format(handoverApplicationUrl, request.flowNo)
+                    "url" to String.format(url, request.flowNo)
                 )
                 // 发邮件
                 val emailRequest = SendNotifyMessageTemplateRequest(
@@ -2384,8 +2384,7 @@ class RbacPermissionManageFacadeServiceImpl(
         }
     }
 
-    private val handoverApplicationUrl =
-        "${config.devopsHostGateway}/console/permission/my-handover?type=handoverFromMe&flowNo=%s"
+    private val url = "${config.devopsHostGateway}/console/permission/my-handover?type=handoverFromMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)
