@@ -1,16 +1,8 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.enum.BatchOperateType
-import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
-import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
-import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
-import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
-import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
-import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -50,25 +42,6 @@ interface PermissionResourceMemberService {
 
     fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo>
 
-    fun listResourceGroupMembers(
-        projectCode: String,
-        memberId: String,
-        resourceType: String? = null,
-        iamGroupIds: List<Int>? = null,
-        minExpiredAt: Long? = null,
-        maxExpiredAt: Long? = null,
-        start: Int? = null,
-        limit: Int? = null
-    ): Pair<Long, List<AuthResourceGroupMember>>
-
-    /**
-     * 获取用户在该项目加入的组
-     * */
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int>
-
     fun batchDeleteResourceGroupMembers(
         projectCode: String,
         iamGroupId: Int,
@@ -76,41 +49,10 @@ interface PermissionResourceMemberService {
         departments: List<String>? = emptyList()
     ): Boolean
 
-    fun batchDeleteResourceGroupMembers(
-        userId: String,
-        projectCode: String,
-        removeMemberDTO: GroupMemberCommonConditionReq
-    ): Boolean
-
     fun deleteIamGroupMembers(
         groupId: Int,
         type: String,
         memberIds: List<String>
-    ): Boolean
-
-    fun batchHandoverGroupMembers(
-        userId: String,
-        projectCode: String,
-        handoverMemberDTO: GroupMemberHandoverConditionReq
-    ): Boolean
-
-    fun batchOperateGroupMembersCheck(
-        userId: String,
-        projectCode: String,
-        batchOperateType: BatchOperateType,
-        conditionReq: GroupMemberCommonConditionReq
-    ): BatchOperateGroupMemberCheckVo
-
-    fun removeMemberFromProject(
-        userId: String,
-        projectCode: String,
-        removeMemberFromProjectReq: RemoveMemberFromProjectReq
-    ): List<ResourceMemberInfo>
-
-    fun removeMemberFromProjectCheck(
-        userId: String,
-        projectCode: String,
-        removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): Boolean
 
     fun roleCodeToIamGroupId(
@@ -134,23 +76,10 @@ interface PermissionResourceMemberService {
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean
 
-    // 无需审批版本
-    fun renewalGroupMember(
-        userId: String,
-        projectCode: String,
-        renewalConditionReq: GroupMemberSingleRenewalReq
-    ): Boolean
-
     fun renewalIamGroupMembers(
         groupId: Int,
         members: List<ManagerMember>,
         expiredAt: Long
-    ): Boolean
-
-    fun batchRenewalGroupMembers(
-        userId: String,
-        projectCode: String,
-        renewalConditionReq: GroupMemberRenewalConditionReq
     ): Boolean
 
     fun addGroupMember(
@@ -174,10 +103,5 @@ interface PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>? = emptyList(),
         departments: List<String>? = emptyList()
-    ): Boolean
-
-    fun isProjectMember(
-        projectCode: String,
-        userId: String
     ): Boolean
 }
