@@ -25,6 +25,8 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsR
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
@@ -89,7 +91,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info(
                     "$id|User $userId create environment response: " +
-                        "${response.rid()}|${response.code}|$responseContent"
+                            "${response.rid()}|${response.code}|$responseContent"
                 )
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
@@ -101,12 +103,12 @@ class WorkspaceBcsClient @Autowired constructor(
                 logger.info("$id|createWorkspace rsp: $environmentRsp")
                 when {
                     WorkspaceStartCloudClient.OK == environmentRsp.code && environmentRsp.data != null
-                    -> return environmentRsp.data
+                        -> return environmentRsp.data
 
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
-                    -> throw WorkspaceDispatchException(
+                        -> throw WorkspaceDispatchException(
                         "创建环境接口返回失败: ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
-                            "型云桌面资源不足(${environmentRsp.code})"
+                                "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw WorkspaceDispatchException(
@@ -409,6 +411,44 @@ class WorkspaceBcsClient @Autowired constructor(
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<WorkspaceTaskStatus>>().data
     }
 
+    fun fetchImages(
+        data: ListImagesData
+    ): ListImagesResp? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/images".addQuery(
+            "architecture" to data.architecture,
+            "envId" to data.envId,
+            "imageName" to data.imageName,
+            "imageType" to data.imageType,
+            "machineType" to data.machineType,
+            "platform" to data.platform,
+            "projectId" to data.projectId,
+            "provider" to data.provider,
+            "zoneId" to data.zoneId
+        )
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<ListImagesResp>>().data
+    }
+
+    fun deleteImage(
+        imageId: String,
+        delaySeconds: Int?
+    ): EnvironmentOperateRsp.EnvironmentOperateRspData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/images/$imageId".addQuery(
+            "delaySeconds" to delaySeconds
+        )
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .delete()
+            .build()
+        return OkhttpUtils.doHttp(request)
+            .resolveResponse<EnvironmentOperateRsp>().data
+    }
+
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
@@ -430,6 +470,23 @@ class WorkspaceBcsClient @Autowired constructor(
         val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appToken)
         val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
         return mapOf("X-Bkapi-Authorization" to headerStr, "BK-Devops-Token" to bcsToken)
+    }
+
+    private fun String.addQuery(vararg pairs: Pair<String, Any?>): String {
+        val sb = StringBuilder(this)
+        var flag = 0
+        pairs.forEach { (name, value) ->
+            if (value == null) {
+                return@forEach
+            }
+            flag += 1
+            if (flag == 1) {
+                sb.append("?$name=$value")
+            } else {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
     }
 
     companion object {

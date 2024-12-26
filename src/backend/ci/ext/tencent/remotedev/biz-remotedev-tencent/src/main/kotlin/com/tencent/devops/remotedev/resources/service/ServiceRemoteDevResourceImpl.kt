@@ -37,6 +37,9 @@ import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -563,6 +566,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    @Deprecated("老的下掉，要被新的代替")
     override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
@@ -853,6 +857,21 @@ class ServiceRemoteDevResourceImpl(
                 projectId = data.projectId,
                 manager = data.managers.joinToString(";"),
                 delete = !data.add
+            )
+        )
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        return Result(imageManageService.fetchImages(userId, data))
+    }
+
+    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+        return Result(
+            imageManageService.deleteImage(
+                userId = userId,
+                projectId = projectId,
+                imageId = imageId,
+                delaySeconds = delaySeconds
             )
         )
     }

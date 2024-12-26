@@ -22,6 +22,9 @@ import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -399,6 +402,7 @@ interface ServiceRemoteDevResource {
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
 
+    @Deprecated(message = "老的下掉，要被新的代替")
     @Operation(summary = "获取镜像列表")
     @GET
     @Path("/image/list")
@@ -804,4 +808,32 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: UpdateRemotedevDataManagers
     ): Result<Boolean>
+
+    @Operation(summary = "获取镜像列表")
+    @POST
+    @Path("/images")
+    fun fetchImages(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?>
+
+    @Operation(summary = "删除镜像")
+    @DELETE
+    @Path("/delete_image")
+    fun deleteImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像 ID", required = true)
+        @QueryParam("imageId")
+        imageId: String,
+        @Parameter(description = "延迟删除时间，单位秒", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int?
+    ): Result<DeleteImageResp>
 }
