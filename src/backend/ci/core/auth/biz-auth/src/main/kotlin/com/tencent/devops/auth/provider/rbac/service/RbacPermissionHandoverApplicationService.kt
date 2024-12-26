@@ -90,8 +90,8 @@ class RbacPermissionHandoverApplicationService(
         }
         val handoverOverviewTable = handoverOverviewTableBuilder.toString()
         val bodyParams = mapOf(
-            "handoverFrom" to overview.applicant.plus("（$handoverFromCnName）"),
-            "handoverTo" to overview.approver.plus("（$handoverToCnName）"),
+            "handoverFrom" to overview.applicant.plus("($handoverFromCnName)"),
+            "handoverTo" to overview.approver.plus("($handoverToCnName)"),
             "projectName" to overview.projectName,
             "handoverOverviews" to handoverOverviewContentOfEmail,
             "handoverOverviewContentOfRtx" to handoverOverviewContentOfRtx,
