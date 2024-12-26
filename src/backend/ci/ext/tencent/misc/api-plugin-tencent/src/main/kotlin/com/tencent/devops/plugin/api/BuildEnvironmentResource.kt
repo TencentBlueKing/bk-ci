@@ -41,6 +41,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_ENVIRONMENT", description = "服务-环境服务")
@@ -96,8 +97,20 @@ interface BuildEnvironmentResource {
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String
+    ): Result<List<EnvWithPermission>>
+
+    @Operation(summary = "通过用户ID获取项目中有权限的环境列表")
+    @GET
+    @Path("/listUsableServerEnvsByUserId")
+    fun listUsableServerEnvsByUserId(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("user")
+        userId: String
     ): Result<List<EnvWithPermission>>
 }

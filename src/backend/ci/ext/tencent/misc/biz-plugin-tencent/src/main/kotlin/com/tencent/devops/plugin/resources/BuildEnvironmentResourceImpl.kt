@@ -64,4 +64,8 @@ class BuildEnvironmentResourceImpl @Autowired constructor(
     ): Result<List<EnvWithPermission>> {
         return jobService.listUsableServerEnvsByLastUpdateUser(projectId, pipelineId)
     }
+
+    override fun listUsableServerEnvsByUserId(projectId: String, userId: String): Result<List<EnvWithPermission>> {
+        return jobService.listUsableServerEnvsByUserId(projectId, userId)
+    }
 }
