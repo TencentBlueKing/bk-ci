@@ -464,14 +464,14 @@ class StorePipelineServiceImpl @Autowired constructor(
             val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
             val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
             // 获取已创建的公共流水线
-            val pipelineIdConfig = businessConfigDao.get(
-                dslContext = dslContext,
-                business = StoreTypeEnum.valueOf(storeType).name,
-                feature = "initBuildPipeline",
-                businessValue = "PIPELINE_ID"
-            )
-            pipelineIdConfig?.let {
-                if (storeCode.isNullOrBlank()) {
+            if (storeCode.isNullOrBlank()) {
+                val pipelineIdConfig = businessConfigDao.get(
+                    dslContext = dslContext,
+                    business = StoreTypeEnum.valueOf(storeType).name,
+                    feature = "initBuildPipeline",
+                    businessValue = "PIPELINE_ID"
+                )
+                pipelineIdConfig?.let {
                     return it.configValue
                 }
             }
