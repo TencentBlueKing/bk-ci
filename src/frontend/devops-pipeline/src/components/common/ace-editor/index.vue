@@ -28,6 +28,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
+    import { mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {
@@ -75,6 +76,13 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'commonParams',
+                'triggerParams'
+            ]),
+            ...mapGetters('atom', [
+                'allPipelineParams'
+            ]),
             langMap () {
                 return {
                     sh: 'shell',
@@ -84,6 +92,19 @@
                     pwsh: 'powershell',
                     ...(this.aceLangMap ?? {})
                 }
+            },
+            pipelineParams () {
+                return [
+                    this.commonParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []).join(','),
+                    this.triggerParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []).join(','),
+                    this.allPipelineParams.map(param => param.id).join(',')
+                ]
             }
         },
         watch: {
@@ -129,14 +150,15 @@
                 this.getAccessToken(false)
             ])
             this.monaco = monaco
+            debugger
             const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
                 app: {
                     name: 'bkci',
                     // 接入方版本号
                     version: '1.0.0'
                 },
-                // env: ReleaseChannel.INSIDER,
-                env: ReleaseChannel.PRODUCTION,
+                env: ReleaseChannel.INSIDER,
+                // env: ReleaseChannel.PRODUCTION,
                 brandPaddingRight: 32,
                 authenticatedSession: {
                     accessToken,
@@ -159,6 +181,12 @@
                 },
                 readOnly: this.readOnly
             })
+
+            gongfengEditor.registerContextDefinition(this.editor, {
+                variables: this.pipelineParams,
+                workspace: ''
+            })
+
             this.isLoading = false
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()

@@ -56,6 +56,7 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
+    SET_TRIGGER_PARAMS,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_DEFAULT_STAGE_TAG,
@@ -333,7 +334,12 @@ export default {
     },
     requestTriggerParams: async ({ commit }, params) => {
         try {
-            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            let data = []
+            if (params?.length > 0) {
+                const res = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+                data = res.data
+            }
+            commit(SET_TRIGGER_PARAMS, data)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
