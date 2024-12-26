@@ -58,6 +58,7 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -71,6 +72,9 @@ class TxStoreIndexCronService(
     private val codeccApi: CodeccApi,
     private val client: Client
 ) {
+
+    @Value("\${codecc.tag:#{null}}")
+    private val codeccTag: String = ""
 
     /**
      * 计算插件SLA指标数据
@@ -403,7 +407,7 @@ class TxStoreIndexCronService(
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
             val result =
-                codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, "clss").data?.get("rdIndicatorsScore")
+                codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, codeccTag).data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0
