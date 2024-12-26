@@ -190,12 +190,11 @@ class CodeccApi(
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String, tag: String? = null): Result<Map<String, Any>> {
         val url = "http://$codeccHost/ms/openapi/api/open/v2/defect/opensource/measurement?url=$atomCodeSrc"
-        logger.info("getCodeccOpensourceMeasurement url:$url")
         val headers = mutableMapOf<String, String>()
         if (!tag.isNullOrBlank()) {
             headers[AUTH_HEADER_GATEWAY_TAG] = tag
-            headers[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         }
+        headers[AUTH_HEADER_CODECC_OPENAPI_TOKEN] = codeccOpenApiToken
         val httpReq = Request.Builder()
             .url(url)
             .headers(headers.toHeaders())
