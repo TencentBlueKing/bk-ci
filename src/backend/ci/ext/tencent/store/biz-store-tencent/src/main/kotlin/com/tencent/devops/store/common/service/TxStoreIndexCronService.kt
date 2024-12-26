@@ -216,8 +216,7 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-//    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 */2 * * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     @Suppress("NestedBlockDepth")
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
