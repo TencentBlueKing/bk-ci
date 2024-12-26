@@ -1890,7 +1890,12 @@ class RbacPermissionManageFacadeServiceImpl(
                     "handoverFrom" to overview.applicant.plus("($handoverFromCnName)"),
                     "remark" to request.remark!!,
                     "content" to String.format(
-                        request.handoverAction.content,
+                        request.handoverAction.emailContent,
+                        request.flowNo,
+                        overview.approver.plus("($handoverToCnName)"),
+                    ),
+                    "weworkContent" to String.format(
+                        request.handoverAction.weworkContent,
                         request.flowNo,
                         overview.approver.plus("($handoverToCnName)"),
                     ),
