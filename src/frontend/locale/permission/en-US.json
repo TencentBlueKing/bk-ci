@@ -247,5 +247,10 @@
     "请输入审核意见，拒绝时必填": "Please enter review comments, mandatory when rejecting",
     "拒绝时，审批意见必填": "When rejecting, approval comments are mandatory",
     "已成功提交「重置授权」申请，等待交接人确认。": "The Reset Authorization request has been successfully submitted, awaiting confirmation from the handover person.",
-    "批量审批": "Batch Approval"
+    "批量审批": "Batch Approval",
+    "审核意见": "Review comments",
+    "审批人": "Approver",
+    "项目名称": "Project name",
+    "本次操作将忽略": "This operation will be ignored",
+    "需先完成交接。": "Handover must be completed first."
 }
