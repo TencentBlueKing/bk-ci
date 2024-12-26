@@ -25,20 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.dispatch.kubernetes.pojo
+package com.tencent.devops.store.common.service
 
-enum class EnvironmentActionStatus {
-    PENDING,
-    SUCCEEDED,
-    FAILED,
-    WAIT_TIMEOUT, // 已废弃，看后续是否能下掉
-    AUTOMATIC_CORRECTION;
+abstract class AbstractDomainService {
 
-    fun needFix() = this == FAILED || this == WAIT_TIMEOUT
-
-    companion object {
-        fun parse(status: String): EnvironmentActionStatus {
-            return values().find { it.name == status } ?: SUCCEEDED
-        }
-    }
+    /**
+     * 转换url域名
+     * @param url url地址
+     * @return 转换域名后的url地址
+     */
+    abstract fun convertDomain(url: String): String
 }

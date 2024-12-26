@@ -12,24 +12,27 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpH
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatusRsp
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.TaskStatusRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.APP_NOT_BIND_CGS
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.NO_CGS_CHOOSE
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateInf
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
-import com.tencent.devops.remotedev.pojo.remotedev.BcsTaskData
-import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import java.net.SocketTimeoutException
 import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
@@ -123,7 +126,7 @@ class WorkspaceBcsClient @Autowired constructor(
         userId: String,
         action: EnvironmentAction,
         workspaceName: String,
-        environmentOperate: EnvironmentOperate,
+        environmentOperate: EnvironmentOperateInf,
         actionMsg: String = ""
     ): EnvironmentOperateRsp.EnvironmentOperateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
@@ -155,10 +158,11 @@ class WorkspaceBcsClient @Autowired constructor(
                         operator = userId,
                         uid = environmentOpRsp.data!!.taskUid,
                         action = action,
-                        actionMsg = actionMsg
+                        actionMsg = actionMsg,
+                        taskId = environmentOpRsp.data.taskID
                     )
 
-                    return environmentOpRsp.data!!
+                    return environmentOpRsp.data
                 } else {
                     throw WorkspaceDispatchException(
                         "操作环境接口返回失败: ${environmentOpRsp.code}-${environmentOpRsp.message}"
@@ -208,6 +212,44 @@ class WorkspaceBcsClient @Autowired constructor(
             logger.error("$userId get workspace info SocketTimeoutException.", e)
             throw WorkspaceDispatchException(
                 errorMessage = "获取工作空间信息接口异常:  接口超时, url: $url"
+            )
+        }
+    }
+
+    fun startGetTaskStatus(
+        userId: String,
+        taskId: String
+    ): TaskStatusRsp.TaskStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/task/status?taskID=$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$userId get task status taskId: $taskId response: ${response.rid()}|$responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "获取实例任务状态接口异常: ${response.code}"
+                    )
+                }
+
+                val taskStatusRsp: TaskStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == taskStatusRsp.code) {
+                    return taskStatusRsp.data!!
+                } else {
+                    throw WorkspaceDispatchException(
+                        "获取实例任务状态接口异常: ${taskStatusRsp.code}-${taskStatusRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get task status SocketTimeoutException.", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "获取实例任务状态接口异常:  接口超时, url: $url"
             )
         }
     }
@@ -331,7 +373,7 @@ class WorkspaceBcsClient @Autowired constructor(
     }
 
     fun expandDiskValidate(
-        data: EnvironmentOperate
+        data: EnvironmentOperateExpandDisk
     ): ExpandDiskValidateResp? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk/validate"
         val body = JsonUtil.toJson(data, false)
@@ -343,17 +385,28 @@ class WorkspaceBcsClient @Autowired constructor(
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<ExpandDiskValidateResp>>().data
     }
 
-    fun expandDisk(
-        data: ExpandDiskData
-    ): BcsTaskData? {
-        val url = "$bcsCloudUrl/api/v1/remotedevenv/expanddisk"
-        val body = JsonUtil.toJson(data, false)
+    fun fetchDiskList(
+        uid: String
+    ): List<VmDiskInfo>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/vm/$uid/disks"
         val request = Request.Builder()
             .url(url)
             .headers(makeHeaders().toHeaders())
-            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .get()
             .build()
-        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<BcsTaskData>>().data
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
+    }
+
+    fun getTaskStatus(
+        taskId: String
+    ): WorkspaceTaskStatus? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/task/status?taskID=$taskId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .get()
+            .build()
+        return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<WorkspaceTaskStatus>>().data
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

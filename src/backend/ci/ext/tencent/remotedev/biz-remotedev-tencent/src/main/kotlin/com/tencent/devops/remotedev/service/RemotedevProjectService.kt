@@ -18,15 +18,34 @@ class RemotedevProjectService @Autowired constructor(
     private val client: Client,
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
-    private val projectStartAppLinkDao: ProjectStartAppLinkDao
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao,
+    private val permissionService: PermissionService
 ) {
-    fun enableRemotedev(userId: String, projectId: String, enable: Boolean): Boolean {
+    fun enableRemotedevWithPermission(
+        userId: String,
+        projectId: String,
+        enable: Boolean,
+        quota: Int?,
+        rewriteManages: Set<String>?
+    ): Boolean {
+        permissionService.checkUserProjectManager(userId, projectId)
+        return enableRemotedev(userId, projectId, enable, quota, rewriteManages)
+    }
+
+    fun enableRemotedev(
+        userId: String,
+        projectId: String,
+        enable: Boolean,
+        quota: Int?,
+        rewriteManages: Set<String>?
+    ): Boolean {
         // 调用project逻辑
         val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
             userId = userId,
             projectCode = projectId,
-            addcloudDesktopNum = null,
-            enable = enable
+            addcloudDesktopNum = quota,
+            enable = enable,
+            rewriteManages = rewriteManages
         ).data
 
         if (ok != true) {

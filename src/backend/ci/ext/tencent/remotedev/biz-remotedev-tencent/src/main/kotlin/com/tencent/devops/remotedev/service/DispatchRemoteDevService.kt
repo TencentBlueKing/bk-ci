@@ -85,4 +85,8 @@ class DispatchRemoteDevService(
             logger.warn("RemoteDevUpdateEvent call back error", it)
         }
     }
+
+    override fun workspaceCreateDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        return expertSupportService.createDiskCallback(taskId, workspaceName, operator)
+    }
 }
