@@ -25,29 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.oauth
+package com.tencent.devops.common.api.enums
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+/**
+ * 代码库类型
+ */
+enum class ScmCode(val scmName: String, val value: String) {
+    TGIT("GIT", "TGIT"), // 内部工蜂
+    GITHUB("GITHUB", "GITHUB"), // github
+    TGIT_CO("TGIT_CO", "TGIT-CO"); // github
 
-@Schema(title = "Token模型")
-data class GitToken(
-    @get:Schema(title = "鉴权token", description = "access_token")
-    @JsonProperty("access_token")
-    var accessToken: String = "",
-    @get:Schema(title = "刷新token", description = "refresh_token")
-    @JsonProperty("refresh_token")
-    var refreshToken: String = "",
-    @get:Schema(title = "token类型", description = "token_type")
-    @JsonProperty("token_type")
-    val tokenType: String = "",
-    @get:Schema(title = "过期时间", description = "expires_in")
-    @JsonProperty("expires_in")
-    val expiresIn: Long = 0L,
-    @get:Schema(title = "创建时间")
-    val createTime: Long? = 0L,
-    @get:Schema(title = "更新时间")
-    val updateTime: Long? = 0L,
-    @get:Schema(title = "操作人")
-    var operator: String? = ""
-)
+    fun convertScmType(): ScmType {
+        return when (this) {
+            TGIT -> ScmType.CODE_GIT
+            GITHUB -> ScmType.GITHUB
+            TGIT_CO -> ScmType.CODE_TGIT
+        }
+    }
+}

@@ -24,30 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.tencent.devops.repository.pojo.oauth
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "Token模型")
-data class GitToken(
-    @get:Schema(title = "鉴权token", description = "access_token")
-    @JsonProperty("access_token")
-    var accessToken: String = "",
-    @get:Schema(title = "刷新token", description = "refresh_token")
-    @JsonProperty("refresh_token")
-    var refreshToken: String = "",
-    @get:Schema(title = "token类型", description = "token_type")
-    @JsonProperty("token_type")
-    val tokenType: String = "",
-    @get:Schema(title = "过期时间", description = "expires_in")
-    @JsonProperty("expires_in")
-    val expiresIn: Long = 0L,
-    @get:Schema(title = "创建时间")
+@Schema(title = "Oauth2 Access Token")
+data class Oauth2AccessToken(
+    val accessToken: String,
+    val tokenType: String,
+    val expiresIn: Long? = 0L,
+    val refreshToken: String? = null,
     val createTime: Long? = 0L,
-    @get:Schema(title = "更新时间")
-    val updateTime: Long? = 0L,
-    @get:Schema(title = "操作人")
-    var operator: String? = ""
+    @get:Schema(title = "server端用户名")
+    val userId: String? = null,
+    @get:Schema(title = "操作者")
+    val operator: String? = null
 )
