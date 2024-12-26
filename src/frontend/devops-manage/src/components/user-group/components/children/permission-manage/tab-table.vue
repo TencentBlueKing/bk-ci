@@ -8,7 +8,7 @@
       show-overflow-tooltip
       :pagination="pagination"
       :border="border"
-      remote-pagination
+      :remote-pagination="isRemotePagination"
       empty-cell-text="--"
       selection-key="resourceCode"
       :checked="selectedResourceCode"
@@ -181,6 +181,10 @@ const props = defineProps({
   loading: Boolean,
   groupName: String,
   batchFlag: String,
+  isRemotePagination:{
+    type: Boolean,
+    default: true,
+  },
 });
 const emit = defineEmits([
   'handleRenewal',
