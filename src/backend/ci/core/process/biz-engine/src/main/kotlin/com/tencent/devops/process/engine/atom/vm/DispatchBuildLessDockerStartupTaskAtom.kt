@@ -51,7 +51,6 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
@@ -71,7 +70,6 @@ import org.springframework.stereotype.Component
 class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
@@ -155,8 +153,20 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         ))
-
-        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            executeCount = task.executeCount ?: 1
+        )
+        val container = containerBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildRecordContainer?.resourceVersion ?: 1,
+            buildId = buildId,
+            executeCount = task.executeCount ?: 1
+        )?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
