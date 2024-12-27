@@ -2687,6 +2687,41 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun replayBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
+    ) {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
+        if (!buildInfo.status.isFinish()) {
+            logger.info("build is not finished, buildId: $buildId")
+            return
+        }
+        buildRestartPipeline(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildInfo = buildInfo
+        )
+    }
+
     private fun buildRestartPipeline(
         projectId: String,
         pipelineId: String,
