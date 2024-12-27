@@ -80,7 +80,8 @@
             return {
                 editor: null,
                 isLoading: false,
-                monaco: null
+                monaco: null,
+                gongfengEditor: null
             }
         },
         computed: {
@@ -136,6 +137,14 @@
                 if (parent) {
                     parent.classList.toggle('with-ace-full-screen')
                 }
+            },
+
+            pipelineParams () {
+                this.$nextTick(this.registryCopilotContext)
+            },
+
+            parentElementAlias () {
+                this.$nextTick(this.registryCopilotContext)
             }
         },
         async mounted () {
@@ -234,7 +243,7 @@
                 this.getAccessToken(false)
                 ])
                 this.monaco = monaco
-                const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                this.gongfengEditor = new GongfengMonacoEditor(this.monaco, {
                     app: {
                         name: 'bkci',
                         // 接入方版本号
@@ -252,7 +261,7 @@
                 })
 
                 this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-                this.editor = await gongfengEditor.createEditor(this.$el, {
+                this.editor = await this.gongfengEditor.createEditor(this.$el, {
                     value: this.value,
                     language: this.getLang(this.lang),
                     theme: 'ciYamlTheme',
@@ -266,7 +275,10 @@
                     readOnly: this.readOnly
                 })
 
-                gongfengEditor.registerContextDefinition(this.editor, {
+                this.registryCopilotContext()
+            },
+            registryCopilotContext () {
+                this.gongfengEditor.registerContextDefinition(this.editor, {
                     variables: this.pipelineParams,
                     workspace: this.parentElementAlias
                 })
