@@ -21,7 +21,9 @@
             :lang="dynamicLang"
             :ace-lang-map="aceLangMap"
             :name="name"
+            :parent-element-alias="elementAlias"
             :full-screen="isFullScreen"
+            :enable-copilot="enableCopilot"
             @input="handleScriptInput"
             :height="height"
             width="100%"
@@ -42,6 +44,10 @@
         },
         mixins: [atomFieldMixin],
         props: {
+            enableCopilot: {
+                type: Boolean,
+                default: true
+            },
             lang: {
                 type: String,
                 default: 'shell'
@@ -74,6 +80,15 @@
                     return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'shell'
                 }
                 return this.lang
+            },
+            elementAlias () {
+                console.log(this.element)
+                return [
+                    this.$route.params.pipelineId,
+                    this.element?.id,
+                    this.element?.name,
+                    this.$route.params.version
+                ].join(':')
             }
         },
         watch: {
@@ -88,6 +103,7 @@
             }
         },
         mounted () {
+            console.log(this.element, ';11111')
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
             if (this.defaultHeight !== 360) {
