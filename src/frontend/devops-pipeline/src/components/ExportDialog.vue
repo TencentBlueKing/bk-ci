@@ -41,6 +41,7 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import Logo from '@/components/Logo'
     import { mapActions, mapState } from 'vuex'
+    import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -78,7 +79,7 @@
             exportList () {
                 return [
                     {
-                        type: 'pipelineJson',
+                        type: UI_MODE,
                         title: 'Pipeline Json',
                         icon: 'export-pipeline',
                         name: `${this.pipelineName}.json`,
@@ -86,13 +87,12 @@
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
                     },
                     {
-                        type: 'pipelineYaml',
+                        type: CODE_MODE,
                         title: 'Pipeline YAML',
                         icon: 'export-pipeline',
                         name: `${this.pipelineName}.yml`,
                         tips: this.$t('newlist.exportPipelineYamlTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${this.projectId}?pipelineId=${this.pipelineId}&actionType=FULL_MODEL2YAML`,
-                        tipsLink: `${IWIKI_DOCS_URL}/p/4009967153`,
                         params: {
                             modelAndSetting: {
                                 model: this.pipeline,
