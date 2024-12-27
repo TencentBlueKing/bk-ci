@@ -50,6 +50,7 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEve
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperienceDownloadType
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -567,16 +568,18 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun reportSpeed(userId: String, params: ReportSpeedParam): Boolean {
         try {
+            val experienceId = HashUtil.decodeIdToLong(params.experienceId)
+            val experienceRecord = experienceDao.get(dslContext, experienceId)
             val now = LocalDateTime.now()
             experienceDownloadSpeedDao.create(
                 dslContext = dslContext,
                 userId = userId,
-                projectId = params.projectId,
-                artifactoryType = params.artifactoryType.name,
-                path = params.path,
-                experienceId = params.experienceId?.let { HashUtil.decodeIdToLong(it) },
+                projectId = experienceRecord.projectId,
+                artifactoryType = experienceRecord.artifactoryType,
+                path = experienceRecord.artifactoryPath,
+                experienceId = experienceId,
                 downloadSpeed = params.downloadSpeed,
-                downloadType = params.downloadType.name,
+                downloadType = ExperienceDownloadType.of(params.downloadType).name,
                 createTime = now,
                 updateTime = now
             )
