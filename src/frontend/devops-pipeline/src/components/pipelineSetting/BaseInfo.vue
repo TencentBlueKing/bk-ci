@@ -95,7 +95,7 @@
             <bk-form-item ext-cls="namingConvention">
                 <syntax-style-configuration
                     :inherited-dialect="settings.inheritedDialect"
-                    :pipeline-dialect="settings.pipelineDialect ?? currentPipelineDialect"
+                    :pipeline-dialect="settings.pipelineDialect ?? defaultPipelineDialect"
                     @inherited-change="inheritedChange"
                     @pipeline-dialect-change="pipelineDialectChange"
                 />
@@ -108,7 +108,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { mapGetters, mapActions, mapState } from 'vuex'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -134,9 +134,6 @@
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
             }),
-            ...mapState('pipelines', [
-                'currentPipelineDialect'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -154,6 +151,12 @@
                     })
                     return value
                 })
+            },
+            curProject () {
+                return this.$store.state.curProject
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
             }
         },
         watch: {
@@ -174,9 +177,6 @@
             this.requestGrouptLists()
         },
         methods: {
-            ...mapActions('pipelines', [
-                'getPipelineDialect'
-            ]),
             /** *
              * 获取标签及其分组
              */
@@ -188,7 +188,6 @@
 
                     this.$store.commit('pipelines/updateGroupLists', res)
                     // 获取当前项目语法风格
-                    await this.getPipelineDialect(this.projectId)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -212,7 +211,7 @@
                 this.settings = {
                     ...this.settings,
                     inheritedDialect: value,
-                    ...value && { pipelineDialect: this.currentPipelineDialect }
+                    ...value && { pipelineDialect: this.defaultPipelineDialect }
                 }
                 this.handleBaseInfoChange('pipelineAsCodeSettings', this.settings)
             },

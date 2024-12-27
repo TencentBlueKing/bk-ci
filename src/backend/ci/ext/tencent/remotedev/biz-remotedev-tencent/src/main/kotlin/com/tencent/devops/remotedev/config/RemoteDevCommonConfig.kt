@@ -64,4 +64,7 @@ class RemoteDevCommonConfig {
 
     @Value("\${startCloud.devcouldCurLaunchId}")
     val devcouldCurLaunchId: Long = 980120L
+
+    @Value("\${notice.wework:#{null}}")
+    val weworkId: String? = null
 }

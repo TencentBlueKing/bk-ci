@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumU
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.MarketAtomStatisticService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -233,20 +234,23 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                     dailyFailDetail = if (totalFailDetail != null) JsonUtil.toMap(totalFailDetail) else null,
                     statisticsTime = startTime
                 )
-                if (storeDailyStatistic != null) {
-                    storeStatisticDailyDao.updateDailyStatisticData(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        storeDailyStatisticRequest = storeDailyStatisticRequest
-                    )
-                } else {
-                    storeStatisticDailyDao.insertDailyStatisticData(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        storeDailyStatisticRequest = storeDailyStatisticRequest
-                    )
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    if (storeDailyStatistic != null) {
+                        storeStatisticDailyDao.updateDailyStatisticData(
+                            dslContext = context,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            storeDailyStatisticRequest = storeDailyStatisticRequest
+                        )
+                    } else {
+                        storeStatisticDailyDao.insertDailyStatisticData(
+                            dslContext = context,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            storeDailyStatisticRequest = storeDailyStatisticRequest
+                        )
+                    }
                 }
             }
             page++
@@ -278,11 +282,14 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                             )
                         )
                     }
-                    storeStatisticTotalDao.batchUpdatePipelineNum(
-                        dslContext = dslContext,
-                        pipelineNumUpdateList = pipelineNumUpdateList,
-                        storeType = StoreTypeEnum.ATOM.type.toByte()
-                    )
+                    dslContext.transaction { t ->
+                        val context = DSL.using(t)
+                        storeStatisticTotalDao.batchUpdatePipelineNum(
+                            dslContext = context,
+                            pipelineNumUpdateList = pipelineNumUpdateList,
+                            storeType = StoreTypeEnum.ATOM.type.toByte()
+                        )
+                    }
                 }
             }
             page++

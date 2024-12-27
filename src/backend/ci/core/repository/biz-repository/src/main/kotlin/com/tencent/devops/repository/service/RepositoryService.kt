@@ -67,10 +67,12 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.REPOSITORY_N
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
@@ -117,7 +119,8 @@ class RepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
-    private val client: Client
+    private val client: Client,
+    private val repositoryGithubDao: RepositoryGithubDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -209,7 +212,8 @@ class RepositoryService @Autowired constructor(
                     aliasName = gitRepositoryResp.name,
                     url = gitRepositoryResp.repositoryUrl,
                     type = ScmType.CODE_GIT,
-                    updatedTime = LocalDateTime.now().timestampmilli()
+                    updatedTime = LocalDateTime.now().timestampmilli(),
+                    remoteRepoId = gitRepositoryResp.id
                 )
             )
         } else {
@@ -1558,6 +1562,62 @@ class RepositoryService @Autowired constructor(
             repository = targetRepo,
             record = repositoryRecord
         )
+    }
+
+    fun listOauthRepo(
+        userId: String,
+        scmType: ScmType,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoOauthRefVo> {
+        val list = when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            else -> {
+                listOf()
+            }
+        }
+        val count = countOauthRepo(userId, scmType)
+        return SQLPage(count, list)
+    }
+
+    fun countOauthRepo(
+        userId: String,
+        scmType: ScmType
+    ): Long {
+        return when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            else -> 0L
+        }
     }
 
     companion object {

@@ -1,20 +1,26 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.FetchRemoteDevData
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.UserAuthApplyDao
 import com.tencent.devops.remotedev.pojo.UserAuthInfo
@@ -27,18 +33,22 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.service.client.FaceCheckData
 import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY
+import java.time.Duration
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class UserInfoCertService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
+    private val configCacheService: ConfigCacheService,
     private val tokenService: ClientTokenService,
     private val streamBridge: StreamBridge,
     private val userAuthApplyDao: UserAuthApplyDao,
@@ -70,8 +80,28 @@ class UserInfoCertService @Autowired constructor(
 
     fun faceRecognition(data: FaceRecognitionData): FaceRecognitionResult {
         try {
-            return taiClient.faceCheck(data.username, FaceCheckData(data.base64FaceData))
+            val result = taiClient.faceCheck(data.username, FaceCheckData(data.base64FaceData))
+            if (result.data != null) {
+                return result.data
+            }
+            if (result.error == null) {
+                logger.error("$USER_CERT_LOG_PREFIX|faceCheck data is null")
+                return FaceRecognitionResult.noCheck()
+            }
+            // error exist
+            val checkError = result.error.details?.filter { it.code in loadFaceRecognitionErrorCodeCache() }
+            if (!checkError.isNullOrEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FACE_RECOGNITION_ERROR.errorCode,
+                    params = arrayOf("${result.error.code}|${result.error.message}|$checkError")
+                )
+            }
+            logger.error("$USER_CERT_LOG_PREFIX|faceCheck error ${result.error}")
+            return FaceRecognitionResult.noCheck()
         } catch (e: Exception) {
+            if (e is ErrorCodeException && e.errorCode == ErrorCodeEnum.FACE_RECOGNITION_ERROR.errorCode) {
+                throw e
+            }
             logger.error("$USER_CERT_LOG_PREFIX|faceCheck error", e)
             return FaceRecognitionResult.noCheck()
         }
@@ -122,13 +152,24 @@ class UserInfoCertService @Autowired constructor(
             ).data?.records?.filter { it.joinedType == JoinedType.DIRECT && it.expiredAt < expiredTime }
                 ?.ifEmpty { null } ?: return
 
-            val admins = client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
-                FetchRemoteDevData(
-                    setOf(data.projectId)
-                )
-            ).data?.get(data.projectId) ?: run {
-                logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
-                return
+            // 太湖用户发送给云研发管理员；集团用户发送给项目管理员
+            val admins = if (UserUtil.isTaiUser(data.userId)) {
+                    client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
+                    FetchRemoteDevData(
+                        setOf(data.projectId)
+                    )
+                ).data?.get(data.projectId) ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
+                    return
+                }
+            } else {
+                client.get(ServiceTxUserResource::class).getProjectUserRoles(
+                    projectCode = data.projectId,
+                    roleId = BkAuthGroup.MANAGER
+                ).data?.toSet() ?: run {
+                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getProjectUserRoles|${data.projectId} is null")
+                    return
+                }
             }
 
             val recordId = userAuthApplyDao.create(
@@ -186,7 +227,7 @@ class UserInfoCertService @Autowired constructor(
                             id = record.userId,
                             type = "user"
                         ),
-                        renewalDuration = 30
+                        renewalDuration = 365
                     )
                 )
             }
@@ -197,6 +238,15 @@ class UserInfoCertService @Autowired constructor(
         }
         userAuthApplyDao.updateStatus(dslContext, recordId, UserAuthRecordStatus.SUCCESS)
     }
+
+    private fun loadFaceRecognitionErrorCodeCache(): Set<String> {
+        return faceRecognitionErrorCodeCache.get(REMOTEDEV_USER_FACE_RECOGNITION_ERROR_CODE_KEY) ?: setOf()
+    }
+
+    private val faceRecognitionErrorCodeCache: LoadingCache<String, Set<String>> = Caffeine.newBuilder()
+        .maximumSize(100L)
+        .expireAfterWrite(Duration.ofMinutes(10))
+        .build { key -> configCacheService.get(key)?.split(";")?.toSet() ?: setOf() }
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)

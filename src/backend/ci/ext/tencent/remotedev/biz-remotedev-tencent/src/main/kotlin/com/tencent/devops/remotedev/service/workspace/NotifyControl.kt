@@ -73,7 +73,6 @@ import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -93,9 +92,6 @@ class NotifyControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao
 ) {
-
-    @Value("\${notice.wework:#{null}}")
-    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyControl::class.java)
@@ -149,20 +145,32 @@ class NotifyControl @Autowired constructor(
             owners = notifyData.owner?.toSet(),
             projectIds = notifyData.projectId?.toSet(),
             notStatus = setOf(WorkspaceStatus.DELETED, WorkspaceStatus.PREPARING, WorkspaceStatus.DELIVERING_FAILED),
-            checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.PROJECT_ID)
+            checkField = listOf(
+                TWorkspace.T_WORKSPACE.NAME,
+                TWorkspace.T_WORKSPACE.PROJECT_ID,
+                TWorkspace.T_WORKSPACE.OWNER_TYPE,
+                TWorkspace.T_WORKSPACE.CREATOR
+            )
         )
-
         val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         notifyDao.add(dslContext, userId, notifyData)
 
+        // 增加个人云桌面的拥有者
+        val personalUsers = workspace.filter { it.ownerType == WorkspaceOwnerType.PERSONAL }
+            .map { it.createUserId }
+            .toMutableSet()
+
+        logger.debug("notifyWorkspaceInfo|workspace|$workspace|personalUsers|$personalUsers")
+
         val userList = if (!notifyData.owner.isNullOrEmpty()) {
             notifyData.owner!!.toSet()
         } else {
+            // 团队实例拥有者 +个人实例拥有者
             workspaceSharedDao.fetchWorkspaceOwner(
                 dslContext = dslContext,
                 workspaceNames = workspace.map { it.workspaceName }.toSet().ifEmpty { return }
-            ).values.toSet()
+            ).values.toSet().plus(personalUsers)
         }
 
         // 给拥有者的客户端发送消息
@@ -565,7 +573,8 @@ class NotifyControl @Autowired constructor(
      */
     fun notify4SystemAdministrator(
         notifyTemplateCode: String,
-        bodyParams: Map<String, String>
+        bodyParams: Map<String, String>,
+        weworkId: String?
     ) {
         // 通知
         if (!weworkId.isNullOrBlank()) {
@@ -573,7 +582,7 @@ class NotifyControl @Autowired constructor(
                 sendNotifyMessageTemplateRequest(
                     notifyTemplateCode = notifyTemplateCode,
                     bodyParams = bodyParams.plus(
-                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                        NotifyUtils.WEWORK_GROUP_KEY to weworkId
                     ),
                     notifyType = setOf(NotifyType.WEWORK_GROUP.name),
                     markdownContent = false

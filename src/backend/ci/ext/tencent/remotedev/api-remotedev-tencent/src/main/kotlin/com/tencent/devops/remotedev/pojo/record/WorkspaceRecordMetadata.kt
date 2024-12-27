@@ -9,5 +9,9 @@ data class WorkspaceRecordMetadata(
     @get:Schema(title = "开始时间", required = true)
     val startTime: Long?,
     @get:Schema(title = "停止时间", required = true)
-    val stopTime: Long?
+    val stopTime: Long?,
+    @get:Schema(title = "文件大小", required = true)
+    val fileSize: Long?,
+    @get:Schema(title = "录屏使用人", required = true)
+    val recordUser: String?
 )

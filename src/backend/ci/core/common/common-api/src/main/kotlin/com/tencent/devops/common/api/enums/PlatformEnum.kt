@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.api.enums
 
+import com.tencent.devops.common.api.enums.PlatformEnum.values
+
+
 enum class PlatformEnum(
     val id: Int,
     val mean: String,
@@ -34,7 +37,7 @@ enum class PlatformEnum(
 ) {
     UNKNOWN(-1, "未知", emptyList()),
 
-    ANDROID(1, "安卓", listOf(".apk")),
+    ANDROID(1, "安卓", listOf(".apk", ".apks")),
 
     IOS(2, "IOS", listOf(".ipa")),
 
@@ -65,10 +68,6 @@ enum class PlatformEnum(
         }
 
         fun of(id: Int?): PlatformEnum? {
-            if (null == id) {
-                return null
-            }
-
             values().forEach {
                 if (it.id == id) {
                     return it

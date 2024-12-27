@@ -259,10 +259,6 @@ class SubPipelineStartUpService @Autowired constructor(
             val model = resource.model
 
             val triggerContainer = model.getTriggerContainer()
-            templateFacadeService.printModifiedTemplateParams(
-                projectId = projectId, pipelineId = pipelineId,
-                pipelineParams = triggerContainer.params, paramValues = parameters
-            )
             // #6090 拨乱反正
             val params = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,

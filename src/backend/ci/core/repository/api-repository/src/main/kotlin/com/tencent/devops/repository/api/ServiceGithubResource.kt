@@ -69,7 +69,10 @@ interface ServiceGithubResource {
         tokenType: String,
         @Parameter(description = "accessToken范围", required = true)
         @QueryParam("scope")
-        scope: String
+        scope: String,
+        @Parameter(description = "蓝盾平台操作人", required = false)
+        @QueryParam("operator")
+        operator: String?
     ): Result<Boolean>
 
     @Operation(summary = "获取github代码库accessToken")

@@ -40,7 +40,7 @@
 
 <script>
     import BKChart from '@blueking/bkcharts'
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import api from '@/api'
 
     export default {
@@ -89,7 +89,7 @@
                         resolve(chartData)
                     } else {
                         const code = this.detail.serviceCode
-                        const now = moment(moment().format('YYYY-MM-DD')).subtract(1, 'days')
+                        const now = dayjs(dayjs().format('YYYY-MM-DD')).subtract(1, 'days')
                         const params = {
                             endTime: now.format('YYYY-MM-DD HH:mm:ss'),
                             startTime: now.subtract(1, this.time).format('YYYY-MM-DD HH:mm:ss')

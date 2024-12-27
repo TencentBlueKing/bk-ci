@@ -2,7 +2,11 @@ import { showLoginPopup } from '@/utils/util'
 import axios, { AxiosError, AxiosResponse, CreateAxiosDefaults } from 'axios'
 import cookie from 'js-cookie'
 import Vue from 'vue'
-
+declare module 'axios' {
+    export interface AxiosRequestConfig {
+      originalResponse?: boolean;
+    }
+}
 const request = axios.create({
     baseURL: API_URL_PREFIX,
     maxRedirects: 0,
@@ -18,7 +22,7 @@ const request = axios.create({
 } as CreateAxiosDefaults)
 
 function errorHandler (error: AxiosError) {
-    if (typeof error.response.data === 'undefined') {
+    if (typeof error.response === 'undefined') {
         // HACK REDIRECT 302
         showLoginPopup()
     }
@@ -45,10 +49,13 @@ request.interceptors.request.use(config => {
 })
 
 request.interceptors.response.use((response: AxiosResponse) => {
+    const originalResponse = response.config.originalResponse || false
     const { data: { code, data, message, status }, status: httpStatus } = response
 
     if (httpStatus === 401) {
         showLoginPopup()
+        const err = { status: httpStatus, message: '登录态已失效' }
+        return Promise.reject(err)
     } else if (httpStatus === 503) {
         return Promise.reject({ // eslint-disable-line
             status: httpStatus,
@@ -77,7 +84,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
         return Promise.reject(errorMsg)
     }
 
-    return data
+    return originalResponse ? response.data : data
 }, errorHandler)
 
 const getCurrentPid = () => {

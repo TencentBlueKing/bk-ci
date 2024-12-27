@@ -172,7 +172,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     type = UpdateEventType.RESTART,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
 

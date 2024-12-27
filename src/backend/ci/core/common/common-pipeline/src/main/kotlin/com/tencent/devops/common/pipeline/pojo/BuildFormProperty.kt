@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-表单元素属性")
@@ -89,5 +90,7 @@ data class BuildFormProperty(
     @get:Schema(title = "参数值是否必填", required = false)
     val valueNotEmpty: Boolean? = false,
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
-    val payload: Any? = null
+    val payload: Any? = null,
+    @get:Schema(title = "级联选择器属性", required = false)
+    var cascadeProps: BuildCascadeProps? = null
 )

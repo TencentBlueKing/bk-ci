@@ -31,8 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.extservice.UserExtServiceVisibleDeptResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.extservice.requests.ExtsionServiceVisibleDeptReq
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,6 +59,6 @@ class UserExtServiceVisibleDeptResourceImpl @Autowired constructor(
     }
 
     override fun getVisibleDept(serviceCode: String): Result<StoreVisibleDeptResp?> {
-        return storeVisibleDeptService.getVisibleDept(serviceCode, StoreTypeEnum.SERVICE, null)
+        return storeVisibleDeptService.getVisibleDept(serviceCode, StoreTypeEnum.SERVICE, DeptStatusEnum.APPROVED.name)
     }
 }

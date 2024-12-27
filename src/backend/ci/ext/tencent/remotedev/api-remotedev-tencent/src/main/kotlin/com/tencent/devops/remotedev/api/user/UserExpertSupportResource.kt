@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
@@ -24,6 +25,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExpertSupportResource {
 
+    @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
     @Operation(summary = "创建专家协助单据")
     @POST
     @Path("/create")
@@ -34,6 +36,17 @@ interface UserExpertSupportResource {
         @Parameter(description = "创建数据")
         data: CreateSupportData
     ): Result<Boolean>
+
+    @Operation(summary = "创建专家协助单据新")
+    @POST
+    @Path("/createNew")
+    fun addExpertSupNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "创建数据")
+        data: CreateSupportData
+    ): Result<Long>
 
     @Operation(summary = "查询专家协助原因")
     @GET
@@ -56,6 +69,20 @@ interface UserExpertSupportResource {
         @QueryParam("size")
         size: String
     ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "挂载新磁盘")
+    @POST
+    @Path("/createDisk")
+    fun createDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "新增磁盘容量，单位Gi，如：10Gi")
+        @QueryParam("size")
+        size: String
+    ): Result<CreateDiskResp>
 
     @Operation(summary = "获取磁盘扩容任务详情")
     @GET

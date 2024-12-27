@@ -27,10 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+
 /**
  * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
  */
 @Suppress("ALL")
+@JsonDeserialize(using = WorkspaceStatusDeserializer::class)
 enum class WorkspaceStatus {
     PREPARING, // 0 准备中
     RUNNING, // 1 运行中
@@ -107,7 +113,7 @@ enum class WorkspaceStatus {
 
     fun checkDistributing() = this == DISTRIBUTING
 
-    fun workspaceInitializing() = checkDelivering()
+    fun workspaceInitializing() = checkDelivering() || this == PREPARING
 
     fun checkUpgrading() = this == UPGRADING
 
@@ -121,9 +127,8 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
-        (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
-            this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
+    fun notOk2doNextAction() =
+        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING ||
             this == CLONING
 
@@ -164,5 +169,16 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY -> "准备后异常"
         WorkspaceStatus.EXCEPTION_CREATE_FAILED -> "创建异常"
         WorkspaceStatus.CLONING -> "克隆中"
+    }
+}
+
+class WorkspaceStatusDeserializer : JsonDeserializer<WorkspaceStatus>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): WorkspaceStatus {
+        val value: String = p.text
+        return try {
+            WorkspaceStatus.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            WorkspaceStatus.EXCEPTION // 默认值
+        }
     }
 }

@@ -301,9 +301,10 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
             val pipelineId = storeBuildInfoRecord.pipelineId
-            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByStoreCode(
                 dslContext = dslContext,
-                pipelineId = pipelineId
+                storeType = storeType,
+                storeCode = storeCode
             )
             var projectCode = storePipelineRelRecord?.projectCode
             if (projectCode.isNullOrBlank()) {
@@ -442,8 +443,13 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val dbVersion = opBaseRecord.version
         val dbStatus = opBaseRecord.status
         // 判断首个版本对应的请求是否合法
+        val validStatusList = listOf(
+            StoreStatusEnum.INIT.name,
+            StoreStatusEnum.COMMITTING.name,
+            StoreStatusEnum.GROUNDING_SUSPENSION.name
+        )
         if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            dbStatus !in listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.GROUNDING_SUSPENSION.name)
+            dbStatus !in validStatusList
         ) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
@@ -531,5 +537,17 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         )
         val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun getStoreCodeById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String {
+        var code = storeBaseQueryDao.getComponentById(dslContext, storeId)?.storeCode
+        if (code == null) {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            code = storeCommonDao.getStoreCodeById(dslContext, storeId)
+        }
+        return code ?: ""
     }
 }
