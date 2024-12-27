@@ -33,7 +33,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
@@ -55,7 +55,7 @@ import java.util.concurrent.Executors
 @Suppress("ALL")
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authVerifyRecordService: AuthVerifyRecordService,
     private val migrateResourceService: MigrateResourceService,
@@ -79,7 +79,7 @@ class MigrateResultService constructor(
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes()
+            val resourceTypes = rbacCommonService.listResourceTypes()
                 .map { it.resourceType }
             val traceId = MDC.get(TraceTag.BIZID)
             val compareFuture = resourceTypes.map { resourceType ->

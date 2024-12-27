@@ -672,10 +672,6 @@ class PipelineBuildFacadeService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
-            templateFacadeService.printModifiedTemplateParams(
-                projectId = projectId, pipelineId = pipelineId,
-                pipelineParams = triggerContainer.params, paramValues = values
-            )
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values

@@ -6,33 +6,48 @@ const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
-const menuList = [
-  {
-    name: t('我的权限'),
-    code: 'my-permission',
-    icon: 'permission-icon-wodequanxian',
+const menuGroups = [
+{
+    theme: t('个人事务'),
+    items: [
+      {
+        name: t('我的权限'),
+        code: 'my-permission',
+        icon: 'permission-icon-wodequanxian',
+      },
+      {
+        name: t('申请权限'),
+        code: 'apply',
+        icon: 'permission-icon-quanxianshenqing',
+      },
+      {
+        name: t('我的申请'),
+        code: 'my-apply',
+        icon: 'permission-icon-wodeshenqing',
+      },
+      {
+        name: t('我的审批'),
+        code: 'my-approval',
+        icon: 'permission-icon-wodeshenpi',
+      },
+      {
+        name: t('我的交接'),
+        code: 'my-handover',
+        icon: 'permission-icon-handover'
+      }
+    ]
   },
   {
-    name: t('我的申请'),
-    code: 'my-apply',
-    icon: 'permission-icon-wodeshenqing',
-  },
-  {
-    name: t('我的审批'),
-    code: 'my-approval',
-    icon: 'permission-icon-wodeshenpi',
-  },
-  {
-    name: t('申请权限'),
-    code: 'apply',
-    icon: 'permission-icon-quanxianshenqing',
-  },
-  {
-    name: t('我的项目'),
-    code: 'my-project',
-    icon: 'permission-icon-wodexiangmu',
+    theme: t('管理事务'),
+    items: [
+      {
+        name: t('我的项目'),
+        code: 'my-project',
+        icon: 'permission-icon-wodexiangmu',
+      }
+    ]
   }
-];
+]
 
 const handleChangeMenu = (menu: any) => {
   router.push({
@@ -45,24 +60,31 @@ const handleChangeMenu = (menu: any) => {
   <article class="permission-aside">
     <section class="menu-list">
       <div
-        v-for="(menu, index) in menuList"
-        :key="index"
-        @click="handleChangeMenu(menu)"
-        :class="{
-          'menu-item': true,
-          'active': route.name === menu.code
-        }"
+        v-for="(group, groupIndex) in menuGroups"
+        :key="groupIndex"
       >
-        <bk-badge
-          position="top-right"
-          theme="danger"
-          dot
-          :visible="true"
-          style="margin: 0 18px 0 25px"
+        <div class="menu-theme">{{ group.theme }}</div>
+        <div
+          v-for="(menu, index) in group.items"
+          :key="index"
+          @click="handleChangeMenu(menu)"
+          :class="{
+            'menu-item': true,
+            'active': route.name === menu.code,
+            'item-border': menu.code === 'apply'
+          }"
         >
-          <i class="permission-icon" :class="menu.icon"></i>
-        </bk-badge>
-        <span>{{ menu.name }}</span>
+          <bk-badge
+            position="top-right"
+            theme="danger"
+            dot
+            :visible="true"
+            style="margin: 0 18px 0 22px"
+          >
+            <i class="permission-icon" :class="menu.icon"></i>
+          </bk-badge>
+          <span>{{ menu.name }}</span>
+        </div>
       </div>
     </section>
 
@@ -85,6 +107,7 @@ const handleChangeMenu = (menu: any) => {
       align-items: center;
       width: 240px;
       height: 40px;
+      margin-top: 4px;
       cursor: pointer;
       &:hover {
         color: #3A84FF;
@@ -94,6 +117,15 @@ const handleChangeMenu = (menu: any) => {
     .active {
       color: #3A84FF;
       background-color: #E1ECFF;
+    }
+    .menu-theme {
+      height: 40px;
+      line-height: 40px;
+      color: #979BA5;
+      margin: 8px 0 0 22px;
+    }
+    .item-border {
+      border-bottom: 1px solid #e4e4e4;
     }
   }
 </style>
