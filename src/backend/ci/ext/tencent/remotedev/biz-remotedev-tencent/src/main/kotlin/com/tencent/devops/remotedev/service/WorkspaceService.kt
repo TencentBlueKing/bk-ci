@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
@@ -1131,6 +1132,8 @@ class WorkspaceService @Autowired constructor(
             instanceNames = "#workspace?.workspaceName",
             instanceIds = "#workspace?.workspaceName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#workspace?.projectId")],
+        scopeId = "#workspace?.projectId",
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
     private fun startCloudWorkspaceDetail(
