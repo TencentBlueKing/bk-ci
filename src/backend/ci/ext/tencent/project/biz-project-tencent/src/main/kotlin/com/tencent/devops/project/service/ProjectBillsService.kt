@@ -13,6 +13,7 @@ import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
@@ -75,6 +76,14 @@ class ProjectBillsService constructor(
     @Value("\${bill.limit:#{null}}")
     private var billLimit: Int = 30
 
+    @Value("\${auth.appCode:}")
+    private val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    private val appSecret = ""
+
+    @Value("\${bill.active.url:#{null}}")
+    private var bcsUrl: String = ""
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -305,8 +314,9 @@ class ProjectBillsService constructor(
     }
 
     private fun isProjectActive(projectInfo: ProjectVO): Boolean {
-        /*若项目已关联运营产品，则4个月内无人访问并且没有执行过流水线则为不活跃；
-        若项目未关联运营产品，则2个月内无人访问并且没有执行过流水线则为不活跃。*/
+        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+            .replace("\\s".toRegex(), "")
+
         val monthsToSubtract = if (projectInfo.productId == null) 2L else 4L
         val startTime = LocalDate.now().minusMonths(monthsToSubtract).format(DATE_FORMATTER)
         val endTime = LocalDate.now().format(DATE_FORMATTER)
@@ -435,30 +445,33 @@ class ProjectBillsService constructor(
     }
 
     private fun reportBillsDataToSaas(summaryBillDTO: BkSummaryBillDTO) {
+        val reportProjects = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
         try {
-            val requestBody = JsonUtils.objectMapper.writeValueAsString(summaryBillDTO)
-            OkhttpUtils.doPost(
-                url = billUrl,
-                jsonParam = requestBody,
-                headers = mapOf("Platform-Key" to billKey)
-            ).use {
-                if (!it.isSuccessful) {
-                    logger.warn("request bill data failed,response:($it)")
-                    throw RemoteServiceException("request failed, response:($it)")
-                }
-                val responseStr = it.body!!.string()
-                val responseDTO = objectMapper.readValue(
-                    responseStr,
-                    object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
-                if (responseDTO.code != 200L || !responseDTO.result) {
-                    // 请求错误
-                    logger.warn("request failed, message:(${responseDTO.message})")
-                    throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+            RetryUtils.retry(3) {
+                val requestBody = JsonUtils.objectMapper.writeValueAsString(summaryBillDTO)
+                OkhttpUtils.doPost(
+                    url = billUrl,
+                    jsonParam = requestBody,
+                    headers = mapOf("Platform-Key" to billKey)
+                ).use {
+                    if (!it.isSuccessful) {
+                        logger.warn("request bill data failed,response:($it)")
+                        throw RemoteServiceException("request failed, response:($it)")
+                    }
+                    val responseStr = it.body!!.string()
+                    val responseDTO = objectMapper.readValue(
+                        responseStr,
+                        object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
+                    if (responseDTO.code != 200L || !responseDTO.result) {
+                        // 请求错误
+                        logger.warn("request failed, message:(${responseDTO.message})")
+                        throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+                    }
+                    logger.info("report bills data to saas success!|$reportProjects|$responseStr")
                 }
             }
         } catch (ignore: Exception) {
-            val reportFailedProject = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
-            logger.warn("request bill data failed!${ignore.message}|$reportFailedProject")
+            logger.warn("request bill data failed!${ignore.message}|$reportProjects")
         }
     }
 }
