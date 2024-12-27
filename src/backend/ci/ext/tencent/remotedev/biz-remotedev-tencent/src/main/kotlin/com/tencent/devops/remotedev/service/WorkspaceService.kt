@@ -979,15 +979,7 @@ class WorkspaceService @Autowired constructor(
             currentLoginUser = currentLoginUser
         )
     }
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#envId"
-        ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
-    )
+
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1136,8 +1128,8 @@ class WorkspaceService @Autowired constructor(
         actionId = ActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
+            instanceNames = "#WorkspaceRecordWithWindows?.workspaceName",
+            instanceIds = "#WorkspaceRecordWithWindows?.workspaceName"
         ),
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
