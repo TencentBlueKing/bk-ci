@@ -588,9 +588,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 if (parentFieldName != null) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_NULL,
-                        params = arrayOf(parentFieldName,fieldName)
+                        params = arrayOf(parentFieldName, fieldName)
                     )
-                }else{
+                } else {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                         params = arrayOf(fieldName)
@@ -602,9 +602,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (parentFieldName != null) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_INVALID,
-                    params = arrayOf(parentFieldName,fieldName)
+                    params = arrayOf(parentFieldName, fieldName)
                 )
-            }else{
+            } else {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                     params = arrayOf(fieldName)
@@ -627,9 +627,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         }
-
     }
-
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
         val message: String?
