@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
@@ -984,11 +983,8 @@ class WorkspaceService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
+            resourceType = ResourceTypeId.CGS
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
@@ -1004,12 +1000,6 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             }
-
-            ActionAuditContext.current()
-                .setInstanceId(workspaceName)
-                .setInstanceName(workspaceName)
-                .setScopeId(workspace.projectId)
-
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1074,12 +1064,6 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
-
-            ActionAuditContext.current()
-                .setInstanceId(workspace.workspaceName)
-                .setInstanceName(workspace.workspaceName)
-                .setScopeId(workspace.projectId)
-
             return startCloudWorkspaceDetail(userId, workspace)
         }
         throw ErrorCodeException(
@@ -1156,7 +1140,10 @@ class WorkspaceService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-            .scopeId = workspace.projectId
+            .setScopeId(workspace.projectId)
+            .setInstanceId(workspace.workspaceName)
+            .setInstanceName(workspace.workspaceName)
+
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val resourceId = if (userId != workspace.createUserId) {
