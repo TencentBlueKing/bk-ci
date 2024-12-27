@@ -695,13 +695,4 @@ class PipelineTriggerEventDao {
                 }
         }
     }
-
-    fun getEventIdByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Long? {
-        return with(T_PIPELINE_TRIGGER_DETAIL) {
-            dslContext.select(EVENT_ID)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                .fetchOne()?.value1()
-        }
-    }
 }

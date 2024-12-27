@@ -452,27 +452,6 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-    fun replayByBuild(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ) {
-        val eventId = pipelineTriggerEventDao.getEventIdByBuildId(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_WEBHOOK_EVENT_NOT_FOUND
-        )
-        replayAll(
-            userId = userId,
-            projectId = projectId,
-            eventId = eventId,
-            pipelineId = pipelineId
-        )
-    }
-
     /**
      * 获取国际化构建事件描述
      */
