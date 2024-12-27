@@ -74,12 +74,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineInitResource
-import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityMetadataMarketResource
@@ -89,10 +86,11 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.MarketAtomBuildInfoDao
 import com.tencent.devops.store.atom.service.TxAtomReleaseService
-import com.tencent.devops.store.common.dao.BusinessConfigDao
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
+import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.TxStoreCodeccService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -107,6 +105,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
+import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
@@ -115,7 +114,6 @@ import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreI18nConfig
@@ -127,7 +125,6 @@ import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import java.time.LocalDateTime
 import java.util.Date
 import java.util.concurrent.Executors
-import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -155,13 +152,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
 
     @Autowired
-    lateinit var businessConfigDao: BusinessConfigDao
-
-    @Autowired
     lateinit var codeccApi: CodeccApi
 
     @Autowired
     lateinit var txStoreCodeccService: TxStoreCodeccService
+
+    @Autowired
+    lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
+
+    @Autowired
+    lateinit var storePipelineService: StorePipelineService
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -653,11 +653,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = context,
-            storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM.type.toByte()
-        )!! // 查找新增插件时关联的项目
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
@@ -680,7 +675,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("atom[$atomCode] buildInfo is:$buildInfo")
-        val script = buildInfo.value1()
         val language = buildInfo.value3()
         // 获取打包所需的操作系统名称和操作系统cpu架构
         val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)
@@ -712,13 +706,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val startParams = mutableMapOf<String, String>() // 启动参数
         startParams[KEY_ATOM_CODE] = atomCode
         startParams[KEY_VERSION] = atomRecord.version
-        startParams[KEY_LANGUAGE] = language
-        startParams[KEY_SCRIPT] = script
         startParams[KEY_COMMIT_ID] = commitId
         startParams[KEY_BRANCH] = branch ?: MASTER
         startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
         startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
         startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
+        startParams[KEY_CODE_SRC] = atomRecord.codeSrc
+        startParams[KEY_REPOSITORY_PATH] = (buildInfo.value2() ?: "")
+        startParams[KEY_REPOSITORY_HASH_ID] = atomRecord.repositoryHashId
+        startParams[KEY_LANGUAGE] = language
+        startParams[KEY_SCRIPT] = buildInfo.value1()
         runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
         validOsNameFlag?.let {
             startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
@@ -726,75 +723,25 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         validOsArchFlag?.let {
             startParams[KEY_VALID_OS_ARCH_FLAG] = it.toString()
         }
-        if (null == atomPipelineRelRecord) {
-            // 为用户初始化构建流水线并触发执行
-            val version = atomRecord.version
-            val pipelineModelConfig = businessConfigDao.get(
-                dslContext = context,
-                business = StoreTypeEnum.ATOM.name,
-                feature = "initBuildPipeline",
-                businessValue = "PIPELINE_MODEL"
-            )
-            var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
-            val paramMap = mapOf(
-                KEY_PIPELINE_NAME to pipelineName,
-                KEY_STORE_CODE to atomCode,
-                KEY_VERSION to version,
-                KEY_LANGUAGE to language,
-                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
-                KEY_REPOSITORY_HASH_ID to atomRecord.repositoryHashId,
-                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
-                KEY_BRANCH to (branch ?: MASTER)
-            )
-            // 将流水线模型中的变量替换成具体的值
-            paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value)
-            }
-            val storeInitPipelineReq = StoreInitPipelineReq(
-                pipelineModel = pipelineModel,
-                startParams = startParams
-            )
-            val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(userId, initProjectCode, storeInitPipelineReq).data
-            logger.info("the atomMarketInitPipelineResp is:$atomMarketInitPipelineResp")
-            if (null != atomMarketInitPipelineResp) {
-                val buildId = atomMarketInitPipelineResp.buildId
-                val atomStatus = if (buildId.isNullOrBlank()) {
-                    AtomStatusEnum.BUILD_FAIL
-                } else {
-                    storePipelineBuildRelDao.add(
-                        dslContext = context,
-                        storeId = atomId,
-                        pipelineId = atomMarketInitPipelineResp.pipelineId,
-                        buildId = buildId
-                    )
-                    AtomStatusEnum.BUILDING
-                }
-                storePipelineRelDao.add(
-                    dslContext = context,
-                    storeCode = atomCode,
-                    storeType = StoreTypeEnum.ATOM,
-                    pipelineId = atomMarketInitPipelineResp.pipelineId,
-                    projectCode = initProjectCode
-                )
-                marketAtomDao.setAtomStatusById(
-                    dslContext = context,
-                    atomId = atomId,
-                    atomStatus = atomStatus.status.toByte(),
-                    userId = userId,
-                    msg = null
-                )
-                // 通过websocket推送状态变更消息
-                storeWebsocketService.sendWebsocketMessage(userId, atomId)
-            }
+        val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
+        val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
+        val pipelineId: String?
+        var projectCode = innerPipelineProject
+        var pipelineUser = innerPipelineUser
+        if (atomPipelineRelRecord == null) {
+            pipelineId = storePipelineService.creatStorePipelineByStoreCode(storeType = StoreTypeEnum.ATOM.name)
         } else {
+            pipelineId = atomPipelineRelRecord.pipelineId
+            if (atomPipelineRelRecord.projectCode != innerPipelineProject) {
+                projectCode = atomPipelineRelRecord.projectCode
+                pipelineUser = userId
+            }
             val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
-                client.get(ServiceBuildResource::class).getBuildStatus(
-                    userId = userId,
-                    projectId = initProjectCode,
+                client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
+                    userId = pipelineUser,
+                    projectId = projectCode,
                     pipelineId = buildInfoRecord.pipelineId,
                     buildId = buildInfoRecord.buildId,
                     channelCode = ChannelCode.AM
@@ -812,33 +759,47 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     )
                 }
             }
-            // 触发执行流水线
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
-                userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
-                ChannelCode.AM, startType = StartType.SERVICE
-            ).data
-            logger.info("the buildIdObj is:$buildIdObj")
-            if (null != buildIdObj) {
-                storePipelineBuildRelDao.add(context, atomId, atomPipelineRelRecord.pipelineId, buildIdObj.id)
-                marketAtomDao.setAtomStatusById(
-                    dslContext = context,
-                    atomId = atomId,
-                    atomStatus = AtomStatusEnum.BUILDING.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 构建中
-            } else {
-                marketAtomDao.setAtomStatusById(
-                    dslContext = context,
-                    atomId = atomId,
-                    atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
-                    userId = userId,
-                    msg = null
-                ) // 构建失败
-            }
-            // 通过websocket推送状态变更消息
-            storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
+        // 触发执行流水线
+        val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+            userId = pipelineUser,
+            projectId = projectCode,
+            pipelineId = pipelineId!!,
+            values = startParams,
+            channelCode = ChannelCode.AM,
+            startType = StartType.SERVICE
+        ).data
+        logger.info("the buildIdObj is:$buildIdObj")
+
+        if (null != buildIdObj) {
+            storePipelineBuildRelDao.add(context, atomId, pipelineId, buildIdObj.id)
+            if (atomPipelineRelRecord == null) {
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    pipelineId = pipelineId,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
+                )
+            }
+            marketAtomDao.setAtomStatusById(
+                dslContext = context,
+                atomId = atomId,
+                atomStatus = AtomStatusEnum.BUILDING.status.toByte(),
+                userId = userId,
+                msg = null
+            ) // 构建中
+        } else {
+            marketAtomDao.setAtomStatusById(
+                dslContext = context,
+                atomId = atomId,
+                atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
+                userId = userId,
+                msg = null
+            ) // 构建失败
+        }
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
         return true
     }
 

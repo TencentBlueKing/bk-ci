@@ -25,29 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
-import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
-import com.tencent.devops.process.service.ExtServiceBuildInitPipelineService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceExtServiceBuildPipelineInitResourceImpl @Autowired constructor(
-    private val extServiceBuildInitPipelineService: ExtServiceBuildInitPipelineService
-) : ServiceExtServiceBuildPipelineInitResource {
+@Tag(name = "OP_STORE", description = "OP-商店")
+@Path("/op/store")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreResource {
 
-    override fun initExtServiceBuildPipeline(
+    @Operation(summary = "删除组件内置流水线")
+    @DELETE
+    @Path("/inner/pipeline/delete")
+    fun deleteStoreInnerPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        projectCode: String,
-        extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
-    ): Result<ExtServiceBuildInitPipelineResp> {
-        return extServiceBuildInitPipelineService.initPipeline(
-            userId = userId,
-            projectCode = projectCode,
-            extServiceBuildInitPipelineReq = extServiceBuildInitPipelineReq
-        )
-    }
+        @Parameter(description = "组件类型", required = false)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum? = null,
+        @Parameter(description = "组件标识", required = false)
+        @QueryParam("storeCode")
+        storeCode: String? = null,
+        @Parameter(description = "需排除的项目", required = false)
+        @QueryParam("excludeProjectCode")
+        excludeProjectCode: String? = null
+    ): Result<Boolean>
 }

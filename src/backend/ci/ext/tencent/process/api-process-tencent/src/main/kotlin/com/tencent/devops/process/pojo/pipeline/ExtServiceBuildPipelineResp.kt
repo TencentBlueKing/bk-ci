@@ -31,7 +31,7 @@ import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务初始化构建流水线报文响应体")
-data class ExtServiceBuildInitPipelineResp(
+data class ExtServiceBuildPipelineResp(
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "构建ID", required = false)

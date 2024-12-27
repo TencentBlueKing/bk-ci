@@ -27,9 +27,9 @@
 
 package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.store.config.TxBkRepoStoreConfig
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.store.config.TxBkRepoStoreConfig
 import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -40,14 +40,14 @@ import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.file.Files
 import okhttp3.Credentials
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.InputStream
-import java.nio.charset.Charset
-import java.nio.file.Files
 
 @Service
 class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
@@ -78,12 +78,14 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
     ): Result<Boolean> {
         logger.info("archiveFile params:[$userId|$repoName|$projectId|$storeType|$storeCode|$version|$destPath")
         // 校验用户上传的文件是否合法
-        val verifyResult = client.get(ServiceStoreResource::class).isStoreMember(
+        val verifyUserResult = client.get(ServiceStoreResource::class).isStoreMember(
             storeCode = storeCode,
             storeType = storeType,
             userId = userId
         )
-        if (verifyResult.isNotOk() || verifyResult.data != true) {
+        // 校验项目是否是研发商店公共项目
+        val verifyProjectResult = client.get(ServiceStoreResource::class).isPublicProject(projectId)
+        if ((verifyUserResult.isNotOk() || verifyUserResult.data != true) && verifyProjectResult.data != true) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(storeCode)

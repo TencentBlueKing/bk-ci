@@ -25,27 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.extservice.dto
+package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.dispatch.pojo.DeployApp
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreResource
+import com.tencent.devops.store.common.service.StorePipelineService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务基本信息")
-data class ExtServiceBaseInfoDTO(
-    @get:Schema(title = "扩展服务Id", required = true)
-    val serviceId: String,
-    @get:Schema(title = "扩展服务代码", required = true)
-    val serviceCode: String,
-    @get:Schema(title = "扩展服务版本号", required = true)
-    val version: String,
-    @get:Schema(title = "扩展服务镜像信息", required = true)
-    val extServiceImageInfo: ExtServiceImageInfoDTO,
-    @get:Schema(title = "扩展服务部署信息", required = true)
-    val extServiceDeployInfo: DeployApp,
-    @get:Schema(title = "分支", required = false)
-    val branch: String? = null,
-    @get:Schema(title = "代码库链接", required = true)
-    val codeSrc: String,
-    @get:Schema(title = "代码库保存路径", required = false)
-    val repositoryPath: String? = null
-)
+@RestResource
+class OpStoreResourceImpl @Autowired constructor(
+    private val storePipelineService: StorePipelineService
+) : OpStoreResource {
+
+    override fun deleteStoreInnerPipeline(
+        userId: String,
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?
+    ): Result<Boolean> {
+        return Result(
+            storePipelineService.deleteStoreInnerPipeline(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                excludeProjectCode = excludeProjectCode
+            )
+        )
+    }
+}

@@ -30,12 +30,13 @@ package com.tencent.devops.store.service.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceEnvDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +48,8 @@ class ExtServiceEnvService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val extServiceEnvDao: ExtServiceEnvDao,
-    private val storeProjectRelDao: StoreProjectRelDao
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) {
 
     private val logger = LoggerFactory.getLogger(ExtServiceEnvService::class.java)
@@ -71,9 +73,8 @@ class ExtServiceEnvService @Autowired constructor(
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
-        // 判断用户的项目是否安装了该扩展服务
         val extServiceFeatureRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)!!
-        if (!extServiceFeatureRecord.publicFlag) {
+        if (!extServiceFeatureRecord.publicFlag && projectCode != storeInnerPipelineConfig.innerPipelineProject) {
             val flag = storeProjectRelDao.isInstalledByProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
