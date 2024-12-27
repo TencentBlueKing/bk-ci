@@ -981,6 +981,17 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_VIEW_CONTENT
+    )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -994,6 +1005,12 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             }
+
+            ActionAuditContext.current()
+                .setInstanceId(workspaceName)
+                .setInstanceName(workspaceName)
+                .addExtendData("projectId", workspace.projectId)
+
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1058,6 +1075,12 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
+
+            ActionAuditContext.current()
+                .setInstanceId(envId)
+                .setInstanceName(envId)
+                .addExtendData("projectId", workspace.projectId)
+
             return startCloudWorkspaceDetail(userId, workspace)
         }
         throw ErrorCodeException(
