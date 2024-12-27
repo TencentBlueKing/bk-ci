@@ -35,6 +35,7 @@ import java.net.URLDecoder
 import java.text.MessageFormat
 import java.util.Locale
 import java.util.Properties
+import java.util.PropertyResourceBundle
 import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
 
@@ -71,7 +72,7 @@ object MessageUtil {
             // 根据locale和baseName生成resourceBundle对象
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
-            message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+            message = resourceBundle.getString(messageCode)
             if (null != params) {
                 val mf = MessageFormat(message)
                 // 根据参数动态替换状态码描述里的占位符

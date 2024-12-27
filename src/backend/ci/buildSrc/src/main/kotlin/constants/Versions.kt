@@ -46,7 +46,7 @@ object Versions {
     const val iam = "2.0.0"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
-    const val audit = "2.0.0"
+    const val audit = "2.0.1"
     const val MysqlDriver = "8.0.33"
     const val HttpClient = "4.5.14"
     // worker
