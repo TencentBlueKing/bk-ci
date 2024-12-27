@@ -989,7 +989,6 @@ class WorkspaceService @Autowired constructor(
             instanceIds = "#workspaceName"
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
@@ -1009,7 +1008,7 @@ class WorkspaceService @Autowired constructor(
             ActionAuditContext.current()
                 .setInstanceId(workspaceName)
                 .setInstanceName(workspaceName)
-                .addExtendData("projectId", workspace.projectId)
+                .setScopeId(workspace.projectId)
 
             return startCloudWorkspaceDetail(userId, workspace)
         }
@@ -1079,7 +1078,7 @@ class WorkspaceService @Autowired constructor(
             ActionAuditContext.current()
                 .setInstanceId(workspace.workspaceName)
                 .setInstanceName(workspace.workspaceName)
-                .addExtendData("projectId", workspace.projectId)
+                .setScopeId(workspace.projectId)
 
             return startCloudWorkspaceDetail(userId, workspace)
         }
