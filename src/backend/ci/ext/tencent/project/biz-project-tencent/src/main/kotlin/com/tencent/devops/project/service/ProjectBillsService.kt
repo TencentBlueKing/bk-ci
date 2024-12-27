@@ -313,6 +313,11 @@ class ProjectBillsService constructor(
         }
     }
 
+    /**
+     *  项目不活跃的判定：BCS项目判定为不活跃，并且
+     *  项目虽已关联运营产品，但4个月内无人访问并且没有执行过流水线则为不活跃；
+     *  或者项目虽未关联运营产品，但2个月内无人访问并且没有执行过流水线则为不活跃
+     * */
     private fun isProjectActive(projectInfo: ProjectVO): Boolean {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
