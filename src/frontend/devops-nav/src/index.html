@@ -213,6 +213,29 @@
 
           <!-- end devops:css -->
           <title></title>
+          <style>
+            /* 模态背景 */
+            #devops-login-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+            }
+            /* 模态窗口 */
+            #devops-login-modal {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                width: 680px;
+                height: 500px;
+            }
+        </style>
 </head>
 
 <body>
@@ -232,6 +255,10 @@
       </div>
     </div>
   </div>
+    <div id="devops-login-modal-overlay">
+        <div id="devops-login-modal">
+        </div>
+    </div>
   <!-- devops:assets -->
   <!-- end devops:assets -->
 
@@ -579,30 +606,6 @@
       )
     }
 
-    // function detectNewVersion() {
-    //   var xhr = new XMLHttpRequest()
-    //   xhr.open('GET', '/console/', true)
-    //   xhr.onreadystatechange = function () {
-    //     if (xhr.readyState === 4 && xhr.status === 200) {
-    //       var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
-    //       var version = versions && versions[1]
-    //       console.log(version)
-    //       if (version !== '__BK_CI_VERSION__') {
-    //         console.log('has new Version', version)
-    //         const locale = getCookie('blueking_language')
-
-    //         const tips = locale === 'en' ? `There is a version update of the Blue Shield platform [${version}]. Click OK to refresh the page.` : `检测到蓝盾平台有版本更新【${version}】点击确定刷新页面`
-    //         window.confirm(tips) && window.location.reload()
-    //       } else {
-    //         setTimeout(() => {
-    //           window.requestIdleCallback(detectNewVersion)
-    //         }, 1000 * 60 * 5)
-    //       }
-    //     }
-    //   }
-    //   xhr.send()
-    // }
-    // window.requestIdleCallback(detectNewVersion)
   </script>
 </body>
 

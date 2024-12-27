@@ -8,8 +8,7 @@ import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import javax.ws.rs.core.Response
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Service
 @Service
 class WhiteListService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val cacheService: RedisCacheService,
+    private val cacheService: ConfigCacheService,
     private val whiteListDao: WhiteListDao,
     private val workspaceDao: WorkspaceDao
 ) {
@@ -175,22 +174,5 @@ class WhiteListService @Autowired constructor(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
             params = arrayOf("User($userId) exceeding the limit($limit)")
         )
-    }
-
-    /**
-     * 校验云桌面白名单的运行OS只能是windows
-     */
-    fun checkRunsOnOs(key: String, runsOnKey: String, currentOs: String? = null) {
-        val runsOnValue = cacheService.hentries(key)?.get(runsOnKey)
-        logger.info("checkRunsOnOS|key|$key|runsOnKey|$runsOnKey|currentOs|$currentOs|runsOnValue|$runsOnValue")
-        if (runsOnValue == null || currentOs == null) {
-            return
-        }
-        if (runsOnValue != currentOs) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ErrorCodeEnum.NOT_ALLOWED_ENVIRONMENT.errorCode
-            )
-        }
     }
 }

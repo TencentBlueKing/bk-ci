@@ -28,13 +28,17 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchBuildTaskStatus
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
@@ -81,7 +85,8 @@ interface RemoteDevInterface {
         workspaceName: String,
         gameId: String,
         cgsId: String,
-        imageId: String
+        imageId: String,
+        imageName: String
     ): String
 
     /**
@@ -99,7 +104,7 @@ interface RemoteDevInterface {
         machineType: String?,
         zoneId: String?,
         live: Boolean?
-    ): String
+    ): TaskCommonResp
 
     /**
      * 获取工作空间web端链接
@@ -112,22 +117,47 @@ interface RemoteDevInterface {
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
 
     /**
+     * 工作空间创建自动修正流程
+     */
+    fun workspaceTaskCreate(
+        taskStatus: TaskStatus,
+        workspaceName: String,
+        operator: String
+    )
+
+    /**
      * 查询工作空间状态
      */
     fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
 
-    /**
-     * 等待任务结束
-     */
-    fun waitTaskFinish(
-        userId: String,
-        taskId: String,
-        type: UpdateEventType
-    ): DispatchBuildTaskStatus
-
     fun expandDisk(
         workspaceName: String,
         userId: String,
-        size: String
+        size: String,
+        pvcId: String?
     ): ExpandDiskValidateResp
+
+    fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): CreateDiskResp
+
+    fun fetchDiskList(
+        workspaceName: String,
+        userId: String
+    ): List<VmDiskInfo>
+
+    fun taskStatus(
+        taskId: String
+    ): WorkspaceTaskStatus?
+
+    fun fetchImages(
+        data: ListImagesData
+    ): ListImagesResp?
+
+    fun deleteImage(
+        imageId: String,
+        delaySeconds: Int?
+    ): String?
 }

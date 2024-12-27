@@ -148,8 +148,8 @@ jobs:
         version=`echo $version | sed 's/-/./g'`
         major=`echo $version | cut -d. -f1`
         minor=`echo $version | cut -d. -f2`
-        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md"
-        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md" >> $GITHUB_OUTPUT
+        echo "version_file=CHANGELOG/zh_CN/CHANGELOG-$major.$minor.md"
+        echo "version_file=CHANGELOG/zh_CN/CHANGELOG-$major.$minor.md" >> $GITHUB_OUTPUT
     - name: Create Release
       id: create_release
       uses: ncipollo/release-action@v1.12.0

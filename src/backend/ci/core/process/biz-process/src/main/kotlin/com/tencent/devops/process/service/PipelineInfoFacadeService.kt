@@ -62,7 +62,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -103,13 +102,6 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.util.LinkedList
@@ -117,6 +109,13 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -307,12 +306,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        inheritedDialectSetting: Boolean? = true,
-        pipelineDialectSetting: String? = null
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -432,12 +428,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 watcher.start("deployPipeline")
-                val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                    projectId = projectId,
-                    asCodeSettings = setting?.pipelineAsCodeSettings,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting
-                )
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
                     setting = setting,
@@ -447,7 +437,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
-                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     versionStatus = versionStatus,
                     branchName = branchName,
@@ -455,31 +444,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo,
-                    inheritedDialectSetting = inheritedDialectSetting,
-                    pipelineDialectSetting = pipelineDialectSetting,
-                    pipelineDialect = pipelineDialect
+                    yamlInfo = yamlInfo
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
                 if (templateId != null) {
-                    watcher.start("addLabel")
-                    if (useLabelSettings == true || versionStatus == VersionStatus.RELEASED) {
-                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-                        val labels = ArrayList<String>()
-                        groups.forEach {
-                            labels.addAll(it.labels)
-                        }
-                        pipelineGroupService.updatePipelineLabel(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            labelIds = labels
-                        )
-                    }
-                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
@@ -969,26 +940,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels = pipelineCopy.labels
             )
             modelCheckPlugin.clearUpModel(copyMode)
-            val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode).pipelineId
             val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
-            if (settingInfo != null) {
-                // setting pipeline需替换成新流水线的
-                val newSetting = pipelineSettingFacadeService.rebuildSetting(
-                    oldSetting = settingInfo,
-                    projectId = projectId,
-                    newPipelineId = newPipelineId,
-                    pipelineName = pipelineCopy.name
-                )
-                // 复制setting到新流水线
-                pipelineSettingFacadeService.saveSetting(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    setting = newSetting,
-                    dispatchPipelineUpdateEvent = false,
-                    updateLabels = false
-                )
-            }
+            val newPipelineId = createPipeline(
+                userId = userId,
+                projectId = projectId,
+                model = copyMode,
+                channelCode = channelCode,
+                setting = settingInfo
+            ).pipelineId
             return newPipelineId
         } catch (e: JsonParseException) {
             logger.error("Parse process($pipelineId) fail", e)
@@ -1125,11 +1084,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
-            val pipelineSetting = savedSetting ?: pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
-            val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                projectId = projectId,
-                pipelineSetting?.pipelineAsCodeSettings
-            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1144,8 +1098,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo,
-                pipelineDialect = pipelineDialect
+                yamlInfo = yamlInfo
             )
             // 审计
             ActionAuditContext.current()
@@ -1216,7 +1169,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildNo: BuildNoUpdateReq
+        targetBuildNo: Int
     ) {
         operationLogService.addOperationLog(
             userId = userId,
@@ -1224,14 +1177,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = 0,
             operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
-            params = buildNo.currentBuildNo.toString(),
+            params = targetBuildNo.toString(),
             description = null
         )
         pipelineBuildSummaryDao.updateBuildNo(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildNo = buildNo.currentBuildNo,
+            buildNo = targetBuildNo,
             debug = false
         )
     }

@@ -307,6 +307,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `MACHINE_TYPE` varchar(16) NOT NULL COMMENT '机型',
 	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
 	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    `INFO` json NULL COMMENT '一些单据的补充信息',
     PRIMARY KEY (`ID`),
     KEY `idx_project_id` (`PROJECT_ID`),
     KEY `idx_host_ip` (`HOST_IP`),
@@ -495,6 +496,7 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     ACTION_MSG      varchar(256) default ''                not null comment '操作行为描述',
     CREATED_TIME    timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
     UID             varchar(128) default ''                not null comment 'task id',
+    TASK_ID         varchar(64)                                null comment '任务id',
     STATUS          varchar(32)  default ''                not null comment '操作状态',
     UPDATE_TIME     timestamp    default CURRENT_TIMESTAMP null comment '修改时间',
     KEY `uni_1` (`WORKSPACE_NAME`),
@@ -545,5 +547,35 @@ CREATE TABLE IF NOT EXISTS `T_USER_AUTH_APPLY` (
     KEY `IDX_RECORD_STATUS` USING BTREE (`PROJECT_ID`, `USER_ID`, `STATUS`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '用户权限申请记录表';
 
+CREATE TABLE IF NOT EXISTS T_WORKSPACE_USE_SNAPSHOTS
+(
+    ID             bigint auto_increment
+        primary key,
+    PROJECT_ID     varchar(64)                         not null comment '项目ID',
+    PROJECT_NAME            varchar(64) charset utf8mb4 default ''                not null comment '项目名称',
+    WORKSPACE_NAME varchar(128)                        not null comment '工作空间名称，唯一性',
+    STATUS         varchar(32)                         not null comment '工作空间状态',
+    DATE           date                         not null comment '快照时间',
+    CREATED_TIME   timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    constraint uindex
+        unique (WORKSPACE_NAME, DATE)
+)
+    comment '在使用中的工作空间快照表';
+
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_RECORD_TICKET` (
+    `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称',
+    `CERT` varchar(64) NOT NULL COMMENT '密钥',
+    `CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`WORKSPACE_NAME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '工作空间录屏密钥表';
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CONFIG` (
+    `KEY` varchar(128) NOT NULL COMMENT '配置索引',
+    `VALUE` text NOT NULL COMMENT '配置内容',
+    `CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`KEY`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '系统配置表';
 
 SET FOREIGN_KEY_CHECKS = 1;

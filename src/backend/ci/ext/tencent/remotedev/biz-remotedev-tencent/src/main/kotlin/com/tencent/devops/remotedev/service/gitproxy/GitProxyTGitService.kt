@@ -1,7 +1,5 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
@@ -34,9 +32,11 @@ import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.gitproxy.OffshoreTGitApiClient.Companion.LOG_UPDATE_TGIT_ACL_TAG
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_PUBLIC_IPS
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import java.time.Duration
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +62,9 @@ class GitProxyTGitService @Autowired constructor(
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
     private val redisOperation: RedisOperation,
-    private val streamBridge: StreamBridge
+    private val streamBridge: StreamBridge,
+    private val devcloudService: DevcloudService,
+    private val configCacheService: ConfigCacheService
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     @ActionAuditRecord(
@@ -224,6 +226,19 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     /**
+     * 刷数据装用
+     */
+    fun linkTGitOp(
+        projectIds: Set<String>
+    ): Map<Long, Boolean> {
+        val result = mutableMapOf<Long, Boolean>()
+        projectIds.forEach {
+            result.putAll(linkTGit(it, null, null))
+        }
+        return result
+    }
+
+    /**
      * OP回调链接工蜂acl
      */
     @ActionAuditRecord(
@@ -235,7 +250,7 @@ class GitProxyTGitService @Autowired constructor(
     )
     fun linkTGit(
         projectId: String,
-        repoIds: Set<Long>,
+        repoIds: Set<Long>?,
         innerToken: TGitToken? = null
     ): Map<Long, Boolean> {
         val result = mutableMapOf<Long, Boolean>()
@@ -250,21 +265,23 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        ips.addAll(fetchDevcloudCvm(projectId))
         // 获取项目下正在跑的所有机器的用户
         val users = fetchProjectSpecAclUsers(setOf(projectId))
 
         // 获取关联的工蜂仓库
         val repoRecord = projectTGitLinkDao.fetch(dslContext, projectId, repoIds).associateBy { it.tgitId }
+        val newRepoIds = repoIds ?: repoRecord.keys
 
         // 审计
         ActionAuditContext.current()
-            .setInstanceName(repoIds.toString())
+            .setInstanceName(newRepoIds.toString())
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
         val tokenBox = TokenBox(client, true)
-        repoIds.forEach { repoId ->
+        newRepoIds.forEach { repoId ->
             val record = repoRecord[repoId] ?: return@forEach
 
             // 当前场景下目前是单一 token，拿不到肯定没了
@@ -599,7 +616,10 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        otherProjects.forEach { op ->
+            ips.addAll(fetchDevcloudCvm(op))
+        }
         val users = fetchProjectSpecAclUsers(otherProjects)
 
         val ok = incUpdateTGitProjectAcl(
@@ -820,7 +840,8 @@ class GitProxyTGitService @Autowired constructor(
                 WorkspaceStatus.DELETED,
                 WorkspaceStatus.DELIVERING_FAILED
             )
-        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toMutableSet()
+        ips.addAll(fetchDevcloudCvm(info.projectId))
         val users = fetchProjectSpecAclUsers(setOf(info.projectId))
 
         val ok = incUpdateTGitProjectAcl(
@@ -950,11 +971,6 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
-    private val publicIpsCache: LoadingCache<String, String> = Caffeine.newBuilder()
-        .maximumSize(5)
-        .expireAfterWrite(Duration.ofHours(1))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
-
     // 增量更新
     // 默认规则组仅放云桌面 IP, 并清空用户白名单
     // 分配了云桌面的用户都加到特定访问人群名单
@@ -1015,6 +1031,40 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    private fun fetchDevcloudCvm(
+        projectId: String
+    ): Set<String> {
+        try {
+            var page = 1
+            val pageSize = 100
+            val result = mutableSetOf<String>()
+
+            while (true) {
+                val cvmPage = devcloudService.fetchCVMList(
+                    userId = "landun",
+                    project = projectId,
+                    page = page,
+                    pageSize = pageSize
+                )
+
+                // 过滤项目信息
+                cvmPage.records.forEach { cvm ->
+                    result.add(cvm.ip ?: return@forEach)
+                }
+
+                if (cvmPage.count < pageSize) {
+                    break
+                }
+                page++
+            }
+
+            return result.map { it.trim() }.toSet()
+        } catch (e: Exception) {
+            logger.error("$LOG_UPDATE_TGIT_ACL_TAG|fetchDevcloudCvm error", e)
+            return emptySet()
+        }
+    }
+
     private fun doUpdateTGitProjectAcl(
         token: TGitToken,
         tGitProjectId: String,
@@ -1053,8 +1103,8 @@ class GitProxyTGitService @Autowired constructor(
             token = token,
             projectId = tGitProjectId,
             ips = ips.plus(
-                publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                    ?: emptySet()
+                configCacheService.get(REDIS_REMOTEDEV_PUBLIC_IPS)
+                    ?.split(";")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
             )
         )
         return Pair(ipOk, specIpOk)
@@ -1269,9 +1319,6 @@ class GitProxyTGitService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
-
-        // 云桌面公网ip，可能会动态变化所以放redis里
-        private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
 
         // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写
         private const val REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL = "remotedev:project:update:tgit:acl"

@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -91,6 +92,12 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
+                    VariableProps(
+                        type = VariablePropType.REPO_REF.value
+                    )
+                }
 
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
@@ -132,7 +139,11 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
-                value = it.defaultValue.toString(),
+                value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
+                    CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
+                } else {
+                    it.defaultValue.toString()
+                },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
@@ -207,8 +218,13 @@ class VariableTransfer {
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
-                    defaultValue = when (type) {
-                        BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
+                    defaultValue = when {
+                        type == BuildFormPropertyType.BOOLEAN ->
+                            (variable.value as String?)?.toBoolean() ?: false
+
+                        CascadePropertyUtils.supportCascadeParam(type) ->
+                            variable.value ?: mapOf<String, String>()
+
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {

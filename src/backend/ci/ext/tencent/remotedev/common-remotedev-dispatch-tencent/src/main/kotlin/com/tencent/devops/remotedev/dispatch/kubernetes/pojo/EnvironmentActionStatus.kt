@@ -31,7 +31,7 @@ enum class EnvironmentActionStatus {
     PENDING,
     SUCCEEDED,
     FAILED,
-    WAIT_TIMEOUT,
+    WAIT_TIMEOUT, // 已废弃，看后续是否能下掉
     AUTOMATIC_CORRECTION;
 
     fun needFix() = this == FAILED || this == WAIT_TIMEOUT

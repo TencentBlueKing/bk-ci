@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
 
-    private val bkConfig = BkConfig()
+    private val bkConfig = BkConfig(mockk())
 
     private val workspaceTemplate = RemotedevSdkService(
         kafkaClient = mockk(),
@@ -32,7 +32,7 @@ class ServiceRemoteDevResourceImplTest {
             createTime = "",
             regionId = "",
             innerIp = "1.2.3",
-            status = WorkspaceStatus.RUNNING,
+            status = WorkspaceStatus.RUNNING.name,
             realOwner = "",
             displayName = "",
             ownerDepartments = null,

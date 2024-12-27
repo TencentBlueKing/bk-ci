@@ -185,6 +185,7 @@
                         :atom-props-model="atom.atomModal.props"
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
+                        :is-instance-template="isInstanceTemplate"
                         class="atom-content"
                     >
                     </div>
@@ -634,7 +635,7 @@
                 'updateRefreshQualityLoading'
             ]),
 
-            changePluginPause (isContinue, loadingKey) {
+            handleExecutePluginPause (isContinue, loadingKey) {
                 const postData = {
                     projectId: this.projectId,
                     pipelineId: this.pipelineId,
@@ -668,6 +669,18 @@
                 }).finally(() => {
                     this[loadingKey] = false
                 })
+            },
+            changePluginPause (isContinue, loadingKey) {
+                if (isContinue && loadingKey === 'isExeContinue') {
+                    this.handleExecutePluginPause(isContinue, loadingKey)
+                } else {
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            this.handleExecutePluginPause(isContinue, loadingKey)
+                        }
+                    })
+                }
             },
             setAtomValidate (addErrors, removeErrors) {
                 if (addErrors && addErrors.length) {

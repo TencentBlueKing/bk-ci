@@ -242,7 +242,14 @@
         "installMethod": "Installation Method",
         "remoteInstall": "Remote Installation",
         "manualInstall": "Manual Installation",
-        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency",
+        "cloudLoginHook": "Cloud Desktop Login Hook",
+        "cloudLogoutHook": "Cloud Desktop Logout Hook",
+        "loginHookTips": "When logging into the cloud desktop, the following selected actions will be executed",
+        "logoutHookTips": "When logging out of the cloud desktop, the following selected actions will be executed",
+        "cleanCredentialsLabel": "Clean credentials, including Git/SVN credentials and browser cache credentials (Chrome, Microsoft Edge)",
+        "ioaLoginLabel": "Login to IOA",
+        "ioaLogoutLabel": "Logout from IOA"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -445,5 +452,7 @@
     "正在生成手动安装命令": "Generating manual installation command",
     "已加载X条": "{0} items loaded",
     "共X个节点": "Total: {0} items",
-    "authManage": "Permission Manage"
+    "authManage": "Permission Manage",
+    "advancedSetting": "Advanced Setting",
+    "saveChange": "Save"
 }

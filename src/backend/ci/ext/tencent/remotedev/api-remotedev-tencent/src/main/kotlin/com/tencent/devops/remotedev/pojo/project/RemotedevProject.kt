@@ -42,3 +42,37 @@ data class RemotedevProject(
     @JsonProperty("remotedev_manager")
     val remotedevManager: String? = ""
 )
+
+@Schema(title = "开启云研发项目信息")
+data class RemotedevProjectNew(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String,
+    @get:Schema(title = "云研发管理员")
+    val remotedevManager: String,
+    @get:Schema(title = "监控面板URL")
+    val monitorUrl: String?
+)
+
+@Schema(title = "开启云研发项目")
+data class EnableRemotedevData(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "true为开启,false为关闭")
+    val enable: Boolean,
+    @get:Schema(title = "云研发管理员列表")
+    val managers: Set<String>,
+    @get:Schema(title = "总配额，默认1000")
+    val quota: Int?
+)
+
+@Schema(title = "修改云研发项目管理员")
+data class UpdateRemotedevDataManagers(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "true增加，false为删除")
+    val add: Boolean,
+    @get:Schema(title = "需要修改的云研发管理员")
+    val managers: Set<String>
+)

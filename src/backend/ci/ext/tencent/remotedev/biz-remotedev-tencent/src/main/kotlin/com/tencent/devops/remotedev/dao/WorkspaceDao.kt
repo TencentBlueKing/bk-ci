@@ -136,10 +136,11 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         userId: String? = null,
-        workspaceName: String? = null
+        workspaceName: Set<String>? = null,
+        notStatus: Set<WorkspaceStatus>? = null
     ): List<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceName)
+            val condition = mixCondition(userId, workspaceName, notStatus)
             val query = dslContext.selectFrom(this)
 
             if (condition.isNotEmpty()) {
@@ -276,14 +277,12 @@ class WorkspaceDao {
         dslContext: DSLContext,
         userId: String? = null,
         workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null
     ): WorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
-                workspaceName = workspaceName,
-                status = status,
+                workspaceName = workspaceName?.let { setOf(workspaceName) },
                 mountType = mountType
             )
 
@@ -381,8 +380,8 @@ class WorkspaceDao {
 
     private fun mixCondition(
         userId: String? = null,
-        workspaceName: String? = null,
-        status: WorkspaceStatus? = null,
+        workspaceName: Set<String>? = null,
+        notStatus: Set<WorkspaceStatus>? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
@@ -393,11 +392,11 @@ class WorkspaceDao {
             if (!userId.isNullOrBlank()) {
                 condition.add(CREATOR.eq(userId))
             }
-            if (!workspaceName.isNullOrBlank()) {
-                condition.add(NAME.eq(workspaceName))
+            if (workspaceName != null) {
+                condition.add(NAME.`in`(workspaceName))
             }
-            if (status != null) {
-                condition.add(STATUS.eq(status.ordinal))
+            if (notStatus != null) {
+                condition.add(STATUS.notIn(notStatus.map { it.ordinal }))
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
@@ -634,7 +633,8 @@ class WorkspaceDao {
                     labels = labels?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
                     },
-                    bakWorkspaceName = bakName
+                    bakWorkspaceName = bakName,
+                    ip = ip
                 )
             }
         }
@@ -661,8 +661,7 @@ class WorkspaceDao {
                     ?: "NO_CHECK",
                 creatorGroupName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_GROUP_NAME) as String?
                     ?: "NO_CHECK",
-                status = WorkspaceStatus.values()[
-                    record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1],
+                status = WorkspaceStatus.load(record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1),
                 createTime = record.getOrNull(TWorkspace.T_WORKSPACE.CREATE_TIME) as LocalDateTime?
                     ?: LocalDateTime.now(),
                 updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?
@@ -689,6 +688,7 @@ class WorkspaceDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<String>
                 },
                 bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
+                ip = record.getOrNull(TWorkspace.T_WORKSPACE.IP) as String?,
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
             )
         }

@@ -174,7 +174,7 @@ class StartControl @Autowired constructor(
                             type = UpdateEventType.START,
                             workspaceName = workspace.workspaceName,
                             mountType = workspace.workspaceMountType,
-                            gameId = gameId.first
+                            appName = gameId.first
                         )
                     )
 

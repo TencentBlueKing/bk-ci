@@ -106,6 +106,15 @@ function _M:get_tag(ns_config)
         tag = "kubernetes-" .. tag
     end
 
+    -- DEVNET区域对tag的转换
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+        if string.find(tag, '^kubernetes-') then
+            tag = string.sub(tag, 12)
+        end
+        tag = 'ieg-codeccsvr-bkci-' .. tag
+    end
+
     -- 设置tag到http请求头
     self:set_header(tag)
 

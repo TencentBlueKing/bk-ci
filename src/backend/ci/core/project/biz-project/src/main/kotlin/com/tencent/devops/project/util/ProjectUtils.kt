@@ -196,7 +196,11 @@ object ProjectUtils {
                 productName = beforeProductName,
                 afterProductName = projectApprovalInfo?.productName,
                 pipelineDialect = projectProperties?.pipelineDialect,
-                afterPipelineDialect = projectApprovalProperties?.pipelineDialect
+                afterPipelineDialect = projectApprovalProperties?.pipelineDialect,
+                enablePipelineNameTips = projectProperties?.enablePipelineNameTips,
+                afterEnablePipelineNameTips = projectApprovalProperties?.enablePipelineNameTips,
+                pipelineNameFormat = projectProperties?.pipelineNameFormat,
+                afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat
             )
         }
     }

@@ -1,4 +1,4 @@
-FROM bkci/openresty:0.0.1
+FROM bkci/openresty:0.0.2
 
 LABEL maintainer="Tencent BlueKing Devops"
 

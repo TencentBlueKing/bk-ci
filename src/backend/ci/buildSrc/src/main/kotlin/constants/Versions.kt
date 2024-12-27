@@ -45,7 +45,7 @@ object Versions {
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
     const val Okhttp = "4.9.0"
-    const val jgit = "5.13.1.202206130422-r"
+    const val jgit = "5.13.3.202401111512-r"
     const val iam = "1.0.7"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -115,7 +117,7 @@ interface ServiceProjectAuthResource {
 
     @GET
     @Path("/{projectCode}/users/{userId}/isProjectUsers")
-    @Operation(summary = "判断是否某个项目中某个组角色的成员")
+    @Operation(summary = "校验用户是否有访问项目权限")
     fun isProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -132,6 +134,18 @@ interface ServiceProjectAuthResource {
         @QueryParam("group")
         @Parameter(description = "用户组类型", required = false)
         group: BkAuthGroup? = null
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/users/{userId}/isProjectMember")
+    @Operation(summary = "校验用户是否是项目成员")
+    fun isProjectMember(
+        @PathParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String
     ): Result<Boolean>
 
     @GET
@@ -247,4 +261,13 @@ interface ServiceProjectAuthResource {
         @Parameter(description = "项目Code", required = true)
         projectCode: String
     ): Result<ProjectPermissionInfoVO>
+
+    @GET
+    @Path("/listUserProjectsWithAuthorization")
+    @Operation(summary = "获取用户授权相关的项目")
+    fun listUserProjectsWithAuthorization(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String
+    ): Result<List<AuthProjectVO>>
 }

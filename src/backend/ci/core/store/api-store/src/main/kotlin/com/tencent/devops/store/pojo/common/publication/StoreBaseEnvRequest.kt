@@ -34,5 +34,5 @@ data class StoreBaseEnvRequest(
     @get:Schema(title = "语言", required = false)
     val language: String? = null,
     @get:Schema(title = "环境扩展信息", required = false)
-    val extBaseEnvInfo: Map<String, Any>? = null
+    val extBaseEnvInfo: MutableMap<String, Any>? = null
 )

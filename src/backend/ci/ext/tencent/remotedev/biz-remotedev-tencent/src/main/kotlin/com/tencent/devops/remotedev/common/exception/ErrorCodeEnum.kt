@@ -207,10 +207,20 @@ enum class ErrorCodeEnum(
                 "Please make sure the credential owner has administrator permissions: " +
                 "Git requires Master and above, SVN requires root directory approver"
     ),
-    REMOVE_TGIT_LINK_ERROR(
+    IMAGE_NOT_FOUND_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132050",
+        formatErrorMessage = "Image {0} not found in project {1}"
+    ),
+    REMOVE_TGIT_LINK_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132051",
         formatErrorMessage = "unbinding TGIT failed: {0}, directly delete the binding information"
+    ),
+    FACE_RECOGNITION_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132052",
+        formatErrorMessage = "user face recognition error: {0}"
     );
 
     fun getErrorMessage(): String {

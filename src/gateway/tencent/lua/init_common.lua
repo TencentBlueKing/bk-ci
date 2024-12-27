@@ -47,7 +47,7 @@ aesUtil=require("util.aes_util")
 
 local ok_table = {status = 0, data = true}
 
-no_container_svr = {"scm", "sign", "config"}
+no_container_svr = {"sign", "config"}
 
 response_ok = json.encode(ok_table)
 

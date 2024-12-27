@@ -18,7 +18,7 @@
 <!-- NEW RELEASE NOTES ENTRY -->
 # v2.0.3
 ## 2024-05-28
-## Changelog since v2.0.2
+### Changelog since v2.0.2
 #### New
 - [New] Modification of the login failure pop-up window specification [link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 
@@ -28,19 +28,19 @@
 
 # v2.0.2
 ## 2024-03-04
-## Changelog since v2.0.1
+### Changelog since v2.0.1
 #### New
 - [New] Initialize bkrepo to modify httpSchema [link](http://github.com/TencentBlueKing/bk-ci/issues/10056)
 
 # v2.0.1
 ## 2024-03-01
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### Fixes
 - [Fix] Fix the problem of new project failure [link](http://github.com/TencentBlueKing/bk-ci/issues/10045)
 
 # v2.0.0
 ## 2024-01-02
-## Changelog since v1.14.0
+### Changelog since v1.14.0
 #### New
 - [New] Support the authority center RBAC [link](http://github.com/TencentBlueKing/bk-ci/issues/7794)
 - [New] Add project management front-end service [link](http://github.com/TencentBlueKing/bk-ci/issues/7923)

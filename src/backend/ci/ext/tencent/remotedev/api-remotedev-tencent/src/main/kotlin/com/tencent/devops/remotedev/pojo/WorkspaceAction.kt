@@ -55,5 +55,8 @@ enum class WorkspaceAction {
     UPGRADING,
     // 克隆
     CLONE,
-    CLONING
+    CLONING,
+    CREATE_SUCCESS, // 交付成功
+    DELETE_IN_INITIALIZING, // 交付时删除
+    CREATE_DISK
 }

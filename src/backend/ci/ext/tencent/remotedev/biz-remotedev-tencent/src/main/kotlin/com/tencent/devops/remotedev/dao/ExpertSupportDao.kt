@@ -5,11 +5,13 @@ import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupportConfig
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportConfigRecord
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportRecord
+import com.tencent.devops.remotedev.pojo.SupRecordInfo
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.JSON
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -26,7 +28,8 @@ class ExpertSupportDao {
         content: String,
         workspaceName: String,
         city: String,
-        machineType: String
+        machineType: String,
+        info: SupRecordInfo
     ): Long {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             return dslContext.insertInto(
@@ -39,7 +42,8 @@ class ExpertSupportDao {
                 STATUS,
                 CONTENT,
                 CITY,
-                MACHINE_TYPE
+                MACHINE_TYPE,
+                INFO
             ).values(
                 projectId,
                 hostIp,
@@ -49,7 +53,8 @@ class ExpertSupportDao {
                 status.name,
                 content,
                 city,
-                machineType
+                machineType,
+                JSON.json(JsonUtil.toJson(info, false))
             ).returning(ID)
                 .fetchOne()!!.id
         }

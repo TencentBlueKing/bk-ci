@@ -62,6 +62,7 @@ class BuildStoreResourceImpl @Autowired constructor(
     }
 
     override fun getStorePkgRunEnvInfo(
+        devopsEnv: String?,
         storeType: StoreTypeEnum,
         language: String,
         runtimeVersion: String,
@@ -70,6 +71,7 @@ class BuildStoreResourceImpl @Autowired constructor(
     ): Result<StorePkgRunEnvInfo?> {
         return Result(
             storePkgRunEnvInfoService.getStorePkgRunEnvInfo(
+                devopsEnv = devopsEnv,
                 userId = "",
                 storeType = storeType,
                 language = language,

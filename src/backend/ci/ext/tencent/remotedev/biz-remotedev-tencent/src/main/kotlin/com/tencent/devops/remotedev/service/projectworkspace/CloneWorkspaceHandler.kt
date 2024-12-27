@@ -4,6 +4,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -15,6 +16,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -30,11 +32,11 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -56,10 +58,10 @@ class CloneWorkspaceHandler @Autowired constructor(
     private val deliverControl: DeliverControl,
     private val workspaceCommon: WorkspaceCommon,
     private val dispatcher: SampleEventDispatcher,
-    private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
 
     @ActionAuditRecord(
@@ -140,6 +142,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -149,7 +152,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                     mountType = WorkspaceMountType.START,
                     zoneId = zoneId,
                     machineType = rebuildReq.machineType,
-                    gameId = null,
+                    appName = appName,
                     projectId = projectId,
                     live = rebuildReq.live
                 )
@@ -176,6 +179,114 @@ class CloneWorkspaceHandler @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START
             )
+        }
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_EDIT_TYPE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_EDIT_TYPE_CONTENT
+    )
+    fun cloneWorkspaceWithTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceCloneReq
+    ): TaskResp {
+        logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        if (!permissionService.hasOwnerPermission(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = projectId,
+                ownerType = workspace.ownerType
+            ) && !permissionService.hasUserManager(userId, projectId)
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to clone $workspaceName")
+            )
+        }
+
+        RedisCallLimit(
+            redisOperation = redisOperation,
+            lockKey = "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds = expiredTimeInSeconds
+        ).tryLock().use {
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't clone now"
+                    )
+                )
+            }
+            val zoneId = createCheckWhenClone(old = workspace, req = rebuildReq)
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.CLONE,
+                actionMessage = "start clone"
+            )
+
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.CLONING
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.CLONE,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    workspace.status,
+                    WorkspaceStatus.CLONING
+                )
+            )
+
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+            // 需要生成一个新的 pipelineId 进行操作
+            val orderId = "${appName}_${projectId}_${UUIDUtil.generate().takeLast(16)}"
+            val resp = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).cloneWorkspaceVm(
+                userId = userId,
+                workspaceName = workspaceName,
+                pipelineId = orderId,
+                machineType = rebuildReq.machineType,
+                zoneId = zoneId,
+                live = rebuildReq.live
+            )
+
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_CLONE,
+                status = true,
+                action = WorkspaceAction.CLONING,
+                systemType = WorkspaceSystemType.WINDOWS_GPU,
+                workspaceMountType = WorkspaceMountType.START,
+                ownerType = WorkspaceOwnerType.PROJECT,
+                projectId = projectId
+            )
+
+            return TaskResp(result = true, taskId = resp.taskId, errMsg = null)
         }
     }
 
@@ -212,7 +323,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 projectId = ws.projectId,
                 workspaceName = workspaceName,
                 workspaceProperty = WorkspaceProperty(
-                    "[克隆]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
+                    "[备用机]${old.displayName.ifBlank { old.workspaceName }}", old.remark, old.labels
                 )
             )
         }

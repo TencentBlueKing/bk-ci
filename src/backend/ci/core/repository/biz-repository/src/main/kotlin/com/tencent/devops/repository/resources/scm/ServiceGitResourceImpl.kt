@@ -279,10 +279,11 @@ class ServiceGitResourceImpl @Autowired constructor(
         filePath: String?,
         format: String?,
         isProjectPathWrapped: Boolean?,
+        projectId: String?,
         response: HttpServletResponse
     ) {
         val repo = repositoryService.serviceGet(
-                "",
+            projectId ?: "",
             RepositoryConfigUtils.buildConfig(repoId, repositoryType)
         )
         repoFileService.downloadTGitRepoFile(

@@ -31,15 +31,13 @@ package upgrader
 
 import (
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/capnspacehook/taskmaster"
 	"github.com/pkg/errors"
-	"golang.org/x/sys/windows/svc/mgr"
 	"os"
-	"os/exec"
 	"strconv"
-	"strings"
-	"syscall"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -51,29 +49,25 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/capnspacehook/taskmaster"
 	"github.com/shirou/gopsutil/v4/process"
 )
-
-type startType string
 
 const (
 	agentProcess  = "agent"
 	daemonProcess = "daemon"
-
-	// 服务，执行计划，手动
-	serviceStart startType = "service"
-	taskStart    startType = "task"
-	manualStart  startType = "manual"
 )
 
 // DoUpgradeAgent 升级agent
 // 1、通过service启动的daemon因为go本身内部注册了daemon导致权限模型有些未知问题，无法更新daemon后启动，只能更新agent
-// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起
+// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起，如果执行计划存在问题，则无法拉起，需要使用 1 中的方式更新
 // 3、用户双击启动的daemon和service一样，无法更新daemon，只能更新agent
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
+	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
+		systemutil.ExitProcess(1)
+	}
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()
@@ -83,29 +77,35 @@ func DoUpgradeAgent() error {
 	}
 	defer func() { totalLock.Unlock() }()
 
-	startT := manualStart
+	startT := wintask.ManualStart
 	var winTask *taskmaster.RegisteredTask = nil
 	// 先查询服务
 	serviceName := "devops_agent_" + config.GAgentConfig.AgentId
-	ok := findService(serviceName)
+	ok := wintask.FindService(serviceName)
 	if ok {
-		startT = serviceStart
+		startT = wintask.ServiceStart
 	} else {
-		if task, taskOk := findTask(serviceName); taskOk {
-			winTask = task
-			startT = taskStart
+		if task, taskOk := wintask.FindTask(serviceName); taskOk {
+			// 启用了的task才能进行升级后的启动，否则不能升级Daemon
+			if task.Enabled &&
+				(task.State == taskmaster.TASK_STATE_READY || task.State == taskmaster.TASK_STATE_RUNNING) {
+				winTask = task
+				startT = wintask.TaskStart
+			} else {
+				logs.Warnf("win task exist but not enable state: %d", task.State)
+			}
 		}
 	}
 	// 理论上不可能，但是作为补充可以为后文提供逻辑依据
-	if startT == taskStart && winTask == nil {
+	if startT == wintask.TaskStart && winTask == nil {
 		logs.Warn("win task not exist update agent")
-		startT = manualStart
+		startT = wintask.ManualStart
 	}
 
 	logs.Infof("agent process start by %s", startT)
 
 	daemonChange := false
-	if startT == taskStart {
+	if startT == wintask.TaskStart {
 		daemonChange, err = checkUpgradeFileChange(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Warn("check daemon upgrade file change failed")
@@ -182,12 +182,7 @@ func DoUpgradeAgent() error {
 	// 只有 daemon 被杀才启动，没被杀等待被 daemon 拉起来
 	if daemonChange {
 		switch startT {
-		case taskStart:
-			cmd := exec.Command("cmd.exe", "/c", systemutil.GetWorkDir()+"/devopsctl.vbs")
-			cmd.SysProcAttr = &syscall.SysProcAttr{
-				CreationFlags:    constant.WinCommandNewConsole | syscall.CREATE_NEW_PROCESS_GROUP,
-				NoInheritHandles: true,
-			}
+		case wintask.TaskStart:
 			if _, err = winTask.Run(); err != nil {
 				return errors.Wrapf(err, "start win task failed")
 			}
@@ -291,38 +286,4 @@ func replaceAgentFile(fileName string) error {
 	}
 
 	return nil
-}
-
-func findService(name string) bool {
-	m, err := mgr.Connect()
-	if err != nil {
-		logs.WithError(err).Error("connect manager failed")
-		return false
-	}
-	defer m.Disconnect()
-
-	service, err := m.OpenService(name)
-	if err != nil {
-		logs.WithError(err).Error("open manager failed")
-		return false
-	}
-	defer service.Close()
-
-	return true
-}
-
-func findTask(name string) (*taskmaster.RegisteredTask, bool) {
-	service, err := taskmaster.Connect()
-	if err != nil {
-		logs.WithError(err).Error("connect taskmaster failed")
-		return nil, false
-	}
-
-	task, err := service.GetRegisteredTask("\\" + name)
-	if err != nil && !strings.Contains(err.Error(), "error parsing registered task") {
-		logs.WithError(err).Error("get registered task failed")
-		return nil, false
-	}
-
-	return &task, true
 }

@@ -38,7 +38,12 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.service.PermissionService
@@ -52,7 +57,8 @@ class ImageManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
 
     companion object {
@@ -121,5 +127,42 @@ class ImageManageService @Autowired constructor(
 
     fun updateImageName(id: Long, imageName: String) {
         imageManageDao.updateImageName(dslContext, id, imageName)
+    }
+
+    // 校验是否基础镜像
+    fun checkBaseImage(imageCosFile: String): Boolean {
+        return getVmStandardImages().any { it.cosFile == imageCosFile }
+    }
+
+    // 校验项目下是否有该镜像:true表示存在；false表示不存在
+    fun checkProjectImage(projectId: String, imageCosFile: String): Boolean {
+        return imageManageDao.queryImageList(
+            projectId = projectId,
+            dslContext = dslContext,
+            imageId = null,
+            imageCosfile = imageCosFile
+        ).isNotEmpty
+    }
+
+    fun fetchImages(
+        userId: String,
+        data: ListImagesData
+    ): ListImagesResp? {
+        permissionService.checkUserManager(userId, data.projectId)
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchImages(data)
+    }
+
+    fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): DeleteImageResp {
+        permissionService.checkUserManager(userId, projectId)
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).deleteImage(
+            imageId = imageId,
+            delaySeconds = delaySeconds
+        )
+        return DeleteImageResp(taskId = taskId)
     }
 }

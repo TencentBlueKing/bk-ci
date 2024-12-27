@@ -70,7 +70,9 @@ class UpgradeService @Autowired constructor(
             return AgentResult(status, false)
         }
 
-        if (!checkProjectUpgrade(projectId)) {
+        if (!checkProjectUpgrade(projectId, AgentUpgradeType.WORKER) &&
+            !checkProjectUpgrade(projectId, AgentUpgradeType.GO_AGENT)
+        ) {
             return AgentResult(status = AgentStatus.IMPORT_OK, data = false)
         }
 
@@ -120,13 +122,6 @@ class UpgradeService @Autowired constructor(
             )
         }
 
-        if (!checkProjectUpgrade(projectId)) {
-            return AgentResult(
-                AgentStatus.IMPORT_OK,
-                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false)
-            )
-        }
-
         val currentWorkerVersion = agentPropsScope.getWorkerVersion()
         val currentGoAgentVersion = agentPropsScope.getAgentVersion()
         val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
@@ -146,6 +141,7 @@ class UpgradeService @Autowired constructor(
         }
 
         val workerVersion = when {
+            !checkProjectUpgrade(projectId, AgentUpgradeType.WORKER) -> false
             currentWorkerVersion.isBlank() -> {
                 logger.warn("The current agent version is not exist")
                 false
@@ -156,7 +152,10 @@ class UpgradeService @Autowired constructor(
             else -> canUpgrade && (info.workerVersion.isNullOrBlank() || (currentWorkerVersion != info.workerVersion))
         }
 
+        val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.WORKER)
+
         val goAgentVersion = when {
+            !agentProjectCheck -> false
             currentGoAgentVersion.isBlank() -> {
                 logger.warn("The current agent master version is not exist")
                 false
@@ -169,6 +168,7 @@ class UpgradeService @Autowired constructor(
         }
 
         val jdkVersion = when {
+            !agentProjectCheck -> false
             currentJdkVersion.isNullOrBlank() -> {
                 logger.warn("project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current jdk is null")
                 false
@@ -183,6 +183,7 @@ class UpgradeService @Autowired constructor(
         }
 
         val dockerInitFile = when {
+            !agentProjectCheck -> false
             info.dockerInitFileInfo == null -> false
             // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
             info.dockerInitFileInfo?.needUpgrade != true -> false
@@ -232,13 +233,13 @@ class UpgradeService @Autowired constructor(
      * 校验这个agent所属的项目是否可以进行升级或者其他属性
      * @return true 可以升级 false 不能进行升级
      */
-    private fun checkProjectUpgrade(projectId: String): Boolean {
+    private fun checkProjectUpgrade(projectId: String, type: AgentUpgradeType?): Boolean {
         // 校验不升级项目，这些项目不参与Agent升级
-        if (projectScope.checkDenyUpgradeProject(projectId)) {
+        if (projectScope.checkDenyUpgradeProject(projectId, type)) {
             return false
         }
 
         // 校验是否在优先升级的项目列表中，如果不在里面并且优先升级项目的列表为空也允许Agent升级。
-        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId)
+        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId, type)
     }
 }

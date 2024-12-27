@@ -171,7 +171,8 @@ class ProjectRemoteDevService @Autowired constructor(
         userId: String,
         projectCode: String,
         addcloudDesktopNum: Int?,
-        enableRemotedev: Boolean?
+        enableRemotedev: Boolean?,
+        rewriteManages: Set<String>?
     ): Boolean {
         if (addcloudDesktopNum == null && enableRemotedev == null) {
             return true
@@ -187,6 +188,9 @@ class ProjectRemoteDevService @Autowired constructor(
         }
         if (addcloudDesktopNum != null) {
             prop = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
+        }
+        if (rewriteManages != null) {
+            prop = prop.copy(remotedevManager = rewriteManages.joinToString(";"))
         }
         if (enableRemotedev != null) {
             prop = prop.copy(remotedev = enableRemotedev)
@@ -215,7 +219,7 @@ class ProjectRemoteDevService @Autowired constructor(
                     )
                 )
                 // 新开启的云研发项目给所有管理员发通知
-                val manager = dbProperties.remotedevManager
+                val manager = prop.remotedevManager
                     ?.split(";")?.filter { it.isNotBlank() }?.toSet()
                     ?: emptySet()
 
