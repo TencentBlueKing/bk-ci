@@ -93,6 +93,7 @@
                         name: `${this.pipelineName}.yml`,
                         tips: this.$t('newlist.exportPipelineYamlTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${this.projectId}?pipelineId=${this.pipelineId}&actionType=FULL_MODEL2YAML`,
+                        tipsLink: this.BKCI_DOCS?.PAC_GUIDE_DOC,
                         params: {
                             modelAndSetting: {
                                 model: this.pipeline,
