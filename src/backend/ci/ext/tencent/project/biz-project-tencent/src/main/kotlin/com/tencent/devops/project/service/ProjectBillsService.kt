@@ -417,7 +417,8 @@ class ProjectBillsService constructor(
                 }
                 val dataSourceBillsDTO = BkDataSourceBillsDTO(
                     dataSourceName = BILL_DATA_SOURCE_NAME,
-                    bills = bills
+                    bills = bills,
+                    month = yearAndMonthOfReportStr
                 )
                 val summaryBillDTO = BkSummaryBillDTO(
                     dataSourceBills = dataSourceBillsDTO,
