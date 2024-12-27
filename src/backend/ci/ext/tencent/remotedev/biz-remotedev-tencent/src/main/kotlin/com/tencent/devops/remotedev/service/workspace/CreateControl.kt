@@ -447,16 +447,6 @@ class CreateControl @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑，用于客户端上创建
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.CGS_CREATE_CONTENT
-    )
-
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
             ?: throw ErrorCodeException(
