@@ -1128,8 +1128,8 @@ class WorkspaceService @Autowired constructor(
         actionId = ActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
-            instanceNames = "#WorkspaceRecordWithWindows?.workspaceName",
-            instanceIds = "#WorkspaceRecordWithWindows?.workspaceName"
+            instanceNames = "#workspace?.workspaceName",
+            instanceIds = "#workspace?.workspaceName"
         ),
         content = ActionAuditContent.CGS_VIEW_CONTENT
     )
