@@ -2,6 +2,7 @@ package com.tencent.devops.common.auth.api
 
 object ActionId {
     // 项目
+    const val PROJECT_VISIT = "project_visit"
     const val PROJECT_CREATE = "project_create"
     const val PROJECT_EDIT = "project_edit"
     const val PROJECT_ENABLE = "project_enable"

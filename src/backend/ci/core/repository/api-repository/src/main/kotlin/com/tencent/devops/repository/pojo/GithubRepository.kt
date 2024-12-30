@@ -56,6 +56,7 @@ data class GithubRepository(
 ) : Repository {
     companion object {
         const val classType = "github"
+        const val SCM_CODE = "GITHUB"
     }
 
     override fun getStartPrefix() = "https://github.com/"

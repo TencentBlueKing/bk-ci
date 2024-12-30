@@ -56,7 +56,7 @@ class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
             migrateIamApiService = migrateIamApiService,
             authResourceCodeConverter = authResourceCodeConverter,
             permissionService = permissionService,
-            rbacCacheService = rbacCacheService,
+            rbacCommonService = rbacCommonService,
             authMigrationDao = authMigrationDao,
             deptService = deptService,
             permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,

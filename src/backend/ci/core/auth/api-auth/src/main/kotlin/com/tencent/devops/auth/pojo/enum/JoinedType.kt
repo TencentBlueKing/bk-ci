@@ -32,5 +32,8 @@ enum class JoinedType {
     DIRECT,
 
     // 通过模板加入
-    TEMPLATE
+    TEMPLATE,
+
+    // 通过组织加入
+    DEPARTMENT
 }
