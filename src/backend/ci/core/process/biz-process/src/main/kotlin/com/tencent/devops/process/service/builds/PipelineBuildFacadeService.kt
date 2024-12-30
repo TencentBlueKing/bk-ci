@@ -2688,7 +2688,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         userId: String
-    ) :BuildId {
+    ): BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
