@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.BKRepoConfig
@@ -59,7 +60,7 @@ class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dockerConfig: DockerConfig,
     private val bKRepoConfig: BKRepoConfig,
-    private val serviceArtifactoryResource: ServiceArtifactoryResource
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
@@ -141,7 +142,7 @@ class ImageArtifactoryService @Autowired constructor(
         pageNumber: Int = 0,
         pageSize: Int = 100
     ): ImageListResp {
-        val imageItems = serviceArtifactoryResource.listPackagePage(
+        val imageItems = client.get(ServiceArtifactoryResource::class).listPackagePage(
             userId = userId,
             projectId = projectId,
             repoName = "image",
