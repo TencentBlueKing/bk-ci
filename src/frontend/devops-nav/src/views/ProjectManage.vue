@@ -189,6 +189,12 @@
                             >
                                 {{ $t('extendManage') }}
                             </bk-button> -->
+                            <bk-button
+                                text
+                                @click="handleQuit(row)"
+                            >
+                                {{ $t('projectExit') }}
+                            </bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -216,6 +222,98 @@
             </empty-tips>
             <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
         </section>
+
+        <bk-dialog
+            :width="640"
+            header-position="center"
+            footer-position="center"
+            v-model="showDialog"
+            :auto-close="false"
+            :render-directive="'if'"
+            @cancel="handleClosed"
+            @confirm="handleHandoverConfirm"
+        >
+            <template slot="header">
+                <Icon
+                    name="warninfo"
+                    width="42"
+                    height="42"
+                    style="border: 1px solid red;"
+                />
+                <h2 class="dialog-header"> {{ $t('抱歉无法退出项目') }} </h2>
+            </template>
+            <main>
+                <div class="project-content">
+                    <p class="tips">
+                        <Icon
+                            name="warning-circle-fill"
+                            width="14"
+                            height="14"
+                            style="border: 1px solid red;"
+                        />
+                        <i18n-t
+                            keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
+                            tag="span"
+                        >
+                            <span class="dtips-num">{{ '10' }}</span>
+                        </i18n-t>
+                        <span>
+                            <Icon
+                                name="refresh"
+                                width="12"
+                                height="12"
+                                style="border: 1px solid red;"
+                            />
+                            <span>{{ $t('刷新') }}</span>
+                        </span>
+                    </p>
+                    <ul class="service-list">
+                        <li>
+                            <p class="item">
+                                <span class="item-name">流水线权限代持</span>
+                                <span class="item-num">4</span>
+                            </p>
+                            <p class="go-detail">
+                                <Icon
+                                    name="jump-link-line"
+                                    width="12"
+                                    height="12"
+                                    style="border: 1px solid red;"
+                                />
+                                <span>{{ $t('详情') }}</span>
+                            </p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="handover-content">
+                    <bk-form
+                        ref="formRef"
+                        :model="handOverForm"
+                        form-type="vertical"
+                        ext-cls="exit-form"
+                    >
+                        <bk-form-item
+                            required
+                            property="name"
+                            label-position="right"
+                            :label="$t('批量交接-交接人')"
+                            :rules="[
+                                { required: true, message: $t('请输入移交人'), trigger: 'blur' }
+                            ]"
+                        >
+                            <project-user-selector
+                                :project-id="projectId"
+                                class="selector-input"
+                                @change="handleChangeOverFormName"
+                                @removeAll="handleClearOverFormName"
+                            >
+                            </project-user-selector>
+                        </bk-form-item>
+                    </bk-form>
+                    <p class="label-tip">{{ $t('可以批量交接给接收人，接收人同意后，方可进行退出操作') }}</p>
+                </div>
+            </main>
+        </bk-dialog>
     </div>
 </template>
 
@@ -226,6 +324,8 @@
     } from '@/utils/permission'
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
+    import Icon from '@/components/Icon/index.vue'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
@@ -239,7 +339,9 @@
     export default ({
         name: 'ProjectManage',
         components: {
-            ApplyProjectDialog
+            ApplyProjectDialog,
+            Icon,
+            ProjectUserSelector
         },
         data () {
             return {
@@ -264,7 +366,15 @@
                     3: this.$t('创建中'),
                     4: this.$t('已启用')
                 },
-                isEnabled: true // 查询过滤-已启用项目
+                isEnabled: true, // 查询过滤-已启用项目
+                showDialog: false,
+                confirmLoading: false,
+                projectId: '',
+                handOverForm: {
+                    id: '',
+                    name: '',
+                    type: ''
+                }
             }
         },
         computed: {
@@ -353,6 +463,104 @@
                         window.location.href = `/console/manage/${projectCode}/expand`
                         break
                 }
+            },
+
+            /**
+             * 无异常情况，正常退出
+             */
+            normalExit (row) {
+                const h = this.$createElement
+                this.$bkInfo({
+                    title: this.$t('确认退出项目?'),
+                    extCls: 'info-box',
+                    width: 480,
+                    subHeader: h('div', { class: 'info-content' },
+                                 [
+                                     h('div', { class: 'info-project' },
+                                       [
+                                           h('span', { class: 'label' }, this.$t('项目：')),
+                                           h('span', { class: 'value' }, row.projectName)
+                                       ]
+                                     ),
+                                     h('div', { class: 'info-tips' }, this.$t('退出后，将清理你在此项目下获得的权限，确认退出吗？'))
+                                 ]),
+                    confirmFn () {
+                        // 正常退出
+                    }
+                })
+            },
+            /**
+             * 通过「组织架构」获得权限，无法退出
+             * @param row
+             */
+            unableToExit (row) {
+                const h = this.$createElement
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('抱歉无法退出项目?'),
+                    extCls: 'info-box',
+                    width: 480,
+                    subHeader: h('div', { class: 'info-content' },
+                                 [
+                                     h('div', { class: 'info-tips' }, [
+                                         h('span', this.$t('您的权限是通过组织架构')),
+                                         h('span', { class: 'reminder' }, row.projectName),
+                                         h('span', this.$t('获得项目权限，不能单独退出，请联系操作人')),
+                                         h('span', { class: 'reminder' }, row.creator),
+                                         h('span', this.$t('评估按照组织架构添加权限是否合理。'))
+                                     ])
+                                 ]
+                    ),
+                    confirmFn () {
+                        // 正常退出
+                    }
+                })
+            },
+            /**
+             * 需要完成交接，才能退出
+             * @param row
+             */
+            exitAfterHandover (row) {
+                this.showDialog = true
+            },
+
+            handleQuit (row) {
+                this.projectId = row.englishName
+
+                // this.normalExit(row)
+                // this.unableToExit(row)
+                this.exitAfterHandover(row)
+            },
+
+            async handleHandoverConfirm () {
+                this.$refs.formRef.validate().then(() => {
+                    console.log('🚀 ~ isValidate:', this.handOverForm)
+                    this.showDialog = true
+                })
+            },
+            handleClosed () {
+                this.showDialog = false
+                this.handleClearOverFormName()
+            },
+
+            getHandOverForm () {
+                return {
+                    id: '',
+                    name: '',
+                    type: ''
+                }
+            },
+            handleChangeOverFormName ({ list, userList }) {
+                if (!list) {
+                    Object.assign(this.handOverForm, this.getHandOverForm())
+                    return
+                }
+                const val = list.join(',')
+                this.handOverForm = userList.find(i => i.id === val)
+            },
+
+            handleClearOverFormName () {
+                Object.assign(this.handOverForm, this.getHandOverForm())
             },
 
             pageChange (page) {
@@ -649,6 +857,110 @@
         width: 16px;
         margin-right: 5px;
     }
+    .info-box {
+        .bk-dialog-sub-header {
+            padding: 0 32px 24px !important;
+        }
+        .info-content {
+            text-align: left;
+            .info-project {
+                font-size: 14px;
+                margin-bottom: 16px;
+                .label {
+                    color: #4D4F56;
+                }
+                .value {
+                    color: #313238;
+                }
+            }
+            .info-text {
+                font-size: 14px;
+                color: #4D4F56;
+                line-height: 22px;
+            }
+            .info-tips {
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 14px;
+                line-height: 22px;
+                background-color: #F5F6FA;
+                border-radius: 2px;
+                .reminder {
+                    color: #FFB219;
+                }
+            }
+        }
+    }
+    .dialog-header {
+        margin-top: 18px;
+        color: #313238;
+        font-size: 20px;
+    }
+    .project-content {
+        margin: 24px 0;
+        .tips {
+            font-size: 14px;
+            color: #63656E;
+        }
+        .tips-num {
+            color: #FFB219;
+        }
+        .service-list {
+            margin-top: 14px;
+            li {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px;
+                background-color: #F0F1F5;
+                border-radius: 2px;
+                font-size: 12px;
+                .item {
+                    height: 32px;
+                    line-height: 32px;
+                    .item-name {
+                        color: #313238;
+                    }
+                    .item-num {
+                        background-color: #EAEBF0;
+                        border-radius: 2px;
+                        padding: 0 8px;
+                        margin-left: 8px;
+                    }
+                }
+                .go-detail {
+                    color: #3A84FF;
+                    svg {
+                        vertical-align: middle;
+                        margin-right: 6px;
+                    }
+                }
+
+            }
+        }
+    }
+    .handover-content {
+        position: relative;
+        padding-top: 16px;
+        font-size: 12px;
+        border-top: 1px solid #C4C6CC;
+        .label-batch {
+            color: #4D4F56;
+            margin-bottom: 6px;
+            &:after {
+                position: absolute;
+                top: 20px;
+                width: 12px;
+                color: #ea3636;
+                text-align: center;
+                content: "*";
+            }
+        }
+        .label-tip {
+            color: #979BA5;
+            margin-top: 4px;
+        }
+    }
 </style>
 
 <style lang="scss">
@@ -660,6 +972,17 @@
             max-height: 440px;
             // overflow: auto;
             @include scroller(#9e9e9e);
+        }
+    }
+    .info-box {
+        .bk-dialog-sub-header {
+            padding: 0 32px 24px !important;
+        }
+    }
+    .exit-form {
+        .bk-label-text {
+            font-size: 12px !important;
+            color: #4D4F56;
         }
     }
 </style>
