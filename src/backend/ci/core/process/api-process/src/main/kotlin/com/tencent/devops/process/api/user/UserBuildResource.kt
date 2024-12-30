@@ -718,5 +718,5 @@ interface UserBuildResource {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
-    ): Result<Boolean>
+    ): Result<BuildId>
 }

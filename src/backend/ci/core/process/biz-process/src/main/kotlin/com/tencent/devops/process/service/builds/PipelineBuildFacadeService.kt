@@ -2688,7 +2688,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         userId: String
-    ) {
+    ) :BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -2706,18 +2706,15 @@ class PipelineBuildFacadeService(
             )
         )
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
-        // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
-        if (!buildInfo.status.isFinish()) {
-            logger.info("build is not finished, buildId: $buildId")
-            return
-        }
         // 按原有的启动参数组装启动参数
         val startParameters = buildInfo.buildParameters?.associate {
             it.key to it.value.toString()
         }?.toMutableMap() ?: mutableMapOf()
         val startType = StartType.toStartType(buildInfo.trigger)
         // 非webhook触发
-        if (startType != StartType.WEB_HOOK) return
+        if (startType != StartType.WEB_HOOK) throw ErrorCodeException(
+            errorCode = ProcessMessageCode
+        )
         webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
             startParameters[param.key] = param.value.toString()
         }
