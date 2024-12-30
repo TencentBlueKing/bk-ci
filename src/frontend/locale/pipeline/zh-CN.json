@@ -469,7 +469,7 @@
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
     "exportGitciTip": "Stream 是蓝盾与工蜂团队联合开发，以 Pipeline as Code 为理念设计的一套 CI 服务。",
-    "exportPipelineYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。了解 PAC 模式",
+    "exportPipelineYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。",
     "chooseExport": "选择导出的文件格式",
     "defaultViews": "我的常用视图",
     "copyPipeline": "复制流水线",
