@@ -641,13 +641,14 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<BuildId> {
-        val buildId = pipelineBuildFacadeService.replayBuild(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            userId = userId
+        return Result(
+            pipelineBuildFacadeService.replayBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId
+            )
         )
-        return Result(buildId)
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

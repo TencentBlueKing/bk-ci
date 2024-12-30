@@ -2713,19 +2713,21 @@ class PipelineBuildFacadeService(
         val startType = StartType.toStartType(buildInfo.trigger)
         // 非webhook触发
         if (startType != StartType.WEB_HOOK) throw ErrorCodeException(
-            errorCode = ProcessMessageCode
+            errorCode = ProcessMessageCode.ERROR_NOT_FOUND_TRIGGER_EVENT
         )
         webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
             startParameters[param.key] = param.value.toString()
         }
-        webhookTriggerPipelineBuild(
-            userId = buildInfo.startUser,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            parameters = startParameters,
-            checkPermission = false,
-            startType = startType
-        )!!
+        return BuildId(
+            webhookTriggerPipelineBuild(
+                userId = buildInfo.startUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                parameters = startParameters,
+                checkPermission = false,
+                startType = startType
+            )!!
+        )
     }
 
     private fun buildRestartPipeline(
