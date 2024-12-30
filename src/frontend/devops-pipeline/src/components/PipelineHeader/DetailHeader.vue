@@ -19,29 +19,88 @@
                 :icon="loading ? 'loading' : ''"
                 outline
                 theme="warning"
-                @click="handleClick"
+                @click="handleCancel"
             >
                 {{ $t("cancel") }}
             </bk-button>
             <template v-else-if="!isDebugExec">
-                <bk-button
+                <bk-dropdown-menu
+                    trigger="click"
                     :disabled="loading || isCurPipelineLocked"
-                    :icon="loading ? 'loading' : ''"
-                    outline
-                    v-perm="{
-                        hasPermission: canExecute,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId,
-                            resourceType: 'pipeline',
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EXECUTE
-                        }
-                    }"
-                    @click="handleClick"
                 >
-                    {{ $t("history.reBuild") }}
-                </bk-button>
+                    <div
+                        class="rebuild-dropdown-trigger"
+                        slot="dropdown-trigger"
+                    >
+                        <i
+                            v-if="loading"
+                            class="devops-icon icon-circle-2-1 spin-icon"
+                        />
+                        <span>{{ $t("history.reBuild") }}</span>
+                        <i class="bk-icon icon-angle-down"></i>
+                    </div>
+                    <ul
+                        class="rebuild-dropdown-content"
+                        slot="dropdown-content"
+                    >
+                        <li
+                            :class="['dropdown-item', {
+                                'disabled': loading || isCurPipelineLocked
+                            }]"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            @click="handleClick('reBuild')"
+                        >
+                            {{ $t("history.reBuild") }}
+                            <bk-popover
+                                :z-index="3000"
+                            >
+                                <i class="bk-icon icon-info-circle" />
+                                <template slot="content">
+                                    <p>{{ $t('history.reBuildTips1') }}</p>
+                                    <p>{{ $t('history.reBuildTips2') }}</p>
+                                    <p>{{ $t('history.reBuildTips3') }}</p>
+                                </template>
+                            </bk-popover>
+                        </li>
+                        <li
+                            :class="['dropdown-item', {
+                                'disabled': loading || isCurPipelineLocked
+                            }]"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            @click="handleClick('rePlay')"
+                        >
+                            {{ $t("history.rePlay") }}
+                            <bk-popover
+                                :z-index="3000"
+                            >
+                                <i class="bk-icon icon-info-circle" />
+                                <template slot="content">
+                                    <p>{{ $t('history.rePlayTips1') }}</p>
+                                    <p>{{ $t('history.rePlayTips2') }}</p>
+                                    <p>{{ $t('history.rePlayTips3') }}</p>
+                                </template>
+                            </bk-popover>
+                        </li>
+                    </ul>
+                </bk-dropdown-menu>
                 <span class="exec-deatils-operate-divider"></span>
             </template>
             <bk-button
@@ -164,15 +223,11 @@
             }
         },
         methods: {
-            ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline']),
-            async handleClick () {
+            ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline', 'requestRePlayPipeline']),
+            async handleCancel () {
                 try {
                     this.loading = true
-                    if (this.isRunning) {
-                        await this.stopExecute(this.execDetail?.id)
-                    } else {
-                        await this.retry(this.execDetail?.id)
-                    }
+                    await this.stopExecute(this.execDetail?.id)
                 } catch (err) {
                     this.handleError(err, {
                         projectId: this.$route.params.projectId,
@@ -182,11 +237,32 @@
                     this.loading = false
                 }
             },
-            async retry (buildId, goDetail = false) {
+            async handleClick (type = 'reBuild') {
+                const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
+                this.$bkInfo({
+                    title,
+                    confirmLoading: true,
+                    confirmFn: async () => {
+                        try {
+                            this.loading = true
+                            await this.retry(type, this.execDetail?.id)
+                            return true
+                        } catch (err) {
+                            this.handleError(err, {
+                                projectId: this.$route.params.projectId,
+                                resourceCode: this.$route.params.pipelineId,
+                                action: this.$permissionResourceAction.EXECUTE
+                            })
+                            this.loading = false
+                        }
+                    }
+                })
+            },
+            async retry (type = 'reBuild', buildId, goDetail = false) {
                 const { projectId, pipelineId } = this.$route.params
-
+                const retryFn = type === 'reBuild' ? this.requestRetryPipeline : this.requestRePlayPipeline
                 // 请求执行构建
-                const res = await this.requestRetryPipeline({
+                const res = await retryFn({
                     ...this.$route.params,
                     buildId
                 })
@@ -275,6 +351,54 @@
     align-items:center;
     &:not(.is-debug-exec-detail) {
         padding-right: 24px;
+    }
+  }
+  .rebuild-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c4c6cc;
+    height: 32px;
+    font-size: 14px;
+    border-radius: 2px;
+    padding: 0 15px;
+    color: #63656E;
+    &:hover {
+        cursor: pointer;
+        border-color: #979ba5;
+    }
+    .icon-angle-down {
+        margin-left: 5px;
+        font-size: 16px;
+    }
+    .spin-icon {
+        margin-right: 5px;
+        color: #458bff;
+        z-index: 2000;
+    }
+  }
+  .rebuild-dropdown-content {
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        height: 32px;
+        line-height: 32px;
+        font-size: 14px;
+
+        &:hover {
+            background-color: #f0f1f5;
+            color: #3a84ff;
+        }
+        &.disabled {
+            cursor: not-allowed;
+            color: #dcdee5;
+        }
+        .icon-info-circle {
+            margin-left: 5px;
+            font-size: 12px;
+        }
     }
   }
 }

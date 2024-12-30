@@ -620,7 +620,16 @@
     "copyToCustomArtifactory": "Copy to custom artifactory",
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
-    "buildMsg": "Build Message"
+    "buildMsg": "Build Message",
+    "replay": "Re-play",
+    "reBuildTips1": "When rebuilding, the execution will be queried with the same trigger parameters, and:",
+    "reBuildTips2": "- The build ID remains unchanged",
+    "reBuildTips3": "- The pipeline version used is based on the initial trigger",
+    "rePlayTips1": "After replaying, a new build will be initiated with the same trigger parameters:",
+    "rePlayTips2": "- A new build ID will be generated",
+    "rePlayTips3": "- The latest pipeline version will be used to run",
+    "reBuildConfirmTips": "Are you sure you want to initiate a rebuild?",
+    "rePlayConfirmTips": "Are you sure you want to replay the event for this pipeline?"
   },
   "preview": {
     "build": "Build",
