@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -273,4 +274,16 @@ interface ArchiveFileService {
         repoName: String,
         filePath: String
     ): List<String>
+
+    /**
+     * 分页查询包列表
+     */
+    fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): List<PackageSummary>
 }

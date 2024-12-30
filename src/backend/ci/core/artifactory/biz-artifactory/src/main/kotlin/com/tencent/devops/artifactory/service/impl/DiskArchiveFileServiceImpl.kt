@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -708,6 +709,17 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             }
         }
         return fileNames
+    }
+
+    override fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): List<PackageSummary> {
+        TODO("Not yet implemented")
     }
 
     companion object {

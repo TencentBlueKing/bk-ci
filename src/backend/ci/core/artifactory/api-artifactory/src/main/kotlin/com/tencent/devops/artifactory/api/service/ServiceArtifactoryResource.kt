@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -40,9 +41,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -370,4 +371,28 @@ interface ServiceArtifactoryResource {
         @QueryParam("filePath")
         filePath: String
     ): Result<List<String>>
+
+    @Operation(summary = "分页查询制品包列表")
+    @GET
+    @Path("/packages/list")
+    fun listPackagePage(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "包名称，支持前缀匹配模糊搜索", required = false)
+        @QueryParam("packageName")
+        packageName: String?,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("pageNumber")
+        pageNumber: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int,
+    ): Result<List<PackageSummary>>
 }

@@ -41,6 +41,7 @@ import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -66,13 +67,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
@@ -82,6 +76,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 @Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
@@ -717,6 +718,43 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             page += 1
         } while (nodeInfos.size == DEFAULT_PAGE_SIZE)
         return fileNames
+    }
+
+    override fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): List<PackageSummary> {
+        return bkRepoClient.listPackagePage(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            packageName = packageName,
+            pageNumber = pageNumber,
+            pageSize = pageSize
+        ).records.map {
+            PackageSummary(
+                createdBy = it.createdBy,
+                createdDate = it.createdDate,
+                lastModifiedBy = it.lastModifiedBy,
+                lastModifiedDate = it.lastModifiedDate,
+                projectId = it.projectId,
+                repoName = it.repoName,
+                name = it.name,
+                key = it.key,
+                type = it.type.name,
+                latest = it.latest,
+                downloads = it.downloads,
+                versions = it.versions,
+                description = it.description,
+                versionTag = it.versionTag,
+                extension = it.extension,
+                historyVersion = it.historyVersion,
+            )
+        }
     }
 
     companion object {

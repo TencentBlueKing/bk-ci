@@ -45,10 +45,10 @@ import com.tencent.devops.image.service.ImageArtifactoryService
 import com.tencent.devops.image.service.ImportImageService
 import com.tencent.devops.image.utils.FileStoreUtils
 import com.tencent.devops.image.utils.ImageFileUtils
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 @Suppress("ALL")
@@ -142,7 +142,11 @@ class UserImageResourceImpl @Autowired constructor(
 
     override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
         checkUserAndProject(userId, projectId)
-        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
+        return Result(artifactoryService.listAllProjectImages(
+            userId = userId,
+            projectId = projectId,
+            searchKey = searchKey
+        ))
     }
 
     override fun listProjectBuildImages(

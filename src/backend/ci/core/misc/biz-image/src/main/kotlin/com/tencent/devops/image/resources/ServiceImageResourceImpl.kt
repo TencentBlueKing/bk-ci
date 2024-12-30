@@ -102,7 +102,11 @@ class ServiceImageResourceImpl @Autowired constructor(
     }
 
     override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
-        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
+        return Result(artifactoryService.listAllProjectImages(
+            userId = userId,
+            projectId = projectId,
+            searchKey = searchKey
+        ))
     }
 
     override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {

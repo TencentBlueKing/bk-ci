@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -238,5 +239,25 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             filePath = filePath
         )
         return Result(fileNames)
+    }
+
+    override fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): Result<List<PackageSummary>> {
+        return Result(
+            archiveFileService.listPackagePage(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                packageName = packageName,
+                pageNumber = pageNumber,
+                pageSize = pageSize
+            )
+        )
     }
 }

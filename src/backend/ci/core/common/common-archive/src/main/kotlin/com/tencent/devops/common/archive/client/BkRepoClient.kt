@@ -53,6 +53,7 @@ import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
+import com.tencent.bkrepo.repository.pojo.packages.PackageSummary
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
@@ -91,6 +92,15 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLEncoder
+import java.nio.file.FileSystems
+import java.nio.file.Paths
+import java.util.UUID
+import javax.ws.rs.NotFoundException
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -104,15 +114,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.UUID
-import javax.ws.rs.NotFoundException
 
 @Component
 class BkRepoClient constructor(
@@ -1143,6 +1144,28 @@ class BkRepoClient constructor(
             .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): Page<PackageSummary> {
+        logger.info(
+            "listPackagePage, userId: $userId, projectId: $projectId, repoName: $repoName, packageName: $packageName," +
+                    " pageNumber: $pageNumber, pageSize: $pageSize"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/package/page/$projectId/$repoName" +
+                "?packageName=$packageName&pageNumber=$pageNumber&pageSize=$pageSize"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<Page<PackageSummary>>>()!!.data!!
     }
 
     private fun query(

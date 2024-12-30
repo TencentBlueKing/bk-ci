@@ -30,11 +30,13 @@ package com.tencent.devops.image.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.image.config.BKRepoConfig
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_COPYING_IN_PROGRESS
 import com.tencent.devops.image.pojo.DockerRepo
@@ -55,7 +57,9 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val dockerConfig: DockerConfig
+    private val dockerConfig: DockerConfig,
+    private val bKRepoConfig: BKRepoConfig,
+    private val serviceArtifactoryResource: ServiceArtifactoryResource
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
@@ -130,19 +134,30 @@ class ImageArtifactoryService @Autowired constructor(
             "{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
     }
 
-    fun listAllProjectImages(projectCode: String, searchKey: String?): ImageListResp {
-        // 查询项目镜像列表
-        val aql = generateListProjectImagesAql(projectCode, searchKey ?: "")
-        val projectImages = aqlSearchImage(aql)
-        val imageList = mutableListOf<ImageItem>()
-        handleImageList(projectImages, imageList)
-        // 获取项目Docker构建镜像列表
-        val dockerProjectImages = listDockerBuildImages(projectCode)
-        handleImageList(dockerProjectImages, imageList)
-        // 获取项目devCloud镜像列表
-        val devCloudProjectImages = listDevCloudImages(projectCode, false)
-        handleImageList(devCloudProjectImages, imageList)
-        return ImageListResp(imageList)
+    fun listAllProjectImages(
+        userId: String,
+        projectId: String,
+        searchKey: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 100
+    ): ImageListResp {
+        val imageItems = serviceArtifactoryResource.listPackagePage(
+            userId = userId,
+            projectId = projectId,
+            repoName = "image",
+            packageName = searchKey,
+            pageNumber = pageNumber,
+            pageSize = pageSize
+        ).data?.map {
+            ImageItem(
+                repoUrl = bKRepoConfig.repoUrl!!,
+                repo = "${it.projectId}/${it.repoName}",
+                name = it.name
+            )
+        }
+        return ImageListResp(
+            imageItems ?: emptyList()
+        )
     }
 
     fun listAllPublicImages(searchKey: String?): ImageListResp {
