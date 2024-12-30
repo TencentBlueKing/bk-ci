@@ -2711,11 +2711,24 @@ class PipelineBuildFacadeService(
             logger.info("build is not finished, buildId: $buildId")
             return
         }
-        buildRestartPipeline(
+        // 按原有的启动参数组装启动参数
+        val startParameters = buildInfo.buildParameters?.associate {
+            it.key to it.value.toString()
+        }?.toMutableMap() ?: mutableMapOf()
+        val startType = StartType.toStartType(buildInfo.trigger)
+        // 非webhook触发
+        if (startType != StartType.WEB_HOOK) return
+        webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+            startParameters[param.key] = param.value.toString()
+        }
+        webhookTriggerPipelineBuild(
+            userId = buildInfo.startUser,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildInfo = buildInfo
-        )
+            parameters = startParameters,
+            checkPermission = false,
+            startType = startType
+        )!!
     }
 
     private fun buildRestartPipeline(
