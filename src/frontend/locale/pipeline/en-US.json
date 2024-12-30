@@ -466,7 +466,7 @@
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
-    "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. Learn about PAC mode.",
+    "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. ",
     "chooseExport": "Choose the export file format",
     "defaultViews": "My views",
     "copyPipeline": "Copy pipeline",

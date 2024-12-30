@@ -465,7 +465,7 @@
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
-    "exportPipelineYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。了解 PAC 模式",
+    "exportPipelineYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。",
     "chooseExport": "选择导出的文件格式",
     "defaultViews": "我的常用视图",
     "copyPipeline": "复制流水线",
