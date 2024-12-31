@@ -9,14 +9,12 @@
             save-key="id"
             display-key="displayName"
             :list="userList"
-            allow-create
             :paste-fn="pasteFn"
             @inputchange="handleInputUserName"
             @change="handleChange"
             @removeAll="removeAll"
         >
         </bk-tag-input>
-        {{ userList }}
     </div>
 </template>
 
@@ -50,7 +48,7 @@
                     params: query
                 }
                 const res = await this.getProjectMembers(search)
-                this.userList = res.records.map((i) => {
+                this.userList = res.records.map(i => {
                     return {
                         ...i,
                         name: i.name || i.id,
@@ -60,8 +58,8 @@
             },
 
             async handleInputUserName (val) {
-                this.searchValue = null
-                this.$emit('change', { list: this.searchValue, userList: this.userList })
+                // this.searchValue = null
+                this.$emit('change', { list: val, userList: this.userList })
                 if (val) {
                     const query = {
                         memberType: 'user',
@@ -77,13 +75,13 @@
             },
 
             handleChange (list) {
-                this.searchValue = list
-                this.$emit('change', { list: this.searchValue, userList: this.userList })
+                // this.searchValue = list
+                this.$emit('change', { list: list, userList: this.userList })
             },
-            async pasteFn (val) {
+            pasteFn (val) {
                 if (this.$refs.tagInputRef) {
                     this.$refs.tagInputRef.curInputValue = val
-                    await this.handleInputUserName(val)
+                    this.handleInputUserName(val)
                 }
                 return []
             },

@@ -230,55 +230,59 @@
             v-model="showDialog"
             :auto-close="false"
             :render-directive="'if'"
-            @cancel="handleClosed"
-            @confirm="handleHandoverConfirm"
+            ext-cls="exit-project-dialog"
+            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
             <template slot="header">
                 <Icon
                     name="warninfo"
                     width="42"
                     height="42"
-                    style="border: 1px solid red;"
                 />
                 <h2 class="dialog-header"> {{ $t('抱歉无法退出项目') }} </h2>
             </template>
             <main>
                 <div class="project-content">
                     <p class="tips">
-                        <Icon
-                            name="warning-circle-fill"
-                            width="14"
-                            height="14"
-                            style="border: 1px solid red;"
-                        />
-                        <i18n-t
-                            keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
-                            tag="span"
-                        >
-                            <span class="dtips-num">{{ '10' }}</span>
-                        </i18n-t>
                         <span>
+                            <Icon
+                                name="warning-circle-fill"
+                                width="14"
+                                height="14"
+                            />
+                            <i18n-t
+                                keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
+                                tag="span"
+                            >
+                                <span class="tips-num">{{ '10' }}</span>
+                            </i18n-t>
+                        </span>
+                        <span class="refresh">
                             <Icon
                                 name="refresh"
                                 width="12"
                                 height="12"
-                                style="border: 1px solid red;"
                             />
                             <span>{{ $t('刷新') }}</span>
                         </span>
                     </p>
-                    <ul class="service-list">
-                        <li>
+                    <ul
+                        class="service-list"
+                        :style="{ 'max-height': `${ulMaxHeight}px` }"
+                    >
+                        <li
+                            v-for="item in exitProjectList"
+                            :key="item.id"
+                        >
                             <p class="item">
-                                <span class="item-name">流水线权限代持</span>
-                                <span class="item-num">4</span>
+                                <span class="item-name">{{ item.name }}</span>
+                                <span class="item-num">{{ item.num }}</span>
                             </p>
                             <p class="go-detail">
                                 <Icon
                                     name="jump-link-line"
                                     width="12"
                                     height="12"
-                                    style="border: 1px solid red;"
                                 />
                                 <span>{{ $t('详情') }}</span>
                             </p>
@@ -313,6 +317,22 @@
                     <p class="label-tip">{{ $t('可以批量交接给接收人，接收人同意后，方可进行退出操作') }}</p>
                 </div>
             </main>
+            <template slot="footer">
+                <div class="bk-dialog-outer">
+                    <bk-button
+                        theme="primary"
+                        @click="handleHandoverConfirm"
+                    >
+                        {{ $t('confirm') }}
+                    </bk-button>
+                    <bk-button
+                        class="close-btn"
+                        @click="handleClosed"
+                    >
+                        {{ $t('cancel') }}
+                    </bk-button>
+                </div>
+            </template>
         </bk-dialog>
     </div>
 </template>
@@ -374,7 +394,60 @@
                     id: '',
                     name: '',
                     type: ''
-                }
+                },
+                exitProjectList: [
+                    {
+                        id: 1,
+                        name: '流水线权限代持',
+                        num: 4
+                    },
+                    {
+                        id: 2,
+                        name: '流水线权限代持',
+                        num: 1
+                    },
+                    {
+                        id: 3,
+                        name: '流水线权限代持',
+                        num: 5
+                    },
+                    {
+                        id: 4,
+                        name: '流水线权限代持',
+                        num: 13
+                    },
+                    {
+                        id: 5,
+                        name: '流水线权限代持',
+                        num: 4
+                    },
+                    {
+                        id: 6,
+                        name: '流水线权限代持',
+                        num: 1
+                    },
+                    {
+                        id: 7,
+                        name: '流水线权限代持',
+                        num: 5
+                    },
+                    {
+                        id: 8,
+                        name: '流水线权限代持',
+                        num: 13
+                    },
+                    {
+                        id: 9,
+                        name: '流水线权限代持',
+                        num: 5
+                    },
+                    {
+                        id: 10,
+                        name: '流水线权限代持',
+                        num: 13
+                    }
+                ],
+                dialogTopOffset: null
             }
         },
         computed: {
@@ -393,6 +466,9 @@
                     prop: this.getkeyByValue(PROJECT_SORT_FILED, prop),
                     order: this.getkeyByValue(ORDER_ENUM, order)
                 }
+            },
+            ulMaxHeight () {
+                return window.innerHeight * 0.8 - 410
             }
         },
         watch: {
@@ -522,20 +598,52 @@
              */
             exitAfterHandover (row) {
                 this.showDialog = true
+                this.projectId = row.englishName
+
+                const ITEM_HEIGHT = 32 // 每项的高度
+                const DIALOG_EXTRA_HEIGHT = 410 // 对话框额外的固定高度
+                const totalListHeight = this.exitProjectList.length * ITEM_HEIGHT
+                const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
+                this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
             },
 
             handleQuit (row) {
-                this.projectId = row.englishName
-
                 // this.normalExit(row)
                 // this.unableToExit(row)
                 this.exitAfterHandover(row)
+                // this.handleHandoverConfirm()
             },
 
             async handleHandoverConfirm () {
                 this.$refs.formRef.validate().then(() => {
                     console.log('🚀 ~ isValidate:', this.handOverForm)
-                    this.showDialog = true
+                    // 调用接口获取跳转的flowNo
+                    // this.showDialog = false
+                    const h = this.$createElement
+                    this.$bkInfo({
+                        title: this.$t('提交成功?'),
+                        extCls: 'info-box',
+                        width: 480,
+                        subHeader: h('div',
+                                     { class: 'info-content' },
+                                     [
+                                         h('div', { class: 'info-tips' },
+                                           [
+                                               h('p', { class: 'info-text' }, this.$t('已成功提交「移交权限」申请，等待交接人确认。')),
+                                               h('p', { class: 'info-text' }, [
+                                                   h('span', this.$t('可在“')),
+                                                   h('span', {
+                                                       style: { color: '#3A84FF' },
+                                                       onClick () {
+                                                           window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${111}&type=handoverFromMe`, '_blank')
+                                                       }
+                                                   }, this.$t('我的交接')),
+                                                   h('span', this.$t('”中查看进度。'))
+                                               ])
+                                           ]
+                                         )
+                                     ])
+                    })
                 })
             },
             handleClosed () {
@@ -649,6 +757,7 @@
                     collation
                 })
             }
+            
         }
     })
 </script>
@@ -862,6 +971,7 @@
             padding: 0 32px 24px !important;
         }
         .info-content {
+            margin-top: 6px;
             text-align: left;
             .info-project {
                 font-size: 14px;
@@ -896,22 +1006,46 @@
         color: #313238;
         font-size: 20px;
     }
+    .bk-dialog-outer {
+        padding-bottom: 25px;
+        .close-btn {
+            margin-left: 8px;
+        }
+    }
     .project-content {
-        margin: 24px 0;
+        margin: 24px 0 16px 0;
         .tips {
+            display: flex;
+            justify-content: space-between;
             font-size: 14px;
             color: #63656E;
-        }
-        .tips-num {
-            color: #FFB219;
+            .tips-num {
+                color: #FFB219;
+            }
+            .refresh {
+                color: #3A84FF;
+            }
         }
         .service-list {
             margin-top: 14px;
+            overflow-y: auto;
+            &::-webkit-scrollbar-thumb {
+                background-color: #c4c6cc !important;
+                border-radius: 5px !important;
+                &:hover {
+                background-color: #979ba5 !important;
+                }
+            }
+            &::-webkit-scrollbar {
+                width: 8px !important;
+                height: 8px !important;
+            }
             li {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 padding: 0 16px;
+                margin-bottom: 8px;
                 background-color: #F0F1F5;
                 border-radius: 2px;
                 font-size: 12px;
@@ -944,18 +1078,6 @@
         padding-top: 16px;
         font-size: 12px;
         border-top: 1px solid #C4C6CC;
-        .label-batch {
-            color: #4D4F56;
-            margin-bottom: 6px;
-            &:after {
-                position: absolute;
-                top: 20px;
-                width: 12px;
-                color: #ea3636;
-                text-align: center;
-                content: "*";
-            }
-        }
         .label-tip {
             color: #979BA5;
             margin-top: 4px;
@@ -983,6 +1105,16 @@
         .bk-label-text {
             font-size: 12px !important;
             color: #4D4F56;
+        }
+    }
+    .exit-project-dialog {
+        .bk-dialog-footer{
+            background-color: #fff;
+            border: none;
+        }
+        .bk-dialog {
+            top: 50% !important;
+            transform: var(--dialog-top-translateY) !important;
         }
     }
 </style>
