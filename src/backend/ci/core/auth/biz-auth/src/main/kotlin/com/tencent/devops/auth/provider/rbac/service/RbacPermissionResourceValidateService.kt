@@ -29,7 +29,9 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,6 +39,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
@@ -44,13 +47,16 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import jakarta.ws.rs.NotFoundException
 
 class RbacPermissionResourceValidateService(
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
-    private val client: Client
+    private val rbacCommonService: RbacCommonService,
+    private val client: Client,
+    private val authAuthorizationDao: AuthAuthorizationDao,
+    private val dslContext: DSLContext
 ) : PermissionResourceValidateService {
 
     companion object {
@@ -69,7 +75,7 @@ class RbacPermissionResourceValidateService(
             val resourceActionList = mutableSetOf<String>()
 
             permissionBatchValidateDTO.actionList.forEach { action ->
-                val actionInfo = rbacCacheService.getActionInfo(action)
+                val actionInfo = rbacCommonService.getActionInfo(action)
                 val iamRelatedResourceType = actionInfo.relatedResourceType
                 if (iamRelatedResourceType == AuthResourceType.PROJECT.value) {
                     projectActionList.add(action)
@@ -117,7 +123,7 @@ class RbacPermissionResourceValidateService(
         resourceCode: String
     ): Boolean {
         checkProjectApprovalStatus(resourceType, resourceCode)
-        val checkProjectManage = rbacCacheService.checkProjectManager(
+        val checkProjectManage = rbacCommonService.checkProjectManager(
             userId = userId,
             projectCode = projectId
         )
@@ -150,6 +156,55 @@ class RbacPermissionResourceValidateService(
             }
         }
         return true
+    }
+
+    override fun validateUserProjectPermissionByChannel(
+        userId: String,
+        projectCode: String,
+        operateChannel: OperateChannel,
+        targetMemberId: String
+    ) {
+        if (operateChannel == OperateChannel.PERSONAL) {
+            // 个人视角校验
+            val hasVisitPermission = permissionService.validateUserResourcePermission(
+                userId = userId,
+                resourceType = AuthResourceType.PROJECT.value,
+                action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
+                projectCode = projectCode
+            )
+            if (hasVisitPermission) return
+
+            val isUserHasProjectAuthorizations = authAuthorizationDao.count(
+                dslContext = dslContext,
+                condition = ResourceAuthorizationConditionRequest(
+                    projectCode = projectCode,
+                    handoverFrom = userId
+                )
+            ) > 0
+            if (!isUserHasProjectAuthorizations) {
+                throw PermissionForbiddenException(
+                    message = "The user does not have permission to visit the project!"
+                )
+            }
+            if (userId != targetMemberId) {
+                throw PermissionForbiddenException(
+                    message = "You do not have permission to operate other user groups!"
+                )
+            }
+        } else {
+            // 管理员视角校验
+            val hasProjectManagePermission = permissionService.validateUserResourcePermission(
+                userId = userId,
+                resourceType = AuthResourceType.PROJECT.value,
+                action = RbacAuthUtils.buildAction(AuthPermission.MANAGE, AuthResourceType.PROJECT),
+                projectCode = projectCode
+            )
+            if (!hasProjectManagePermission) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                )
+            }
+        }
     }
 
     private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -259,4 +261,13 @@ interface ServiceProjectAuthResource {
         @Parameter(description = "项目Code", required = true)
         projectCode: String
     ): Result<ProjectPermissionInfoVO>
+
+    @GET
+    @Path("/listUserProjectsWithAuthorization")
+    @Operation(summary = "获取用户授权相关的项目")
+    fun listUserProjectsWithAuthorization(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String
+    ): Result<List<AuthProjectVO>>
 }

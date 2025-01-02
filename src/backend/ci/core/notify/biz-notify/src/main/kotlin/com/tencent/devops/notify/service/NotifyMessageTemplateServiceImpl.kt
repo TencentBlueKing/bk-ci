@@ -39,6 +39,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
@@ -63,6 +64,7 @@ import com.tencent.devops.notify.service.notifier.NotifierUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
@@ -94,7 +96,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             expiredTimeInSeconds = 60
 
         )
+        val traceId = MDC.get(TraceTag.BIZID)
         Executors.newFixedThreadPool(1).submit {
+            MDC.put(TraceTag.BIZID, traceId)
             if (redisLock.tryLock()) {
                 try {
                     logger.info("start init MessageTemplate")
@@ -117,6 +121,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val yamlStr = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         val templates = YamlUtil.to(yamlStr, object : TypeReference<List<MessageTemplate>>() {})
         templates.forEach { template ->
+            logger.info("update message template:$template")
             val tCommonNotifyMessageTemplateRecord = TCommonNotifyMessageTemplateRecord()
             tCommonNotifyMessageTemplateRecord.id = template.id
             tCommonNotifyMessageTemplateRecord.templateCode = template.templateCode

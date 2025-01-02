@@ -300,5 +300,17 @@
     "命名规范提示": "Naming Convention Tip",
     "开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。": "Once enabled, you need to provide a naming convention tip for pipelines. This tip will be displayed on the 'Create Pipeline' page.",
     "请输入流水线命名规范提示说明": "Please enter the naming convention tip for pipelines. Eg: Please follow the pipeline naming convention using the format “ModuleName(one/multiple/scenario, etc.)_TriggerMechanism(premerge/trunk/daily, etc.)_TestAspect(UT/canary/DIFF, etc.",
-    "未开启": "Not Enabled"
+    "未开启": "Not Enabled",
+    "移交以上用户组，将导致": "Transferring the above user group will cause",
+    "X个流水线权限代持失效": " {0} pipeline delegation permissions to become invalid",
+    "X个代码库授权失效": " {0} repository authorizations to become invalid",
+    "X个资源没有拥有者": " {0} resources to have no owner",
+    "X个环境节点授权失效": "{0} environment node authorizations have expired",
+    "请确认是否同步移交授权。": "Please confirm whether to also transfer the authorization.",
+    "退出以上用户组，将导致": "Exiting the above user group will cause",
+    "请填写交接人，完成交接后才能成功退出。": "Please specify a transferee and complete the transfer before successfully exiting.",
+    "申请交接": "Confirm transfer",
+    "升级后，该项目下的流水线引用变量时仅支持X模式。": "After the upgrade, the pipelines under this project only support the {'${{xxx}}'} mode when referencing variables.",
+    "升级有可能导致存量流水线X，请谨慎操作。": "The upgrade might cause existing pipelines to {0}, please proceed with caution.",
+    "运行失败": "Run failed"
 }

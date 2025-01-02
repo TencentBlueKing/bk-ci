@@ -35,7 +35,6 @@ import java.net.URLDecoder
 import java.text.MessageFormat
 import java.util.Locale
 import java.util.Properties
-import java.util.PropertyResourceBundle
 import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
 

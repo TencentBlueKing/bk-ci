@@ -157,6 +157,9 @@ interface ServiceStoreComponentResource {
         @Parameter(description = "实例ID", required = false)
         @QueryParam("instanceId")
         instanceId: String?,
+        @Parameter(description = "是否查测试中版本 true：是，false：否", required = false)
+        @QueryParam("queryTestFlag")
+        queryTestFlag: Boolean? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)

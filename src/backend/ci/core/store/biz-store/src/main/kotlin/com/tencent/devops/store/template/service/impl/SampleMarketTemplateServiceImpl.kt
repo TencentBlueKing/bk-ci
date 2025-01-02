@@ -29,7 +29,7 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.template.service.SampleMarketTemplateService
 
 class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTemplateServiceImpl() {

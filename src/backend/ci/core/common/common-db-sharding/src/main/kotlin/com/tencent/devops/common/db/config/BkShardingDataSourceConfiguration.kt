@@ -43,6 +43,8 @@ import com.tencent.devops.common.db.pojo.TableShardingStrategyEnum
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory
 import io.micrometer.core.instrument.MeterRegistry
+import java.util.Properties
+import javax.sql.DataSource
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory
 import org.apache.shardingsphere.infra.algorithm.core.config.AlgorithmConfiguration
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration
@@ -62,8 +64,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import java.util.Properties
-import javax.sql.DataSource
 import org.apache.shardingsphere.broadcast.api.config.BroadcastRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableReferenceRuleConfiguration
 import org.apache.shardingsphere.single.api.config.SingleRuleConfiguration
@@ -125,6 +125,9 @@ class BkShardingDataSourceConfiguration {
     @Value("\${sharding.tableShardingStrategy.defaultShardingNum:#{5}}")
     private val defaultTableShardingNum: Int = 5
 
+    @Value("\${spring.datasource.connectionTestQuery:select 1;}")
+    private lateinit var dataSourceConnectionTestQuery: String
+
     private fun dataSourceMap(
         dataSourcePrefixName: String,
         dataSourceConfigs: List<DataSourceConfig>,
@@ -168,6 +171,7 @@ class BkShardingDataSourceConfiguration {
             connectionInitSql = datasourceInitSql
             leakDetectionThreshold = datasourceLeakDetectionThreshold
             metricsTrackerFactory = MicrometerMetricsTrackerFactory(metricsRegistry)
+            connectionTestQuery = dataSourceConnectionTestQuery
         }
     }
 

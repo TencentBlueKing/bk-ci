@@ -33,8 +33,8 @@ import jakarta.validation.Valid
 
 @Schema(title = "工作台-新增组件请求报文体")
 data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
+    @get:Schema(title = "项目代码", required = false)
+    val projectCode: String? = null,
     @get:Schema(title = "基础信息", required = true)
     @field:Valid
     val baseInfo: StoreBaseCreateRequest
