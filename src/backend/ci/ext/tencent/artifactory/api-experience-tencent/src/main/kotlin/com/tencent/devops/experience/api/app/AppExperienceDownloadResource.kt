@@ -35,9 +35,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.experience.pojo.download.ReportSpeedParam
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -83,4 +84,18 @@ interface AppExperienceDownloadResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<DownloadRecordVO>>
+
+    @Operation(summary = "上报下载速度")
+    @Path("/reportSpeed")
+    @POST
+    fun reportSpeed(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @Parameter(description = "上报下载速度参数", required = true)
+        params: ReportSpeedParam
+    ): Result<Boolean>
 }
