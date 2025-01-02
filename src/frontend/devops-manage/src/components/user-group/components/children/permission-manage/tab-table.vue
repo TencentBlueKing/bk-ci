@@ -211,8 +211,8 @@ const resourceType = computed(() => props.resourceType);
 const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
 const TOOLTIPS_CONTENT = {
-  UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
-  UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
+  UNIQUE_MANAGER: t('唯一管理员，不可直接移出。请交接或停用项目'),
+  UNIQUE_OWNER: t('唯一拥有者，不可直接移出。请交接或删除资源'),
   TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
@@ -299,6 +299,7 @@ function handleSelectAllData() {
 function handleClear() {
   refTable.value.clearSelection();
   isCurrentAll.value = false;
+  curSelectedData.value = [];
   emit('handleClear', resourceType.value);
 }
 /**
