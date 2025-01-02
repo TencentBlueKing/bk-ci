@@ -63,7 +63,7 @@ class SubPipelineUpgradeService @Autowired constructor(
         ThreadPoolUtil.submitAction(
             action = {
                 val startTime = System.currentTimeMillis()
-                logger.info("Start to create sub pipeline ref")
+                logger.info("Start to create sub pipeline ref|projectId=$projectId")
                 var offset = 0
                 val limit = 1000
                 try {
@@ -106,7 +106,7 @@ class SubPipelineUpgradeService @Autowired constructor(
         ThreadPoolUtil.submitAction(
             action = {
                 val startTime = System.currentTimeMillis()
-                logger.info("Start to create sub pipeline ref")
+                logger.info("Start to create sub pipeline ref|projectId=$projectId|pipelineId=$pipelineId")
                 try {
                     updateSubPipelineRef(
                         userId = userId,
@@ -166,7 +166,6 @@ class SubPipelineUpgradeService @Autowired constructor(
         pipelineId: String,
         subPipelineRefList: List<SubPipelineRef>
     ) {
-        logger.info("analysis sub pipeline ref|$subPipelineRefList")
         dslContext.transaction { configuration ->
             val transaction = DSL.using(configuration)
             val existsRefs = subPipelineRefService.list(
