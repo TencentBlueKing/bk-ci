@@ -327,6 +327,16 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             approveReq.result == PASS
         }
+        // 入库信息，并设置当前版本的LATEST_FLAG
+        marketAtomDao.approveAtomFromOp(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomStatus = atomStatus,
+            approveReq = approveReq,
+            latestFlag = latestFlag,
+            pubTime = LocalDateTime.now()
+        )
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,
@@ -347,16 +357,6 @@ class OpAtomServiceImpl @Autowired constructor(
             // 发送通知消息
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
         }
-        // 入库信息，并设置当前版本的LATEST_FLAG
-        marketAtomDao.approveAtomFromOp(
-            dslContext = dslContext,
-            userId = userId,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
-        )
         // 更新默认插件缓存
         if (approveReq.defaultFlag) {
             redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)

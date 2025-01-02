@@ -558,6 +558,9 @@ object ProcessMessageCode {
     // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
         "bkNotSubPipelineExecutePermissionResetErrorTitle"
+
+    // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
+    const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
     // 子流水线循环依赖错误标题
     const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
 

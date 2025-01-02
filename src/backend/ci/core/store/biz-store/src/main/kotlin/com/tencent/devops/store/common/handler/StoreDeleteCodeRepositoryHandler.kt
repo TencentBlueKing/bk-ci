@@ -23,32 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.webhook
+package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.permission.PipelinePermissionService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineBuildPermissionService @Autowired constructor(
-    private val pipelinePermissionService: PipelinePermissionService
-) {
-    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
-            )
-        )
+class StoreDeleteCodeRepositoryHandler(
+    private val storeBaseDeleteService: StoreBaseDeleteService
+) : Handler<StoreDeleteRequest> {
+
+    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+
+        return when (handlerRequest.storeType) {
+            StoreTypeEnum.TEMPLATE.name, StoreTypeEnum.IMAGE.name -> false
+            else -> true
+        }
+    }
+
+    override fun execute(handlerRequest: StoreDeleteRequest) {
+        // 删除组件代码库
+        storeBaseDeleteService.deleteComponentCodeRepository(handlerRequest)
     }
 }

@@ -46,7 +46,8 @@ class SubPipelineTaskService @Autowired constructor(
     /**
      * 子流水线插件atomCode
      */
-    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE)
+    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE) ||
+            atomCode == SubPipelineCallElement.classType
 
     @Suppress("UNCHECKED_CAST")
     fun getSubPipelineParam(
@@ -338,7 +339,7 @@ class SubPipelineTaskService @Autowired constructor(
      */
     private fun PipelineModelTask.taskEnable(): Boolean {
         val elementEnable = (this.stageEnable && this.containerEnable && this.additionalOptions?.enable ?: true)
-        val supportElement = supportAtomCode(this.atomCode) || this.atomCode == SubPipelineCallElement.TASK_ATOM
+        val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
         return elementEnable && supportElement
     }
 

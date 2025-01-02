@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
@@ -64,8 +63,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     override fun supportAtomCode(atomCode: String): Boolean {
-        return subPipelineCheckService.supportAtomCode(atomCode) ||
-                atomCode == SubPipelineCallElement.classType
+        return subPipelineCheckService.supportAtomCode(atomCode)
     }
 
     override fun beforeDelete(element: Element, param: BeforeDeleteParam) {

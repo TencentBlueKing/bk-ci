@@ -1044,6 +1044,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         limit: Int,
         offset: Int
     ): List<ProjectByConditionDTO> {
+        logger.info("list projects by condition:$projectConditionDTO|$limit|$offset")
         return projectDao.listProjectsByCondition(
             dslContext = dslContext,
             projectConditionDTO = projectConditionDTO,
@@ -1055,7 +1056,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 englishName = it.englishName,
                 permission = true,
                 routerTag = buildRouterTag(it.routerTag),
-                bgId = it.bgId
+                bgId = it.bgId,
+                remotedevManager = it.properties?.let { properties ->
+                    JsonUtil.to(
+                        properties, ProjectProperties::class.java
+                    )
+                }?.remotedevManager
             )
         }
     }
