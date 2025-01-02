@@ -617,7 +617,7 @@
     "copySuc": "复制{0}至自定义仓库成功",
     "buildMsg": "构建信息",
     "rePlay": "重放事件",
-    "reBuildTips1": "重新构建时，将以同样的触发参数查询执行，且:",
+    "reBuildTips1": "重新构建时，将以同样的触发参数重新执行，且:",
     "reBuildTips2": "- build id 不变",
     "reBuildTips3": "- 使用的流水线版本以首次触发为准",
     "rePlayTips1": "重放后，将以同样的触发参数启动一次新的构建：",
