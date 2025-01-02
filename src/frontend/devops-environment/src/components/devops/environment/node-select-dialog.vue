@@ -497,6 +497,7 @@
             padding: 20px;
             font-size: 12px;
             background-color: #f5f7fa;
+            overflow: hidden;
             > p {
                 text-align: left;
                 margin-bottom: 24px;
@@ -508,7 +509,9 @@
             }
 
             .preview-selected-ul {
-                padding: 12px 0;
+                margin: 12px 0;
+                overflow-y: auto;
+                height: calc(100% - 56px);
                 .preview-selected-li {
                     @extend %flex;
                     background-color: white;

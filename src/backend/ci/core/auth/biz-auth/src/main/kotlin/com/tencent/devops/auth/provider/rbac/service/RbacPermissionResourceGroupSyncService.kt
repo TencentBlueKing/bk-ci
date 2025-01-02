@@ -40,6 +40,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -74,7 +75,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val redisOperation: RedisOperation,
     private val authResourceSyncDao: AuthResourceSyncDao,
     private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
@@ -505,7 +506,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         logger.info("start to sync resource group member:$projectCode")
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes().map { it.resourceType }
+            val resourceTypes = rbacCommonService.listResourceTypes().map { it.resourceType }
             val traceId = MDC.get(TraceTag.BIZID)
             val resourceTypeFuture = resourceTypes.map { resourceType ->
                 CompletableFuture.supplyAsync(
@@ -752,7 +753,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         iamGroupId = iamGroupId,
                         memberId = iamGroupTemplate.id,
                         memberName = iamGroupTemplate.name,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                        memberType = MemberType.TEMPLATE.type,
                         expiredTime = expiredTime
                     )
                 )

@@ -21,20 +21,29 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -260,6 +269,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        return client.get(ServiceRemoteDevResource::class).workspaceCloneTask(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            req = req
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
@@ -471,10 +495,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun expandWorkspaceDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        pvcId: String?
     ): Result<ExpandDiskValidateResp?> {
-        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size")
-        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size)
+        logger.info("expandWorkspaceDisk |$userId|$workspaceName|$size|$pvcId")
+        return client.get(ServiceRemoteDevResource::class).expandDisk(userId, workspaceName, size, pvcId)
+    }
+
+    override fun createWorkspaceDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<CreateDiskResp> {
+        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size")
+        return client.get(ServiceRemoteDevResource::class).createDisk(userId, workspaceName, size)
+    }
+
+    override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
+        logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
     }
 
     override fun upgradeWorkspace(
@@ -577,5 +616,35 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
+        logger.info("getTaskStatus |$userId|$taskId")
+        return client.get(ServiceRemoteDevResource::class).getTaskStatus(userId, taskId)
+    }
+
+    override fun enableRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
+        logger.info("enableRemotedev |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).enableProjectRemotedev(userId, data)
+    }
+
+    override fun updateRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
+        logger.info("updateRemotedevManager |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).updateProjectRemotedevManager(userId, data)
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        logger.info("fetchImages |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, data)
+    }
+
+    override fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): Result<DeleteImageResp> {
+        logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
 }

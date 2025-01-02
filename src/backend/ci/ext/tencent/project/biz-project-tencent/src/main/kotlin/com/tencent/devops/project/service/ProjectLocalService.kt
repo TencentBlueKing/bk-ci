@@ -89,8 +89,8 @@ class ProjectLocalService @Autowired constructor(
     @Value("\${tag.stream:#{null}}")
     private val streamTag: String? = null
 
-    // TODO 后续改回到tag
-    private var rbacTag: String = "rbac-gray"
+    @Value("\${tag.rbac:#{null}}")
+    private var rbacTag: String = ""
 
     fun listForApp(
         userId: String,

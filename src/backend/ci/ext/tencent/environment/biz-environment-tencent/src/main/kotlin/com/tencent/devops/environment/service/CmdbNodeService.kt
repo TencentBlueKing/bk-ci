@@ -33,10 +33,13 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
@@ -58,6 +61,7 @@ import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.model.CreateNodeModel
+import com.tencent.devops.environment.permission.EnvNodeAuthorizationService
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
@@ -98,7 +102,8 @@ class CmdbNodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val tencentCmdbService: TencentCmdbService,
     private val tencentCCService: TencentCCService,
-    private val queryAgentStatusService: QueryAgentStatusService
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val envNodeAuthorizationService: EnvNodeAuthorizationService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
@@ -844,6 +849,7 @@ class CmdbNodeService @Autowired constructor(
         userId: String,
         projectId: String
     ) {
+        val resourceAuthorizationList = mutableListOf<ResourceAuthorizationDTO>()
         insertedNodeList.forEach {
             val nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
             environmentPermissionService.createNode(
@@ -852,9 +858,23 @@ class CmdbNodeService @Autowired constructor(
                 nodeId = it.nodeId,
                 nodeName = nodeName
             )
+            resourceAuthorizationList.add(
+                ResourceAuthorizationDTO(
+                    projectCode = projectId,
+                    resourceType = ResourceTypeId.ENV_NODE,
+                    resourceName = nodeName,
+                    resourceCode = HashUtil.encodeLongId(it.nodeId),
+                    handoverTime = LocalDateTime.now().timestampmilli(),
+                    handoverFrom = userId
+                )
+            )
             // audit
             ActionAuditContext.current()
                 .addInstanceInfo(it.nodeId.toString(), nodeName, null, null)
         }
+        envNodeAuthorizationService.addResourceAuthorization(
+            projectId = projectId,
+            resourceAuthorizationList = resourceAuthorizationList
+        )
     }
 }

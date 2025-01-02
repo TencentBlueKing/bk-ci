@@ -3,8 +3,10 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -14,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +26,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
-    private val workspaceRecordService: WorkspaceRecordService
+    private val workspaceRecordService: WorkspaceRecordService,
+    private val notifyControl: NotifyControl
 ) : OpWorkspaceResource {
 
     companion object {
@@ -126,5 +130,22 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             workspaceRecordService.saveWorkspaceRecordTicket(it)
         }
         return Result(true)
+    }
+
+    override fun pendingCheck(userId: String, ww: String?): Result<String> {
+        val data = SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).pendingCheck(userId).data!!
+        if (!ww.isNullOrBlank() && data.isNotBlank()) {
+            notifyControl.notify4SystemAdministrator(
+                notifyTemplateCode = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL",
+                bodyParams = mapOf(
+                    "pipelineName" to "pending 任务自检",
+                    "successContent" to data,
+                    "detailUrl" to "没有~",
+                    "buildNum" to "没有~"
+                ),
+                weworkId = ww
+            )
+        }
+        return Result(data)
     }
 }

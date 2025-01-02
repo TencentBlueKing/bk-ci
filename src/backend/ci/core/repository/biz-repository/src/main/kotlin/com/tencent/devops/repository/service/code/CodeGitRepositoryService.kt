@@ -206,25 +206,19 @@ class CodeGitRepositoryService @Autowired constructor(
                 authType = repository.authType,
                 gitProjectId = gitProjectId
             )
-            val repositoryCodeRecord = repositoryCodeGitDao.get(
-                dslContext = transactionContext,
-                repositoryId = repositoryId
-            )
-            if (repositoryCodeRecord.authType == RepoAuthType.OAUTH.name &&
-                repositoryCodeRecord.userName != repository.userName) {
-                repositoryAuthorizationService.batchModifyHandoverFrom(
-                    projectId = projectId,
-                    resourceAuthorizationHandoverList = listOf(
-                        ResourceAuthorizationHandoverDTO(
-                            projectCode = projectId,
-                            resourceType = AuthResourceType.CODE_REPERTORY.value,
-                            resourceName = record.aliasName,
-                            resourceCode = repositoryHashId,
-                            handoverTo = repository.userName
-                        )
+            // 重置授权管理
+            repositoryAuthorizationService.batchModifyHandoverFrom(
+                projectId = projectId,
+                resourceAuthorizationHandoverList = listOf(
+                    ResourceAuthorizationHandoverDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = record.aliasName,
+                        resourceCode = repositoryHashId,
+                        handoverTo = repository.userName
                     )
                 )
-            }
+            )
         }
     }
 

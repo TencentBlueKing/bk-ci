@@ -38,4 +38,10 @@ class StoreInnerPipelineConfig {
 
     @Value("\${store.innerPipeline.user:}")
     val innerPipelineUser: String = ""
+
+    @Value("\${store.innerPipeline.gray.project:}")
+    val innerPipelineGrayProject: String = ""
+
+    @Value("\${store.innerPipeline.gray.user:}")
+    val innerPipelineGrayUser: String = ""
 }

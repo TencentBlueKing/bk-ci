@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.0-rc.5](#v310-rc5)
+   - [Changelog since v3.1.0-rc.4](#changelog-since-v310-rc4)
+
 - [v3.1.0-rc.4](#v310-rc4)
    - [Changelog since v3.1.0-rc.3](#changelog-since-v310-rc3)
 
@@ -16,6 +19,59 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.0-rc.5
+## 2024-12-23
+### Changelog since v3.1.0-rc.4
+#### 新增
+
+##### 流水线
+- [新增] 插件配置支持字段间联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11251)
+- [新增] feat：Git分支/Tag和Svn分支/Tag类型的变量优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10774)
+- [新增] feat: 优化PUSH事件预匹配逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11317)
+- [新增] AI大模型融入 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10825)
+- [新增] feat: copilot 编辑器支持免登录 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11290)
+- [新增] feat：推荐版本号模版优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11186)
+- [新增] 【蓝盾-评审会已评审】【PAC】feat：流水线版本管理机制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8161)
+- [新增] feat：运行时校验权限代持人权限是否已失效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10478)
+
+##### 权限中心
+- [新增] feat：提供项目管理相关openapi接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11231)
+
+##### 项目管理
+- [新增] feat：查询项目接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11276)
+
+##### Stream
+- [新增] [stream] 项目支持关联到运营产品 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9948)
+
+##### 调度
+- [新增] feat：优化dispatch-sdk调度逻辑对其他服务的依赖 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10882)
+
+##### 未分类
+- [新增] feat: 升级openresty到1.19 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11295)
+- [新增] openapi新增文档生成能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/7412)
+- [新增] feat: 升级undertow版本解决内存泄漏问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11300)
+- [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
+
+#### 优化
+
+##### 研发商店
+- [优化] pref:nodejs安装包下载地址域名支持按部署环境返回 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11327)
+- [优化] pref：研发商店通用化接口封装优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11049)
+
+##### 环境管理
+- [优化] perf: 增加部分错误码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11279)
+
+#### 修复
+
+##### 流水线
+- [修复] fix: 执行前暂停的插件弹窗问题处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11296)
+
+##### 研发商店
+- [修复] bug:插件最新版本使用历史版本修复方式发布后，再用普通方式发布的分支会继承上一次的 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11301)
+
+##### 未分类
+- [修复] bugfix: 升级JDK17导致worker无法强杀进程 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11320)
+
 # v3.1.0-rc.4
 ## 2024-12-05
 ### Changelog since v3.1.0-rc.3

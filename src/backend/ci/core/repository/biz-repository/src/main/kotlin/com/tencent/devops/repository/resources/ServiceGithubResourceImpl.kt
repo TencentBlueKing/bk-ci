@@ -52,9 +52,10 @@ class ServiceGithubResourceImpl @Autowired constructor(
         userId: String,
         accessToken: String,
         tokenType: String,
-        scope: String
+        scope: String,
+        operator: String?
     ): Result<Boolean> {
-        githubTokenService.createAccessToken(userId, accessToken, tokenType, scope)
+        githubTokenService.createAccessToken(userId, accessToken, tokenType, scope, operator = operator ?: userId)
         return Result(true)
     }
 

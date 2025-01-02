@@ -50,11 +50,13 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEve
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperienceDownloadType
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
+import com.tencent.devops.experience.dao.ExperienceDownloadSpeedDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceTokenDao
@@ -65,6 +67,7 @@ import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
+import com.tencent.devops.experience.pojo.download.ReportSpeedParam
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -77,6 +80,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod")
 class ExperienceDownloadService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceTokenDao: ExperienceTokenDao,
@@ -85,6 +89,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceDownloadSpeedDao: ExperienceDownloadSpeedDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePushService: ExperiencePushService,
     private val client: Client,
@@ -559,6 +564,30 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun getDownloadUsers(experienceId: Long): List<String> {
         return experienceDownloadDao.listUserIdsByExperienceId(dslContext, experienceId)
+    }
+
+    fun reportSpeed(userId: String, params: ReportSpeedParam): Boolean {
+        try {
+            val experienceId = HashUtil.decodeIdToLong(params.experienceId)
+            val experienceRecord = experienceDao.get(dslContext, experienceId)
+            val now = LocalDateTime.now()
+            experienceDownloadSpeedDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = experienceRecord.projectId,
+                artifactoryType = experienceRecord.artifactoryType,
+                path = experienceRecord.artifactoryPath,
+                experienceId = experienceId,
+                downloadSpeed = params.downloadSpeed,
+                downloadType = ExperienceDownloadType.of(params.downloadType).name,
+                createTime = now,
+                updateTime = now
+            )
+            return true
+        } catch (e: Exception) {
+            logger.error("report speed error", e)
+            return false
+        }
     }
 
     companion object {

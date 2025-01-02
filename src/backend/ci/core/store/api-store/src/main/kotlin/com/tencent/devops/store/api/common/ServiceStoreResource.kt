@@ -109,6 +109,30 @@ interface ServiceStoreResource {
         userId: String
     ): Result<Boolean>
 
+    @Operation(summary = "判断项目是否是研发商店公共项目")
+    @GET
+    @Path("projects/{projectCode}/validate")
+    fun isPublicProject(
+        @Parameter(description = "标识", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<Boolean>
+
+    @Operation(summary = "校验流水线用户访问组件信息权限")
+    @GET
+    @Path("/codes/{storeCode}/pipeline/visit/validate")
+    fun validatePipelineUserStorePermission(
+        @Parameter(description = "标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
+
     @Operation(summary = "判断错误码是否合规")
     @POST
     @Path("/codes/{storeCode}/errorCode/compliance")

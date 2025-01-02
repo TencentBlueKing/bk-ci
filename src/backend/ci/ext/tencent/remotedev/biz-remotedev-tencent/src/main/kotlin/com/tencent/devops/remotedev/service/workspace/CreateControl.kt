@@ -897,7 +897,8 @@ class CreateControl @Autowired constructor(
             userId = userId,
             projectCode = userProjectId,
             addcloudDesktopNum = null,
-            enable = true
+            enable = true,
+            rewriteManages = null
         ).data
 
         if (ok != true) {
