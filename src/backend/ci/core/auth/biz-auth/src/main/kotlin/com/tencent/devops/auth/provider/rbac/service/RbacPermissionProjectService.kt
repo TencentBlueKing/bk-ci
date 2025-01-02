@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -53,10 +54,11 @@ class RbacPermissionProjectService(
     private val authResourceService: AuthResourceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
-    private val resourceMemberService: PermissionResourceMemberService
+    private val resourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : PermissionProjectService {
 
     companion object {
@@ -137,7 +139,7 @@ class RbacPermissionProjectService(
                 return managerPermission
             }
 
-            return rbacCacheService.validateUserProjectPermission(
+            return rbacCommonService.validateUserProjectPermission(
                 userId = userId,
                 projectCode = projectCode,
                 permission = AuthPermission.VISIT
@@ -153,7 +155,7 @@ class RbacPermissionProjectService(
         userId: String,
         projectCode: String
     ): Boolean {
-        return resourceMemberService.isProjectMember(
+        return permissionManageFacadeService.isProjectMember(
             projectCode = projectCode,
             userId = userId
         )
@@ -167,14 +169,14 @@ class RbacPermissionProjectService(
 //            resourceCode = projectCode,
 //            group = null
 //        ).contains(userId)
-        return resourceMemberService.isProjectMember(
+        return permissionManageFacadeService.isProjectMember(
             projectCode = projectCode,
             userId = userId
         )
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        return rbacCacheService.checkProjectManager(userId, projectCode)
+        return rbacCommonService.checkProjectManager(userId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {

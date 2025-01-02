@@ -45,11 +45,14 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtil
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -209,7 +212,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         workspaceName: String,
         gameId: String,
         cgsId: String,
-        imageId: String
+        imageId: String,
+        imageName: String
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -220,7 +224,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 appName = gameId,
                 userId = userId,
                 pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
-                cgsId = cgsId
+                cgsId = cgsId,
+                imageName = imageName
             ),
             actionMsg = imageId
         )
@@ -254,7 +259,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         machineType: String?,
         zoneId: String?,
         live: Boolean?
-    ): String {
+    ): TaskCommonResp {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
@@ -268,7 +273,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 live = live
             )
         )
-        return resp.taskUid
+        return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)
     }
 
     override fun expandDisk(
@@ -319,6 +324,14 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun taskStatus(taskId: String): WorkspaceTaskStatus? {
         return workspaceBcsClient.getTaskStatus(taskId)
+    }
+
+    override fun fetchImages(data: ListImagesData): ListImagesResp? {
+        return workspaceBcsClient.fetchImages(data)
+    }
+
+    override fun deleteImage(imageId: String, delaySeconds: Int?): String? {
+        return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

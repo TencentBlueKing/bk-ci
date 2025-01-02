@@ -39,7 +39,8 @@ enum class ErrorType(
     SYSTEM("system", 0), // 0 系统运行报错
     USER("user", 1), // 1 用户配置报错
     THIRD_PARTY("thirdParty", 2), // 2 第三方系统接入错误
-    PLUGIN("plugin", 3); // 3 插件执行错误
+    PLUGIN("plugin", 3), // 3 插件执行错误
+    BUILD_MACHINE("buildMachine", 4); // 4 构建机运行报错
 
     companion object {
 
@@ -57,6 +58,7 @@ enum class ErrorType(
                 0 -> SYSTEM
                 1 -> USER
                 2 -> THIRD_PARTY
+                4 -> BUILD_MACHINE
                 else -> PLUGIN
             }
         }

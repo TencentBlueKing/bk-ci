@@ -26,6 +26,9 @@ import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -39,6 +42,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -258,6 +262,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
         return client.get(ServiceRemoteDevResource::class).workspaceClone(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            req = req
+        )
+    }
+
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        return client.get(ServiceRemoteDevResource::class).workspaceCloneTask(
             userId = userId,
             projectId = projectId,
             workspaceName = workspaceName,
@@ -612,5 +631,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun updateRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
         logger.info("updateRemotedevManager |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).updateProjectRemotedevManager(userId, data)
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        logger.info("fetchImages |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).fetchImages(userId, data)
+    }
+
+    override fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): Result<DeleteImageResp> {
+        logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
 }

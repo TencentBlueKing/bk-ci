@@ -164,7 +164,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     gameId = gameId.first,
                     cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
-                    imageId = imageId
+                    imageId = imageId,
+                    imageName = makeImageReq.imageName
                 )
             }.onFailure {
                 // 更新镜像信息

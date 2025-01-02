@@ -30,11 +30,14 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 
 /**
@@ -82,7 +85,8 @@ interface RemoteDevInterface {
         workspaceName: String,
         gameId: String,
         cgsId: String,
-        imageId: String
+        imageId: String,
+        imageName: String
     ): String
 
     /**
@@ -100,7 +104,7 @@ interface RemoteDevInterface {
         machineType: String?,
         zoneId: String?,
         live: Boolean?
-    ): String
+    ): TaskCommonResp
 
     /**
      * 获取工作空间web端链接
@@ -147,4 +151,13 @@ interface RemoteDevInterface {
     fun taskStatus(
         taskId: String
     ): WorkspaceTaskStatus?
+
+    fun fetchImages(
+        data: ListImagesData
+    ): ListImagesResp?
+
+    fun deleteImage(
+        imageId: String,
+        delaySeconds: Int?
+    ): String?
 }

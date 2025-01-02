@@ -45,5 +45,9 @@ data class GitToken(
     @JsonProperty("expires_in")
     val expiresIn: Long = 0L,
     @get:Schema(title = "创建时间")
-    val createTime: Long? = 0L
+    val createTime: Long? = 0L,
+    @get:Schema(title = "更新时间")
+    val updateTime: Long? = 0L,
+    @get:Schema(title = "操作人")
+    var operator: String? = ""
 )

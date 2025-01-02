@@ -144,7 +144,7 @@ class HeartbeatControl @Autowired constructor(
                 actionType = ActionType.TERMINATE,
                 executeCount = container.executeCount,
                 reason = tipMessage,
-                errorTypeName = ErrorType.THIRD_PARTY.name,
+                errorTypeName = ErrorType.BUILD_MACHINE.name,
                 errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
             )
         )

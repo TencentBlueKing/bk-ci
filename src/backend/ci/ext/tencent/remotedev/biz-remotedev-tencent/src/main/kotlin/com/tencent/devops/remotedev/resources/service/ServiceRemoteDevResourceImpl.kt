@@ -37,6 +37,9 @@ import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -51,6 +54,7 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
@@ -409,6 +413,22 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        return Result(
+            cloneWorkspaceHandler.cloneWorkspaceWithTask(
+                userId = userId,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                rebuildReq = req
+            )
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
@@ -563,6 +583,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    @Deprecated("老的下掉，要被新的代替")
     override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
@@ -853,6 +874,21 @@ class ServiceRemoteDevResourceImpl(
                 projectId = data.projectId,
                 manager = data.managers.joinToString(";"),
                 delete = !data.add
+            )
+        )
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        return Result(imageManageService.fetchImages(userId, data))
+    }
+
+    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+        return Result(
+            imageManageService.deleteImage(
+                userId = userId,
+                projectId = projectId,
+                imageId = imageId,
+                delaySeconds = delaySeconds
             )
         )
     }

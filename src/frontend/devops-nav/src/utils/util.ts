@@ -1,4 +1,3 @@
-import { showLoginModal } from '@blueking/login-modal'
 import eventBus from './eventBus'
 export function firstUpperCase (str: string): string {
     try {
@@ -242,7 +241,7 @@ export function ifShowNotice (currentNotice) {
 }
 
 export function showLoginPopup () {
-    const successUrl = `${window.location.origin}/console/static/login_done.html`
+    const successUrl = `${window.location.origin}/console/static/login_callback.html`
 
     // 系统的登录页地址
     const siteLoginUrl = window.getLoginUrl()
@@ -258,5 +257,30 @@ export function showLoginPopup () {
     const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
 
     // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-    showLoginModal({ loginUrl })
+    const modal = document.getElementById('devops-login-modal-overlay')
+    if (modal.style.display !== 'flex') {
+        modal.style.display = 'flex'
+    
+        // 动态创建iframe
+        const iframe = document.createElement('iframe')
+        iframe.setAttribute('id', 'devops-login-iframe')
+        iframe.setAttribute('src', loginUrl)
+        iframe.style.width = '100%'
+        iframe.style.height = '100%'
+        iframe.style.border = 'none'
+        document.getElementById('devops-login-modal').appendChild(iframe)
+    
+        const abortController = new AbortController()
+        const option = {
+            signal: abortController.signal
+        } as AddEventListenerOptions
+        // 监听子页面的消息
+        window.addEventListener('message', (event: any) => {
+            if (event.data === 'loginSuccess') {
+                modal.style.display = 'none'
+                iframe.remove() // 移除iframe
+                abortController.abort()
+            }
+        }, option)
+    }
 }

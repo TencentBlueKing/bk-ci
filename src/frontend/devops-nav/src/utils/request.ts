@@ -22,7 +22,7 @@ const request = axios.create({
 } as CreateAxiosDefaults)
 
 function errorHandler (error: AxiosError) {
-    if (typeof error.response.data === 'undefined') {
+    if (typeof error.response === 'undefined') {
         // HACK REDIRECT 302
         showLoginPopup()
     }
@@ -54,6 +54,8 @@ request.interceptors.response.use((response: AxiosResponse) => {
 
     if (httpStatus === 401) {
         showLoginPopup()
+        const err = { status: httpStatus, message: '登录态已失效' }
+        return Promise.reject(err)
     } else if (httpStatus === 503) {
         return Promise.reject({ // eslint-disable-line
             status: httpStatus,

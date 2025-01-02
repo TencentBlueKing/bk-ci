@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Login Success</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+        }
+        .message {
+            text-align: center;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            width: 350px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .icon {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+        .icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 40px;
+            border-right: 5px solid white;
+            border-bottom: 5px solid white;
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        h1 {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+        p {
+            color: #666;
+            font-size: 16px;
+        }
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .close-button {
+            background-color: #4caf50;
+            color: white;
+        }
+        .close-button:hover {
+            background-color: #45a049;
+        }
+        .refresh-button {
+            background-color: #2196f3;
+            color: white;
+        }
+        .refresh-button:hover {
+            background-color: #1e88e5;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); } 
+            60% { transform: translateY(-10px); }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="message hidden" id="message-container">
+        <div class="icon"></div>
+        <h1 id="login-success-title">Login Successful!</h1>
+        <p id="countdown"></p>
+
+        <button id="close-button" class="button close-button" onclick="loginSuccess()">Close</button> <!-- 新增关闭按钮 -->
+        <button id="refresh-button" class="button refresh-button" onclick="refreshParent()">Refresh Page</button> <!-- 新增刷新按钮 -->
+    </div>
+
+    <script>
+        const translations = {
+            'en-US': {
+                title: "Login Successful!",
+                countdown: "This page will close automatically in {seconds} seconds.",
+                closeButton: "Close",
+                refreshButton: "Refresh Page"
+            },
+            'zh-CN': {
+                title: "登录成功!",
+                countdown: "此页面将在 {seconds} 秒后自动关闭。",
+                closeButton: "关闭",
+                refreshButton: "刷新页面"
+            }
+        };
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function getLanguage() {
+            const lang = getCookie('blueking_language');
+            return translations[lang] ? lang : 'zh-CN';
+        }
+
+        function translatePage() {
+            const lang = getLanguage();
+            const translation = translations[lang];
+
+            document.getElementById('login-success-title').textContent = translation.title;
+            document.getElementById('close-button').textContent = translation.closeButton;
+            document.getElementById('refresh-button').textContent = translation.refreshButton;
+        }
+
+        function loginSuccess() {
+            // 向父窗口发送登录成功的消息
+            window.parent.postMessage('loginSuccess', '*');
+        }
+
+        function refreshParent() {
+            window.parent.location.reload();
+        }
+
+        // 倒计时3秒后自动关闭窗口
+        function startCountdown() {
+            const lang = getLanguage();
+            const translation = translations[lang];
+            let countdownElement = document.getElementById('countdown');
+            let seconds = 3;
+            countdownElement.textContent = translation.countdown.replace('{seconds}', seconds);
+
+            let interval = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = translation.countdown.replace('{seconds}', seconds);
+
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    loginSuccess();
+                }
+            }, 1000);
+        }
+
+        // 开始倒计时和翻译页面
+        window.onload = function() {
+            translatePage();
+            document.getElementById('message-container').classList.remove('hidden');
+            startCountdown();
+        }
+    </script>
+</body>
+</html>

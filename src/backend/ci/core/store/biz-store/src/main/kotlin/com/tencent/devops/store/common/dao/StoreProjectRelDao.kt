@@ -619,4 +619,24 @@ class StoreProjectRelDao {
                 .fetchOne()
         }
     }
+
+    /**
+     * 判断组件是否被用户安装
+     */
+    fun isInstalledByUser(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        storeType: Byte
+    ): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(CREATOR.eq(userId))
+                .and(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+                .fetchOne(0, Long::class.java) != 0L
+        }
+    }
 }
