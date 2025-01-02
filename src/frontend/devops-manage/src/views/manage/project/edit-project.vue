@@ -271,7 +271,10 @@ onMounted(() => {
         {{ t('项目：') }} <span class="project-name">{{ projectData.projectName }}</span>
       </div>
       <div class="description">
-        {{ t('升级后，该项目对变量引用方式将有更严格的要求。') }}
+        {{ t('升级后，该项目下的流水线引用变量时仅支持X模式。') }}
+        <i18n-t keypath="升级有可能导致存量流水线X，请谨慎操作。" tag="div">
+          <span class="warn-tip">{{ t('运行失败') }}</span>
+        </i18n-t>
       </div>
     </template>
   </bk-dialog>
@@ -337,15 +340,18 @@ onMounted(() => {
     }
   }
   .description {
-    display: flex;
-    align-items: center;
     width: 416px;
-    height: 46px;
-    padding: 0 16px;
+    height: 58x;
+    padding: 6px 16px;
     margin: 16px 0;
     background: #F5F6FA;
     border-radius: 2px;
     font-size: 14px;
     color: #63656E;
+
+    .warn-tip {
+      font-weight: 700;
+      color: red;
+    }
   }
 </style>

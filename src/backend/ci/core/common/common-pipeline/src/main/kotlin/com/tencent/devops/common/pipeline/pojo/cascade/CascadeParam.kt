@@ -2,6 +2,7 @@ package com.tencent.devops.common.pipeline.pojo.cascade
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import org.slf4j.LoggerFactory
 
 abstract class CascadeParam constructor(
@@ -31,7 +32,11 @@ abstract class CascadeParam constructor(
     }
 
     private fun getDefaultValue(prop: BuildFormProperty): Map<String, String> {
-        val defaultValue = prop.defaultValue as Map<String, String>
+        val defaultValue = CascadePropertyUtils.parseDefaultValue(
+            key = prop.id,
+            defaultValue = prop.defaultValue,
+            type = prop.type
+        )
         return if (!chain.find { !defaultValue.containsKey(it) }.isNullOrBlank()) {
             mapOf()
         } else {

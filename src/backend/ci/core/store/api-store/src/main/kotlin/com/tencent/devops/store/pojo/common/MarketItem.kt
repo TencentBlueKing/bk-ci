@@ -45,6 +45,8 @@ data class MarketItem(
     val code: String,
     @get:Schema(title = "版本号", required = true)
     val version: String,
+    @get:Schema(title = "状态", required = true)
+    val status: String,
     @get:Schema(title = "组件类型", required = true)
     val type: String,
     @get:Schema(title = "研发来源类型", required = false)

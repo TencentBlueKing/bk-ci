@@ -169,4 +169,5 @@ object StoreMessageCode {
     // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
     const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
     const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
+    const val STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL = "2120937" // 研发商店：代码库删除失败，失败原因:{0}
 }

@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class StoreMediaInfo(
     @get:Schema(title = "媒体id")
     val id: String,
-    @get:Schema(title = "研发商店类型", required = true)
+    @get:Schema(title = "组件标识", required = true)
     val storeCode: String,
     @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
