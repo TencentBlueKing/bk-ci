@@ -2711,12 +2711,37 @@ class PipelineBuildFacadeService(
             it.key to it.value.toString()
         }?.toMutableMap() ?: mutableMapOf()
         val startType = StartType.toStartType(buildInfo.trigger)
-        // 非webhook触发
-        if (startType != StartType.WEB_HOOK) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NOT_FOUND_TRIGGER_EVENT
+        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS)
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
-        webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
-            startParameters[param.key] = param.value.toString()
+        val resource = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version)
+        val model = resource.model
+        val triggerContainer = model.getTriggerContainer()
+        val triggerElements = when (startType) {
+            StartType.WEB_HOOK -> {
+                // webhook触发
+                webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+                    startParameters[param.key] = param.value.toString()
+                }
+                triggerContainer.elements.filter { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
+            StartType.MANUAL, StartType.SERVICE -> {
+                triggerContainer.elements.filterIsInstance<ManualTriggerElement>()
+            }
+
+            StartType.REMOTE -> {
+                triggerContainer.elements.filterIsInstance<RemoteTriggerElement>()
+            }
+
+            else -> {
+                null
+            }
         }
         return BuildId(
             webhookTriggerPipelineBuild(
