@@ -69,6 +69,7 @@ export default {
         hideSkipExecTask: false,
         globalEnvs: null,
         commonParams: [],
+        triggerParams: [],
         saveStatus: false,
         authSettingEditing: false,
         stageTagList: [],
