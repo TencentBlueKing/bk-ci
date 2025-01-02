@@ -1378,7 +1378,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun count(projectIds: Set<String>, expired: Boolean?): Map<String, Int> {
-        val result = experienceDao.count(dslContext, projectIds, expired ?: false)
+        val result = experienceDao.count(dslContext, projectIds)
         return result?.map {
             val count = it[0] as Int
             val projectId = it[1] as String
