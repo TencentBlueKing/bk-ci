@@ -86,7 +86,7 @@ class RepositoryCopilotService @Autowired constructor(
             source = sourceSha,
             target = targetSha,
             projectName = projectName,
-            scmCode = COPILOT_SCM_CODE,
+            scmType = COPILOT_SCM_TYPE,
             status = copilotSummary.status
         )
         return copilotSummary
@@ -144,7 +144,7 @@ class RepositoryCopilotService @Autowired constructor(
                         source = record.sourceCommit,
                         target = record.targetCommit,
                         projectName = record.projectName,
-                        scmCode = COPILOT_SCM_CODE,
+                        scmType = COPILOT_SCM_TYPE,
                         status = copilotSummary.status
                     )
                 }
@@ -207,6 +207,7 @@ class RepositoryCopilotService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
-        const val COPILOT_SCM_CODE = "TGIT"
+        // 现阶段仅支持内网工蜂GIT仓库
+        const val COPILOT_SCM_TYPE = "TGIT"
     }
 }
