@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.pojo
 
 data class CreateWorkspaceRes(
     val enviromentUid: String,
-    val taskId: String,
-    val regionId: Int = 0,
-    val resourceId: String? = null
+    val taskUid: String,
+    val taskId: String
 )

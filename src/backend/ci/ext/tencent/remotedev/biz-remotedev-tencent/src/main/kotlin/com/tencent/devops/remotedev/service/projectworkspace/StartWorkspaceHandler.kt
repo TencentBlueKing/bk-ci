@@ -171,7 +171,7 @@ class StartWorkspaceHandler @Autowired constructor(
                     type = UpdateEventType.START,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
-                    gameId = gameId.first
+                    appName = gameId.first
                 )
             )
 

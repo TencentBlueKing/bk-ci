@@ -142,4 +142,10 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
     override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
         return null
     }
+
+    override fun getStoreCodeById(dslContext: DSLContext, storeId: String): String? {
+        return with(TIdeAtom.T_IDE_ATOM) {
+            dslContext.select(ATOM_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
 }

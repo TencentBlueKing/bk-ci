@@ -29,6 +29,7 @@
                         :project-id="projectId"
                         :element-id="elementId"
                         :turbo-disabled="inputDisabled"
+                        :element="element"
                         :ref="key"
                         @handleChange="handleUpdateTurbo"
                         v-bind="obj"
@@ -43,6 +44,7 @@
                         :name="key"
                         :handle-change="handleUpdateElement"
                         :value="element[key]"
+                        :element="element"
                         v-bind="obj"
                     ></component>
                 </form-field>

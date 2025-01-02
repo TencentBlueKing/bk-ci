@@ -76,6 +76,10 @@ export default {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
         return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
     },
+    allPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params ?? []
+    },
     curPipelineBuildNoConfig: state => {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
         const semver = firstJob?.params?.filter(param => semverVersionKeySet.has(param.id))

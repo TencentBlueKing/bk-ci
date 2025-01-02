@@ -621,16 +621,15 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE
             )
-        )
+        ) {
+            logger.warn("BKSystemErrorMonitor|BAD_USER|$userId|$projectId|$pipelineId")
+        }
     }
 
     private fun uploadProjectUserMetrics(

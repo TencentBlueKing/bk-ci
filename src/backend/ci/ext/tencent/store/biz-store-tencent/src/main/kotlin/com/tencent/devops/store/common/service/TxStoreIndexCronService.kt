@@ -58,6 +58,7 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -71,6 +72,9 @@ class TxStoreIndexCronService(
     private val codeccApi: CodeccApi,
     private val client: Client
 ) {
+
+    @Value("\${codecc.opensource.tag:#{null}}")
+    private val codeccOpensourceTag: String = ""
 
     /**
      * 计算插件SLA指标数据
@@ -213,6 +217,7 @@ class TxStoreIndexCronService(
      * 计算插件质量指标数据
      */
     @Scheduled(cron = "0 0 1 * * ?")
+    @Suppress("NestedBlockDepth")
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
@@ -266,7 +271,7 @@ class TxStoreIndexCronService(
                         }
                     }
                     val codeccOpensourceMeasurement = getCodeccOpensourceMeasurement(atomCode)
-                    val result = if (complianceRate > 99.9 && codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR
+                    val result = if (complianceRate >= 99.9 && codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR
                     else BK_NOT_UP_TO_PAR
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
@@ -400,7 +405,8 @@ class TxStoreIndexCronService(
     private fun getCodeccOpensourceMeasurement(atomCode: String): Double {
         val atomCodeSrc = atomDao.getAtomCodeSrc(dslContext, atomCode)
         if (!atomCodeSrc.isNullOrBlank()) {
-            val result = codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc).data?.get("rdIndicatorsScore")
+            val result = codeccApi.getCodeccOpensourceMeasurement(atomCodeSrc, codeccOpensourceTag)
+                .data?.get("rdIndicatorsScore")
             return (result as? Double) ?: 0.0
         }
         return 0.0

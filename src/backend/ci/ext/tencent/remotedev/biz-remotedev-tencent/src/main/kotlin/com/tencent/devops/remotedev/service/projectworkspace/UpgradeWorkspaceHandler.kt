@@ -144,6 +144,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -152,7 +153,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     machineType = rebuildReq.machineType,
-                    gameId = null,
+                    appName = appName,
                     projectId = projectId
                 )
             )

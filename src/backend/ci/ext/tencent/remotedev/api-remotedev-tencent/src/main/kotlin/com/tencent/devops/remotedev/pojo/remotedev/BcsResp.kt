@@ -9,7 +9,3 @@ data class BcsResp<out T>(
     val message: String?,
     val data: T?
 )
-
-data class BcsTaskData(
-    val taskUid: String
-)

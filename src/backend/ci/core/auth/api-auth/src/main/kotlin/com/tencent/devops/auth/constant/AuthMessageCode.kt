@@ -142,4 +142,12 @@ object AuthMessageCode {
     const val INVALID_EXPIRED_PERM_NOT_ALLOW_TO_HANDOVER = "2121089" // 已过期的权限不允许交接
 
     const val ERROR_USER_INFORMATION_NOT_SYNCED = "2121090" // 请等待第二天用户信息同步后再尝试操作，因为新入职用户的信息尚未同步完成。
+
+    const val ERROR_HANDOVER_OVERVIEW_NOT_EXIST = "2121091" // 权限交接记录不存在
+    const val ERROR_HANDOVER_FINISH = "2121092" // 该交接申请单已被处理，不允许重复操作
+    const val ERROR_HANDOVER_REVOKE = "2121093" // 由于您不是该交接申请单的发起人，无法进行撤销操作
+    const val ERROR_HANDOVER_APPROVAL = "2121094" // 由于您不是该交接申请单的审批人，无法进行任何操作
+    const val ERROR_HANDOVER_HANDLE = "2121095" // 该交接申请单正在被处理中，请耐心等待
+    const val ERROR_REPERTORY_HANDOVER_AUTHORIZATION = "2121096" // 交接操作不合法，用户没有对应代码库授权的权限
+    const val ERROR_SINGLE_GROUP_REMOVE = "2121098" // 由于直接退出用户组，会导致授权失效，必须进行用户组移交
 }

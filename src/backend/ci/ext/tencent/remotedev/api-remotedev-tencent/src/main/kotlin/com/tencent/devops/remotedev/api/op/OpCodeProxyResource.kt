@@ -27,6 +27,13 @@ interface OpCodeProxyResource {
         data: CallbackLinktgitData
     ): Result<Map<Long, Boolean>>
 
+    @Operation(summary = "刷数据用")
+    @POST
+    @Path("/refresh/tgitlink")
+    fun refreshTgitlink(
+        projectIds: Set<String>
+    ): Result<Map<Long, Boolean>>
+
     @Operation(summary = "添加或者删除工蜂ACLIP")
     @POST
     @Path("/updateTgitAclIp")

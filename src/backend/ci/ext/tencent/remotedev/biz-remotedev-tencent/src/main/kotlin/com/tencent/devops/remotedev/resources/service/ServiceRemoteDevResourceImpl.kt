@@ -33,26 +33,36 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -112,7 +122,8 @@ class ServiceRemoteDevResourceImpl(
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val remotedevProjectService: RemotedevProjectService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -177,7 +188,11 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
-    override fun getRemotedevProjectsNew(projectId: String?, page: Int, pageSize: Int): Result<List<RemotedevProjectNew>> {
+    override fun getRemotedevProjectsNew(
+        projectId: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<RemotedevProjectNew>> {
         return Result(workspaceService.getWorkspaceProjectNew(projectId, page, pageSize))
     }
 
@@ -203,7 +218,8 @@ class ServiceRemoteDevResourceImpl(
                 userId = operator,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null
+                enable = null,
+                rewriteManages = null
             )
         }
         cgsData.forEach { cgs ->
@@ -397,6 +413,22 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    override fun workspaceCloneTask(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp> {
+        return Result(
+            cloneWorkspaceHandler.cloneWorkspaceWithTask(
+                userId = userId,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                rebuildReq = req
+            )
+        )
+    }
+
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
@@ -551,6 +583,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
+    @Deprecated("老的下掉，要被新的代替")
     override fun getWorkspaceImageList(projectId: String?, imageId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
         val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
@@ -689,19 +722,43 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 
-    override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
+    override fun expandDisk(
+        userId: String,
+        workspaceName: String,
+        size: String,
+        pvcId: String?
+    ): Result<ExpandDiskValidateResp?> {
         val data = expertSupportService.expandDisk(
             workspaceName = workspaceName,
             userId = userId,
-            size = size
+            size = size,
+            pvcId = pvcId
         ) ?: return Result(null)
-
         return Result(
             ExpandDiskValidateResp(
                 valid = data.valid,
-                message = data.message
+                message = data.message,
+                taskId = data.taskId
             )
         )
+    }
+
+    override fun createDisk(
+        userId: String,
+        workspaceName: String,
+        size: String
+    ): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.createDisk(
+                workspaceName = workspaceName,
+                userId = userId,
+                size = size
+            )
+        )
+    }
+
+    override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
+        return Result(expertSupportService.fetchDiskList(userId, workspaceName))
     }
 
     override fun upgradeWorkspace(
@@ -774,7 +831,12 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceTimeline(userId: String, workspaceName: String, page: Int?, pageSize: Int?): Result<Page<WorkspaceOpHistory>> {
+    override fun getWorkspaceTimeline(
+        userId: String,
+        workspaceName: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>> {
         return Result(
             workspaceService.getWorkspaceTimeline(
                 userId = userId,
@@ -787,5 +849,47 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
+        return Result(expertSupportService.getTaskStatus(userId, taskId))
+    }
+
+    override fun enableProjectRemotedev(userId: String, data: EnableRemotedevData): Result<Boolean> {
+        return Result(
+            remotedevProjectService.enableRemotedevWithPermission(
+                userId = userId,
+                projectId = data.projectId,
+                enable = data.enable,
+                quota = data.quota ?: 1000,
+                rewriteManages = data.managers
+            )
+        )
+    }
+
+    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
+        return Result(
+            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
+                userId = userId,
+                projectId = data.projectId,
+                manager = data.managers.joinToString(";"),
+                delete = !data.add
+            )
+        )
+    }
+
+    override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
+        return Result(imageManageService.fetchImages(userId, data))
+    }
+
+    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+        return Result(
+            imageManageService.deleteImage(
+                userId = userId,
+                projectId = projectId,
+                imageId = imageId,
+                delaySeconds = delaySeconds
+            )
+        )
     }
 }

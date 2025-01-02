@@ -143,7 +143,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null
+                enable = null,
+                rewriteManages = null
             )
         }
         // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额

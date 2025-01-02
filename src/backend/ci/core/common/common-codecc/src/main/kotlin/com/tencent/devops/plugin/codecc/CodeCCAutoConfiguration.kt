@@ -46,15 +46,12 @@ class CodeCCAutoConfiguration {
         codeccApiProxyGateWay: String = "",
 
         @Value("\${codecc.host:}")
-        codeccHost: String = "",
+        codeccHost: String = ""
 
-        @Value("\${codecc.gray.projectId:}")
-        codeccGrayProjectId: String? = null
     ): CodeccApi =
         CodeccApi(
             codeccApiUrl = codeccApiGateWay,
             codeccApiProxyUrl = codeccApiProxyGateWay,
-            codeccHost = codeccHost,
-            codeccGrayProjectId = codeccGrayProjectId
+            codeccHost = codeccHost
         )
 }

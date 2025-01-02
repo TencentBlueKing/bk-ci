@@ -38,9 +38,9 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
-    import ParamGroup from './children/param-group'
+    import { mapState } from 'vuex'
     import EnvItem from './children/env-item'
+    import ParamGroup from './children/param-group'
     export default {
         components: {
             ParamGroup,
@@ -61,18 +61,14 @@
                 isLoading: false,
                 searchStr: '',
                 triggerParamList: [],
-                sysParamList: [],
-                noParamsTrigger: ['manualTrigger', 'remoteTrigger', 'timerTrigger']
+                sysParamList: []
             }
         },
         computed: {
             ...mapState('atom', [
-                'commonParams'
+                'commonParams',
+                'triggerParams'
             ]),
-            atomCodeList () {
-                const triggerList = (this.container?.elements || []).map(item => item.atomCode)
-                return triggerList.filter(item => !this.noParamsTrigger.includes(item))
-            },
             renderSysParamList () {
                 if (!this.searchStr) {
                     return this.sysParamList
@@ -90,26 +86,17 @@
                 }
             }
         },
-        watch: {
-            atomCodeList () {
-                this.$nextTick(this.initData)
-            }
-        },
+
         created () {
             this.initData()
         },
         methods: {
-            ...mapActions('atom', [
-                'requestTriggerParams'
-            ]),
-            async initData () {
-                this.sysParamList = []
-                this.sysParamList.splice(0, 0, ...this.commonParams)
 
-                if (this.atomCodeList.length) {
-                    this.triggerParams = await this.requestTriggerParams(this.atomCodeList)
-                    this.sysParamList.splice(1, 0, ...this.triggerParams)
-                }
+            async initData () {
+                this.sysParamList = [
+                    ...this.commonParams,
+                    ...this.triggerParams
+                ]
                 this.sysParamList[0] && (this.sysParamList[0].isOpen = true)
             }
         }

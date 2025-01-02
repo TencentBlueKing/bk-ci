@@ -53,13 +53,13 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
         val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
             // 判断请求来源的域名是否是devx环境的域名
-            val host = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
+            val host = RegexUtils.splitDomainContextPath("$devxStaticRepoPrefixUrl/")?.first
             val refererHost = RegexUtils.splitDomainContextPath("$referer/")?.first ?: referer
-            host.contains(refererHost)
+            host?.contains(refererHost)
         } else {
             false
         }
-        if (hostReplaceFlag && !staticRepoPrefixUrl.isNullOrBlank()) {
+        if (hostReplaceFlag == true && !staticRepoPrefixUrl.isNullOrBlank()) {
             // 进行域名替换
             return str.replace(staticRepoPrefixUrl!!, devxStaticRepoPrefixUrl!!)
         }

@@ -1,11 +1,8 @@
 package com.tencent.devops.openapi.api.apigw.v4.environment.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -36,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -57,13 +55,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun executeScript(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -77,13 +75,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun distributeFile(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -97,13 +95,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun terminateTask(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -121,13 +119,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun queryJobInstanceStatus(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -148,13 +146,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun queryJobInstanceLogs(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -168,13 +166,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun createAccount(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -188,13 +186,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun deleteAccount(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -208,13 +206,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun getAccountList(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -241,13 +239,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun getStepInstanceDetail(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -265,13 +263,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun getStepInstanceStatus(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -310,13 +308,13 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun operateStepInstance(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -330,7 +328,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun operateOpProject(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String,
         @Parameter(description = "op操作请求信息", required = true)
         opOperateReq: OpOperateReq
     ): OpOperateResult
@@ -341,7 +339,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun checkDeployNodesInCmdb(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "gse agent状态版本更新接口", tags = ["v4_app_job_update_gse_agent"])
@@ -350,7 +348,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun updateGseAgent(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "将存量不在CC中的机器导入CC中的接口", tags = ["v4_app_job_add_stock_node_to_cc"])
@@ -359,7 +357,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun addStockNodeToCC(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(summary = "给存量部署节点写入机器server_id", tags = ["v4_app_job_write_server_id"])
@@ -368,7 +366,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     fun writeServerId(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String
     )
 
     @Operation(
@@ -378,9 +376,12 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @POST
     @Path("/{projectId}/install_agent")
     fun installAgent(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
@@ -398,9 +399,12 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @GET
     @Path("/{projectId}/query_agent_task_status")
     fun queryAgentTaskStatus(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
@@ -412,10 +416,12 @@ interface ApigwTXEnvironmentJobResourceV4 {
         jobId: Int,
         @Parameter(description = "查询agent任务状态的页码", required = true)
         @QueryParam("page")
-        page: Int = 1,
+        @DefaultValue("1")
+        page: Int,
         @Parameter(description = "查询agent任务状态的页码", required = true)
         @QueryParam("pageSize")
-        pageSize: Int = 10
+        @DefaultValue("10")
+        pageSize: Int
     ): AgentResult<QueryAgentTaskStatusResult>
 
     @Operation(
@@ -425,9 +431,12 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @GET
     @Path("/{projectId}/obtain_manual_installation_command")
     fun obtainManualInstallationCommand(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
@@ -442,6 +451,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
         innerIp: String,
         @Parameter(description = "主机管控区域ID，可在蓝鲸配置平台搜索主机信息查看，默认值为0，表示公司内部区域")
         @QueryParam("bkCloudId")
-        bkCloudId: Int = 0
+        @DefaultValue("0")
+        bkCloudId: Int
     ): AgentResult<ObtainManualCommandResult>
 }

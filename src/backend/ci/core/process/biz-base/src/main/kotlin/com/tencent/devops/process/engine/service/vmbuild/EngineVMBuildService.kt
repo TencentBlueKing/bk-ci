@@ -1142,6 +1142,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."
+                        ErrorType.BUILD_MACHINE -> "Please contact the person in charge of the build machine."
                     }
                 if (showAI(task)) {
                     buildLogPrinter.addAIErrorLine(

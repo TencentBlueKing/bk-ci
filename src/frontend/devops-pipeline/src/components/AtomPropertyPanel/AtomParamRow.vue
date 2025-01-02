@@ -13,6 +13,7 @@
         <component
             :is="param.type"
             :container="container"
+            :element="element"
             :atom-value="fullAtomValue"
             :disabled="disabled"
             :name="paramKey"

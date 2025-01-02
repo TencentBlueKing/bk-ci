@@ -241,7 +241,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     }
 
     override fun installAgent(
-        userId: String,
+        userId: String?,
         projectId: String,
         apiGwInstallAgentReq: ApiGwInstallAgentReq
     ): AgentResult<InstallAgentResult> {
@@ -261,7 +261,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
             hostList = hostList,
         )
         return apiGwAgentService.installAgent(
-            userId = userId,
+            userId = userId!!,
             projectId = projectId,
             apiGwInstallAgentReq = apiGwInstallAgentReq,
             bkHostId = hostList[0].toInt()
@@ -269,7 +269,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     }
 
     override fun queryAgentTaskStatus(
-        userId: String,
+        userId: String?,
         projectId: String,
         jobId: Int,
         page: Int,
@@ -284,7 +284,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     }
 
     override fun obtainManualInstallationCommand(
-        userId: String,
+        userId: String?,
         projectId: String,
         jobId: Int,
         innerIp: String,
@@ -300,8 +300,8 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkParamBlank(userId: String, projectId: String) {
-        if (userId.isBlank()) {
+    private fun checkParamBlank(userId: String?, projectId: String) {
+        if (userId.isNullOrBlank()) {
             throw ParamBlankException("userId is blank.")
         }
         if (projectId.isBlank()) {

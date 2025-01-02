@@ -18,20 +18,29 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -271,6 +280,22 @@ interface ServiceRemoteDevResource {
         req: WorkspaceCloneReq
     ): Result<Boolean>
 
+    @Operation(summary = "克隆windows工作空间，返回任务ID")
+    @POST
+    @Path("/workspace_clone_task")
+    fun workspaceCloneTask(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        req: WorkspaceCloneReq
+    ): Result<TaskResp>
+
     @Operation(summary = "删除windows工作空间-项目")
     @DELETE
     @Path("/project_win_workspace")
@@ -394,6 +419,7 @@ interface ServiceRemoteDevResource {
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
 
+    @Deprecated(message = "老的下掉，要被新的代替")
     @Operation(summary = "获取镜像列表")
     @GET
     @Path("/image/list")
@@ -593,8 +619,34 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @QueryParam("size")
-        size: String
+        size: String,
+        @QueryParam("pvcId")
+        pvcId: String?
     ): Result<ExpandDiskValidateResp?>
+
+    @Operation(summary = "创建磁盘")
+    @POST
+    @Path("/createdisk")
+    fun createDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("size")
+        size: String
+    ): Result<CreateDiskResp>
+
+    @Operation(summary = "获取磁盘列表")
+    @GET
+    @Path("/disklist")
+    fun fetchDiskList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<List<VmDiskInfo>>
 
     @Operation(summary = "云桌面调整配置")
     @POST
@@ -741,4 +793,64 @@ interface ServiceRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "查询任务状态")
+    @GET
+    @Path("/get_task_status")
+    fun getTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "taskId", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<WorkspaceTaskStatus?>
+
+    @Operation(summary = "蓝盾项目开启或关闭云研发")
+    @POST
+    @Path("/enable_project_remotedev")
+    fun enableProjectRemotedev(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: EnableRemotedevData
+    ): Result<Boolean>
+
+    @Operation(summary = "修改项目云研发管理员")
+    @POST
+    @Path("/update_project_remotedev_managers")
+    fun updateProjectRemotedevManager(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: UpdateRemotedevDataManagers
+    ): Result<Boolean>
+
+    @Operation(summary = "获取镜像列表")
+    @POST
+    @Path("/images")
+    fun fetchImages(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ListImagesData
+    ): Result<ListImagesResp?>
+
+    @Operation(summary = "删除镜像")
+    @DELETE
+    @Path("/delete_image")
+    fun deleteImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像 ID", required = true)
+        @QueryParam("imageId")
+        imageId: String,
+        @Parameter(description = "延迟删除时间，单位秒", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int?
+    ): Result<DeleteImageResp>
 }

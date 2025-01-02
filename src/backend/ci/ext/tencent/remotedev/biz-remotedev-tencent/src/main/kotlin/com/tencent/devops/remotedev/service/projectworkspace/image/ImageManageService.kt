@@ -38,7 +38,12 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
+import com.tencent.devops.remotedev.pojo.image.ListImagesData
+import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.service.PermissionService
@@ -52,7 +57,8 @@ class ImageManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
 
     companion object {
@@ -136,5 +142,27 @@ class ImageManageService @Autowired constructor(
             imageId = null,
             imageCosfile = imageCosFile
         ).isNotEmpty
+    }
+
+    fun fetchImages(
+        userId: String,
+        data: ListImagesData
+    ): ListImagesResp? {
+        permissionService.checkUserManager(userId, data.projectId)
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchImages(data)
+    }
+
+    fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): DeleteImageResp {
+        permissionService.checkUserManager(userId, projectId)
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).deleteImage(
+            imageId = imageId,
+            delaySeconds = delaySeconds
+        )
+        return DeleteImageResp(taskId = taskId)
     }
 }

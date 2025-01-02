@@ -481,7 +481,7 @@ data class StartBuildContext(
          */
         private fun fillCascadeParam(
             param: BuildParameters,
-            originStartContexts: HashMap<String, BuildParameters>,
+            originStartContexts: HashMap<String, BuildParameters>
         ): List<BuildParameters> {
             val originStartParams = mutableListOf<BuildParameters>()
             val key = param.key

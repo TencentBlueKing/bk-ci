@@ -35,6 +35,7 @@ import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
+import com.tencent.devops.experience.pojo.download.ReportSpeedParam
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,5 +60,13 @@ class AppExperienceDownloadResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Pagination<DownloadRecordVO>> {
         return Result(experienceDownloadService.records(userId, platform, page, pageSize))
+    }
+
+    override fun reportSpeed(
+        userId: String,
+        platform: Int,
+        params: ReportSpeedParam
+    ): Result<Boolean> {
+        return Result(experienceDownloadService.reportSpeed(userId, params))
     }
 }
