@@ -54,6 +54,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Record7
 import org.jooq.Result
@@ -721,6 +722,21 @@ class CmdbNodeDao @Autowired constructor(
             ).from(this)
                 .where(HOST_ID.`in`(hostIdList))
                 .fetch()
+        }
+    }
+
+    fun getNodesBaseInfoByHostIds(
+        dslContext: DSLContext,
+        hostList: List<Host>
+    ): Result<Record4<Long, String, Long, Long>> {
+        val hostIdList = hostList.map { it.bkHostId }
+        return with(TNode.T_NODE) {
+            dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                SERVER_ID.`as`(T_NODE_SERVER_ID),
+                HOST_ID.`as`(T_NODE_HOST_ID)
+            ).from(this).where(HOST_ID.`in`(hostIdList)).fetch()
         }
     }
 

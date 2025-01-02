@@ -72,15 +72,20 @@ class CmdbNodeAction @Autowired constructor(
             val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
 
             // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
-            val nodeRecordByHostId = cmdbNodeDao.getNodesFromHostListByBkHostId(
+            val nodeRecordByHostId = cmdbNodeDao.getNodesBaseInfoByHostIds(
                 dslContext, queryCCEqualBizHostIdList
             )
-            if (logger.isDebugEnabled)
-                logger.debug("[deleteNodes]nodeRecordByHostId:${nodeRecordByHostId.joinToString()}")
             val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it[T_NODE_HOST_ID] as? Long }, { it })
             val deleteHostIdMap = hostIdToNodeMap.filter { (key, value) ->
                 BIZ_SIZE == value.size // key -> host_id, value -> host_id对应T_NODE表记录
             } // 只有一个项目
+
+            val deleteHostList = deleteHostIdMap.filter {
+                it.value.isNotEmpty()
+            }.map {
+                it.value[0]
+            }
+            logger.info("[deleteNodes]toDeleteHost: ${deleteHostList.joinToString()}")
 
             // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
             if (deleteHostIdMap.isNotEmpty()) {
