@@ -597,7 +597,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
             callBackUrl = it.url,
             events = it.eventType,
             secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
-            enable = it.enable,
             name = it.name
         )
     }
