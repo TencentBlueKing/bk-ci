@@ -2,14 +2,14 @@ import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { deepEqual } from "@/utils/util.js";
-import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
-import codelibIcon from '@/css/svg/color-logo-codelib.svg';
-import codeccIcon from '@/css/svg/color-logo-codecc.svg';
-import environmentIcon from '@/css/svg/color-logo-environment.svg';
-import experienceIcon from '@/css/svg/color-logo-experience.svg';
-import qualityIcon from '@/css/svg/color-logo-quality.svg';
-import ticketIcon from '@/css/svg/color-logo-ticket.svg';
-import turboIcon from '@/css/svg/color-logo-turbo.svg';
+import pipelineIcon from '@/components/user-group/svg/color-logo-pipeline.svg';
+import codelibIcon from '@/components/user-group/svg/color-logo-codelib.svg';
+import codeccIcon from '@/components/user-group/svg/color-logo-codecc.svg';
+import environmentIcon from '@/components/user-group/svg/color-logo-environment.svg';
+import experienceIcon from '@/components/user-group/svg/color-logo-experience.svg';
+import qualityIcon from '@/components/user-group/svg/color-logo-quality.svg';
+import ticketIcon from '@/components/user-group/svg/color-logo-ticket.svg';
+import turboIcon from '@/components/user-group/svg/color-logo-turbo.svg';
 
 export enum HandoverType {
   AUTHORIZATION = 'AUTHORIZATION',

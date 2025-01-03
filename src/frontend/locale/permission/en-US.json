@@ -158,8 +158,6 @@
     "用户组权限已移交": "User Group Permissions Transferred",
     "用户组已退出": "User Group Exited",
     "永久": "Permanent",
-    "唯一管理员，不可退出。请添加新的管理员后再退出": "Sole administrator, cannot exit. Please add a new administrator before exiting.",
-    "唯一拥有者，不可退出。请添加新的拥有者后再退出": "Sole owner, cannot exit. Please add a new owner before exiting.",
     "通过用户组加入，不可直接退出。如需调整，请编辑用户组": "Joined through user group, cannot exit directly. Please edit the user group for adjustments.",
     "无需续期": "No Renewal Needed",
     "通过用户组获得权限，请到流水线里续期整个用户组": "Permissions acquired through user group, please renew the entire user group in the pipeline.",
@@ -252,5 +250,7 @@
     "审批人": "Approver",
     "项目名称": "Project name",
     "本次操作将忽略": "This operation will be ignored",
-    "需先完成交接。": "Handover must be completed first."
+    "需先完成交接。": "Handover must be completed first.",
+    "唯一管理员，不可直接退出。请交接或停用项目": "The sole administrator, cannot exit directly. Please hand over or deactivate the project",
+    "唯一拥有者，不可直接退出。请交接或删除资源": "The sole owner, cannot exit directly. Please hand over or delete resources"
 }

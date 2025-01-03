@@ -7,9 +7,6 @@
     <div class="manage-content-project" v-if="projectTable.length">
       <p class="project-group">
         <span>{{t("资源授权")}}</span>
-        <!-- <i18n-t v-overflow-title class="describe" keypath="你是以下X条流水线权限代持人，直接退出将导致流水线运行失败，需先移交" tag="div">
-          <span class="text-blue">{{ authorizationsLength }}</span>
-        </i18n-t> -->
       </p>
       <div
         class="project-group-table"
@@ -54,9 +51,6 @@
     <div class="manage-content-resource" v-if="sourceTable.length">
       <p class="project-group">
         <span>{{t("用户组")}}</span>
-        <!-- <i18n-t class="describe" keypath="你是以下X个用户组的唯一管理员，直接退出将导致对应资源无管理人，需先移交" tag="div">
-          <span class="text-blue">{{ 3 }}</span>
-        </i18n-t> -->
       </p>
       <div
         class="project-group-table"
@@ -125,18 +119,11 @@ const detailGroupTable = userDetailGroupTable();
 const projectTable = computed(() => props.sourceList.filter(item => item.type === HandoverType.AUTHORIZATION));
 const sourceTable= computed(() => props.sourceList.filter(item => item.type === HandoverType.GROUP));
 
-const authorizationsLength = computed(() => {
-  return projectTable.value.reduce((sum, current) => {
-    return sum + current.count
-  }, 0)
-})
-
-function getShapeIconClass(activeFlag) {
-  return `shape-icon permission-icon permission-icon-${activeFlag ? 'down' : 'right'}-shape`
-}
-
 const emit = defineEmits(['collapseClick']);
 
+function getShapeIconClass(activeFlag) {
+  return `shape-icon manage-icon manage-icon-${activeFlag ? 'down' : 'right'}-shape`
+}
 /**
  * 折叠面板点击事件
  * @param id 折叠面板唯一标志

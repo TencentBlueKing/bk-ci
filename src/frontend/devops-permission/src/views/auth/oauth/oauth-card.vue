@@ -303,12 +303,14 @@ const handleAuthorize = () => {
               v-for="item in relSourceList"
               :key="item.name"
             >
+            <bk-overflow-title>
               <a
                 :href="`${codelibPageUrl}/${item.projectId}?searchName=${item.aliasName}`"
                 target="_blank"
               >
                 {{ item.aliasName }}
               </a>
+            </bk-overflow-title>
             </li>
           </ul>
         </div>
@@ -515,7 +517,7 @@ const handleAuthorize = () => {
     .resource-list-content {
       border: 1px solid #EAEBF0;
       height: 210px;
-      overflow: auto;
+      overflow-y: auto;
       &::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -524,6 +526,12 @@ const handleAuthorize = () => {
           background: #a5a5a5;
           box-shadow: inset 0 0 6px hsla(0, 0%, 80%, .3);
         }
+      }
+      li {
+        width: 90%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
       li a {
         padding: 0 12px;
