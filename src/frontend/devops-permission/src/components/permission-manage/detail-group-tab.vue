@@ -18,7 +18,7 @@
       >
         <bk-collapse-panel
           v-model="item.activeFlag"
-          :item-click="(type) => collapseClick(type, 'AUTHORIZATION')"
+          :item-click="(type) => collapseClick(type, HandoverType.AUTHORIZATION)"
           :name="item.resourceType"
         >
           <template #header>
@@ -43,7 +43,7 @@
               :resource-name="item.resourceTypeName"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
-              type="AUTHORIZATION"
+              :type="HandoverType.AUTHORIZATION"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
@@ -65,7 +65,7 @@
       >
         <bk-collapse-panel
           v-model="item.activeFlag"
-          :item-click="(type) => collapseClick(type, 'GROUP')"
+          :item-click="(type) => collapseClick(type, HandoverType.GROUP)"
           :name="item.resourceType"
         >
           <template #header>
@@ -89,7 +89,7 @@
               :resource-name="item.resourceTypeName"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
-              type="GROUP"
+              :type="HandoverType.GROUP"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
