@@ -143,7 +143,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null,
+                enable = true,
                 rewriteManages = null
             )
         }
