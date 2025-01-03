@@ -225,7 +225,7 @@ class ExperienceAppService(
             versionTitle = versionTitle,
             categoryId = categoryId,
             productOwner = objectMapper.readValue(experience.productOwner),
-            createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
+            createDate = experience.createTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = isPublic,
             remark = experience.remark,
