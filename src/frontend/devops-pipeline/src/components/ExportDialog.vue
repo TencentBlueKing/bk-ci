@@ -27,7 +27,7 @@
                 </p>
                 <bk-button
                     class="export-button"
-                    @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)"
+                    @click="downLoadFromApi(exportItem)"
                     :loading="isDownLoading"
                 >
                     {{ $t('newlist.exportPipelineJson') }}
@@ -41,6 +41,7 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import Logo from '@/components/Logo'
     import { mapActions, mapState } from 'vuex'
+    import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -58,6 +59,8 @@
 
         computed: {
             ...mapState('atom', [
+                'pipeline',
+                'pipelineSetting',
                 'pipelineInfo'
             ]),
 
@@ -76,6 +79,7 @@
             exportList () {
                 return [
                     {
+                        type: UI_MODE,
                         title: 'Pipeline Json',
                         icon: 'export-pipeline',
                         name: `${this.pipelineName}.json`,
@@ -83,21 +87,28 @@
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
                     },
                     {
+                        type: CODE_MODE,
+                        title: 'Pipeline YAML',
+                        icon: 'export-pipeline',
+                        name: `${this.pipelineName}.yml`,
+                        tips: this.$t('newlist.exportPipelineYamlTip'),
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${this.projectId}?pipelineId=${this.pipelineId}&actionType=FULL_MODEL2YAML`,
+                        tipsLink: `${IWIKI_DOCS_URL}/p/4009967153`,
+                        params: {
+                            modelAndSetting: {
+                                model: this.pipeline,
+                                setting: this.pipelineSetting
+                            }
+                        }
+                    },
+                    {
+                        type: 'preCi',
                         title: 'PreCI',
                         icon: 'export-prebuild',
                         name: `${this.pipelineName}.yml`,
                         tips: this.$t('newlist.exportYamlTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/prebuild`,
                         tipsLink: `${IWIKI_DOCS_URL}/x/ruhACw`
-
-                    },
-                    {
-                        title: 'Stream YAML',
-                        icon: 'export-ci',
-                        name: `${this.pipelineName}.yml`,
-                        tips: this.$t('newlist.exportGitciTip'),
-                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/gitci`,
-                        tipsLink: `${IWIKI_DOCS_URL}/x/pZMdK`
                     }
                 ]
             }
@@ -110,9 +121,10 @@
                 this.$emit('update:isShow', false)
             },
 
-            downLoadFromApi (url, name) {
+            downLoadFromApi (exportItem) {
+                const { exportUrl: url, name, params, type } = exportItem
                 this.isDownLoading = true
-                this.download({ url, name }).catch((e) => {
+                this.download({ url, name, params, type }).catch((e) => {
                     this.handleError(
                         e,
                         {
