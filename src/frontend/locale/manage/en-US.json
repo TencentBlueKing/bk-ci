@@ -315,5 +315,9 @@
     "；其中X个用户组X，": "; among them {0} user groups {1},",
     "批量移出操作尚未完成，确认放弃操作吗？": "Batch removal operation has not been completed, are you sure you want to abandon the operation?",
     "待移交详情": "Pending transfer details",
-    "输入交接人，选中回车进行有效性校验": "Input the handover person, and press Enter for validity check"
+    "输入交接人，选中回车进行有效性校验": "Input the handover person, and press Enter for validity check",
+    "资源授权": "Resource authorization",
+    "查看详情": "View details",
+    "需先完成交接。": "Handover must be completed first.",
+    "返回": "Return"
 }

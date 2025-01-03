@@ -10,7 +10,7 @@ import qualityIcon from '@/components/user-group/svg/color-logo-quality.svg';
 import ticketIcon from '@/components/user-group/svg/color-logo-ticket.svg';
 import turboIcon from '@/components/user-group/svg/color-logo-turbo.svg';
 
-enum HandoverType {
+export enum HandoverType {
   AUTHORIZATION = 'AUTHORIZATION',
   GROUP = 'GROUP'
 }

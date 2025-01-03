@@ -18,7 +18,7 @@
           <span
             :class="{
               'resource-name': true,
-              'hover-link': ['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType)
+              'hover-link': LINKABLE_RESOURCE_TYPES.includes(row.resourceType)
             }" 
             @click="handleToResourcePage(row)"
           >{{ row.resourceName }}</span>
@@ -26,7 +26,6 @@
       </bk-table-column>
       <template v-if="!isAuthorizations">
         <bk-table-column :label="t('用户组')" prop="groupName" />
-        <!-- <bk-table-column :label="t('用户组描述')" prop="groupDesc" /> -->
       </template>
       <template v-else>
         <bk-table-column :label="t('授权人')" prop="handoverFrom" />
@@ -63,33 +62,31 @@ const emit = defineEmits([
 const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
-const resourceType = computed(() => props.resourceType);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data);
 const border = ['row', 'outer'];
+const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group'];
+const URL_TEMPLATES = {
+  pipeline: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
+  pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
+  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`
+};
 
 function pageLimitChange(limit) {
-  emit('pageLimitChange',limit, resourceType.value, props.type);
+  emit('pageLimitChange',limit, props.resourceType, props.type);
 }
 function pageValueChange(value) {
-  emit('pageValueChange',value, resourceType.value, props.type);
+  emit('pageValueChange',value, props.resourceType, props.type);
 }
 
 /**
  * 跳转页面
  */
 function handleToResourcePage (row) {
-  if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
-  switch (row.resourceType) {
-    case 'pipeline':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
-      return
-    case 'pipeline_group':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
-      return
-    case 'codecc_task':
-      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
-      return
+  if (!LINKABLE_RESOURCE_TYPES.includes(row.resourceType)) return
+  const url = URL_TEMPLATES[row.resourceType]?.(projectId.value, row);
+  if (url) {
+    window.open(url);
   }
 }
 </script>
