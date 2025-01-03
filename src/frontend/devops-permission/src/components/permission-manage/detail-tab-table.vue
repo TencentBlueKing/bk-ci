@@ -26,7 +26,6 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
 const props = defineProps({
