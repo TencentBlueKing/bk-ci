@@ -121,7 +121,7 @@
             async handleSuccess (result, type = UI_MODE) {
                 let res
                 if (type === UI_MODE) {
-                    const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
+                    const newPipelineName = result.model.name
                     res = await this.updatePipeline(result, newPipelineName)
                 } else if (type === CODE_MODE) {
                     this.updatePipelineMode(CODE_MODE)
@@ -159,7 +159,7 @@
                         actionType: 'FULL_YAML2MODEL',
                         oldYaml: result
                     })
-                    const newPipelineName = this.pipelineName || `${modelAndSetting.model.name}_${hashID().slice(0, 8)}`
+                    const newPipelineName = modelAndSetting.model.name
                     
                     const pipeline = {
                         ...modelAndSetting.model,
