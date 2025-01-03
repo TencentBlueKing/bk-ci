@@ -37,7 +37,7 @@ data class PipelineVersionWithModelRequest(
     @get:Schema(title = "草稿的来源版本（前端保存时传递）", required = true)
     val baseVersion: Int,
     @get:Schema(title = "流水线模型", required = true)
-    val modelAndSetting: PipelineModelAndSetting,
+    val modelAndSetting: PipelineModelAndSetting?,
     @get:Schema(title = "流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?,
     @get:Schema(title = "存储格式", required = false)
