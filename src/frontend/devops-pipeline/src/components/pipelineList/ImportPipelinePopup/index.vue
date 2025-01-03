@@ -21,7 +21,6 @@
 </template>
 
 <script>
-    import { hashID } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
