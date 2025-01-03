@@ -148,8 +148,7 @@ export default defineStore('userDetailGroupTable', () => {
           if (authorizationData && Array.isArray(authorizationData.records) && item === authorizationItem) {
             item.tableData = authorizationData.records;
             item.activeFlag = true;
-          }
-          if (userGroupData && Array.isArray(userGroupData.records) && item === userGroupItem) {
+          } else if(userGroupData && Array.isArray(userGroupData.records) && item === userGroupItem) {
             item.tableData = userGroupData.records;
             item.activeFlag = true;
           }
