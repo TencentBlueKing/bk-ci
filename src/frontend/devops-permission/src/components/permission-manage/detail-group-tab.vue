@@ -132,11 +132,7 @@ const authorizationsLength = computed(() => {
 })
 
 function getShapeIconClass(activeFlag) {
-  return {
-    'permission-icon permission-icon-down-shape': activeFlag,
-    'permission-icon permission-icon-right-shape': !activeFlag,
-    'shape-icon': true
-  };
+  return `shape-icon permission-icon permission-icon-${activeFlag ? 'down' : 'right'}-shape`
 }
 
 const emit = defineEmits(['collapseClick']);
