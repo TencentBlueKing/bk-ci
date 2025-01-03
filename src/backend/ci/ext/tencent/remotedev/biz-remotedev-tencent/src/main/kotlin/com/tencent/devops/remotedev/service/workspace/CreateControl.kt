@@ -45,6 +45,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -898,7 +899,7 @@ class CreateControl @Autowired constructor(
             projectCode = userProjectId,
             addcloudDesktopNum = null,
             enable = true,
-            rewriteManages = null
+            data = UpdateRemotedevBody(null)
         ).data
 
         if (ok != true) {
