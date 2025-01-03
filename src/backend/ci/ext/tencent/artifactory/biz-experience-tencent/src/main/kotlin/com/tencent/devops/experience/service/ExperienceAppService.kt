@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -224,7 +225,7 @@ class ExperienceAppService(
             versionTitle = versionTitle,
             categoryId = categoryId,
             productOwner = objectMapper.readValue(experience.productOwner),
-            createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
+            createDate = experience.createTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = isPublic,
             remark = experience.remark,
@@ -269,7 +270,15 @@ class ExperienceAppService(
         page: Int,
         pageSize: Int,
         organization: String?,
-        showAll: Boolean?
+        showAll: Boolean?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        createDateBegin: Long?,
+        createDateEnd: Long?,
+        endDateBegin: Long?,
+        endDateEnd: Long?,
+        creator: String?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -284,17 +293,33 @@ class ExperienceAppService(
                 pageSize = if (pageSize <= 0) 10 else pageSize,
                 isOldVersion = false,
                 isOuter = organization == ORGANIZATION_OUTER,
-                showAll = showAll ?: false
+                showAll = showAll == true,
+                name = name,
+                version = version,
+                remark = remark,
+                createDateBegin = createDateBegin,
+                createDateEnd = createDateEnd,
+                endDateBegin = endDateBegin,
+                endDateEnd = endDateEnd,
+                creator = creator
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
         } else {
             experienceDao.countByBundleIdentifier(
-                dslContext,
-                experience.projectId,
-                experience.bundleIdentifier,
-                experience.platform,
-                experience.classify
+                dslContext = dslContext,
+                projectId = experience.projectId,
+                bundleIdentifier = experience.bundleIdentifier,
+                platform = experience.platform,
+                classify = experience.classify,
+                name = name,
+                version = version,
+                remark = remark,
+                createDateBegin = createDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+                createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+                endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+                endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+                creator = creator
             ) > page * pageSize
         }
 
@@ -311,7 +336,15 @@ class ExperienceAppService(
         pageSize: Int,
         isOldVersion: Boolean,
         isOuter: Boolean = false,
-        showAll: Boolean = false
+        showAll: Boolean = false,
+        name: String? = null,
+        version: String? = null,
+        remark: String? = null,
+        createDateBegin: Long? = null,
+        createDateEnd: Long? = null,
+        endDateBegin: Long? = null,
+        endDateEnd: Long? = null,
+        creator: String? = null
     ): List<ExperienceChangeLog> {
         val groupIdTypeEnum = if (showAll) GroupIdTypeEnum.ALL else GroupIdTypeEnum.JUST_PRIVATE
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, groupIdTypeEnum, isOuter)
@@ -334,7 +367,15 @@ class ExperienceAppService(
             classify = classify,
             recordIds = recordIds,
             offset = (page - 1) * pageSize,
-            limit = pageSize
+            limit = pageSize,
+            name = name,
+            version = version,
+            remark = remark,
+            createDateBegin = createDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
+            creator = creator
         )
 
         return experienceList.map {
