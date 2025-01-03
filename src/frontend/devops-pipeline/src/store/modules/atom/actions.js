@@ -894,7 +894,7 @@ export default {
                 const blob = new Blob([result])
                 fn(blob)
             })
-        } else if (type === UI_MODE) {
+        } else {
             return fetch(url, { credentials: 'include' }).then((res) => {
                 if (res.status >= 200 && res.status < 300) {
                     return res.blob()
