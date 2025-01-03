@@ -635,6 +635,22 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun replayByBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<BuildId> {
+        return Result(
+            pipelineBuildFacadeService.replayBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId
+            )
+        )
+    }
+
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

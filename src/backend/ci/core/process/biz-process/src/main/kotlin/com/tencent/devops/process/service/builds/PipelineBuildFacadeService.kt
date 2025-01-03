@@ -2683,6 +2683,53 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun replayBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
+    ): BuildId {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        // 按原有的启动参数组装启动参数
+        val startParameters = buildInfo.buildParameters?.associate {
+            it.key to it.value.toString()
+        }?.toMutableMap() ?: mutableMapOf()
+        val startType = StartType.toStartType(buildInfo.trigger)
+        // 非webhook触发
+        if (startType != StartType.WEB_HOOK) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NOT_FOUND_TRIGGER_EVENT
+        )
+        webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+            startParameters[param.key] = param.value.toString()
+        }
+        return BuildId(
+            webhookTriggerPipelineBuild(
+                userId = buildInfo.startUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                parameters = startParameters,
+                checkPermission = false,
+                startType = startType
+            )!!
+        )
+    }
+
     private fun buildRestartPipeline(
         projectId: String,
         pipelineId: String,
