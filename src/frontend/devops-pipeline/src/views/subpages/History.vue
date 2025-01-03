@@ -65,6 +65,7 @@
         <show-variable
             v-if="activeChild.showVar && pipeline"
             :editable="false"
+            :pipeline-model="true"
             :pipeline="pipeline"
             :is-direct-show-version="isDirectShowVersion"
         />

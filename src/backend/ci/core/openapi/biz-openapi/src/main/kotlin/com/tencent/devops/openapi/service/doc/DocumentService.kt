@@ -361,7 +361,7 @@ class DocumentService {
             }, it).apply {
                 if (it in polymorphismMap) {
                     this.setRow(
-                        (definitions[it] as Schema).discriminator.toString(),
+                        (definitions[it] as Schema).discriminator.propertyName,
                         "string",
                         getI18n(BK_YES),
                         getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}")),
@@ -376,7 +376,7 @@ class DocumentService {
 
             // 多态类展示
             polymorphismMap[it]?.forEach { (child, value) ->
-                val discriminator = (definitions[it] as Schema).discriminator.toString()
+                val discriminator = (definitions[it] as Schema).discriminator.propertyName
                 val childModel = cacheOrLoad({ null }, child)
                     .setRow(
                         discriminator,
@@ -701,7 +701,7 @@ class DocumentService {
 
             else -> {
                 if (model.discriminator != null) {
-                    loadJson[model.discriminator.toString()] = "string"
+                    loadJson[model.discriminator.propertyName] = "string"
                 }
                 model.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property, deep)
@@ -717,6 +717,7 @@ class DocumentService {
                 val loadJson = mutableMapOf<String, Any>()
                 val key = property.`$ref`.removePrefix("#/components/schemas/")
                 definitions[key]?.let { loadModelJson(it, loadJson, deep) }
+                deep.remove(property.`$ref`)
                 return loadJson
             } else {
                 return property.`$ref`
@@ -725,7 +726,7 @@ class DocumentService {
         return when (property) {
             // swagger无法获取到map的key类型
             is MapSchema -> {
-                mapOf("string" to property.additionalProperties)
+                mapOf("string" to loadPropertyJson(property.additionalProperties as Schema<*>, deep))
             }
 
             is ObjectSchema -> {
@@ -746,11 +747,8 @@ class DocumentService {
 
             is BooleanSchema -> false
             else -> {
-                val result = when (property.default) {
-                    is Int -> 0
-                    is Long -> 0L
-                    is Double -> 0.0
-                    is Float -> 0f
+                val result = when (property.type) {
+                    "integer" -> 0
                     else -> property.type
                 }
                 result
@@ -841,9 +839,10 @@ class DocumentService {
                 val infoMap = mutableMapOf<String, String>()
                 val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
 //            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
-                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name ?: it.name.split(".").last()
+                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
+                    ?: it.name.split(".").last()
                 subTypes.forEach { child ->
-                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name
+                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
                         ?: child.value.java.name.split(".").last()
                     infoMap[childName] = child.name
                 }

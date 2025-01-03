@@ -4,6 +4,8 @@ packages:
   - "!devops-repo"
   - bk-pipeline
   - bk-permission
+  - locale
+  - common-lib
 
 catalogs:
   vue2:

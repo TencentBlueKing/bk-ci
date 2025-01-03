@@ -73,7 +73,7 @@ interface IVariable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
-    val value: String?,
+    val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = true,
@@ -178,6 +178,8 @@ enum class VariablePropType(val value: String) {
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
     GIT_REF("git-ref"),
+    SVN_REF("svn-tag"),
+    REPO_REF("repo-ref"),
     CODE_LIB("code-lib"),
     CONTAINER_TYPE("container-type"),
     ARTIFACTORY("artifactory"),
@@ -197,6 +199,7 @@ enum class VariablePropType(val value: String) {
         ARTIFACTORY -> BuildFormPropertyType.ARTIFACTORY
         SUB_PIPELINE -> BuildFormPropertyType.SUB_PIPELINE
         CUSTOM_FILE -> BuildFormPropertyType.CUSTOM_FILE
+        REPO_REF -> BuildFormPropertyType.REPO_REF
         else -> BuildFormPropertyType.STRING
     }
 

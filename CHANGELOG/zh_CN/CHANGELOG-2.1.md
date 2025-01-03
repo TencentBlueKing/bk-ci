@@ -45,7 +45,7 @@
 
 # v2.1.3
 ## 2024-05-28
-## Changelog since v2.1.2
+### Changelog since v2.1.2
 #### 新增
 - [新增] 登录失效弹窗规范修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8125)
 
@@ -54,19 +54,19 @@
 
 # v2.1.2
 ## 2024-05-20
-## Changelog since v2.1.1
+### Changelog since v2.1.1
 #### 修复
 - [修复] [社区]上架失败&流水线执行页面白屏问题[v2.1.0+] [链接](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 
 # v2.1.1
 ## 2024-04-26
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### 修复
 - [修复] 2.1版本process服务启动失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 
 # v2.1.0
 ## 2024-04-22
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### 新增
 - [新增] Docker构建机支持拓展资源调度 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [新增] 运营产品和组织架构联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -337,9 +337,10 @@
 - [修复] openapi 判断是否项目成员没有根据项目路由 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9427)
 - [修复] devcloud类型登录调试，窗口大小无法自适应 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9418)
 - [修复] 共享凭据不需要依赖插件敏感接口权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9398)
+
 # v2.1.0-rc.6
 ## 2024-04-19
-## Changelog since v2.1.0-rc.5
+### Changelog since v2.1.0-rc.5
 #### 新增
 - [新增] Docker构建机支持拓展资源调度 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10162)
 - [新增] 运营产品和组织架构联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10213)
@@ -366,7 +367,7 @@
 
 # v2.1.0-rc.5
 ## 2024-04-10
-## Changelog since v2.1.0-rc.4
+### Changelog since v2.1.0-rc.4
 #### 新增
 - [新增] 创建/编辑项目openapi增加运营产品必填检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10088)
 - [新增] 支持通过接口自定义项目级别用户组 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10025)
@@ -398,7 +399,7 @@
 
 # v2.1.0-rc.4
 ## 2024-03-22
-## Changelog since v2.1.0-rc.3
+### Changelog since v2.1.0-rc.3
 #### 新增
 - [新增] 公共构建机支持持久化构建容器调度 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9269)
 - [新增] 项目启用停用广播通知 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10080)
@@ -423,7 +424,7 @@
 
 # v2.1.0-rc.3
 ## 2024-03-07
-## Changelog since v2.1.0-rc.2
+### Changelog since v2.1.0-rc.2
 #### 新增
 - [新增] svn webhook接口切换 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9302)
 - [新增] 流水线构建历史表格，拖拽表格列宽记忆功能 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10065)
@@ -458,7 +459,7 @@
 
 # v2.1.0-rc.2
 ## 2024-02-22
-## Changelog since v2.1.0-rc.1
+### Changelog since v2.1.0-rc.1
 #### 新增
 - [新增] 迁移逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10014)
 - [新增] 用户组添加成员优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9909)
@@ -486,7 +487,7 @@
 
 # v2.1.0-rc.1
 ## 2024-01-16
-## Changelog since v2.0.0
+### Changelog since v2.0.0
 #### 新增
 - [新增] 流水线归档 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9397)
 - [新增] 支持给一组用户添加流水线权限 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9690)

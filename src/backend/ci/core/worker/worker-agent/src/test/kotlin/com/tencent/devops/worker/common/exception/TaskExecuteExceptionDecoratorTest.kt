@@ -50,12 +50,12 @@ class TaskExecuteExceptionDecoratorTest {
     }
 
     @Test
-    fun testMaybeThirdPartyException() {
+    fun testMaybeRemoteServiceException() {
         RemoteServiceException("Service error").let { throwable ->
             val trustedException = TaskExecuteExceptionDecorator.decorate(throwable)
             assertNotNull(trustedException)
             assertEquals(throwable, trustedException.cause)
-            assertEquals(ErrorType.THIRD_PARTY, trustedException.errorType)
+            assertEquals(ErrorType.SYSTEM, trustedException.errorType)
         }
     }
 

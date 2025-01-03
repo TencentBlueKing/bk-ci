@@ -314,6 +314,19 @@ class AuthResourceDao {
         }
     }
 
+    fun listByResourceCodes(
+        dslContext: DSLContext,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.`in`(resourceCodes))
+                .fetch().map { convert(it) }
+        }
+    }
+
     fun getResourceCodeByType(
         dslContext: DSLContext,
         projectCode: String,

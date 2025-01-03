@@ -201,7 +201,8 @@ class QueueInterceptor @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
-                    status = BuildStatus.CANCELED
+                    status = BuildStatus.CANCELED,
+                    executeCount = buildInfo.executeCount
                 )
             )
         }
@@ -255,7 +256,8 @@ class QueueInterceptor @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
-                    status = BuildStatus.CANCELED
+                    status = BuildStatus.CANCELED,
+                    executeCount = buildInfo.executeCount
                 )
             )
         }
