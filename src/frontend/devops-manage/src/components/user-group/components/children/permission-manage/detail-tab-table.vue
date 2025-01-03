@@ -18,7 +18,7 @@
           <span
             :class="{
               'resource-name': true,
-              'hover-link': LINKABLE_RESOURCE_TYPES.includes(row.resourceType)
+              'hover-link': isLinkable
             }" 
             @click="handleToResourcePage(row)"
           >{{ row.resourceName }}</span>
@@ -63,7 +63,12 @@ const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
-const tableList = computed(() => props.data);
+const tableList = computed(() => {
+  return props.data.map(row => ({
+    ...row,
+    isLinkable: LINKABLE_RESOURCE_TYPES.includes(row.resourceType)
+  }));
+});
 const border = ['row', 'outer'];
 const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group'];
 const URL_TEMPLATES = {
@@ -83,7 +88,7 @@ function pageValueChange(value) {
  * 跳转页面
  */
 function handleToResourcePage (row) {
-  if (!LINKABLE_RESOURCE_TYPES.includes(row.resourceType)) return
+  if (!isLinkable) return
   const url = URL_TEMPLATES[row.resourceType]?.(projectId.value, row);
   if (url) {
     window.open(url);
