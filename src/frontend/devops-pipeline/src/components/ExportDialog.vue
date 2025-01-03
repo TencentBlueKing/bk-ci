@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         :value="isShow"
-        :width="480"
+        :width="560"
         :auto-close="false"
         :show-footer="false"
         :title="$t('newlist.chooseExport')"
