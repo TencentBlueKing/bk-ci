@@ -216,7 +216,7 @@
             },
             checkJsonValid (json) {
                 try {
-                    return json.model.stages && json.setting.pipelineName
+                    return (json.model.stages && json.setting.pipelineName) || json.stages
                 } catch (e) {
                     return false
                 }
