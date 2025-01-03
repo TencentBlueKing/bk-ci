@@ -18,7 +18,7 @@
           <span
             :class="{
               'resource-name': true,
-              'hover-link': isLinkable
+              'hover-link': row.isLinkable
             }" 
             @click="handleToResourcePage(row)"
           >{{ row.resourceName }}</span>
@@ -88,7 +88,7 @@ function pageValueChange(value) {
  * 跳转页面
  */
 function handleToResourcePage (row) {
-  if (!isLinkable) return
+  if (!row.isLinkable) return
   const url = URL_TEMPLATES[row.resourceType]?.(projectId.value, row);
   if (url) {
     window.open(url);
