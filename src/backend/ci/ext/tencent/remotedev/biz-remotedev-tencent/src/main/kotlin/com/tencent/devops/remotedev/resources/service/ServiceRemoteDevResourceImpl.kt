@@ -214,7 +214,7 @@ class ServiceRemoteDevResourceImpl(
                 userId = operator,
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = true,
+                enable = null,
                 rewriteManages = null
             )
         }
