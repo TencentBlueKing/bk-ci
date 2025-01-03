@@ -138,22 +138,22 @@ export default defineStore('userDetailGroupTable', () => {
         detailSourceList.value.find(item => item.type === HandoverType.GROUP)
       ];
       // 同时获取授权列表和用户组列表
-      const [authorizationList, userGroupList] = await Promise.all([
+      const [authorizationData, userGroupData] = await Promise.all([
         authorizationItem ? getAuthorizationsList(authorizationItem) : Promise.resolve(null),
         userGroupItem ? getGroupList(userGroupItem) : Promise.resolve(null)
       ]);
 
       if (currentRequestId === requestId) {
         detailSourceList.value.forEach(item => {
-          if (authorizationList && item === authorizationItem) {
-            item.tableData = authorizationList.records;
+          if (authorizationData && Array.isArray(authorizationData.records) && item === authorizationItem) {
+            item.tableData = authorizationData.records;
             item.activeFlag = true;
           }
-          if (userGroupList && item === userGroupItem) {
-            item.tableData = userGroupList.records;
+          if (userGroupData && Array.isArray(userGroupData.records) && item === userGroupItem) {
+            item.tableData = userGroupData.records;
             item.activeFlag = true;
           }
-          item.pagination.count = item.count!;
+          item.pagination.count = item.count ?? 0;
         });
       }
     } catch (error) {
