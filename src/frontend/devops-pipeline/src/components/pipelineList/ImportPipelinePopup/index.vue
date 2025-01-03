@@ -12,7 +12,7 @@
         {{ $t('importPipelineLabel') }}
         <bk-upload
             v-if="isShow"
-            accept="application/json"
+            accept=".json, .yaml, .yml, application/json, application/x-yaml"
             :with-credentials="true"
             :custom-request="handleSelect"
         >
@@ -23,6 +23,8 @@
 <script>
     import { hashID } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+
     export default {
         name: 'import-pipeline-popup',
         props: {
@@ -62,51 +64,97 @@
                 'setPipelineSetting',
                 'setPipelineWithoutTrigger'
             ]),
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
 
             handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
                 const reader = new FileReader()
                 reader.readAsText(fileObj.origin)
-
-                reader.addEventListener('loadend', e => {
+                reader.addEventListener('loadend', async e => {
                     try {
-                        const jsonResult = JSON.parse(reader.result)
-                        const isValid = this.checkJosnValid(jsonResult)
-                        const code = isValid ? 0 : 1
-                        const message = isValid ? null : this.$t('invalidPipelineJson')
+                        if (fileObj.type === 'application/json' || fileObj.name.endsWith('.json')) {
+                            const jsonResult = JSON.parse(reader.result)
+                            const isValid = this.checkJsonValid(jsonResult)
+                            const code = isValid ? 0 : 1
+                            const message = isValid ? null : this.$t('invalidPipelineJsonOrYaml')
 
-                        onSuccess({
-                            code,
-                            message,
-                            result: jsonResult
-                        }, fileObj)
+                            onSuccess({
+                                code,
+                                message,
+                                result: jsonResult
+                            }, fileObj)
 
-                        if (isValid) {
-                            this.handleSuccess(jsonResult)
+                            if (isValid) {
+                                this.handleSuccess(jsonResult, UI_MODE)
+                            }
+                        } else if (fileObj.type === 'application/x-yaml' || fileObj.name.endsWith('.yaml') || fileObj.name.endsWith('.yml')) {
+                            const yaml = e.target.result
+                            const isValid = !!yaml
+                            const code = isValid ? 0 : 1
+                            const message = isValid ? null : this.$t('invalidPipelineJsonOrYaml')
+
+                            onSuccess({
+                                code,
+                                message,
+                                result: yaml
+                            }, fileObj)
+
+                            if (isValid) {
+                                this.handleSuccess(yaml, CODE_MODE)
+                            }
                         }
                     } catch (e) {
                         console.log(e)
                         onSuccess({
                             code: 1,
-                            message: this.$t('invalidPipelineJson'),
+                            message: this.$t('invalidPipelineJsonOrYaml'),
                             result: ''
                         }, fileObj)
                     } finally {
                         onDone(fileObj)
                     }
                 })
-
                 reader.addEventListener('progress', onProgress)
             },
 
-            async handleSuccess (result) {
-                const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
-                const res = await this.updatePipeline(result, newPipelineName)
-                this.setEditFrom(true)
-                if (res) {
-                    if (typeof this.handleImportSuccess === 'function') {
-                        this.handleImportSuccess()
-                        return
+            async handleSuccess (result, type = UI_MODE) {
+                if (type === UI_MODE) {
+                    const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
+                    const res = await this.updatePipeline(result, newPipelineName)
+                    this.setEditFrom(true)
+                    if (res) {
+                        if (typeof this.handleImportSuccess === 'function') {
+                            this.handleImportSuccess()
+                            return
+                        }
+    
+                        this.$nextTick(() => {
+                            this.$router.push({
+                                name: 'pipelineImportEdit',
+                                params: {
+                                    tab: 'pipeline'
+                                }
+                            })
+                        })
                     }
+                } else if (type === CODE_MODE) {
+                    this.updatePipelineMode(CODE_MODE)
+                    this.setEditFrom(true)
+                    this.$store.dispatch('atom/setPipelineYaml', result)
+                    try {
+                        await this.transferPipeline({
+                            projectId: this.$route.params.projectId,
+                            actionType: 'FULL_YAML2MODEL',
+                            oldYaml: result
+                        })
+                    } catch (error) {
+                        this.$showTips({
+                            message: error.message,
+                            theme: 'error'
+                        })
+                    }
+                    this.setPipelineEditing(true)
 
                     this.$nextTick(() => {
                         this.$router.push({
@@ -166,9 +214,9 @@
                 this.setPipelineEditing(true)
                 return true
             },
-            checkJosnValid (json) {
+            checkJsonValid (json) {
                 try {
-                    return json.model.stages && json.setting.pipelineName
+                    return (json.model.stages && json.setting.pipelineName) || json.stages
                 } catch (e) {
                     return false
                 }
