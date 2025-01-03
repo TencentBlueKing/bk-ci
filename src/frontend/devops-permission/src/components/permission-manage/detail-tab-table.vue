@@ -4,7 +4,7 @@
       class="detail-table"
       ref="refTable"
       :max-height="!isShowOperation && 464"
-      :data="tableList"
+      :data="data"
       show-overflow-tooltip
       :pagination="pagination"
       :border="border"
@@ -50,7 +50,6 @@ const emit = defineEmits([
 ])
 const { t } = useI18n();
 const refTable = ref(null);
-const tableList = computed(() => props.data);
 const border = ['row', 'outer'];
 
 function pageLimitChange(limit) {
