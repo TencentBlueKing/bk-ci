@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
@@ -90,6 +91,7 @@ class VmOperateTaskGenerator {
         val taskType: String
         val taskName: String
         val taskAtom: String
+        var timeout: Long? = null
         if (container is VMBuildContainer) {
             val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
             val baseOS = container.baseOS.name
@@ -97,14 +99,19 @@ class VmOperateTaskGenerator {
             taskType = EnvControlTaskType.VM.name
             taskName = "Prepare_Job#${container.id!!}"
             taskAtom = START_VM_TASK_ATOM
+            timeout = container.jobControlOption?.prepareTimeout?.toLong()
         } else {
             atomCode = START_NORMAL_TASK_ATOM
             taskType = EnvControlTaskType.NORMAL.name
             taskName = "Prepare_Job#${container.id!!}(N)"
             taskAtom = START_NORMAL_TASK_ATOM
+            if (container is NormalContainer) {
+                timeout = container.jobControlOption?.prepareTimeout?.toLong()
+            }
         }
         val additionalOptions = ElementAdditionalOptions(
-            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+            timeout = timeout
         )
         return PipelineBuildTask(
             projectId = projectId,
