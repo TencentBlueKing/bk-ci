@@ -13,20 +13,9 @@
       @page-limit-change="pageLimitChange"
       @page-value-change="pageValueChange"
     >
-      <bk-table-column :label="groupName" prop="resourceName">
-        <template #default="{ row }">
-          <span
-            :class="{
-              'resource-name': true,
-              'hover-link': ['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType)
-            }" 
-            @click="handleToResourcePage(row)"
-          >{{ row.resourceName }}</span>
-        </template>
-      </bk-table-column>
+      <bk-table-column :label="groupName" prop="resourceName" />
       <template v-if="!isAuthorizations">
         <bk-table-column :label="t('用户组')" prop="groupName" />
-        <!-- <bk-table-column :label="t('用户组描述')" prop="groupDesc" /> -->
       </template>
       <template v-else>
         <bk-table-column :label="t('授权人')" prop="handoverFrom" />
@@ -60,37 +49,16 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
-const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
-const resourceType = computed(() => props.resourceType);
-const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data);
 const border = ['row', 'outer'];
 
 function pageLimitChange(limit) {
-  emit('pageLimitChange',limit, resourceType.value, props.type);
+  emit('pageLimitChange',limit, props.resourceType, props.type);
 }
 function pageValueChange(value) {
-  emit('pageValueChange',value, resourceType.value, props.type);
-}
-
-/**
- * 跳转页面
- */
-function handleToResourcePage (row) {
-  if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
-  switch (row.resourceType) {
-    case 'pipeline':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
-      return
-    case 'pipeline_group':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
-      return
-    case 'codecc_task':
-      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
-      return
-  }
+  emit('pageValueChange',value, props.resourceType, props.type);
 }
 </script>
 

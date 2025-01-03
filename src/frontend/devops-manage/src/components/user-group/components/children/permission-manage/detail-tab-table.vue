@@ -13,17 +13,7 @@
       @page-limit-change="pageLimitChange"
       @page-value-change="pageValueChange"
     >
-      <bk-table-column :label="groupName" prop="resourceName">
-        <template #default="{ row }">
-          <span
-            :class="{
-              'resource-name': true,
-              'hover-link': row.isLinkable
-            }" 
-            @click="handleToResourcePage(row)"
-          >{{ row.resourceName }}</span>
-        </template>
-      </bk-table-column>
+      <bk-table-column :label="groupName" prop="resourceName" />
       <template v-if="!isAuthorizations">
         <bk-table-column :label="t('用户组')" prop="groupName" />
       </template>
@@ -36,7 +26,6 @@
 
 <script setup name="TabTable">
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
 const props = defineProps({
@@ -59,40 +48,16 @@ const emit = defineEmits([
   'pageLimitChange',
   'pageValueChange',
 ])
-const route = useRoute();
 const { t } = useI18n();
 const refTable = ref(null);
-const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
-const tableList = computed(() => {
-  return props.data.map(row => ({
-    ...row,
-    isLinkable: LINKABLE_RESOURCE_TYPES.includes(row.resourceType)
-  }));
-});
+const tableList = computed(() => props.data);
 const border = ['row', 'outer'];
-const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group'];
-const URL_TEMPLATES = {
-  pipeline: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
-  pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
-  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`
-};
 
 function pageLimitChange(limit) {
   emit('pageLimitChange',limit, props.resourceType, props.type);
 }
 function pageValueChange(value) {
   emit('pageValueChange',value, props.resourceType, props.type);
-}
-
-/**
- * 跳转页面
- */
-function handleToResourcePage (row) {
-  if (!row.isLinkable) return
-  const url = URL_TEMPLATES[row.resourceType]?.(projectId.value, row);
-  if (url) {
-    window.open(url);
-  }
 }
 </script>
 

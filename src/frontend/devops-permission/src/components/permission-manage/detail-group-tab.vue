@@ -23,11 +23,7 @@
         >
           <template #header>
             <p class="group-title">
-              <i :class="{
-                'permission-icon permission-icon-down-shape': item.activeFlag,
-                'permission-icon permission-icon-right-shape': !item.activeFlag,
-                'shape-icon': true,
-              }" />
+              <i :class="getShapeIconClass(item.activeFlag)" />
               <img
                 v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)"
                 :src="detailGroupTable.getServiceIcon(item.resourceType)"
@@ -47,7 +43,7 @@
               :resource-name="item.resourceTypeName"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
-              :type="'AUTHORIZATION'"
+              type="AUTHORIZATION"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
@@ -74,11 +70,7 @@
         >
           <template #header>
             <p class="group-title">
-              <i :class="{
-                'permission-icon permission-icon-down-shape': item.activeFlag,
-                'permission-icon permission-icon-right-shape': !item.activeFlag,
-                'shape-icon': true,
-              }" />
+              <i :class="getShapeIconClass(item.activeFlag)" />
               <img
                 v-if="item.resourceType && detailGroupTable.getServiceIcon(item.resourceType)"
                 :src="detailGroupTable.getServiceIcon(item.resourceType)"
@@ -97,7 +89,7 @@
               :resource-name="item.resourceTypeName"
               :loading="item.tableLoading"
               :group-name="item.resourceTypeName"
-              :type="'GROUP'"
+              type="GROUP"
               @page-limit-change="pageLimitChange"
               @page-value-change="pageValueChange"
             />
@@ -111,7 +103,7 @@
 <script setup name="GroupTab">
 import { useI18n } from 'vue-i18n';
 import { defineProps, defineEmits, computed } from 'vue';
-import userDetailGroupTable from '@/store/userDetailGroupTable';
+import userDetailGroupTable, { HandoverType } from '@/store/userDetailGroupTable';
 import TabTable from './detail-tab-table.vue';
 
 const props = defineProps({
@@ -130,14 +122,22 @@ const props = defineProps({
 });
 const { t } = useI18n();
 const detailGroupTable = userDetailGroupTable();
-const projectTable = computed(() => props.sourceList.filter(item => item.type === "AUTHORIZATION"));
-const sourceTable= computed(() => props.sourceList.filter(item => item.type === "GROUP"));
+const projectTable = computed(() => props.sourceList.filter(item => item.type === HandoverType.AUTHORIZATION));
+const sourceTable= computed(() => props.sourceList.filter(item => item.type === HandoverType.GROUP));
 
 const authorizationsLength = computed(() => {
   return projectTable.value.reduce((sum, current) => {
     return sum + current.count
   }, 0)
 })
+
+function getShapeIconClass(activeFlag) {
+  return {
+    'permission-icon permission-icon-down-shape': activeFlag,
+    'permission-icon permission-icon-right-shape': !activeFlag,
+    'shape-icon': true
+  };
+}
 
 const emit = defineEmits(['collapseClick']);
 

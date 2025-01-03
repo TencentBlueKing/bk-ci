@@ -122,12 +122,12 @@ const sourceTable= computed(() => props.sourceList.filter(item => item.type === 
 const emit = defineEmits(['collapseClick']);
 
 function getShapeIconClass(activeFlag) {
-      return {
-        'manage-icon manage-icon-down-shape': activeFlag,
-        'manage-icon manage-icon-right-shape': !activeFlag,
-        'shape-icon': true
-      };
-    }
+  return {
+    'manage-icon manage-icon-down-shape': activeFlag,
+    'manage-icon manage-icon-right-shape': !activeFlag,
+    'shape-icon': true
+  };
+}
 /**
  * 折叠面板点击事件
  * @param id 折叠面板唯一标志
