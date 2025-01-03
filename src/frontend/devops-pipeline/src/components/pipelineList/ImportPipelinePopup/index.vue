@@ -119,42 +119,20 @@
             },
 
             async handleSuccess (result, type = UI_MODE) {
+                let res
                 if (type === UI_MODE) {
                     const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
-                    const res = await this.updatePipeline(result, newPipelineName)
-                    this.setEditFrom(true)
-                    if (res) {
-                        if (typeof this.handleImportSuccess === 'function') {
-                            this.handleImportSuccess()
-                            return
-                        }
-    
-                        this.$nextTick(() => {
-                            this.$router.push({
-                                name: 'pipelineImportEdit',
-                                params: {
-                                    tab: 'pipeline'
-                                }
-                            })
-                        })
-                    }
+                    res = await this.updatePipeline(result, newPipelineName)
                 } else if (type === CODE_MODE) {
                     this.updatePipelineMode(CODE_MODE)
-                    this.setEditFrom(true)
-                    this.$store.dispatch('atom/setPipelineYaml', result)
-                    try {
-                        await this.transferPipeline({
-                            projectId: this.$route.params.projectId,
-                            actionType: 'FULL_YAML2MODEL',
-                            oldYaml: result
-                        })
-                    } catch (error) {
-                        this.$showTips({
-                            message: error.message,
-                            theme: 'error'
-                        })
+                    res = await this.updateCodeModePipeline(result)
+                }
+
+                if (res) {
+                    if (typeof this.handleImportSuccess === 'function') {
+                        this.handleImportSuccess()
+                        return
                     }
-                    this.setPipelineEditing(true)
 
                     this.$nextTick(() => {
                         this.$router.push({
@@ -171,6 +149,42 @@
                     message: this.$t('invalidPipelineJson'),
                     theme: 'error'
                 })
+            },
+            async updateCodeModePipeline (result) {
+                this.$store.dispatch('atom/setPipelineYaml', result)
+                this.setEditFrom(true)
+                try {
+                    const { modelAndSetting } = await this.transferPipeline({
+                        projectId: this.$route.params.projectId,
+                        actionType: 'FULL_YAML2MODEL',
+                        oldYaml: result
+                    })
+                    const newPipelineName = this.pipelineName || `${modelAndSetting.model.name}_${hashID().slice(0, 8)}`
+                    
+                    const pipeline = {
+                        ...modelAndSetting.model,
+                        name: newPipelineName
+                    }
+                    this.setPipelineSetting({
+                        ...modelAndSetting.setting,
+                        pipelineId: this.pipelineId ?? modelAndSetting.setting.pipelineId,
+                        pipelineName: newPipelineName
+                    })
+                    this.setPipeline(pipeline)
+                    this.setPipelineWithoutTrigger({
+                        ...pipeline,
+                        stages: modelAndSetting.model.stages.slice(1)
+                    })
+                    this.setPipelineEditing(true)
+
+                    return true
+                } catch (error) {
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
+                    return false
+                }
             },
             async updatePipeline (result, newPipelineName) {
                 const { templateId, instanceFromTemplate, ...restModel } = result.model
@@ -212,6 +226,7 @@
                     stages: result.model.stages.slice(1)
                 })
                 this.setPipelineEditing(true)
+                this.setEditFrom(true)
                 return true
             },
             checkJsonValid (json) {
