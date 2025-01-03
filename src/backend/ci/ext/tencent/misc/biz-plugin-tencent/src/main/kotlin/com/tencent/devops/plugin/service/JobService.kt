@@ -158,7 +158,7 @@ class JobService @Autowired constructor(
 
     fun listUsableServerEnvsByUserId(projectId: String, userId: String): Result<List<EnvWithPermission>> {
         val result = client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
-        logger.info(
+        logger.debug(
             "[listUsableServerEnvsByUserId]projectId={}, userId={}, usable envs={}",
             projectId,
             userId,
@@ -169,7 +169,7 @@ class JobService @Autowired constructor(
 
     fun listUsableServerNodesByUserId(projectId: String, userId: String): Result<List<NodeWithPermission>> {
         val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
-        logger.info(
+        logger.debug(
             "[listUsableServerNodesByUserId]projectId={}, userId={}, usable nodes={}",
             projectId,
             userId,
