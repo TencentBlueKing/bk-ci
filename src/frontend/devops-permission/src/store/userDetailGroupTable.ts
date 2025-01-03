@@ -1,6 +1,7 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { deepEqual } from "@/utils/util.js";
 import pipelineIcon from '@/css/svg/color-logo-pipeline.svg';
 import codelibIcon from '@/css/svg/color-logo-codelib.svg';
 import codeccIcon from '@/css/svg/color-logo-codecc.svg';
@@ -145,10 +146,10 @@ export default defineStore('userDetailGroupTable', () => {
 
       if (currentRequestId === requestId) {
         detailSourceList.value.forEach(item => {
-          if (authorizationData && Array.isArray(authorizationData.records) && item === authorizationItem) {
+          if (authorizationData && Array.isArray(authorizationData.records) && deepEqual(item, authorizationItem)) {
             item.tableData = authorizationData.records;
             item.activeFlag = true;
-          } else if(userGroupData && Array.isArray(userGroupData.records) && item === userGroupItem) {
+          } else if (userGroupData && Array.isArray(userGroupData.records) && deepEqual(item, userGroupItem)) {
             item.tableData = userGroupData.records;
             item.activeFlag = true;
           }
