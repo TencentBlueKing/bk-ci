@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import org.jooq.DSLContext
@@ -45,7 +46,7 @@ class RemotedevProjectService @Autowired constructor(
             projectCode = projectId,
             addcloudDesktopNum = quota,
             enable = enable,
-            rewriteManages = rewriteManages
+            data = UpdateRemotedevBody(rewriteManages)
         ).data
 
         if (ok != true) {

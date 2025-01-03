@@ -47,6 +47,7 @@ import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectExtPermissionService
@@ -405,7 +406,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         projectCode: String,
         addcloudDesktopNum: Int?,
         enable: Boolean?,
-        rewriteManages: Set<String>?
+        data: UpdateRemotedevBody
     ): Result<Boolean> {
         return Result(
             remoteDevService.updateRemoteDevInfo(
@@ -413,7 +414,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 addcloudDesktopNum = addcloudDesktopNum,
                 enableRemotedev = enable,
-                rewriteManages = rewriteManages
+                rewriteManages = data.rewriteManages
             )
         )
     }
