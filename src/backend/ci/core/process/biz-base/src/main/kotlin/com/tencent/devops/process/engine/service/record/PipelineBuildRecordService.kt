@@ -164,7 +164,8 @@ class PipelineBuildRecordService @Autowired constructor(
         buildInfo: BuildInfo,
         executeCount: Int?,
         refreshStatus: Boolean = true,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        sensitiveFlag: Boolean? = true
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -255,6 +256,11 @@ class PipelineBuildRecordService @Autowired constructor(
                 fixContainerDetail(container)
                 container.fetchGroupContainers()?.forEach { groupContainer ->
                     fixContainerDetail(groupContainer)
+                }
+                if (sensitiveFlag != true) {
+                    container.elements.forEach { e ->
+                        pipelineRepositoryService.transferSensitiveParam(e)
+                    }
                 }
             }
             stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost

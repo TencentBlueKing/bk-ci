@@ -1331,8 +1331,6 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-
-        logger.info("getPipelineResourceVersion checkPermission:$checkPermission")
         // 历史数据兼容：
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
@@ -1366,7 +1364,7 @@ class PipelineRepositoryService constructor(
     }
 
     // 敏感入参解析
-    private fun transferSensitiveParam(atomElement: Element) {
+    fun transferSensitiveParam(atomElement: Element) {
         if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
             val atomCode = atomElement.getAtomCode()
             val hashKey = if (atomElement.version.contains("*") || atomElement.version.contains("latest")) {
