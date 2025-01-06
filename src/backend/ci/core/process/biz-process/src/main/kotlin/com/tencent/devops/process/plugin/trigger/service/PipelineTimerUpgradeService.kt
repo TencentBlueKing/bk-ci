@@ -48,7 +48,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
 ) {
     @SuppressWarnings("NestedBlockDepth")
     fun upgrade(userId: String, targetProjectId: String?, targetPipelineId: String?) {
-        logger.info("upgrade pipeline timer||targetProjectId=$targetProjectId|targetPipelineId=$targetPipelineId")
+        logger.info("upgrade pipeline timer|targetProjectId=$targetProjectId|targetPipelineId=$targetPipelineId")
         var offset = 0
         val limit = 100
         do {
@@ -190,7 +190,6 @@ open class PipelineTimerUpgradeService @Autowired constructor(
      */
     fun getTimerTriggerConfig(model: Model) = model.getTriggerContainer()
         .elements.filter { it is TimerTriggerElement && it.elementEnabled() }.map { it as TimerTriggerElement }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTimerUpgradeService::class.java)

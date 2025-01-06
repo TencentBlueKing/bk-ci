@@ -110,7 +110,7 @@ class PipelineQuartzService @Autowired constructor(
         try {
             val md5 = DigestUtils.md5Hex(crontab)
             val comboKey = if (taskId.isEmpty()) {
-                "${pipelineId}_${md5}_${projectId}"
+                "${pipelineId}_${md5}_$projectId"
             } else {
                 "${pipelineId}_${md5}_${projectId}_$taskId"
             }
