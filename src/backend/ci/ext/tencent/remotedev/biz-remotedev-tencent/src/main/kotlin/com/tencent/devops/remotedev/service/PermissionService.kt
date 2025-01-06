@@ -30,7 +30,11 @@ package com.tencent.devops.remotedev.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.Oauth2PassWordRequest
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
+import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -85,6 +89,12 @@ class PermissionService @Autowired constructor(
 
     @Value("\${remoteDev.aes.iv:}")
     private val aesIV: String = ""
+
+    @Value("\${remoteDev.cdi.clientId:}")
+    private val clientId: String = ""
+
+    @Value("\${remoteDev.cdi.clientSecret:}")
+    private val clientSecret: String = ""
 
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -323,6 +333,39 @@ class PermissionService @Autowired constructor(
             return false
         }
         return true
+    }
+
+    fun getCDIOauth(workspaceName: String, appId: String): Oauth2AccessTokenVo {
+        val key = "$workspaceName@@$appId"
+        return client.get(Oauth2ServiceEndpointResource::class).getAccessToken(
+            clientId,
+            clientSecret,
+            Oauth2PassWordRequest(
+                Oauth2GrantType.PASS_WORD,
+                userName = key,
+                passWord = key
+            )
+        ).data!!
+    }
+
+    fun checkCDIOauth(cdiToken: String): Pair<String, String>? {
+        kotlin.runCatching {
+            checkNotNull(
+                client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                    clientId = clientId,
+                    clientSecret = clientSecret,
+                    accessToken = cdiToken
+                ).data
+            ).split("@@")
+        }.fold(
+            {
+                return it[0] to it[1]
+            },
+            {
+                logger.warn("checkCDIOauth fail|$cdiToken", it)
+                return null
+            }
+        )
     }
 
     /**
