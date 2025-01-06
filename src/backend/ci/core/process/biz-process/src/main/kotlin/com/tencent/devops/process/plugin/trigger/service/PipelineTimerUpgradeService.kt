@@ -46,8 +46,9 @@ open class PipelineTimerUpgradeService @Autowired constructor(
     val pipelineTimerService: PipelineTimerService,
     val timerTriggerTaskService: PipelineTimerTriggerTaskService
 ) {
+    @SuppressWarnings("NestedBlockDepth")
     fun upgrade(userId: String, targetProjectId: String?, targetPipelineId: String?) {
-        logger.info("upgrade pipeline timer")
+        logger.info("upgrade pipeline timer||targetProjectId=$targetProjectId|targetPipelineId=$targetPipelineId")
         var offset = 0
         val limit = 100
         do {
