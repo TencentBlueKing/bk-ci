@@ -38,10 +38,10 @@
 </template>
 
 <script>
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import Logo from '@/components/Logo'
-    import { mapActions, mapState } from 'vuex'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
