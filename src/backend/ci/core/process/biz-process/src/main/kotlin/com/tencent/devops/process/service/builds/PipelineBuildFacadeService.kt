@@ -1578,7 +1578,8 @@ class PipelineBuildFacadeService(
         return buildRecordService.getBuildRecord(
             buildInfo = buildInfo,
             executeCount = executeCount,
-            queryDslContext = queryDslContext
+            queryDslContext = queryDslContext,
+            sensitiveFlag = sensitiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
