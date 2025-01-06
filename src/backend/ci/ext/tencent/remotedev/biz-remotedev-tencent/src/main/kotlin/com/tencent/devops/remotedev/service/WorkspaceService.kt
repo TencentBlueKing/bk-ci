@@ -1045,9 +1045,7 @@ class WorkspaceService @Autowired constructor(
             val cgsStatus = try {
                 startCloudClient.computerStatus(
                     public.map { it.value2() }.toSet()
-                )?.associateBy(
-                    { it.cgsId }, { it.state }
-                )
+                )?.associateBy({ it.cgsId }, { it.state })
             } catch (e: Exception) {
                 logger.warn("get computerStatus error", e)
                 null
