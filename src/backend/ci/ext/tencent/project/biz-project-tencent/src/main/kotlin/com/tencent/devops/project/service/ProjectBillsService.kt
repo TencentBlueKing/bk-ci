@@ -438,7 +438,7 @@ class ProjectBillsService(
                 )
                 // 上报数据至saas
                 reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
-                logger.info("report bills data:$summaryBillDTO")
+                logger.info("report bills summary data :$summaryBillDTO")
                 offset += limit
             } while (projects.size == limit)
             logger.info("report bills data total :$count")
@@ -448,6 +448,7 @@ class ProjectBillsService(
 
     private fun reportBillsDataToSaas(summaryBillDTO: BkSummaryBillDTO) {
         val reportProjects = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
+        if (reportProjects.isEmpty()) return
         try {
             RetryUtils.retry(3) {
                 val requestBody = JsonUtils.objectMapper.writeValueAsString(summaryBillDTO)
