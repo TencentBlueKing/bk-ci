@@ -34,14 +34,15 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
-class ProjectBillsService constructor(
+class ProjectBillsService(
     val client: Client,
     val projectService: ProjectService,
     val redisOperation: RedisOperation,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val projectPaasCCService: ProjectPaasCCService
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -316,12 +317,17 @@ class ProjectBillsService constructor(
     /**
      *  项目不活跃的判定：BCS项目判定为不活跃，并且
      *  项目虽已关联运营产品，但4个月内无人访问并且没有执行过流水线则为不活跃；
-     *  或者项目虽未关联运营产品，但2个月内无人访问并且没有执行过流水线则为不活跃
+     *  或者项目未关联运营产品，且2个月内无人访问并且没有执行过流水线则为不活跃
      * */
     private fun isProjectActive(projectInfo: ProjectVO): Boolean {
-        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-            .replace("\\s".toRegex(), "")
+        // 校验BCS项目是否活跃
+        val isPassCCProjectActive = projectPaasCCService.checkPassCCProjectActivity(
+            projectCode = projectInfo.englishName
+        )
+        if (isPassCCProjectActive)
+            return true
 
+        // 校验项目是否有访问过/执行过流水线
         val monthsToSubtract = if (projectInfo.productId == null) 2L else 4L
         val startTime = LocalDate.now().minusMonths(monthsToSubtract).format(DATE_FORMATTER)
         val endTime = LocalDate.now().format(DATE_FORMATTER)
