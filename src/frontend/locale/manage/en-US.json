@@ -269,23 +269,19 @@
     "CONSTRAINED": "Constraint Style",
     "语法差异": "Grammatical Differences",
     "差异项": "Difference Item",
-
     "表达式格式": "Expression Format",
     "单花括号或双花括号": "Single or Double Curly Braces",
     "如：${var}、${{var}}": "e.g., {'${var}'}、{'${{var}}'}",
     "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
     "如：${{variables.var}}": "e.g., {'${{variables.var}}'}",
-
     "表达式函数": "Expression Functions",
     "如contains、join、fromJSON": "e.g., contains, join, fromJSON...",
     "仅在流程控制选项X设置中可以使用": "Can only be used in the flow control option {0} settings",
     "自定义表达式满足时运行": "custom expressions satisfy run",
     "流程控制选项、插件入参、Job设置等流水线配置中均可使用函数": "Functions can be used in pipeline configurations such as flow control options, plugin parameters, and Job settings",
     "如变量a值为Json字符串，则bash脚本中，可以使用fromJSON读取echo “a.node is ${{fromJSON(a).node}}”": "If the value of variable 'a' is a JSON string, you can use fromJSON in a bash script to read it, e.g., echo \"a.node is {'${{fromJSON(a).node}}'}\"",
-
     "变量值超长": "Variable Value Too Long",
     "仅警告未报错": "Only Warning without Error",
-
     "变量 ID 规范": "Variable ID Standard",
     "未限制": "No Restriction",
     "不支持中文 ID，减少不同构建环境下的兼容问题": "Chinese IDs Not Supported to Reduce Compatibility Issues in Different Build Environments",
@@ -299,5 +295,22 @@
     "基础信息": "Basic Information",
     "高级信息": "Advanced Information",
     "所属服务": "Associated Service",
-    "资源": "Resource"
+    "资源": "Resource",
+    "权限": "Permissions",
+    "命名规范提示": "Naming Convention Tip",
+    "开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。": "Once enabled, you need to provide a naming convention tip for pipelines. This tip will be displayed on the 'Create Pipeline' page.",
+    "请输入流水线命名规范提示说明": "Please enter the naming convention tip for pipelines. Eg: Please follow the pipeline naming convention using the format “ModuleName(one/multiple/scenario, etc.)_TriggerMechanism(premerge/trunk/daily, etc.)_TestAspect(UT/canary/DIFF, etc.",
+    "未开启": "Not Enabled",
+    "移交以上用户组，将导致": "Transferring the above user group will cause",
+    "X个流水线权限代持失效": " {0} pipeline delegation permissions to become invalid",
+    "X个代码库授权失效": " {0} repository authorizations to become invalid",
+    "X个资源没有拥有者": " {0} resources to have no owner",
+    "X个环境节点授权失效": "{0} environment node authorizations have expired",
+    "请确认是否同步移交授权。": "Please confirm whether to also transfer the authorization.",
+    "退出以上用户组，将导致": "Exiting the above user group will cause",
+    "请填写交接人，完成交接后才能成功退出。": "Please specify a transferee and complete the transfer before successfully exiting.",
+    "申请交接": "Confirm transfer",
+    "升级后，该项目下的流水线引用变量时仅支持X模式。": "After the upgrade, the pipelines under this project only support the {'${{xxx}}'} mode when referencing variables.",
+    "升级有可能导致存量流水线X，请谨慎操作。": "The upgrade might cause existing pipelines to {0}, please proceed with caution.",
+    "运行失败": "Run failed"
 }

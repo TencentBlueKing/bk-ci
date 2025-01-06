@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreComponentQueryResource
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreMediaService
+import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
@@ -40,13 +42,17 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStoreComponentQueryResourceImpl @Autowired constructor(
-    private val storeComponentQueryService: StoreComponentQueryService
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeProjectService: StoreProjectService,
+    private val storeMediaService: StoreMediaService
 ) : UserStoreComponentQueryResource {
 
     override fun getMyComponents(
@@ -151,6 +157,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         instanceId: String?,
+        queryTestFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<Page<MarketItem>> {
@@ -170,6 +177,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                     queryProjectComponentFlag = queryProjectComponentFlag,
                     sortType = sortType,
                     instanceId = instanceId,
+                    queryTestFlag = queryTestFlag,
                     page = page,
                     pageSize = pageSize,
                     installed = installed,
@@ -192,5 +200,23 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                 storeType = storeType
             )
         )
+    }
+
+    override fun getStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Set<StoreTestItem>> {
+        return Result(
+            storeProjectService.getStoreTestInfo(userId = userId, storeType = storeType, storeCode = storeCode)
+        )
+    }
+
+    override fun getStoreMediaInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<List<StoreMediaInfo>?> {
+        return storeMediaService.getByCode(storeCode, storeType)
     }
 }

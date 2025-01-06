@@ -2,6 +2,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -14,8 +15,9 @@ import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import java.util.concurrent.TimeUnit
 
 @RestResource
-class ServiceResourceMemberResourceImpl constructor(
-    private val permissionResourceMemberService: PermissionResourceMemberService
+class ServiceResourceMemberResourceImpl(
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : ServiceResourceMemberResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupMembers(
@@ -107,7 +109,7 @@ class ServiceResourceMemberResourceImpl constructor(
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.renewalGroupMember(
+            permissionManageFacadeService.renewalGroupMember(
                 userId = userId,
                 projectCode = projectCode,
                 renewalConditionReq = renewalConditionReq

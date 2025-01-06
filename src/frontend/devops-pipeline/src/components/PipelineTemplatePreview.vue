@@ -35,6 +35,7 @@
                 :name="panel.name"
             >
                 <component
+                    v-if="value"
                     style="pointer-events: none"
                     v-bind="panel.props"
                     :is="panel.component"
