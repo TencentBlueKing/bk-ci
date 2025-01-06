@@ -76,15 +76,6 @@ class ProjectBillsService(
 
     @Value("\${bill.limit:#{null}}")
     private var billLimit: Int = 30
-
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
-
-    @Value("\${bill.active.url:#{null}}")
-    private var bcsUrl: String = ""
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
