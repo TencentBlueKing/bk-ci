@@ -57,7 +57,7 @@ class CDIFilter constructor(
             return
         }
         kotlin.run cache@{
-            if (cache.getIfPresent(cdiToken) != null) {
+            if (cache.getIfPresent(cdiToken) == null) {
                 val (workspaceName, realAppId) = client.get(ServiceSDKResource::class).checkCDIOauth(
                     cdiToken = cdiToken
                 ).data ?: run {
