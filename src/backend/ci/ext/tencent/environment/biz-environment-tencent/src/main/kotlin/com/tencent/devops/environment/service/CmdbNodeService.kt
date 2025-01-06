@@ -695,7 +695,6 @@ class CmdbNodeService @Autowired constructor(
      */
     private fun addNodeToCCByIpMap(toAddIpToCmdbNodeMap: Map<String, CmdbServerDTO>): List<CCHost> {
         // 通过节点svrId查询：节点是否在CC中
-        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId }
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
         val (ccHostList, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
         // 1. 在CC中，通过svrId查出host_id、云区域id、操作系统类型
@@ -727,23 +726,12 @@ class CmdbNodeService @Autowired constructor(
                 }
             }
         }
-        // 3. 不在CC中，add到CC中，查出host_id、云区域id和操作系统类型
+        // 3. 不在CC中，add到CC中，查出成功插入的host_id、云区域id和操作系统类型
         var addToCCInfoList: List<CCHost> = listOf()
         val notInCCAddSvrIdList = toAddIpToCmdbNodeMutableMap.values.map { it.serverId }
         if (notInCCSvrIdList.isNotEmpty()) {
-            val addToCCResp = tencentCCService.addHostToCiBiz(notInCCAddSvrIdList)
-            val (ccHostList, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
-            val hostIdToCCInfoMap = ccHostList.associateBy { it.bkHostId }
-            val ccHostIdList = addToCCResp.data?.bkHostIds
-            addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                CCHost(
-                    svrId = notInCCSvrIdList[index],
-                    bkHostId = value,
-                    bkHostInnerip = serverIdToCmdbNodeMap[notInCCSvrIdList[index]]?.getFirstIp(),
-                    bkCloudId = hostIdToCCInfoMap?.get(value)?.bkCloudId,
-                    osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
-                )
-            } ?: listOf()
+            val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId }
+            addToCCInfoList = addHostToCCByServerIds(notInCCAddSvrIdList, serverIdToCmdbNodeMap)
             logger.info(
                 "[addNodeToCCByIpMap]addToCCInfo: " +
                     addToCCInfoList.joinToString(separator = ", ", transform = { it.toString() })
@@ -754,7 +742,6 @@ class CmdbNodeService @Autowired constructor(
 
     private fun addNodeToCCByServerIdMap(toAddServerIdToCmdbNodeMap: Map<Long, CmdbServerDTO>): List<CCHost> {
         // 通过节点svrId查询：节点是否在CC中
-        val serverIdToCmdbNodeMap = toAddServerIdToCmdbNodeMap.values.associateBy { it.serverId }
         val svrIdList = toAddServerIdToCmdbNodeMap.mapNotNull { it.value.serverId }
         val (ccHostList, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
         // 1. 在CC中，通过svrId查出host_id、云区域id、操作系统类型
@@ -790,19 +777,8 @@ class CmdbNodeService @Autowired constructor(
         var addToCCHostList: List<CCHost> = listOf()
         val notInCCAddSvrIdList = toAddServerIdToCmdbNodeMutableMap.values.map { it.serverId }
         if (notInCCSvrIdList.isNotEmpty()) {
-            val addToCCResp = tencentCCService.addHostToCiBiz(notInCCAddSvrIdList)
-            val (ccHostList, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
-            val hostIdToCCInfoMap = ccHostList.associateBy { it.bkHostId }
-            val ccHostIdList = addToCCResp.data?.bkHostIds
-            addToCCHostList = ccHostIdList?.mapIndexed { index, value ->
-                CCHost(
-                    svrId = notInCCSvrIdList[index],
-                    bkHostId = value,
-                    bkHostInnerip = serverIdToCmdbNodeMap[notInCCSvrIdList[index]]?.getFirstIp(),
-                    bkCloudId = hostIdToCCInfoMap?.get(value)?.bkCloudId,
-                    osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
-                )
-            } ?: emptyList()
+            val serverIdToCmdbNodeMap = toAddServerIdToCmdbNodeMap.values.associateBy { it.serverId }
+            addToCCHostList = addHostToCCByServerIds(notInCCAddSvrIdList, serverIdToCmdbNodeMap)
             logger.info(
                 "[addNodeToCCByServerIdMap]addToCCInfo: " +
                     addToCCHostList.joinToString(separator = ", ", transform = { it.toString() })
@@ -874,5 +850,24 @@ class CmdbNodeService @Autowired constructor(
             projectId = projectId,
             resourceAuthorizationList = resourceAuthorizationList
         )
+    }
+
+    private fun addHostToCCByServerIds(
+        notInCCAddSvrIdList: List<Long>,
+        serverIdToCmdbNodeMap: Map<Long, CmdbServerDTO>
+    ): List<CCHost> {
+        val addToCCInfoList: List<CCHost>
+        val addToCCResp = tencentCCService.addHostToCiBiz(notInCCAddSvrIdList)
+        val ccHostList = tencentCCService.listHostByServerId(notInCCAddSvrIdList.toSet())
+        addToCCInfoList = ccHostList.map {
+            CCHost(
+                bkHostId = it.bkHostId,
+                bkCloudId = it.bkCloudId,
+                bkHostInnerip = serverIdToCmdbNodeMap[it.svrId]?.getFirstIp(),
+                svrId = it.svrId,
+                osType = getOsTypeByCCCode(it.osType)
+            )
+        }
+        return addToCCInfoList
     }
 }
