@@ -1079,8 +1079,9 @@ class WorkspaceService @Autowired constructor(
             workspaceNames = public.map { it.value1() }.toSet(),
             checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
         ).associateBy({ it.nodeHashId }, { it.status })
+        val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses } ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
                 projectId = it.projectId,
