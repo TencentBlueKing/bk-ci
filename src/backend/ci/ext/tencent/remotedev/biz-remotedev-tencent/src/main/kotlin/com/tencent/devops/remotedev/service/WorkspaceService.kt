@@ -1042,11 +1042,16 @@ class WorkspaceService @Autowired constructor(
             ).associateBy({ it.workspaceName }, { it.status })
 
             // 检测cds的状态
-            val cgsStatus = startCloudClient.computerStatus(
-                public.map { it.value2() }.toSet()
-            )?.associateBy(
-                { it.cgsId }, { it.state }
-            )
+            val cgsStatus = try {
+                startCloudClient.computerStatus(
+                    public.map { it.value2() }.toSet()
+                )?.associateBy(
+                    { it.cgsId }, { it.state }
+                )
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
 
             val oneReady = public.filter {
                 loginUserMap[it.value2()].isNullOrEmpty() &&
@@ -1110,14 +1115,20 @@ class WorkspaceService @Autowired constructor(
             checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
         ).associateBy({ it.nodeHashId }, { it.status })
         // 检测cds的状态
-        val cgsStatus = startCloudClient.computerStatus(
-            public.map { it.value2() }.toSet()
-        )?.associateBy(
-            { it.cgsId }, { it.state }
-        )
+        val cgsStatus = try {
+            startCloudClient.computerStatus(
+                public.map { it.value2() }.toSet()
+            )?.associateBy(
+                { it.cgsId }, { it.state }
+            )
+        } catch (e: Exception) {
+            logger.warn("get computerStatus error", e)
+            null
+        }
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status } ?: 0
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
+                ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
                 projectId = it.projectId,
