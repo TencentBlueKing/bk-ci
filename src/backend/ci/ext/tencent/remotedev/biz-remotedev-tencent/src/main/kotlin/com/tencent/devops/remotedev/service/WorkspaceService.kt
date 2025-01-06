@@ -1006,7 +1006,7 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get computerStatus error", e)
                 null
             }
-            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.ordinal) {
+            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
                     params = arrayOf(workspaceName)
@@ -1051,7 +1051,7 @@ class WorkspaceService @Autowired constructor(
             val oneReady = public.filter {
                 loginUserMap[it.value2()].isNullOrEmpty() &&
                     workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
-                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.ordinal
+                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
