@@ -46,8 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class CDIResourceImpl @Autowired constructor(
     private val client: Client,
     private val workspaceService: WorkspaceService,
-    private val checkTokenService: ClientTokenService
-    private val notifyControl: NotifyControl,
+    private val checkTokenService: ClientTokenService,
+    private val notifyControl: NotifyControl
 ) : CDIResource {
     companion object {
         private val logger = LoggerFactory.getLogger(CDIResourceImpl::class.java)
