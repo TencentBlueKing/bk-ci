@@ -77,3 +77,48 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-warning-circle-fill:before {
 	content: "\e112";
 }
+.permission-icon-down-shape:before {
+	content: "\e113";
+}
+.permission-icon-yonghuzu:before {
+	content: "\e114";
+}
+.permission-icon-yonghu-2:before {
+	content: "\e115";
+}
+.permission-icon-oauth:before {
+	content: "\e116";
+}
+.permission-icon-codelib:before {
+	content: "\e117";
+}
+.permission-icon-user:before {
+	content: "\e118";
+}
+.permission-icon-tishi:before {
+	content: "\e119";
+}
+.permission-icon-permission:before {
+	content: "\e11a";
+}
+.permission-icon-normal:before {
+	content: "\e11b";
+}
+.permission-icon-handover:before {
+	content: "\e11c";
+}
+.permission-icon-info:before {
+	content: "\e11d";
+}
+.permission-icon-unknown:before {
+	content: "\e11e";
+}
+.permission-icon-abnormal:before {
+	content: "\e11f";
+}
+.permission-icon-warning-2:before {
+	content: "\e120";
+}
+.permission-icon-right-shape:before {
+	content: "\e121";
+}

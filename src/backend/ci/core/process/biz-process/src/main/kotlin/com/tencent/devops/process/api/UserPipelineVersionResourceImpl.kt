@@ -247,7 +247,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",
@@ -497,7 +497,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildNo = buildNo
+            targetBuildNo = buildNo.currentBuildNo
         )
         return Result(true)
     }

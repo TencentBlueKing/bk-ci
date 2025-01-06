@@ -86,6 +86,12 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String
     ): Boolean = true
 
+    override fun isGroupsHasProjectLevelPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        action: String
+    ): Boolean = true
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,

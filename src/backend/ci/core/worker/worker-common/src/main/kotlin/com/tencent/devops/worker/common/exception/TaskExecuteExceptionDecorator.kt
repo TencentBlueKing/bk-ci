@@ -102,8 +102,8 @@ class RemoteServiceExceptionD : ExceptionDecorator<RemoteServiceException> {
     override fun decorate(exception: RemoteServiceException): TaskExecuteException {
         return TaskExecuteException(
             errorMsg = "THIRD PARTY response error: ${exception.message}",
-            errorType = ErrorType.THIRD_PARTY,
-            errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
             cause = exception
         )
     }

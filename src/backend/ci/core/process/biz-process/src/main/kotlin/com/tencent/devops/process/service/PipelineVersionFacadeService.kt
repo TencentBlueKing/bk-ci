@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -177,6 +178,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             VersionStatus.COMMITTING -> {
                 draftVersion?.version
             }
+
             VersionStatus.BRANCH -> {
                 val branchVersion = pipelineRepositoryService.getBranchVersionResource(
                     projectId, pipelineId, null
@@ -184,6 +186,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 versionName = branchVersion?.versionName
                 branchVersion?.version
             }
+
             else -> {
                 draftVersion?.version
             }
@@ -544,7 +547,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                                         id = "T-1-1-1",
                                         name = I18nUtil.getCodeLanMessage(
                                             CommonMessageCode.BK_MANUAL_TRIGGER,
-                                            language = I18nUtil.getLanguage(userId
+                                            language = I18nUtil.getLanguage(
+                                                userId
                                             )
                                         )
                                     )
@@ -657,12 +661,14 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
-            Triple(false, null, I18nUtil.getCodeLanMessage(
-                messageCode = e.errorCode,
-                params = e.params,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                defaultMessage = e.defaultMessage
-            ))
+            Triple(
+                false, null, I18nUtil.getCodeLanMessage(
+                    messageCode = e.errorCode,
+                    params = e.params,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    defaultMessage = e.defaultMessage
+                )
+            )
         }
         return PipelineVersionWithModel(
             modelAndSetting = modelAndSetting,
@@ -749,16 +755,28 @@ class PipelineVersionFacadeService @Autowired constructor(
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
                 newYaml = null
             }
-            model = modelAndYaml.modelAndSetting.model
-            setting = modelAndYaml.modelAndSetting.setting
+            model = Preconditions.checkNotNull(
+                modelAndYaml.modelAndSetting?.model,
+                "modelAndYaml.modelAndSetting.model must not be null"
+            )
+            setting = Preconditions.checkNotNull(
+                modelAndYaml.modelAndSetting?.setting,
+                "modelAndYaml.modelAndSetting.setting must not be null"
+            )
         }
         return if (pipelineId.isNullOrBlank()) {
             // 新建流水线产生草稿
             pipelineInfoFacadeService.createPipeline(
                 userId = userId,
                 projectId = projectId,
-                model = model ?: modelAndYaml.modelAndSetting.model,
-                setting = setting ?: modelAndYaml.modelAndSetting.setting,
+                model = model ?: Preconditions.checkNotNull(
+                    modelAndYaml.modelAndSetting?.model,
+                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.model must not be null"
+                ),
+                setting = setting ?: Preconditions.checkNotNull(
+                    modelAndYaml.modelAndSetting?.setting,
+                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.setting must not be null"
+                ),
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 versionStatus = versionStatus,
@@ -772,7 +790,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                setting = setting ?: modelAndYaml.modelAndSetting.setting,
+                setting = setting ?: Preconditions.checkNotNull(
+                    modelAndYaml.modelAndSetting?.setting,
+                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.setting must not be null"
+                ),
                 checkPermission = false,
                 versionStatus = versionStatus,
                 dispatchPipelineUpdateEvent = false,
@@ -786,7 +807,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                     release?.model
                 } else {
                     model
-                } ?: modelAndYaml.modelAndSetting.model,
+                } ?: Preconditions.checkNotNull(
+                    modelAndYaml.modelAndSetting?.model,
+                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.model must not be null"
+                ),
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 checkTemplate = false,

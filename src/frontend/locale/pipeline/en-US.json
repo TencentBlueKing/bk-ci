@@ -141,8 +141,8 @@
   "pipelinesDetail": "Details",
   "newPipelineFromTemplateLabel": "New From Template",
   "newPipelineFromJSONLabel": "Import From Json",
-  "importPipelineLabel": "Please upload a pipeline JSON file",
-  "invalidPipelineJson": "Invalid Pipeline JSON",
+  "importPipelineLabel": "Please upload a pipeline JSON/YAML file",
+  "invalidPipelineJsonOrYaml": "Invalid Pipeline JSON/YAML",
   "exportPipelineSuccess": "Export Pipeline Success",
   "sizeLimit": "Maximum file size is 100MB. When re-uploading, if the path remains unchanged, there is no need to save the pipeline.",
   "fileUploadSuccess": "Upload Successful",
@@ -466,6 +466,7 @@
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
+    "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. ",
     "chooseExport": "Choose the export file format",
     "defaultViews": "My views",
     "copyPipeline": "Copy pipeline",

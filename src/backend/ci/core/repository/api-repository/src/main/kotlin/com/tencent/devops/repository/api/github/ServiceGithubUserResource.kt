@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubUserResource {
 
-    @Operation(summary = "创建或者更新文件内容")
+    @Operation(summary = "获取用户信息")
     @GET
     @Path("/getUser")
     fun getUser(
