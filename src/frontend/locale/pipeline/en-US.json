@@ -1539,7 +1539,7 @@
   "scanQRCodeView": "Use Blue Shield APP<br/>Scan the QR code to view the component list",
   "runs": "Runs",
   "needSignTips": "{0} is an internal test version, downloading in progress, please wait",
-  "apkSignDurationTips": "Only the first download requires waiting. Preparation time is related to the package size. A 500MB package takes about 1 minute.",
+  "apkSignDurationTips": "Only the first download requires waiting. The preparation time is related to the package size and takes about 5 seconds to complete.",
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
   "unAccessUser": "User {0} is not a member of the current project.",
