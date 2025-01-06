@@ -1101,6 +1101,7 @@ class WorkspaceService @Autowired constructor(
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
         val host2NodeMap = public.associateBy { it.value2() }
+        val node2HostMap = public.associateBy({ it.value3() }, { it.value2() })
         val loginUserMap = startWorkspaceService.cachingLoginUsers(public.map { it.value2() ?: "" }.toSet())
         val nodeLoginMap = loginUserMap.mapKeys { host2NodeMap[it.key]?.value3() }
         val workspaceStatus = workspaceJoinDao.fetchWindowsWorkspaces(
@@ -1108,9 +1109,15 @@ class WorkspaceService @Autowired constructor(
             workspaceNames = public.map { it.value1() }.toSet(),
             checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
         ).associateBy({ it.nodeHashId }, { it.status })
+        // 检测cds的状态
+        val cgsStatus = startCloudClient.computerStatus(
+            public.map { it.value2() }.toSet()
+        )?.associateBy(
+            { it.cgsId }, { it.state }
+        )
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses } ?: 0
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status } ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
                 projectId = it.projectId,
