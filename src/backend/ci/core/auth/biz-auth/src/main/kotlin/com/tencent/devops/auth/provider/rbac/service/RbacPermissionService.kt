@@ -364,7 +364,10 @@ class RbacPermissionService(
 
                 resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
                     val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
-                        client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(projectCode, authViewIds).data
+                        client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
+                            projectId = projectCode,
+                            viewIdsEncode = authViewIds
+                        ).data
                     } ?: emptyList()
 
                     val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
