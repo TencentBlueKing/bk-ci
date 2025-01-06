@@ -1331,6 +1331,8 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+
+        logger.info("getPipelineResourceVersion checkPermission:$checkPermission")
         // 历史数据兼容：
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
