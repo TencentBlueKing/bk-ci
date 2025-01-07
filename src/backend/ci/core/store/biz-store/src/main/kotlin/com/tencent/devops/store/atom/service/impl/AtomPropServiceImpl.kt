@@ -34,18 +34,17 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomPropDao
-import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.atom.service.AtomPropService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -86,7 +85,7 @@ class AtomPropServiceImpl @Autowired constructor(
         // 从缓存中查找插件属性信息
         var queryDbAtomCodes: MutableList<String>? = null
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
-        val refererHost = referer?.let { HomeHostUtil.getHost(referer) } ?: ""
+        val refererHost = referer?.let { RegexUtils.splitDomainContextPath("$referer/")?.first } ?: ""
         atomCodes.forEach { atomCode ->
             val atomProp = atomPropCache.getIfPresent("$refererHost:$atomCode")
             if (atomProp != null) {
