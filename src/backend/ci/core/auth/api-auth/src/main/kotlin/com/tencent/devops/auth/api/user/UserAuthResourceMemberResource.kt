@@ -264,6 +264,9 @@ interface UserAuthResourceMemberResource {
         action: String?,
         @QueryParam("operateChannel")
         @Parameter(description = "操作渠道")
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        @QueryParam("uniqueManagerGroupsQueryFlag")
+        @Parameter(description = "是否查询唯一管理员组")
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): Result<List<ResourceType2CountVo>>
 }

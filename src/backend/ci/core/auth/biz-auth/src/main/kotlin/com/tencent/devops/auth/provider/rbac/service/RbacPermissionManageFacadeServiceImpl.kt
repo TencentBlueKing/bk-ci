@@ -121,6 +121,7 @@ class RbacPermissionManageFacadeServiceImpl(
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> {
@@ -132,9 +133,16 @@ class RbacPermissionManageFacadeServiceImpl(
                 iamGroupIds = iamGroupIds,
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
-                action = action
+                action = action,
+                uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
             )
         )
+        if (iamGroupIdsByConditions.isEmpty()) {
+            return SQLPage(
+                count = 0,
+                records = emptyList()
+            )
+        }
         // 查询成员所在资源用户组列表
         val (count, resourceGroupMembers) = listResourceGroupMembers(
             projectCode = projectId,
@@ -349,21 +357,26 @@ class RbacPermissionManageFacadeServiceImpl(
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): List<ResourceType2CountVo> {
-        val (iamTemplateIds, memberDeptInfos) = getMemberTemplateIdsAndDeptInfos(
-            projectCode = projectCode,
-            memberId = memberId,
-            operateChannel = operateChannel
-        )
         val iamGroupIdsByConditions = listIamGroupIdsByConditions(
             condition = IamGroupIdsQueryConditionDTO(
                 projectCode = projectCode,
                 groupName = groupName,
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
-                action = action
+                action = action,
+                uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
             )
+        )
+        if (iamGroupIdsByConditions.isEmpty())
+            return emptyList()
+
+        val (iamTemplateIds, memberDeptInfos) = getMemberTemplateIdsAndDeptInfos(
+            projectCode = projectCode,
+            memberId = memberId,
+            operateChannel = operateChannel
         )
         // 获取成员加入的用户组
         val memberGroupCountMap = authResourceGroupMemberDao.countMemberGroupOfResourceType(
@@ -399,29 +412,46 @@ class RbacPermissionManageFacadeServiceImpl(
     }
 
     override fun listIamGroupIdsByConditions(condition: IamGroupIdsQueryConditionDTO): List<Int> {
-        return with(condition) {
-            val filterGroupsByGroupName = if (isQueryByGroupName()) {
-                permissionResourceGroupService.listIamGroupIdsByGroupName(
-                    projectId = projectCode,
-                    groupName = groupName!!
-                )
-            } else {
-                emptyList()
-            }
-            val finalGroupIds = if (isQueryByGroupPermissions()) {
-                groupPermissionService.listGroupsByPermissionConditions(
-                    projectCode = projectCode,
-                    filterIamGroupIds = filterGroupsByGroupName,
-                    relatedResourceType = relatedResourceType!!,
-                    relatedResourceCode = relatedResourceCode,
-                    action = action
-                )
-            } else {
-                filterGroupsByGroupName
-            }.toMutableList()
-            iamGroupIds?.let { finalGroupIds.addAll(it) }
-            finalGroupIds
+        val finalGroupIds = mutableListOf<Int>()
+
+        // 处理按组名查询的情况
+        if (condition.isQueryByGroupName()) {
+            val groupIdsByGroupName = permissionResourceGroupService.listIamGroupIdsByGroupName(
+                projectId = condition.projectCode,
+                groupName = condition.groupName!!
+            )
+            finalGroupIds.addAll(groupIdsByGroupName)
         }
+
+        // 处理按权限条件查询的情况
+        if (condition.isQueryByGroupPermissions()) {
+            val groupsByPermissions = groupPermissionService.listGroupsByPermissionConditions(
+                projectCode = condition.projectCode,
+                filterIamGroupIds = finalGroupIds,
+                relatedResourceType = condition.relatedResourceType!!,
+                relatedResourceCode = condition.relatedResourceCode,
+                action = condition.action
+            )
+            finalGroupIds.clear()
+            finalGroupIds.addAll(groupsByPermissions)
+        }
+
+        // 添加额外的 IAM 组 ID（如果有）
+        condition.iamGroupIds?.let { finalGroupIds.addAll(it) }
+
+        // 如果需要唯一管理组查询，则过滤出唯一的组
+        if (condition.uniqueManagerGroupsQueryFlag == true) {
+            finalGroupIds.clear()
+            finalGroupIds.addAll(
+                authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+                    dslContext = dslContext,
+                    projectCode = condition.projectCode,
+                    iamGroupIds = finalGroupIds
+                )
+            )
+        }
+
+        return finalGroupIds
     }
 
     override fun listMemberGroupIdsInProject(

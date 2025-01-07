@@ -39,6 +39,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> = SQLPage(0, emptyList())
@@ -52,7 +53,8 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): List<ResourceType2CountVo> = emptyList()
 
     override fun listIamGroupIdsByConditions(

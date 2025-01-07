@@ -46,6 +46,7 @@ interface PermissionManageFacadeService {
         relatedResourceCode: String? = null,
         action: String? = null,
         operateChannel: OperateChannel? = OperateChannel.MANAGER,
+        uniqueManagerGroupsQueryFlag: Boolean? = null,
         start: Int? = null,
         limit: Int? = null
     ): SQLPage<GroupDetailsInfoVo>
@@ -64,7 +65,8 @@ interface PermissionManageFacadeService {
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel? = OperateChannel.MANAGER
+        operateChannel: OperateChannel? = OperateChannel.MANAGER,
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): List<ResourceType2CountVo>
 
     /**

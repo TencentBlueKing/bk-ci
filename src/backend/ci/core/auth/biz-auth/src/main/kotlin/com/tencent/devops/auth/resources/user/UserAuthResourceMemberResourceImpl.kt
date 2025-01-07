@@ -269,7 +269,8 @@ class UserAuthResourceMemberResourceImpl(
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?,
     ): Result<List<ResourceType2CountVo>> {
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
@@ -287,7 +288,8 @@ class UserAuthResourceMemberResourceImpl(
                 relatedResourceType = relatedResourceType,
                 relatedResourceCode = relatedResourceCode,
                 action = action,
-                operateChannel = operateChannel
+                operateChannel = operateChannel,
+                uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
             )
         )
     }
