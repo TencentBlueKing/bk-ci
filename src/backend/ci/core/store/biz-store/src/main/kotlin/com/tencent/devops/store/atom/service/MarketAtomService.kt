@@ -202,10 +202,11 @@ interface MarketAtomService {
     ): Result<Boolean>
 
     /**
-     * 更新插件敏感配置
+     * 更新插件敏感参数配置
      */
     fun updateAtomSensitiveCacheConfig(
         atomCode: String,
-        atomVersion: String
+        atomVersion: String,
+        props: String? = null
     )
 }

@@ -1589,12 +1589,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
-    override fun updateAtomSensitiveCacheConfig(atomCode: String, atomVersion: String) {
-        val propJsonStr = atomDao.getAtomProps(dslContext, atomCode, atomVersion) ?: return
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
+    override fun updateAtomSensitiveCacheConfig(
+        atomCode: String,
+        atomVersion: String,
+        props: String?
+    ) {
+        val propsJsonStr = if (props.isNullOrBlank()) {
+            atomDao.getAtomProps(dslContext, atomCode, atomVersion) ?: return
+        } else {
+            props
+        }
+        val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(propsJsonStr)
         val params = mutableListOf<String>()
-        if (null != props["input"]) {
-            val input = props["input"] as Map<String, Any>
+        if (null != propsMap["input"]) {
+            val input = propsMap["input"] as Map<String, Any>
             input.forEach { inputIt ->
                 val paramKey = inputIt.key
                 val paramValueMap = inputIt.value as Map<String, Any>
