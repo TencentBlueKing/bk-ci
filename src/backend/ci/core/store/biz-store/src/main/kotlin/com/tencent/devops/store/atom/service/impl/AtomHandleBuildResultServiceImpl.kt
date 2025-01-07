@@ -82,7 +82,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败
             redisOperation.hdelete(
-                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                key = "ATOM_SENSITIVE_PARAM_KEY:$atomCode",
                 hashKey = VersionUtils.convertLatestVersion(version)
             )
         }

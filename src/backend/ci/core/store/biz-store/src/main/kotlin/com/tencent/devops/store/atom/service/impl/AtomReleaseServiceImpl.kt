@@ -975,7 +975,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             values = "false"
         )
         redisOperation.hdelete(
-            key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+            key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
             hashKey = VersionUtils.convertLatestVersion(record.version)
         )
         checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)

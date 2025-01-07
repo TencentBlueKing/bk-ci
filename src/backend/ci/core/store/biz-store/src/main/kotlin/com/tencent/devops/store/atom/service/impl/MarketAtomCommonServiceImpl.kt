@@ -77,6 +77,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
@@ -694,7 +695,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 values = "false"
             )
             redisOperation.hdelete(
-                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
                 hashKey = VersionUtils.convertLatestVersion(version)
             )
         }
