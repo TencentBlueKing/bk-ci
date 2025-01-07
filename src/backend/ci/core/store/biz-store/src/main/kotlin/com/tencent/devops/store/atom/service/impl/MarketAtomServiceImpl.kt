@@ -1609,10 +1609,21 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 hashKey = atomVersion,
                 values = params.joinToString(",")
             )
+            // 使用latest版本号缓存测试版本提供给调试项目使用
+            redisOperation.hset(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                values = params.joinToString(",")
+            )
         } else {
             redisOperation.hdelete(
                 key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
                 hashKey = atomVersion
+            )
+            redisOperation.hset(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                values = ""
             )
         }
     }

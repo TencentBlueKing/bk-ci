@@ -76,12 +76,16 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
             return Result(true)
         }
+        val atomCode = atomRecord.atomCode
+        val version = atomRecord.version
         var atomStatus = AtomStatusEnum.TESTING // 构建成功将插件状态置位测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败
+            redisOperation.hdelete(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version)
+            )
         }
-        val atomCode = atomRecord.atomCode
-        val version = atomRecord.version
         marketAtomService.setAtomBuildStatusByAtomCode(
             atomCode = atomCode,
             version = version,
@@ -117,6 +121,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 hashKey = VersionUtils.convertLatestVersion(version),
                 values = "true"
             )
+            marketAtomService.updateAtomSensitiveCacheConfig(atomCode, version)
         }
         return Result(true)
     }

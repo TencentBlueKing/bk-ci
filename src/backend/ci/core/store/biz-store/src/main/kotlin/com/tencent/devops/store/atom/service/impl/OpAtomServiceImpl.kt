@@ -337,15 +337,6 @@ class OpAtomServiceImpl @Autowired constructor(
             latestFlag = latestFlag,
             pubTime = LocalDateTime.now()
         )
-        if (latestFlag == true) {
-            val hashKey = "${atom.version.substring(
-                0, atom.version.indexOf(".") + 1)}latest"
-            redisOperation.hset(
-                key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
-                hashKey = hashKey,
-                values = atom.version
-            )
-        }
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,

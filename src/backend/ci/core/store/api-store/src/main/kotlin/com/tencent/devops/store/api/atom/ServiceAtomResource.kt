@@ -119,4 +119,16 @@ interface ServiceAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>
+
+    @Operation(summary = "获取项目下的调试插件列表")
+    @GET
+    @Path("/projectCodes/{projectCode}/test/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data[*].atomCode}", "{data[*].version}", "releaseInfo"]
+    )
+    fun getTestAtoms(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<List<String>>
 }

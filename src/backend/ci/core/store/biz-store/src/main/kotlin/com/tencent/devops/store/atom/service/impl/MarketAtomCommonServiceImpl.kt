@@ -693,6 +693,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 hashKey = VersionUtils.convertLatestVersion(version),
                 values = "false"
             )
+            redisOperation.hdelete(
+                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version)
+            )
         }
     }
 

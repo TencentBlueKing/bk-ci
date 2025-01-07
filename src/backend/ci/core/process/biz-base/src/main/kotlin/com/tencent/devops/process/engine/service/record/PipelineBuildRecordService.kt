@@ -259,7 +259,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 }
                 if (sensitiveFlag != true) {
                     container.elements.forEach { e ->
-                        pipelineRepositoryService.transferSensitiveParam(e)
+                        pipelineRepositoryService.transferSensitiveParam(pipelineId, e)
                     }
                 }
             }

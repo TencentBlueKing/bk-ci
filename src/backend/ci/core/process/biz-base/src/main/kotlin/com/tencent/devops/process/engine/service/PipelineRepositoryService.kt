@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.service
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -112,7 +114,6 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -124,6 +125,11 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_TEST_VERSION_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -168,7 +174,6 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineGroupService: PipelineGroupService,
     private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
@@ -1337,6 +1342,7 @@ class PipelineRepositoryService constructor(
         // 3 所有插件ENV配置合并历史值，并过滤掉默认值
         var randomSeed = 1
         val jobIdSet = mutableSetOf<String>()
+        val testAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
         resource?.model?.stages?.forEachIndexed { index, s ->
             if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
@@ -1354,7 +1360,7 @@ class PipelineRepositoryService constructor(
                         }
                         e.additionalOptions?.customEnv = null
                         if (checkPermission != true) {
-                            transferSensitiveParam(e)
+                            transferSensitiveParam(testAtomCodes ?: emptyList(), e)
                         }
                     }
                 }
@@ -1364,20 +1370,30 @@ class PipelineRepositoryService constructor(
     }
 
     // 敏感入参解析
-    fun transferSensitiveParam(atomElement: Element) {
+    fun transferSensitiveParam(testAtomCodes: List<String>, atomElement: Element) {
         if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
             val atomCode = atomElement.getAtomCode()
-            val hashKey = if (atomElement.version.contains("*") || atomElement.version.contains("latest")) {
-                redisOperation.hget(
-                    key = "ATOM_LATEST_VERSION_KEY_PREFIX:$atomCode",
-                    hashKey = "${atomElement.version.substring(0, atomElement.version.indexOf(".") + 1)}latest"
-                )
+            val version = atomElement.version
+            val hashKey = if (version.contains(".*")) {
+                var latestVersion: String? = null
+                if (testAtomCodes.contains(atomCode)) {
+                    latestVersion = version
+                }
+                if (latestVersion.isNullOrBlank()) {
+                    val atomRunInfoStr = redisOperation.hget(
+                        key = "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode",
+                        hashKey = version
+                    )
+                    val atomRunInfo = atomRunInfoStr?.let { JsonUtil.toMap(it) }
+                    latestVersion = atomRunInfo?.get(KEY_VERSION).toString()
+                }
+                latestVersion
             } else {
-                atomElement.version
+                version
             }
             val param = redisOperation.hget(
-                key = "ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = hashKey ?: return
+                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                hashKey = hashKey
             )
             if (!param.isNullOrBlank()) {
                 atomElement.transferSensitiveParam(param.split(","))
