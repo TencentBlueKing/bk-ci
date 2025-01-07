@@ -230,7 +230,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
         dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds, pipelineAuthorizer)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return AtomResponse(BuildStatus.CALL_WAITING)
+        return AtomResponse(BuildStatus.RUNNING)
     }
 
     private fun dispatch(

@@ -92,6 +92,7 @@ class VmOperateTaskGenerator {
         val taskName: String
         val taskAtom: String
         var timeout: Long? = null
+        var timeoutVar: String? = null
         if (container is VMBuildContainer) {
             val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
             val baseOS = container.baseOS.name
@@ -99,19 +100,22 @@ class VmOperateTaskGenerator {
             taskType = EnvControlTaskType.VM.name
             taskName = "Prepare_Job#${container.id!!}"
             taskAtom = START_VM_TASK_ATOM
-            timeout = container.jobControlOption?.prepareTimeout?.toLong()
+            timeout = container.jobControlOption?.timeout?.toLong()
+            timeoutVar = container.jobControlOption?.timeoutVar
         } else {
             atomCode = START_NORMAL_TASK_ATOM
             taskType = EnvControlTaskType.NORMAL.name
             taskName = "Prepare_Job#${container.id!!}(N)"
             taskAtom = START_NORMAL_TASK_ATOM
             if (container is NormalContainer) {
-                timeout = container.jobControlOption?.prepareTimeout?.toLong()
+                timeout = container.jobControlOption?.timeout?.toLong()
+                timeoutVar = container.jobControlOption?.timeoutVar
             }
         }
         val additionalOptions = ElementAdditionalOptions(
             runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
-            timeout = timeout
+            timeout = timeout,
+            timeoutVar = timeoutVar
         )
         return PipelineBuildTask(
             projectId = projectId,
