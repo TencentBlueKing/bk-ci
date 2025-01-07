@@ -717,6 +717,9 @@ interface UserBuildResource {
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @Parameter(description = "强制触发", required = false)
+        @QueryParam("forceTrigger")
+        forceTrigger: Boolean? = false
     ): Result<BuildId>
 }

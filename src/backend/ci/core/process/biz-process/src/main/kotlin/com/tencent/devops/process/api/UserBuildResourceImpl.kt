@@ -639,14 +639,16 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        forceTrigger: Boolean?
     ): Result<BuildId> {
         return Result(
             pipelineBuildFacadeService.replayBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                userId = userId
+                userId = userId,
+                forceTrigger = forceTrigger ?: false
             )
         )
     }

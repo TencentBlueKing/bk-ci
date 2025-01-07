@@ -88,6 +88,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRefreshBuildLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -834,7 +835,9 @@ class PipelineBuildFacadeService(
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
         userParameters: List<BuildParameters>? = null,
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        pipelineResource: PipelineResourceVersion? = null,
+        pipelineInfo: PipelineInfo? = null,
     ): String? {
 
         if (checkPermission) {
@@ -849,8 +852,10 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return null
+        val readyToBuildPipelineInfo = pipelineInfo ?: pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
@@ -859,8 +864,11 @@ class PipelineBuildFacadeService(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val resource = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version)
+            val resource = pipelineResource?:getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = readyToBuildPipelineInfo.version
+            )
             val model = resource.model
 
             /**
@@ -2687,7 +2695,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        userId: String
+        userId: String,
+        forceTrigger: Boolean
     ): BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2711,18 +2720,19 @@ class PipelineBuildFacadeService(
             it.key to it.value.toString()
         }?.toMutableMap() ?: mutableMapOf()
         val startType = StartType.toStartType(buildInfo.trigger)
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS)
-        if (readyToBuildPipelineInfo.locked == true) {
+        if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+        if (pipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
-        val resource = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version)
-        val model = resource.model
+        val pipelineResourceVersion = getPipelineResourceVersion(projectId, pipelineId, pipelineInfo.version)
+        val model = pipelineResourceVersion.model
         val triggerContainer = model.getTriggerContainer()
-        val triggerElements = when (startType) {
+        // 检查触发器是否存在
+        val checkTriggerResult = forceTrigger || when (startType) {
             StartType.WEB_HOOK -> {
                 // webhook触发
                 webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
@@ -2742,6 +2752,12 @@ class PipelineBuildFacadeService(
             else -> {
                 null
             }
+        }.isNullOrEmpty()
+        if (checkTriggerResult) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
+                params = arrayOf(pipelineResourceVersion.versionName ?: "")
+            )
         }
         return BuildId(
             webhookTriggerPipelineBuild(
@@ -2750,7 +2766,9 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 parameters = startParameters,
                 checkPermission = false,
-                startType = startType
+                startType = startType,
+                pipelineInfo = pipelineInfo,
+                pipelineResource = pipelineResourceVersion
             )!!
         )
     }
