@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
+import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.common.api.model.SQLPage
@@ -175,5 +176,19 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
 
     override fun isProjectMember(projectCode: String, userId: String): Boolean {
         return true
+    }
+
+    override fun checkMemberExitsProject(
+        projectCode: String,
+        userId: String
+    ): MemberExitsProjectCheckVo {
+        return MemberExitsProjectCheckVo()
+    }
+
+    override fun memberExitsProject(
+        projectCode: String,
+        request: RemoveMemberFromProjectReq
+    ): String {
+        return ""
     }
 }
