@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -78,6 +79,7 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -105,6 +107,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
+    private val client: Client,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -112,7 +115,7 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    pipelineEventDispatcher: PipelineEventDispatcher,
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = recordModelDao,
@@ -247,7 +250,7 @@ class PipelineBuildRecordService @Autowired constructor(
             if (!newVarName.isNullOrBlank()) newParams.add(it.copy(id = newVarName)) else newParams.add(it)
         }
         triggerContainer.params = newParams
-
+        val testAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data ?: emptyList()
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
             stage.resetBuildOption()
@@ -259,7 +262,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 }
                 if (sensitiveFlag != true) {
                     container.elements.forEach { e ->
-                        pipelineRepositoryService.transferSensitiveParam(pipelineId, e)
+                        pipelineRepositoryService.transferSensitiveParam(testAtomCodes, e)
                     }
                 }
             }
