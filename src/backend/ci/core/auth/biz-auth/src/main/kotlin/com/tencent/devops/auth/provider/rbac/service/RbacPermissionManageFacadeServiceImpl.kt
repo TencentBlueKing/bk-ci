@@ -2207,9 +2207,9 @@ class RbacPermissionManageFacadeServiceImpl(
         )
         return MemberExitsProjectCheckVo(
             uniqueManagerCount = uniqueManagerGroups.size,
-            pipelineAuthorizationCount = resourceType2Authorizations[ResourceTypeId.PIPELINE]?.size,
-            repositoryAuthorizationCount = resourceType2Authorizations[ResourceTypeId.REPERTORY]?.size,
-            envNodeAuthorizationCount = resourceType2Authorizations[ResourceTypeId.ENV_NODE]?.size
+            pipelineAuthorizationCount = resourceType2Authorizations[ResourceTypeId.PIPELINE]?.size ?: 0,
+            repositoryAuthorizationCount = resourceType2Authorizations[ResourceTypeId.REPERTORY]?.size ?: 0,
+            envNodeAuthorizationCount = resourceType2Authorizations[ResourceTypeId.ENV_NODE]?.size ?: 0
         )
     }
 
