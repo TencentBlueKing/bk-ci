@@ -658,6 +658,7 @@ class OpAtomServiceImpl @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.warn("updateAtomSensitiveCacheConfig failed", ignored)
             }
+            logger.info("end updateAtomSensitiveCacheConfig!!")
         }
         return Result(true)
     }

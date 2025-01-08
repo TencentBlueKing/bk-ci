@@ -156,6 +156,6 @@ class OpAtomResourceImpl @Autowired constructor(
     }
 
     override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        TODO("Not yet implemented")
+        return opAtomService.updateAtomSensitiveCacheConfig(userId, atomCode)
     }
 }
