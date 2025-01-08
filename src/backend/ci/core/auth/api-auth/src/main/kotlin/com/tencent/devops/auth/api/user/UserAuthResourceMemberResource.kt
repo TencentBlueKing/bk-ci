@@ -12,6 +12,7 @@ import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.model.SQLPage
@@ -269,4 +270,30 @@ interface UserAuthResourceMemberResource {
         @Parameter(description = "是否查询唯一管理员组")
         uniqueManagerGroupsQueryFlag: Boolean?
     ): Result<List<ResourceType2CountVo>>
+
+    @GET
+    @Path("/{projectId}/checkMemberExitsProject")
+    @Operation(summary = "用户主动退出项目检查")
+    fun checkMemberExitsProject(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String
+    ): Result<MemberExitsProjectCheckVo>
+
+    @POST
+    @Path("/{projectId}/memberExitsProject")
+    @Operation(summary = "用户主动退出项目")
+    fun memberExitsProject(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String,
+        @Parameter(description = "请求体", required = true)
+        request: RemoveMemberFromProjectReq
+    ): Result<String>
 }

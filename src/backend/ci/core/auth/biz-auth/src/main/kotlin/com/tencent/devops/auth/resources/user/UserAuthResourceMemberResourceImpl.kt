@@ -13,6 +13,7 @@ import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -290,6 +291,37 @@ class UserAuthResourceMemberResourceImpl(
                 action = action,
                 operateChannel = operateChannel,
                 uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
+            )
+        )
+    }
+
+    override fun checkMemberExitsProject(
+        userId: String,
+        projectId: String
+    ): Result<MemberExitsProjectCheckVo> {
+        return Result(
+            permissionManageFacadeService.checkMemberExitsProject(
+                projectCode = projectId,
+                userId = userId
+            )
+        )
+    }
+
+    override fun memberExitsProject(
+        userId: String,
+        projectId: String,
+        request: RemoveMemberFromProjectReq
+    ): Result<String> {
+        permissionResourceValidateService.validateUserProjectPermissionByChannel(
+            userId = userId,
+            projectCode = projectId,
+            operateChannel = OperateChannel.PERSONAL,
+            targetMemberId = request.targetMember.id
+        )
+        return Result(
+            permissionManageFacadeService.memberExitsProject(
+                projectCode = projectId,
+                request = request
             )
         )
     }
