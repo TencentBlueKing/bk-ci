@@ -441,14 +441,14 @@ class RbacPermissionManageFacadeServiceImpl(
 
         // 如果需要唯一管理组查询，则过滤出唯一的组
         if (condition.uniqueManagerGroupsQueryFlag == true) {
-            finalGroupIds.clear()
-            finalGroupIds.addAll(
-                authResourceGroupMemberDao.listProjectUniqueManagerGroups(
-                    dslContext = dslContext,
-                    projectCode = condition.projectCode,
-                    iamGroupIds = finalGroupIds
-                )
+            val groupsByUniqueManager = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+                dslContext = dslContext,
+                projectCode = condition.projectCode,
+                iamGroupIds = finalGroupIds
             )
+
+            finalGroupIds.clear()
+            finalGroupIds.addAll(groupsByUniqueManager)
         }
 
         return finalGroupIds
