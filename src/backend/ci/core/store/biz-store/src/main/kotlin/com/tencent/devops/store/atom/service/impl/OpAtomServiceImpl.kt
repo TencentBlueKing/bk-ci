@@ -650,7 +650,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 AtomStatusEnum.RELEASED.status.toByte()
             )
             try {
-                if (!atomCode.isNullOrBlank()) {
+                if (atomCode.isNullOrBlank()) {
                     batchUpdateAtomSensitiveCacheConfig(null, statusList)
                 } else {
                     batchUpdateAtomSensitiveCacheConfig(atomCode, statusList)

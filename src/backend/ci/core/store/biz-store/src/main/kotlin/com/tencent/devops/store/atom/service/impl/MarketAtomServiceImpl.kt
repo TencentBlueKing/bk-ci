@@ -1595,10 +1595,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         props: String?
     ) {
         val propsJsonStr = if (props.isNullOrBlank()) {
-            atomDao.getAtomProps(dslContext, atomCode, atomVersion) ?: return
+            atomDao.getAtomProps(dslContext, atomCode, atomVersion)
         } else {
             props
         }
+        if (propsJsonStr.isNullOrBlank()) return
         val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(propsJsonStr)
         val params = mutableListOf<String>()
         if (null != propsMap["input"]) {
