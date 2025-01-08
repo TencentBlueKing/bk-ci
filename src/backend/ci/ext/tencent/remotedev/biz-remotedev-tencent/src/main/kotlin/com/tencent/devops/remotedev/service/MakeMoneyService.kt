@@ -39,7 +39,8 @@ class MakeMoneyService @Autowired constructor(
         val projectId: String,
         val projectName: String,
         val status: WorkspaceStatus,
-        val ip: String
+        val ip: String,
+        val bgName: String
     )
 
     companion object {
@@ -146,7 +147,11 @@ class MakeMoneyService @Autowired constructor(
             if (res.isEmpty()) break
             aMap.putAll(res.associateBy({ it.name }, {
                 SaveData(
-                    it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip
+                    projectId = it.projectId,
+                    projectName = it.projectName,
+                    status = WorkspaceStatus.load(it.status),
+                    ip = it.ip,
+                    bgName = it.creatorBgName
                 )
             }))
             page += 1
@@ -167,7 +172,13 @@ class MakeMoneyService @Autowired constructor(
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = filter.toSet()
             ).associateBy({ it.name }, {
-                SaveData(it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip)
+                SaveData(
+                    projectId = it.projectId,
+                    projectName = it.projectName,
+                    status = WorkspaceStatus.load(it.status),
+                    ip = it.ip,
+                    bgName = it.creatorBgName
+                )
             })
             // 快照昨天在使用的实例
             aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
@@ -218,6 +229,11 @@ class MakeMoneyService @Autowired constructor(
             @JsonProperty("res_id")
             @get:Schema(title = "资源ID")
             val resId: String,
+            @JsonProperty("bg_name")
+            @get:Schema(title = "云桌面所属BG")
+            val bgName: String,
+            @get:Schema(title = "IEG的传 1，非IEG 传 0")
+            val flag: Int,
             @get:Schema(title = "主机IP")
             val ip: String,
             @get:Schema(title = "使用天数")
@@ -276,7 +292,13 @@ class MakeMoneyService @Autowired constructor(
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = chunk.toSet()
             ).associateBy({ it.name }, {
-                SaveData(it.projectId, it.projectName, WorkspaceStatus.load(it.status), it.ip)
+                SaveData(
+                    projectId = it.projectId,
+                    projectName = it.projectName,
+                    status = WorkspaceStatus.load(it.status),
+                    ip = it.ip,
+                    bgName = it.creatorBgName
+                )
             })
             chunk.forEach { name ->
                 val workspace = workspaceInfo[name]
@@ -292,7 +314,9 @@ class MakeMoneyService @Autowired constructor(
                         resId = name,
                         ip = workspace?.ip ?: "ERROR",
                         usage = usage,
-                        dayDetail = dayDetail
+                        dayDetail = dayDetail,
+                        bgName = workspace?.bgName ?: "ERROR",
+                        flag = if (workspace?.bgName == "IEG互动娱乐事业群") 1 else 0
                     )
                 )
             }
@@ -341,6 +365,8 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(6).setCellValue("ip 主机IP")
             row.createCell(7).setCellValue("usage 使用天数")
             row.createCell(8).setCellValue("daydetail 日明细数据")
+            row.createCell(9).setCellValue("bg_name bg名")
+            row.createCell(10).setCellValue("flag")
         }
 
         bills.forEachIndexed { index, bill ->
@@ -355,8 +381,10 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(6).setCellValue(bill.ip)
             row.createCell(7).setCellValue(bill.usage.toString())
             row.createCell(8).setCellValue(JsonUtil.toJson(bill.dayDetail, formatted = false))
+            row.createCell(9).setCellValue(bill.bgName)
+            row.createCell(10).setCellValue(bill.flag.toString())
         }
-        for (i in 0 until 8) {
+        for (i in 0 until 10) {
             sheet.trackAllColumnsForAutoSizing()
             sheet.autoSizeColumn(i)
         }
