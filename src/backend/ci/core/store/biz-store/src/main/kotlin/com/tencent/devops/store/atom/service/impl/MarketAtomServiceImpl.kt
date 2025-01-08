@@ -1594,47 +1594,51 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         atomVersion: String,
         props: String?
     ) {
-        val propsJsonStr = if (props.isNullOrBlank()) {
-            atomDao.getAtomProps(dslContext, atomCode, atomVersion)
-        } else {
-            props
-        }
-        if (propsJsonStr.isNullOrBlank()) return
-        val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(propsJsonStr)
-        val params = mutableListOf<String>()
-        if (null != propsMap["input"]) {
-            val input = propsMap["input"] as Map<String, Any>
-            input.forEach { inputIt ->
-                val paramKey = inputIt.key
-                val paramValueMap = inputIt.value as Map<String, Any>
-                val isSensitive = paramValueMap["isSensitive"] as? Boolean
-                if (isSensitive == true) {
-                    params.add(paramKey)
+        try {
+            val propsJsonStr = if (props.isNullOrBlank()) {
+                atomDao.getAtomProps(dslContext, atomCode, atomVersion)
+            } else {
+                props
+            }
+            if (propsJsonStr.isNullOrBlank()) return
+            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(propsJsonStr)
+            val params = mutableListOf<String>()
+            if (null != propsMap["input"]) {
+                val input = propsMap["input"] as Map<String, Any>
+                input.forEach { inputIt ->
+                    val paramKey = inputIt.key
+                    val paramValueMap = inputIt.value as Map<String, Any>
+                    val isSensitive = paramValueMap["isSensitive"] as? Boolean
+                    if (isSensitive == true) {
+                        params.add(paramKey)
+                    }
                 }
             }
-        }
-        if (params.isNotEmpty()) {
-            redisOperation.hset(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = atomVersion,
-                values = params.joinToString(",")
-            )
-            // 使用latest版本号缓存测试版本提供给调试项目使用
-            redisOperation.hset(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(atomVersion),
-                values = params.joinToString(",")
-            )
-        } else {
-            redisOperation.hdelete(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = atomVersion
-            )
-            redisOperation.hset(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(atomVersion),
-                values = ""
-            )
+            if (params.isNotEmpty()) {
+                redisOperation.hset(
+                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                    hashKey = atomVersion,
+                    values = params.joinToString(",")
+                )
+                // 使用latest版本号缓存测试版本提供给调试项目使用
+                redisOperation.hset(
+                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                    hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                    values = params.joinToString(",")
+                )
+            } else {
+                redisOperation.hdelete(
+                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                    hashKey = atomVersion
+                )
+                redisOperation.hset(
+                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
+                    hashKey = VersionUtils.convertLatestVersion(atomVersion),
+                    values = ""
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", ignored)
         }
     }
 }
