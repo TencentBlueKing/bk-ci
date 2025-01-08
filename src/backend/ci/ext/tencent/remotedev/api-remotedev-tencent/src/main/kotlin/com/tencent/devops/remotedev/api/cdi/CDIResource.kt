@@ -30,11 +30,13 @@ package com.tencent.devops.remotedev.api.cdi
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.common.AUTH_HEADER_OAUTH2
 import com.tencent.devops.remotedev.pojo.common.DEVX_HEADER_CDI_WORKSPACE_NAME
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -46,56 +48,114 @@ import javax.ws.rs.core.MediaType
 
 /*
 * CDI接口规范：
-* 1.接口入参需有 AUTH_HEADER_USER_ID ，并且限制为云桌面当前登陆人，如果当前无登陆人则值为no_login_user。
-* 2.接口入参需有 AUTH_HEADER_DEVOPS_STORE_CODE ，并且限制为当前访问应用ID
-* 3.接口入参需有 DEVX_HEADER_CDI_WORKSPACE_NAME ，并且限制为当前云桌面
+* 1.接口入参需有 AUTH_HEADER_OAUTH2 ，此参数应用请求时传入
+* 2.接口入参需有 AUTH_HEADER_DEVOPS_STORE_CODE ，此参数应用请求时传入
+* 3.接口入参需有 AUTH_HEADER_USER_ID ，并且限制为云桌面当前登陆人，如果当前无登陆人则值为no_login_user。
+* 4.接口入参需有 DEVX_HEADER_CDI_WORKSPACE_NAME ，并且限制为当前云桌面
 * */
 @Tag(name = "CDI_REMOTE_DEV", description = "cdi-remoteDev")
 @Path("/cdi/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface CDIResource {
-    @Operation(summary = "云桌面应用获取云桌面信息")
+    @Operation(
+        summary = "云桌面应用获取云桌面信息",
+        responses = [
+            ApiResponse(
+                responseCode = "default",
+                description = "云桌面详情"
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "获取云桌面详情失败，请确认云桌面是否真实存在"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "未授权，提供的token无效或缺失"
+            )
+        ]
+    )
     @GET
     @Path("/workspace_detail")
     fun getWorkspaceDetail(
-        @Parameter(description = "userId", required = false)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @Parameter(description = "应用请求时需带上此授权token", required = true)
+        @HeaderParam(AUTH_HEADER_OAUTH2)
+        token: String,
         @Parameter(description = "应用id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_STORE_CODE)
         storeCode: String,
-        @Parameter(description = "workspaceName", required = false)
+        @Parameter(description = "userId", required = true, hidden = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true, hidden = true)
         @HeaderParam(DEVX_HEADER_CDI_WORKSPACE_NAME)
         workspaceName: String
-    ): Result<WeSecProjectWorkspace?>
+    ): Result<WeSecProjectWorkspace>
 
-    @Operation(summary = "云桌面应用获取当前实例登陆人")
+    @Operation(
+        summary = "云桌面应用获取当前实例登陆人",
+        responses = [
+            ApiResponse(
+                responseCode = "default",
+                description = "成功获取当前登录人ID"
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "目前无法获取云桌面登录用户。可以尝试退出云桌面，然后重新登录。"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "未授权，提供的token无效或缺失"
+            )
+        ]
+    )
     @GET
     @Path("/login_user_id")
     fun getLoginUserId(
-        @Parameter(description = "userId", required = false)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @Parameter(description = "应用请求时需带上此授权token", required = true)
+        @HeaderParam(AUTH_HEADER_OAUTH2)
+        token: String,
         @Parameter(description = "应用id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_STORE_CODE)
         storeCode: String,
-        @Parameter(description = "workspaceName", required = false)
+        @Parameter(description = "userId", required = true, hidden = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true, hidden = true)
         @HeaderParam(DEVX_HEADER_CDI_WORKSPACE_NAME)
         workspaceName: String
     ): Result<String/*当前登陆人id*/>
 
-    @Operation(summary = "云桌面应用给云桌面或者客户端发送消息")
+    @Operation(
+        summary = "云桌面应用给云桌面或者客户端发送消息",
+        responses = [
+            ApiResponse(
+                responseCode = "default",
+                description = "返回通知成功与否"
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "通知异常。请确认1.通知人是不是项目成员，2.云桌面是否真实存在"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "未授权，提供的token无效或缺失"
+            )
+        ]
+    )
     @POST
     @Path("/notify")
     fun messageRegister(
-        @Parameter(description = "userId", required = false)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @Parameter(description = "应用请求时需带上此授权token", required = true)
+        @HeaderParam(AUTH_HEADER_OAUTH2)
+        token: String,
         @Parameter(description = "应用id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_STORE_CODE)
         storeCode: String,
-        @Parameter(description = "workspaceName", required = false)
+        @Parameter(description = "userId", required = true, hidden = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true, hidden = true)
         @HeaderParam(DEVX_HEADER_CDI_WORKSPACE_NAME)
         workspaceName: String,
         data: WorkspaceDesktopNotifyData

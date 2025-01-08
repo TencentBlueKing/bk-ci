@@ -54,21 +54,32 @@ class CDIResourceImpl @Autowired constructor(
     }
 
     override fun getWorkspaceDetail(
-        userId: String,
+        token: String,
         storeCode: String,
+        userId: String,
         workspaceName: String
-    ): Result<WeSecProjectWorkspace?> {
+    ): Result<WeSecProjectWorkspace> {
         logger.info("getWorkspaceDetail|$userId|$storeCode|$workspaceName")
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspaceName,
                 notStatus = null,
                 hasCurrentUser = true
-            ).firstOrNull()
+            ).firstOrNull() ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "This workspace was not found"
+                )
+            )
         )
     }
 
-    override fun getLoginUserId(userId: String, storeCode: String, workspaceName: String): Result<String> {
+    override fun getLoginUserId(
+        token: String,
+        storeCode: String,
+        userId: String,
+        workspaceName: String
+    ): Result<String> {
         logger.info("getLoginUserId|$userId|$storeCode|$workspaceName")
         return Result(kotlin.runCatching {
             checkNotNull(
@@ -95,8 +106,9 @@ class CDIResourceImpl @Autowired constructor(
     }
 
     override fun messageRegister(
-        userId: String,
+        token: String,
         storeCode: String,
+        userId: String,
         workspaceName: String,
         data: WorkspaceDesktopNotifyData
     ): Result<Boolean> {
@@ -107,7 +119,12 @@ class CDIResourceImpl @Autowired constructor(
             checkPermission = false
         ) ?: run {
             logger.warn("messageRegister get workspace detail failed|$workspaceName")
-            return Result(false)
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "This workspace was not found"
+                )
+            )
         }
         data.userIdList.forEach { user ->
             val check = client.get(ServiceProjectAuthResource::class).isProjectUser(

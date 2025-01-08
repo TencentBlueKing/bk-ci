@@ -32,45 +32,45 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "提供给安全侧的项目下云桌面信息")
 data class WeSecProjectWorkspace(
-    @get:Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称", name = "workspace_name")
     @JsonProperty("workspace_name")
     val workspaceName: String,
-    @get:Schema(title = "项目ID")
+    @get:Schema(title = "项目ID", name = "project_id")
     @JsonProperty("project_id")
     val projectId: String,
     @get:Schema(title = "工作空间创建人")
     val creator: String,
     @get:Schema(title = "工作空间拥有者")
     val owner: String? = null,
-    @get:Schema(title = "工作空间创建时间")
+    @get:Schema(title = "工作空间创建时间", name = "create_time")
     @JsonProperty("create_time")
     val createTime: String? = null,
-    @get:Schema(title = "region_id")
+    @get:Schema(title = "region_id", name = "region_id")
     @JsonProperty("region_id")
     val regionId: String,
-    @get:Schema(title = "inner_ip")
+    @get:Schema(title = "inner_ip", name = "inner_ip")
     @JsonProperty("inner_ip")
     val innerIp: String?,
     @get:Schema(title = "状态")
     val status: String?,
-    @get:Schema(title = "工作空间实际拥有者，待分配时为空")
+    @get:Schema(title = "工作空间实际拥有者，待分配时为空", name = "real_owner")
     @JsonProperty("real_owner")
     val realOwner: String? = null,
-    @get:Schema(title = "云桌面别名")
+    @get:Schema(title = "云桌面别名", name = "display_name")
     @JsonProperty("display_name")
     val displayName: String? = null,
     @get:Schema(title = "拥有者所属组织信息")
     val ownerDepartments: List<DepartmentsInfo>?,
     @get:Schema(title = "当前登录人")
     val currentLoginUsers: Set<String>?,
-    @get:Schema(title = "机型")
+    @get:Schema(title = "机型", name = "machine_type")
     @JsonProperty("machine_type")
     val machineType: String? = null,
     @JsonProperty("mac_address")
-    @get:Schema(title = "mac地址")
+    @get:Schema(title = "mac地址", name = "mac_address")
     val macAddress: String? = null,
     @JsonProperty("zone_type")
-    @get:Schema(title = "专区类型")
+    @get:Schema(title = "专区类型", name = "zone_type")
     val zoneType: String? = null,
     @get:Schema(title = "共享人")
     val viewers: List<String>? = emptyList(),

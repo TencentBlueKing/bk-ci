@@ -8,6 +8,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.api.service.ServiceSDKResource
+import com.tencent.devops.remotedev.pojo.common.AUTH_HEADER_OAUTH2
 import com.tencent.devops.remotedev.pojo.common.DEVX_HEADER_CDI_WORKSPACE_NAME
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
@@ -26,7 +27,6 @@ class CDIFilter constructor(
 ) : ContainerRequestFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(CDIFilter::class.java)
-        const val AUTH_HEADER_OAUTH2: String = "X-CDI-OAUTH2-AUTHORIZATION"
         private const val CDI_PATH = "/api/cdi/"
     }
 
@@ -43,7 +43,7 @@ class CDIFilter constructor(
         val appIp = requestContext.headers.getFirst(AUTH_HEADER_DEVOPS_STORE_CODE)
         if (cdiToken.isNullOrBlank() || appIp.isNullOrBlank()) {
             requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
+                Response.status(Response.Status.UNAUTHORIZED).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
                         I18nUtil.generateResponseDataObject(
                             messageCode = PERMISSION_DENIED,
@@ -81,7 +81,7 @@ class CDIFilter constructor(
         val (value, message) = checkNotNull(cache.getIfPresent(cdiToken))
         if (message != null) {
             requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
+                Response.status(Response.Status.UNAUTHORIZED).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
                         I18nUtil.generateResponseDataObject(
                             messageCode = PERMISSION_DENIED,
