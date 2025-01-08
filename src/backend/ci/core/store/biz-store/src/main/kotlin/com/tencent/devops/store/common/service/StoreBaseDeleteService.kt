@@ -44,6 +44,12 @@ interface StoreBaseDeleteService {
     fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest)
 
     /**
+     * 删除组件代码库
+     * @param handlerRequest 删除组件请求报文体
+     */
+    fun deleteComponentCodeRepository(handlerRequest: StoreDeleteRequest)
+
+    /**
      * 持久化删除组件数据
      * @param handlerRequest 删除组件请求报文体
      */

@@ -461,7 +461,7 @@ class PipelineTriggerEventDao {
             dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
+                .fetchAny()
         }
         return record?.let { convertEvent(it) }
     }

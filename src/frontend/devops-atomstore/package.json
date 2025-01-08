@@ -9,7 +9,7 @@
     "codemirror": "5.61.0",
     "core-js": "3.10.0",
     "dayjs": "^1.11.2",
-    "js-cookie": "3.0.1",
+    "js-cookie": "^3.0.5",
     "mavon-editor": "^2.10.4",
     "moment": "^2.29.2",
     "vue": "~2.7.16"

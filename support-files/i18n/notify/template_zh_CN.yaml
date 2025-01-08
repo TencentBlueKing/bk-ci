@@ -1009,3 +1009,49 @@
     body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
   creator: "system"
   modifior: "system"
+- index: 48
+  id: "0f7204084e7c46da8702e3a5c377cd31"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION"
+  templateName: "蓝盾权限交接申请"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d57d7358f5034b21acafde62f27d75fd"
+    title: "蓝盾权限交接申请"
+    body: "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>蓝盾DevOps平台</title>\n    <style>\n        * {\n            box-sizing: border-box;\n        }\n\n        .content-wrapper .num {\n            color: #4e90ff;\n        }\n        td, th {\n            padding: 10px;\n            font-size: 12px;\n        }\n    </style>\n</head>\n\n<body>\n    <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n        <tbody>\n            <tr>\n                <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                    <table>\n                        <tbody>\n                            <tr>\n                                <td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\">\n                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                        <tr>\n                                            <td style=\"background: #fff; border-radius: 10px;box-shadow: 0 2px 10px 0 #19192926;position: relative; top: -30px;\">\n                                                <div style=\"padding: 20px 36px;background-color: #fff; border-radius: 10px;\">\n                                                    <p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6;font-size: 24px; \">蓝盾权限交接申请</p>\n                                                    <div class=\"content-wrapper\" style=\"color: #313238;font-size: 16px;line-height: 2;\">\n                                                        <p style=\"margin: 0;padding: 0;\">你好，${handoverTo}:</p>\n                                                        <p style=\"margin: 0;padding: 0;\"><span> ${handoverFrom} </span>申请将蓝盾项目[${projectName}]下的 ${handoverOverviews}移交给你，请确认是否接收。</p>\n                                                    </div>\n                                                    <table style=\"border-collapse: collapse; width: 100%;\" bgcolor=\"#fff\" >\n                                                        <thead>\n                                                            <tr>\n                                                                <th style=\"font-weight: 500;background: #FAFBFD;text-align: left;border-bottom: 1px solid #ddd;\">交接类型</th>\n                                                                <th style=\"font-weight: 500;background: #FAFBFD;text-align: left;border-bottom: 1px solid #ddd;\">资源类型</th>\n                                                                <th style=\"font-weight: 500;background: #FAFBFD;text-align: left;border-bottom: 1px solid #ddd;\">数量</th>\n                                                            </tr>\n                                                        </thead>\n                                                        <tbody>${table}</tbody>\n                                                    </table>\n                                                    <a href=${url}  style=\"display: block;width: 300px;padding: 10px;margin: 0 auto;background-color: #3498db;color: #fff;text-align: center;text-decoration: none;border-radius: 30px;margin-top: 50px;\">马上处理</a>\n                                                </div>\n                                            </td>\n                                        </tr>\n                                    </table>\n                                </td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </td>\n            </tr>\n        </tbody>\n    </table>\n\n</body>\n\n</html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "84f28ea9f6c44afaa3b7777cc286c18c"
+    sender: "DevOps"
+    title: "【蓝盾权限】移交通知"
+    body: "${handoverFrom}申请将蓝盾项目【${projectName}】下的 ${handoverOverviewContentOfRtx}移交给你，请确认是否接收 \n去处理：${url}"
+  creator: "system"
+  modifior: "system"
+- index: 49
+  id: "1519a9a0b92b44fe8e8e813f2b52e012"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION_RESULT"
+  templateName: "蓝盾权限交接审批结果"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "902b30b05d184f478ea8eaaea53533f1"
+    title: "蓝盾权限交接申请"
+    body: "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>蓝盾DevOps平台</title>\n    <style>\n        * {\n            box-sizing: border-box;\n        }\n\n        .content-wrapper .num {\n            color: #4e90ff;\n        }\n        td, th {\n            padding: 5px;\n        }\n    </style>\n</head>\n\n<body>\n    <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n        <tbody>\n            <tr>\n                <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                    <table>\n                        <tbody>\n                            <tr>\n                                <td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\">\n                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                        <tr>\n                                            <td style=\"background: #fff; border-radius: 10px;position: relative; top: -30px;\">\n                                                <div style=\"padding: 20px 36px;background-color: #fff;box-shadow: 0 2px 10px 0 #19192926; border-radius: 10px;\">\n                                                    <p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6; font-size: 24px; \">蓝盾权限交接申请 - ${result}</p>\n                                                    <div class=\"content-wrapper\" style=\"color: #313238;font-size: 18px;line-height: 2;\">\n                                                        <p style=\"margin: 0;padding: 0; font-size: 15px;\">你好，${handoverFrom}</p>\n                                                        <p style=\"margin: 0;padding: 0; font-size: 15px;\">${content}</p>\n                                                        <p style=\"margin: 0;padding: 0; font-size: 15px;\">审核意见：${remark}</p>\n                                                    </div>\n                                                    <a href=${url}  style=\"display: block;width: 300px;padding: 10px;margin: 0 auto;background-color: #3498db;color: #fff;text-align: center;text-decoration: none;border-radius: 30px;margin-top: 50px;\">查看详情</a>\n                                                </div>\n                                            </td>\n                                        </tr>\n                                    </table>\n                                </td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </td>\n            </tr>\n        </tbody>\n    </table>\n\n</body>\n\n</html>\n    "
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "4ead2e88f2a94fcbb7b1ffc5c523f742"
+    sender: "DevOps"
+    title: "蓝盾权限交接申请 - ${result}"
+    body: "你好，${handoverFrom} \n${weworkContent} \n审核意见：${remark} \n更多详情查看：${url}"
+  creator: "system"
+  modifior: "system"

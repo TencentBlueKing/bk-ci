@@ -55,12 +55,12 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
-import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList")
@@ -113,6 +113,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         )
         // 处理检查组件升级参数个性化逻辑
         getStoreSpecBusService(storeType).doCheckStoreUpdateParamSpecBus(storeUpdateRequest)
+    }
+
+    override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
+        val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
+        val storeType = storeBaseUpdateRequest.storeType
+        getStoreSpecBusService(storeType).doStoreUpdatePreBus(storeUpdateRequest)
     }
 
     override fun doStoreUpdateDataPersistent(storeUpdateRequest: StoreUpdateRequest) {
@@ -183,22 +189,18 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeBaseManageDao.saveStoreBaseData(context, storeBaseDataPO)
             if (!storeBaseExtDataPOs.isNullOrEmpty()) {
-                storeBaseExtManageDao.deleteStoreBaseExtInfo(context, storeId)
                 storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs)
             }
             storeBaseFeatureDataPO?.let {
                 storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
             }
             if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
-                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType.type.toByte())
                 storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
             if (!storeBaseEnvDataPOs.isNullOrEmpty()) {
-                storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
                 storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
             }
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
-                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
                 storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs)
             }
             storeLabelRelDao.deleteByStoreId(context, storeId)
@@ -255,7 +257,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         }
         if (flag) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(name)
             )
         }

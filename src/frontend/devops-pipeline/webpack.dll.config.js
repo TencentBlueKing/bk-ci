@@ -27,6 +27,7 @@ module.exports = (env = {}, argv) => {
             'axios',
             'vee-validate',
             'vue-i18n',
+            'js-cookie',
             'dayjs'
         ],
         output: {
@@ -92,7 +93,6 @@ module.exports = (env = {}, argv) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
-            new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,
                 name: 'lib',

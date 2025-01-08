@@ -28,6 +28,11 @@ interface AuthMonitorSpaceService {
     fun getMonitorSpaceBizId(projectCode: String): String
 
     /**
+     * 获取监控空间业务id列表
+     * */
+    fun listMonitorSpaceBizIds(projectCode: List<String>): Map<String, String>
+
+    /**
      * 获取监控空间详情
      */
     fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO?

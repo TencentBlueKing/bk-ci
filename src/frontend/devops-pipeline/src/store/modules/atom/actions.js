@@ -24,7 +24,7 @@ import {
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from '@/store/constants'
-import { UI_MODE } from '@/utils/pipelineConst'
+import { UI_MODE, CODE_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
 import { areDeeplyEqual } from '../../../utils/util'
@@ -264,7 +264,7 @@ export default {
             }
         }
     },
-    async transfer ({ getters }, { projectId, pipelineId, actionType, ...params }) {
+    async transfer ({ getters, state }, { projectId, pipelineId, actionType, ...params }) {
         const apis = [
             request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
                 params: {
@@ -273,7 +273,7 @@ export default {
                 }
             })
         ]
-        if (actionType === 'FULL_YAML2MODEL') {
+        if (actionType === 'FULL_YAML2MODEL' && !state.editfromImport) {
             apis.push(
                 request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
                     params: params.version ? { version: params.version } : {}
@@ -864,14 +864,8 @@ export default {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
     },
 
-    download (_, { url, name }) {
-        return fetch(url, { credentials: 'include' }).then((res) => {
-            if (res.status >= 200 && res.status < 300) {
-                return res.blob()
-            } else {
-                return res.json().then((result) => Promise.reject(result))
-            }
-        }).then((blob) => {
+    download (_, { url, name, params, type }) {
+        const fn = (blob) => {
             const a = document.createElement('a')
             const url = window.URL || window.webkitURL || window.moxURL
             a.href = url.createObjectURL(blob)
@@ -879,7 +873,38 @@ export default {
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
-        })
+        }
+
+        if (type === CODE_MODE) {
+            return fetch(url, {
+                credentials: 'include',
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(params)
+            }).then((res) => {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.json()
+                } else {
+                    return res.json().then((result) => Promise.reject(result))
+                }
+            }).then((data) => {
+                const result = data.data.newYaml
+                const blob = new Blob([result])
+                fn(blob)
+            })
+        } else {
+            return fetch(url, { credentials: 'include' }).then((res) => {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.blob()
+                } else {
+                    return res.json().then((result) => Promise.reject(result))
+                }
+            }).then((blob) => {
+                fn(blob)
+            })
+        }
     },
     reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {

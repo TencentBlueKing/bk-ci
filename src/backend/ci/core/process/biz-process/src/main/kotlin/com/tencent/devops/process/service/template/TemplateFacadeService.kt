@@ -1526,11 +1526,13 @@ class TemplateFacadeService @Autowired constructor(
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
                 // 模板中的buildNo存在才需要回显
+                // 将实例自己维护的当前值一起返回
                 val instanceBuildNoObj = templateTriggerContainer.buildNo?.let { no ->
                     BuildNo(
                         buildNoType = no.buildNoType,
                         required = no.required ?: instanceTriggerContainer.buildNo?.required,
-                        buildNo = buildNos[pipelineId] ?: no.buildNo
+                        buildNo = no.buildNo,
+                        currentBuildNo = buildNos[pipelineId]
                     )
                 }
 
@@ -1538,7 +1540,10 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
                     buildNo = instanceBuildNoObj,
-                    param = instanceParams
+                    param = instanceParams,
+                    updateBuildNo = instanceTriggerContainer.buildNo?.let { ino ->
+                        ino.buildNo != templateModel.getTriggerContainer().buildNo?.buildNo
+                    }
                 )
             }.toMap()
         } catch (ignored: Throwable) {
@@ -1871,6 +1876,16 @@ class TemplateFacadeService @Autowired constructor(
                 checkPermission = true,
                 checkTemplate = false
             )
+            templateInstanceUpdate.buildNo?.let {
+                if (templateInstanceUpdate.resetBuildNo == true) {
+                    pipelineInfoFacadeService.updateBuildNo(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        targetBuildNo = it.buildNo
+                    )
+                }
+            }
         }
     }
 
@@ -2620,37 +2635,6 @@ class TemplateFacadeService @Autowired constructor(
 
     fun enableTemplatePermissionManage(projectId: String): Boolean {
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
-    }
-
-    // TODO 埋点统计模板常量在流水线启动时被修改日志, 后续需要删除
-    fun printModifiedTemplateParams(
-        projectId: String,
-        pipelineId: String,
-        pipelineParams: List<BuildFormProperty>,
-        paramValues: Map<String, String>
-    ) {
-        val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId) ?: return
-        val templateRecord =
-            templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version) ?: return
-        val template: Model = objectMapper.readValue(templateRecord.template)
-        val templateParams = (template.getTriggerContainer()).templateParams
-        if (templateParams.isNullOrEmpty()) {
-            return
-        }
-        pipelineParams.forEach { param ->
-            val value = paramValues[param.id] ?: param.defaultValue
-            templateParams.forEach { template ->
-                if (template.id == param.id && template.defaultValue != value) {
-                    logger.warn(
-                        "BKSystemErrorMonitor|$projectId|$pipelineId|" +
-                                "templateId:${templateRecord.id}|templateVersion:${templateRecord.version}|" +
-                                "defaultValue:${template.defaultValue}|newValue:$value|" +
-                                "template params cannot be modified"
-                    )
-                    return
-                }
-            }
-        }
     }
 
     companion object {

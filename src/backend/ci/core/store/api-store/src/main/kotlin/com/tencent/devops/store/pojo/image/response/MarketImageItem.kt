@@ -68,6 +68,9 @@ data class MarketImageItem constructor(
     @get:Schema(title = "版本号", required = true)
     val version: String,
 
+    @get:Schema(title = "状态", required = true)
+    val status: String,
+
     @get:Schema(title = "镜像简介", required = false)
     val summary: String? = null,
 
@@ -127,6 +130,7 @@ data class MarketImageItem constructor(
         instance.classifyCode,
         instance.logoUrl,
         instance.version,
+        instance.status,
         instance.summary,
         instance.score,
         instance.downloads,
