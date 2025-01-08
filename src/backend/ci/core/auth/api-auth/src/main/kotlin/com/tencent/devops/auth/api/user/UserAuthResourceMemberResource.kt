@@ -272,7 +272,7 @@ interface UserAuthResourceMemberResource {
     ): Result<List<ResourceType2CountVo>>
 
     @GET
-    @Path("/{projectId}/checkMemberExitsProject")
+    @Path("/checkMemberExitsProject")
     @Operation(summary = "用户主动退出项目检查")
     fun checkMemberExitsProject(
         @Parameter(description = "用户名", required = true)
@@ -284,7 +284,7 @@ interface UserAuthResourceMemberResource {
     ): Result<MemberExitsProjectCheckVo>
 
     @POST
-    @Path("/{projectId}/memberExitsProject")
+    @Path("/memberExitsProject")
     @Operation(summary = "用户主动退出项目")
     fun memberExitsProject(
         @Parameter(description = "用户名", required = true)
