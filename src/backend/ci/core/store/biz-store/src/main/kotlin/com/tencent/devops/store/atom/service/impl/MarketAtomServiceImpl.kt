@@ -1638,7 +1638,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 )
             }
         } catch (ignored: Exception) {
-            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", ignored)
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed")
         }
     }
 }
