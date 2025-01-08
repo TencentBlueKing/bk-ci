@@ -316,7 +316,7 @@ class MakeMoneyService @Autowired constructor(
                         usage = usage,
                         dayDetail = dayDetail,
                         bgName = workspace?.bgName ?: "ERROR",
-                        flag = if (workspace?.bgName == "IEG互动娱乐事业群") 1 else 0
+                        flag = if (workspace?.bgName == "IEG互动娱乐事业群" || workspace?.bgName == "子公司组织") 1 else 0
                     )
                 )
             }
