@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.12](#v3012)
+   - [Changelog since v3.0.11](#changelog-since-v3011)
+
 - [v3.0.11](#v3011)
    - [Changelog since v3.0.0](#changelog-since-v300)
 - [v3.0.1-v3.0.10]
@@ -13,6 +16,14 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.12
+## 2025-01-08
+### Changelog since v3.0.11
+#### 修复
+
+##### 未分类
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 # v3.0.11
 ## 2024-12-05
 ### Changelog since v3.0.0
