@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.0-rc.6](#v310-rc6)
+   - [Changelog since v3.1.0-rc.5](#changelog-since-v310-rc5)
+
 - [v3.1.0-rc.5](#v310-rc5)
    - [Changelog since v3.1.0-rc.4](#changelog-since-v310-rc4)
 
@@ -19,6 +22,42 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.0-rc.6
+## 2025-01-08
+### Changelog since v3.1.0-rc.5
+#### 新增
+
+##### 流水线
+- [新增] feat：导出流水线功能优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11304)
+- [新增] feat：推荐版本号模版优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11186)
+- [新增] feat：Git分支/Tag和Svn分支/Tag类型的变量优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10774)
+
+##### 权限中心
+- [新增] feat：用户个人视角 权限管理优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11138)
+
+##### 未分类
+- [新增] feat：支持管理我的 OAUTH [链接](http://github.com/TencentBlueKing/bk-ci/issues/10995)
+- [新增] API自动化文档优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11339)
+- [新增] feat: 健康检查优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11336)
+- [新增] [feat] 插件日志10w+即归档为压缩包 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11183)
+
+#### 优化
+
+##### 流水线
+- [优化] pref：优化流水线项目下已安装插件关联流水线查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11307)
+
+##### 研发商店
+- [优化] pref:研发商店组件内置打包流水线都归属到统一的平台项目下 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10475)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复流水线事件重放报500错误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11333)
+- [修复] bug: GIT触发器单独监听[新增分支]不生效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11338)
+
+##### 研发商店
+- [修复] bug：插件执行失败时的错误码类型归属错误问题优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11294)
+
 # v3.1.0-rc.5
 ## 2024-12-23
 ### Changelog since v3.1.0-rc.4
