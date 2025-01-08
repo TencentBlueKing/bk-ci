@@ -91,4 +91,22 @@ class StoreReleaseDao {
                 .execute()
         }
     }
+
+
+    fun updateComponentFirstPublisher(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        storeType: Byte,
+        firstPublisher: String
+    ) {
+        with(TStoreRelease.T_STORE_RELEASE) {
+            dslContext.update(this)
+                .set(FIRST_PUB_CREATOR, firstPublisher)
+                .set(MODIFIER, userId)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
 }

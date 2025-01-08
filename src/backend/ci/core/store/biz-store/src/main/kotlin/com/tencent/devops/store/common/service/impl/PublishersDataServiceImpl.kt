@@ -44,6 +44,7 @@ import com.tencent.devops.store.common.dao.PublishersDao
 import com.tencent.devops.store.common.dao.StoreDockingPlatformDao
 import com.tencent.devops.store.common.dao.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.service.PublishersDataService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -70,7 +71,8 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService,
-    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao
+    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao,
+    private val storeReleaseDao: StoreReleaseDao
 ) : PublishersDataService {
 
     private val executorService = Executors.newSingleThreadExecutor()
@@ -344,6 +346,16 @@ class PublishersDataServiceImpl @Autowired constructor(
 
             logger.info("Syn person publisher group ${System.currentTimeMillis() - startTime}ms")
         }
+        return true
+    }
+
+    override fun updateComponentFirstPublisher(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        firstPublisher: String
+    ): Boolean {
+        storeReleaseDao.updateComponentFirstPublisher(dslContext, userId, storeCode, storeType.type.toByte(),firstPublisher)
         return true
     }
 

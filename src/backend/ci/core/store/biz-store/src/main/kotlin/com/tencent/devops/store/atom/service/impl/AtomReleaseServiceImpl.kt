@@ -1060,7 +1060,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     storeReleaseCreateRequest = StoreReleaseCreateRequest(
                         storeCode = atomCode,
                         storeType = StoreTypeEnum.ATOM,
-                        latestUpgrader = userId,
+                        latestUpgrader =atomReleaseRequest.creator?:userId,
                         latestUpgradeTime = pubTime
                     )
                 )

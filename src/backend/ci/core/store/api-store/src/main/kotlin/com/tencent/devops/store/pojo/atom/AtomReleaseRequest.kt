@@ -45,5 +45,8 @@ data class AtomReleaseRequest(
     @get:Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
     @get:Schema(title = "代码库分支")
-    val branch: String? = null
-)
+    val branch: String? = null,
+    @get:Schema(title = "创建人")
+    val creator: String? = null,
+
+    )
