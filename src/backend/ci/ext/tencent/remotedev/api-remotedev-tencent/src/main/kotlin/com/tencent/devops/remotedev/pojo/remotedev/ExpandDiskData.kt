@@ -40,5 +40,5 @@ data class VmDiskInfo(
     @get:Schema(title = "是否系统盘")
     val isSystemVolume: Boolean,
     @get:Schema(title = "创建磁盘时间")
-    val createdAt: String
+    val createdAt: String?
 )
