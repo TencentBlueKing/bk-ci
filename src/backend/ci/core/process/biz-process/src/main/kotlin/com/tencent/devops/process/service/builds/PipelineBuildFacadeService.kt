@@ -131,6 +131,9 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -2752,10 +2755,28 @@ class PipelineBuildFacadeService(
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
+                // 自定义触发源材料信息
+                startParameters.putAll(
+                    buildVariableService.getAllVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                    )
+                )
                 triggerContainer.elements.find { it is ManualTriggerElement }
             }
 
             StartType.REMOTE -> {
+                startParameters.putAll(
+                    // 自定义触发源材料参数
+                    buildVariableService.getAllVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                    )
+                )
                 triggerContainer.elements.find { it is RemoteTriggerElement }
             }
 
@@ -2764,6 +2785,22 @@ class PipelineBuildFacadeService(
             }
 
             StartType.PIPELINE -> {
+                // 父子流水线核心参数
+                startParameters.putAll(
+                    buildVariableService.getAllVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        keys = setOf(
+                            PIPELINE_START_PARENT_PROJECT_ID,
+                            PIPELINE_START_PARENT_PIPELINE_ID,
+                            PIPELINE_START_PARENT_BUILD_ID,
+                            PIPELINE_START_PARENT_BUILD_TASK_ID,
+                            PIPELINE_START_SUB_RUN_MODE,
+                            PIPELINE_START_PARENT_EXECUTE_COUNT
+                        )
+                    )
+                )
                 buildVariableService.getAllVariable(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -2814,7 +2851,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE, StartType.TIME_TRIGGER -> {
+        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE -> {
             buildManualStartup(
                 userId = userId,
                 projectId = projectId,
@@ -2822,6 +2859,18 @@ class PipelineBuildFacadeService(
                 channelCode = ChannelCode.BS,
                 values = startParameters,
                 startType = startType
+            )
+        }
+
+        StartType.TIME_TRIGGER -> {
+            BuildId(
+                timerTriggerPipelineBuild(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    parameters = startParameters,
+                    checkPermission = false
+                ) ?: ""
             )
         }
 
