@@ -139,12 +139,6 @@ class RbacPermissionManageFacadeServiceImpl(
                 uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
             )
         )
-        if (iamGroupIdsByConditions.isEmpty()) {
-            return SQLPage(
-                count = 0,
-                records = emptyList()
-            )
-        }
         // 查询成员所在资源用户组列表
         val (count, resourceGroupMembers) = listResourceGroupMembers(
             projectCode = projectId,
@@ -372,8 +366,6 @@ class RbacPermissionManageFacadeServiceImpl(
                 uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag
             )
         )
-        if (iamGroupIdsByConditions.isEmpty())
-            return emptyList()
 
         val (iamTemplateIds, memberDeptInfos) = getMemberTemplateIdsAndDeptInfos(
             projectCode = projectCode,
