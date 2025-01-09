@@ -16,5 +16,4 @@ object ResourceTypeId {
     const val EXPERIENCE_GROUP = "experience_group"
     // 自定义
     const val SECURITY = "security"
-    const val TGIT_LINK = "tgit_link"
 }
