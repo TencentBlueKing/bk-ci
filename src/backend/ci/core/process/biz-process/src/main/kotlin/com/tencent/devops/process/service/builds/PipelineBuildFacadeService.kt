@@ -2747,41 +2747,47 @@ class PipelineBuildFacadeService(
         // 检查触发器是否存在
         val checkTriggerResult = forceTrigger || when (startType) {
             StartType.WEB_HOOK -> {
-                // webhook触发
-                webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
-                    startParameters[param.key] = param.value.toString()
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }?.let {
+                    // webhook触发
+                    webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+                        startParameters[param.key] = param.value.toString()
+                    }
+                    it
                 }
-                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                // 自定义触发源材料信息
-                startParameters.putAll(
-                    buildVariableService.getAllVariable(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                triggerContainer.elements.find { it is ManualTriggerElement }?.let {
+                    startParameters.putAll(
+                        // 自定义触发源材料参数
+                        buildVariableService.getAllVariable(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                        )
                     )
-                )
-                triggerContainer.elements.find { it is ManualTriggerElement }
+                    it
+                }
             }
 
             StartType.REMOTE -> {
-                startParameters.putAll(
-                    // 自定义触发源材料参数
-                    buildVariableService.getAllVariable(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                triggerContainer.elements.find { it is RemoteTriggerElement }?.let {
+                    startParameters.putAll(
+                        // 自定义触发源材料参数
+                        buildVariableService.getAllVariable(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                        )
                     )
-                )
-                triggerContainer.elements.find { it is RemoteTriggerElement }
+                    it
+                }
             }
 
             StartType.TIME_TRIGGER -> {
-                triggerContainer.elements.find { it is TimerTriggerElement }
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
             StartType.PIPELINE -> {
