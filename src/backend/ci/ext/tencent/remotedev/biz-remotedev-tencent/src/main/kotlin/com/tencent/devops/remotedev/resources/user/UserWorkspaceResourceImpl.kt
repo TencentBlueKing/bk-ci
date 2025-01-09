@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -76,7 +76,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val notifyControl: NotifyControl
 ) : UserWorkspaceResource {
 
-    @AuditEntry(actionId = ActionId.CGS_START)
+    @AuditEntry(actionId = TencentActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
         bkTicket: String,
@@ -85,12 +85,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(startControl.startWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_STOP)
+    @AuditEntry(actionId = TencentActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_EDIT)
+    @AuditEntry(actionId = TencentActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(
             workspaceService.modifyWorkspaceProperty(
@@ -117,7 +117,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
@@ -210,7 +210,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_VIEW)
+    @AuditEntry(actionId = TencentActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,

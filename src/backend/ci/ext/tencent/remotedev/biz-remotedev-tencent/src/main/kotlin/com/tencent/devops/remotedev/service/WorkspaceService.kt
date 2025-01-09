@@ -40,8 +40,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.ci.UserUtil
@@ -156,13 +156,13 @@ class WorkspaceService @Autowired constructor(
     val projectMonitorUrl = ""
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_EDIT,
+        actionId = TencentActionId.CGS_EDIT,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_EDIT_CONTENT
+        content = TencentActionAuditContent.CGS_EDIT_CONTENT
     )
     @Deprecated("不要新增功能，希望废弃该方法")
     // 修改workspace备注名称
@@ -181,7 +181,7 @@ class WorkspaceService @Autowired constructor(
             )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
         if (checkPermission && !permissionService.hasUserManager(userId, ws.projectId)) {
@@ -227,7 +227,7 @@ class WorkspaceService @Autowired constructor(
         )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
         if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
@@ -248,7 +248,7 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
+    @AuditEntry(actionId = TencentActionId.CGS_SHARE)
     fun shareWorkspace4OP(
         userId: String,
         shareWorkspace: ShareWorkspace
@@ -278,13 +278,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_SHARE,
+        actionId = TencentActionId.CGS_SHARE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_SHARE_CONTENT
+        content = TencentActionAuditContent.CGS_SHARE_CONTENT
     )
     fun shareWorkspace(
         userId: String,
@@ -300,7 +300,7 @@ class WorkspaceService @Autowired constructor(
             )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         if (needPermission) {
@@ -913,13 +913,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
+        actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
+        content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
@@ -928,7 +928,7 @@ class WorkspaceService @Autowired constructor(
             permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         val winInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
@@ -1125,13 +1125,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
+        actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
+        content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
     private fun startCloudWorkspaceDetail(
         userId: String,
@@ -1141,10 +1141,10 @@ class WorkspaceService @Autowired constructor(
 
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+        ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val resourceId = if (userId != workspace.createUserId) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,

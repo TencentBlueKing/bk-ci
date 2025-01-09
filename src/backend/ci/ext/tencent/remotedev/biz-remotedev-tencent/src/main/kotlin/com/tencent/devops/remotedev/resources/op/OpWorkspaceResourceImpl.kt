@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.resources.op
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
@@ -34,7 +34,7 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         val logger = LoggerFactory.getLogger(OpWorkspaceResourceImpl::class.java)
     }
 
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
+    @AuditEntry(actionId = TencentActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
         return Result(
             workspaceService.shareWorkspace(

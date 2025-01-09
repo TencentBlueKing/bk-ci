@@ -26,24 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-websocket"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:common:common-audit:common-audit-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:remotedev:common-remotedev-dispatch-tencent"))
-    api(project(":ext:tencent:remotedev:biz-remotedev-dispatch-tencent"))
-    api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    implementation("org.apache.poi:poi")
-    implementation("org.apache.poi:poi-ooxml")
-    implementation("com.tencentcloudapi:tencentcloud-sdk-java-cfs")
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    testImplementation(project(":core:common:common-test"))
+    api(project(":core:common:common-audit"))
 }

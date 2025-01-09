@@ -32,8 +32,8 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -86,15 +86,15 @@ class RestartWorkspaceHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_RESTART,
+        actionId = TencentActionId.CGS_RESTART,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.CGS_RESTART_CONTENT
+        content = TencentActionAuditContent.CGS_RESTART_CONTENT
     )
     fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")

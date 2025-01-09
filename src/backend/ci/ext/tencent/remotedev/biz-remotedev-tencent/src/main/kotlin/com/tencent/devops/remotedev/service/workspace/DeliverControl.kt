@@ -32,10 +32,10 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent.ASSIGNS_TEMPLATE
-import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTENT
-import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent.ASSIGNS_TEMPLATE
+import com.tencent.devops.common.audit.TencentActionAuditContent.CGS_ASSIGN_USER_CONTENT
+import com.tencent.devops.common.audit.TencentActionAuditContent.PROJECT_CODE_TEMPLATE
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -67,7 +67,7 @@ class DeliverControl @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_ASSIGN,
+        actionId = TencentActionId.CGS_ASSIGN,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",

@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
@@ -32,7 +31,7 @@ class UserExpertSupportResourceImpl @Autowired constructor(
         return Result(expertSupportService.fetchSupportConfig(ExpertSupportConfigType.ERROR).map { it.content })
     }
 
-    @AuditEntry(actionId = ActionId.CGS_EXPAND_DISK)
+    @AuditEntry(actionId = TencentActionId.CGS_EXPAND_DISK)
     override fun expandDisk(userId: String, workspaceName: String, size: String): Result<ExpandDiskValidateResp?> {
         val data = expertSupportService.expandDisk(workspaceName, userId, size, null) ?: return Result(null)
         return Result(

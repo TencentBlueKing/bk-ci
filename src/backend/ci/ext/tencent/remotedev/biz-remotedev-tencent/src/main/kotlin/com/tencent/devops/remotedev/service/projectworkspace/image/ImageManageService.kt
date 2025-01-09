@@ -31,8 +31,8 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
@@ -100,15 +100,15 @@ class ImageManageService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.IMAGE_DELETE,
+        actionId = TencentActionId.IMAGE_DELETE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.IMAGE,
             instanceNames = "#imageId",
             instanceIds = "#imageId"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.IMAGE_DELETE_CONTENT
+        content = TencentActionAuditContent.IMAGE_DELETE_CONTENT
     )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
