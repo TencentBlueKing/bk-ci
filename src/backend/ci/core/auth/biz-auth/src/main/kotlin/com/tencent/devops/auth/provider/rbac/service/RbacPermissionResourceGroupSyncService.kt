@@ -29,6 +29,7 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.GroupMemberVerifyInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -161,10 +162,16 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 if (deptService.isUserDeparted(memberId)) {
                     return@forEach
                 }
-                val verifyResults = iamV2ManagerService.verifyGroupValidMember(
-                    memberId,
-                    groupInfos.joinToString(",") { it.iamGroupId.toString() }
-                )
+                // 获取用户加入组的有效期
+                val groupIds = groupInfos.map { it.iamGroupId }
+                val verifyResults = mutableMapOf<Int, GroupMemberVerifyInfo>()
+                groupIds.chunked(20).forEach { batchGroupIds ->
+                    val batchVerifyGroupValidMember = iamV2ManagerService.verifyGroupValidMember(
+                        memberId,
+                        batchGroupIds.joinToString(",")
+                    )
+                    verifyResults.putAll(batchVerifyGroupValidMember)
+                }
                 verifyResults.forEach { (groupId, verifyResult) ->
                     if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
                         logger.info("The member of group needs to be renewed:$projectCode|$groupId|$memberId")
