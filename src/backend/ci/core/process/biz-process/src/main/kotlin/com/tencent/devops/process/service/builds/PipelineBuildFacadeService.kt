@@ -2759,18 +2759,52 @@ class PipelineBuildFacadeService(
                 params = arrayOf(pipelineResourceVersion.versionName ?: "")
             )
         }
-        return BuildId(
-            webhookTriggerPipelineBuild(
-                userId = buildInfo.startUser,
+        return triggerPipeline(
+            userId = buildInfo.startUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            startParameters = startParameters,
+            startType = startType,
+            pipelineInfo = pipelineInfo,
+            pipelineResourceVersion = pipelineResourceVersion
+        )
+    }
+
+    private fun triggerPipeline(
+        startType: StartType,
+        projectId: String,
+        pipelineId: String,
+        startParameters: Map<String, String>,
+        pipelineInfo: PipelineInfo? = null,
+        pipelineResourceVersion: PipelineResourceVersion? = null,
+        userId: String
+    ) = when (startType) {
+        StartType.WEB_HOOK -> {
+            // webhook触发
+            BuildId(
+                webhookTriggerPipelineBuild(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    parameters = startParameters,
+                    checkPermission = false,
+                    startType = startType,
+                    pipelineInfo = pipelineInfo,
+                    pipelineResource = pipelineResourceVersion
+                )!!
+            )
+        }
+
+        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE, StartType.TIME_TRIGGER, StartType.PIPELINE -> {
+            buildManualStartup(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                parameters = startParameters,
-                checkPermission = false,
-                startType = startType,
-                pipelineInfo = pipelineInfo,
-                pipelineResource = pipelineResourceVersion
-            )!!
-        )
+                channelCode = ChannelCode.BS,
+                values = startParameters,
+                startType = startType
+            )
+        }
     }
 
     private fun buildRestartPipeline(
