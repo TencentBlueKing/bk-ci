@@ -250,7 +250,7 @@
                                 height="14"
                             />
                             <i18n
-                                keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
+                                path="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
                                 tag="span"
                             >
                                 <span class="tips-num">{{ exitProject.transferNeededNum }}</span>
@@ -706,9 +706,9 @@
 
             goToPermission (key) {
                 if (key === 'uniqueManager') {
-                    window.open(`${window.location.origin}/console/permission/my-permission?projectId=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
+                    window.open(`${window.location.origin}/console/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
                 } else {
-                    window.open(`${window.location.origin}/console/permission/auth/repertory?projectId=${this.projectId}&authKey=${key}`, '_blank')
+                    window.open(`${window.location.origin}/console/permission/auth/repertory?projectCode=${this.projectId}&authKey=${key}`, '_blank')
                 }
             },
 
