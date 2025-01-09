@@ -864,7 +864,7 @@ class PipelineBuildFacadeService(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            val resource = pipelineResource?:getPipelineResourceVersion(
+            val resource = pipelineResource ?: getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = readyToBuildPipelineInfo.version
