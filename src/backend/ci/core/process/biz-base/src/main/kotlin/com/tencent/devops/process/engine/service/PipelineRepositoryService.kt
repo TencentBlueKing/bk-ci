@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.service
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -58,10 +57,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -125,9 +121,6 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -1313,7 +1306,7 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         version: Int? = null,
         includeDraft: Boolean? = false,
-        checkPermission: Boolean? = true
+        editPermission: Boolean? = true
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
@@ -1358,7 +1351,7 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
-                        if (checkPermission != true) {
+                        if (editPermission != true) {
                             pipelineInfoService.transferSensitiveParam(testAtomCodes ?: emptyList(), e)
                         }
                     }

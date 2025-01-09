@@ -612,7 +612,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-        val checkPermission = pipelinePermissionService.checkPipelinePermission(
+        val editPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -623,7 +623,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = version,
             includeDraft = true,
-            checkPermission = checkPermission
+            editPermission = editPermission
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
@@ -657,7 +657,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
         val (yamlSupported, yamlPreview, msg) = try {
             val response = transferService.buildPreview(
-                userId, projectId, pipelineId, resource
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                resource = resource,
+                editPermission = editPermission
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {

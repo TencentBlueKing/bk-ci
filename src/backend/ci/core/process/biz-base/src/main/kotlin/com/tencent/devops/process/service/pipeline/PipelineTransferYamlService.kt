@@ -50,7 +50,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -132,6 +131,13 @@ class PipelineTransferYamlService @Autowired constructor(
                     aspects
                 )
             }
+            // 无编辑权限需要对流水线插件敏感参数做处理
+            if (editPermission == false) {
+                val projectTestAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
+                data.modelAndSetting?.model?.stages?.forEach {
+                    transferElementSensitiveParam(projectTestAtomCodes, it.containers)
+                }
+            }
             PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
             when (actionType) {
                 TransferActionType.FULL_MODEL2YAML -> {
@@ -206,13 +212,6 @@ class PipelineTransferYamlService @Autowired constructor(
                     )
                     val model = modelTransfer.yaml2Model(input)
                     val setting = modelTransfer.yaml2Setting(input)
-                    // 无编辑权限需要对流水线插件敏感参数做处理
-                    if (editPermission == false) {
-                        val projectTestAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
-                        model.stages.forEach {
-                            transferElementSensitiveParam(projectTestAtomCodes, it.containers)
-                        }
-                    }
                     logger.info(watcher.toString())
                     return TransferResponse(
                         yamlWithVersion = YamlWithVersion(
@@ -267,7 +266,8 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        resource: PipelineResourceVersion
+        resource: PipelineResourceVersion,
+        editPermission: Boolean? = null
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
@@ -289,7 +289,8 @@ class PipelineTransferYamlService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             actionType = TransferActionType.FULL_MODEL2YAML,
-            data = TransferBody(modelAndSetting)
+            data = TransferBody(modelAndSetting),
+            editPermission = editPermission
         ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         try {
             TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
