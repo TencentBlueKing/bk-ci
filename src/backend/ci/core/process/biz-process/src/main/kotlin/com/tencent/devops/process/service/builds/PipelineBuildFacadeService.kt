@@ -56,11 +56,13 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
@@ -2738,21 +2740,25 @@ class PipelineBuildFacadeService(
                 webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
                     startParameters[param.key] = param.value.toString()
                 }
-                triggerContainer.elements.filter { it.id == startParameters[PIPELINE_START_TASK_ID] }
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                triggerContainer.elements.filterIsInstance<ManualTriggerElement>()
+                triggerContainer.elements.find { it is ManualTriggerElement }
             }
 
             StartType.REMOTE -> {
-                triggerContainer.elements.filterIsInstance<RemoteTriggerElement>()
+                triggerContainer.elements.find { it is RemoteTriggerElement }
             }
 
-            else -> {
-                null
+            StartType.TIME_TRIGGER -> {
+                triggerContainer.elements.find { it is TimerTriggerElement }
             }
-        }.isNullOrEmpty()
+
+            StartType.PIPELINE -> {
+                EmptyElement()
+            }
+        } == null
         if (checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
