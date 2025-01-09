@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
@@ -48,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -69,6 +71,7 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import java.util.LinkedList
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -86,7 +89,8 @@ class PipelineTransferYamlService @Autowired constructor(
     private val yamlIndexService: YamlIndexService,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val client: Client,
-    private val yamlSchemaCheck: CodeSchemaCheck
+    private val yamlSchemaCheck: CodeSchemaCheck,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -112,7 +116,8 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String?,
         actionType: TransferActionType,
         data: TransferBody,
-        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
+        editPermission: Boolean? = null
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         // #8161 蓝盾PAC默认使用V3版本的YAML语言
@@ -200,7 +205,13 @@ class PipelineTransferYamlService @Autowired constructor(
                     )
                     val model = modelTransfer.yaml2Model(input)
                     val setting = modelTransfer.yaml2Setting(input)
-
+                    // 无编辑权限需要对流水线插件敏感参数做处理
+                    if (editPermission == false) {
+                        val projectTestAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
+                        model.stages.forEach {
+                            transferElementSensitiveParam(projectTestAtomCodes, it.containers)
+                        }
+                    }
                     logger.info(watcher.toString())
                     return TransferResponse(
                         yamlWithVersion = YamlWithVersion(
@@ -214,6 +225,17 @@ class PipelineTransferYamlService @Autowired constructor(
             watcher.stop()
         }
         return TransferResponse()
+    }
+
+    private fun transferElementSensitiveParam(projectTestAtomCodes: List<String>?, containers: List<Container>) {
+        containers.forEach {
+            it.elements.forEach { e ->
+                pipelineRepositoryService.transferSensitiveParam(
+                    projectTestAtomCodes = projectTestAtomCodes ?: emptyList(),
+                    element = e
+                )
+            }
+        }
     }
 
     fun modelTaskTransfer(

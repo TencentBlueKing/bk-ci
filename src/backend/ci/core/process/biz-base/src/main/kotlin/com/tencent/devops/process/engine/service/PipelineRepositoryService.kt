@@ -1368,13 +1368,13 @@ class PipelineRepositoryService constructor(
     }
 
     // 敏感入参解析
-    fun transferSensitiveParam(testAtomCodes: List<String>, atomElement: Element) {
-        if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
-            val atomCode = atomElement.getAtomCode()
-            val version = atomElement.version
+    fun transferSensitiveParam(projectTestAtomCodes: List<String>, element: Element) {
+        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+            val atomCode = element.getAtomCode()
+            val version = element.version
             val hashKey = if (version.contains(".*")) {
                 var latestVersion: String? = null
-                if (testAtomCodes.contains(atomCode)) {
+                if (projectTestAtomCodes.contains(atomCode)) {
                     latestVersion = version
                 }
                 if (latestVersion.isNullOrBlank()) {
@@ -1394,7 +1394,7 @@ class PipelineRepositoryService constructor(
                 hashKey = hashKey
             )
             if (!param.isNullOrBlank()) {
-                atomElement.transferSensitiveParam(param.split(","))
+                element.transferSensitiveParam(param.split(","))
             }
         }
     }
