@@ -55,6 +55,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("MagicNumber")
 class ProjectPaasCCService @Autowired constructor(
     val objectMapper: ObjectMapper
 ) {
@@ -64,6 +65,14 @@ class ProjectPaasCCService @Autowired constructor(
     @Value("\${bcs.token}")
     private lateinit var bcsToken: String
 
+    @Value("\${bcs.project.activity.url}")
+    private lateinit var bcsProjectActivityCheckUrl: String
+
+    @Value("\${esb.appCode:}")
+    private lateinit var appCode: String
+
+    @Value("\${esb.appSecret:}")
+    private lateinit var appSecret: String
     fun createPaasCCProject(
         userId: String,
         accessToken: String,
@@ -101,7 +110,8 @@ class ProjectPaasCCService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_BSC_CREATE_PROJECT,
                 language = I18nUtil.getLanguage(userId)
-            ))
+            )
+        )
         val result = objectMapper.readValue<Result<Map<String, Any>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the projects in bcs with response $responseContent")
@@ -148,16 +158,19 @@ class ProjectPaasCCService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
-            ))
+            )
+        )
         logger.info("Success to update the project with response $responseContent")
         val result: Response<Any> = objectMapper.readValue(responseContent)
 
         if (result.code.toInt() != 0) {
             logger.warn("Fail to update the project in bcs with response $responseContent")
-            throw OperationException(MessageUtil.getMessageByLocale(
-                messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
-                language = I18nUtil.getLanguage(userId)
-            ) + ": $responseContent")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
+                    language = I18nUtil.getLanguage(userId)
+                ) + ": $responseContent"
+            )
         }
     }
 
@@ -182,7 +195,8 @@ class ProjectPaasCCService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = FAILED_UPDATE_LOGO_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
-            ))
+            )
+        )
         logger.info("Success to update the projectLogo with response $responseContent")
         val result: Response<Any> = objectMapper.readValue(responseContent)
 
@@ -197,7 +211,6 @@ class ProjectPaasCCService @Autowired constructor(
         }
     }
 
-    @Suppress("MagicNumber")
     fun getPaasCCProjectInfo(projectCode: String, accessToken: String): BcsProjectInfo? {
         logger.info("get the bsc projectInfo $projectCode with token $accessToken")
         val url = "$ccUrl/$projectCode"
@@ -208,7 +221,8 @@ class ProjectPaasCCService @Autowired constructor(
             request,
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_FAILED_GET_PAASCC_INFORMATION
-            ))
+            )
+        )
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
         if (result.code != 0) {
             if (result.code == 2001600) {
@@ -220,16 +234,43 @@ class ProjectPaasCCService @Autowired constructor(
         return result.data
     }
 
+    fun checkPassCCProjectActivity(projectCode: String): Boolean {
+        logger.info("check pass cc project activity:$projectCode")
+        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+            .replace("\\s".toRegex(), "")
+        val url = String.format(bcsProjectActivityCheckUrl, projectCode)
+        val request = Request.Builder().url(url)
+            .addHeader("Authorization", "Bearer $bcsToken")
+            .addHeader("X-Bkapi-Authorization", headerStr)
+            .get().build()
+        val responseContent = request(
+            request = request,
+            errorMessage = "check pass cc project activity failed"
+        )
+        logger.info("check pass cc project activity response:$responseContent")
+        val result = objectMapper.readValue<Result<Map<String, String>?>>(responseContent)
+        if (result.code != 0) {
+            if (result.code == 1405501) {
+                logger.warn("Fail to get Project in bcs with: ${result.message}")
+                throw OperationException("pass cc project not exist $projectCode")
+            }
+            logger.warn("check pass cc project activity failed $responseContent")
+            throw OperationException("check pass cc project activity failed $responseContent")
+        }
+        val isPassCCProjectActive = result.data?.get("isActive")?.toBoolean() ?: true
+        logger.info("pass project activity :$projectCode|$isPassCCProjectActive")
+        return isPassCCProjectActive
+    }
+
     private fun request(request: Request, errorMessage: String): String {
-//        val httpClient = okHttpClient.newBuilder().build()
         OkhttpUtils.doHttp(request).use { response ->
-            //        httpClient.newCall(request).execute().use { response ->
             val responseContent = response.body!!.string()
             logger.info("bcs: $responseContent")
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code} " +
-                            ", message ${response.message} and response $responseContent")
+                        ", message ${response.message} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent
