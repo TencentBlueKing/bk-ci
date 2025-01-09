@@ -284,16 +284,20 @@ class PipelineTransferYamlService @Autowired constructor(
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        val yaml = resource.yaml ?: transfer(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            actionType = TransferActionType.FULL_MODEL2YAML,
-            data = TransferBody(modelAndSetting),
-            editPermission = editPermission
-        ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
+        val yaml = if (editPermission == false || resource.yaml.isNullOrBlank()) {
+            transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = TransferActionType.FULL_MODEL2YAML,
+                data = TransferBody(modelAndSetting),
+                editPermission = editPermission
+            ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
+        } else {
+            resource.yaml
+        }
         try {
-            TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+            TransferMapper.getYamlLevelOneIndex(yaml!!).forEach { (key, value) ->
                 if (key in pipeline_key) pipelineIndex.add(value)
                 if (key in trigger_key) triggerIndex.add(value)
                 if (key in notice_key) noticeIndex.add(value)
@@ -302,7 +306,7 @@ class PipelineTransferYamlService @Autowired constructor(
         } catch (ignore: Throwable) {
             logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
         }
-        return PreviewResponse(yaml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
+        return PreviewResponse(yaml!!, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
     }
 
     fun position(
