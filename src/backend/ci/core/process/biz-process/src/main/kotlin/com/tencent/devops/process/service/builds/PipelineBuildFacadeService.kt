@@ -2764,6 +2764,11 @@ class PipelineBuildFacadeService(
             }
 
             StartType.PIPELINE -> {
+                buildVariableService.getAllVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                ).forEach { (key, value) -> startParameters[key] = value }
                 EmptyElement()
             }
         } == null
