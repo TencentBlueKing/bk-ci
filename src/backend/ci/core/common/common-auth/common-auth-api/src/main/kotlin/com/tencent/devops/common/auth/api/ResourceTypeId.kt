@@ -7,8 +7,6 @@ object ResourceTypeId {
     const val PIPELINE_TEMPLATE = "pipeline_template"
     const val CREDENTIAL = "credential"
     const val CERT = "cert"
-    const val CGS = "cgs"
-    const val IMAGE = "image"
     const val ENVIRONMENT = "environment"
     const val ENV_NODE = "env_node"
     const val RULE = "rule"
