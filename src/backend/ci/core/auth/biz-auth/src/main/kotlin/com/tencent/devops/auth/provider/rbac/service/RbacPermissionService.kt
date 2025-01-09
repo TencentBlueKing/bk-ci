@@ -51,6 +51,7 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -360,6 +361,30 @@ class RbacPermissionService(
                         projectCode = projectCode,
                         resourceType = resourceType
                     )
+
+                resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
+                    val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
+                        client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
+                            projectId = projectCode,
+                            viewIdsEncode = authViewIds
+                        ).data
+                    } ?: emptyList()
+
+                    val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
+                    val pipelineIds = mutableSetOf<String>().apply {
+                        addAll(authViewPipelineIds)
+                        addAll(
+                            getFinalResourceCodes(
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                iamResourceCodes = authPipelineIamIds,
+                                createUser = userId
+                            )
+                        )
+                    }
+                    pipelineIds.toList()
+                }
+
                 // 返回具体资源列表
                 else -> {
                     val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
