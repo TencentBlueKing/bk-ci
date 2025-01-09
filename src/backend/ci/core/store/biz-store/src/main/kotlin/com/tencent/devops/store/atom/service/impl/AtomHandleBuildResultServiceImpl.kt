@@ -98,7 +98,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 redisLock.lock()
                 marketAtomDao.setupAtomLatestTestFlag(
                     dslContext = dslContext,
-                    userId = storeBuildResultRequest.userId,
+                    userId = atomRecord.modifier,
                     atomCode = atomCode,
                     atomId = atomId
                 )
