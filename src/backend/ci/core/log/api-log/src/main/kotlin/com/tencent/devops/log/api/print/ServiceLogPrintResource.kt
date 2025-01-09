@@ -127,7 +127,7 @@ interface ServiceLogPrintResource {
         executeCount: Int?,
         @Parameter(description = "插件的存储模式", required = false)
         @QueryParam("logStorageMode")
-        logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
+        logStorageMode: LogStorageMode? = null,
         @Parameter(description = "job id", required = false)
         @QueryParam("userJobId")
         jobId: String?,
