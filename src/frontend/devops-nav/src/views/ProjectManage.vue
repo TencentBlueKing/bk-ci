@@ -249,12 +249,12 @@
                                 width="14"
                                 height="14"
                             />
-                            <i18n-t
+                            <i18n
                                 keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
                                 tag="span"
                             >
                                 <span class="tips-num">{{ exitProject.transferNeededNum }}</span>
-                            </i18n-t>
+                            </i18n>
                         </span>
                         <span class="refresh">
                             <Icon
@@ -304,13 +304,13 @@
                                 { required: true, message: $t('请输入移交人'), trigger: 'blur' }
                             ]"
                         >
-                            <project-user-selector
+                            <ProjectUserSelector
                                 :project-id="projectId"
                                 class="selector-input"
                                 @change="handleChangeOverFormName"
                                 @removeAll="handleClearOverFormName"
                             >
-                            </project-user-selector>
+                            </ProjectUserSelector>
                         </bk-form-item>
                     </bk-form>
                     <p class="label-tip">{{ $t('可以批量交接给接收人，接收人同意后，方可进行退出操作') }}</p>
