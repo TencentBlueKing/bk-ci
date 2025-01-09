@@ -2832,7 +2832,7 @@ class PipelineBuildFacadeService(
                     values = startParameters,
                     runMode = startParameters[PIPELINE_START_SUB_RUN_MODE] ?: SubPipelineStartUpService.SYNC_RUN_MODE,
                     executeCount = startParameters[PIPELINE_START_PARENT_EXECUTE_COUNT]?.toInt()
-                ).data.id
+                ).data!!.id
             )
         }
     }
