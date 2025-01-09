@@ -191,7 +191,7 @@
                             </bk-button> -->
                             <bk-button
                                 text
-                                @click="handleQuit(row)"
+                                @click="handleQuitClick(row)"
                             >
                                 {{ $t('projectExit') }}
                             </bk-button>
@@ -231,7 +231,6 @@
             :auto-close="false"
             :render-directive="'if'"
             ext-cls="exit-project-dialog"
-            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
             <template slot="header">
                 <Icon
@@ -241,7 +240,7 @@
                 />
                 <h2 class="dialog-header"> {{ $t('抱歉无法退出项目') }} </h2>
             </template>
-            <main>
+            <main v-bkloading="{ isLoading: isMainLoading }">
                 <div class="project-content">
                     <p class="tips">
                         <span>
@@ -254,7 +253,7 @@
                                 keypath="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
                                 tag="span"
                             >
-                                <span class="tips-num">{{ '10' }}</span>
+                                <span class="tips-num">{{ exitProject.transferNeededNum }}</span>
                             </i18n-t>
                         </span>
                         <span class="refresh">
@@ -263,20 +262,20 @@
                                 width="12"
                                 height="12"
                             />
-                            <span>{{ $t('刷新') }}</span>
+                            <span @click="handleRefresh">{{ $t('刷新') }}</span>
                         </span>
                     </p>
                     <ul
                         class="service-list"
-                        :style="{ 'max-height': `${ulMaxHeight}px` }"
                     >
                         <li
-                            v-for="item in exitProjectList"
-                            :key="item.id"
+                            v-for="(label, tips) in exitProjectCounts"
+                            :key="tips"
+                            v-if="label.count"
                         >
                             <p class="item">
-                                <span class="item-name">{{ item.name }}</span>
-                                <span class="item-num">{{ item.num }}</span>
+                                <span class="item-name">{{ $t(tips) }}</span>
+                                <span class="item-num">{{ label.count }}</span>
                             </p>
                             <p class="go-detail">
                                 <Icon
@@ -284,7 +283,7 @@
                                     width="12"
                                     height="12"
                                 />
-                                <span>{{ $t('详情') }}</span>
+                                <span @click="goToPermission(label.key)">{{ $t('详情') }}</span>
                             </p>
                         </li>
                     </ul>
@@ -321,6 +320,7 @@
                 <div class="bk-dialog-outer">
                     <bk-button
                         theme="primary"
+                        :loading="quitLoading"
                         @click="handleHandoverConfirm"
                     >
                         {{ $t('confirm') }}
@@ -346,6 +346,7 @@
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
     import Icon from '@/components/Icon/index.vue'
+    import authInfo from '@/utils/auth'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
@@ -395,59 +396,10 @@
                     name: '',
                     type: ''
                 },
-                exitProjectList: [
-                    {
-                        id: 1,
-                        name: '流水线权限代持',
-                        num: 4
-                    },
-                    {
-                        id: 2,
-                        name: '流水线权限代持',
-                        num: 1
-                    },
-                    {
-                        id: 3,
-                        name: '流水线权限代持',
-                        num: 5
-                    },
-                    {
-                        id: 4,
-                        name: '流水线权限代持',
-                        num: 13
-                    },
-                    {
-                        id: 5,
-                        name: '流水线权限代持',
-                        num: 4
-                    },
-                    {
-                        id: 6,
-                        name: '流水线权限代持',
-                        num: 1
-                    },
-                    {
-                        id: 7,
-                        name: '流水线权限代持',
-                        num: 5
-                    },
-                    {
-                        id: 8,
-                        name: '流水线权限代持',
-                        num: 13
-                    },
-                    {
-                        id: 9,
-                        name: '流水线权限代持',
-                        num: 5
-                    },
-                    {
-                        id: 10,
-                        name: '流水线权限代持',
-                        num: 13
-                    }
-                ],
-                dialogTopOffset: null
+                exitProject: {},
+                quitLoading: false,
+                isMainLoading: false,
+                targetMember: null
             }
         },
         computed: {
@@ -467,8 +419,26 @@
                     order: this.getkeyByValue(ORDER_ENUM, order)
                 }
             },
-            ulMaxHeight () {
-                return window.innerHeight * 0.8 - 410
+
+            exitProjectCounts () {
+                return {
+                    流水线权限代持: {
+                        count: this.exitProject.pipelineAuthorizationCount,
+                        key: 'pipeline'
+                    },
+                    代码库授权: {
+                        count: this.exitProject.repositoryAuthorizationCount,
+                        key: 'repertory'
+                    },
+                    部署节点授权: {
+                        count: this.exitProject.envNodeAuthorizationCount,
+                        key: 'env_node'
+                    },
+                    资源唯一拥有者: {
+                        count: this.exitProject.uniqueManagerCount,
+                        key: 'uniqueManager'
+                    }
+                }
             }
         },
         watch: {
@@ -483,7 +453,12 @@
             this.fetchProjects()
         },
         methods: {
-            ...mapActions(['fetchProjectList', 'toggleProjectEnable']),
+            ...mapActions([
+                'fetchProjectList',
+                'toggleProjectEnable',
+                'checkMemberExitsProject',
+                'memberExitsProject'
+            ]),
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -550,6 +525,7 @@
                     title: this.$t('确认退出项目?'),
                     extCls: 'info-box',
                     width: 480,
+                    confirmLoading: true,
                     subHeader: h('div', { class: 'info-content' },
                                  [
                                      h('div', { class: 'info-project' },
@@ -560,8 +536,30 @@
                                      ),
                                      h('div', { class: 'info-tips' }, this.$t('退出后，将清理你在此项目下获得的权限，确认退出吗？'))
                                  ]),
-                    confirmFn () {
-                        // 正常退出
+                    confirmFn: async () => {
+                        const params = {
+                            projectId: this.projectId,
+                            handoverParams: {
+                                targetMember: {
+                                    id: this.targetMember.username,
+                                    name: this.targetMember.chineseName,
+                                    type: 'user',
+                                    departed: true
+                                }
+                            }
+                        }
+                        await this.memberExitsProject(params).then(res => {
+                            this.$bkMessage({
+                                message: this.$t('已成功退出项目'),
+                                theme: 'success'
+                            })
+                            this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
+                        }).catch(error => {
+                            this.$bkMessage({
+                                message: error.message,
+                                theme: 'error'
+                            })
+                        })
                     }
                 })
             },
@@ -569,83 +567,151 @@
              * 通过「组织架构」获得权限，无法退出
              * @param row
              */
-            unableToExit (row) {
+            unableToExit (departments) {
                 const h = this.$createElement
                 this.$bkInfo({
                     type: 'warning',
                     title: this.$t('抱歉无法退出项目?'),
                     extCls: 'info-box',
                     width: 480,
-                    subHeader: h('div', { class: 'info-content' },
+                    showFooter: false,
+                    subHeader: h('div', { class: 'info-content footer-none' },
                                  [
                                      h('div', { class: 'info-tips' }, [
                                          h('span', this.$t('您的权限是通过组织架构')),
-                                         h('span', { class: 'reminder' }, row.projectName),
-                                         h('span', this.$t('获得项目权限，不能单独退出，请联系操作人')),
-                                         h('span', { class: 'reminder' }, row.creator),
-                                         h('span', this.$t('评估按照组织架构添加权限是否合理。'))
+                                         h('span', { class: 'reminder' }, departments),
+                                         h('span', this.$t('获得项目权限，不能单独退出，请联系项目管理员，评估按照组织架构添加权限是否合理。'))
                                      ])
                                  ]
-                    ),
-                    confirmFn () {
-                        // 正常退出
-                    }
+                    )
                 })
             },
             /**
              * 需要完成交接，才能退出
-             * @param row
              */
-            exitAfterHandover (row) {
-                this.showDialog = true
-                this.projectId = row.englishName
-
-                const ITEM_HEIGHT = 32 // 每项的高度
-                const DIALOG_EXTRA_HEIGHT = 410 // 对话框额外的固定高度
-                const totalListHeight = this.exitProjectList.length * ITEM_HEIGHT
-                const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
-                this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
-            },
-
-            handleQuit (row) {
-                // this.normalExit(row)
-                // this.unableToExit(row)
-                this.exitAfterHandover(row)
-                // this.handleHandoverConfirm()
-            },
-
             async handleHandoverConfirm () {
-                this.$refs.formRef.validate().then(() => {
-                    console.log('🚀 ~ isValidate:', this.handOverForm)
-                    // 调用接口获取跳转的flowNo
-                    // this.showDialog = false
-                    const h = this.$createElement
-                    this.$bkInfo({
-                        title: this.$t('提交成功?'),
-                        extCls: 'info-box',
-                        width: 480,
-                        subHeader: h('div',
-                                     { class: 'info-content' },
-                                     [
-                                         h('div', { class: 'info-tips' },
-                                           [
-                                               h('p', { class: 'info-text' }, this.$t('已成功提交「移交权限」申请，等待交接人确认。')),
-                                               h('p', { class: 'info-text' }, [
-                                                   h('span', this.$t('可在“')),
-                                                   h('span', {
-                                                       style: { color: '#3A84FF' },
-                                                       onClick () {
-                                                           window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${111}&type=handoverFromMe`, '_blank')
-                                                       }
-                                                   }, this.$t('我的交接')),
-                                                   h('span', this.$t('”中查看进度。'))
-                                               ])
-                                           ]
-                                         )
-                                     ])
+                this.$refs.formRef.validate().then(async () => {
+                    const { displayName, ...handoverTo } = this.handOverForm
+                    const params = {
+                        projectId: this.projectId,
+                        handoverParams: {
+                            targetMember: {
+                                id: this.targetMember.username,
+                                name: this.targetMember.chineseName,
+                                type: 'user',
+                                departed: true
+                            },
+                            handoverTo: {
+                                ...handoverTo,
+                                departed: true
+                            }
+                        }
+                    }
+                    this.quitLoading = true
+                    await this.memberExitsProject(params).then(res => {
+                        this.quitLoading = false
+                        this.showDialog = false
+                        const h = this.$createElement
+                        this.$bkInfo({
+                            title: this.$t('提交成功?'),
+                            extCls: 'info-box',
+                            width: 480,
+                            okText: this.$t('查看进度'),
+                            cancelText: this.$t('关闭'),
+                            subHeader: h('div',
+                                         { class: 'info-content' },
+                                         [
+                                             h('div', { class: 'info-tips' },
+                                               [
+                                                   h('p', { class: 'info-text' }, this.$t('已成功提交「移交权限」申请，等待交接人确认。')),
+                                                   h('p', { class: 'info-text' }, [
+                                                       h('span', this.$t('可在“')),
+                                                       h('span', {
+                                                           style: { color: '#3A84FF', cursor: 'pointer' },
+                                                           on: {
+                                                               click: () => {
+                                                                   window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                                                               }
+                                                           }
+                                                       }, this.$t('我的交接')),
+                                                       h('span', this.$t('”中查看进度。'))
+                                                   ])
+                                               ]
+                                             )
+                                         ]),
+                            confirmFn: () => {
+                                this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
+                                window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                            },
+                            cancelFn: () => {
+                                this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
+                            }
+                        })
+                    }).catch(error => {
+                        this.quitLoading = false
+                        console.log('error:', error)
                     })
                 })
             },
+
+            async updateExitProject (projectId) {
+                try {
+                    const res = await this.checkMemberExitsProject({ projectId })
+                    const {
+                        uniqueManagerCount = 0,
+                        pipelineAuthorizationCount = 0,
+                        repositoryAuthorizationCount = 0,
+                        envNodeAuthorizationCount = 0
+                    } = res
+
+                    this.exitProject = {
+                        ...res,
+                        transferNeededNum: uniqueManagerCount + pipelineAuthorizationCount + repositoryAuthorizationCount + envNodeAuthorizationCount
+                    }
+                } catch (error) {
+                    console.log('error', error)
+                }
+            },
+
+            async handleQuitClick (row) {
+                this.targetMember = await authInfo.requestCurrentUser()
+                this.projectId = row.englishName
+                await this.updateExitProject(this.projectId)
+
+                const {
+                    departmentJoinedCount = 0,
+                    departments,
+                    transferNeededNum
+                } = this.exitProject
+
+                if (departmentJoinedCount > 0) {
+                    this.unableToExit(departments)
+                } else if (transferNeededNum > 0) {
+                    this.showDialog = true
+                } else {
+                    this.normalExit(row)
+                }
+            },
+
+            async handleRefresh () {
+                try {
+                    this.isMainLoading = true
+                    await this.updateExitProject(this.projectId)
+                } catch (error) {
+                    console.error('Error during handleRefresh:', error)
+                } finally {
+                    this.isMainLoading = false
+                }
+            },
+
+            goToPermission (key) {
+                if (key === 'uniqueManager') {
+                    window.open(`${window.location.origin}/console/permission/my-permission?projectId=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
+                } else {
+                    window.open(`${window.location.origin}/console/permission/auth/repertory?projectId=${this.projectId}&authKey=${key}`, '_blank')
+                }
+            },
+
             handleClosed () {
                 this.showDialog = false
                 this.handleClearOverFormName()
@@ -658,12 +724,13 @@
                     type: ''
                 }
             },
+
             handleChangeOverFormName ({ list, userList }) {
                 if (!list) {
                     Object.assign(this.handOverForm, this.getHandOverForm())
                     return
                 }
-                const val = list.join(',')
+                const val = list[0]
                 this.handOverForm = userList.find(i => i.id === val)
             },
 
@@ -1000,6 +1067,9 @@
                 }
             }
         }
+        .footer-none {
+            margin-bottom: 18px;
+        }
     }
     .dialog-header {
         margin-top: 18px;
@@ -1024,6 +1094,7 @@
             }
             .refresh {
                 color: #3A84FF;
+                cursor: pointer;
             }
         }
         .service-list {
@@ -1064,6 +1135,7 @@
                 }
                 .go-detail {
                     color: #3A84FF;
+                    cursor: pointer;
                     svg {
                         vertical-align: middle;
                         margin-right: 6px;
@@ -1111,10 +1183,6 @@
         .bk-dialog-footer{
             background-color: #fff;
             border: none;
-        }
-        .bk-dialog {
-            top: 50% !important;
-            transform: var(--dialog-top-translateY) !important;
         }
     }
 </style>

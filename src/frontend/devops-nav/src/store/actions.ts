@@ -187,6 +187,18 @@ const actions: ActionTree<RootState, any> = {
             ...params
         }).toString()
         return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/listProjectMembers?${query}`)
+    },
+    /**
+     * 用户主动退出项目检查
+     */
+    checkMemberExitsProject (_, { projectId }) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/checkMemberExitsProject`)
+    },
+    /**
+     * 用户主动退出项目
+     */
+    memberExitsProject (_, { projectId, handoverParams }) {
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/memberExitsProject`, handoverParams)
     }
 }
 

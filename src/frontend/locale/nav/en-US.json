@@ -230,13 +230,19 @@
     "批量交接-接收人": "Batch handover - recipient",
     "可以批量交接给接收人，接收人同意后，方可进行退出操作": "You can batch handover to the recipient, and the recipient must agree before you can exit",
     "您的权限是通过组织架构": "Your permissions are obtained through the organizational structure",
-    "获得项目权限，不能单独退出，请联系操作人": " to obtain project permissions, cannot exit individually, please contact the operator",
-    "评估按照组织架构添加权限是否合理。": "Evaluate whether adding permissions according to the organizational structure is reasonable.",
+    "获得项目权限，不能单独退出，请联系项目管理员，评估按照组织架构添加权限是否合理。": " Obtained project permissions, cannot exit individually, please contact the project administrator,Evaluate whether adding permissions according to the organizational structure is reasonable.",
     "确认退出项目?": "Confirm exit from the project?",
     "项目": "Project",
     "退出后，将清理你在此项目下获得的权限，确认退出吗？": "After exiting, your permissions obtained in this project will be cleared, confirm exit?",
     "提交成功": "Submission successful",
     "已成功提交「移交权限」申请，等待交接人确认。": "Successfully submitted 'handover permissions' application, waiting for the handover person to confirm.",
-    "可在“我的交接”中查看进度。": "You can check the progress in 'My Handover'.",
-    "关闭": "Close"
+    "可在“": "You can check in \" ",
+    "我的交接": "My Handover",
+    "”中查看进度。": " \" to view the progress.",
+    "关闭": "Close",
+    "已成功退出项目": "Successfully exited the project",
+    "流水线权限代持": "Pipeline permission holding",
+    "代码库授权": "Repository authorization",
+    "部署节点授权": "Deployment node authorization",
+    "资源唯一拥有者": "Sole owner of the resource"
 }
