@@ -336,7 +336,7 @@ open class BkRepoDownloadService(
         val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
         val sha256 = fileDetail!!.sha256
         val deployDomain = HomeHostUtil.outerServerHost().removePrefix("https://").removePrefix("http://")
-        val appDeviceTypes = fileProperties[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: ""
+        val appDeviceTypes = fileProperties[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"
         val appModuleType = fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "entry"
 
         // 支持HSP
@@ -433,7 +433,7 @@ open class BkRepoDownloadService(
                     """,{
                           "name": "${hspMetadata[ARCHIVE_PROPS_APP_NAME] ?: d.moduleName}",
                           "type": "${fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "shared"}",
-                          "deviceTypes": ${hspMetadata[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: ""},
+                          "deviceTypes": ${hspMetadata[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"},
                           "packageUrl": "$hspDownloadUrl",
                           "packageHash": "${hspFile.sha256}"
                         }
