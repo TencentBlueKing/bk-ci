@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.pojo.TemplatePath
@@ -90,7 +91,7 @@ class PipelineTransferYamlService @Autowired constructor(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val client: Client,
     private val yamlSchemaCheck: CodeSchemaCheck,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineInfoService: PipelineInfoService
 ) {
 
     companion object {
@@ -230,7 +231,7 @@ class PipelineTransferYamlService @Autowired constructor(
     private fun transferElementSensitiveParam(projectTestAtomCodes: List<String>?, containers: List<Container>) {
         containers.forEach {
             it.elements.forEach { e ->
-                pipelineRepositoryService.transferSensitiveParam(
+                pipelineInfoService.transferSensitiveParam(
                     projectTestAtomCodes = projectTestAtomCodes ?: emptyList(),
                     element = e
                 )

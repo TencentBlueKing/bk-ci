@@ -172,7 +172,8 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineInfoService: PipelineInfoService
 ) {
 
     companion object {
@@ -1358,45 +1359,13 @@ class PipelineRepositoryService constructor(
                         }
                         e.additionalOptions?.customEnv = null
                         if (checkPermission != true) {
-                            transferSensitiveParam(testAtomCodes ?: emptyList(), e)
+                            pipelineInfoService.transferSensitiveParam(testAtomCodes ?: emptyList(), e)
                         }
                     }
                 }
             }
         }
         return resource
-    }
-
-    // 敏感入参解析
-    fun transferSensitiveParam(projectTestAtomCodes: List<String>, element: Element) {
-        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-            val atomCode = element.getAtomCode()
-            val version = element.version
-            val hashKey = if (version.contains(".*")) {
-                var latestVersion: String? = null
-                if (projectTestAtomCodes.contains(atomCode)) {
-                    latestVersion = version
-                }
-                if (latestVersion.isNullOrBlank()) {
-                    val atomRunInfoStr = redisOperation.hget(
-                        key = "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode",
-                        hashKey = version
-                    )
-                    val atomRunInfo = atomRunInfoStr?.let { JsonUtil.toMap(it) }
-                    latestVersion = atomRunInfo?.get(KEY_VERSION).toString()
-                }
-                latestVersion
-            } else {
-                version
-            }
-            val param = redisOperation.hget(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = hashKey
-            )
-            if (!param.isNullOrBlank()) {
-                element.transferSensitiveParam(param.split(","))
-            }
-        }
     }
 
     fun getDraftVersionResource(

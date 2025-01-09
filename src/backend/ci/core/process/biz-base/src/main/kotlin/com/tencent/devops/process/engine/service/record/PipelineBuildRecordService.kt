@@ -67,6 +67,7 @@ import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -108,6 +109,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     private val client: Client,
+    private val pipelineInfoService: PipelineInfoService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -115,7 +117,7 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
-    pipelineEventDispatcher: PipelineEventDispatcher,
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = recordModelDao,
@@ -262,7 +264,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 }
                 if (sensitiveFlag != true) {
                     container.elements.forEach { e ->
-                        pipelineRepositoryService.transferSensitiveParam(testAtomCodes, e)
+                        pipelineInfoService.transferSensitiveParam(testAtomCodes, e)
                     }
                 }
             }
