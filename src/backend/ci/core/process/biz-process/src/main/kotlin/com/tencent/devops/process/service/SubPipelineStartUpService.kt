@@ -97,7 +97,7 @@ class SubPipelineStartUpService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
-        private const val SYNC_RUN_MODE = "syn"
+        const val SYNC_RUN_MODE = "syn"
     }
 
     /**

@@ -126,8 +126,8 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.service.SubPipelineStartUpService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -138,6 +138,12 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_EXECUTE_COUNT
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
@@ -180,7 +186,7 @@ class PipelineBuildFacadeService(
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val templateFacadeService: TemplateFacadeService
+    private val subPipelineStartUpService: SubPipelineStartUpService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2801,7 +2807,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE, StartType.TIME_TRIGGER, StartType.PIPELINE -> {
+        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE, StartType.TIME_TRIGGER -> {
             buildManualStartup(
                 userId = userId,
                 projectId = projectId,
@@ -2809,6 +2815,24 @@ class PipelineBuildFacadeService(
                 channelCode = ChannelCode.BS,
                 values = startParameters,
                 startType = startType
+            )
+        }
+
+        StartType.PIPELINE -> {
+            BuildId(
+                subPipelineStartUpService.callPipelineStartup(
+                    projectId = startParameters[PIPELINE_START_PARENT_PROJECT_ID]!!,
+                    parentPipelineId = startParameters[PIPELINE_START_PARENT_PIPELINE_ID]!!,
+                    buildId = startParameters[PIPELINE_START_PARENT_BUILD_ID]!!,
+                    callProjectId = projectId,
+                    callPipelineId = pipelineId,
+                    atomCode = "SubPipelineExec",
+                    taskId = startParameters[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
+                    channelCode = ChannelCode.BS,
+                    values = startParameters,
+                    runMode = startParameters[PIPELINE_START_SUB_RUN_MODE] ?: SubPipelineStartUpService.SYNC_RUN_MODE,
+                    executeCount = startParameters[PIPELINE_START_PARENT_EXECUTE_COUNT]?.toInt()
+                ).data.id
             )
         }
     }
