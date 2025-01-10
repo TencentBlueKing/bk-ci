@@ -106,7 +106,7 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
                 dslContext = context,
                 serviceId = serviceId,
                 serviceStatus = serviceStatus.status.toByte(),
-                userId = storeBuildResultRequest.userId,
+                userId = serviceRecord.modifier,
                 msg = null
             )
             if (serviceStatus == ExtServiceStatusEnum.TESTING) {
