@@ -2216,7 +2216,7 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        val needDelNames = events.keys.subtract(existEventNames).toSet()
+        val needDelNames = existEventNames.subtract(events.keys).toSet()
         pipelineCallbackDao.delete(
             dslContext = dslContext,
             projectId = projectId,
