@@ -108,4 +108,6 @@ interface AtomReleaseService {
      * 结束分支版本测试
      */
     fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean>
+
+    fun updateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String)
 }
