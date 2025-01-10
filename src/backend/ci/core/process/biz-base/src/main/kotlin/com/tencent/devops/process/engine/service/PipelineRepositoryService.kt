@@ -2216,13 +2216,15 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         ).map { it.name }.toSet()
-        val needDelNames = existEventNames.subtract(events.keys).toSet()
-        pipelineCallbackDao.delete(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            names = needDelNames
-        )
+        if (existEventNames.isNotEmpty()) {
+            val needDelNames = existEventNames.subtract(events.keys).toSet()
+            pipelineCallbackDao.delete(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                names = needDelNames
+            )
+        }
         // 保存回调事件
         pipelineCallbackDao.save(
             dslContext = dslContext,
