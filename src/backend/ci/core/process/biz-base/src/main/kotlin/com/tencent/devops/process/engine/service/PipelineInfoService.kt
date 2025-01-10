@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -59,7 +60,10 @@ class PipelineInfoService @Autowired constructor(
             val version = element.version
             val hashKey = if (version.contains(".*")) {
                 var latestVersion: String? = null
-                if (projectTestAtomCodes.contains(atomCode)) {
+                val atomVersionTestFlag =
+                    redisOperation.hget("$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode", version)
+                // 项目下调试插件处理
+                if (projectTestAtomCodes.contains(atomCode) && (atomVersionTestFlag == "true")) {
                     latestVersion = version
                 }
                 if (latestVersion.isNullOrBlank()) {
