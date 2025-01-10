@@ -732,15 +732,19 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
+    fun setupAtomLatestTestFlag(
+        dslContext: DSLContext,
+        userId: String,
+        atomCode: String,
+        atomId: String
+    ) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(
                     LATEST_TEST_FLAG,
                     DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
                 )
-                .set(MODIFIER, DSL.case_().`when`(ID.eq(atomId), userId))
-                .where(ATOM_CODE.eq(atomCode))
+                .set(MODIFIER, DSL.case_().`when`(ID.eq(atomId), userId).otherwise(MODIFIER))
                 .execute()
         }
     }
