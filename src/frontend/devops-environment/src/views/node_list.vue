@@ -724,6 +724,20 @@
                     {
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.usage'),
+                        id: 'nodeUsage',
+                        children: [
+                            {
+                                id: 'DEPLOY',
+                                name: this.$t('environment.部署')
+                            },
+                            {
+                                id: 'BUILD',
+                                name: this.$t('environment.构建')
+                            }
+                        ]
                     }
                 ]
                 return data.filter(data => {
