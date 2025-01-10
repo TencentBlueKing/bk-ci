@@ -1459,18 +1459,29 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
                 val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
                 latestTestVersionId?.let {
-                    marketAtomDao.resetAtomLatestTestFlagByCode(
-                        dslContext = dslContext,
-                        atomCode = atomCode
-                    )
-                    marketAtomDao.setupAtomLatestTestFlagById(
-                        dslContext = dslContext,
-                        atomId = latestTestVersionId,
+                    updateAtomLatestTestFlag(
                         userId = userId,
-                        latestFlag = true
+                        atomCode = atomCode,
+                        atomId = it
                     )
                 }
             }
+        }
+    }
+
+    override fun updateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            marketAtomDao.resetAtomLatestTestFlagByCode(
+                dslContext = transactionContext,
+                atomCode = atomCode
+            )
+            marketAtomDao.setupAtomLatestTestFlagById(
+                dslContext = transactionContext,
+                atomId = atomId,
+                userId = userId,
+                latestFlag = true
+            )
         }
     }
 }

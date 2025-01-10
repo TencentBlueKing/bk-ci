@@ -90,22 +90,14 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
+
             RedisLock(
                 redisOperation,
                 "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.resetAtomLatestTestFlagByCode(
-                    dslContext = dslContext,
-                    atomCode = atomCode
-                )
-                marketAtomDao.setupAtomLatestTestFlagById(
-                    dslContext = dslContext,
-                    atomId = atomId,
-                    userId = atomRecord.modifier,
-                    latestFlag = true
-                )
+                atomReleaseService.updateAtomLatestTestFlag(atomRecord.modifier, atomCode, atomId)
             }
             // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(
