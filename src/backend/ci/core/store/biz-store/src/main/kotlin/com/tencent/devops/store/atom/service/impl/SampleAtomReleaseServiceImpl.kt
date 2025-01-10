@@ -100,16 +100,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.resetAtomLatestTestFlagByCode(
-                    dslContext = dslContext,
-                    atomCode = record.atomCode
-                )
-                marketAtomDao.setupAtomLatestTestFlagById(
-                    dslContext = dslContext,
-                    atomId = atomId,
-                    userId = userId,
-                    latestFlag = true
-                )
+                updateAtomLatestTestFlag(userId, record.atomCode, atomId)
             }
         }
     }
