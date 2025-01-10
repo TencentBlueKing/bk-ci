@@ -1458,11 +1458,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             redisLock.lock()
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
                 val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
-                marketAtomDao.setupAtomLatestTestFlag(
+                marketAtomDao.resetAtomLatestTestFlagByCode(
                     dslContext = dslContext,
+                    atomCode = atomCode
+                )
+                marketAtomDao.setupAtomLatestTestFlagById(
+                    dslContext = dslContext,
+                    atomId = latestTestVersionId ?: "",
                     userId = userId,
-                    atomCode = atomCode,
-                    atomId = latestTestVersionId ?: ""
+                    latestFlag = true
                 )
             }
         }

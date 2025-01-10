@@ -96,11 +96,15 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.setupAtomLatestTestFlag(
+                marketAtomDao.resetAtomLatestTestFlagByCode(
                     dslContext = dslContext,
+                    atomCode = atomCode
+                )
+                marketAtomDao.setupAtomLatestTestFlagById(
+                    dslContext = dslContext,
+                    atomId = atomId,
                     userId = atomRecord.modifier,
-                    atomCode = atomCode,
-                    atomId = atomId
+                    latestFlag = true
                 )
             }
             // 插件errorCodes.json文件数据入库
