@@ -708,7 +708,7 @@
                 if (key === 'uniqueManager') {
                     window.open(`${window.location.origin}/console/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
                 } else {
-                    window.open(`${window.location.origin}/console/permission/auth/repertory?projectCode=${this.projectId}&authKey=${key}`, '_blank')
+                    window.open(`${window.location.origin}/console/permission/auth/${key}?projectCode=${this.projectId}`, '_blank')
                 }
             },
 
