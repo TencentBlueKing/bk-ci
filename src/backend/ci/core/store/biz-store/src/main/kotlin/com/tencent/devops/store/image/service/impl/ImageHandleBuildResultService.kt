@@ -30,11 +30,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.image.dao.ImageDao
+import com.tencent.devops.store.image.service.MarketImageService
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
-import com.tencent.devops.store.image.service.MarketImageService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
