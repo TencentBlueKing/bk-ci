@@ -782,9 +782,9 @@
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
-                            this.requestParams[i.id] = i.values[0].name.trim()
+                            this.requestParams[i.id] = i.values[0].id.trim()
                         } else {
-                            this.requestParams[i.id] = i.name
+                            this.requestParams[i.id] = i.id
                         }
                     })
                     this.pagination.current = 1
