@@ -299,7 +299,7 @@
                             required
                             property="name"
                             label-position="right"
-                            :label="$t('批量交接-交接人')"
+                            :label="$t('批量交接-接收人')"
                             :rules="[
                                 { required: true, message: $t('请输入移交人'), trigger: 'blur' }
                             ]"
@@ -391,6 +391,7 @@
                 showDialog: false,
                 confirmLoading: false,
                 projectId: '',
+                projectName: '',
                 handOverForm: {
                     id: '',
                     name: '',
@@ -519,7 +520,7 @@
             /**
              * 无异常情况，正常退出
              */
-            normalExit (row) {
+            normalExit () {
                 const h = this.$createElement
                 this.$bkInfo({
                     title: this.$t('确认退出项目?'),
@@ -531,7 +532,7 @@
                                      h('div', { class: 'info-project' },
                                        [
                                            h('span', { class: 'label' }, this.$t('项目：')),
-                                           h('span', { class: 'value' }, row.projectName)
+                                           h('span', { class: 'value' }, this.projectName)
                                        ]
                                      ),
                                      h('div', { class: 'info-tips' }, this.$t('退出后，将清理你在此项目下获得的权限，确认退出吗？'))
@@ -649,7 +650,10 @@
                         })
                     }).catch(error => {
                         this.quitLoading = false
-                        console.log('error:', error)
+                        this.$bkMessage({
+                            message: error.message,
+                            theme: 'error'
+                        })
                     })
                 })
             },
@@ -676,6 +680,8 @@
             async handleQuitClick (row) {
                 this.targetMember = await authInfo.requestCurrentUser()
                 this.projectId = row.englishName
+                this.projectName = row.projectName
+  
                 await this.updateExitProject(this.projectId)
 
                 const {
@@ -689,7 +695,7 @@
                 } else if (transferNeededNum > 0) {
                     this.showDialog = true
                 } else {
-                    this.normalExit(row)
+                    this.normalExit(this.projectName)
                 }
             },
 
@@ -697,8 +703,12 @@
                 try {
                     this.isMainLoading = true
                     await this.updateExitProject(this.projectId)
+                    if (!this.exitProject.departmentJoinedCount && !this.exitProject.transferNeededNum) {
+                        this.showDialog = false
+                        this.normalExit(this.projectName)
+                    }
                 } catch (error) {
-                    console.error('Error during handleRefresh:', error)
+                    console.error('error', error)
                 } finally {
                     this.isMainLoading = false
                 }

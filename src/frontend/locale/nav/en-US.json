@@ -229,7 +229,7 @@
     "检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目": "Detected {0} permissions or authorizations cannot exit directly, please hand over or clear resources first, then exit the project",
     "批量交接-接收人": "Batch handover - recipient",
     "可以批量交接给接收人，接收人同意后，方可进行退出操作": "You can batch handover to the recipient, and the recipient must agree before you can exit",
-    "您的权限是通过组织架构": "Your permissions are obtained through the organizational structure",
+    "您的权限是通过组织架构": "Your permissions are obtained through the organizational structure ",
     "获得项目权限，不能单独退出，请联系项目管理员，评估按照组织架构添加权限是否合理。": " Obtained project permissions, cannot exit individually, please contact the project administrator,Evaluate whether adding permissions according to the organizational structure is reasonable.",
     "确认退出项目?": "Confirm exit from the project?",
     "项目": "Project",
@@ -244,5 +244,6 @@
     "流水线权限代持": "Pipeline permission holding",
     "代码库授权": "Repository authorization",
     "部署节点授权": "Deployment node authorization",
-    "资源唯一拥有者": "Sole owner of the resource"
+    "资源唯一拥有者": "Sole owner of the resource",
+    "输入接收人，选中回车进行校验": "Enter the recipient, and press enter to validate"
 }
