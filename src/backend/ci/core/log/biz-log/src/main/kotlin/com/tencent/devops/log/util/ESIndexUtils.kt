@@ -57,7 +57,7 @@ object ESIndexUtils {
             .startObject("stepId").field("type", "keyword").endObject()
             .startObject("executeCount").field("type", "keyword").endObject()
             .startObject("logType").field("type", "keyword").endObject()
-            .startObject("message").field("type", "keyword")
+            .startObject("message").field("type", "text")
             .field("index", false)
             .endObject()
             .endObject()
