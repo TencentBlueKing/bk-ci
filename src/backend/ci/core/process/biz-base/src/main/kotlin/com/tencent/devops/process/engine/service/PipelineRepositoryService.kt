@@ -1140,13 +1140,13 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
-                        // 保存回调事件
-                        pipelineCallbackDao.save(
+                        // 保存流水线单体回调记录
+                        savePipelineCallback(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             userId = userId,
-                            list = model.events?.map { it.value } ?: listOf()
+                            events = model.events
                         )
                     }
                 }
@@ -2198,5 +2198,40 @@ class PipelineRepositoryService constructor(
             logger.info("get pipeline oauth user fail", ignored)
             null
         }?.handoverFrom
+    }
+
+    /**
+     * 保存流水线单体回调记录
+     */
+    private fun savePipelineCallback(
+        events: Map<String, PipelineCallbackEvent>?,
+        pipelineId: String,
+        projectId: String,
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        if (events.isNullOrEmpty()) return
+        val existEventNames = pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).map { it.name }.toSet()
+        val needDelNames = events.keys.subtract(existEventNames).toSet()
+        pipelineCallbackDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            names = needDelNames
+        )
+        // 保存回调事件
+        pipelineCallbackDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            list = events.map { (key, value) ->
+                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+            }
+        )
     }
 }

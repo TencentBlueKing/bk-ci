@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.event
 data class PipelineCallbackEvent(
     val callbackEvent: CallBackEvent,
     var callbackUrl: String,
-    var secretToken: String?,
+    val secretToken: String?,
     val callbackName: String,
     val region: CallBackNetWorkRegionType?
 )

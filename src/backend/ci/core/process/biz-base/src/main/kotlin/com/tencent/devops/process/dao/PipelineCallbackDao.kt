@@ -90,7 +90,7 @@ class PipelineCallbackDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        event: String?
+        event: String? = null
     ): Result<TPipelineCallbackRecord> {
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
@@ -101,6 +101,21 @@ class PipelineCallbackDao {
                     } else it
                 }
                 .fetch()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        names: Set<String>
+    ) {
+        with(TPipelineCallback.T_PIPELINE_CALLBACK) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(NAME.eq(name))
+                .execute()
         }
     }
 }
