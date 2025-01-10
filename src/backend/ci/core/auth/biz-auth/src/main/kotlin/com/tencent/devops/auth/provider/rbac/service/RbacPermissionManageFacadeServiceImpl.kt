@@ -2160,9 +2160,10 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String
     ): MemberExitsProjectCheckVo {
         logger.info("check member exits project:$projectCode|$userId")
-        val userDeptInfos = getMemberDeptInfos(
-            memberId = userId
-        )
+        val userDeptInfos = deptService.getUserInfo(
+            userId = "admin",
+            name = userId
+        )?.deptInfo?.map { it.name!! } ?: emptyList()
         val userDepartmentsInProject = authResourceGroupMemberDao.isMembersInProject(
             dslContext = dslContext,
             projectCode = projectCode,
