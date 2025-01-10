@@ -75,7 +75,7 @@
                 <SearchSelect
                     class="search-input"
                     v-model="searchValue"
-                    :placeholder="$t('environment.nodeSearchTips')"
+                    :placeholder="filterPlaceHolder"
                     :data="filterData"
                     :show-condition="false"
                     clearable
@@ -743,6 +743,9 @@
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            filterPlaceHolder () {
+                return this.filterData.map(item => item.name).join(' / ')
             },
             usageMap () {
                 return {
