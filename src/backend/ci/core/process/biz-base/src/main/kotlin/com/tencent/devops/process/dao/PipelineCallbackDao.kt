@@ -114,7 +114,7 @@ class PipelineCallbackDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(NAME.eq(name))
+                .and(NAME.`in`(names))
                 .execute()
         }
     }
