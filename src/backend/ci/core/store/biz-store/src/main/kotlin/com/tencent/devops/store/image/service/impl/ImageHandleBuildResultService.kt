@@ -73,7 +73,7 @@ class ImageHandleBuildResultService @Autowired constructor(
         }
         marketImageService.setImageBuildStatusByImageId(
             imageId = imageId,
-            userId = storeBuildResultRequest.userId,
+            userId = imageRecord.modifier,
             imageStatus = imageStatus,
             msg = null
         )

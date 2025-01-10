@@ -85,7 +85,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         marketAtomService.setAtomBuildStatusByAtomCode(
             atomCode = atomCode,
             version = version,
-            userId = storeBuildResultRequest.userId,
+            userId = atomRecord.modifier,
             atomStatus = atomStatus,
             msg = null
         )
