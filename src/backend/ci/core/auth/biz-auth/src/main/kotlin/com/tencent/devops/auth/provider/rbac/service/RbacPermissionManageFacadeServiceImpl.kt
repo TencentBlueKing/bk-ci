@@ -70,6 +70,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
@@ -2171,9 +2172,16 @@ class RbacPermissionManageFacadeServiceImpl(
             memberType = MemberType.DEPARTMENT.type
         ).map { it.name }
         if (userDepartmentsInProject.isNotEmpty()) {
+            val managers = permissionResourceMemberService.getResourceGroupMembers(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                group = BkAuthGroup.MANAGER
+            )
             return MemberExitsProjectCheckVo(
                 departmentJoinedCount = userDepartmentsInProject.size,
-                departments = userDepartmentsInProject.joinToString(",")
+                departments = userDepartmentsInProject.joinToString(","),
+                managers = managers
             )
         }
         val resourceType2Authorizations = authAuthorizationDao.list(

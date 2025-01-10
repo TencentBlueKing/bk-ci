@@ -8,6 +8,8 @@ data class MemberExitsProjectCheckVo(
     val departmentJoinedCount: Int? = 0,
     @get:Schema(title = "组织")
     val departments: String? = "",
+    @get:Schema(title = "项目管理员")
+    val managers: List<String>? = emptyList(),
     @get:Schema(title = "唯一管理员组的数量")
     val uniqueManagerCount: Int? = 0,
     @get:Schema(title = "流水线授权数量")
