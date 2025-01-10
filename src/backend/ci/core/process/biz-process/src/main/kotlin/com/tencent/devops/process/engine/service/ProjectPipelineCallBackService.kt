@@ -564,21 +564,16 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
         dslContext.transaction { transactionContext ->
             val transaction = DSL.using(transactionContext)
-            newEventMap.forEach { (name, info) ->
-                pipelineCallbackDao.save(
-                    dslContext = transaction,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    name = name,
-                    event = info.callbackEvent.name,
-                    url = info.callbackUrl,
-                    secretToken = info.secretToken?.let {
-                        AESUtil.encrypt(aesKey, it)
-                    },
-                    region = info.region?.name ?: CallBackNetWorkRegionType.IDC.name,
-                    userId = userId
-                )
-            }
+            pipelineCallbackDao.save(
+                dslContext = transaction,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                list = newEventMap.map { (key, value) ->
+                    val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
+                    value.copy(secretToken = encodeToken)
+                }
+            )
         }
     }
 

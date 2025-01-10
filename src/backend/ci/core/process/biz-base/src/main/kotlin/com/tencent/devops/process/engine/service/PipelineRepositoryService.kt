@@ -1140,6 +1140,14 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                        // 保存回调事件
+                        pipelineCallbackDao.save(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            list = model.events?.map { it.value } ?: listOf()
+                        )
                     }
                 }
 

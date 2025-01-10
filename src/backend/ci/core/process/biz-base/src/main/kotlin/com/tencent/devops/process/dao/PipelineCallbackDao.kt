@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.model.process.tables.TPipelineCallback
 import com.tencent.devops.model.process.tables.records.TPipelineCallbackRecord
 import org.jooq.DSLContext
@@ -45,43 +47,42 @@ class PipelineCallbackDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        name: String,
-        event: String,
         userId: String,
-        url: String,
-        region: String,
-        secretToken: String?,
+        list: List<PipelineCallbackEvent>
     ) {
+        if (list.isEmpty()) return
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                NAME,
-                EVENT_TYPE,
-                USER_ID,
-                URL,
-                REGION,
-                SECRET_TOKEN,
-                CREATE_TIME,
-                UPDATE_TIME
-            ).values(
-                projectId,
-                pipelineId,
-                name,
-                event,
-                userId,
-                url,
-                region,
-                secretToken,
-                now,
-                now,
-            ).onDuplicateKeyUpdate()
-                .set(UPDATE_TIME, now)
-                .set(URL, url)
-                .set(SECRET_TOKEN, secretToken)
-                .execute()
+            list.forEach {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    NAME,
+                    EVENT_TYPE,
+                    USER_ID,
+                    URL,
+                    SECRET_TOKEN,
+                    REGION,
+                    CREATE_TIME,
+                    UPDATE_TIME
+                ).values(
+                    projectId,
+                    pipelineId,
+                    it.callbackName,
+                    it.callbackEvent.name,
+                    userId,
+                    it.callbackUrl,
+                    it.secretToken,
+                    (it.region ?: CallBackNetWorkRegionType.IDC).name,
+                    now,
+                    now
+                ).onDuplicateKeyUpdate()
+                    .set(UPDATE_TIME, now)
+                    .set(URL, it.callbackUrl)
+                    .set(SECRET_TOKEN, it.secretToken)
+                    .execute()
+            }
         }
     }
 
