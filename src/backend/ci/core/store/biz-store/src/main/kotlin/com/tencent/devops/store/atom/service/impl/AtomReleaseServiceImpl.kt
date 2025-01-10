@@ -1449,7 +1449,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Result(atomId)
     }
 
-    private fun checkUpdateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
+    fun checkUpdateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
         RedisLock(
             redisOperation,
             "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
