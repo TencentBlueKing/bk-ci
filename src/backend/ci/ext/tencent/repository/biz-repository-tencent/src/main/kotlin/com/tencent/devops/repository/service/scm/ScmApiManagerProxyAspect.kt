@@ -110,7 +110,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
             if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
                 it
             } else {
-                JsonUtil.to(it.toString(), signature.method.genericReturnType)
+                JsonUtil.toForType(it.toString(), signature.method.genericReturnType)
             }
         }
     }

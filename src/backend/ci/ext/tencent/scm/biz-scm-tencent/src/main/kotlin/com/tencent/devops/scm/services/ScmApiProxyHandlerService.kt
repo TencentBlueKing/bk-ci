@@ -76,7 +76,7 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
                     if (ReflectUtil.isPrimitiveOrStringType(parameter.parameterType)) {
                         it
                     } else {
-                        JsonUtil.to(it.toString(), genericParameterTypes[index])
+                        JsonUtil.toForType(it.toString(), genericParameterTypes[index])
                     }
                 }
             }
