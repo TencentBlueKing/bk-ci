@@ -2727,8 +2727,10 @@ class PipelineBuildFacadeService(
             )
         )
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
-        // 按原有的启动参数组装启动参数
-        val startParameters = buildInfo.buildParameters?.associate {
+        // 按原有的启动参数组装启动参数(排除重试次数)
+        val startParameters = buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.associate {
             it.key to it.value.toString()
         }?.toMutableMap() ?: mutableMapOf()
         val startType = StartType.toStartType(buildInfo.trigger)
