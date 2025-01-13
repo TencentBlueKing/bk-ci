@@ -224,7 +224,7 @@
         </section>
 
         <bk-dialog
-            :width="690"
+            :width="710"
             header-position="center"
             footer-position="center"
             v-model="showDialog"
