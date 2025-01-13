@@ -75,7 +75,7 @@ import org.slf4j.LoggerFactory
 
 object Runner {
 
-    private const val maxSleepStep = 50L
+    private const val maxSleepStep = 80L
     private const val windows = 5L
     private const val millsStep = 100L
     private val logger = LoggerFactory.getLogger(Runner::class.java)
