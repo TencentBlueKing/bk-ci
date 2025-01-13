@@ -621,7 +621,7 @@
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
     "buildMsg": "Build Message",
-    "replay": "Re-play",
+    "rePlay": "Re-play",
     "reBuildTips1": "When rebuilding, it will be re-executed with the same trigger parameters, and:",
     "reBuildTips2": "- The BK_CI_BUILD_NO remains unchanged",
     "reBuildTips3": "- The pipeline version used is based on the initial trigger",
