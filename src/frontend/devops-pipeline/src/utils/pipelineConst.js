@@ -102,6 +102,10 @@ export const errorTypeMap = [
     {
         title: 'pluginError',
         icon: 'error-plugin'
+    },
+    {
+        title: 'containerError',
+        icon: 'error-node'
     }
 ]
 

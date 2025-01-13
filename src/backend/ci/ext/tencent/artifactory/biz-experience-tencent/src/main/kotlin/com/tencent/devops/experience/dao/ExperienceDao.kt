@@ -44,7 +44,7 @@ import org.springframework.stereotype.Repository
 import jakarta.ws.rs.NotFoundException
 
 @Repository
-@SuppressWarnings("LongParameterList", "LongMethod")
+@SuppressWarnings("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 class ExperienceDao {
 
     fun list(dslContext: DSLContext, idSet: Collection<Long>): Result<TExperienceRecord> {
@@ -124,21 +124,31 @@ class ExperienceDao {
         classify: String?,
         recordIds: Set<Long>? = null,
         offset: Int,
-        limit: Int
+        limit: Int,
+        name: String?,
+        version: String?,
+        remark: String?,
+        createDateBegin: LocalDateTime?,
+        createDateEnd: LocalDateTime?,
+        endDateBegin: LocalDateTime?,
+        endDateEnd: LocalDateTime?,
+        creator: String?
     ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
-                .let {
-                    if (null == classify) it else it.and(CLASSIFY.eq(classify))
-                }
-                .let {
-                    if (null == platform) it else it.and(PLATFORM.eq(platform))
-                }
-                .let {
-                    if (null == recordIds) it else it.and(ID.`in`(recordIds))
-                }
+                .let { if (null == classify) it else it.and(CLASSIFY.eq(classify)) }
+                .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (null == recordIds) it else it.and(ID.`in`(recordIds)) }
+                .let { if (name != null) it.and(NAME.like("%$name%")) else it }
+                .let { if (version != null) it.and(VERSION.like("%$version%")) else it }
+                .let { if (remark != null) it.and(REMARK.like("%$remark%")) else it }
+                .let { if (createDateBegin != null) it.and(CREATE_TIME.gt(createDateBegin)) else it }
+                .let { if (createDateEnd != null) it.and(CREATE_TIME.lt(createDateEnd)) else it }
+                .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
+                .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
+                .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
@@ -339,7 +349,7 @@ class ExperienceDao {
         }
     }
 
-    fun count(dslContext: DSLContext, projectIds: Set<String>, expired: Boolean): Result<Record>? {
+    fun count(dslContext: DSLContext, projectIds: Set<String>): Result<Record>? {
         with(TExperience.T_EXPERIENCE) {
             val conditions = mutableListOf<Condition>()
             if (projectIds.isNotEmpty()) conditions.add(PROJECT_ID.`in`(projectIds))
@@ -358,14 +368,30 @@ class ExperienceDao {
         projectId: String?,
         bundleIdentifier: String?,
         platform: String?,
-        classify: String?
+        classify: String?,
+        name: String?,
+        version: String?,
+        remark: String?,
+        createDateBegin: LocalDateTime?,
+        createDateEnd: LocalDateTime?,
+        endDateBegin: LocalDateTime?,
+        endDateEnd: LocalDateTime?,
+        creator: String?
     ): Int {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectCount().from(this)
-                .where(PROJECT_ID.eq(PROJECT_ID))
+                .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .let { if (platform == null) it else it.and(PLATFORM.eq(platform)) }
                 .let { if (classify == null) it else it.and(CLASSIFY.eq(classify)) }
+                .let { if (name != null) it.and(NAME.like("%$name%")) else it }
+                .let { if (version != null) it.and(VERSION.like("%$version%")) else it }
+                .let { if (remark != null) it.and(REMARK.like("%$remark%")) else it }
+                .let { if (createDateBegin != null) it.and(CREATE_TIME.gt(createDateBegin)) else it }
+                .let { if (createDateEnd != null) it.and(CREATE_TIME.lt(createDateEnd)) else it }
+                .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
+                .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
+                .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
                 .fetchOne()!!.value1()
         }
     }
@@ -433,26 +459,6 @@ class ExperienceDao {
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .fetchOne()!!.value1()
-        }
-    }
-
-    fun listLikeExperienceName(
-        dslContext: DSLContext,
-        experienceName: String,
-        platform: String?
-    ): Result<TExperienceRecord> {
-        val now = LocalDateTime.now()
-        return with(TExperience.T_EXPERIENCE) {
-            dslContext.selectFrom(this)
-                .where(END_DATE.gt(now))
-                .and(ONLINE.eq(true))
-                .and(EXPERIENCE_NAME.like("%$experienceName%"))
-                .let {
-                    if (null == platform) it else it.and(PLATFORM.eq(platform))
-                }
-                .orderBy(UPDATE_TIME.desc())
-                .limit(100)
-                .fetch()
         }
     }
 

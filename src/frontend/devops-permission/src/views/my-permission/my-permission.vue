@@ -1206,8 +1206,8 @@ function goBack() {
         }
       }
 
-      .main-line-remove {
-        margin-top: 40px;
+      .main-line-handover {
+        margin-top: 26px;
       }
     }
 

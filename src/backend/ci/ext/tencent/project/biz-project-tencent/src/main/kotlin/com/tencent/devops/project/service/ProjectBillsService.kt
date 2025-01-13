@@ -13,6 +13,7 @@ import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
@@ -33,14 +34,15 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
-class ProjectBillsService constructor(
+class ProjectBillsService(
     val client: Client,
     val projectService: ProjectService,
     val redisOperation: RedisOperation,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val projectPaasCCService: ProjectPaasCCService
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -74,7 +76,6 @@ class ProjectBillsService constructor(
 
     @Value("\${bill.limit:#{null}}")
     private var billLimit: Int = 30
-
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -304,9 +305,20 @@ class ProjectBillsService constructor(
         }
     }
 
+    /**
+     *  项目不活跃的判定：BCS项目判定为不活跃，并且
+     *  项目虽已关联运营产品，但4个月内无人访问并且没有执行过流水线则为不活跃；
+     *  或者项目未关联运营产品，且2个月内无人访问并且没有执行过流水线则为不活跃
+     * */
     private fun isProjectActive(projectInfo: ProjectVO): Boolean {
-        /*若项目已关联运营产品，则4个月内无人访问并且没有执行过流水线则为不活跃；
-        若项目未关联运营产品，则2个月内无人访问并且没有执行过流水线则为不活跃。*/
+        // 校验BCS项目是否活跃
+        val isPassCCProjectActive = projectPaasCCService.checkPassCCProjectActivity(
+            projectCode = projectInfo.englishName
+        )
+        if (isPassCCProjectActive)
+            return true
+
+        // 校验项目是否有访问过/执行过流水线
         val monthsToSubtract = if (projectInfo.productId == null) 2L else 4L
         val startTime = LocalDate.now().minusMonths(monthsToSubtract).format(DATE_FORMATTER)
         val endTime = LocalDate.now().format(DATE_FORMATTER)
@@ -417,7 +429,8 @@ class ProjectBillsService constructor(
                 }
                 val dataSourceBillsDTO = BkDataSourceBillsDTO(
                     dataSourceName = BILL_DATA_SOURCE_NAME,
-                    bills = bills
+                    bills = bills,
+                    month = yearAndMonthOfReportStr
                 )
                 val summaryBillDTO = BkSummaryBillDTO(
                     dataSourceBills = dataSourceBillsDTO,
@@ -425,7 +438,7 @@ class ProjectBillsService constructor(
                 )
                 // 上报数据至saas
                 reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
-                logger.info("report bills data:$summaryBillDTO")
+                logger.info("report bills summary data :$summaryBillDTO")
                 offset += limit
             } while (projects.size == limit)
             logger.info("report bills data total :$count")
@@ -434,30 +447,34 @@ class ProjectBillsService constructor(
     }
 
     private fun reportBillsDataToSaas(summaryBillDTO: BkSummaryBillDTO) {
+        val reportProjects = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
+        if (reportProjects.isEmpty()) return
         try {
-            val requestBody = JsonUtils.objectMapper.writeValueAsString(summaryBillDTO)
-            OkhttpUtils.doPost(
-                url = billUrl,
-                jsonParam = requestBody,
-                headers = mapOf("Platform-Key" to billKey)
-            ).use {
-                if (!it.isSuccessful) {
-                    logger.warn("request bill data failed,response:($it)")
-                    throw RemoteServiceException("request failed, response:($it)")
-                }
-                val responseStr = it.body!!.string()
-                val responseDTO = objectMapper.readValue(
-                    responseStr,
-                    object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
-                if (responseDTO.code != 200L || !responseDTO.result) {
-                    // 请求错误
-                    logger.warn("request failed, message:(${responseDTO.message})")
-                    throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+            RetryUtils.retry(3) {
+                val requestBody = JsonUtils.objectMapper.writeValueAsString(summaryBillDTO)
+                OkhttpUtils.doPost(
+                    url = billUrl,
+                    jsonParam = requestBody,
+                    headers = mapOf("Platform-Key" to billKey)
+                ).use {
+                    if (!it.isSuccessful) {
+                        logger.warn("request bill data failed,response:($it)")
+                        throw RemoteServiceException("request failed, response:($it)")
+                    }
+                    val responseStr = it.body!!.string()
+                    val responseDTO = objectMapper.readValue(
+                        responseStr,
+                        object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
+                    if (responseDTO.code != 200L || !responseDTO.result) {
+                        // 请求错误
+                        logger.warn("request failed, message:(${responseDTO.message})")
+                        throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+                    }
+                    logger.info("report bills data to saas success!|$reportProjects|$responseStr")
                 }
             }
         } catch (ignore: Exception) {
-            val reportFailedProject = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
-            logger.warn("request bill data failed!${ignore.message}|$reportFailedProject")
+            logger.warn("request bill data failed!${ignore.message}|$reportProjects")
         }
     }
 }

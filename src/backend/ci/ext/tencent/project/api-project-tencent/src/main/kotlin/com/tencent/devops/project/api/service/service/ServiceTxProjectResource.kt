@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -427,7 +428,7 @@ interface ServiceTxProjectResource {
         @Parameter(description = "开启或关闭云研发", required = false)
         @QueryParam("enable")
         enable: Boolean?,
-        rewriteManages: Set<String>?
+        data: UpdateRemotedevBody
     ): Result<Boolean>
 
     @Operation(summary = "按项目扩展系统设置consul Tag")

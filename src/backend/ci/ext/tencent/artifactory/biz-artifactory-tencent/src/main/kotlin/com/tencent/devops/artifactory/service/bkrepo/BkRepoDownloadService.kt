@@ -27,13 +27,17 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.HapJson5Info
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
@@ -43,6 +47,7 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
+import com.tencent.devops.artifactory.service.pojo.HapAppDependency
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
@@ -56,8 +61,11 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_DEPENDENCIES
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_DEVICE_TYPES
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MIN_API_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MODULE_TYPE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_TARGET_API_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
@@ -288,7 +296,7 @@ open class BkRepoDownloadService(
             userId
         }
 
-        // 获取IP下载链接
+        // 获取下载链接
         val outerDownloadUrl = outerDownloadUrlByToken(
             creatorId = creatorId,
             userId = userId,
@@ -299,13 +307,7 @@ open class BkRepoDownloadService(
         ).url
 
         // 获取参数(HAP 企业分发无法拼参数 , 特殊处理)
-        val toHttpUrl = outerDownloadUrl.toHttpUrl()
-        val queryParams = toHttpUrl.queryParameterNames.associateWith { name ->
-            toHttpUrl.queryParameterValues(name)[0]
-        }
-        val outerDownloadUrlData = outerDownloadUrl.split("?")[0].split("/api/share/")
-        val hapExternalDownloadUrl = outerDownloadUrlData[0] + "/api/token/" + queryParams["token"] +
-                "/user/" + queryParams["userId"] + "/" + outerDownloadUrlData[1]
+        val hapExternalDownloadUrl = convert2HapExternalDownloadUrl(outerDownloadUrl)
 
         // 获取IPA属性
         val repoName = RepoUtils.getRepoByType(artifactoryType)
@@ -334,6 +336,21 @@ open class BkRepoDownloadService(
         val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
         val sha256 = fileDetail!!.sha256
         val deployDomain = HomeHostUtil.outerServerHost().removePrefix("https://").removePrefix("http://")
+        val appDeviceTypes = fileProperties[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"
+        val appModuleType = fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "entry"
+
+        // 支持HSP
+        val hspStringBuilder = getHspString(
+            fileProperties = fileProperties,
+            creatorId = creatorId,
+            projectId = projectId,
+            userId = userId,
+            ttl = ttl
+        )
+        if (logger.isDebugEnabled) {
+            logger.debug("hspStringBuilder: $hspStringBuilder")
+        }
+
         return """
             {
               "app": {
@@ -352,18 +369,93 @@ open class BkRepoDownloadService(
                 "modules": [
                   {
                     "name": "$appTitle",
-                    "type": "entry",
-                    "deviceTypes": [
-                      "tablet",
-                      "phone"
-                    ],
+                    "type": "$appModuleType",
+                    "deviceTypes":$appDeviceTypes,
                     "packageUrl": "$hapExternalDownloadUrl",
                     "packageHash": "$sha256"
                   }
+                  $hspStringBuilder
                 ]
               }
             }
         """.trimIndent()
+    }
+
+    /**
+     * 获取HSP模块信息
+     */
+    private fun getHspString(
+        fileProperties: Map<String, String>,
+        creatorId: String,
+        projectId: String,
+        userId: String,
+        ttl: Int
+    ): String {
+        val appDependencies = fileProperties[ARCHIVE_PROPS_APP_DEPENDENCIES]
+        val hspStringBuilder = StringBuilder()
+        if (null != appDependencies) {
+            val dependencies = JsonUtil.to(appDependencies, object : TypeReference<List<HapAppDependency>>() {})
+            for (d in dependencies) {
+                val hspFiles = bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                    userId = creatorId,
+                    projectId = projectId,
+                    repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+                    filePaths = emptyList(),
+                    fileNames = emptyList(),
+                    metadata = mapOf("appName" to d.moduleName, "appVersionCode" to d.versionCode.toString()),
+                    page = 1,
+                    pageSize = 1,
+                    sortBy = "createdDate",
+                    direction = Sort.Direction.DESC
+                ).records
+                if (hspFiles.isEmpty()) {
+                    logger.warn("module not found , name:{} , code:{}", d.moduleName, d.versionCode)
+                    continue
+                }
+                val hspFile = hspFiles[0]
+                val hspMetadata = hspFile.metadata ?: emptyMap()
+                if (logger.isDebugEnabled) {
+                    logger.debug("hspFile: {}", hspFile)
+                }
+                // 获取下载链接
+                val artifactoryType =
+                    if (hspFile.repoName == REPO_NAME_PIPELINE) ArtifactoryType.PIPELINE else ArtifactoryType.CUSTOM_DIR
+                val hspDownloadUrl = outerDownloadUrlByToken(
+                    creatorId = creatorId,
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    path = hspFile.fullPath,
+                    ttl = ttl
+                ).url.let { convert2HapExternalDownloadUrl(it) }
+
+                hspStringBuilder.append(
+                    """,{
+                          "name": "${hspMetadata[ARCHIVE_PROPS_APP_NAME] ?: d.moduleName}",
+                          "type": "${fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "shared"}",
+                          "deviceTypes": ${hspMetadata[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"},
+                          "packageUrl": "$hspDownloadUrl",
+                          "packageHash": "${hspFile.sha256}"
+                        }
+                    """.trimIndent()
+                )
+            }
+        }
+        return hspStringBuilder.toString()
+    }
+
+    /**
+     * 转换为hapExternalDownloadUrl
+     */
+    private fun convert2HapExternalDownloadUrl(outerDownloadUrl: String): String {
+        val toHttpUrl = outerDownloadUrl.toHttpUrl()
+        val queryParams = toHttpUrl.queryParameterNames.associateWith { name ->
+            toHttpUrl.queryParameterValues(name)[0]
+        }
+        val outerDownloadUrlData = outerDownloadUrl.split("?")[0].split("/api/share/")
+        val hapExternalDownloadUrl = outerDownloadUrlData[0] + "/api/token/" + queryParams["token"] +
+                "/user/" + queryParams["userId"] + "/" + outerDownloadUrlData[1]
+        return hapExternalDownloadUrl
     }
 
     @ActionAuditRecord(

@@ -11,6 +11,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -219,7 +220,7 @@ class ServiceRemoteDevResourceImpl(
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
                 enable = null,
-                rewriteManages = null
+                data = UpdateRemotedevBody(null)
             )
         }
         cgsData.forEach { cgs ->

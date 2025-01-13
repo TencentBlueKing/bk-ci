@@ -46,26 +46,27 @@ class LogStatusDao {
         subTags: String?,
         containerHashId: String?,
         executeCount: Int,
-        logStorageMode: LogStorageMode,
+        logStorageMode: LogStorageMode?,
         finish: Boolean,
         jobId: String?,
         stepId: String?
     ) {
         with(TLogStatus.T_LOG_STATUS) {
-            dslContext.insertInto(this)
+            val update = dslContext.insertInto(this)
                 .set(BUILD_ID, buildId)
                 .set(TAG, tag)
                 .set(SUB_TAG, subTags)
                 .set(EXECUTE_COUNT, executeCount)
                 .set(JOB_ID, containerHashId)
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode.name)
+
                 .set(USER_JOB_ID, jobId)
                 .set(STEP_ID, stepId)
-                .onDuplicateKeyUpdate()
+            logStorageMode?.let { update.set(MODE, it.name) }
+            update.onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode.name)
-                .execute()
+            logStorageMode?.let { update.set(MODE, it.name) }
+            update.execute()
         }
     }
 

@@ -246,7 +246,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",

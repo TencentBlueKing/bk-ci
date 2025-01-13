@@ -14,6 +14,7 @@
                         :full-atom-value="atomValue"
                         :get-atom-key-modal="getAtomKeyModal"
                         :container="container"
+                        :disabled="disabled"
                         :element="element"
                     />
                 </template>
@@ -43,6 +44,7 @@
                             :get-atom-key-modal="getAtomKeyModal"
                             :container="container"
                             :element="element"
+                            :disabled="disabled"
                         />
                     </div>
                 </accordion>
@@ -76,6 +78,7 @@
                             :get-atom-key-modal="getAtomKeyModal"
                             :container="container"
                             :element="element"
+                            :disabled="disabled"
                         />
                     </div>
                 </accordion>
@@ -88,6 +91,7 @@
                         :get-atom-key-modal="getAtomKeyModal"
                         :container="container"
                         :element="element"
+                        :disabled="disabled"
                     />
                 </template>
             </template>
@@ -103,10 +107,10 @@
 </template>
 
 <script>
-    import AtomParamRow from './AtomParamRow'
+    import Accordion from '@/components/atomFormField/Accordion'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import AtomOutput from './AtomOutput'
-    import Accordion from '@/components/atomFormField/Accordion'
+    import AtomParamRow from './AtomParamRow'
 
     export default {
         name: 'normal-atom-v2',

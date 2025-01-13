@@ -163,7 +163,31 @@ interface AppExperienceResource {
         pageSize: Int,
         @Parameter(description = "是否展示所有版本", required = false)
         @QueryParam("showAll")
-        showAll: Boolean?
+        showAll: Boolean?,
+        @Parameter(description = "文件名", required = false)
+        @QueryParam("name")
+        name: String? = null,
+        @Parameter(description = "版本号", required = false)
+        @QueryParam("version")
+        version: String? = null,
+        @Parameter(description = "版本描述", required = false)
+        @QueryParam("remark")
+        remark: String? = null,
+        @Parameter(description = "体验发起时间--起始时间(秒级)", required = false)
+        @QueryParam("createDateBegin")
+        createDateBegin: Long? = null,
+        @Parameter(description = "体验发起时间--终止时间(秒级)", required = false)
+        @QueryParam("createDateEnd")
+        createDateEnd: Long? = null,
+        @Parameter(description = "体验结束时间--起始时间(秒级)", required = false)
+        @QueryParam("endDateBegin")
+        endDateBegin: Long? = null,
+        @Parameter(description = "体验结束时间--终止时间(秒级)", required = false)
+        @QueryParam("endDateEnd")
+        endDateEnd: Long? = null,
+        @Parameter(description = "发起人", required = false)
+        @QueryParam("creator")
+        creator: String? = null,
     ): Result<Pagination<ExperienceChangeLog>>
 
     @Operation(summary = "创建外部直接下载链接")

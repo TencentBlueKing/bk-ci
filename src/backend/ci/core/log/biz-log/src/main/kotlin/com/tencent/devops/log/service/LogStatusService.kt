@@ -63,7 +63,7 @@ class LogStatusService @Autowired constructor(
                 subTags = subTag ?: "",
                 containerHashId = containerHashId ?: "",
                 executeCount = executeCount ?: 1,
-                logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
+                logStorageMode = logStorageMode,
                 finish = finish,
                 jobId = jobId,
                 stepId = stepId
