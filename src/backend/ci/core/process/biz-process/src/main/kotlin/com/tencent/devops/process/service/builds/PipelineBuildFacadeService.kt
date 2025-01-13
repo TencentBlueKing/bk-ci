@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
@@ -88,6 +89,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRefreshBuildLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -123,11 +125,14 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.service.SubPipelineStartUpService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -135,12 +140,19 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_EXECUTE_COUNT
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
@@ -177,7 +189,8 @@ class PipelineBuildFacadeService(
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val templateFacadeService: TemplateFacadeService
+    @Lazy
+    private val subPipelineStartUpService: SubPipelineStartUpService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -834,7 +847,9 @@ class PipelineBuildFacadeService(
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
         userParameters: List<BuildParameters>? = null,
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        pipelineResource: PipelineResourceVersion? = null,
+        pipelineInfo: PipelineInfo? = null,
     ): String? {
 
         if (checkPermission) {
@@ -849,8 +864,10 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return null
+        val readyToBuildPipelineInfo = pipelineInfo ?: pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
@@ -859,8 +876,11 @@ class PipelineBuildFacadeService(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val resource = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version)
+            val resource = pipelineResource ?: getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = readyToBuildPipelineInfo.version
+            )
             val model = resource.model
 
             /**
@@ -2681,6 +2701,185 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
             params = arrayOf(buildId)
         )
+    }
+
+    fun replayBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        forceTrigger: Boolean
+    ): BuildId {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        // 按原有的启动参数组装启动参数(排除重试次数)
+        val startParameters = buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.associate {
+            it.key to it.value.toString()
+        }?.toMutableMap() ?: mutableMapOf()
+        val startType = StartType.toStartType(buildInfo.trigger)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS)
+        if (pipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        if (pipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
+        val pipelineResourceVersion = getPipelineResourceVersion(projectId, pipelineId, pipelineInfo.version)
+        val model = pipelineResourceVersion.model
+        val triggerContainer = model.getTriggerContainer()
+        // 检查触发器是否存在
+        val checkTriggerResult = forceTrigger || when (startType) {
+            StartType.WEB_HOOK -> {
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
+            StartType.MANUAL, StartType.SERVICE -> {
+                triggerContainer.elements.find { it is ManualTriggerElement }
+            }
+
+            StartType.REMOTE -> {
+                triggerContainer.elements.find { it is RemoteTriggerElement }
+            }
+
+            StartType.TIME_TRIGGER -> {
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
+            StartType.PIPELINE -> {
+                EmptyElement()
+            }
+        } != null
+        if (!checkTriggerResult) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
+                params = arrayOf(pipelineResourceVersion.versionName ?: "")
+            )
+        }
+        return triggerPipeline(
+            userId = buildInfo.startUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startParameters = startParameters,
+            startType = startType,
+            pipelineInfo = pipelineInfo,
+            pipelineResourceVersion = pipelineResourceVersion
+        )
+    }
+
+    private fun triggerPipeline(
+        startType: StartType,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        startParameters: MutableMap<String, String>,
+        pipelineInfo: PipelineInfo? = null,
+        pipelineResourceVersion: PipelineResourceVersion? = null,
+        userId: String
+    ) = when (startType) {
+        StartType.WEB_HOOK -> {
+            // webhook触发
+            webhookBuildParameterService.getBuildParameters(buildId = buildId)?.forEach { param ->
+                startParameters[param.key] = param.value.toString()
+            }
+            // webhook触发
+            BuildId(
+                webhookTriggerPipelineBuild(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    parameters = startParameters,
+                    checkPermission = false,
+                    startType = startType,
+                    pipelineInfo = pipelineInfo,
+                    pipelineResource = pipelineResourceVersion
+                )!!
+            )
+        }
+
+        StartType.MANUAL, StartType.SERVICE, StartType.REMOTE -> {
+            startParameters.putAll(
+                // 自定义触发源材料参数
+                buildVariableService.getAllVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                )
+            )
+            buildManualStartup(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS,
+                values = startParameters,
+                startType = startType
+            )
+        }
+
+        StartType.TIME_TRIGGER -> {
+            BuildId(
+                timerTriggerPipelineBuild(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    parameters = startParameters,
+                    checkPermission = false
+                ) ?: ""
+            )
+        }
+
+        StartType.PIPELINE -> {
+            // 父子流水线核心参数
+            startParameters.putAll(
+                buildVariableService.getAllVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    keys = setOf(
+                        PIPELINE_START_PARENT_PROJECT_ID,
+                        PIPELINE_START_PARENT_PIPELINE_ID,
+                        PIPELINE_START_PARENT_BUILD_ID,
+                        PIPELINE_START_PARENT_BUILD_TASK_ID,
+                        PIPELINE_START_SUB_RUN_MODE,
+                        PIPELINE_START_PARENT_EXECUTE_COUNT
+                    )
+                )
+            )
+            BuildId(
+                subPipelineStartUpService.callPipelineStartup(
+                    projectId = startParameters[PIPELINE_START_PARENT_PROJECT_ID]!!,
+                    parentPipelineId = startParameters[PIPELINE_START_PARENT_PIPELINE_ID]!!,
+                    buildId = startParameters[PIPELINE_START_PARENT_BUILD_ID]!!,
+                    callProjectId = projectId,
+                    callPipelineId = pipelineId,
+                    atomCode = "SubPipelineExec",
+                    taskId = startParameters[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
+                    channelCode = ChannelCode.BS,
+                    values = startParameters,
+                    runMode = startParameters[PIPELINE_START_SUB_RUN_MODE] ?: SubPipelineStartUpService.SYNC_RUN_MODE,
+                    executeCount = startParameters[PIPELINE_START_PARENT_EXECUTE_COUNT]?.toInt()
+                ).data!!.id
+            )
+        }
     }
 
     private fun buildRestartPipeline(
