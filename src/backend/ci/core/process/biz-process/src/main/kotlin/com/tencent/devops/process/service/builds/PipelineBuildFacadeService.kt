@@ -2813,8 +2813,8 @@ class PipelineBuildFacadeService(
                 ).forEach { (key, value) -> startParameters[key] = value }
                 EmptyElement()
             }
-        } == null
-        if (checkTriggerResult) {
+        } != null
+        if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
                 params = arrayOf(pipelineResourceVersion.versionName ?: "")
