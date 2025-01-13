@@ -225,15 +225,15 @@
     "oauthManage": "Oauth Manage",
     "刷新": "Refresh",
     "详情": "Details",
-    "抱歉无法退出项目": "Sorry, unable to exit the project",
-    "检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目": "Detected {0} permissions or authorizations cannot exit directly, please hand over or clear resources first, then exit the project",
-    "批量交接-接收人": "Batch handover - recipient",
-    "可以批量交接给接收人，接收人同意后，方可进行退出操作": "You can batch handover to the recipient, and the recipient must agree before you can exit",
+    "不能退出项目": "Cannot exit the project",
+    "检测到X项权限/授权不能直接退出，请先清理资源、或在下方填写交接人移交给新负责人": "Detected {0} permissions/authorizations that cannot be exited directly. Please clear resources first, or fill in the handover person below to transfer to a new person in charge.",
+    "批量交接-交接人": "Batch Handover - Handover Person",
+    "可以批量交接给交接人，交接人同意后，将成功退出项目": "Can be batch handed over to the handover person, and will successfully exit the project after the handover person agrees",
     "您的权限是通过组织架构": "Your permissions are obtained through the organizational structure ",
     "获得项目权限，不能单独退出，请联系项目管理员，评估按照组织架构添加权限是否合理。": " Obtained project permissions, cannot exit individually, please contact the project administrator,Evaluate whether adding permissions according to the organizational structure is reasonable.",
     "确认退出项目?": "Confirm exit from the project?",
     "项目": "Project",
-    "退出后，将清理你在此项目下获得的权限，确认退出吗？": "After exiting, your permissions obtained in this project will be cleared, confirm exit?",
+    "退出时，将清理你在此项目下获得的权限，确认退出吗？": "Upon exit, your permissions obtained under this project will be cleared. Are you sure you want to exit?",
     "提交成功": "Submission successful",
     "已成功提交「移交权限」申请，等待交接人确认。": "Successfully submitted 'handover permissions' application, waiting for the handover person to confirm.",
     "可在“": "You can check in \" ",
@@ -245,5 +245,6 @@
     "代码库授权": "Repository authorization",
     "部署节点授权": "Deployment node authorization",
     "资源唯一拥有者": "Sole owner of the resource",
-    "输入接收人，选中回车进行校验": "Enter the recipient, and press enter to validate"
+    "输入接收人，选中回车进行校验": "Enter the recipient, and press enter to validate",
+    "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over"
 }

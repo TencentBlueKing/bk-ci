@@ -224,7 +224,7 @@
         </section>
 
         <bk-dialog
-            :width="640"
+            :width="690"
             header-position="center"
             footer-position="center"
             v-model="showDialog"
@@ -238,7 +238,7 @@
                     width="42"
                     height="42"
                 />
-                <h2 class="dialog-header"> {{ $t('抱歉无法退出项目') }} </h2>
+                <h2 class="dialog-header"> {{ $t('存在需清理或交接的权限/授权') }} </h2>
             </template>
             <main v-bkloading="{ isLoading: isMainLoading }">
                 <div class="project-content">
@@ -250,7 +250,7 @@
                                 height="14"
                             />
                             <i18n
-                                path="检测到X项权限或授权不能直接退出，请先进行交接或清理资源后，再退出项目"
+                                path="检测到X项权限/授权不能直接退出，请先清理资源、或在下方填写交接人移交给新负责人"
                                 tag="span"
                             >
                                 <span class="tips-num">{{ exitProject.transferNeededNum }}</span>
@@ -299,7 +299,7 @@
                             required
                             property="name"
                             label-position="right"
-                            :label="$t('批量交接-接收人')"
+                            :label="$t('批量交接-交接人')"
                             :rules="[
                                 { required: true, message: $t('请输入移交人'), trigger: 'blur' }
                             ]"
@@ -313,13 +313,13 @@
                             </ProjectUserSelector>
                         </bk-form-item>
                     </bk-form>
-                    <p class="label-tip">{{ $t('可以批量交接给接收人，接收人同意后，方可进行退出操作') }}</p>
+                    <p class="label-tip">{{ $t('可以批量交接给交接人，交接人同意后，将成功退出项目') }}</p>
                 </div>
             </main>
             <template slot="footer">
                 <div class="bk-dialog-outer">
                     <bk-button
-                        theme="primary"
+                        theme="danger"
                         :loading="quitLoading"
                         @click="handleHandoverConfirm"
                     >
@@ -526,6 +526,7 @@
                     title: this.$t('确认退出项目?'),
                     extCls: 'info-box',
                     width: 480,
+                    theme: 'danger',
                     confirmLoading: true,
                     subHeader: h('div', { class: 'info-content' },
                                  [
@@ -535,7 +536,7 @@
                                            h('span', { class: 'value' }, this.projectName)
                                        ]
                                      ),
-                                     h('div', { class: 'info-tips' }, this.$t('退出后，将清理你在此项目下获得的权限，确认退出吗？'))
+                                     h('div', { class: 'info-tips' }, this.$t('退出时，将清理你在此项目下获得的权限，确认退出吗？'))
                                  ]),
                     confirmFn: async () => {
                         const params = {
@@ -568,20 +569,39 @@
              * 通过「组织架构」获得权限，无法退出
              * @param row
              */
-            unableToExit (departments) {
+            unableToExit (departments, managers) {
                 const h = this.$createElement
                 this.$bkInfo({
                     type: 'warning',
-                    title: this.$t('抱歉无法退出项目?'),
+                    theme: 'danger',
+                    title: this.$t('不能退出项目'),
                     extCls: 'info-box',
                     width: 480,
                     showFooter: false,
                     subHeader: h('div', { class: 'info-content footer-none' },
                                  [
                                      h('div', { class: 'info-tips' }, [
-                                         h('span', this.$t('您的权限是通过组织架构')),
+                                         h('span', this.$t('存在通过组织架构')),
                                          h('span', { class: 'reminder' }, departments),
-                                         h('span', this.$t('获得项目权限，不能单独退出，请联系项目管理员，评估按照组织架构添加权限是否合理。'))
+                                         h('span', this.$t('获得权限的资源，无法直接退出。请联系项目管理员（')),
+                                         h('span', { class: 'reminder' },
+                                           managers.length > 2
+                                               ? (
+                                                   [h('span', `${managers.slice(0, 2).join(', ')}.....`),
+                                                    h('span', {
+                                                        style: { color: '#3A84FF', cursor: 'pointer' },
+                                                        directives: [
+                                                            {
+                                                                name: 'bk-tooltips',
+                                                                value: managers.join('， '),
+                                                                modifiers: { click: true }
+                                                            }
+                                                        ]
+                                                    }, this.$t('展开'))]
+                                               )
+                                               : managers.join(', ')
+                                         ),
+                                         h('span', this.$t('），评估按照组织架构添加权限是否合理。'))
                                      ])
                                  ]
                     )
@@ -616,6 +636,7 @@
                         this.$bkInfo({
                             title: this.$t('提交成功?'),
                             extCls: 'info-box',
+                            theme: 'danger',
                             width: 480,
                             okText: this.$t('查看进度'),
                             cancelText: this.$t('关闭'),
@@ -687,11 +708,12 @@
                 const {
                     departmentJoinedCount = 0,
                     departments,
+                    managers,
                     transferNeededNum
                 } = this.exitProject
 
                 if (departmentJoinedCount > 0) {
-                    this.unableToExit(departments)
+                    this.unableToExit(departments, managers)
                 } else if (transferNeededNum > 0) {
                     this.showDialog = true
                 } else {
@@ -1103,8 +1125,10 @@
                 color: #FFB219;
             }
             .refresh {
+                text-align: right;
                 color: #3A84FF;
                 cursor: pointer;
+                width: 70px;
             }
         }
         .service-list {
