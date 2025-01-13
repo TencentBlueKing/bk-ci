@@ -561,4 +561,18 @@ object ProcessMessageCode {
 
     // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
     const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
+    // 子流水线循环依赖错误标题
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
+
+    // 当前流水线存在循环依赖
+    const val BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkCurrentSubPipelineCircularDependencyErrorMessage"
+
+    // 子流水线[xxx]调用了当前流水线，形成循环依赖
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkSubPipelineCircularDependencyErrorMessage"
+
+    // [xxx]流水线循环调用[xxx]流水线，形成循环依赖
+    const val BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkOtherSubPipelineCircularDependencyErrorMessage"
 }
