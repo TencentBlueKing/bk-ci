@@ -295,9 +295,11 @@ const actions = {
     /**
      * 重放流水线
      */
-    requestRePlayPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
-        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild`).then(response => {
+    requestRePlayPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, forceTrigger = false }) {
+        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`).then(response => {
             return response.data
+        }).catch(e => {
+            return e
         })
     }
 }

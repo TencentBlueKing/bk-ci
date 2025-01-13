@@ -238,10 +238,28 @@
                 }
             },
             async handleClick (type = 'reBuild') {
+                const h = this.$createElement
                 const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
                 this.$bkInfo({
                     title,
+                    width: 500,
                     confirmLoading: true,
+                    subHeader: h('div', {
+                        style: {
+                            background: '#f5f6fa',
+                            padding: '10px',
+                            fontSize: '12px',
+                            lineHeight: '20px'
+                        }
+                    }, type === 'reBuild'
+                        ? [
+                            h('p', this.$t('history.reBuildInfo1')),
+                            h('p', this.$t('history.reBuildInfo2'))
+                        ]
+                        : [
+                            h('p', this.$t('history.rePlayInfo1')),
+                            h('p', this.$t('history.rePlayInfo2'))
+                        ]),
                     confirmFn: async () => {
                         try {
                             this.loading = true
@@ -258,15 +276,15 @@
                     }
                 })
             },
-            async retry (type = 'reBuild', buildId, goDetail = false) {
+            async retry (type = 'reBuild', buildId, forceTrigger = false) {
                 const { projectId, pipelineId } = this.$route.params
                 const retryFn = type === 'reBuild' ? this.requestRetryPipeline : this.requestRePlayPipeline
                 // 请求执行构建
                 const res = await retryFn({
                     ...this.$route.params,
-                    buildId
+                    buildId,
+                    forceTrigger
                 })
-
                 if (res && res.id) {
                     this.$router.replace({
                         name: 'pipelinesDetail',
@@ -283,6 +301,28 @@
                     this.$showTips({
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
+                    })
+                } else if (res.code === 2101260) {
+                    this.loading = false
+                    this.$bkInfo({
+                        title: this.$t('history.rePlay'),
+                        subTitle: res.message,
+                        width: 500,
+                        confirmLoading: true,
+                        confirmFn: async () => {
+                            try {
+                                this.loading = true
+                                await this.retry('rePlay', buildId, true)
+                                return true
+                            } catch (err) {
+                                this.handleError(err, {
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.$route.params.pipelineId,
+                                    action: this.$permissionResourceAction.EXECUTE
+                                })
+                                this.loading = false
+                            }
+                        }
                     })
                 } else {
                     throw Error(this.$t('subpage.rebuildFail'))
