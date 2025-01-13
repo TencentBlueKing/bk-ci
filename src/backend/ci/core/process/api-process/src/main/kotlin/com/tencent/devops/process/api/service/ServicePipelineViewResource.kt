@@ -208,4 +208,14 @@ interface ServicePipelineViewResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Set<Long>>
+
+    @Operation(summary = "根据视图ID获取流水线ID列表")
+    @POST
+    @Path("/pipelines/listPipelineIdByViewIds")
+    fun listPipelineIdByViewIds(
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "按视图过滤", required = false)
+        viewIdsEncode: List<String>
+    ): Result<List<String>>
 }

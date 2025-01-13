@@ -52,6 +52,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import java.net.URLEncoder
 import jakarta.ws.rs.core.Response
 
@@ -86,8 +87,9 @@ class GithubOAuthService @Autowired constructor(
             specRedirectUrl,
             redirectUrlTypeEnum?.type
         ).joinToString(separator = OAUTH_URL_STATE_SEPARATOR)
+        val encodeState = URLEncoder.encode(state, "UTF-8")
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$encodeState"
         return GithubOauth(redirectUrl)
     }
 
@@ -136,10 +138,11 @@ class GithubOAuthService @Autowired constructor(
         if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
+        val sourceState = URLDecoder.decode(state, "UTF-8")
         // 回调状态信息
         // @see com.tencent.devops.repository.service.github.GithubOAuthService.getGithubOauth
         // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}},{{跳转链接}},{{跳转类型}}
-        val arrays = state.split(OAUTH_URL_STATE_SEPARATOR)
+        val arrays = sourceState.split(OAUTH_URL_STATE_SEPARATOR)
         val userId = arrays[0]
         val projectId = arrays[1]
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""

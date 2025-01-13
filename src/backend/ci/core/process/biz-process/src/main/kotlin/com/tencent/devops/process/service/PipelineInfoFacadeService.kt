@@ -1084,6 +1084,18 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
+            val templateId = model.templateId
+
+            if (templateId != null) {
+                // 如果是根据模板创建的流水线需为model设置srcTemplateId
+                model.srcTemplateId = templateDao.getSrcTemplateId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    type = TemplateType.CONSTRAINT.name
+                )
+            }
+
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,

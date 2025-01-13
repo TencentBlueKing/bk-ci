@@ -59,6 +59,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -766,9 +767,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         beforeSubjectScopes: List<SubjectScopeInfo>,
         afterSubjectScopes: List<SubjectScopeInfo>
     ): Boolean {
-        val beforeIds = beforeSubjectScopes.map { it.id }.toSet()
-        val afterIds = afterSubjectScopes.map { it.id }.toSet()
-        return beforeIds != afterIds
+        val beforeUsernames = beforeSubjectScopes
+            .filter { it.type == SubjectScopeType.USER.value }
+            .map { it.username }
+            .toSet()
+
+        val afterUsernames = afterSubjectScopes
+            .filter { it.type == SubjectScopeType.USER.value }
+            .map { it.username }
+            .toSet()
+
+        val beforeDeptIds = beforeSubjectScopes
+            .filter { it.type != SubjectScopeType.USER.value }
+            .map { it.id }
+            .toSet()
+
+        val afterDeptIds = afterSubjectScopes
+            .filter { it.type != SubjectScopeType.USER.value }
+            .map { it.id }
+            .toSet()
+
+        return beforeUsernames != afterUsernames || beforeDeptIds != afterDeptIds
     }
 
     private fun updateApprovalInfo(

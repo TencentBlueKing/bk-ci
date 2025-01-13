@@ -37,7 +37,7 @@
           <span
             :class="{
               'resource-name': true,
-              'hover-link': ['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType)
+              'hover-link': row.isLinkable
             }" 
             @click="handleToResourcePage(row)"
           >{{ row.resourceName }}</span>
@@ -49,7 +49,7 @@
           <div class="overlay" v-if="shouldShowOverlay(row)">
             {{ row.unableMessage }}
             <span
-              v-if="row.removeMemberButtonControl === 'TEMPLATE' && (['codecc_task','pipeline','pipeline_group'].includes(row.resourceType))"
+              v-if="row.removeMemberButtonControl === 'TEMPLATE' && row.isLinkable"
               @click="handleToResourcePage(row)"
               class="text-blue"
             >
@@ -162,6 +162,12 @@ import { timeFormatter } from '@/common/util.ts'
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 
+const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group'];
+const URL_TEMPLATES = {
+  pipeline: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
+  pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
+  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`
+};
 const props = defineProps({
   isShowOperation: {
     type: Boolean,
@@ -207,19 +213,18 @@ const refTable = ref(null);
 const curSelectedData = ref([]);
 const isCurrentAll = ref(false);
 const selectedResourceCode = computed(() => isCurrentAll.value ? tableList.value.map(i => i.resourceCode) : curSelectedData.value.map(i => i.resourceCode));
-const resourceType = computed(() => props.resourceType);
-const groupTotal = computed(() => props.groupTotal);
 const remainingCount = computed(()=> props.groupTotal - props.data.length);
 const TOOLTIPS_CONTENT = {
-  UNIQUE_MANAGER: t('唯一管理员，不可移出。请添加新的管理员后再移出'),
-  UNIQUE_OWNER: t('唯一拥有者，不可移出。请添加新的拥有者后再移出'),
+  UNIQUE_MANAGER: t('唯一管理员，不可直接移出。请交接或停用项目'),
+  UNIQUE_OWNER: t('唯一拥有者，不可直接移出。请交接或删除资源'),
   TEMPLATE: t('通过用户组加入，不可直接移出。如需调整，请编辑用户组')
 }
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const tableList = computed(() => props.data.map(item => ({
     ...item,
     unableMessage: getUnableMessage(item),
-    isExpired: item.expiredAt < Date.now() && item.removeMemberButtonControl === 'OTHER'
+    isExpired: item.expiredAt < Date.now() && item.removeMemberButtonControl === 'OTHER',
+    isLinkable: LINKABLE_RESOURCE_TYPES.includes(item.resourceType)
   }))
 );
 const border = ['row', 'outer'];
@@ -266,7 +271,7 @@ function getUnableMessage(row){
  */
 function handleSelectAll({checked}) {
   if (checked) {
-    emit('getSelectList', tableList.value, resourceType.value);
+    emit('getSelectList', tableList.value, props.resourceType);
     curSelectedData.value = tableList.value;
     isCurrentAll.value = false;
   } else {
@@ -278,7 +283,7 @@ function handleSelectAll({checked}) {
  */
 function handleSelectionChange() {
   const selectionList = refTable.value.getSelection();
-  emit('getSelectList', selectionList, resourceType.value);
+  emit('getSelectList', selectionList, props.resourceType);
   curSelectedData.value = selectionList;
   isCurrentAll.value = props.data.length === selectionList
 };
@@ -290,7 +295,7 @@ function handleSelectAllData() {
   if (selectLength != props.data.length) {
     refTable.value.toggleAllSelection();
   }
-  emit('handleSelectAllData', resourceType.value)
+  emit('handleSelectAllData', props.resourceType)
   isCurrentAll.value = true;
 }
 /**
@@ -299,55 +304,49 @@ function handleSelectAllData() {
 function handleClear() {
   refTable.value.clearSelection();
   isCurrentAll.value = false;
-  emit('handleClear', resourceType.value);
+  curSelectedData.value = [];
+  emit('handleClear', props.resourceType);
 }
 /**
  * 续期按钮点击
  * @param row 行数据
  */
 function handleRenewal(row) {
-  emit('handleRenewal', row, resourceType.value, refTable.value);
+  emit('handleRenewal', row, props.resourceType, refTable.value);
 }
 /**
  * 移交按钮点击
  * @param row 行数据
  */
 function handleHandOver(row, index) {
-  emit('handleHandOver', row, resourceType.value, index);
+  emit('handleHandOver', row, props.resourceType, index);
 }
 /**
  * 移出按钮点击
  * @param row 行数据
  */
 function handleRemove(row, index) {
-  emit('handleRemove', row, resourceType.value, index);
+  emit('handleRemove', row, props.resourceType, index);
 }
 /**
  * 加载更多
  */
 function handleLoadMore() {
-  emit('handleLoadMore', resourceType.value);
+  emit('handleLoadMore', props.resourceType);
 }
 
 function pageLimitChange(limit) {
-  emit('pageLimitChange',limit, resourceType.value);
+  emit('pageLimitChange',limit, props.resourceType);
 }
 function pageValueChange(value) {
-  emit('pageValueChange',value, resourceType.value);
+  emit('pageValueChange',value, props.resourceType);
 }
 
 function handleToResourcePage (row) {
-  if (!(['codecc_task', 'pipeline', 'pipeline_group'].includes(row.resourceType))) return
-  switch (row.resourceType) {
-    case 'pipeline':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`)
-      return
-    case 'pipeline_group':
-      window.open(`${location.origin}/console/pipeline/${projectId.value}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`)
-      return
-    case 'codecc_task':
-      window.open(`${location.origin}/console/codecc/${projectId.value}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`)
-      return
+  if (!row.isLinkable) return
+  const url = URL_TEMPLATES[row.resourceType]?.(projectId.value, row);
+  if (url) {
+    window.open(url);
   }
 }
 </script>

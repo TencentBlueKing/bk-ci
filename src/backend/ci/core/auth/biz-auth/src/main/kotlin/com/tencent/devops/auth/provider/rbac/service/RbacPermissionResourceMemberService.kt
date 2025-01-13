@@ -589,7 +589,7 @@ class RbacPermissionResourceMemberService(
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
-        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId")
+        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId|${memberRenewalDTO.expiredAt}")
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
             .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)
