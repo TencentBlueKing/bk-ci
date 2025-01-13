@@ -73,7 +73,9 @@ open class PipelineTimerService @Autowired constructor(
         channelCode: ChannelCode,
         repoHashId: String?,
         branchs: Set<String>?,
-        noScm: Boolean?
+        taskId: String,
+        noScm: Boolean?,
+        startParam: Map<String, String>?
     ): Result<Boolean> {
         val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
         return if (0 < pipelineTimerDao.save(
@@ -85,7 +87,9 @@ open class PipelineTimerService @Autowired constructor(
                 channelCode,
                 repoHashId,
                 branchs?.let { JsonUtil.toJson(it) },
-                noScm
+                noScm,
+                startParam?.let { JsonUtil.toJson(it) },
+                taskId
             )
         ) {
             pipelineEventDispatcher.dispatch(
@@ -93,6 +97,7 @@ open class PipelineTimerService @Autowired constructor(
                     source = "saveTimer",
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    taskId = taskId,
                     userId = userId,
                     crontabExpressionJson = crontabJson
                 )
@@ -104,6 +109,7 @@ open class PipelineTimerService @Autowired constructor(
                     source = "saveTimer_fail",
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    taskId = taskId,
                     userId = userId,
                     crontabExpressionJson = crontabJson,
                     actionType = ActionType.TERMINATE
@@ -119,17 +125,18 @@ open class PipelineTimerService @Autowired constructor(
         }
     }
 
-    open fun deleteTimer(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
+    open fun deleteTimer(projectId: String, pipelineId: String, userId: String, taskId: String): Result<Boolean> {
         var count = 0
-        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId)
+        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId, taskId)
         if (timerRecord != null) {
-            count = pipelineTimerDao.delete(dslContext, projectId, pipelineId)
+            count = pipelineTimerDao.delete(dslContext, projectId, pipelineId, taskId)
             // 终止定时器
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
                     source = "deleteTimer",
                     projectId = timerRecord.projectId,
                     pipelineId = pipelineId,
+                    taskId = taskId,
                     userId = userId,
                     crontabExpressionJson = timerRecord.crontab,
                     actionType = ActionType.TERMINATE
@@ -147,8 +154,8 @@ open class PipelineTimerService @Autowired constructor(
         )
     }
 
-    open fun get(projectId: String, pipelineId: String): PipelineTimer? {
-        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId) ?: return null
+    open fun get(projectId: String, pipelineId: String, taskId: String): PipelineTimer? {
+        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId, taskId) ?: return null
         return convert(timerRecord)
     }
 
@@ -173,7 +180,9 @@ open class PipelineTimerService @Autowired constructor(
                 branchs = branchs?.let {
                     JsonUtil.to(it, object : TypeReference<List<String>>() {})
                 },
-                noScm = noScm
+                noScm = noScm,
+                taskId = taskId,
+                startParam = startParam?.let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) }
             )
         }
     }
@@ -231,5 +240,58 @@ open class PipelineTimerService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+    }
+
+    fun listTimer(projectId: String, pipelineId: String): List<TPipelineTimerRecord> {
+        return pipelineTimerDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun listPipeline(projectId: String?, pipelineId: String?, limit: Int, offset: Int): List<Pair<String, String>> {
+        return pipelineTimerDao.listPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    /**
+     * 修改定时任务record，并更新quartz定时任务
+     */
+    fun updateTimer(
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        userId: String,
+        startParam: Map<String, String>?,
+        crontabExpressionJson: String
+    ): Result<Boolean> {
+        return if (pipelineTimerDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = taskId,
+                startParam = startParam?.let {
+                    JsonUtil.toJson(it, false)
+                }
+            ) > 0
+        ) {
+            pipelineEventDispatcher.dispatch(
+                PipelineTimerChangeEvent(
+                    source = "saveTimer",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = taskId,
+                    userId = userId,
+                    crontabExpressionJson = crontabExpressionJson
+                )
+            )
+            return Result(true)
+        } else Result(false)
     }
 }

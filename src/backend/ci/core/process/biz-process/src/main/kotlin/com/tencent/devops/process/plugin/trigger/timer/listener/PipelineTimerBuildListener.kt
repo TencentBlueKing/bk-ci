@@ -79,11 +79,15 @@ class PipelineTimerBuildListener @Autowired constructor(
 
     override fun run(event: PipelineTimerBuildEvent) {
         val pipelineTimer =
-            pipelineTimerService.get(projectId = event.projectId, pipelineId = event.pipelineId) ?: return
+            pipelineTimerService.get(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                taskId = event.taskId
+            ) ?: return
         with(pipelineTimer) {
             when {
                 repoHashId.isNullOrBlank() ->
-                    timerTrigger(event = event)
+                    timerTrigger(event = event, params = event.startParam ?: mapOf())
 
                 else ->
                     repoTimerTrigger(
@@ -107,7 +111,7 @@ class PipelineTimerBuildListener @Autowired constructor(
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
                 if (buildResult.data.isNullOrBlank()) {
-                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
+                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId, event.taskId)
                     logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
@@ -147,21 +151,30 @@ class PipelineTimerBuildListener @Autowired constructor(
                     messages.add(I18nUtil.getCodeLanMessage(ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY))
                     return
                 }
+                // 填充触发器启动参数
+                val startParams = mutableMapOf<String, String>()
+                event.startParam?.let {
+                    startParams.putAll(it)
+                }
                 finalBranchs.forEach { branch ->
                     if (noScm == true) {
                         branchTimerTrigger(
                             event = event,
                             repoHashId = repoHashId!!,
                             branch = branch,
-                            branchMessages = branchMessages
+                            branchMessages = branchMessages,
+                            startParams = startParams
                         )
                     } else {
-                        timerTrigger(
-                            event = event,
-                            params = mapOf(
+                        startParams.putAll(
+                            mapOf(
                                 BK_REPO_WEBHOOK_HASH_ID to repoHashId!!,
                                 PIPELINE_WEBHOOK_BRANCH to branch
                             )
+                        )
+                        timerTrigger(
+                            event = event,
+                            params = startParams
                         )
                     }
                 }
@@ -192,7 +205,8 @@ class PipelineTimerBuildListener @Autowired constructor(
         event: PipelineTimerBuildEvent,
         repoHashId: String,
         branch: String,
-        branchMessages: MutableMap<String, MutableSet<String>>
+        branchMessages: MutableMap<String, MutableSet<String>>,
+        startParams: MutableMap<String, String>
     ) {
         val repositoryConfig = RepositoryConfig(
             repositoryHashId = repoHashId,
@@ -221,12 +235,15 @@ class PipelineTimerBuildListener @Autowired constructor(
                     branch = branch
                 )
                 if (timerBranch == null || timerBranch.revision != revision) {
-                    val buildId = timerTrigger(
-                        event = event,
-                        params = mapOf(
+                    startParams.putAll(
+                        mapOf(
                             BK_REPO_WEBHOOK_HASH_ID to repoHashId,
                             PIPELINE_WEBHOOK_BRANCH to branch
                         )
+                    )
+                    val buildId = timerTrigger(
+                        event = event,
+                        params = startParams
                     ) ?: return
                     logger.info("success to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch|$buildId")
                     pipelineTimerService.saveTimerBranch(
