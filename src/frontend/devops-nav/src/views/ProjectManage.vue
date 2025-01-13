@@ -233,22 +233,24 @@
             ext-cls="exit-project-dialog"
         >
             <template slot="header">
-                <Icon
-                    name="warninfo"
-                    width="42"
-                    height="42"
-                />
+                <img
+                    src="../assets/scss/logo/warninfo.svg"
+                    alt=""
+                    :width="42"
+                    :height="42"
+                >
                 <h2 class="dialog-header"> {{ $t('存在需清理或交接的权限/授权') }} </h2>
             </template>
             <main v-bkloading="{ isLoading: isMainLoading }">
                 <div class="project-content">
                     <p class="tips">
                         <span>
-                            <Icon
-                                name="warning-circle-fill"
-                                width="14"
-                                height="14"
-                            />
+                            <img
+                                src="../assets/scss/logo/warning-circle-fill.svg"
+                                alt=""
+                                :width="14"
+                                :height="14"
+                            >
                             <i18n
                                 path="检测到X项权限/授权不能直接退出，请先清理资源、或在下方填写交接人移交给新负责人"
                                 tag="span"
@@ -257,11 +259,12 @@
                             </i18n>
                         </span>
                         <span class="refresh">
-                            <Icon
-                                name="refresh"
-                                width="12"
-                                height="12"
-                            />
+                            <img
+                                src="../assets/scss/logo/refresh.svg"
+                                alt=""
+                                :width="12"
+                                :height="12"
+                            >
                             <span @click="handleRefresh">{{ $t('刷新') }}</span>
                         </span>
                     </p>
@@ -278,11 +281,12 @@
                                 <span class="item-num">{{ label.count }}</span>
                             </p>
                             <p class="go-detail">
-                                <Icon
-                                    name="jump-link-line"
-                                    width="12"
-                                    height="12"
-                                />
+                                <img
+                                    src="../assets/scss/logo/jump-link-line.svg"
+                                    alt=""
+                                    :width="12"
+                                    :height="12"
+                                >
                                 <span @click="goToPermission(label.key)">{{ $t('详情') }}</span>
                             </p>
                         </li>
@@ -345,7 +349,6 @@
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
-    import Icon from '@/components/Icon/index.vue'
     import authInfo from '@/utils/auth'
     
     const PROJECT_SORT_FILED = {
@@ -361,7 +364,6 @@
         name: 'ProjectManage',
         components: {
             ApplyProjectDialog,
-            Icon,
             ProjectUserSelector
         },
         data () {
@@ -1119,6 +1121,7 @@
         .tips {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 14px;
             color: #63656E;
             .tips-num {
@@ -1127,6 +1130,7 @@
             .refresh {
                 text-align: right;
                 color: #3A84FF;
+                font-size: 12px;
                 cursor: pointer;
                 width: 70px;
             }
@@ -1170,6 +1174,7 @@
                 .go-detail {
                     color: #3A84FF;
                     cursor: pointer;
+                    font-size: 12px;
                     svg {
                         vertical-align: middle;
                         margin-right: 6px;
@@ -1177,6 +1182,9 @@
                 }
 
             }
+        }
+        img {
+            vertical-align: middle;
         }
     }
     .handover-content {
