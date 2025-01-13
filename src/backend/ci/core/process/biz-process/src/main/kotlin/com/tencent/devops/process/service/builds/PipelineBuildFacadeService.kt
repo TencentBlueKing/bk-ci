@@ -2746,43 +2746,15 @@ class PipelineBuildFacadeService(
         // 检查触发器是否存在
         val checkTriggerResult = forceTrigger || when (startType) {
             StartType.WEB_HOOK -> {
-                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }?.let {
-                    // webhook触发
-                    webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
-                        startParameters[param.key] = param.value.toString()
-                    }
-                    it
-                }
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                triggerContainer.elements.find { it is ManualTriggerElement }?.let {
-                    startParameters.putAll(
-                        // 自定义触发源材料参数
-                        buildVariableService.getAllVariable(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
-                        )
-                    )
-                    it
-                }
+                triggerContainer.elements.find { it is ManualTriggerElement }
             }
 
             StartType.REMOTE -> {
-                triggerContainer.elements.find { it is RemoteTriggerElement }?.let {
-                    startParameters.putAll(
-                        // 自定义触发源材料参数
-                        buildVariableService.getAllVariable(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
-                        )
-                    )
-                    it
-                }
+                triggerContainer.elements.find { it is RemoteTriggerElement }
             }
 
             StartType.TIME_TRIGGER -> {
@@ -2790,27 +2762,6 @@ class PipelineBuildFacadeService(
             }
 
             StartType.PIPELINE -> {
-                // 父子流水线核心参数
-                startParameters.putAll(
-                    buildVariableService.getAllVariable(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        keys = setOf(
-                            PIPELINE_START_PARENT_PROJECT_ID,
-                            PIPELINE_START_PARENT_PIPELINE_ID,
-                            PIPELINE_START_PARENT_BUILD_ID,
-                            PIPELINE_START_PARENT_BUILD_TASK_ID,
-                            PIPELINE_START_SUB_RUN_MODE,
-                            PIPELINE_START_PARENT_EXECUTE_COUNT
-                        )
-                    )
-                )
-                buildVariableService.getAllVariable(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                ).forEach { (key, value) -> startParameters[key] = value }
                 EmptyElement()
             }
         } != null
@@ -2824,6 +2775,7 @@ class PipelineBuildFacadeService(
             userId = buildInfo.startUser,
             projectId = projectId,
             pipelineId = pipelineId,
+            buildId = buildId,
             startParameters = startParameters,
             startType = startType,
             pipelineInfo = pipelineInfo,
@@ -2835,12 +2787,17 @@ class PipelineBuildFacadeService(
         startType: StartType,
         projectId: String,
         pipelineId: String,
-        startParameters: Map<String, String>,
+        buildId: String,
+        startParameters: MutableMap<String, String>,
         pipelineInfo: PipelineInfo? = null,
         pipelineResourceVersion: PipelineResourceVersion? = null,
         userId: String
     ) = when (startType) {
         StartType.WEB_HOOK -> {
+            // webhook触发
+            webhookBuildParameterService.getBuildParameters(buildId = buildId)?.forEach { param ->
+                startParameters[param.key] = param.value.toString()
+            }
             // webhook触发
             BuildId(
                 webhookTriggerPipelineBuild(
@@ -2857,6 +2814,15 @@ class PipelineBuildFacadeService(
         }
 
         StartType.MANUAL, StartType.SERVICE, StartType.REMOTE -> {
+            startParameters.putAll(
+                // 自定义触发源材料参数
+                buildVariableService.getAllVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    keys = setOf(BK_CI_MATERIAL_ID, BK_CI_MATERIAL_NAME, BK_CI_MATERIAL_URL)
+                )
+            )
             buildManualStartup(
                 userId = userId,
                 projectId = projectId,
@@ -2880,6 +2846,22 @@ class PipelineBuildFacadeService(
         }
 
         StartType.PIPELINE -> {
+            // 父子流水线核心参数
+            startParameters.putAll(
+                buildVariableService.getAllVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    keys = setOf(
+                        PIPELINE_START_PARENT_PROJECT_ID,
+                        PIPELINE_START_PARENT_PIPELINE_ID,
+                        PIPELINE_START_PARENT_BUILD_ID,
+                        PIPELINE_START_PARENT_BUILD_TASK_ID,
+                        PIPELINE_START_SUB_RUN_MODE,
+                        PIPELINE_START_PARENT_EXECUTE_COUNT
+                    )
+                )
+            )
             BuildId(
                 subPipelineStartUpService.callPipelineStartup(
                     projectId = startParameters[PIPELINE_START_PARENT_PROJECT_ID]!!,
