@@ -52,6 +52,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -441,6 +442,7 @@ interface ApigwRemoteDevResource {
         type: QuotaType?,
         @Parameter(description = "地域类型", required = true)
         @QueryParam("zoneType")
+        @DefaultValue("DEFAULT")
         zoneType: WindowsResourceZoneConfigType
     ): Result<Map<String, Map<String, Int>>>
 

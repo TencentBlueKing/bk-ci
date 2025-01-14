@@ -50,7 +50,7 @@ object CommonUtil {
         }
         /*非特殊区域需要去掉数字后完全匹配*/
         if (zoneType == WindowsResourceZoneConfigType.DEFAULT &&
-            zoneId.replace(Regex("\\d+"), "") in zoneShortName.value
+            zoneId.replace(Regex("\\d+"), "") !in zoneShortName.value
         ) {
             return true
         }
