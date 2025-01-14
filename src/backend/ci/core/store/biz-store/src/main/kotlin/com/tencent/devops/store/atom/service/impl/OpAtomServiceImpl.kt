@@ -65,6 +65,7 @@ import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.common.utils.ThreadPoolUtil
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -80,6 +81,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
@@ -679,11 +681,19 @@ class OpAtomServiceImpl @Autowired constructor(
             )
             val tAtom = TAtom.T_ATOM
             result.forEach {
+                val latestFlag = it[KEY_LATEST_FLAG]  as Boolean
                 marketAtomService.updateAtomSensitiveCacheConfig(
                     atomCode = it[tAtom.ATOM_CODE],
                     atomVersion = it[tAtom.VERSION],
                     props = it[tAtom.PROPS]
                 )
+                if (latestFlag) {
+                    marketAtomService.updateAtomSensitiveCacheConfig(
+                        atomCode = it[tAtom.ATOM_CODE],
+                        atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
+                        props = it[tAtom.PROPS]
+                    )
+                }
             }
             offset += limit
         } while (result.size == limit)
