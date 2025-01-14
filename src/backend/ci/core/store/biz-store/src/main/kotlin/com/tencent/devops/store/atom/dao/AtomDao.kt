@@ -97,6 +97,7 @@ import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
@@ -1481,7 +1482,7 @@ class AtomDao : AtomBaseDao() {
         statusList: List<Byte>,
         offset: Int? = null,
         limit: Int? = null
-    ): Result<Record4<String, String, String, Byte>> {
+    ): Result<Record5<String, String, String, Byte, Boolean>> {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             if (!atomCode.isNullOrBlank()) {
@@ -1492,7 +1493,8 @@ class AtomDao : AtomBaseDao() {
                 ATOM_CODE,
                 VERSION,
                 PROPS,
-                ATOM_STATUS
+                ATOM_STATUS,
+                LATEST_FLAG
             ).from(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME, ID)
