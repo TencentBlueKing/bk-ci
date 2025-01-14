@@ -63,7 +63,6 @@ const val ATOM_POST_PARENT_ELEMENT_ID = "parentElementId"
 const val ATOM_POST_CONDITION = "postCondition" // 插件post操作执行条件
 const val ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX = "ATOM_POST_NORMAL_PROJECT_FLAG" // 插件对应普通项目的post标识Key前缀
 const val ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX = "ATOM_POST_VERSION_TEST_FLAG" // 插件大版本内是否有测试版本Key前缀
-const val ATOM_SENSITIVE_PARAM_KEY_PREFIX = "ATOM_SENSITIVE_PARAM_KEY"
 const val ATOM_POST_EXECUTE_TIP = "ATOM_POST_EXECUTE_TIP" // 插件post操作执行时提示
 const val ATOM_INPUT = "input" // 插件输入
 const val ATOM_OUTPUT = "output" // 插件输出

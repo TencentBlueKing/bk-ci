@@ -75,6 +75,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -120,7 +121,6 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -1334,7 +1334,11 @@ class PipelineRepositoryService constructor(
         // 3 所有插件ENV配置合并历史值，并过滤掉默认值
         var randomSeed = 1
         val jobIdSet = mutableSetOf<String>()
-        val testAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
+        val elementSensitiveParamInfos = if (editPermission == false && resource?.model != null) {
+            AtomUtils.getModelElementSensitiveParamInfos(projectId, resource.model, client)
+        } else {
+            null
+        }
         resource?.model?.stages?.forEachIndexed { index, s ->
             if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
@@ -1351,8 +1355,8 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
-                        if (editPermission != true) {
-                            pipelineInfoService.transferSensitiveParam(testAtomCodes ?: emptyList(), e)
+                        elementSensitiveParamInfos?.let {
+                            pipelineInfoService.transferSensitiveParam(e, elementSensitiveParamInfos)
                         }
                     }
                 }

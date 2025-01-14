@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersion
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -56,4 +56,15 @@ interface ServiceMarketAtomEnvResource {
         @Parameter(description = "插件版本信息", required = true)
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>
+
+    @Operation(summary = "批量获取插件敏感入参字段信息")
+    @POST
+    @Path("/project/{projectCode}/run/info/list")
+    fun batchGetAtomSensitiveParamInfos(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件版本信息", required = true)
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, String>?>
 }

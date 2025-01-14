@@ -1540,7 +1540,7 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = null,
             channelCode = channelCode,
-            sensitiveFlag = pipelinePermissionService.checkPipelinePermission(
+            editPermission = pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1556,7 +1556,7 @@ class PipelineBuildFacadeService(
         executeCount: Int?,
         channelCode: ChannelCode,
         archiveFlag: Boolean? = false,
-        sensitiveFlag: Boolean? = true
+        editPermission: Boolean? = true
     ): ModelRecord {
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildInfo = pipelineRuntimeService.getBuildInfo(
@@ -1579,7 +1579,7 @@ class PipelineBuildFacadeService(
             buildInfo = buildInfo,
             executeCount = executeCount,
             queryDslContext = queryDslContext,
-            sensitiveFlag = sensitiveFlag
+            editPermission = editPermission
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1616,7 +1616,7 @@ class PipelineBuildFacadeService(
             executeCount = executeCount,
             channelCode = channelCode,
             archiveFlag = archiveFlag,
-            sensitiveFlag = pipelinePermissionService.checkPipelinePermission(
+            editPermission = pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

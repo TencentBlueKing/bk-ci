@@ -124,7 +124,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.InstallStoreReq
@@ -1601,42 +1600,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 props
             }
             if (propsJsonStr.isNullOrBlank()) return
-            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(propsJsonStr)
-            val params = mutableListOf<String>()
-            if (null != propsMap["input"]) {
-                val input = propsMap["input"] as Map<String, Any>
-                input.forEach { inputIt ->
-                    val paramKey = inputIt.key
-                    val paramValueMap = inputIt.value as Map<String, Any>
-                    val isSensitive = paramValueMap["isSensitive"] as? Boolean
-                    if (isSensitive == true) {
-                        params.add(paramKey)
-                    }
-                }
-            }
-            if (params.isNotEmpty()) {
-                redisOperation.hset(
-                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                    hashKey = atomVersion,
-                    values = params.joinToString(",")
-                )
-                // 使用latest版本号缓存测试版本提供给调试项目使用
-                redisOperation.hset(
-                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                    hashKey = VersionUtils.convertLatestVersion(atomVersion),
-                    values = params.joinToString(",")
-                )
-            } else {
-                redisOperation.hdelete(
-                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                    hashKey = atomVersion
-                )
-                redisOperation.hset(
-                    key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                    hashKey = VersionUtils.convertLatestVersion(atomVersion),
-                    values = ""
-                )
-            }
+            val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
+
         } catch (ignored: Exception) {
             logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed")
         }

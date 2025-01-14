@@ -27,17 +27,11 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -54,36 +48,13 @@ class PipelineInfoService @Autowired constructor(
     }
 
     // 敏感入参解析
-    fun transferSensitiveParam(projectTestAtomCodes: List<String>, element: Element) {
+    fun transferSensitiveParam(element: Element, elementSensitiveParamInfos: Map<String, String>) {
         if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
             val atomCode = element.getAtomCode()
             val version = element.version
-            val hashKey = if (version.contains(".*")) {
-                var latestVersion: String? = null
-                val atomVersionTestFlag =
-                    redisOperation.hget("$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode", version)
-                // 项目下调试插件处理
-                if (projectTestAtomCodes.contains(atomCode) && (atomVersionTestFlag == "true")) {
-                    latestVersion = version
-                }
-                if (latestVersion.isNullOrBlank()) {
-                    val atomRunInfoStr = redisOperation.hget(
-                        key = "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode",
-                        hashKey = version
-                    )
-                    val atomRunInfo = atomRunInfoStr?.let { JsonUtil.toMap(it) }
-                    latestVersion = atomRunInfo?.get(KEY_VERSION).toString()
-                }
-                latestVersion
-            } else {
-                version
-            }
-            val param = redisOperation.hget(
-                key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-                hashKey = hashKey
-            )
-            if (!param.isNullOrBlank()) {
-                element.transferSensitiveParam(param.split(","))
+            val params = elementSensitiveParamInfos["$atomCode:$version"]
+            if (!params.isNullOrBlank()) {
+                element.transferSensitiveParam(params.split(","))
             }
         }
     }

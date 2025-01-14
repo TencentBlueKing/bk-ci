@@ -130,7 +130,6 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.ATOM_SENSITIVE_PARAM_KEY_PREFIX
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -974,10 +973,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
             hashKey = VersionUtils.convertLatestVersion(record.version),
             values = "false"
-        )
-        redisOperation.hdelete(
-            key = "$ATOM_SENSITIVE_PARAM_KEY_PREFIX:$atomCode",
-            hashKey = VersionUtils.convertLatestVersion(record.version)
         )
         checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)

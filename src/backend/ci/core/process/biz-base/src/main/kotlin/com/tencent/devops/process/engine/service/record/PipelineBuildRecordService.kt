@@ -58,6 +58,7 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -80,7 +81,6 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -170,7 +170,7 @@ class PipelineBuildRecordService @Autowired constructor(
         executeCount: Int?,
         refreshStatus: Boolean = true,
         queryDslContext: DSLContext? = null,
-        sensitiveFlag: Boolean? = true
+        editPermission: Boolean? = true
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -225,7 +225,11 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId = projectId,
             pipelineId = buildInfo.pipelineId
         )
-
+        val elementSensitiveParamInfos = if (editPermission == false) {
+            AtomUtils.getModelElementSensitiveParamInfos(projectId, model, client)
+        } else {
+            null
+        }
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
         if (refreshStatus && fixedExecuteCount == buildInfo.executeCount) {
@@ -252,7 +256,7 @@ class PipelineBuildRecordService @Autowired constructor(
             if (!newVarName.isNullOrBlank()) newParams.add(it.copy(id = newVarName)) else newParams.add(it)
         }
         triggerContainer.params = newParams
-        val testAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data ?: emptyList()
+
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
             stage.resetBuildOption()
@@ -262,9 +266,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 container.fetchGroupContainers()?.forEach { groupContainer ->
                     fixContainerDetail(groupContainer)
                 }
-                if (sensitiveFlag != true) {
+                elementSensitiveParamInfos?.let {
                     container.elements.forEach { e ->
-                        pipelineInfoService.transferSensitiveParam(testAtomCodes, e)
+                        pipelineInfoService.transferSensitiveParam(e, elementSensitiveParamInfos)
                     }
                 }
             }

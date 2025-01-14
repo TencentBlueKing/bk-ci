@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
@@ -47,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
@@ -71,7 +71,6 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import java.util.LinkedList
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -131,11 +130,18 @@ class PipelineTransferYamlService @Autowired constructor(
                     aspects
                 )
             }
+            val model = data.modelAndSetting?.model
             // 无编辑权限需要对流水线插件敏感参数做处理
-            if (editPermission == false) {
-                val projectTestAtomCodes = client.get(ServiceAtomResource::class).getTestAtoms(projectId).data
-                data.modelAndSetting?.model?.stages?.forEach {
-                    transferElementSensitiveParam(projectTestAtomCodes, it.containers)
+            if (editPermission == false && model != null) {
+                val elementSensitiveParamInfos = AtomUtils.getModelElementSensitiveParamInfos(projectId, model, client)
+                model.stages.forEach { stage ->
+                    stage.containers.forEach { container ->
+                        container.elements.forEach { e ->
+                            elementSensitiveParamInfos?.let {
+                                pipelineInfoService.transferSensitiveParam(e, it)
+                            }
+                        }
+                    }
                 }
             }
             PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
@@ -225,17 +231,6 @@ class PipelineTransferYamlService @Autowired constructor(
             watcher.stop()
         }
         return TransferResponse()
-    }
-
-    private fun transferElementSensitiveParam(projectTestAtomCodes: List<String>?, containers: List<Container>) {
-        containers.forEach {
-            it.elements.forEach { e ->
-                pipelineInfoService.transferSensitiveParam(
-                    projectTestAtomCodes = projectTestAtomCodes ?: emptyList(),
-                    element = e
-                )
-            }
-        }
     }
 
     fun modelTaskTransfer(
