@@ -1,13 +1,14 @@
 <template>
     <div>
         <bk-tag-input
-            ref="tagInputRef"
             class="manage-user-selector"
             clearable
+            v-model="tagValue"
             :placeholder="$t('输入交接人，选中回车进行校验')"
             :search-key="searchKeyArr"
             save-key="id"
             display-key="displayName"
+            allow-auto-match
             :list="userList"
             :paste-fn="pasteFn"
             @inputchange="handleInputUserName"
@@ -33,8 +34,7 @@
             return {
                 searchKeyArr: ['id', 'name'],
                 userList: [],
-                searchValue: null,
-                pasteValue: ''
+                tagValue: []
             }
         },
         created () {
@@ -58,7 +58,6 @@
             },
 
             async handleInputUserName (val) {
-                // this.searchValue = null
                 this.$emit('change', { list: val, userList: this.userList })
                 if (val) {
                     const query = {
@@ -69,21 +68,19 @@
                         globalError: false
                     }
                     await this.fetchProjectMembers(query)
-                    return
                 }
-                this.userList = []
             },
 
             handleChange (list) {
-                // this.searchValue = list
-                this.$emit('change', { list: list, userList: this.userList })
+                // 确保只能输入或粘贴一个tag（:max-data="1" 时禁止粘贴）
+                this.tagValue = list.slice(-1)
+                this.$emit('change', { list: this.tagValue, userList: this.userList })
             },
             pasteFn (val) {
-                if (this.$refs.tagInputRef) {
-                    this.$refs.tagInputRef.curInputValue = val
-                    this.handleInputUserName(val)
+                if (this.tagValue) {
+                    this.tagValue = []
                 }
-                return []
+                return this.userList.filter(i => i.id === val || i.name === val)
             },
 
             removeAll (val) {
