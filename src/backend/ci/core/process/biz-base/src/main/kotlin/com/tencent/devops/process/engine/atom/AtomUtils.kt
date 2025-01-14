@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -282,5 +283,23 @@ object AtomUtils {
                 }
             }
         }
+    }
+
+    fun getModelElementSensitiveParamInfos(
+        projectId: String,
+        model: Model,
+        client: Client
+    ) : Map<String, String>? {
+        val atomVersions = mutableSetOf<StoreVersion>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach {
+                atomVersions.addAll(getAtomVersions(it))
+            }
+        }
+        if (atomVersions.isEmpty()) return null
+        return client.get(ServiceMarketAtomEnvResource::class).batchGetAtomSensitiveParamInfos(
+            projectId,
+            atomVersions
+        ).data
     }
 }

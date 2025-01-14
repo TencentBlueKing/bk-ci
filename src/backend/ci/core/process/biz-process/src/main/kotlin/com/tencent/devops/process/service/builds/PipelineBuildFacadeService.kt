@@ -139,12 +139,12 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 /**
  *
@@ -1539,7 +1539,13 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = null,
-            channelCode = channelCode
+            channelCode = channelCode,
+            editPermission = pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
         )
     }
 
@@ -1549,7 +1555,8 @@ class PipelineBuildFacadeService(
         buildId: String,
         executeCount: Int?,
         channelCode: ChannelCode,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        editPermission: Boolean? = true
     ): ModelRecord {
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildInfo = pipelineRuntimeService.getBuildInfo(
@@ -1571,7 +1578,8 @@ class PipelineBuildFacadeService(
         return buildRecordService.getBuildRecord(
             buildInfo = buildInfo,
             executeCount = executeCount,
-            queryDslContext = queryDslContext
+            queryDslContext = queryDslContext,
+            editPermission = editPermission
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1607,7 +1615,13 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = executeCount,
             channelCode = channelCode,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            editPermission = pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
         )
     }
 
