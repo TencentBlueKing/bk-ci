@@ -71,5 +71,4 @@ interface OpStorePublishersResource {
         firstPublisher: String
     ): Result<Boolean>
 
-
 }
