@@ -110,12 +110,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress(
     "LongMethod",
@@ -193,7 +193,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw NotFoundException("Fail to find build: buildId($buildId)")
-        Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
+        Preconditions.checkNotNull(buildInfo) { NotFoundException("Pipeline build ($buildId) is not exist") }
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
@@ -204,7 +204,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId = projectId, pipelineId = buildInfo.pipelineId
         )
-        Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
+        Preconditions.checkNotNull(model) { NotFoundException("Build Model ($buildId) is not exist") }
 
         model!!.stages.forEachIndexed { index, s ->
             if (index == 0) {

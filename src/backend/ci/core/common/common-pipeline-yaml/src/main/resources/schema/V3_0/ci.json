@@ -1479,7 +1479,13 @@
                           } ]
                         },
                         "label" : {
-                          "type" : "string"
+                          "anyOf" : [ {
+                            "type" : "string"
+                          }, {
+                            "type" : "number"
+                          }, {
+                            "type" : "boolean"
+                          } ]
                         },
                         "description" : {
                           "type" : "string"
@@ -1648,7 +1654,13 @@
                         } ]
                       },
                       "label" : {
-                        "type" : "string"
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
                       },
                       "description" : {
                         "type" : "string"

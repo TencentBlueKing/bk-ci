@@ -373,5 +373,23 @@ export default {
   */
   getIsDirectRemove(projectId: string, groupId: number, params: any) {
     return http.DELETE(`${IAM_PERFIX}/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
-  }
+  },
+  /**
+   * 获取资源授权管理数量
+   */
+  getResourceType2CountOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/getResourceType2CountOfHandover`, params);
+  },
+  /**
+   * 获取交接单中授权相关
+   */
+  listAuthorizationsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listAuthorizationsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  listGroupsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listGroupsOfHandover`, params);
+  },
 };

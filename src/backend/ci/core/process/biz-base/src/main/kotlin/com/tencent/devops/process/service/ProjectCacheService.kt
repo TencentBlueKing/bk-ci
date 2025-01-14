@@ -80,6 +80,6 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectCacheService::class.java)
         private const val cacheSize: Long = 5000
-        private const val cacheTimeMinute: Long = 10
+        private const val cacheTimeMinute: Long = 5
     }
 }
