@@ -355,7 +355,13 @@ class PublishersDataServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         firstPublisher: String
     ): Boolean {
-        storeReleaseDao.updateComponentFirstPublisher(dslContext, userId, storeCode, storeType.type.toByte(),firstPublisher)
+        storeReleaseDao.updateComponentFirstPublisher(
+            dslContext,
+            userId,
+            storeCode,
+            storeType.type.toByte(),
+            firstPublisher
+        )
         return true
     }
 
