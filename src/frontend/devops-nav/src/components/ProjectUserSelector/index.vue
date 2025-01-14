@@ -4,7 +4,7 @@
             ref="tagInputRef"
             class="manage-user-selector"
             clearable
-            :placeholder="$t('输入接收人，选中回车进行校验')"
+            :placeholder="$t('输入交接人，选中回车进行校验')"
             :search-key="searchKeyArr"
             save-key="id"
             display-key="displayName"

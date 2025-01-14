@@ -582,20 +582,26 @@
                     showFooter: false,
                     subHeader: h('div', { class: 'info-content footer-none' },
                                  [
+                                     h('div', { class: 'info-project' },
+                                       [
+                                           h('span', { class: 'label' }, this.$t('项目：')),
+                                           h('span', { class: 'value' }, this.projectName)
+                                       ]
+                                     ),
                                      h('div', { class: 'info-tips' }, [
                                          h('span', this.$t('存在通过组织架构')),
                                          h('span', { class: 'reminder' }, departments),
-                                         h('span', this.$t('获得权限的资源，无法直接退出。请联系项目管理员（')),
+                                         h('span', this.$t('获得权限的资源，无法直接退出。请联系项目管理员')),
                                          h('span', { class: 'reminder' },
                                            managers.length > 2
                                                ? (
-                                                   [h('span', `${managers.slice(0, 2).join(', ')}.....`),
+                                                   [h('span', `${managers.slice(0, 2).join('，')}.....`),
                                                     h('span', {
                                                         style: { color: '#3A84FF', cursor: 'pointer' },
                                                         directives: [
                                                             {
                                                                 name: 'bk-tooltips',
-                                                                value: managers.join('， '),
+                                                                value: managers.join('，'),
                                                                 modifiers: { click: true }
                                                             }
                                                         ]
@@ -603,7 +609,7 @@
                                                )
                                                : managers.join(', ')
                                          ),
-                                         h('span', this.$t('），评估按照组织架构添加权限是否合理。'))
+                                         h('span', this.$t('，评估按照组织架构添加权限是否合理。'))
                                      ])
                                  ]
                     )
