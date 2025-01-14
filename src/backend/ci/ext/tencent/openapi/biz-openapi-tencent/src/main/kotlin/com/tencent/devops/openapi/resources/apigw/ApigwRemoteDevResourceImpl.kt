@@ -318,9 +318,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).fetchExpertSupRecordAny(id)
     }
 
-    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        logger.info("getWindowsQuota $userId|$type")
-        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
+    override fun getWindowsQuota(
+        userId: String,
+        type: QuotaType?,
+        zoneType: WindowsResourceZoneConfigType
+    ): Result<Map<String, Map<String, Int>>> {
+        logger.info("getWindowsQuota $userId|$type|$zoneType")
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type, zoneType)
     }
 
     override fun updateUsageLimit(

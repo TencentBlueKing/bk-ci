@@ -2,10 +2,10 @@ package com.tencent.devops.remotedev.utils
 
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 
 object CommonUtil {
-
     fun parseResourceVmRespData(
         data: List<ResourceVmRespData>?,
         zoneConfig: WindowsResourceZoneConfig,
@@ -14,22 +14,47 @@ object CommonUtil {
     ): Map<String, Int> {
         val res = mutableMapOf<String, Int>()
         data?.forEach { resp ->
-            /*特殊区域需要完全匹配*/
-            if (zoneConfig.type != WindowsResourceZoneConfigType.DEFAULT && resp.zoneId != zoneConfig.zoneShortName) {
-                return@forEach
-            }
-            /*DEFAULT需要不在特殊区域*/
-            if (zoneConfig.type == WindowsResourceZoneConfigType.DEFAULT && resp.zoneId in spec.value) {
-                return@forEach
-            }
-            /*非特殊区域需要去掉数字后完全匹配*/
-            if (zoneConfig.type == WindowsResourceZoneConfigType.DEFAULT &&
-                resp.zoneId.replace(Regex("\\d+"), "") != zoneConfig.zoneShortName
+            if (zoneIdCheck(
+                    quotaType = null,
+                    zoneType = zoneConfig.type,
+                    zoneShortName = lazy { listOf(zoneConfig.zoneShortName) },
+                    zoneId = resp.zoneId,
+                    spec = spec
+                )
             ) {
                 return@forEach
             }
             res[resp.zoneId] = resp.machineResources?.firstOrNull { ma -> ma.machineType == size }?.free ?: 0
         }
         return res
+    }
+
+    fun zoneIdCheck(
+        quotaType: QuotaType?,
+        zoneType: WindowsResourceZoneConfigType,
+        zoneId: String,
+        zoneShortName: Lazy<List<String>>,
+        spec: Lazy<List<String>>
+    ): Boolean {
+        // todo 待废弃
+        if (quotaType != null) {
+            return quotaType == QuotaType.OFFSHORE && zoneId in spec.value
+        }
+        /*特殊区域需要完全匹配*/
+        if (zoneType != WindowsResourceZoneConfigType.DEFAULT && zoneId !in zoneShortName.value) {
+            return true
+        }
+        /*DEFAULT需要不在特殊区域*/
+        if (zoneType == WindowsResourceZoneConfigType.DEFAULT && zoneId in spec.value) {
+            return true
+        }
+        /*非特殊区域需要去掉数字后完全匹配*/
+        if (zoneType == WindowsResourceZoneConfigType.DEFAULT &&
+            zoneId.replace(Regex("\\d+"), "") in zoneShortName.value
+        ) {
+            return true
+        }
+
+        return false
     }
 }
