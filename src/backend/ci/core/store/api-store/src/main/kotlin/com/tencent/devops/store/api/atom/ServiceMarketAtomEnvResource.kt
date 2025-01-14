@@ -59,7 +59,7 @@ interface ServiceMarketAtomEnvResource {
 
     @Operation(summary = "批量获取插件敏感入参字段信息")
     @POST
-    @Path("/project/{projectCode}/run/info/list")
+    @Path("/project/{projectCode}/sensitive/param/list")
     fun batchGetAtomSensitiveParamInfos(
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")

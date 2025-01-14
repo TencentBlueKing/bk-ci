@@ -100,7 +100,6 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -110,6 +109,7 @@ import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
@@ -1601,7 +1601,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             if (propsJsonStr.isNullOrBlank()) return
             val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
-
+            // 去缓存中获取插件运行时信息
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
+            if (!atomRunInfoJson.isNullOrEmpty() && !params.isNullOrEmpty()) {
+                val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                atomRunInfo.sensitiveParams = params.joinToString(",")
+                redisOperation.hset(
+                    key = atomRunInfoKey,
+                    hashKey = atomVersion,
+                    values = JsonUtil.toJson(atomRunInfo)
+                )
+            }
         } catch (ignored: Exception) {
             logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed")
         }
