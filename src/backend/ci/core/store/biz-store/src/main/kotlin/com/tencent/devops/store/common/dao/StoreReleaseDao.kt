@@ -92,7 +92,6 @@ class StoreReleaseDao {
         }
     }
 
-
     fun updateComponentFirstPublisher(
         dslContext: DSLContext,
         userId: String,

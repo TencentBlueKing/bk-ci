@@ -52,7 +52,6 @@ interface OpStorePublishersResource {
     @Path("/refresh/person")
     fun refreshPersonPublisherGroup(): Result<Boolean>
 
-
     @Operation(summary = "修改组件的首次发布人")
     @PUT
     @Path("/updateComponentFirstPublisher")
@@ -70,5 +69,4 @@ interface OpStorePublishersResource {
         @QueryParam("firstPublisher")
         firstPublisher: String
     ): Result<Boolean>
-
 }
