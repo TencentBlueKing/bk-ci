@@ -27,12 +27,10 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.records.TTableShardingConfigRecord
 import com.tencent.devops.project.dao.TableShardingConfigDao
 import com.tencent.devops.project.pojo.TableShardingConfig
@@ -55,13 +53,14 @@ class TableShardingConfigServiceImpl @Autowired constructor(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
-            tableName = tableName
+            tableName = tableName,
+            tableRuleType = tableShardingConfig.type
         )
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf("[$clusterName-$moduleCode]$tableName")
+                params = arrayOf("[$clusterName-$moduleCode-${tableShardingConfig.type}]$tableName")
             )
         }
         tableShardingConfigDao.add(dslContext, userId, tableShardingConfig)
@@ -81,11 +80,13 @@ class TableShardingConfigServiceImpl @Autowired constructor(
         val clusterName = tableShardingConfig.clusterName
         val moduleCode = tableShardingConfig.moduleCode
         val tableName = tableShardingConfig.tableName
+        val tableRuleType = tableShardingConfig.type
         val nameCount = tableShardingConfigDao.countByName(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
-            tableName = tableName
+            tableName = tableName,
+            tableRuleType = tableRuleType
         )
         if (nameCount > 0) {
             val obj = tableShardingConfigDao.getById(dslContext, id)
@@ -93,7 +94,7 @@ class TableShardingConfigServiceImpl @Autowired constructor(
                 // 抛出错误提示
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf("[$clusterName-$moduleCode]$tableName")
+                    params = arrayOf("[$clusterName-$moduleCode-$tableRuleType]$tableName")
                 )
             }
         }
@@ -134,7 +135,7 @@ class TableShardingConfigServiceImpl @Autowired constructor(
                 moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
                 tableName = record.tableName,
                 shardingNum = record.shardingNum,
-                tableScope = JsonUtil.to(record.tableScope, object : TypeReference<List<String>>() {})
+                type = ShardingRuleTypeEnum.valueOf(record.type)
             )
         } else {
             null
@@ -165,7 +166,7 @@ class TableShardingConfigServiceImpl @Autowired constructor(
                     moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
                     tableName = record.tableName,
                     shardingNum = record.shardingNum,
-                    tableScope = JsonUtil.to(record.tableScope, object : TypeReference<List<String>>() {})
+                    type = ShardingRuleTypeEnum.valueOf(record.type)
                 )
             )
         }
