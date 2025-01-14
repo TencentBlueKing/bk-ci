@@ -40,5 +40,7 @@ data class TableShardingConfig(
     @field:BkField(minLength = 1, maxLength = 128)
     val tableName: String,
     @get:Schema(title = "分表数量")
-    val shardingNum: Int
+    val shardingNum: Int,
+    @get:Schema(title = "表范围")
+    val tableScope: List<String>
 )

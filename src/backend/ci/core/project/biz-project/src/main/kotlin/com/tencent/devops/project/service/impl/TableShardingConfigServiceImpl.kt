@@ -27,9 +27,13 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.model.project.tables.records.TTableShardingConfigRecord
 import com.tencent.devops.project.dao.TableShardingConfigDao
 import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.service.TableShardingConfigService
@@ -104,48 +108,53 @@ class TableShardingConfigServiceImpl @Autowired constructor(
 
     override fun getTableShardingConfigById(id: String): TableShardingConfig? {
         val record = tableShardingConfigDao.getById(dslContext, id)
-        return if (record != null) {
-            TableShardingConfig(
-                clusterName = record.clusterName,
-                moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
-                tableName = record.tableName,
-                shardingNum = record.shardingNum
-            )
-        } else {
-            null
-        }
+        return convertTableShardingConfig(record)
     }
 
     override fun getTableShardingConfigByName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        tableName: String
+        tableName: String,
+        ruleType: ShardingRuleTypeEnum
     ): TableShardingConfig? {
         val record = tableShardingConfigDao.getByName(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
-            tableName = tableName
+            tableName = tableName,
+            tableRuleType = ruleType
         )
-        return if (record != null) {
+        return convertTableShardingConfig(record)
+    }
+
+    private fun convertTableShardingConfig(record: TTableShardingConfigRecord?): TableShardingConfig? {
+        val tableShardingConfig = if (record != null) {
             TableShardingConfig(
                 clusterName = record.clusterName,
                 moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
                 tableName = record.tableName,
-                shardingNum = record.shardingNum
+                shardingNum = record.shardingNum,
+                tableScope = JsonUtil.to(record.tableScope, object : TypeReference<List<String>>() {})
             )
         } else {
             null
         }
+        return tableShardingConfig
     }
 
     override fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: SystemModuleEnum
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum
     ): List<TableShardingConfig>? {
         var tableShardingConfigs: MutableList<TableShardingConfig>? = null
-        val records = tableShardingConfigDao.listByModule(dslContext, clusterName, moduleCode)
+        val records = tableShardingConfigDao.listByModule(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            tableRuleType = ruleType
+        )
         records?.forEach { record ->
             if (tableShardingConfigs == null) {
                 tableShardingConfigs = mutableListOf()
@@ -155,7 +164,8 @@ class TableShardingConfigServiceImpl @Autowired constructor(
                     clusterName = record.clusterName,
                     moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
                     tableName = record.tableName,
-                    shardingNum = record.shardingNum
+                    shardingNum = record.shardingNum,
+                    tableScope = JsonUtil.to(record.tableScope, object : TypeReference<List<String>>() {})
                 )
             )
         }
