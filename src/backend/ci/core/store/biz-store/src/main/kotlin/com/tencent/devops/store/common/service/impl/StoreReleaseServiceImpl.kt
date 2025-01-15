@@ -363,7 +363,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
                     storeReleaseCreateRequest = StoreReleaseCreateRequest(
                         storeCode = storeCode,
                         storeType = storeType,
-                        latestUpgrader = userId,
+                        latestUpgrader = storeReleaseRequest.publisher ?: userId,
                         latestUpgradeTime = pubTime
                     )
                 )

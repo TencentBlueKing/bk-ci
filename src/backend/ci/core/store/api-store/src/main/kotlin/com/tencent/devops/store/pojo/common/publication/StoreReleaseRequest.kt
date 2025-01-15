@@ -45,5 +45,7 @@ data class StoreReleaseRequest(
     @get:Schema(title = "组件状态")
     val status: StoreStatusEnum,
     @get:Schema(title = "发布类型")
-    val releaseType: ReleaseTypeEnum
+    val releaseType: ReleaseTypeEnum,
+    @get:Schema(title = "发布人")
+    val publisher: String? = null
 )
