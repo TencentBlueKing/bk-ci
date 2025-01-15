@@ -1379,20 +1379,24 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
-        // 填充流水线级别回调
-        resource?.model?.events = pipelineCallbackDao.list(
+        pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             event = null
-        ).associate {
-            it.name to PipelineCallbackEvent(
-                callbackEvent = CallBackEvent.valueOf(it.eventType),
-                callbackUrl = it.url,
-                secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
-                region = CallBackNetWorkRegionType.valueOf(it.region),
-                callbackName = it.name
-            )
+        ).let { records ->
+            if (records.isNotEmpty) {
+                // 填充流水线级别回调
+                resource?.model?.events = records.associate {
+                    it.name to PipelineCallbackEvent(
+                        callbackEvent = CallBackEvent.valueOf(it.eventType),
+                        callbackUrl = it.url,
+                        secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                        region = CallBackNetWorkRegionType.valueOf(it.region),
+                        callbackName = it.name
+                    )
+                }
+            }
         }
         return resource
     }
