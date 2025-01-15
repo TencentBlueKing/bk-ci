@@ -40,7 +40,6 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
-import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.ClientTipsService
 import com.tencent.devops.remotedev.service.PermissionService

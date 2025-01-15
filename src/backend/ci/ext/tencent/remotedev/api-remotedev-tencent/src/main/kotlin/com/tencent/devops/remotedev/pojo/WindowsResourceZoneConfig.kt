@@ -31,8 +31,6 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.tencent.devops.remotedev.pojo.common.QuotaType.DEVCLOUD
-import com.tencent.devops.remotedev.pojo.common.QuotaType.OFFSHORE
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "WINDOWS 地域表")
@@ -62,6 +60,7 @@ enum class WindowsResourceZoneConfigType {
         DEVCLOUD -> true
         else -> false
     }
+
     companion object {
         fun parse(value: String): WindowsResourceZoneConfigType {
             return values().find { it.name == value } ?: DEFAULT
