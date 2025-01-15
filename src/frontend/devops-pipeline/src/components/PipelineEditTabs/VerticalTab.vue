@@ -22,6 +22,7 @@
             >
                 <component
                     :is="activeTab.component"
+                    :id="activeTab.id"
                     v-bind="activeTab.componentProps"
                 ></component>
             </slot>

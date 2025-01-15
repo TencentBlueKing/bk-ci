@@ -13,6 +13,9 @@
             <span v-else>
                 <span>{{ formatCommitId(firstCommit.commit) }}</span>
             </span>
+            <span @click="handleOpenAISummary">
+                AI摘要
+            </span>
         </p>
         <bk-table :data="commitList">
             <!-- <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column> -->
@@ -49,6 +52,11 @@
                 :formatter="formatTimeColumn"
             ></bk-table-column>
         </bk-table>
+
+        <code-ai-summary
+            :value.sync="showAiSummary"
+            :element-id="id"
+        />
     </div>
     <div
         v-else
@@ -69,10 +77,12 @@
 <script>
     import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import CodeAiSummary from '@/components/CodeAiSummary/'
     export default {
         name: 'code-record-table',
         components: {
-            Logo
+            Logo,
+            CodeAiSummary
         },
         props: {
             commitList: {
@@ -82,6 +92,15 @@
             label: {
                 type: String,
                 default: ''
+            },
+            id: {
+                type: String,
+                default: ''
+            }
+        },
+        data () {
+            return {
+                showAiSummary: false
             }
         },
         computed: {
@@ -102,6 +121,24 @@
             },
             formatCommitId (commitId) {
                 return commitId && typeof commitId === 'string' ? commitId.slice(0, 8) : '--'
+            },
+            async handleOpenAISummary () {
+                try {
+                    const res = await this.$store.dispatch('common/checkOAuth', {
+                        redirectUrlType: 'SPEC',
+                        redirectUrl: window.location.href
+                    })
+                    if (res.status === 403) {
+                        window.top.location.href = res.url
+                        return
+                    }
+                    this.showAiSummary = true
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message ? e.message : e,
+                        theme: 'error'
+                    })
+                }
             }
         }
     }

@@ -405,6 +405,18 @@ export const actions = {
     },
     getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
         return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
+    },
+    checkOAuth: async (_, params) => {
+        const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/git/isOauth`, { params })
+        return data
+    },
+    getAISummary: async (_, { projectId, buildId, pipelineId, elementId }) => {
+        const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary?projectId=${projectId}&pipelineId=${pipelineId}&buildId=${buildId}&elementId=${elementId}`)
+        return data
+    },
+    summaryRate: async (_, params) => {
+        const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate`, params)
+        return data
     }
 }
 
