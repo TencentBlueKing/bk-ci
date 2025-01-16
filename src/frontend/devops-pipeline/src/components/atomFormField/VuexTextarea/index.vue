@@ -1,4 +1,5 @@
 <script>
+    import { string } from 'yaml/dist/schema/common/string'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'vuex-textarea',
@@ -11,6 +12,10 @@
             hoverUnfold: {
                 type: Boolean,
                 default: false
+            },
+            maxlength: {
+                type: string,
+                default: ''
             }
         },
         methods: {
@@ -28,7 +33,7 @@
             }
         },
         render (h) {
-            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled } = this
+            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength } = this
             return (
                 <textarea
                     placeholder={placeholder}
@@ -39,6 +44,7 @@
                     name={name}
                     disabled={readOnly || disabled}
                     value={value}
+                    maxlength={maxlength}
                 />
             )
         }

@@ -86,6 +86,7 @@
                     :disabled="!editable"
                     name="desc"
                     :value="pipelineSetting.desc"
+                    maxlength="100"
                     :placeholder="$t('pipelineDescInputTips')"
                     v-validate.initial="'max:100'"
                     :handle-change="handleBaseInfoChange"
