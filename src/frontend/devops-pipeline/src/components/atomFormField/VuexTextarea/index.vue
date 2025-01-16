@@ -14,7 +14,7 @@
                 default: false
             },
             maxlength: {
-                type: string,
+                type: String,
                 default: ''
             }
         },
