@@ -33,7 +33,6 @@ import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
-import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -42,6 +41,8 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL", "UNUSED")
@@ -257,6 +258,44 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
                 packageName = packageName,
                 pageNumber = pageNumber,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        version: String?,
+        packageKey: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): Result<Page<PackageVersion>> {
+        return Result(
+            archiveFileService.listVersionPage(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                version = version,
+                packageKey = packageKey,
+                pageNumber = pageNumber,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): Result<PackageSummary> {
+        return Result(
+            archiveFileService.getPackageInfo(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                packageKey = packageKey
             )
         )
     }

@@ -35,13 +35,12 @@ import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -66,24 +65,6 @@ interface ServiceImageResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<DockerTag>>
-
-    @Operation(summary = "镜像仓库支持升级为构建镜像")
-    @Path("/projects/{projectId}/setBuildImage")
-    @POST
-    fun setBuildImage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "镜像repo", required = true)
-        @QueryParam("imageRepo")
-        imageRepo: String,
-        @Parameter(description = "镜像tag", required = true)
-        @QueryParam("imageTag")
-        imageTag: String
-    ): Result<Boolean>
 
     @Operation(summary = "获取公共镜像列表")
     @Path("/listPublicImages")
@@ -152,15 +133,18 @@ interface ServiceImageResource {
     ): Result<ImageListResp>
 
     @Operation(summary = "获取镜像信息")
-    @Path("/getImageInfo")
+    @Path("/{projectId}/getImageInfo")
     @GET
     fun getImageInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像repo", required = true)
-        @QueryParam("imageRepo")
-        imageRepo: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像名称", required = true)
+        @QueryParam("imageName")
+        imageName: String,
         @Parameter(description = "开始索引", required = false)
         @QueryParam("tagStart")
         tagStart: Int?,
@@ -170,32 +154,20 @@ interface ServiceImageResource {
     ): Result<DockerRepo?>
 
     @Operation(summary = "获取构建镜像信息")
-    @Path("/getTagInfo")
+    @Path("/{projectId}/getTagInfo")
     @GET
     fun getTagInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "镜像repo", required = true)
-        @QueryParam("imageRepo")
-        imageRepo: String,
-        @Parameter(description = "镜像tag", required = true)
-        @QueryParam("imageTag")
-        imageTag: String
-    ): Result<DockerTag?>
-
-    @Operation(summary = "获取项目DevCloud构建镜像列表")
-    @Path("/{projectId}/listDevCloudImages/{public}")
-    @GET
-    fun listDevCloudImages(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "是否公共镜像", required = true)
-        @PathParam("public")
-        public: Boolean
-    ): Result<List<DockerTag>>
+        @Parameter(description = "镜像名称", required = true)
+        @QueryParam("imageName")
+        imageName: String,
+        @Parameter(description = "镜像tag", required = true)
+        @QueryParam("imageTag")
+        imageTag: String
+    ): Result<DockerTag?>
 }

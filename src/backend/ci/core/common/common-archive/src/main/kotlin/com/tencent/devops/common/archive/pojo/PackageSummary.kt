@@ -1,6 +1,5 @@
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.archive.pojo
 
-import com.tencent.bkrepo.repository.pojo.packages.PackageType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 

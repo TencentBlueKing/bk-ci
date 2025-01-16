@@ -41,7 +41,6 @@ import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -61,6 +60,8 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -735,26 +736,48 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             packageName = packageName,
             pageNumber = pageNumber,
             pageSize = pageSize
-        ).records.map {
-            PackageSummary(
-                createdBy = it.createdBy,
-                createdDate = it.createdDate,
-                lastModifiedBy = it.lastModifiedBy,
-                lastModifiedDate = it.lastModifiedDate,
-                projectId = it.projectId,
-                repoName = it.repoName,
-                name = it.name,
-                key = it.key,
-                type = it.type.name,
-                latest = it.latest,
-                downloads = it.downloads,
-                versions = it.versions,
-                description = it.description,
-                versionTag = it.versionTag,
-                extension = it.extension,
-                historyVersion = it.historyVersion,
-            )
-        }
+        ).records
+    }
+
+    override fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String?,
+        version: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): Page<PackageVersion> {
+        val result = bkRepoClient.listVersionPage(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            version = version,
+            packageKey = packageKey,
+            pageNumber = pageNumber,
+            pageSize = pageSize
+        )
+        return Page(
+            count = result.totalRecords,
+            page = result.pageNumber,
+            pageSize = result.pageSize,
+            totalPages = result.totalPages.toInt(),
+            records = result.records
+        )
+    }
+
+    override fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary {
+        return bkRepoClient.getPackageInfo(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            packageKey = packageKey,
+        )
     }
 
     companion object {

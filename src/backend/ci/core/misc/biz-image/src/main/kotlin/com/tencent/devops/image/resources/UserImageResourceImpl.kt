@@ -27,6 +27,8 @@
 
 package com.tencent.devops.image.resources
 
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -34,6 +36,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.UserImageResource
+import com.tencent.devops.image.config.BKRepoConfig
 import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_FILE_VALID_IMAGE_COUNT_ZERO
 import com.tencent.devops.image.constants.ImageMessageCode.USER_NOT_UPLOAD_IMAGE_PERMISSION
 import com.tencent.devops.image.pojo.DockerRepo
@@ -109,10 +112,17 @@ class UserImageResourceImpl @Autowired constructor(
 
         val vSearchKey = searchKey ?: ""
         val vStart = if (start == null || start == 0) 0 else start
-        val vLimit = if (limit == null || limit == 0) 10000 else limit
-
+        val vLimit = if (limit == null || limit == 0) 100 else limit
+        val bkRepoConfig = BKRepoConfig()
         return try {
-            Result(artifactoryService.listPublicImages(vSearchKey, vStart, vLimit))
+            Result(artifactoryService.listProjectImages(
+                userId = SYSTEM,
+                projectId = bkRepoConfig.repoProject!!,
+                repoName = "paas",
+                searchKey = vSearchKey,
+                pageNumber = vStart,
+                pageSize = vLimit
+            ))
         } catch (e: Exception) {
             logger.error("list public image failed", e)
             throw RuntimeException("list public image failed")
@@ -130,10 +140,16 @@ class UserImageResourceImpl @Autowired constructor(
 
         val vSearchKey = searchKey ?: ""
         val vStart = if (start == null || start == 0) 0 else start
-        val vLimit = if (limit == null || limit == 0) 10000 else limit
+        val vLimit = if (limit == null || limit == 0) 100 else limit
 
         return try {
-            Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+            Result(artifactoryService.listProjectImages(
+                userId = userId,
+                projectId = projectId,
+                searchKey = vSearchKey,
+                pageNumber = vStart,
+                pageSize = vLimit
+            ))
         } catch (e: Exception) {
             logger.error("list project image failed", e)
             throw RuntimeException("list project image failed")
@@ -149,65 +165,43 @@ class UserImageResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun listProjectBuildImages(
+    override fun getImageInfo(
         userId: String,
         projectId: String,
-        searchKey: String?,
-        start: Int?,
-        limit: Int?
-    ): Result<ImagePageData> {
-        val vSearchKey = searchKey ?: ""
-        val vStart = if (start == null || start == 0) 0 else start
-        val vLimit = if (limit == null || limit == 0) 10000 else limit
-
-        try {
-            return Result(artifactoryService.listProjectBuildImages(projectId, vSearchKey, vStart, vLimit))
-        } catch (e: Exception) {
-            logger.error("list project build image failed", e)
-            throw RuntimeException("list project build image failed")
-        }
-    }
-
-    override fun listDockerBuildImages(userId: String, projectId: String): Result<List<DockerTag>> {
-        checkUserAndProject(userId, projectId)
-
-        try {
-            return Result(artifactoryService.listDockerBuildImages(projectId))
-        } catch (e: Exception) {
-            logger.error("list docker build image failed", e)
-            throw RuntimeException("list docker build image failed")
-        }
-    }
-
-    override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
-        checkUserAndProject(userId, projectId)
-
-        try {
-            return Result(artifactoryService.listDevCloudImages(projectId, public))
-        } catch (e: Exception) {
-            logger.error("list dev cloud image failed", e)
-            throw RuntimeException("list dev cloud image failed")
-        }
-    }
-
-    override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {
-        if (imageRepo.isBlank()) {
+        imageName: String,
+        tagStart: Int?,
+        tagLimit: Int?
+    ): Result<DockerRepo?> {
+        if (imageName.isBlank()) {
             throw OperationException("imageRepo required")
         }
 
         val vStart = if (tagStart == null || tagStart == 0) 0 else tagStart
-        val vLimit = if (tagLimit == null || tagLimit == 0) 1000 else tagLimit
+        val vLimit = if (tagLimit == null || tagLimit == 0) 100 else tagLimit
 
         return try {
-            Result(artifactoryService.getImageInfo(imageRepo, true, vStart, vLimit))
+            Result(artifactoryService.getImageInfo(
+                userId = userId,
+                projectId = projectId,
+                repoName = REPO_NAME_IMAGE,
+                packageKey = "docker://$imageName",
+                tagStart = vStart,
+                tagLimit = vLimit,
+                includeTagDetail  = true
+            ))
         } catch (e: Exception) {
             logger.error("get image info failed", e)
             throw RuntimeException("get image info failed")
         }
     }
 
-    override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
-        if (imageRepo.isBlank()) {
+    override fun getTagInfo(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        imageTag: String
+    ): Result<DockerTag?> {
+        if (imageName.isBlank()) {
             throw OperationException("imageRepo required")
         }
         if (imageTag.isBlank()) {
@@ -215,7 +209,13 @@ class UserImageResourceImpl @Autowired constructor(
         }
 
         try {
-            return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
+            return Result(artifactoryService.getTagInfo(
+                userId = userId,
+                projectId = projectId,
+                repoName = REPO_NAME_IMAGE,
+                imageName = imageName,
+                imageTag = imageTag
+            ))
         } catch (e: Exception) {
             logger.error("get image tag failed", e)
             throw RuntimeException("get image tag failed")

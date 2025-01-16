@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
-import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -41,6 +40,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -395,4 +396,49 @@ interface ServiceArtifactoryResource {
         @QueryParam("pageSize")
         pageSize: Int,
     ): Result<List<PackageSummary>>
+
+    @Operation(summary = "查询包信息")
+    @GET
+    @Path("/package/get")
+    fun getPackageInfo(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "包唯一key", required = true)
+        @QueryParam("packageKey")
+        packageKey: String
+    ): Result<PackageSummary>
+
+    @Operation(summary = "分页查询包版本")
+    @GET
+    @Path("/package/version/list")
+    fun listVersionPage(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "版本名称，前缀匹配", required = false)
+        @QueryParam("version")
+        version: String? = null,
+        @Parameter(description = "包唯一key", required = false)
+        @QueryParam("packageKey")
+        packageKey: String?,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("pageNumber")
+        pageNumber: Int = 1,
+        @Parameter(description = "每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+    ): Result<Page<PackageVersion>>
 }

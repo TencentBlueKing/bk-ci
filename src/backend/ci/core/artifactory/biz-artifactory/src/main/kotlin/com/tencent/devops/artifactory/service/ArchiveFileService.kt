@@ -31,12 +31,13 @@ import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.PackageSummary
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -286,4 +287,21 @@ interface ArchiveFileService {
         pageNumber: Int = 0,
         pageSize: Int = 20
     ): List<PackageSummary>
+
+    fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        version: String?,
+        packageKey: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): Page<PackageVersion>
+
+    fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary
 }

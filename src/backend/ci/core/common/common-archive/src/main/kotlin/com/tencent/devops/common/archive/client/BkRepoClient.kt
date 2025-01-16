@@ -53,7 +53,6 @@ import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
-import com.tencent.bkrepo.repository.pojo.packages.PackageSummary
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
@@ -72,6 +71,8 @@ import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
@@ -1166,6 +1167,54 @@ class BkRepoClient constructor(
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Page<PackageSummary>>>()!!.data!!
+    }
+
+    /**
+     * 查询包信息
+     */
+    fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary {
+        logger.info(
+            "getPackageInfo, userId: $userId, projectId: $projectId, repoName: $repoName, packageName: $packageKey"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/package/info/$projectId/$repoName" +
+                "?packageKey=$packageKey"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<PackageSummary>>()!!.data!!
+    }
+
+    /**
+     * 分页查询包版本
+     */
+    fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String? = null,
+        version: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): Page<PackageVersion> {
+        logger.info(
+            "listPackagePage, userId: $userId, projectId: $projectId, repoName: $repoName, packageName: $packageKey," +
+                    " pageNumber: $pageNumber, pageSize: $pageSize"
+        )
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/version/page/$projectId/$repoName" +
+                "?packageKey=$packageKey&version=$version&pageNumber=$pageNumber&pageSize=$pageSize"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<Page<PackageVersion>>>()!!.data!!
     }
 
     private fun query(

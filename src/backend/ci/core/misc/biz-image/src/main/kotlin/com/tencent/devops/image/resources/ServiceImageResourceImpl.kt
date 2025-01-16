@@ -27,11 +27,12 @@
 
 package com.tencent.devops.image.resources
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.image.api.ServiceImageResource
+import com.tencent.devops.image.config.BKRepoConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -52,37 +53,26 @@ class ServiceImageResourceImpl @Autowired constructor(
     override fun listDockerBuildImages(userId: String, projectId: String): Result<List<DockerTag>> {
         checkUserAndProject(userId, projectId)
         try {
-            return Result(artifactoryService.listDockerBuildImages(projectId))
+            return Result(
+                artifactoryService.listDockerImages(userId = userId,projectId = projectId) ?: emptyList()
+            )
         } catch (e: Exception) {
             logger.error("list docker build image failed", e)
             throw RuntimeException("list docker build image failed")
         }
     }
 
-    override fun setBuildImage(
-        userId: String,
-        projectId: String,
-        imageRepo: String,
-        imageTag: String
-    ): Result<Boolean> {
-        if (imageRepo.isBlank()) {
-            throw OperationException("imageRepo required")
-        }
-        if (imageTag.isBlank()) {
-            throw OperationException("imageTag required")
-        }
-
-        return try {
-            Result(artifactoryService.copyToBuildImage(projectId, imageRepo, imageTag))
-        } catch (e: OperationException) {
-            Result(1, e.message!!)
-        }
-    }
-
     override fun listPublicImages(userId: String, searchKey: String?, start: Int?, limit: Int?): Result<ImagePageData> {
+        val bkRepoConfig = BKRepoConfig()
         val vSearchKey = searchKey ?: ""
         val (vStart, vLimit) = pair(start, limit)
-        return Result(artifactoryService.listPublicImages(vSearchKey, vStart, vLimit))
+        return Result(artifactoryService.listProjectImages(
+            userId = userId,
+            projectId = bkRepoConfig.repoProject!!,
+            searchKey = vSearchKey,
+            pageNumber = vStart,
+            pageSize = vLimit
+        ))
     }
 
     override fun listProjectImages(
@@ -94,7 +84,13 @@ class ServiceImageResourceImpl @Autowired constructor(
     ): Result<ImagePageData> {
         val vSearchKey = searchKey ?: ""
         val (vStart, vLimit) = pair(start, limit)
-        return Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+        return Result(artifactoryService.listProjectImages(
+            userId = userId,
+            projectId = projectId,
+            searchKey = vSearchKey,
+            pageNumber = vStart,
+            pageSize = vLimit
+        ))
     }
 
     override fun listAllPublicImages(userId: String, searchKey: String?): Result<ImageListResp> {
@@ -109,9 +105,23 @@ class ServiceImageResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {
+    override fun getImageInfo(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        tagStart: Int?,
+        tagLimit: Int?
+    ): Result<DockerRepo?> {
         val (vStart, vLimit) = pair(tagStart, tagLimit)
-        return Result(artifactoryService.getImageInfo(imageRepo, true, vStart, vLimit))
+        return Result(artifactoryService.getImageInfo(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_NAME_IMAGE,
+            packageKey = "docker://$imageName",
+            includeTagDetail = true,
+            tagStart = vStart,
+            tagLimit = vLimit
+        ))
     }
 
     private fun pair(start: Int?, limit: Int?): Pair<Int, Int> {
@@ -120,19 +130,19 @@ class ServiceImageResourceImpl @Autowired constructor(
         return Pair(vStart, vLimit)
     }
 
-    override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
-        return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
-    }
-
-    override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
-        checkUserAndProject(userId, projectId)
-
-        try {
-            return Result(artifactoryService.listDevCloudImages(projectId, public))
-        } catch (e: Exception) {
-            logger.error("list dev cloud image failed", e)
-            throw RuntimeException("list dev cloud image failed")
-        }
+    override fun getTagInfo(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        imageTag: String
+    ): Result<DockerTag?> {
+        return Result(artifactoryService.getTagInfo(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_NAME_IMAGE,
+            imageTag = imageTag,
+            imageName = imageName
+        ))
     }
 
     private fun checkUserAndProject(userId: String, projectId: String) {

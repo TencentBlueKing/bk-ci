@@ -31,6 +31,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class BKRepoConfig {
+
 //    @Value("\${bkRepo.repoUrl}")
     var repoUrl: String? = "docker-dev.bkrepo.woa.com"
+
+//    @Value("\${bkRepo.repoProject}")
+    var repoProject: String? = ""
 }
