@@ -29,7 +29,16 @@
             v-else
             class="content-wrapper"
         >
-            <div v-html="summaryData.resultHtml"></div>
+            <div
+                v-if="summaryData.status === 3"
+                class="summary-error-tips"
+            >
+                {{ $t('details.getAiSummaryErr') }}
+            </div>
+            <div
+                v-else
+                v-html="summaryData.resultHtml"
+            />
         </div>
         <template slot="footer">
             <div class="footer-wrapper">
@@ -49,12 +58,14 @@
                         <span>{{ $t('details.regenerate') }}</span>
                     </div>
                     <div
+                        v-if="summaryData.status !== 3"
                         class="like-icon like-icon-1"
                         @click="handleRate('UP')"
                     >
                         <logo :name="isRateUp ? 'like' : 'notLike'" />
                     </div>
                     <div
+                        v-if="summaryData.status !== 3"
                         class="like-icon like-icon-2"
                         @click="handleRate('DOWN')"
                     >
@@ -116,10 +127,10 @@
             handleChangeValue (val) {
                 this.$emit('update:value', val)
             },
-            async handleGetSummary () {
+            async handleGetSummary (type = 'getAISummary') {
                 try {
                     this.isLoading = true
-                    const res = await this.$store.dispatch('common/getAISummary', {
+                    const res = await this.$store.dispatch(`common/${type}`, {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         buildId: this.buildNo,
@@ -159,7 +170,7 @@
                 }
             },
             async handleRegenerate () {
-                this.handleGetSummary()
+                this.handleGetSummary('regenerateAISummary')
             }
         }
     }
@@ -182,6 +193,10 @@
             min-height: 160px;
             max-height: 300px;
             overflow: scroll;
+            .summary-error-tips {
+                margin-top: 60px;
+                text-align: center;
+            }
         }
         .ai-loading-icon {
             width: 32px !important;

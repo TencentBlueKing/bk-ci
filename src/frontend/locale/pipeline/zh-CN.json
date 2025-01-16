@@ -772,7 +772,8 @@
     "aiSummary": "AI 摘要",
     "aiSummaryLoadingTips": "正在生成AI摘要，请稍等......",
     "copilotTips": "以上摘要由工蜂 Copilot 生成",
-    "regenerate": "重新生成"
+    "regenerate": "重新生成",
+    "getAiSummaryErr": "获取AI摘要失败，请重新生成"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
