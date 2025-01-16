@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.user.UserExperienceResource
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
@@ -199,6 +200,15 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun outerCanAdd(userId: String, projectId: String, param: OuterCanAddParam): Result<OuterCanAddVO> {
         return Result(experienceOuterService.outerCanAdd(projectId, param))
+    }
+
+    override fun delete(
+        userId: String,
+        projectId: String,
+        experienceHashId: String
+    ): Result<Boolean> {
+        experienceService.delete(userId, projectId, experienceHashId)
+        return Result(true)
     }
 
     fun checkParam(userId: String, projectId: String) {
