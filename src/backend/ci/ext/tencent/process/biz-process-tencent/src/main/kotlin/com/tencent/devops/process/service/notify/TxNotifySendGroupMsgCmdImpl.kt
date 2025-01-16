@@ -192,7 +192,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                 }
             }.toSet()
         }
-        return receivers
+        return receivers.filter { it.isNotBlank() }.toMutableSet()
     }
 
     companion object {
