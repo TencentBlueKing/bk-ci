@@ -29,7 +29,7 @@
             v-else
             class="content-wrapper"
         >
-            123
+            <div v-html="summaryData.resultHtml"></div>
         </div>
         <template slot="footer">
             <div class="footer-wrapper">
@@ -42,7 +42,10 @@
                         class="refresh-icon"
                         @click="handleRegenerate"
                     >
-                        <logo name="refresh" />
+                        <logo
+                            name="refresh"
+                            size="14"
+                        />
                         <span>{{ $t('details.regenerate') }}</span>
                     </div>
                     <div
@@ -56,7 +59,6 @@
                         @click="handleRate('DOWN')"
                     >
                         <logo :name="isRateDown ? 'like' : 'notLike'" />
-                        <logo name="like" />
                     </div>
                 </div>
             </div>
@@ -205,6 +207,9 @@
                 display: flex;
                 align-items: center;
                 margin-right: 10px;
+                span {
+                    margin-left: 6px;
+                }
             }
             .like-icon {
                 width: 25px;
