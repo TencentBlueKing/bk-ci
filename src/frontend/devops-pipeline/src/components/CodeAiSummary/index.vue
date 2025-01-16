@@ -71,14 +71,20 @@
                         class="like-icon like-icon-1"
                         @click="handleRate('UP')"
                     >
-                        <logo :name="isRateUp ? 'like' : 'notLike'" />
+                        <logo
+                            :name="isRateUp ? 'like' : 'notLike'"
+                            size="16"
+                        />
                     </div>
                     <div
                         v-if="summaryData.status !== 3"
                         class="like-icon like-icon-2"
                         @click="handleRate('DOWN')"
                     >
-                        <logo :name="isRateDown ? 'like' : 'notLike'" />
+                        <logo
+                            :name="isRateDown ? 'like' : 'notLike'"
+                            size="16"
+                        />
                     </div>
                 </div>
             </div>
@@ -261,10 +267,13 @@
                     }
                 }
                 .like-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     width: 25px;
                     height: 25px;
                     border: 1px solid #ccc;
-                    margin-left: 5px;
+                    margin-left: 10px;
                     cursor: pointer;
                 }
                 .like-icon-2 {
