@@ -37,6 +37,7 @@
             </div>
             <div
                 v-else
+                class="summary-result-content"
                 v-html="summaryData.resultHtml"
             />
         </div>
@@ -178,6 +179,8 @@
                 }
             },
             async handleRegenerate () {
+                this.isRateDown = false
+                this.isRateUp = false
                 this.handleGetSummary('regenerateAISummary')
             }
         }
@@ -197,10 +200,27 @@
             }
         }
         .content-wrapper {
-            margin: 20px 0;
+            margin: 15px 0;
             min-height: 160px;
             max-height: 300px;
             overflow: scroll;
+            .summary-result-content {
+                line-height: 24px;
+                p {
+                    margin: 0 0 10px;
+                }
+                ul {
+                    padding-left: 28px;
+                    margin-top: 0;
+                    margin-bottom: 10px;
+                }
+                ul li {
+                    list-style-type: disc;
+                    ul li {
+                        list-style-type: circle;
+                    }
+                }
+            }
             .summary-error-tips {
                 margin-top: 60px;
                 text-align: center;
@@ -223,7 +243,7 @@
             font-size: 12px !important;
             .left-content {
                 display: flex;
-                align-content: center;
+                align-items: center;
                 .copilot-tips {
                     margin-left: 6px;
                 }

@@ -13,8 +13,15 @@
             <span v-else>
                 <span>{{ formatCommitId(firstCommit.commit) }}</span>
             </span>
-            <span @click="handleOpenAISummary">
-                AI摘要
+            <span
+                class="ai-cr-button"
+                @click="handleOpenAISummary"
+            >
+                <logo
+                    name="aicr-colorful"
+                    size="12"
+                />
+                <span class="ai-cr-text">{{ $t('details.aiSummary') }}</span>
             </span>
         </p>
         <bk-table :data="commitList">
@@ -151,9 +158,33 @@
         height: 100%;
         .prompt-tips {
             margin-bottom: 12px;
+            height: 32px;
+            line-height: 32px;
         }
         .commit-link {
             color: $primaryColor;
         }
+    }
+    .ai-cr-button {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #21e3c0, #3144ec) border-box;
+        border: 1px solid transparent;
+        padding: 5px;
+        line-height: 18px;
+        font-size: 12px;
+        border-radius: 2px;
+        margin-left: 10px;
+        cursor: pointer;
+        span {
+            margin-left: 5px;
+        }
+    }
+    .ai-cr-text {
+        background-image: linear-gradient(90deg, #21e3c0, #3144ec);
+        background-size: 100%;
+        background-repeat: repeat;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 </style>

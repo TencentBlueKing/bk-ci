@@ -769,7 +769,7 @@
     "triggerSuc": "触发成功",
     "triggerFail": "触发失败",
     "triggerMismatch": "触发器不匹配",
-    "aiSummary": "AI 摘要",
+    "aiSummary": "AI摘要",
     "aiSummaryLoadingTips": "正在生成AI摘要，请稍等......",
     "copilotTips": "以上摘要由工蜂 Copilot 生成",
     "regenerate": "重新生成",
