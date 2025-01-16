@@ -727,10 +727,20 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         userId: String,
         projectId: String,
         repoName: String,
+        version: String?,
         packageKey: String?,
         pageNumber: Int,
         pageSize: Int
     ): Page<PackageVersion> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary {
         TODO("Not yet implemented")
     }
 
