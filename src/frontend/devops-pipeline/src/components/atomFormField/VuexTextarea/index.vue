@@ -1,5 +1,4 @@
 <script>
-    import { string } from 'yaml/dist/schema/common/string'
     import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'vuex-textarea',
