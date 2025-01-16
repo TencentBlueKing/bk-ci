@@ -418,8 +418,8 @@ export const actions = {
         const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/status?projectId=${projectId}&pipelineId=${pipelineId}&buildId=${buildId}&elementId=${elementId}`)
         return data
     },
-    summaryRate: async (_, params) => {
-        const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate`, params)
+    summaryRate: async (_, { projectName, processId, type }) => {
+        const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate?projectName=${projectName}&processId=${processId}&type=${type}`)
         return data
     }
 }

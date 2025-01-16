@@ -42,9 +42,17 @@
         </div>
         <template slot="footer">
             <div class="footer-wrapper">
-                <p>{{ $t('details.copilotTips') }}</p>
+                <div class="left-content">
+                    <logo
+                        name="ai-cr"
+                        size="14"
+                    />
+                    <p class="copilot-tips">
+                        {{ $t('details.copilotTips') }}
+                    </p>
+                </div>
                 <div
-                    class="operate-buttons"
+                    class="right-content"
                     v-if="!isLoading"
                 >
                     <div
@@ -213,28 +221,35 @@
             height: 32px;
             line-height: 32px;
             font-size: 12px !important;
-        }
-        .operate-buttons {
-            display: flex;
-            align-items: center;
-            .refresh-icon {
-                cursor: pointer;
+            .left-content {
                 display: flex;
-                align-items: center;
-                margin-right: 10px;
-                span {
+                align-content: center;
+                .copilot-tips {
                     margin-left: 6px;
                 }
             }
-            .like-icon {
-                width: 25px;
-                height: 25px;
-                border: 1px solid #ccc;
-                margin-left: 5px;
-                cursor: pointer;
-            }
-            .like-icon-2 {
-                transform: rotate(180deg);
+            .right-content {
+                display: flex;
+                align-items: center;
+                .refresh-icon {
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    margin-right: 10px;
+                    span {
+                        margin-left: 6px;
+                    }
+                }
+                .like-icon {
+                    width: 25px;
+                    height: 25px;
+                    border: 1px solid #ccc;
+                    margin-left: 5px;
+                    cursor: pointer;
+                }
+                .like-icon-2 {
+                    transform: rotate(180deg);
+                }
             }
         }
     }
