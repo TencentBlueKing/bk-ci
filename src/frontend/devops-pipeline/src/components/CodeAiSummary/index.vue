@@ -30,7 +30,7 @@
             class="content-wrapper"
         >
             <div
-                v-if="summaryData.status === 3"
+                v-if="isFailedStatus"
                 class="summary-error-tips"
             >
                 {{ $t('details.getAiSummaryErr') }}
@@ -67,7 +67,7 @@
                         <span>{{ $t('details.regenerate') }}</span>
                     </div>
                     <div
-                        v-if="summaryData.status !== 3"
+                        v-if="!isFailedStatus"
                         class="like-icon like-icon-1"
                         @click="handleRate('UP')"
                     >
@@ -77,7 +77,7 @@
                         />
                     </div>
                     <div
-                        v-if="summaryData.status !== 3"
+                        v-if="!isFailedStatus"
                         class="like-icon like-icon-2"
                         @click="handleRate('DOWN')"
                     >
@@ -127,6 +127,9 @@
             },
             buildNo () {
                 return this.$route.params.buildNo
+            },
+            isFailedStatus () {
+                return this.summaryData.status === 3
             }
         },
         watch: {
