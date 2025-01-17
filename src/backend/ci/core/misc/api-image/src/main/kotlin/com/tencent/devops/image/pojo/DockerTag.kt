@@ -38,8 +38,8 @@ data class DockerTag(
     var projectId: String? = null,
     @get:Schema(title = "仓库")
     var repoName: String? = null,
-    @get:Schema(title = "镜像")
-    var image: String? = null,
+    @get:Schema(title = "镜像名称")
+    var imageName: String? = null,
     @get:Schema(title = "创建者")
     var createdBy: String? = null,
     @get:Schema(title = "创建时间")

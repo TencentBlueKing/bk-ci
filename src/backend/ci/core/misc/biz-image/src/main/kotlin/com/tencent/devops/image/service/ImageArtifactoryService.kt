@@ -89,10 +89,10 @@ class ImageArtifactoryService @Autowired constructor(
         ).data
         return imagePackagePage?.map {
             DockerTag(
-                tag = it.name,
+                tag = it.latest,
                 projectId = projectId,
                 repoName = repoName,
-                image = "${bKRepoConfig.repoUrl}/$projectId/$repoName/${it.name}:${it.latest}"
+                imageName = it.name
             )
         }
     }
@@ -175,18 +175,6 @@ class ImageArtifactoryService @Autowired constructor(
         )
     }
 
-    private fun handleImageList(images: List<DockerTag>, imageList: MutableList<ImageItem>) {
-        images.forEach {
-            imageList.add(
-                ImageItem(
-                    repoUrl = bKRepoConfig.repoUrl!!,
-                    repo = it.repoName!!,
-                    name = it.image!!
-                )
-            )
-        }
-    }
-
     fun getImageInfo(
         userId: String,
         projectId: String,
@@ -234,7 +222,7 @@ class ImageArtifactoryService @Autowired constructor(
                         tag = it.name,
                         projectId = imagePackage.projectId,
                         repoName = imagePackage.repoName,
-                        image = "${bKRepoConfig.repoUrl}/$projectId/$repoName/${imagePackage.name}:${it.name}",
+                        imageName = imagePackage.name,
                         createdBy = it.createdBy,
                         created = it.createdDate,
                         modified = it.lastModifiedDate,
@@ -271,7 +259,7 @@ class ImageArtifactoryService @Autowired constructor(
                     tag = it.name,
                     projectId = projectId,
                     repoName = repoName,
-                    image = "${bKRepoConfig.repoUrl}/$projectId/$repoName/${imageName}:${it.name}",
+                    imageName = imageName,
                     createdBy = it.createdBy,
                     created = it.createdDate,
                     modified = it.lastModifiedDate,

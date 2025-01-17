@@ -122,14 +122,11 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                     dockerList.addAll(containerResourceList.sortedBy { it.name })
                 }
                 val dockerBuildImageList =
-                    client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode)
-                        .data // linux环境第三方镜像
+                    client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode).data
                 logger.info("the dockerBuildImageList is :$dockerBuildImageList")
                 dockerBuildImageList?.forEach {
-                    val image = it.image
-                    if (null != image) {
-                        val array = image.split("/paas/bkdevops/")
-                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
+                    it.imageName?.let { imageName ->
+                        dockerList.add(ContainerResourceItem(id = imageName, name = imageName))
                     }
                 }
                 containerResourceValue = dockerList.map {
