@@ -14,7 +14,7 @@
             },
             maxlength: {
                 type: Number,
-                default: ''
+                default: null
             }
         },
         methods: {
