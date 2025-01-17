@@ -86,4 +86,8 @@
         overflow: auto;
     }
 
+    .bkdevops-aside-nav.bk-navigation {
+        flex: 1;
+    }
+
 </style>
