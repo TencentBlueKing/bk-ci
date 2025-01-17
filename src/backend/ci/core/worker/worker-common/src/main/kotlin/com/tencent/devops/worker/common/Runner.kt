@@ -67,11 +67,11 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import kotlin.system.exitProcess
+import org.slf4j.LoggerFactory
 
 object Runner {
 
@@ -117,6 +117,7 @@ object Runner {
                         messageCode = PARAMETER_ERROR,
                         language = AgentEnv.getLocaleLanguage()
                     ) + "：${ignore.message}"
+
                 is FileNotFoundException, is IOException -> {
                     MessageUtil.getMessageByLocale(
                         messageCode = RUN_AGENT_WITHOUT_PERMISSION,
@@ -124,6 +125,7 @@ object Runner {
                         params = arrayOf("${ignore.message}")
                     )
                 }
+
                 else -> MessageUtil.getMessageByLocale(
                     messageCode = UNKNOWN_ERROR,
                     language = AgentEnv.getLocaleLanguage()
@@ -237,10 +239,9 @@ object Runner {
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
-                    Preconditions.checkNotNull(
-                        obj = buildTask.taskId,
-                        exception = RemoteServiceException("Not valid build elementId")
-                    )
+                    Preconditions.checkNotNull(buildTask.taskId) {
+                        RemoteServiceException("Not valid build elementId")
+                    }
                     // 处理task和job级别的上下文
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
@@ -274,6 +275,7 @@ object Runner {
                         waitCount = 0
                     }
                 }
+
                 BuildTaskStatus.WAIT -> {
                     var sleepStep = waitCount++ / windows
                     if (sleepStep <= 0) {
@@ -283,6 +285,7 @@ object Runner {
                     logger.info("WAIT $sleepMills ms")
                     Thread.sleep(sleepMills)
                 }
+
                 BuildTaskStatus.END -> break@loop
             }
         }

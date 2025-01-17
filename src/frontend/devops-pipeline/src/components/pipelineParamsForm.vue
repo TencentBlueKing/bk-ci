@@ -14,7 +14,7 @@
             <section class="component-row">
                 <component
                     :is="param.component"
-                    v-validate="{ required: param.required }"
+                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
@@ -47,7 +47,9 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileParamInput from '@/components/FileParamInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
+    import { isObject } from '@/utils/util'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
@@ -67,7 +69,10 @@
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA
+        TEXTAREA,
+        REPO_REF,
+        getBranchOption,
+        isRepoParam
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -80,7 +85,8 @@
             VuexTextarea,
             FormField,
             metadataList,
-            FileParamInput
+            FileParamInput,
+            CascadeRequestSelector
         },
         props: {
             disabled: {
@@ -163,12 +169,21 @@
                         name: param.id,
                         required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
-                        ...restParam
+                        ...restParam,
+                        ...(
+                            isRepoParam(param.type)
+                                ? {
+                                    childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
+                                }
+                                : {}
+                        )
                     }
                 })
             }
         },
         methods: {
+            isObject,
+            getBranchOption,
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'
@@ -187,6 +202,15 @@
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
                     case param.type === SUB_PIPELINE:
+                    case param.type === REPO_REF:
+                        return param.options
+                    default:
+                        return []
+                }
+            },
+            getCodeRepoOpt (param) {
+                switch (true) {
+                    case param.type === REPO_REF:
                         return param.options
                     default:
                         return []
@@ -202,7 +226,6 @@
             getParamByName (name) {
                 return this.paramList.find(param => `devops${param.name}` === name)
             },
-
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串

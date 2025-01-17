@@ -1009,3 +1009,49 @@
     body: "The store component [${name}]V${version} has been reviewed and approved and successfully released"
   creator: "system"
   modifior: "system"
+- index: 48
+  id: "0f7204084e7c46da8702e3a5c377cd31"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION"
+  templateName: "BK-CI Permission handover application"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d57d7358f5034b21acafde62f27d75fd"
+    title: "BK-CI Permission handover application"
+    body: "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>BK-CI</title>\n    <style>\n        * {\n            box-sizing: border-box;\n        }\n\n        .content-wrapper .num {\n            color: #4e90ff;\n        }\n        td, th {\n            padding: 5px;\n        }\n    </style>\n</head>\n\n<body>\n    <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n        <tbody>\n            <tr>\n                <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                    <table>\n                        <tbody>\n                            <tr>\n                                <td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\">\n                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                        <tr>\n                                            <td style=\"background:#fff;border-radius:10px;position:relative;top:-30px;\">\n                                              <div style=\"padding:20px 36px;background-color:#fff;box-shadow:0 2px 10px 0#19192926;border-radius:10px;\">\n                                                <p style=\"padding-bottom:20px;line-height:2;border-bottom:1px solid#e6e6e6;font-size:24px;\">BK-CI Permission handover application</p>\n                                                <div class=\"content-wrapper\" style=\"color:#313238;font-size:18px;line-height:2;\">\n                                                  <p style=\"margin:0;padding:0;\">Hi,${handoverTo}:</p>\n                                                  <p style=\"margin:0;padding:0;text-indent:2em;\">\n                                                    <span>${handoverFrom}</span> has applied to handover the permissions under the BK-CI project [${projectName}] to you.Please confirm whether to accept it. </p></div>\n                                                <a href=${url} style=\"display:block;width:300px;padding:10px;margin:0 auto;background-color:#3498db;color:#fff;text-align:center;text-decoration:none;border-radius:30px;margin-top:50px;\">Handle it immediately</a></div>\n                                            </td>\n                                          </tr>\n                                    </table>\n                                </td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </td>\n            </tr>\n        </tbody>\n    </table>\n\n</body>\n\n</html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "84f28ea9f6c44afaa3b7777cc286c18c"
+    sender: "DevOps"
+    title: "BK-CI Permission handover application"
+    body: "Hi,${handoverTo}: \n${handoverFrom} has applied to handover the permissions under the BK-CI project [${projectName}] to you. Please confirm whether to accept it. Handle it immediately :${url}"
+  creator: "system"
+  modifior: "system"
+- index: 49
+  id: "1519a9a0b92b44fe8e8e813f2b52e012"
+  templateCode: "BK_PERMISSIONS_HANDOVER_APPLICATION_RESULT"
+  templateName: "BK-CI Permission handover application result"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "902b30b05d184f478ea8eaaea53533f1"
+    title: "BK-CI Permission handover application result"
+    body: "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>BK-CI</title>\n    <style>\n        * {\n            box-sizing: border-box;\n        }\n\n        .content-wrapper .num {\n            color: #4e90ff;\n        }\n        td, th {\n            padding: 5px;\n        }\n    </style>\n</head>\n\n<body>\n    <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n        <tbody>\n            <tr>\n                <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                    <table>\n                        <tbody>\n                            <tr>\n                                <td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\">\n                                    <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                        <tr>\n                                            <td style=\"background:#fff;border-radius:10px;position:relative;top:-30px;\">\n                                                <div style=\"padding:20px 36px;background-color:#fff;box-shadow:0 2px 10px 0#19192926;border-radius:10px;\">\n                                                  <p style=\"padding-bottom:20px;line-height:2;border-bottom:1px solid#e6e6e6;font-size:24px;\">BK-CI Permission handover application result</p>\n                                                  <div class=\"content-wrapper\" style=\"color:#313238;font-size:18px;line-height:2;\">\n                                                    <p style=\"margin:0;padding:0;text-indent:2em;\">The permission handover process for your BK-CI project [${projectName}] has ended.</p></div>\n                                                  <a href=${url} style=\"display:block;width:300px;padding:10px;margin:0 auto;background-color:#3498db;color:#fff;text-align:center;text-decoration:none;border-radius:30px;margin-top:50px;\">See more details</a></div>\n                                            </td>\n                                        </tr>\n                                    </table>\n                                </td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </td>\n            </tr>\n        </tbody>\n    </table>\n\n</body>\n\n</html>\n    "
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "4ead2e88f2a94fcbb7b1ffc5c523f742"
+    sender: "DevOps"
+    title: "BK-CI Permission handover application result"
+    body: "The permission handover process for your BK-CI project [${projectName}] has ended.See more details:${url}"
+  creator: "system"
+  modifior: "system"

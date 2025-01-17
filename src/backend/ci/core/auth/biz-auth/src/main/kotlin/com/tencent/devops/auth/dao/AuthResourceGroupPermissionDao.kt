@@ -2,6 +2,7 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupPermission
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupPermissionRecord
 import org.jooq.Condition
@@ -183,6 +184,26 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun isGroupsHasProjectLevelPermission(
+        dslContext: DSLContext,
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        actionRelatedResourceType: String,
+        action: String
+    ): Boolean {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(filterIamGroupIds))
+                .and(ACTION_RELATED_RESOURCE_TYPE.eq(actionRelatedResourceType))
+                .and(ACTION.eq(action))
+                .and(RELATED_RESOURCE_TYPE.eq(ResourceTypeId.PROJECT))
+                .and(RELATED_RESOURCE_CODE.eq(projectCode))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun listGroupResourcesWithPermission(
         dslContext: DSLContext,
         projectCode: String,
@@ -194,6 +215,7 @@ class AuthResourceGroupPermissionDao {
             dslContext.select(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)
                 .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(filterIamGroupIds))
                 .and(ACTION_RELATED_RESOURCE_TYPE.eq(resourceType))
                 .and(ACTION.eq(action))
                 .groupBy(RELATED_RESOURCE_TYPE, RELATED_RESOURCE_CODE)

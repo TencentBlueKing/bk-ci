@@ -61,6 +61,9 @@ object GptMessageCode {
     // 发生错误！插件日志未入库或已清理。
     const val SCRIPT_ERROR_ANALYSIS_CHAT_TASK_LOGS_EMPTY = "scriptErrorAnalysisChatTaskLogsEmpty"
 
+    // 发生错误！请刷新页面后重试。
+    const val SCRIPT_ERROR_ANALYSIS_CHAT_TASK_UNDEFINED = "scriptErrorAnalysisChatTaskUndefined"
+
     // 当前模型忙，请稍后重试
     const val GPT_BUSY = "gptBusy"
 

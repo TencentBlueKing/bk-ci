@@ -39,6 +39,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -47,7 +48,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -159,6 +159,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.CATEGROY,
             ta.ATOM_CODE,
             ta.VERSION,
+            ta.ATOM_STATUS,
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
@@ -731,14 +732,28 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
+    fun setupAtomLatestTestFlagById(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        latestFlag: Boolean
+    ) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
-                .set(
-                    LATEST_TEST_FLAG,
-                    DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
-                )
+                .set(LATEST_TEST_FLAG, latestFlag)
                 .set(MODIFIER, userId)
+                .where(ID.eq(atomId))
+                .execute()
+        }
+    }
+
+    fun resetAtomLatestTestFlagByCode(
+        dslContext: DSLContext,
+        atomCode: String
+    ) {
+        with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(LATEST_TEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
                 .execute()
         }

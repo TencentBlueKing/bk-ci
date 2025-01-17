@@ -220,5 +220,6 @@
     "tencentBlueKing": "蓝鲸智云",
     "openSource": "开源社区",
     "currentVersion": "当前版本",
-    "releaseNotes": "版本日志"
+    "releaseNotes": "版本日志",
+    "oauthManage": "我的授权"
 }

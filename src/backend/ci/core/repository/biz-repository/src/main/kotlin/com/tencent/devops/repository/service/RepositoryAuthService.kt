@@ -153,7 +153,7 @@ class RepositoryAuthService @Autowired constructor(
         repositoryInfos.map {
             val entity = ResourceAuthorizationResponse(
                 projectCode = projectId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.CODE_REPERTORY.value,
                 resourceName = it.aliasName,
                 resourceCode = it.repositoryHashId!!,
                 handoverTime = it.updatedTime,

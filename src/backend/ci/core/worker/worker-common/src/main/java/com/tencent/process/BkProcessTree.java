@@ -624,24 +624,29 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
     }
 
     private static final class UnixReflection {
-        private static final Field PID_FIELD;
-        private static final Method DESTROY_PROCESS;
+        private static Field PID_FIELD;
+        private static Method DESTROY_PROCESS;
 
         private UnixReflection() {
         }
 
+        // TODO: 升级到JDK17后，这里可以使用 java.lang.Process 重构
         public static void destroy(int pid, boolean forceFlag) throws IllegalAccessException, InvocationTargetException {
-            if (isPreJava8()) {
-                DESTROY_PROCESS.invoke((Object) null, pid);
+            if (isJava17()) {
+                BkProcessTree.log("Killing by jdk17");
+                destroyProcessJava17(pid, forceFlag);
             } else {
+                BkProcessTree.log("Killing by jdk8");
                 DESTROY_PROCESS.invoke((Object) null, pid, forceFlag);
             }
-
         }
 
-        private static boolean isPreJava8() {
-            int javaVersionAsAnInteger = Integer.parseInt(System.getProperty("java.version").replaceAll("\\.", "").replaceAll("_", "").substring(0, 2));
-            return javaVersionAsAnInteger < 18;
+        private static boolean isJava17() {
+            String javaVersion = System.getProperty("java.version");
+            if (javaVersion.startsWith("17")) {
+                return true;
+            }
+            return false;
         }
 
         static {
@@ -650,17 +655,51 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
                 Class<?> clazz = Class.forName("java.lang.UNIXProcess");
                 PID_FIELD = clazz.getDeclaredField("pid");
                 PID_FIELD.setAccessible(true);
-                if (isPreJava8()) {
-                    DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE);
-                } else {
-                    DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
-                }
-
+                DESTROY_PROCESS = clazz.getDeclaredMethod("destroyProcess", Integer.TYPE, Boolean.TYPE);
                 DESTROY_PROCESS.setAccessible(true);
             } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
-                x = new LinkageError();
-                x.initCause(e);
-                throw x;
+                if (isJava17()) {
+                    BkProcessTree.log("java17 ignore java8 class error");
+                } else {
+                    x = new LinkageError();
+                    x.initCause(e);
+                    throw x;
+                }
+            }
+        }
+
+        private static void destroyProcessJava17(int pid, boolean forceFlag) {
+            try {
+                // 获取ProcessHandle类
+                Class<?> processHandleClass = Class.forName("java.lang.ProcessHandle");
+
+                // 获取ProcessHandle.of方法
+                Method ofMethod = processHandleClass.getMethod("of", long.class);
+                Object optionalProcessHandle = ofMethod.invoke(null, pid);
+
+                // 获取Optional.isPresent方法
+                Class<?> optionalClass = Class.forName("java.util.Optional");
+                Method isPresentMethod = optionalClass.getMethod("isPresent");
+                boolean isPresent = (boolean) isPresentMethod.invoke(optionalProcessHandle);
+
+                if (isPresent) {
+                    // 获取Optional.get方法
+                    Method getMethod = optionalClass.getMethod("get");
+                    Object processHandle = getMethod.invoke(optionalProcessHandle);
+
+                    // 获取ProcessHandle.destroy方法
+                    Method destroyMethod;
+                    if (forceFlag) {
+                        destroyMethod = processHandleClass.getMethod("destroyForcibly");
+                    } else {
+                        destroyMethod = processHandleClass.getMethod("destroy");
+                    }
+                    destroyMethod.invoke(processHandle);
+                } else {
+                    BkProcessTree.log("Failed to terminate pid=" + pid + "no present");
+                }
+            } catch (Exception e) {
+                BkProcessTree.log("Failed to terminate pid=" + pid, e);
             }
         }
     }

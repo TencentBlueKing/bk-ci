@@ -1,4 +1,11 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.12](#v3012)
+   - [Changelog since v3.0.11](#changelog-since-v3011)
+
+- [v3.0.11](#v3011)
+   - [Changelog since v3.0.0](#changelog-since-v300)
+- [v3.0.1-v3.0.10]
+   - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.10已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
 - [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
 - [v3.0.0-rc.1](#v300-rc1)
@@ -9,9 +16,43 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.12
+## 2025-01-08
+### Changelog since v3.0.11
+#### 修复
+
+##### 未分类
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
+# v3.0.11
+## 2024-12-05
+### Changelog since v3.0.0
+#### 新增
+
+##### 未分类
+- [新增] feat: 调整helm的镜像使其支持配置imageRegistry [链接](http://github.com/TencentBlueKing/bk-ci/issues/11171)
+- [新增] feat：依赖的服务未部署时的交互优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10612)
+- [新增] feat：支持查看版本日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10938)
+- [新增] feat: 蓝鲸7.2版本的改动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10558)
+- [新增] 产品的顶栏下拉框样式和内容统一规范 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10939)
+- [新增] feat: 把docker build插件的config ns配置给去掉 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10926)
+- [新增] feat: 新启动的POD需要热身 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10887)
+- [新增] feat: 让worker支持在JDK17中运行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10412)
+
+#### 修复
+
+##### 流水线
+- [修复] 【蓝盾-评审会已评审】【PAC】feat：新建/编辑流水线支持以 Code 方式编排流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8125)
+
+##### 权限中心
+- [修复] bug: 权限管理-权限续期数据同步 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11271)
+
+##### 未分类
+- [修复] fix UnreachableCode [链接](http://github.com/TencentBlueKing/bk-ci/issues/11172)
+
 # v3.0.0
 ## 2024-09-10
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### 新增
 ##### 流水线
 - pipeline as code
@@ -227,7 +268,7 @@
 
 # v3.0.0-rc.1
 ## 2024-09-10
-## Changelog since v2.1.0
+### Changelog since v2.1.0
 #### 新增
 ##### 流水线
 - pipeline as code

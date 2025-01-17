@@ -31,7 +31,12 @@ module.exports = (env = {}, argv) => {
         amd: 'vue',
         root: 'Vue',
       },
-      axios: 'axios',
+      axios:  {
+        commonjs: 'axios',
+        commonjs2: 'axios',
+        amd: 'axios',
+        root: 'Axios',
+      },
     },
     module: {
       rules: [

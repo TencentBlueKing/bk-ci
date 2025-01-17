@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -320,7 +321,7 @@ class CallBackControl @Autowired constructor(
         try {
             breaker.executeCallable {
                 HttpRetryUtils.retry(MAX_RETRY_COUNT) {
-                    callbackClient.newCall(request).execute()
+                    callbackClient.newCall(request).execute().closeQuietly()
                 }
                 if (callBack.failureTime != null) {
                     projectPipelineCallBackService.updateFailureTime(

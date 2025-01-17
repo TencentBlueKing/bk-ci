@@ -66,15 +66,15 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -188,9 +188,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val vmNames = param.vmNames.joinToString(",")
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        Preconditions.checkNotNull(
-            obj = pipelineInfo,
-            exception = BuildTaskException(
+        Preconditions.checkNotNull(pipelineInfo) {
+            BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
@@ -201,8 +200,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-        )
-
+        }
+        
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -217,9 +216,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             executeCount = task.executeCount ?: 1
         )?.getContainer(vmSeqId)
-        Preconditions.checkNotNull(
-            obj = container,
-            exception = BuildTaskException(
+        Preconditions.checkNotNull(container) {
+            BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
@@ -231,7 +229,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-        )
+        }
 
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，

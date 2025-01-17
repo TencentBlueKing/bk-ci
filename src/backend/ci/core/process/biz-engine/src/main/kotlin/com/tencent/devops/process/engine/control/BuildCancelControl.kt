@@ -116,6 +116,11 @@ class BuildCancelControl @Autowired constructor(
             LOG.info("[$$buildId|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
+        // 执行次数不匹配的时间直接丢弃，防止异步延迟
+        if (event.executeCount?.let { buildInfo.executeCount != it } == true) {
+            LOG.info("[$$buildId|${event.source}|EXECUTE_COUNT_NOT_MATCH|${event.status}| abandon!")
+            return false
+        }
 
         val model = pipelineBuildRecordService.getRecordModel(
             projectId = event.projectId,
