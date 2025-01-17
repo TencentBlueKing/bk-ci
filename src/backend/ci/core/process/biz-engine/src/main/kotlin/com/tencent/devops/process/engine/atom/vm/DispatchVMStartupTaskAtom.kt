@@ -193,15 +193,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getDefaultLocaleLanguage()
+                    ERROR_PIPELINE_NOT_EXISTS, I18nUtil.getDefaultLocaleLanguage()
                 ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
             )
         }
-        
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
             pipelineId = pipelineId,
