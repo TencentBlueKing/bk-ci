@@ -230,6 +230,14 @@ class RebuildWorkspaceHandler @Autowired constructor(
         if (event.status) {
             // 成功的调用才删除参数
             logger.debug("rebuildWorkspace|getRebuildOptions|${event.workspaceName}|${event.userId}")
+            // 重写IOA注册表
+            if (workspace.workspaceSystemType.needSafeInitialization()) {
+                softwareManageService.safeInitialization(
+                    projectId = workspace.projectId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName
+                )
+            }
             if (options != null) {
                 WorkspaceOperateCommonObject.deleteRebuildOptions(redisOperation, event.taskUid!!)
             }
@@ -255,15 +263,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.REBUILDING,
                         toStatus.name
                     )
-                )
-            }
-
-            // 重写IOA注册表
-            if (workspace.workspaceSystemType.needSafeInitialization()) {
-                softwareManageService.safeInitialization(
-                    projectId = workspace.projectId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName
                 )
             }
         } else {
