@@ -4,38 +4,60 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": " vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "bkui-vue": "1.0.3-beta.9",
+    "bkui-vue": "2.0.1-beta.94",
+    "dayjs": "^1.11.2",
+    "lodash": "^4.17.21",
+    "pinia": "^2.1.7",
+    "postcss": "^8.5.1",
     "vue": "^3.5.13",
     "vue-i18n": "^9.10.2",
-    "vue-router": "^4.3.0",
-    "pinia": "^2.1.7",
-    "dayjs": "^1.11.2",
-    "lodash": "^4.17.21"
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
-    "@vitejs/plugin-vue-jsx": "^3.1.0",
+    "@eslint/js": "^10.0.0",
     "@rushstack/eslint-patch": "^1.3.3",
     "@tsconfig/node20": "^20.1.2",
     "@types/jsdom": "^21.1.6",
     "@types/node": "^20.11.28",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^3.1.0",
     "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
     "@vue/test-utils": "^2.4.5",
     "@vue/tsconfig": "^0.5.1",
-    "lodash-es": "^4.17.21",
-    "eslint": "^8.49.0",
-    "eslint-plugin-vue": "^9.17.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
     "eslint-plugin-cypress": "^2.15.1",
-    "typescript": "~5.4.0",
+    "eslint-plugin-vue": "^9.27.0",
+    "globals": "^15.14.0",
     "jsdom": "^24.0.0",
-    "vite-plugin-vue-devtools": "^7.0.18",
+    "lodash-es": "^4.17.21",
+    "postcss-import": "^14.1.0",
+    "start-server-and-test": "^2.0.3",
+    "stylelint": "^16.13.2",
+    "stylelint-config-standard": "^37.0.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.4.0",
+    "typescript-eslint": "^8.20.0",
     "vite": "^6.0.5",
-    "start-server-and-test": "^2.0.3"
+    "vite-plugin-vue-devtools": "^7.0.18"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/metrics/*.json",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/metrics"
+        ]
+      }
+    }
   }
 }

@@ -7,18 +7,17 @@ import enLang from 'bkui-vue/dist/locale/en.esm';
 import zhLang from 'bkui-vue/dist/locale/zh-cn.esm';
 
 export default defineComponent({
-    name: 'App',
-    setup() {
-      const { locale } = useI18n();
-      const lang = computed(() => {
-        if (locale.value === EN_LOCALE) {
-          return enLang;
-        }
-        return zhLang;
-      });
-      return () => (
-        <div>123</div>
-      );
-    },
+  name: 'App',
+  setup() {
+    const { locale } = useI18n();
+    const lang = computed(() => {
+      if (locale.value === EN_LOCALE) {
+        return enLang;
+      }
+      return zhLang;
+    });
+    return () => (
+      <RouterView />
+    );
+  },
 });
-  

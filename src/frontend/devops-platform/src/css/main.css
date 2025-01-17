@@ -1,5 +1,9 @@
-.app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#app {
+  font-family: -apple-system,PingFang SC,BlinkMacSystemFont,Microsoft YaHei,Helvetica Neue,Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -12,4 +16,25 @@
   overflow: auto;
   display: flex;
   flex-direction: column;
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  height: 9px;
+  border-radius: 20px;
+  background-color: #c4c6cc;
+}
+
+.check-popper::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 28px;
+  transform: rotate(45deg);
+  border-width: 8px;
+  border-style: solid;
+  border-color: #FAFBFD;
+  box-shadow: -1px -1px 0 0 #DCDEE5;
 }

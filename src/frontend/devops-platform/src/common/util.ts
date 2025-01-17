@@ -2,22 +2,22 @@ import dayjs from 'dayjs';
 
 // 获取 cookie
 export function getCookie(name: string): string {
-    try {
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const cookies = decodedCookie.split(';');
-        for (const cookie of cookies) {
-        const [key, value] = cookie.trim().split('=');
-        if (key === name) {
-            return value;
-        }
-        }
-        return '';
-    } catch (e) {
-        console.error('get cookie error', e);
-        return '';
+  try {
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookies = decodedCookie.split(';');
+    for (const cookie of cookies) {
+      const [key, value] = cookie.trim().split('=');
+      if (key === name) {
+        return value;
+      }
     }
+    return '';
+  } catch (e) {
+    console.error('get cookie error', e);
+    return '';
+  }
 }
-  
+
 /**
  * 检查是不是 object 类型
  * @param item
