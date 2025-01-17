@@ -13,7 +13,7 @@
                 default: false
             },
             maxlength: {
-                type: String,
+                type: Number,
                 default: ''
             }
         },
