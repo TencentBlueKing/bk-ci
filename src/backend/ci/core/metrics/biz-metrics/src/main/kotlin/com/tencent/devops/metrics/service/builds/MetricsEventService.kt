@@ -92,7 +92,6 @@ class MetricsEventService @Autowired constructor(
         }
 
         private fun send() {
-            val url = "${metricsUserConfig.eventIp}:10205/v2/push/"
             val body = JsonUtil.toJson(
                 MetricsEventPO(
                     dataId = metricsUserConfig.eventDataId,
@@ -102,7 +101,7 @@ class MetricsEventService @Autowired constructor(
                 false
             )
             val request = Request.Builder()
-                .url(url)
+                .url(metricsUserConfig.eventUrl)
                 .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
                 .build()
 
@@ -125,7 +124,7 @@ class MetricsEventService @Autowired constructor(
         time: LocalDateTime,
         labels: List<Tag>
     ) {
-        if (metricsUserConfig.eventIp.isBlank()) return
+        if (metricsUserConfig.eventUrl.isBlank()) return
         val dimension = mutableMapOf(
             "projectId" to projectId,
             "pipelineId" to pipelineId,
@@ -161,7 +160,7 @@ class MetricsEventService @Autowired constructor(
         time: LocalDateTime,
         labels: List<Tag>
     ) {
-        if (metricsUserConfig.eventIp.isBlank()) return
+        if (metricsUserConfig.eventUrl.isBlank()) return
         val dimension = mutableMapOf(
             "projectId" to projectId,
             "pipelineId" to pipelineId,

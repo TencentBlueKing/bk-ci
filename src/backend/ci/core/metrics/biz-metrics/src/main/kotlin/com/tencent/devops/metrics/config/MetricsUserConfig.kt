@@ -61,8 +61,8 @@ class MetricsUserConfig {
     @Value("\${metrics.user.enable:false}")
     val metricsUserEnabled: Boolean = false
 
-    @Value("\${metrics.event.ip:}")
-    val eventIp: String = ""
+    @Value("\${metrics.event.url:}")
+    val eventUrl: String = ""
 
     @Value("\${metrics.event.dataid:}")
     val eventDataId: Long = 0L
