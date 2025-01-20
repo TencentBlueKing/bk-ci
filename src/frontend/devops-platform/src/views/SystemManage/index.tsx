@@ -1,42 +1,38 @@
 import { useI18n } from 'vue-i18n';
 import { defineComponent, onMounted, ref, h } from 'vue';
-import { Plus } from 'bkui-vue/lib/icon';
+import { InfoBox } from 'bkui-vue';
+import Plus from '@/css/svg/plus.svg';
+// import AddFill from '@/css/svg/add-fill.svg';
+// import CloseSamll from '@/css/svg/close-samll.svg';
+// import EditLine from '@/css/svg/edit-line.svg';
+import ArrowsRight from '@/css/svg/arrows-right.svg'
 import PaltformHeader from '@/components/paltform-header';
-// import './index.less'; 
-// import useUserStore from '@/store/user';
+import TimeLimit from '@/components/time-limit'
+import AddDialog from './components/AddDialog';
+import RenewalDialog from './components/RenewalDialog';
 
 export default defineComponent({
   setup() {
     const { t } = useI18n();
-    // const userStore = useUserStore();
-    // onMounted(() => {
-    //   userStore.fetchUserInfo();
-    // });
     const currentTap = ref('manage');
     const search = ref('');
+    const isShowAddDialog = ref(false);
+    const isShowRenewalDialog = ref(false);
+    const formData = ref({
+      name: '',
+      role: '观察者',
+      expiredAt: 30,
+      scope: []
+    });
+    const renewal = ref();
     const tableData = ref([{ ip: '123' }, { ip: '123' }]);
     const columns = ref([
       {
-        "label": "代码源名称",
-        "field": "ip",
-        render({ cell, row }) {
-          // return h()
-        }
-      },
-      {
-        "label": "代码源标识",
+        "label": t('用户'),
         "field": "ip",
       },
       {
-        "label": "代码源域名",
-        "field": "ip",
-      },
-      {
-        "label": "Webhook",
-        "field": "ip",
-      },
-      {
-        "label": "PAC",
+        "label": t('有效期'),
         "field": "ip",
       },
       {
@@ -65,8 +61,32 @@ export default defineComponent({
               display: 'flex'
             }
           }, [
-            h('span', '续期'),
-            h('span', '删除')
+            h('span', {
+              class: 'text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer',
+              onClick() {
+                isShowRenewalDialog.value = true;
+              }
+            }, t('续期')),
+            h('span', {
+              class: `text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer ${row.state === 2 ? 'text-[#C4C6CC]' : ''}`,
+              onClick() {
+                InfoBox({
+                  confirmText: t('删除'),
+                  cancelText: t('取消'),
+                  confirmButtonTheme: 'danger',
+                  title: t('是否删除该系统管理员?'),
+                  content: h('div', {
+                    class: 'text-[14px] text-[#4D4F56]'
+                  }, [
+                    h('span', `${t('管理员名称')}：`),
+                    h('span', { class: 'text-[#313238]' }, 'xxx')
+                  ]),
+                  onConfirm() {
+                    console.log('---');
+                  },
+                });
+              }
+            }, t('删除'))
           ])
         }
       }
@@ -93,6 +113,10 @@ export default defineComponent({
       pagination.value.count = 10;
     };
 
+    function handleAdd() {
+      isShowAddDialog.value = true
+    };
+
     function changeTap(tapValue: string) {
       currentTap.value = tapValue;
     };
@@ -110,8 +134,43 @@ export default defineComponent({
     };
 
     function handleClear() {
-      search.value = ''
+      search.value = '';
     };
+
+    function handleSelected(flag:string) {
+      formData.value.role = flag;
+    };
+    /**
+     * 授权期限选择
+     */
+    function handleChangeTime(value, type) {
+      if (type === 'add') {
+        formData.value.expiredAt = Number(value);
+      } else if (type === 'renewal') {
+        renewal.value = Number(value)
+      }
+    };
+
+    function handleAddConfirm() {
+      console.log(formData.value);
+      isShowAddDialog.value = false;
+    };
+
+    function handleAddClosed() {
+      isShowAddDialog.value = false;
+    };
+
+    function handleRemoveItem(id) {};
+
+    function handleRenewalConfirm() {
+      console.log(renewal.value );
+      isShowRenewalDialog.value = false;
+    };
+
+    function handleRenewalClosed() {
+      isShowRenewalDialog.value = false;
+    };
+
 
     return () => (
       <>
@@ -119,8 +178,8 @@ export default defineComponent({
         <div class="p-[24px] h-mainHeight">
           <div class="flex">
             <div class="flex-1">
-              <bk-button theme="primary" class="mb-[16px] mr-[12px]">
-                <Plus width={14} class="mr-[6px]" />
+              <bk-button theme="primary" class="mb-[16px] mr-[12px]" onClick={handleAdd}>
+                <img src={Plus} alt="" class="w-[12px] mr-[6px] align-middle" />
                 {t('新增')}
               </bk-button>
               <div class="inline-flex">
@@ -160,6 +219,23 @@ export default defineComponent({
             onPageValueChange={handlePageValueChange}
           />
         </div>
+
+        <AddDialog
+          v-model:isShow={isShowAddDialog.value}
+          formData={formData.value}
+          onConfirm={handleAddConfirm}
+          onClosed={handleAddClosed}
+          onSelected={handleSelected}
+          onRemoveItem={handleRemoveItem}
+          onChangeTime={handleChangeTime}
+        />
+
+        <RenewalDialog
+          v-model:isShow={isShowRenewalDialog.value}
+          onConfirm={handleRenewalConfirm}
+          onRemoveItem={handleRenewalClosed}
+          onChangeTime={handleChangeTime}
+        />
       </>
     );
   },

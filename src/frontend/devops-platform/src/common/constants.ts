@@ -3,13 +3,11 @@
 export const BASE_PREFIX = import.meta.env.DEV ? '/ms' : '';
 export const STORE_TYPE = 'DEVX';
 
-export const OWNER_PERMISSION_LIST = ['开发', '版本发布', '私有配置', '可见范围', '审批', '成员管理'];
-export const DEVELOPER_PERMISSION_LIST = ['开发', '版本发布', '私有配置'];
-
-export const STEP_CODES = {
-  COMMIT: 'commit',
-  BUILD: 'build',
-  TEST: 'test',
-  EDIT: 'edit',
-  APPROVE: 'approve',
+export const BORDER = ['outer', 'row']
+export const TIME_FILTERS = {
+  30: '1个月',
+  90: '3个月',
+  180: '6个月',
+  360: '12个月',
+  'custom': '自定义'
 };

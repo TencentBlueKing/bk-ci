@@ -39,6 +39,7 @@
     ".eslintrc",
     "vite.config.ts",
     "global.d.ts",
-    "env.d.ts"
+    "env.d.ts",
+    "declarations.d.ts"
   ]
 }

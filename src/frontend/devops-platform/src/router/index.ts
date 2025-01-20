@@ -4,7 +4,7 @@ import {
 } from 'vue-router';
 const PaltformEntry = () => import('@/views/PaltformEntry');
 // 系统管理员
-const SystemManage = () => import('@/views/SystemManage');
+const SystemManage = () => import('@/views/SystemManage/index');
 // 代码源管理
 const CodeSourceManage = () => import('@/views/RepositoryService/CodeSourceManage');
 // 新增代码源

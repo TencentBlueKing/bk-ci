@@ -2,21 +2,46 @@
 import { useI18n } from 'vue-i18n';
 import { defineComponent, ref, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
+import { Tag, InfoBox } from 'bkui-vue';
 import Plus from '@/css/svg/plus.svg';
+import GitIcon from '@/css/image/git.png';
 import PaltformHeader from '@/components/paltform-header';
+import { BORDER } from "@/common/constants";
 
 export default defineComponent({
   setup() {
     const { t } = useI18n();
     const router = useRouter();
 
-    const tableData = ref([{ ip: '123' }, { ip: '123' }]);
+    const tableData = ref([
+      {
+        ip: '123',
+        name: '工蜂',
+        webhook: true,
+        pac: false,
+        state: 1
+      }, {
+        ip: '123',
+        name: '工蜂',
+        webhook: false,
+        pac: true,
+        state: 2
+      }
+    ]);
     const columns = ref([
       {
         "label": t('代码源名称'),
         "field": "ip",
         render({ cell, row }) {
-          // return h()
+          return h('p', {
+            class: 'flex items-center'
+          }, [
+            h('img', {
+              src: GitIcon,
+              class: 'w-[17px] mr-[2px]'
+            }),
+            h('span', {}, row.name)
+          ])
         }
       },
       {
@@ -29,11 +54,25 @@ export default defineComponent({
       },
       {
         "label": "Webhook",
-        "field": "ip",
+        "field": "webhook",
+        render({ cell, row }) {
+          return h(Tag, {
+            theme: row.webhook ? 'success' : '',
+          }, {
+            default: () => row.webhook ? t('启用') : t('未启用')
+          })
+        }
       },
       {
         "label": "PAC",
-        "field": "ip",
+        "field": "pac",
+        render({ cell, row }) {
+          return h(Tag, {
+            theme: row.pac ? 'success' : ''
+          }, {
+            default: () => row.pac ? t('启用') : t('未启用')
+          })
+        }
       },
       {
         "label": t('创建人'),
@@ -61,8 +100,18 @@ export default defineComponent({
               display: 'flex'
             }
           }, [
-            h('span', '启用'),
-            h('span', '删除')
+            h('span', {
+              class: 'text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer',
+              onClick() {
+                getInfoBox(row.state, row.name)
+              }
+            }, row.state === 1 ? t('启用') : t('停用')),
+            h('span', {
+              class: `text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer ${row.state === 2 ? 'text-[#C4C6CC]' : ''}`,
+              onClick() {
+                getInfoBox(row.state, row.name)
+              }
+            }, t('删除'))
           ])
         }
       }
@@ -91,6 +140,25 @@ export default defineComponent({
       })
     };
 
+    function getInfoBox(state, name: string) {
+      const tip = state === 1 ? t('停用') : t('删除');
+      InfoBox({
+        confirmText: tip,
+        cancelText: t('取消'),
+        confirmButtonTheme: 'danger',
+        title: t('是否X该代码源？', [tip]),
+        content: h('div', {
+          class: 'text-[14px] text-[#4D4F56]'
+        }, [
+          h('span', `${t('代码源名称')}：`),
+          h('span', { class: 'text-[#313238]' }, name)
+        ]),
+        onConfirm() {
+          console.log('---');
+        },
+      });
+    };
+
     return () => (
       <>
         <PaltformHeader title={t('代码源管理')} />
@@ -102,7 +170,7 @@ export default defineComponent({
 
           <bk-table
             class="bg-white !h-tableHeight"
-            border={['outer', 'row']}
+            border={BORDER}
             settings={true}
             columns={columns.value}
             data={tableData.value}

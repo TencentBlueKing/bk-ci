@@ -38,3 +38,12 @@
   border-color: #FAFBFD;
   box-shadow: -1px -1px 0 0 #DCDEE5;
 }
+
+.required:after {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  color: #ea3636;
+  text-align: center;
+  content: "*";
+}
