@@ -61,6 +61,18 @@ class MetricsUserConfig {
     @Value("\${metrics.user.enable:false}")
     val metricsUserEnabled: Boolean = false
 
+    @Value("\${metrics.event.ip:}")
+    val eventIp: String = ""
+
+    @Value("\${metrics.event.dataid:}")
+    val eventDataId: Long = 0L
+
+    @Value("\${metrics.event.token:}")
+    val eventToken: String = ""
+
+    @Value("\${metrics.event.consumerCount:1}")
+    val eventConsumerCount: Int = 1
+
     /*注册默认的 prometheusMeterRegistry*/
     @Bean
     fun prometheusMeterRegistry(
