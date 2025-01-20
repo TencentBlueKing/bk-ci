@@ -48,6 +48,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -57,8 +59,6 @@ import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -733,14 +733,28 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
+    fun setupAtomLatestTestFlagById(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        latestFlag: Boolean
+    ) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
-                .set(
-                    LATEST_TEST_FLAG,
-                    DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
-                )
+                .set(LATEST_TEST_FLAG, latestFlag)
                 .set(MODIFIER, userId)
+                .where(ID.eq(atomId))
+                .execute()
+        }
+    }
+
+    fun resetAtomLatestTestFlagByCode(
+        dslContext: DSLContext,
+        atomCode: String
+    ) {
+        with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(LATEST_TEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
                 .execute()
         }
