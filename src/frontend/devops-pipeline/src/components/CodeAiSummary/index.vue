@@ -12,16 +12,10 @@
             class="loading-wrapper"
         >
             <div
-                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary ai-loading-icon"
+                v-bkloading="{ isLoading: isLoading, theme: 'primary', mode: 'spin', size: 'normal' }"
+                class="loading-icon"
             >
-                <div class="rotate rotate1"></div>
-                <div class="rotate rotate2"></div>
-                <div class="rotate rotate3"></div>
-                <div class="rotate rotate4"></div>
-                <div class="rotate rotate5"></div>
-                <div class="rotate rotate6"></div>
-                <div class="rotate rotate7"></div>
-                <div class="rotate rotate8"></div>
+                <span></span>
             </div>
             <p>{{ $t('details.aiSummaryLoadingTips') }}</p>
         </div>
@@ -235,14 +229,8 @@
                 text-align: center;
             }
         }
-        .ai-loading-icon {
-            width: 32px !important;
-            height: 32px !important;
-            .rotate {
-                width: 4px !important;
-                height: 8px !important;
-                transform-origin: 50% 18px !important;
-            }
+        .loading-icon {
+            padding-bottom: 35px;
         }
         .footer-wrapper {
             display: flex;
