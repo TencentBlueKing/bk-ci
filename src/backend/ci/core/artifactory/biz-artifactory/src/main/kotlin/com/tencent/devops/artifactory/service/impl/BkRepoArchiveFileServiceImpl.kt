@@ -743,8 +743,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repoName: String,
-        packageKey: String?,
         version: String?,
+        packageKey: String?,
         pageNumber: Int,
         pageSize: Int
     ): Page<PackageVersion> {
