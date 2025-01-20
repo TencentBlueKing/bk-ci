@@ -75,6 +75,7 @@ class MetricsEventService @Autowired constructor(
                     buf.add(message)
                     if (buf.size < BUFFER_SIZE) continue
                 }
+                if (buf.isEmpty()) continue
                 RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
                     override fun execute() {
                         send()
