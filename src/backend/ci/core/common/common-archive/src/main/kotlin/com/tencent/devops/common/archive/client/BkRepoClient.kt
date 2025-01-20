@@ -1152,7 +1152,7 @@ class BkRepoClient constructor(
         projectId: String,
         repoName: String,
         packageName: String? = null,
-        pageNumber: Int = 0,
+        pageNumber: Int = 1,
         pageSize: Int = 20
     ): Page<PackageSummary> {
         logger.info(
@@ -1200,11 +1200,11 @@ class BkRepoClient constructor(
         repoName: String,
         packageKey: String? = null,
         version: String? = null,
-        pageNumber: Int = 0,
+        pageNumber: Int = 1,
         pageSize: Int = 20
     ): Page<PackageVersion> {
         logger.info(
-            "listPackagePage, userId: $userId, projectId: $projectId, repoName: $repoName, packageName: $packageKey," +
+            "listVersionPage, userId: $userId, projectId: $projectId, repoName: $repoName, packageName: $packageKey," +
                     " pageNumber: $pageNumber, pageSize: $pageSize"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/version/page/$projectId/$repoName" +

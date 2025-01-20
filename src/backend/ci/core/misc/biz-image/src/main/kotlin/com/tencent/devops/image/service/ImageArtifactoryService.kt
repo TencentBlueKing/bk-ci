@@ -76,7 +76,7 @@ class ImageArtifactoryService @Autowired constructor(
         projectId: String,
         repoName: String = REPO_NAME_IMAGE,
         searchKey: String? = null,
-        pageNumber: Int = 0,
+        pageNumber: Int = 1,
         pageSize: Int = 100
     ): List<DockerTag>? {
         val imagePackagePage = client.get(ServiceArtifactoryResource::class).listPackagePage(
@@ -145,7 +145,7 @@ class ImageArtifactoryService @Autowired constructor(
         projectId: String,
         searchKey: String? = null,
         repoName: String = REPO_NAME_IMAGE,
-        pageNumber: Int = 0,
+        pageNumber: Int = 1,
         pageSize: Int = 100
     ): ImageListResp {
         val imageItems = client.get(ServiceArtifactoryResource::class).listPackagePage(
