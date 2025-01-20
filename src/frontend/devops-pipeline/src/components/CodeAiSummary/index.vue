@@ -11,12 +11,13 @@
             v-if="isLoading"
             class="loading-wrapper"
         >
-            <div
-                v-bkloading="{ isLoading: isLoading, theme: 'primary', mode: 'spin', size: 'normal' }"
+            <bk-loading
+                theme="primary"
+                mode="spin"
+                size="normal"
+                is-loading
                 class="loading-icon"
-            >
-                <span></span>
-            </div>
+            />
             <p>{{ $t('details.aiSummaryLoadingTips') }}</p>
         </div>
         <div
@@ -135,6 +136,9 @@
                 }
             }
         },
+        beforeDestroy () {
+            clearTimeout(this.timer)
+        },
         methods: {
             handleChangeValue (val) {
                 this.$emit('update:value', val)
@@ -230,7 +234,8 @@
             }
         }
         .loading-icon {
-            padding-bottom: 35px;
+            margin-bottom: 35px;
+            padding-right: 550px;
         }
         .footer-wrapper {
             display: flex;
