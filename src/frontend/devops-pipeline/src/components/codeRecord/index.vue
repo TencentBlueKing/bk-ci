@@ -58,6 +58,7 @@
                 return this.codeCommitList.map(item => ({
                     id: item.elementId,
                     name: item.name,
+                    scmType: item.scmType,
                     component: 'CodeRecordTable',
                     componentProps: {
                         commitList: item.records,

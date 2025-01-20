@@ -14,6 +14,7 @@
                 <span>{{ formatCommitId(firstCommit.commit) }}</span>
             </span>
             <span
+                v-if="isGItRepo"
                 class="ai-cr-button"
                 @click="handleOpenAISummary"
             >
@@ -103,6 +104,9 @@
             id: {
                 type: String,
                 default: ''
+            },
+            scmType: {
+                type: String
             }
         },
         data () {
@@ -120,6 +124,9 @@
             lastCommit () {
                 const len = this.commitList.length
                 return this.hasCommitList && len > 0 ? this.commitList[len - 1] : ''
+            },
+            isGItRepo () {
+                return this.scmType === 'CODE_GIT'
             }
         },
         methods: {
