@@ -13,8 +13,7 @@
                 default: false
             },
             maxlength: {
-                type: Number,
-                default: null
+                type: Number
             }
         },
         methods: {
@@ -43,7 +42,7 @@
                     name={name}
                     disabled={readOnly || disabled}
                     value={value}
-                    maxlength={maxlength}
+                    {...(maxlength ? { maxlength } : {})}
                 />
             )
         }
