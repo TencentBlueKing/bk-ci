@@ -51,6 +51,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -662,4 +663,24 @@ class MarketTemplateDao {
                 .execute()
         }
     }
+
+
+    fun listByTemplateCode(dslContext: DSLContext): List<TTemplateRecord>? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext
+                .selectFrom(this)
+                .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
+                .and(
+                    CREATE_TIME.eq(
+                        DSL.select(min(CREATE_TIME))
+                            .from(this)
+                            .where(TEMPLATE_CODE.eq(TTemplate.T_TEMPLATE.TEMPLATE_CODE))
+                            .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
+                    )
+                )
+                .fetch()
+                .into(TTemplateRecord::class.java)
+        }
+    }
+
 }

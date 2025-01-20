@@ -91,6 +91,7 @@ import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
+import org.jooq.impl.DSL.min
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -1431,6 +1432,25 @@ class MarketImageDao @Autowired constructor() {
                     setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte()))
                 ).and(IMAGE_CODE.`in`(projectTestImageCodes))
                 .fetch()
+        }
+    }
+
+
+    fun listByImageCode(dslContext: DSLContext): List<TImageRecord>? {
+        return with(TImage.T_IMAGE) {
+            dslContext
+                .selectFrom(this)
+                .where(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                .and(
+                    CREATE_TIME.eq(
+                        DSL.select(min(CREATE_TIME))
+                            .from(this)
+                            .where(IMAGE_CODE.eq(TImage.T_IMAGE.IMAGE_CODE))
+                            .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                    )
+                )
+                .fetch()
+                .into(TImageRecord::class.java)
         }
     }
 }

@@ -28,6 +28,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreRelease
+import com.tencent.devops.model.store.tables.records.TStoreReleaseRecord
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -94,7 +95,6 @@ class StoreReleaseDao {
 
     fun updateComponentFirstPublisher(
         dslContext: DSLContext,
-        userId: String,
         storeCode: String,
         storeType: Byte,
         firstPublisher: String
@@ -102,10 +102,25 @@ class StoreReleaseDao {
         with(TStoreRelease.T_STORE_RELEASE) {
             dslContext.update(this)
                 .set(FIRST_PUB_CREATOR, firstPublisher)
-                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .execute()
         }
+    }
+
+
+    fun selectStoreReleaseInfo(
+        dslContext: DSLContext,
+        storeCode: List<String>,
+        storeType: Byte
+    ): List<TStoreReleaseRecord>? {
+        return with(TStoreRelease.T_STORE_RELEASE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.`in`(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .fetch()
+        }
+
     }
 }

@@ -39,6 +39,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -47,9 +48,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -57,7 +55,10 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -897,4 +898,23 @@ class MarketAtomDao : AtomBaseDao() {
             }
         }
     }
+
+    fun listByAtomCode(dslContext: DSLContext): List<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            dslContext
+                .selectFrom(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .and(
+                    CREATE_TIME.eq(
+                        DSL.select(min(CREATE_TIME))
+                            .from(this)
+                            .where(ATOM_CODE.eq(TAtom.T_ATOM.ATOM_CODE))
+                            .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                    )
+                )
+                .fetch()
+                .into(TAtomRecord::class.java)
+        }
+    }
+
 }
