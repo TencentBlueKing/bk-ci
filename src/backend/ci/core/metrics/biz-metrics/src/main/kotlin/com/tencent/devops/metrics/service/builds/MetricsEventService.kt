@@ -105,7 +105,7 @@ class MetricsEventService @Autowired constructor(
                 .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
                 .build()
 
-            OkhttpUtils.doHttp(request)
+            OkhttpUtils.doHttp(request).close()
         }
     }
 
