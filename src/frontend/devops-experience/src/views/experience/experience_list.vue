@@ -155,48 +155,54 @@
                                 >
                                     编辑
                                 </bk-button>
-                                <bk-button
-                                    class="operate-btn"
-                                    v-if="props.row.online && !props.row.expired"
-                                    v-perm="{
-                                        hasPermission: props.row.permissions.canDelete,
-                                        disablePermissionApi: true,
-                                        tooltips: '没有权限',
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
-                                            resourceCode: props.row.experienceHashId,
-                                            action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
-                                        }
-                                    }"
-                                    text
-                                    @click.stop="toDropOff(props.row)"
-                                >
-                                    下架
-                                </bk-button>
-                                <span
-                                    v-bk-tooltips="{ content: '该体验已下架' }"
-                                    class="expired-text"
-                                    v-else
-                                >下架</span>
-                                <bk-button
-                                    class="operate-btn"
-                                    v-perm="{
-                                        hasPermission: props.row.permissions.canDelete,
-                                        disablePermissionApi: true,
-                                        tooltips: '没有权限',
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
-                                            resourceCode: props.row.experienceHashId,
-                                            action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
-                                        }
-                                    }"
-                                    text
-                                    @click.stop="toDeleteRow(props.row)"
-                                >
-                                    删除
-                                </bk-button>
+                                <template v-if="props.row.online && !props.row.expired">
+                                    <bk-button
+                                        class="operate-btn"
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canDelete,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                                resourceCode: props.row.experienceHashId,
+                                                action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click.stop="toDropOff(props.row)"
+                                    >
+                                        下架
+                                    </bk-button>
+                                    <span
+                                        v-bk-tooltips="{ content: '删除之前，请先下架体验' }"
+                                        class="expired-text"
+                                    >删除</span>
+                                </template>
+                                <template v-else>
+                                    <span
+                                        v-bk-tooltips="{ content: '该体验已下架' }"
+                                        class="expired-text"
+                                    >下架</span>
+                                    <bk-button
+                                        class="operate-btn"
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canDelete,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                                resourceCode: props.row.experienceHashId,
+                                                action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click.stop="toDeleteRow(props.row)"
+                                    >
+                                        删除
+                                    </bk-button>
+                                </template>
                             </div>
                         </template>
                     </bk-table-column>
