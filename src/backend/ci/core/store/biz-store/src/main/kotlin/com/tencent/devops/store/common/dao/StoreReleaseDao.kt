@@ -97,15 +97,22 @@ class StoreReleaseDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        firstPublisher: String
+        firstPublisher: String,
+        userId: String?
     ) {
         with(TStoreRelease.T_STORE_RELEASE) {
-            dslContext.update(this)
+            val updateQuery = dslContext.update(this)
                 .set(FIRST_PUB_CREATOR, firstPublisher)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(STORE_CODE.eq(storeCode))
+
+            if (userId != null) {
+                updateQuery.set(MODIFIER, userId)
+            }
+
+            updateQuery.where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
-                .execute()
+
+            updateQuery.execute()
         }
     }
 

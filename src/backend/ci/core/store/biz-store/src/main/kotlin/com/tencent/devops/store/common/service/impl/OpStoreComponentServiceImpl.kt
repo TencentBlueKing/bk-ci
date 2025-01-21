@@ -116,7 +116,7 @@ class OpStoreComponentServiceImpl @Autowired constructor(
                     version = version,
                     status = storeStatus,
                     releaseType = releaseType,
-                    publisher = record.publisher
+                    publisher = record.modifier
                 )
             )
         }

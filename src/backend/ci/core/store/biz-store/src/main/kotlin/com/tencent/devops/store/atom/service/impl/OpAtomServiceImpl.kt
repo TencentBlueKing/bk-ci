@@ -349,7 +349,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     releaseType = releaseType,
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch,
-                    publisher = atom.publisher
+                    publisher = atom.modifier
                 )
             )
         } else {

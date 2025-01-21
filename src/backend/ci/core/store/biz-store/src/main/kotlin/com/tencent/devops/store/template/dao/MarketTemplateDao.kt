@@ -669,14 +669,16 @@ class MarketTemplateDao {
         return with(TTemplate.T_TEMPLATE) {
             dslContext
                 .selectFrom(this)
-                .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-                .and(
-                    CREATE_TIME.eq(
-                        DSL.select(min(CREATE_TIME))
-                            .from(this)
-                            .where(TEMPLATE_CODE.eq(TTemplate.T_TEMPLATE.TEMPLATE_CODE))
-                            .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-                    )
+                .where(
+                    TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())
+                        .and(
+                            CREATE_TIME.eq(
+                                DSL.select(min(CREATE_TIME))
+                                    .from(this)
+                                    .where(TEMPLATE_CODE.eq(TTemplate.T_TEMPLATE.TEMPLATE_CODE))
+                                    .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
+                            )
+                        )
                 )
                 .fetch()
                 .into(TTemplateRecord::class.java)

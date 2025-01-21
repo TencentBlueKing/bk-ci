@@ -1440,14 +1440,16 @@ class MarketImageDao @Autowired constructor() {
         return with(TImage.T_IMAGE) {
             dslContext
                 .selectFrom(this)
-                .where(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-                .and(
-                    CREATE_TIME.eq(
-                        DSL.select(min(CREATE_TIME))
-                            .from(this)
-                            .where(IMAGE_CODE.eq(TImage.T_IMAGE.IMAGE_CODE))
-                            .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-                    )
+                .where(
+                    IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
+                        .and(
+                            CREATE_TIME.eq(
+                                DSL.select(min(CREATE_TIME))
+                                    .from(this)
+                                    .where(IMAGE_CODE.eq(TImage.T_IMAGE.IMAGE_CODE))
+                                    .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                            )
+                        )
                 )
                 .fetch()
                 .into(TImageRecord::class.java)

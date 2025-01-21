@@ -43,11 +43,8 @@ class OpStorePublishersResourceImpl constructor(
     }
 
     override fun updateComponentFirstPublisher(
-        userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        firstPublisher: String
+        userId: String
     ): Result<Boolean> {
-        return Result(publishersDataService.updateComponentFirstPublisher(userId, storeCode, storeType, firstPublisher))
+        return Result(publishersDataService.updateComponentFirstPublisher(userId))
     }
 }

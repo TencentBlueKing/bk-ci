@@ -917,14 +917,16 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext
                 .selectFrom(this)
-                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                .and(
-                    CREATE_TIME.eq(
-                        DSL.select(min(CREATE_TIME))
-                            .from(this)
-                            .where(ATOM_CODE.eq(TAtom.T_ATOM.ATOM_CODE))
-                            .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                    )
+                .where(
+                    ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
+                        .and(
+                            CREATE_TIME.eq(
+                                DSL.select(min(CREATE_TIME))
+                                    .from(this)
+                                    .where(ATOM_CODE.eq(TAtom.T_ATOM.ATOM_CODE))
+                                    .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                            )
+                        )
                 )
                 .fetch()
                 .into(TAtomRecord::class.java)

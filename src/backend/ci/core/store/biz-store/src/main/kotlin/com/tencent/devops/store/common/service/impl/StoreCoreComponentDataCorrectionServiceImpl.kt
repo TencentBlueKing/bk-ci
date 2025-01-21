@@ -37,17 +37,17 @@ class StoreCoreComponentDataCorrectionServiceImpl : StoreComponentDataCorrection
 
 
 
-    override fun updateComponentFirstPublisher() {
+    override fun updateComponentFirstPublisher(userId: String?) {
 
         try {
             val atomList = atomDao.listByAtomCode(dslContext)?.map { Component(it.atomCode, it.modifier) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, atomList, storeReleaseDao, dslContext)
+            updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, atomList, storeReleaseDao, dslContext,userId)
 
             val templateList = templateDao.listByTemplateCode(dslContext)?.map { Component(it.templateCode, it.modifier) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.TEMPLATE, templateList, storeReleaseDao, dslContext)
+            updateFirstPublisherIfNecessary(StoreTypeEnum.TEMPLATE, templateList, storeReleaseDao, dslContext,userId)
 
             val imageList = imageDao.listByImageCode(dslContext)?.map { Component(it.imageCode, it.modifier) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.IMAGE, imageList, storeReleaseDao, dslContext)
+            updateFirstPublisherIfNecessary(StoreTypeEnum.IMAGE, imageList, storeReleaseDao, dslContext,userId)
         }catch (e: Exception){
             logger.info("updateComponentFirstPublisher error:${e.message}")
             throw RuntimeException("updateComponentFirstPublisher error")
@@ -60,7 +60,8 @@ class StoreCoreComponentDataCorrectionServiceImpl : StoreComponentDataCorrection
         storeTypeEnum: StoreTypeEnum,
         list: List<Component>?,
         dao: StoreReleaseDao,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        userId: String?
     ) {
 
         if (!list.isNullOrEmpty()) {
@@ -81,7 +82,8 @@ class StoreCoreComponentDataCorrectionServiceImpl : StoreComponentDataCorrection
                                 dslContext = transactionContext,
                                 storeCode = it.code,
                                 storeType = storeTypeEnum.type.toByte(),
-                                firstPublisher = it.modifier
+                                firstPublisher = it.modifier,
+                                userId = userId
                             )
                         }
 

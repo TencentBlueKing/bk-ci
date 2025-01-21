@@ -58,15 +58,6 @@ interface OpStorePublishersResource {
     fun updateComponentFirstPublisher(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "store组件代码", required = true)
-        @QueryParam("storeCode")
-        storeCode: String,
-        @Parameter(description = "组件类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
-        @Parameter(description = "首次发布人", required = true)
-        @QueryParam("firstPublisher")
-        firstPublisher: String
+        userId: String
     ): Result<Boolean>
 }

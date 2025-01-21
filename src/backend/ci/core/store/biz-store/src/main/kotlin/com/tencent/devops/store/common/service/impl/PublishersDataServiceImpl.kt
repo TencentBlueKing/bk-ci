@@ -46,21 +46,22 @@ import com.tencent.devops.store.common.dao.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.service.PublishersDataService
+import com.tencent.devops.store.common.service.StoreComponentDataCorrectionService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.pojo.common.enums.PublisherType
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.publication.PublisherDeptInfo
 import com.tencent.devops.store.pojo.common.publication.PublisherInfo
 import com.tencent.devops.store.pojo.common.publication.PublishersRequest
-import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.enums.PublisherType
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Service
 class PublishersDataServiceImpl @Autowired constructor(
@@ -72,7 +73,8 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService,
     private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao,
-    private val storeReleaseDao: StoreReleaseDao
+    private val storeReleaseDao: StoreReleaseDao,
+    private val storeComponentDataCorrectionService: StoreComponentDataCorrectionService
 ) : PublishersDataService {
 
     private val executorService = Executors.newSingleThreadExecutor()
@@ -351,17 +353,8 @@ class PublishersDataServiceImpl @Autowired constructor(
 
     override fun updateComponentFirstPublisher(
         userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        firstPublisher: String
     ): Boolean {
-        storeReleaseDao.updateComponentFirstPublisher(
-            dslContext,
-            userId,
-            storeCode,
-            storeType.type.toByte(),
-            firstPublisher
-        )
+        storeComponentDataCorrectionService.updateComponentFirstPublisher(userId)
         return true
     }
 

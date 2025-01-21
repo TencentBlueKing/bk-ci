@@ -78,10 +78,5 @@ interface PublishersDataService {
     /**
      * 修改组件首个发布人
      */
-    fun updateComponentFirstPublisher(
-        userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        firstPublisher: String
-    ): Boolean
+    fun updateComponentFirstPublisher(userId: String): Boolean
 }
