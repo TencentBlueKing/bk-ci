@@ -105,7 +105,12 @@ class MetricsEventService @Autowired constructor(
                 .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
                 .build()
 
-            OkhttpUtils.doHttp(request).close()
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    val responseContent = response.body!!.string()
+                    logger.error("event send fail. $responseContent")
+                }
+            }
         }
     }
 
