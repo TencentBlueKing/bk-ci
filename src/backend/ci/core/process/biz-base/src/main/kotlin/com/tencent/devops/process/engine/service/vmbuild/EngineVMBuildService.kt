@@ -908,7 +908,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId, taskId = result.taskId, actionType = ActionType.END,
                     containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                     stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                    buildStatus = task.status.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    buildStatus = buildStatus.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
                 )
             )
         }
