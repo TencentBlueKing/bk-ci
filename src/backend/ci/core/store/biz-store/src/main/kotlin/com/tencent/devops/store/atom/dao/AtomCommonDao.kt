@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -51,8 +52,10 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository(value = "ATOM_COMMON_DAO")
 class AtomCommonDao : AbstractStoreCommonDao() {
@@ -200,4 +203,21 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             dslContext.select(ATOM_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
     }
+
+
+    override fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String
+    ): Result<Record3<String, String, LocalDateTime>>? {
+        val atom = TAtom.T_ATOM
+        val atomVersionLogs = TAtomVersionLog.T_ATOM_VERSION_LOG
+        return dslContext.select(atom.VERSION, atomVersionLogs.CONTENT, atom.UPDATE_TIME)
+            .from(atom)
+            .join(atomVersionLogs)
+            .on(atom.ID.eq(atomVersionLogs.ATOM_ID))
+            .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
+            .fetch()
+
+    }
+
 }

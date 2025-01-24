@@ -65,6 +65,7 @@ import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentVersonLogService
 import com.tencent.devops.store.common.service.StoreHonorService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
@@ -95,6 +96,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -183,6 +185,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     @Autowired
     lateinit var labelDao: LabelDao
+
+    @Autowired
+    lateinit var storeComponentVersonLogService: StoreComponentVersonLogService
+
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
@@ -1086,4 +1092,17 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             else -> str
         }
     }
+
+
+    /**
+     * 根据组件id获取组件版本日志
+     */
+    override fun getStoreVersionLogs(
+        userId: String,
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): Result<StoreVersionLogs> {
+        return storeComponentVersonLogService.getStoreComponentVersionLogs(userId, storeId, storeType)
+    }
+
 }

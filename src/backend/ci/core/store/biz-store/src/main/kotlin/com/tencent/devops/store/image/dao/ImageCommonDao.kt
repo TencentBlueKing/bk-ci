@@ -29,6 +29,7 @@ package com.tencent.devops.store.image.dao
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
+import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -43,8 +44,10 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository(value = "IMAGE_COMMON_DAO")
 class ImageCommonDao : AbstractStoreCommonDao() {
@@ -164,5 +167,21 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
+    }
+
+
+    override fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String
+    ): Result<Record3<String, String, LocalDateTime>>? {
+        val image = TImage.T_IMAGE
+        val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+        return dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME)
+            .from(image)
+            .join(imageLog)
+            .on(image.ID.eq(imageLog.IMAGE_ID))
+            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
+            .fetch()
+
     }
 }

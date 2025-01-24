@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -319,4 +320,21 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
     ): Result<List<StoreMediaInfo>?>
+
+
+    //根据组件ID获取组件版本日志
+    @Operation(summary = "根据组件ID获取组件版本日志")
+    @GET
+    @Path("/{storeType}/{storeId}/getVersionLogs/")
+    fun getStoreVersionLogs(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<StoreVersionLogs>
 }

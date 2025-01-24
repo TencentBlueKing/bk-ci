@@ -30,7 +30,9 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record3
 import org.jooq.Result
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 abstract class AbstractStoreCommonDao {
@@ -82,4 +84,10 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeId: String
     ): String?
+
+    abstract fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+    ): Result<Record3<String, String, LocalDateTime>>?
+
 }
