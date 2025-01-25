@@ -8,6 +8,7 @@ import com.tencent.devops.store.common.service.StoreComponentVersonLogService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -28,24 +29,42 @@ class StoreComponentVersonLogServiceImpl : StoreComponentVersonLogService() {
     @Autowired
     lateinit var dslContext: DSLContext
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreComponentVersonLogServiceImpl::class.java)
+    }
+
 
     override fun getStoreComponentVersionLogs(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum
-    ):  Result<StoreVersionLogs> {
+    ): Result<StoreVersionLogs> {
 
-        val storeCommonDao = getStoreCommonDao(storeType.name)
         val storeVersionLogList =
             storeVersionLogDao.getStoreComponentVersionLogs(dslContext, storeCode, storeType.type.toByte())
 
-        val versionLogInfos = storeVersionLogList?.takeIf { it.isNotEmpty }
+        var versionLogInfos = storeVersionLogList?.takeIf { it.isNotEmpty }
             ?.map { createStoreVersionLogInfo(it, storeType) }
-            ?: storeCommonDao.getStoreComponentVersionLogs(dslContext, storeCode)
-                ?.map { createStoreVersionLogInfo(it, storeType) }
-            ?: emptyList()
 
-        return Result(StoreVersionLogs(versionLogInfos.size, versionLogInfos))
+        if (versionLogInfos.isNullOrEmpty()) {
+            versionLogInfos = try {
+                getStoreCommonDao(storeType.name).getStoreComponentVersionLogs(dslContext, storeCode)
+                    ?.map { createStoreVersionLogInfo(it, storeType) }
+                    ?: emptyList()
+
+            } catch (e: Exception) {
+                logger.error(
+                    "getStoreComponentVersionLogs error:${
+                        e.message
+                    }"
+                )
+                emptyList()
+            }
+
+
+        }
+
+        return Result(StoreVersionLogs(versionLogInfos!!.size, versionLogInfos))
     }
 
 
