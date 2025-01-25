@@ -31,6 +31,7 @@ package com.tencent.devops.metrics.service.builds
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.metrics.config.MetricsUserConfig
@@ -55,7 +56,7 @@ import org.springframework.stereotype.Service
 class MetricsEventService @Autowired constructor(
     private val metricsUserConfig: MetricsUserConfig
 ) {
-    private val queue: BlockingQueue<MetricsEventPO.Data> = ArrayBlockingQueue(10000) // 创建一个容量为10000的阻塞队列
+    private val queue: BlockingQueue<MetricsEventPO.Data> = ArrayBlockingQueue(10000) // 阻塞队列
 
     private val executor = Executors.newCachedThreadPool()
 
@@ -120,6 +121,11 @@ class MetricsEventService @Autowired constructor(
         }
     }
 
+    private fun priority(status: String) = when (status) {
+        BuildStatus.FAILED.name, BuildStatus.CANCELED.name -> "WARNING"
+        else -> "NORMAL"
+    }
+
     fun registerBuildStatusEvent(
         projectId: String,
         pipelineId: String,
@@ -131,6 +137,9 @@ class MetricsEventService @Autowired constructor(
     ) {
         if (metricsUserConfig.eventUrl.isBlank()) return
         val dimension = mutableMapOf(
+            "source" to "BKCI",
+            "domain" to "CICD",
+            "priority" to priority(status),
             "projectId" to projectId,
             "pipelineId" to pipelineId,
             "buildId" to buildId,
@@ -142,7 +151,7 @@ class MetricsEventService @Autowired constructor(
                 dimension[label.key] = label.value
             }
         }
-        queue.put(
+        val unavailable = queue.offer(
             MetricsEventPO.Data(
                 eventName = MetricsUserConfig.gaugeBuildStatusKey,
                 event = MetricsEventPO.Data.Event(
@@ -152,12 +161,16 @@ class MetricsEventService @Autowired constructor(
                 timestamp = time.timestampmilli()
             )
         )
+        if (unavailable) {
+            logger.warn("queue full and ignore")
+        }
     }
 
     fun registerBuildStepStatusEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        stageId: String,
         jobId: String,
         stepId: String,
         status: String,
@@ -167,10 +180,14 @@ class MetricsEventService @Autowired constructor(
     ) {
         if (metricsUserConfig.eventUrl.isBlank()) return
         val dimension = mutableMapOf(
+            "source" to "BKCI",
+            "domain" to "CICD",
+            "priority" to priority(status),
             "projectId" to projectId,
             "pipelineId" to pipelineId,
             "buildId" to buildId,
             "status" to status,
+            "stageId" to stageId,
             "jobId" to jobId,
             "stepId" to stepId,
             "type" to type.name
@@ -180,7 +197,7 @@ class MetricsEventService @Autowired constructor(
                 dimension[label.key] = label.value
             }
         }
-        queue.put(
+        val unavailable = queue.offer(
             MetricsEventPO.Data(
                 eventName = MetricsUserConfig.gaugeBuildStepStatusKey,
                 event = MetricsEventPO.Data.Event(
@@ -190,5 +207,8 @@ class MetricsEventService @Autowired constructor(
                 timestamp = time.timestampmilli()
             )
         )
+        if (unavailable) {
+            logger.warn("queue full and ignore")
+        }
     }
 }

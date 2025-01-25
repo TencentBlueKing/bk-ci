@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -96,6 +97,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
+import java.util.Date
 import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -307,7 +309,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo)
+                broadcastStartEvent(buildInfo, setting)
             } else {
                 broadcastQueueEvent()
             }
@@ -497,7 +499,7 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
+    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo, pipelineSetting: PipelineSetting?) {
         pipelineEventDispatcher.dispatch(
             // 广播构建即将启动消息给订阅者
             PipelineBuildStartBroadCastEvent(
@@ -519,7 +521,13 @@ class BuildStartControl @Autowired constructor(
                 actionType = ActionType.START,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.RUNNING.name,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_START
+                type = PipelineBuildStatusBroadCastEventType.BUILD_START,
+                labels = mapOf(
+                    "startTime" to DateTimeUtil.formatDate(Date()),
+                    "trigger" to buildInfo.trigger,
+                    "triggerUser" to buildInfo.triggerUser,
+                    "pipelineName" to (pipelineSetting?.pipelineName ?: "")
+                )
             )
         )
     }

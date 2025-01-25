@@ -33,10 +33,13 @@ import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_QUALITY_CHECK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -52,8 +55,6 @@ import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -84,10 +85,10 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -260,7 +261,16 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END,
                 buildStatus = buildStatus.name,
                 executeCount = buildInfo.executeCount,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_END
+                type = PipelineBuildStatusBroadCastEventType.BUILD_END,
+                labels = mapOf(
+                    "startTime" to (buildInfo.startTime?.let {
+                        DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                    } ?: ""),
+                    "trigger" to buildInfo.trigger,
+                    "triggerUser" to buildInfo.triggerUser,
+                    "pipelineName" to model.name,
+                    "duration" to DateTimeUtil.formatMillSecond(checkNotNull(buildInfo.endTime) - buildInfo.queueTime)
+                )
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",
