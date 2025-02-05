@@ -40,13 +40,13 @@ class StoreCoreComponentDataCorrectionServiceImpl : StoreComponentDataCorrection
     override fun updateComponentFirstPublisher(userId: String?) {
 
         try {
-            val atomList = atomDao.listByAtomCode(dslContext)?.map { Component(it.atomCode, it.modifier) }
+            val atomList = atomDao.listByAtomCode(dslContext)?.map { Component(it.value1(), it.value2()) }
             updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, atomList, storeReleaseDao, dslContext,userId)
 
-            val templateList = templateDao.listByTemplateCode(dslContext)?.map { Component(it.templateCode, it.modifier) }
+            val templateList = templateDao.listByTemplateCode(dslContext)?.map { Component(it.templateCode, it.creator) }
             updateFirstPublisherIfNecessary(StoreTypeEnum.TEMPLATE, templateList, storeReleaseDao, dslContext,userId)
 
-            val imageList = imageDao.listByImageCode(dslContext)?.map { Component(it.imageCode, it.modifier) }
+            val imageList = imageDao.listByImageCode(dslContext)?.map { Component(it.value1(), it.value2()) }
             updateFirstPublisherIfNecessary(StoreTypeEnum.IMAGE, imageList, storeReleaseDao, dslContext,userId)
         }catch (e: Exception){
             logger.info("updateComponentFirstPublisher error:${e.message}")

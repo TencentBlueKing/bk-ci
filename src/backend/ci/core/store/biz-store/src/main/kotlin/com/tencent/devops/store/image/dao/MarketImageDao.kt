@@ -36,6 +36,7 @@ import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.model.store.tables.TImageCategoryRel
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
+import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -73,6 +74,7 @@ import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
@@ -87,11 +89,11 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record19
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
-import org.jooq.impl.DSL.min
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -1436,23 +1438,11 @@ class MarketImageDao @Autowired constructor() {
     }
 
 
-    fun listByImageCode(dslContext: DSLContext): List<TImageRecord>? {
-        return with(TImage.T_IMAGE) {
-            dslContext
-                .selectFrom(this)
-                .where(
-                    IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
-                        .and(
-                            CREATE_TIME.eq(
-                                DSL.select(min(CREATE_TIME))
-                                    .from(this)
-                                    .where(IMAGE_CODE.eq(TImage.T_IMAGE.IMAGE_CODE))
-                                    .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-                            )
-                        )
-                )
-                .fetch()
-                .into(TImageRecord::class.java)
-        }
+    fun listByImageCode(dslContext: DSLContext): Result<Record2<String, String>>? {
+        val tImage = TImage.T_IMAGE
+        val tImageVersionLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+        return dslContext.select(tImage.IMAGE_CODE, tImageVersionLog.MODIFIER).from(tImage).join(tImageVersionLog)
+            .on(tImage.ID.eq(tImageVersionLog.IMAGE_ID))
+            .where(tImageVersionLog.RELEASE_TYPE.eq(ReleaseTypeEnum.NEW.releaseType.toByte())).fetch()
     }
 }

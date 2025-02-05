@@ -47,18 +47,19 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -913,24 +914,12 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun listByAtomCode(dslContext: DSLContext): List<TAtomRecord>? {
-        return with(TAtom.T_ATOM) {
-            dslContext
-                .selectFrom(this)
-                .where(
-                    ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                        .and(
-                            CREATE_TIME.eq(
-                                DSL.select(min(CREATE_TIME))
-                                    .from(this)
-                                    .where(ATOM_CODE.eq(TAtom.T_ATOM.ATOM_CODE))
-                                    .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                            )
-                        )
-                )
-                .fetch()
-                .into(TAtomRecord::class.java)
-        }
+    fun listByAtomCode(dslContext: DSLContext): Result<Record2<String, String>>? {
+        val tAtom = TAtom.T_ATOM
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        return dslContext.select(tAtom.ATOM_CODE, tAtomVersionLog.MODIFIER).from(tAtom).join(tAtomVersionLog)
+            .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
+            .where(tAtomVersionLog.RELEASE_TYPE.eq(ReleaseTypeEnum.NEW.releaseType.toByte())).fetch()
     }
 
 }
