@@ -666,23 +666,24 @@ class MarketTemplateDao {
 
 
     fun listByTemplateCode(dslContext: DSLContext): List<TTemplateRecord>? {
-        return with(TTemplate.T_TEMPLATE) {
-            dslContext
-                .selectFrom(this)
-                .where(
-                    TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())
-                        .and(
-                            CREATE_TIME.eq(
-                                DSL.select(min(CREATE_TIME))
-                                    .from(this)
-                                    .where(TEMPLATE_CODE.eq(TTemplate.T_TEMPLATE.TEMPLATE_CODE))
-                                    .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-                            )
-                        )
-                )
-                .fetch()
-                .into(TTemplateRecord::class.java)
-        }
+        val tTemplate = TTemplate.T_TEMPLATE.`as`("t_template")
+        val tTemplateChild = TTemplate.T_TEMPLATE.`as`("t_template_child")
+
+        val minCreateTimeSubquery = dslContext.select(min(tTemplateChild.CREATE_TIME))
+            .from(tTemplateChild)
+            .where(
+                tTemplateChild.TEMPLATE_CODE.eq(tTemplate.TEMPLATE_CODE)
+                    .and(tTemplateChild.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
+            )
+
+        return dslContext
+            .selectFrom(tTemplate)
+            .where(
+                tTemplate.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())
+                    .and(tTemplate.CREATE_TIME.eq(minCreateTimeSubquery))
+            )
+            .fetch()
+            .into(TTemplateRecord::class.java)
     }
 
 }
