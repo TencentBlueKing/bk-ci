@@ -29,7 +29,6 @@ package com.tencent.devops.store.image.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
@@ -37,6 +36,7 @@ import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.model.store.tables.TImageCategoryRel
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
+import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -1443,6 +1443,8 @@ class MarketImageDao @Autowired constructor() {
         val tImage = TImage.T_IMAGE.`as`("t_image")
         val tImageChild = TImage.T_IMAGE.`as`("t_image_child")
 
+        val tImageVersionLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+
         val minCreateTimeSubquery = dslContext.select(min(tImageChild.CREATE_TIME))
             .from(tImageChild)
             .where(
@@ -1456,8 +1458,12 @@ class MarketImageDao @Autowired constructor() {
                     )
             )
 
-        val result = dslContext
-            .selectFrom(tImage)
+
+        return dslContext
+            .select(tImage.IMAGE_CODE, tImageVersionLog.MODIFIER)
+            .from(tImage)
+            .join(tImageVersionLog)
+            .on(tImage.ID.eq(tImageVersionLog.IMAGE_ID))
             .where(
                 tImage.IMAGE_STATUS.`in`(
                     AtomStatusEnum.RELEASED.status.toByte(),
@@ -1466,12 +1472,6 @@ class MarketImageDao @Autowired constructor() {
                 )
                     .and(tImage.CREATE_TIME.eq(minCreateTimeSubquery))
             )
-
-
-        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
-
-
-        return dslContext.select(tImage.IMAGE_CODE, tAtomVersionLog.MODIFIER).from(result).join(tAtomVersionLog)
-            .on(tImage.ID.eq(tAtomVersionLog.ATOM_ID)).fetch()
+            .fetch()
     }
 }

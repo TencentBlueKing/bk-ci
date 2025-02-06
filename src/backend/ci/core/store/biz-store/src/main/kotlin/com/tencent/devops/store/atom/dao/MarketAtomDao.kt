@@ -917,6 +917,7 @@ class MarketAtomDao : AtomBaseDao() {
     fun listByAtomCode(dslContext: DSLContext): Result<Record2<String, String>>? {
         val tAtom = TAtom.T_ATOM.`as`("t_atom")
         val tAtomChild = TAtom.T_ATOM.`as`("t_atom_child")
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
 
         val minCreateTimeSubquery = dslContext.select(min(tAtomChild.CREATE_TIME))
             .from(tAtomChild)
@@ -931,8 +932,11 @@ class MarketAtomDao : AtomBaseDao() {
                     )
             )
 
-        val result = dslContext
-            .selectFrom(tAtom)
+        return dslContext
+            .select(tAtom.ATOM_CODE, tAtomVersionLog.MODIFIER)
+            .from(tAtom)
+            .join(tAtomVersionLog)
+            .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
             .where(
                 tAtom.ATOM_STATUS.`in`(
                     AtomStatusEnum.RELEASED.status.toByte(),
@@ -941,12 +945,7 @@ class MarketAtomDao : AtomBaseDao() {
                 )
                     .and(tAtom.CREATE_TIME.eq(minCreateTimeSubquery))
             )
-
-
-        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
-
-        return dslContext.select(tAtom.ATOM_CODE, tAtomVersionLog.MODIFIER).from(result).join(tAtomVersionLog)
-            .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID)).fetch()
+            .fetch()
     }
 
 }
