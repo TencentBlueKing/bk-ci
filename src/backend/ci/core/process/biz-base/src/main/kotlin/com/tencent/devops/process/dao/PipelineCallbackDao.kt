@@ -94,7 +94,7 @@ class PipelineCallbackDao {
     ): Result<TPipelineCallbackRecord> {
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .let {
                     if (!event.isNullOrBlank()) {
                         it.and(EVENT_TYPE.eq(event))
