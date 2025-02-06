@@ -29,6 +29,7 @@ package com.tencent.devops.store.image.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
@@ -36,7 +37,6 @@ import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.model.store.tables.TImageCategoryRel
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
-import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -64,6 +64,7 @@ import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_VERSION
 import com.tencent.devops.store.image.exception.ClassifyNotExistException
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
@@ -74,7 +75,6 @@ import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
@@ -94,6 +94,7 @@ import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
+import org.jooq.impl.DSL.min
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -1439,10 +1440,38 @@ class MarketImageDao @Autowired constructor() {
 
 
     fun listByImageCode(dslContext: DSLContext): Result<Record2<String, String>>? {
-        val tImage = TImage.T_IMAGE
-        val tImageVersionLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-        return dslContext.select(tImage.IMAGE_CODE, tImageVersionLog.MODIFIER).from(tImage).join(tImageVersionLog)
-            .on(tImage.ID.eq(tImageVersionLog.IMAGE_ID))
-            .where(tImageVersionLog.RELEASE_TYPE.eq(ReleaseTypeEnum.NEW.releaseType.toByte())).fetch()
+        val tImage = TImage.T_IMAGE.`as`("t_image")
+        val tImageChild = TImage.T_IMAGE.`as`("t_image_child")
+
+        val minCreateTimeSubquery = dslContext.select(min(tImageChild.CREATE_TIME))
+            .from(tImageChild)
+            .where(
+                tImageChild.IMAGE_CODE.eq(tImage.IMAGE_CODE)
+                    .and(
+                        tImageChild.IMAGE_STATUS.`in`(
+                            AtomStatusEnum.RELEASED.status.toByte(),
+                            AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                            AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                        )
+                    )
+            )
+
+        val result = dslContext
+            .selectFrom(tImage)
+            .where(
+                tImage.IMAGE_STATUS.`in`(
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                )
+                    .and(tImage.CREATE_TIME.eq(minCreateTimeSubquery))
+            )
+
+
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+
+
+        return dslContext.select(tImage.IMAGE_CODE, tAtomVersionLog.MODIFIER).from(result).join(tAtomVersionLog)
+            .on(tImage.ID.eq(tAtomVersionLog.ATOM_ID)).fetch()
     }
 }
