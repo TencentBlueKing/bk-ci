@@ -176,7 +176,8 @@ class CallBackControl @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
             userId = pipelineInfo.lastModifyUser,
-            updateTime = pipelineInfo.updateTime
+            updateTime = pipelineInfo.updateTime,
+            projectId = pipelineInfo.projectId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = pipelineEvent), list)
