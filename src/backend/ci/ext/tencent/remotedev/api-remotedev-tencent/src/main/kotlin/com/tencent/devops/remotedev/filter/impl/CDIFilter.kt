@@ -27,7 +27,7 @@ class CDIFilter constructor(
 ) : ContainerRequestFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(CDIFilter::class.java)
-        private const val CDI_PATH = "/api/cdi/"
+        private const val CDI_PATH = "/api/external/cdi/"
     }
 
     private val cache = Caffeine.newBuilder()

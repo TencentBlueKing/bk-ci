@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 * 4.接口入参需有 DEVX_HEADER_CDI_WORKSPACE_NAME ，并且限制为当前云桌面
 * */
 @Tag(name = "CDI_REMOTE_DEV", description = "cdi-remoteDev")
-@Path("/cdi/")
+@Path("/external/cdi/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface CDIResource {
