@@ -41,7 +41,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.user.UserExperienceResource
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.pojo.Experience
-import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
