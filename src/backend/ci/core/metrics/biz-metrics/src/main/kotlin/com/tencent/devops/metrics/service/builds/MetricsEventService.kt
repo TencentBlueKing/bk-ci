@@ -122,8 +122,8 @@ class MetricsEventService @Autowired constructor(
     }
 
     private fun priority(status: String) = when (status) {
-        BuildStatus.FAILED.name, BuildStatus.CANCELED.name -> "WARNING"
-        else -> "NORMAL"
+        BuildStatus.FAILED.name, BuildStatus.CANCELED.name -> "Warning"
+        else -> "Normal"
     }
 
     fun registerBuildStatusEvent(

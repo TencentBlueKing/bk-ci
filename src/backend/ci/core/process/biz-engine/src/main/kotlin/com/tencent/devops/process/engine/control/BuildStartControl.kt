@@ -523,7 +523,7 @@ class BuildStartControl @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING.name,
                 type = PipelineBuildStatusBroadCastEventType.BUILD_START,
                 labels = mapOf(
-                    "startTime" to DateTimeUtil.formatDate(Date()),
+                    "startTime" to LocalDateTime.now().timestampmilli().toString(),
                     "trigger" to buildInfo.trigger,
                     "triggerUser" to buildInfo.triggerUser,
                     "pipelineName" to (pipelineSetting?.pipelineName ?: "")

@@ -263,13 +263,11 @@ class BuildEndControl @Autowired constructor(
                 executeCount = buildInfo.executeCount,
                 type = PipelineBuildStatusBroadCastEventType.BUILD_END,
                 labels = mapOf(
-                    "startTime" to (buildInfo.startTime?.let {
-                        DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
-                    } ?: ""),
+                    "startTime" to (buildInfo.startTime?.toString() ?: ""),
                     "trigger" to buildInfo.trigger,
                     "triggerUser" to buildInfo.triggerUser,
                     "pipelineName" to model.name,
-                    "duration" to DateTimeUtil.formatMillSecond(checkNotNull(buildInfo.endTime) - buildInfo.queueTime)
+                    "duration" to (checkNotNull(buildInfo.endTime) - buildInfo.queueTime).toString()
                 )
             ),
             PipelineBuildWebSocketPushEvent(
