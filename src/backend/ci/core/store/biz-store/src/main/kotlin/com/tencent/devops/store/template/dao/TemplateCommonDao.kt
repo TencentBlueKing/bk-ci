@@ -153,13 +153,19 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreComponentVersionLogs(
         dslContext: DSLContext,
-        storeCode: String
+        storeCode: String,
+        page: Int?,
+        pageSize: Int?
     ): Result<Record3<String, String, LocalDateTime>>? {
         return with(TTemplate.T_TEMPLATE) {
-            dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME).from(this)
+            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME).from(this)
                 .where(TEMPLATE_CODE.eq(storeCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
-                .fetch()
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 

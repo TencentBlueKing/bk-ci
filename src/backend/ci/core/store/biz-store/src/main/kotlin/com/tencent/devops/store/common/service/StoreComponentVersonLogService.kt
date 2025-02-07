@@ -1,12 +1,12 @@
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
 import org.jooq.Record3
 import java.time.LocalDateTime
 import java.util.*
@@ -20,8 +20,10 @@ abstract class StoreComponentVersonLogService {
     abstract fun getStoreComponentVersionLogs(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum
-    ): Result<StoreVersionLogs>
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>>
 
 
     fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {

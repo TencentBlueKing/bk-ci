@@ -43,7 +43,7 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -322,19 +322,25 @@ interface UserStoreComponentQueryResource {
     ): Result<List<StoreMediaInfo>?>
 
 
-    //根据组件ID获取组件版本日志
-    @Operation(summary = "根据组件ID获取组件版本日志")
+
+    @Operation(summary = "根据组件Code获取组件版本日志")
     @GET
-    @Path("/{storeType}/{storeId}/getVersionLogs/")
+    @Path("/{storeType}/{storeCode}/getVersionLogs/")
     fun getStoreVersionLogs(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        storeId: String,
+        @PathParam("storeCode")
+        storeCode: String,
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
-        storeType: StoreTypeEnum
-    ): Result<StoreVersionLogs>
+        storeType: StoreTypeEnum,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<StoreVersionLogInfo>>
 }

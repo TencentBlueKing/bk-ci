@@ -120,10 +120,12 @@ class StoreVersionLogDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<Record3<String, String, LocalDateTime>>? {
         val tsb = TStoreBase.T_STORE_BASE
         val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
-        return dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME)
+        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME)
             .from(tsb)
             .join(tsvl)
             .on(tsb.ID.eq(tsvl.STORE_ID))
@@ -131,7 +133,12 @@ class StoreVersionLogDao {
                 tsb.STORE_CODE.eq(storeCode)
                     .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
             )
-            .fetch()
+        if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize, pageSize)
+        }
+
+        return baseStep.fetch()
 
     }
+
 }

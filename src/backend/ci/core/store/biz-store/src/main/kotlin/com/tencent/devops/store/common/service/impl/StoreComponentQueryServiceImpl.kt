@@ -96,7 +96,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.StoreVersionLogs
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1099,10 +1099,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
      */
     override fun getStoreVersionLogs(
         userId: String,
-        storeId: String,
-        storeType: StoreTypeEnum
-    ): Result<StoreVersionLogs> {
-        return storeComponentVersonLogService.getStoreComponentVersionLogs(userId, storeId, storeType)
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>> {
+        return storeComponentVersonLogService.getStoreComponentVersionLogs(userId, storeCode, storeType,page,pageSize)
     }
 
 }
