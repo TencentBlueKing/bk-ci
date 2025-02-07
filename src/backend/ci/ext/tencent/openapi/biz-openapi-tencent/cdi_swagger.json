@@ -10,7 +10,7 @@
     "description" : "cdi-remoteDev"
   } ],
   "paths" : {
-    "/remotedev/api/cdi/login_user_id" : {
+    "/remotedev/api/external/cdi/login_user_id" : {
       "get" : {
         "tags" : [ "CDI_REMOTE_DEV" ],
         "summary" : "云桌面应用获取当前实例登陆人",
@@ -52,7 +52,7 @@
         }
       }
     },
-    "/remotedev/api/cdi/workspace_detail" : {
+    "/remotedev/api/external/cdi/workspace_detail" : {
       "get" : {
         "tags" : [ "CDI_REMOTE_DEV" ],
         "summary" : "云桌面应用获取云桌面信息",
@@ -94,7 +94,7 @@
         }
       }
     },
-    "/remotedev/api/cdi/notify" : {
+    "/remotedev/api/external/cdi/notify" : {
       "post" : {
         "tags" : [ "CDI_REMOTE_DEV" ],
         "summary" : "云桌面应用给云桌面或者客户端发送消息",

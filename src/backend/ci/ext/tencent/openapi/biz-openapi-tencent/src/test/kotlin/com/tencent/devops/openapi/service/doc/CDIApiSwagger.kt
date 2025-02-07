@@ -52,8 +52,7 @@ class CDIApiSwagger {
         val openAPI = loadSwagger()
 
         val json = Json.pretty(openAPI)
-
-        val outputFile = File("swagger.json")
+        val outputFile = File("cdi_swagger.json")
         outputFile.writeText(json)
 
         assert(outputFile.exists())
