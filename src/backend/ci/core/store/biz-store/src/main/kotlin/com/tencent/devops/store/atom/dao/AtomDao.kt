@@ -96,7 +96,6 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record3
-import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
