@@ -34,7 +34,7 @@ import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import org.jooq.DSLContext
-import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -122,10 +122,10 @@ class StoreVersionLogDao {
         storeType: Byte,
         page: Int? = null,
         pageSize: Int? = null
-    ): Result<Record3<String, String, LocalDateTime>>? {
+    ): Result<Record4<String, String, LocalDateTime, LocalDateTime>>? {
         val tsb = TStoreBase.T_STORE_BASE
         val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
-        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME)
+        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsvl.UPDATE_TIME,tsb.UPDATE_TIME.`as`("releaseTime"))
             .from(tsb)
             .join(tsvl)
             .on(tsb.ID.eq(tsvl.STORE_ID))

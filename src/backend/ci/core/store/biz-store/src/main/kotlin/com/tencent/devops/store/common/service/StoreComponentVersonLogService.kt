@@ -7,7 +7,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import org.jooq.Record3
+import org.jooq.Record
+import org.jooq.Record4
 import java.time.LocalDateTime
 import java.util.*
 
@@ -31,23 +32,26 @@ abstract class StoreComponentVersonLogService {
     }
 
     fun createStoreVersionLogInfo(
-        record: Record3<String, String, LocalDateTime>,
+        record: Record,
         storeType: StoreTypeEnum
     ): StoreVersionLogInfo {
         return StoreVersionLogInfo(
-            version = record.value1(),
-            updateLog = record.value2(),
+            version = record.get("VERSION") as? String,
+            updateLog = record.get("CONTENT") as? String,
             lastUpdateTime = DateTimeUtil.formatDate(
-                DateTimeUtil.convertLocalDateTimeToDate(record.value3()),
+                DateTimeUtil.convertLocalDateTimeToDate(record.get("UPDATED_TIME") as LocalDateTime),
                 DateTimeUtil.YYYY_MM_DD_HH_MM_SS
             ),
-            tag = generateTag(storeType, record.value1())
+            tag = generateTag(storeType, record.get("VERSION") as? String, record.get("releaseTime") as? LocalDateTime)
         )
     }
 
-    private fun generateTag(storeType: StoreTypeEnum, version: String): String {
+    private fun generateTag(storeType: StoreTypeEnum, version: String?, releaseTime: LocalDateTime?): String {
         return if (storeType in HAS_TAG) {
-            val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+            val date = DateTimeUtil.formatDate(
+                DateTimeUtil.convertLocalDateTimeToDate(releaseTime!!),
+                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+            )
             "prod-v${version}-$date"
         } else {
             " "
