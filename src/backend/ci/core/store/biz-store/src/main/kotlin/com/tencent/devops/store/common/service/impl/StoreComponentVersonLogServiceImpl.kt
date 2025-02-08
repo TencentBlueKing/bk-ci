@@ -58,14 +58,13 @@ class StoreComponentVersonLogServiceImpl : StoreComponentVersonLogService() {
             )?.map { createStoreVersionLogInfo(it, storeType) } ?: emptyList()
         } else {
             try {
-                val VersionLogList =
+                val versionLogList =
                     getStoreCommonDao(storeType.name).getStoreComponentVersionLogs(dslContext, storeCode)
-                if (VersionLogList?.isNotEmpty == true) {
-                    count = VersionLogList.size
-                    storeVersionLogDao.getStoreComponentVersionLogs(
+                if (versionLogList?.isNotEmpty == true) {
+                    count = versionLogList.size
+                    getStoreCommonDao(storeType.name).getStoreComponentVersionLogs(
                         dslContext,
                         storeCode,
-                        storeType.type.toByte(),
                         page,
                         pageSize
                     )?.map { createStoreVersionLogInfo(it, storeType) } ?: emptyList()
