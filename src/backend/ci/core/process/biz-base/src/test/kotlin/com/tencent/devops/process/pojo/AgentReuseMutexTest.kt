@@ -3,6 +3,9 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
@@ -26,7 +29,7 @@ class AgentReuseMutexTest {
                 "job_env_dep_1" to initReuseEnv("job_env_1"),
                 "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null),
                 "job_env_dep_2" to initReuseEnv("job_env_dep_1"),
-                "job_id_dep_8" to initReuseEnv("job_1")
+                "job_id_dep_8" to initReuseEnv("\${{variables.TEST_JOB_ID}}")
             )
         )
         stages.add(
@@ -48,21 +51,20 @@ class AgentReuseMutexTest {
             )
         )
         val tree = AgentReuseMutexTree(1, mutableListOf())
+        val variables = mapOf("variables.TEST_JOB_ID" to "job_1")
         stages.forEachIndexed { index, stage ->
             stage.forEach { (jobId, dsp) ->
-                tree.addNode(
-                    jobId = jobId,
-                    reuseId = if (dsp.agentType.isReuse()) {
-                        dsp.value
-                    } else {
-                        null
-                    },
-                    dispatchType = dsp,
-                    existDep = jobId == "job_id_dep_8",
-                    stageIndex = index,
-                    containerId = null,
-                    isEnv = dsp is ThirdPartyAgentEnvDispatchType
-                )
+                val con = if (jobId == "job_id_dep_8") {
+                    VMBuildContainer(
+                        jobId = jobId,
+                        dispatchType = dsp,
+                        baseOS = VMBaseOS.ALL,
+                        jobControlOption = JobControlOption(dependOnName = "job_1")
+                    )
+                } else {
+                    VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                }
+                tree.addNode(con, index, variables)
             }
         }
         val expectRes = mapOf(
@@ -175,6 +177,7 @@ class AgentReuseMutexTest {
             )
         )
         val treeMap = tree.tranMap()
+        println(treeMap)
         Assertions.assertEquals(
             expectRes.toSortedMap().map { it.key to Pair(it.value.first, it.value.second) }.toMap().toSortedMap(),
             treeMap.toSortedMap()
@@ -205,38 +208,16 @@ class AgentReuseMutexTest {
         )
         val thrown1 = assertThrows<ErrorCodeException> {
             stages[0].forEach { (jobId, dsp) ->
-                tree.addNode(
-                    jobId = jobId,
-                    reuseId = if (dsp.agentType.isReuse()) {
-                        dsp.value
-                    } else {
-                        null
-                    },
-                    dispatchType = dsp,
-                    existDep = jobId == "job_id_dep_8",
-                    stageIndex = 0,
-                    containerId = null,
-                    isEnv = dsp is ThirdPartyAgentEnvDispatchType
-                )
+                val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                tree.addNode(con, 0, emptyMap())
             }
         }
         Assertions.assertTrue { thrown1.errorCode == ERROR_AGENT_REUSE_MUTEX_DEP_ERROR }
 
         val thrown2 = assertThrows<ErrorCodeException> {
             stages[1].forEach { (jobId, dsp) ->
-                tree.addNode(
-                    jobId = jobId,
-                    reuseId = if (dsp.agentType.isReuse()) {
-                        dsp.value
-                    } else {
-                        null
-                    },
-                    dispatchType = dsp,
-                    existDep = jobId == "job_id_dep_8",
-                    stageIndex = 0,
-                    containerId = null,
-                    isEnv = dsp is ThirdPartyAgentEnvDispatchType
-                )
+                val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                tree.addNode(con, 0, emptyMap())
             }
         }
         Assertions.assertTrue { thrown2.errorCode == ERROR_AGENT_REUSE_MUTEX_DEP_ERROR }
@@ -255,19 +236,8 @@ class AgentReuseMutexTest {
         )
         val thrown1 = assertThrows<ErrorCodeException> {
             stages[0].forEach { (jobId, dsp) ->
-                tree.addNode(
-                    jobId = jobId,
-                    reuseId = if (dsp.agentType.isReuse()) {
-                        dsp.value
-                    } else {
-                        null
-                    },
-                    dispatchType = dsp,
-                    existDep = jobId == "job_id_dep_8",
-                    stageIndex = 0,
-                    containerId = null,
-                    isEnv = dsp is ThirdPartyAgentEnvDispatchType
-                )
+                val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                tree.addNode(con, 0, emptyMap())
             }
             tree.checkVirtualRootAndResetJobType()
         }

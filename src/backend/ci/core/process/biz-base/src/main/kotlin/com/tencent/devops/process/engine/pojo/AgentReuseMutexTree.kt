@@ -50,7 +50,7 @@ data class AgentReuseMutexTree(
         )
     }
 
-    fun addNode(
+    private fun addNode(
         jobId: String?,
         reuseId: String?,
         dispatchType: ThirdPartyAgentDispatch,
