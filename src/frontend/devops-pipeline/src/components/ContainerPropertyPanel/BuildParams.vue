@@ -158,22 +158,38 @@
                                                 :error-msg="errors.first(`param-${param.id}.defaultValue`)"
                                                 :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                                             >
-                                                <selector
-                                                    style="max-width: 250px"
-                                                    :popover-min-width="250"
+                                                <template
                                                     v-if="isSelectorParam(param.type)"
-                                                    :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                    :list="transformOpt(param.options)"
-                                                    :multi-select="isMultipleParam(param.type)"
-                                                    name="defaultValue"
-                                                    :data-vv-scope="`param-${param.id}`"
-                                                    :placeholder="$t('editPage.defaultValueTips')"
-                                                    :disabled="disabled"
-                                                    show-select-all
-                                                    :key="param.type"
-                                                    :value="getSelectorDefaultVal(param)"
                                                 >
-                                                </selector>
+                                                    <request-selector
+                                                        v-if="param.payload && param.payload.type === 'remote'"
+                                                        v-bind="remoteParamOption"
+                                                        v-validate.initial="{ required: valueRequired }"
+                                                        :popover-min-width="450"
+                                                        :disabled="disabled"
+                                                        name="defaultValue"
+                                                        :multi-select="isMultipleParam(param.type)"
+                                                        :data-vv-scope="'pipelineParam'"
+                                                        :value="getSelectorDefaultVal(param)"
+                                                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    >
+                                                    </request-selector>
+                                                    <selector
+                                                        v-else
+                                                        style="max-width: 250px"
+                                                        :popover-min-width="250"
+                                                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                        :list="optionList"
+                                                        :multi-select="isMultipleParam(param.type)"
+                                                        name="defaultValue"
+                                                        :data-vv-scope="`param-${param.id}`"
+                                                        :disabled="disabled"
+                                                        show-select-all
+                                                        :key="param.type"
+                                                        :value="getSelectorDefaultVal(param)"
+                                                    >
+                                                    </selector>
+                                                </template>
                                                 <enum-input
                                                     v-if="isBooleanParam(param.type)"
                                                     name="defaultValue"
@@ -267,24 +283,15 @@
                                         </template>
                                     </div>
 
-                                    <bk-form-item
-                                        label-width="auto"
+                                    <select-type-param
                                         v-if="isSelectorParam(param.type)"
-                                        :label="$t('editPage.selectOptions')"
-                                        :desc="$t('editPage.optionsDesc')"
-                                        :is-error="errors.has(`param-${param.id}.options`)"
-                                        :error-msg="errors.first(`param-${param.id}.options`)"
-                                    >
-                                        <vuex-textarea
-                                            v-validate.initial="'excludeComma'"
-                                            :disabled="disabled"
-                                            :handle-change="(name, value) => editOption(name, value, index)"
-                                            name="options"
-                                            :data-vv-scope="`param-${param.id}`"
-                                            :placeholder="$t('editPage.optionTips')"
-                                            :value="getOptions(param)"
-                                        ></vuex-textarea>
-                                    </bk-form-item>
+                                        :key="param.type"
+                                        class="mt20"
+                                        :param="param"
+                                        :handle-update-options="(name, value) => handleUpdateOptions(name, value, index)"
+                                        :handle-update-payload="(name, value) => handleUpdatePayload(name, value, index)"
+                                        :reset-default-val="() => handleUpdateParam('defaultValue', '', index)"
+                                    />
 
                                     <bk-form-item
                                         label-width="auto"
@@ -483,6 +490,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
     import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
@@ -536,7 +544,8 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            FileParamInput
+            FileParamInput,
+            SelectTypeParam
         },
         mixins: [validMixins],
         props: {
@@ -569,7 +578,9 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: []
+                optionList: [],
+                renderParams: [],
+                remoteParamOption: {}
             }
         },
         computed: {
@@ -749,11 +760,7 @@
             handleUpdateParam (key, value, paramIndex) {
                 try {
                     const param = this.globalParams[paramIndex]
-                    if (isMultipleParam(param.type) && key === 'defaultValue') {
-                        Object.assign(param, {
-                            [key]: value.join(',')
-                        })
-                    } else if (param) {
+                    if (param) {
                         Object.assign(param, {
                             [key]: value
                         })
@@ -794,23 +801,28 @@
                 this.handleUpdateParam('required', !isShow, paramIndex)
             },
 
-            editOption (name, value, index) {
-                try {
-                    let opts = []
-                    if (value && typeof value === 'string') {
-                        opts = value.split('\n').map(opt => {
-                            const v = opt.trim()
-                            const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
-                            const [, key, value] = res
-                            console.log(key, value)
-                            return {
-                                key,
-                                value
-                            }
-                        })
-                    }
+            setRemoteParamOption (payload) {
+                payload = payload || {}
+                const remoteOpion = {
+                    url: payload?.url || '',
+                    dataPath: payload?.dataPath || 'data',
+                    paramId: payload?.paramId || 'id',
+                    paramName: payload?.paramName || 'name'
+                }
+                this.remoteParamOption = remoteOpion
+            },
 
-                    this.handleUpdateParam(name, opts, index)
+            handleUpdatePayload (name, value, index) {
+                this.handleUpdateParam(name, value, index)
+                if (value.type === 'remote') {
+                    this.setRemoteParamOption(value)
+                }
+            },
+
+            handleUpdateOptions (name, value, index) {
+                try {
+                    this.transformOpt(value)
+                    this.handleUpdateParam(name, value, index)
                     const param = this.renderParams[index]
                     if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                         const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
@@ -896,6 +908,10 @@
             // 全局参数添加遍历的key值
             getParams (params) {
                 const result = params.map(item => {
+                    this.setRemoteParamOption(item.payload)
+                    if (this.isSelectorParam(item.type) && item?.payload?.type !== 'remote') {
+                        this.transformOpt(item.options || [])
+                    }
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {
                         temp.paramIdKey = typeof item.paramIdKey !== 'undefined' ? item.paramIdKey : `paramIdKey-${this.paramIdCount++}`
@@ -908,7 +924,7 @@
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
-                return Array.isArray(opts)
+                this.optionList = Array.isArray(opts)
                     ? opts.filter(opt => {
                         if (!uniqueMap[opt.key]) {
                             uniqueMap[opt.key] = 1
