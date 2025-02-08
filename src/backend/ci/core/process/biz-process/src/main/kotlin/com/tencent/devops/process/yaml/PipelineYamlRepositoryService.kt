@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -321,7 +322,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
             }),
-            yamlInfo = yamlInfo
+            yamlInfo = yamlInfo,
+            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
         val version = deployPipelineResult.version
 
