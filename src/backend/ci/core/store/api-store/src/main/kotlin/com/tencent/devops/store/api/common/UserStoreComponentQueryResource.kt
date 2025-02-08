@@ -48,6 +48,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -338,9 +339,11 @@ interface UserStoreComponentQueryResource {
         storeType: StoreTypeEnum,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
-        page: Int = 1,
+        @DefaultValue("1")
+        page: Int,
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int = 10
+        @DefaultValue("10")
+        pageSize: Int
     ): Result<Page<StoreVersionLogInfo>>
 }
