@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
@@ -26,19 +27,19 @@ data class AgentReuseMutexTree(
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
 ) {
-
-    fun addNode(container: VMBuildContainer, stageIndex: Int) {
+    fun addNode(container: VMBuildContainer, stageIndex: Int, variables: Map<String, String>) {
         val dispatchType = container.dispatchType
         if (dispatchType !is ThirdPartyAgentDispatch) {
             return
         }
         val reuseId = if (dispatchType.agentType.isReuse()) {
-            dispatchType.value
+            EnvReplacementParser.parse(dispatchType.value, contextMap = variables)
         } else {
             null
         }
         return addNode(
             jobId = container.jobId,
+            reuseId = reuseId,
             dispatchType = dispatchType,
             // 逻辑上可能需要dependOn复用树
             existDep = (container.jobControlOption?.dependOnId?.contains(reuseId) == true) ||
@@ -51,17 +52,13 @@ data class AgentReuseMutexTree(
 
     fun addNode(
         jobId: String?,
+        reuseId: String?,
         dispatchType: ThirdPartyAgentDispatch,
         existDep: Boolean,
         stageIndex: Int,
         containerId: String?,
         isEnv: Boolean
     ) {
-        val reuseId = if (dispatchType.agentType.isReuse()) {
-            dispatchType.value
-        } else {
-            null
-        }
         if (reuseId.isNullOrBlank()) {
             if (jobId.isNullOrBlank()) {
                 return

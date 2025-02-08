@@ -52,6 +52,11 @@ class AgentReuseMutexTest {
             stage.forEach { (jobId, dsp) ->
                 tree.addNode(
                     jobId = jobId,
+                    reuseId = if (dsp.agentType.isReuse()) {
+                        dsp.value
+                    } else {
+                        null
+                    },
                     dispatchType = dsp,
                     existDep = jobId == "job_id_dep_8",
                     stageIndex = index,
@@ -202,6 +207,11 @@ class AgentReuseMutexTest {
             stages[0].forEach { (jobId, dsp) ->
                 tree.addNode(
                     jobId = jobId,
+                    reuseId = if (dsp.agentType.isReuse()) {
+                        dsp.value
+                    } else {
+                        null
+                    },
                     dispatchType = dsp,
                     existDep = jobId == "job_id_dep_8",
                     stageIndex = 0,
@@ -216,6 +226,11 @@ class AgentReuseMutexTest {
             stages[1].forEach { (jobId, dsp) ->
                 tree.addNode(
                     jobId = jobId,
+                    reuseId = if (dsp.agentType.isReuse()) {
+                        dsp.value
+                    } else {
+                        null
+                    },
                     dispatchType = dsp,
                     existDep = jobId == "job_id_dep_8",
                     stageIndex = 0,
@@ -242,6 +257,11 @@ class AgentReuseMutexTest {
             stages[0].forEach { (jobId, dsp) ->
                 tree.addNode(
                     jobId = jobId,
+                    reuseId = if (dsp.agentType.isReuse()) {
+                        dsp.value
+                    } else {
+                        null
+                    },
                     dispatchType = dsp,
                     existDep = jobId == "job_id_dep_8",
                     stageIndex = 0,
