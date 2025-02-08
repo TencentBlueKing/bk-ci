@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -55,10 +54,10 @@ import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PipelineYamlRepositoryService @Autowired constructor(
@@ -322,8 +321,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
             }),
-            yamlInfo = yamlInfo,
-            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
+            yamlInfo = yamlInfo
         )
         val version = deployPipelineResult.version
 
