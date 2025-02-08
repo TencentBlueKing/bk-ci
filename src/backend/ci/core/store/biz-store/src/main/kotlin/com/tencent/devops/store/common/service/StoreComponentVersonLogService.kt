@@ -33,21 +33,24 @@ abstract class StoreComponentVersonLogService {
         record: Record3<String, String, LocalDateTime>,
         storeType: StoreTypeEnum
     ): StoreVersionLogInfo {
-        val updateTime = DateTimeUtil.formatDate(
-            DateTimeUtil.convertLocalDateTimeToDate(record.value3()),
-            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-        )
         return StoreVersionLogInfo(
             version = record.value1(),
             updateLog = record.value2(),
-            lastUpdateTime = updateTime,
-            tag = generateTag(storeType, record.value1(), updateTime)
+            lastUpdateTime = DateTimeUtil.formatDate(
+                DateTimeUtil.convertLocalDateTimeToDate(record.value3()),
+                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+            ),
+            tag = generateTag(storeType, record.value1(), record.value3())
         )
     }
 
-    private fun generateTag(storeType: StoreTypeEnum, version: String, updateTime: String): String {
+    private fun generateTag(storeType: StoreTypeEnum, version: String, updateTime: LocalDateTime): String {
         return if (storeType in HAS_TAG) {
-            "prod-v${version}-$updateTime"
+            val updateTimeStr = DateTimeUtil.formatDate(
+                DateTimeUtil.convertLocalDateTimeToDate(updateTime),
+                DateTimeUtil.YYYY_MM_DD
+            )
+            "prod-v${version}-$updateTimeStr"
         } else {
             " "
         }
