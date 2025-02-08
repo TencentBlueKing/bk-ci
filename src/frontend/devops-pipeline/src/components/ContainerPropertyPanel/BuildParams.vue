@@ -163,15 +163,16 @@
                                                 >
                                                     <request-selector
                                                         v-if="param.payload && param.payload.type === 'remote'"
-                                                        v-bind="remoteParamOption"
+                                                        v-bind="getRemoteParamOption(param.payload)"
                                                         v-validate.initial="{ required: valueRequired }"
                                                         :popover-min-width="450"
                                                         :disabled="disabled"
                                                         name="defaultValue"
                                                         :multi-select="isMultipleParam(param.type)"
                                                         :data-vv-scope="'pipelineParam'"
-                                                        :value="getSelectorDefaultVal(param)"
+                                                        :value="param.defaultValue"
                                                         :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                        :key="param.type"
                                                     >
                                                     </request-selector>
                                                     <selector
@@ -179,14 +180,14 @@
                                                         style="max-width: 250px"
                                                         :popover-min-width="250"
                                                         :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                                                        :list="optionList"
+                                                        :list="transformOpt(param.options)"
                                                         :multi-select="isMultipleParam(param.type)"
                                                         name="defaultValue"
                                                         :data-vv-scope="`param-${param.id}`"
                                                         :disabled="disabled"
                                                         show-select-all
                                                         :key="param.type"
-                                                        :value="getSelectorDefaultVal(param)"
+                                                        :value="param.defaultValue"
                                                     >
                                                     </selector>
                                                 </template>
@@ -289,8 +290,8 @@
                                         class="mt20"
                                         :param="param"
                                         :handle-update-options="(name, value) => handleUpdateOptions(name, value, index)"
-                                        :handle-update-payload="(name, value) => handleUpdatePayload(name, value, index)"
-                                        :reset-default-val="() => handleUpdateParam('defaultValue', '', index)"
+                                        :handle-update-payload="(name, value) => handleUpdateParam(name, value, index)"
+                                        :reset-default-val="() => handleResetDefaultVal(param, index)"
                                     />
 
                                     <bk-form-item
@@ -578,9 +579,7 @@
         data () {
             return {
                 paramIdCount: 0,
-                optionList: [],
-                renderParams: [],
-                remoteParamOption: {}
+                renderParams: []
             }
         },
         computed: {
@@ -680,13 +679,6 @@
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
-            },
-            getSelectorDefaultVal ({ type, defaultValue = '' }) {
-                if (isMultipleParam(type)) {
-                    return defaultValue && typeof defaultValue === 'string' ? defaultValue.split(',') : []
-                }
-
-                return defaultValue
             },
             handleParamTypeChange (key, value, paramIndex) {
                 const newGlobalParams = [
@@ -801,24 +793,18 @@
                 this.handleUpdateParam('required', !isShow, paramIndex)
             },
 
-            setRemoteParamOption (payload) {
+            getRemoteParamOption (payload) {
                 payload = payload || {}
-                const remoteOpion = {
+                return {
                     url: payload?.url || '',
                     dataPath: payload?.dataPath || 'data',
                     paramId: payload?.paramId || 'id',
                     paramName: payload?.paramName || 'name'
                 }
-                this.remoteParamOption = remoteOpion
             },
-
-            handleUpdatePayload (name, value, index) {
-                this.handleUpdateParam(name, value, index)
-                if (value.type === 'remote') {
-                    this.setRemoteParamOption(value)
-                }
+            handleResetDefaultVal (param, index) {
+                this.handleUpdateParam('defaultValue', isMultipleParam(param.type) ? [] : '', index)
             },
-
             handleUpdateOptions (name, value, index) {
                 try {
                     this.transformOpt(value)
@@ -908,10 +894,6 @@
             // 全局参数添加遍历的key值
             getParams (params) {
                 const result = params.map(item => {
-                    this.setRemoteParamOption(item.payload)
-                    if (this.isSelectorParam(item.type) && item?.payload?.type !== 'remote') {
-                        this.transformOpt(item.options || [])
-                    }
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {
                         temp.paramIdKey = typeof item.paramIdKey !== 'undefined' ? item.paramIdKey : `paramIdKey-${this.paramIdCount++}`
@@ -924,7 +906,7 @@
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
-                this.optionList = Array.isArray(opts)
+                return Array.isArray(opts)
                     ? opts.filter(opt => {
                         if (!uniqueMap[opt.key]) {
                             uniqueMap[opt.key] = 1
@@ -950,6 +932,7 @@
         .bk-form-item {
             flex: 1;
             padding-right: 8px;
+            max-width: 50%;
             margin-top: 0;
             line-height: 30px;
 
