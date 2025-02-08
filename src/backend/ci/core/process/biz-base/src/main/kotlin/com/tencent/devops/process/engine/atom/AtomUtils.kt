@@ -289,7 +289,7 @@ object AtomUtils {
         projectId: String,
         model: Model,
         client: Client
-    ) : Map<String, String>? {
+    ): Map<String, String>? {
         val atomVersions = mutableSetOf<StoreVersion>()
         model.stages.forEach { stage ->
             stage.containers.forEach {

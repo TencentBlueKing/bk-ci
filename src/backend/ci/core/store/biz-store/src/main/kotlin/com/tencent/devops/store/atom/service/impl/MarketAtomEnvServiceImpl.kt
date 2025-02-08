@@ -238,7 +238,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             params = arrayOf(projectCode, atomName)
         )
         val props = atomEnv.props
-        val sensitiveParams =  props?.let {
+        val sensitiveParams = props?.let {
             marketAtomCommonService.getAtomSensitiveParams(props)
         }
         val atomRunInfo = AtomRunInfo(
