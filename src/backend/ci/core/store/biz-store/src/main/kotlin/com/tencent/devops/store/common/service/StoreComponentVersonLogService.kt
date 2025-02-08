@@ -7,10 +7,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import org.jooq.Record
-import org.jooq.Record4
+import org.jooq.Record3
 import java.time.LocalDateTime
-import java.util.*
 
 abstract class StoreComponentVersonLogService {
 
@@ -32,27 +30,24 @@ abstract class StoreComponentVersonLogService {
     }
 
     fun createStoreVersionLogInfo(
-        record: Record,
+        record: Record3<String, String, LocalDateTime>,
         storeType: StoreTypeEnum
     ): StoreVersionLogInfo {
+        val updateTime = DateTimeUtil.formatDate(
+            DateTimeUtil.convertLocalDateTimeToDate(record.value3()),
+            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+        )
         return StoreVersionLogInfo(
-            version = record.get("VERSION") as? String,
-            updateLog = record.get("CONTENT") as? String,
-            lastUpdateTime = DateTimeUtil.formatDate(
-                DateTimeUtil.convertLocalDateTimeToDate(record.get("UPDATED_TIME") as LocalDateTime),
-                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-            ),
-            tag = generateTag(storeType, record.get("VERSION") as? String, record.get("releaseTime") as? LocalDateTime)
+            version = record.value1(),
+            updateLog = record.value2(),
+            lastUpdateTime = updateTime,
+            tag = generateTag(storeType, record.value1(), updateTime)
         )
     }
 
-    private fun generateTag(storeType: StoreTypeEnum, version: String?, releaseTime: LocalDateTime?): String {
+    private fun generateTag(storeType: StoreTypeEnum, version: String, updateTime: String): String {
         return if (storeType in HAS_TAG) {
-            val date = DateTimeUtil.formatDate(
-                DateTimeUtil.convertLocalDateTimeToDate(releaseTime!!),
-                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-            )
-            "prod-v${version}-$date"
+            "prod-v${version}-$updateTime"
         } else {
             " "
         }
