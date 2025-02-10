@@ -76,9 +76,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
             return Result(true)
         }
+        // 构建成功将插件状态置位测试状态
+        var atomStatus = AtomStatusEnum.TESTING
         val atomCode = atomRecord.atomCode
         val version = atomRecord.version
-        var atomStatus = AtomStatusEnum.TESTING // 构建成功将插件状态置位测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败
         }
