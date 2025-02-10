@@ -1,6 +1,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -13,6 +14,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_VAR_ERROR
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -20,14 +22,14 @@ import org.junit.jupiter.api.assertThrows
 
 class AgentReuseMutexTest {
     @Test
-    fun addNodeTest() {
+    fun `正常使用测试`() {
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
             mapOf(
                 "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentType.ID, null, null),
                 "job_id_dep_1" to initReuseId("job_1"),
                 "job_env_dep_1" to initReuseEnv("job_env_1"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null),
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("env_1", null, null, AgentType.NAME, null, null),
                 "job_env_dep_2" to initReuseEnv("job_env_dep_1"),
                 "job_id_dep_8" to initReuseEnv("\${{variables.TEST_JOB_ID}}")
             )
@@ -36,7 +38,8 @@ class AgentReuseMutexTest {
             mapOf(
                 "job_id_dep_2" to initReuseId("job_id_dep_1"),
                 "job_id_dep_3" to initReuseId("job_env_dep_1"),
-                "job_id_dep_4" to initReuseId("job_id_dep_2")
+                "job_id_dep_4" to initReuseId("job_id_dep_2"),
+                "job_id_dep_9" to initReuseId("\${{variables.TEST_JOB_ID_2}}")
             )
         )
         stages.add(
@@ -51,7 +54,7 @@ class AgentReuseMutexTest {
             )
         )
         val tree = AgentReuseMutexTree(1, mutableListOf())
-        val variables = mapOf("variables.TEST_JOB_ID" to "job_1")
+        val variables = mapOf("variables.TEST_JOB_ID" to "job_1", "variables.TEST_JOB_ID_2" to "job_env_1")
         stages.forEachIndexed { index, stage ->
             stage.forEach { (jobId, dsp) ->
                 val con = if (jobId == "job_id_dep_8") {
@@ -97,36 +100,36 @@ class AgentReuseMutexTest {
                 )
             ),
             "job_env_dep_1" to Triple(
-                AgentReuseMutex("job_env_dep_1", "job_env_1", "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
+                AgentReuseMutex("job_env_dep_1", "job_env_1", "env_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
                 true,
                 ThirdPartyAgentEnvDispatchType(
                     envName = "job_env_1",
                     null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
-                        "job_1",
+                        "env_1",
                         AgentType.NAME,
                         "job_env_1"
                     )
                 )
             ),
             "job_env_1" to Triple(
-                AgentReuseMutex("job_env_1", null, "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
+                AgentReuseMutex("job_env_1", null, "env_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
                 false,
                 ThirdPartyAgentEnvDispatchType(
-                    envName = "job_1",
+                    envName = "env_1",
                     null, null, AgentType.NAME, null, ReusedInfo(
-                        "job_1",
+                        "env_1",
                         AgentType.NAME,
                         null
                     )
                 )
             ),
             "job_env_dep_2" to Triple(
-                AgentReuseMutex("job_env_dep_2", "job_env_1", "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
+                AgentReuseMutex("job_env_dep_2", "job_env_1", "env_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
                 true,
                 ThirdPartyAgentEnvDispatchType(
                     envName = "job_env_1",
                     null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
-                        "job_1",
+                        "env_1",
                         AgentType.NAME,
                         "job_env_1"
                     )
@@ -151,7 +154,7 @@ class AgentReuseMutexTest {
                 ), true, initReuseId("job_1")
             ),
             "job_id_dep_3" to Triple(
-                AgentReuseMutex("job_id_dep_3", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
+                AgentReuseMutex("job_id_dep_3", "job_env_1", "env_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
                 true, initReuseId("job_env_1")
             ),
             "job_id_dep_4" to Triple(
@@ -163,21 +166,30 @@ class AgentReuseMutexTest {
                     true
                 ), true, initReuseId("job_1")
             ),
+            "job_id_dep_9" to Triple(
+                AgentReuseMutex(
+                    "job_id_dep_9",
+                    "job_env_1",
+                    "env_1",
+                    AgentReuseMutexType.AGENT_DEP_VAR,
+                    false
+                ), true, initReuseId("job_env_1")
+            ),
             "job_id_dep_5" to Triple(
-                AgentReuseMutex("job_id_dep_5", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
+                AgentReuseMutex("job_id_dep_5", "job_env_1", "env_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
                 true, initReuseId("job_env_1")
             ),
             "job_id_dep_6" to Triple(
-                AgentReuseMutex("job_id_dep_6", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
+                AgentReuseMutex("job_id_dep_6", "job_env_1", "env_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
                 true, initReuseId("job_env_1")
             ),
             "job_id_dep_7" to Triple(
-                AgentReuseMutex("job_id_dep_7", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
+                AgentReuseMutex("job_id_dep_7", "job_env_1", "env_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
                 true, initReuseEnv("job_env_1")
             )
         )
         val treeMap = tree.tranMap()
-        println(treeMap)
+        println(JsonUtil.toJson(treeMap))
         Assertions.assertEquals(
             expectRes.toSortedMap().map { it.key to Pair(it.value.first, it.value.second) }.toMap().toSortedMap(),
             treeMap.toSortedMap()
@@ -191,7 +203,7 @@ class AgentReuseMutexTest {
     }
 
     @Test
-    fun checkDepTypeError() {
+    fun `复用类型不正确报错测试`() {
         val tree = AgentReuseMutexTree(1, mutableListOf())
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
@@ -212,7 +224,7 @@ class AgentReuseMutexTest {
                 tree.addNode(con, 0, emptyMap())
             }
         }
-        Assertions.assertTrue { thrown1.errorCode == ERROR_AGENT_REUSE_MUTEX_DEP_ERROR }
+        Assertions.assertEquals(thrown1.errorCode, ERROR_AGENT_REUSE_MUTEX_DEP_ERROR)
 
         val thrown2 = assertThrows<ErrorCodeException> {
             stages[1].forEach { (jobId, dsp) ->
@@ -220,11 +232,45 @@ class AgentReuseMutexTest {
                 tree.addNode(con, 0, emptyMap())
             }
         }
-        Assertions.assertTrue { thrown2.errorCode == ERROR_AGENT_REUSE_MUTEX_DEP_ERROR }
+        Assertions.assertEquals(thrown2.errorCode, ERROR_AGENT_REUSE_MUTEX_DEP_ERROR)
     }
 
     @Test
-    fun checkDepCycleError() {
+    fun `使用变量复用没有顺序关系报错测试`() {
+        val tree = AgentReuseMutexTree(1, mutableListOf())
+        val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
+        stages.add(
+            mapOf(
+                "job_env_dep_1" to initReuseId("\${{variables.TEST_JOB_ID}}"),
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null)
+            )
+        )
+        stages.add(
+            mapOf(
+                "job_1" to ThirdPartyAgentIDDispatchType("agent_1", null, AgentType.ID, null, null),
+                "job_id_dep_1" to initReuseEnv("\${{variables.TEST_JOB_ID_2}}")
+            )
+        )
+        val variables = mapOf("variables.TEST_JOB_ID" to "job_env_1", "variables.TEST_JOB_ID_2" to "job_1")
+        val thrown1 = assertThrows<ErrorCodeException> {
+            stages[0].forEach { (jobId, dsp) ->
+                val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                tree.addNode(con, 0, variables)
+            }
+        }
+        Assertions.assertEquals(thrown1.errorCode, ERROR_AGENT_REUSE_MUTEX_VAR_ERROR)
+
+        val thrown2 = assertThrows<ErrorCodeException> {
+            stages[1].forEach { (jobId, dsp) ->
+                val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
+                tree.addNode(con, 0, variables)
+            }
+        }
+        Assertions.assertEquals(thrown2.errorCode, ERROR_AGENT_REUSE_MUTEX_VAR_ERROR)
+    }
+
+    @Test
+    fun `存在复用循环依赖检查测试`() {
         val tree = AgentReuseMutexTree(1, mutableListOf())
         val stages = mutableListOf<Map<String, ThirdPartyAgentDispatch>>()
         stages.add(
@@ -234,14 +280,15 @@ class AgentReuseMutexTest {
                 "job_env_dep_2" to initReuseId("job_env_dep_1")
             )
         )
+        val variables = mapOf("variables.TEST_JOB_ID" to "job_id_dep_2", "variables.TEST_JOB_ID_2" to "job_env_dep_2")
         val thrown1 = assertThrows<ErrorCodeException> {
             stages[0].forEach { (jobId, dsp) ->
                 val con = VMBuildContainer(jobId = jobId, dispatchType = dsp, baseOS = VMBaseOS.ALL)
-                tree.addNode(con, 0, emptyMap())
+                tree.addNode(con, 0, variables)
             }
             tree.checkVirtualRootAndResetJobType()
         }
-        Assertions.assertTrue { thrown1.errorCode == ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE }
+        Assertions.assertEquals(thrown1.errorCode, ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE)
     }
 
     private fun initReuseId(reuseName: String) =
