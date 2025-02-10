@@ -152,7 +152,7 @@ class UpgradeService @Autowired constructor(
             else -> canUpgrade && (info.workerVersion.isNullOrBlank() || (currentWorkerVersion != info.workerVersion))
         }
 
-        val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.WORKER)
+        val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.GO_AGENT)
 
         val goAgentVersion = when {
             !agentProjectCheck -> false
