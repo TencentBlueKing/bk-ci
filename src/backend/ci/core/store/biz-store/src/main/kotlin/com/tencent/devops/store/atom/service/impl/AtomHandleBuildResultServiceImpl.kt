@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -78,6 +79,9 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         val atomCode = atomRecord.atomCode
         val version = atomRecord.version
         var atomStatus = AtomStatusEnum.TESTING // 构建成功将插件状态置位测试状态
+        if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
+            atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败
+        }
         marketAtomService.setAtomBuildStatusByAtomCode(
             atomCode = atomCode,
             version = version,
