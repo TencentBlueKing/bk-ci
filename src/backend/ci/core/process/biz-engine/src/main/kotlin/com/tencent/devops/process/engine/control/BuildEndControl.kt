@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_QUALITY_CHECK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
