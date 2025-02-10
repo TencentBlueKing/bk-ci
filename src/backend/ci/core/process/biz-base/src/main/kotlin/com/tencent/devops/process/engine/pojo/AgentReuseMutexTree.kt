@@ -161,6 +161,9 @@ data class AgentReuseMutexTree(
         }
     }
 
+    // TODO: 这里有个非紧急BUG
+    //  如果复用了一个还未出现的非根节点，就会把这个非根节点先设为虚根，
+    //  就会存在最后找不到这个非根节点的问题，因为这个非根节点不会走根节点逻辑
     private fun addReuseNode(
         stageSeq: Int,
         reuseJobId: String,
