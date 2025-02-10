@@ -5,6 +5,7 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.service.StoreComponentDataCorrectionService
 import com.tencent.devops.store.image.dao.MarketImageDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -32,23 +33,25 @@ class StoreCoreComponentDataCorrectionServiceImpl : StoreComponentDataCorrection
     lateinit var storeReleaseDao: StoreReleaseDao
 
 
-
-
-
-
-
     override fun updateComponentFirstPublisher(userId: String?) {
 
         try {
             val atomList = atomDao.listByAtomCode(dslContext)?.map { Component(it.value1(), it.value2()) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, atomList, storeReleaseDao, dslContext,userId)
+            updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, atomList, storeReleaseDao, dslContext, userId)
 
-            val templateList = templateDao.listByTemplateCode(dslContext)?.map { Component(it.templateCode, it.creator) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.TEMPLATE, templateList, storeReleaseDao, dslContext,userId)
+            val templateList = templateDao.listByTemplateCode(dslContext)?.map {
+                if (it.templateStatus == TemplateStatusEnum.UNDERCARRIAGED.status.toByte()) {
+                    Component(it.templateCode, it.creator)
+                } else {
+                    Component(it.templateCode, it.modifier)
+                }
+
+            }
+            updateFirstPublisherIfNecessary(StoreTypeEnum.TEMPLATE, templateList, storeReleaseDao, dslContext, userId)
 
             val imageList = imageDao.listByImageCode(dslContext)?.map { Component(it.value1(), it.value2()) }
-            updateFirstPublisherIfNecessary(StoreTypeEnum.IMAGE, imageList, storeReleaseDao, dslContext,userId)
-        }catch (e: Exception){
+            updateFirstPublisherIfNecessary(StoreTypeEnum.IMAGE, imageList, storeReleaseDao, dslContext, userId)
+        } catch (e: Exception) {
             logger.info("updateComponentFirstPublisher error:${e.message}")
             throw RuntimeException("updateComponentFirstPublisher error")
         }
