@@ -201,6 +201,15 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(experienceOuterService.outerCanAdd(projectId, param))
     }
 
+    override fun delete(
+        userId: String,
+        projectId: String,
+        experienceHashId: String
+    ): Result<Boolean> {
+        experienceService.delete(userId, projectId, experienceHashId)
+        return Result(true)
+    }
+
     fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
