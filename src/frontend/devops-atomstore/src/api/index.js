@@ -73,5 +73,9 @@ export default {
 
     requestAtomOutputList (code) {
         return vue.$ajax.get(`${prefix}/user/market/atoms/${code}/output`)
+    },
+
+    getVersionLogs (storeType, code, params) {
+        return vue.$ajax.get(`${prefix}/user/store/components/${storeType}/${code}/getVersionLogs`, { params })
     }
 }
