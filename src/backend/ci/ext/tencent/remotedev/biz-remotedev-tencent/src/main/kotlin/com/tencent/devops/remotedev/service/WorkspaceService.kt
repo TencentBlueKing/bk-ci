@@ -985,6 +985,13 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        content = ActionAuditContent.CGS_VIEW_CONTENT
+    )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1170,15 +1177,6 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
-        ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
-    )
     private fun startCloudWorkspaceDetail(
         userId: String,
         workspace: WorkspaceRecordWithWindows
@@ -1188,7 +1186,10 @@ class WorkspaceService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-            .scopeId = workspace.projectId
+            .setScopeId(workspace.projectId)
+            .setInstanceId(workspace.workspaceName)
+            .setInstanceName(workspace.workspaceName)
+
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val resourceId = if (userId != workspace.createUserId) {

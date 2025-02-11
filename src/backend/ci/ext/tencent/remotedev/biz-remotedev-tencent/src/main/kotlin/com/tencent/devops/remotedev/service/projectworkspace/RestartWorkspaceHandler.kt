@@ -28,8 +28,8 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -92,8 +92,6 @@ class RestartWorkspaceHandler @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = ActionAuditContent.CGS_RESTART_CONTENT
     )
     fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
@@ -115,6 +113,10 @@ class RestartWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to restart $workspaceName")
             )
         }
+
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
 
         RedisCallLimit(
             redisOperation,
