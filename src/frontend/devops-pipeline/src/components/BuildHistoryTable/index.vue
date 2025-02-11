@@ -91,7 +91,7 @@
                     :prop="col.id"
                     :label="$t(col.label)"
                     :key="col.id"
-                    show-overflow-tooltip
+                    :show-overflow-tooltip="col.id !== 'appVersions'"
                 >
                     <template
                         v-if="col.id === 'buildNum'"
@@ -659,6 +659,7 @@
             versionToolTipsConf () {
                 return {
                     delay: 500,
+                    allowHTML: true,
                     content: '#app-version-tooltip-content'
                 }
             },

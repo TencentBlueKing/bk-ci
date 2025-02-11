@@ -10,7 +10,7 @@
             <section class="sub-view-port">
                 <div class="filter-warpper">
                     <bk-checkbox
-                        class="mr15"
+                        class="mr15 filter-checkbox"
                         :checked="getIsShowExpired"
                         @change="toggleExpired"
                     >
@@ -155,29 +155,54 @@
                                 >
                                     编辑
                                 </bk-button>
-                                <bk-button
-                                    v-if="props.row.online && !props.row.expired"
-                                    v-perm="{
-                                        hasPermission: props.row.permissions.canDelete,
-                                        disablePermissionApi: true,
-                                        tooltips: '没有权限',
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
-                                            resourceCode: props.row.experienceHashId,
-                                            action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
-                                        }
-                                    }"
-                                    text
-                                    @click.stop="toDropOff(props.row)"
-                                >
-                                    下架
-                                </bk-button>
-                                <span
-                                    v-bk-tooltips="{ content: '该体验已下架' }"
-                                    class="expired-text"
-                                    v-else
-                                >下架</span>
+                                <template v-if="props.row.online && !props.row.expired">
+                                    <bk-button
+                                        class="operate-btn"
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canDelete,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                                resourceCode: props.row.experienceHashId,
+                                                action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click.stop="toDropOff(props.row)"
+                                    >
+                                        下架
+                                    </bk-button>
+                                    <span
+                                        v-bk-tooltips="{ content: '删除之前，请先下架体验' }"
+                                        class="expired-text"
+                                    >删除</span>
+                                </template>
+                                <template v-else>
+                                    <span
+                                        v-bk-tooltips="{ content: '该体验已下架' }"
+                                        class="expired-text"
+                                    >下架</span>
+                                    <bk-button
+                                        class="operate-btn"
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canDelete,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                                resourceCode: props.row.experienceHashId,
+                                                action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click.stop="toDeleteRow(props.row)"
+                                    >
+                                        删除
+                                    </bk-button>
+                                </template>
                             </div>
                         </template>
                     </bk-table-column>
@@ -358,9 +383,6 @@
             /**
              * 获取发布列表
              */
-            /**
-             * 获取发布列表
-             */
             async requestList (reset = true) {
                 try {
                     this.isTableLoading = true
@@ -504,6 +526,37 @@
                     })
                 }
             },
+            async toDeleteRow (row) {
+                if (row.permissions.canDelete) {
+                    this.$bkInfo({
+                        title: '确认',
+                        subTitle: '确认删除该体验',
+                        confirmFn: async () => {
+                            let message, theme
+
+                            try {
+                                await this.$store.dispatch('experience/deleteExp', {
+                                    projectId: this.projectId,
+                                    experienceHashId: row.experienceHashId
+                                })
+
+                                message = '删除成功'
+                                theme = 'success'
+                            } catch (err) {
+                                message = err.data ? err.data.message : err
+                                theme = 'error'
+                            } finally {
+                                this.$bkMessage({
+                                    message,
+                                    theme
+                                })
+
+                                this.requestList(false)
+                            }
+                        }
+                    })
+                }
+            },
             toggleExpired (isExpired) {
                 this.$store.dispatch('experience/updateIsExpired', {
                     isExpired
@@ -597,14 +650,20 @@
             .icon-qrcode {
                 margin-right: 10px;
             }
+            .operate-btn {
+                margin-left: 12px;
+            }
         }
     }
     .filter-warpper {
         display: flex;
         align-items: center;
-        float: right;
         height: 32px;
         margin-bottom: 20px;
+        .filter-checkbox {
+            display: inline-flex;
+            flex-shrink: 0;
+        }
         .date-prepend {
             flex-shrink: 0;
             height: 32px;
