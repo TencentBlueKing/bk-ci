@@ -6,7 +6,7 @@ import Info from '@/css/svg/info-line.svg';
 import Plus from '@/css/svg/plus.svg';
 import GitIcon from '@/css/image/git.png';
 import GitLabIcon from '@/css/image/gitlab.png';
-import PaltformHeader from '@/components/paltform-header';
+import PlatformHeader from '@/components/platform-header';
 
 export default defineComponent({
   setup() {
@@ -117,7 +117,7 @@ export default defineComponent({
 
     return () => (
       <>
-        <PaltformHeader>
+        <PlatformHeader>
           {{
             default: () => (
               <p class="flex" >
@@ -126,7 +126,7 @@ export default defineComponent({
               </p>
             )
           }}
-        </PaltformHeader>
+        </PlatformHeader>
         <div class="p-[24px] h-mainHeight">
           <bk-form
             ref="formRef"
@@ -281,7 +281,7 @@ export default defineComponent({
                 }
               </bk-form-item>
               <bk-form-item label={t('Webhook 监听')}>
-                <div class="flex items-center">
+                <div class="flex items-center h-[32px]">
                   <bk-switcher
                     v-model={formData.value.webhook}
                     theme="primary"

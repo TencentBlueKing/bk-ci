@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       width: {
-        paltformMainWidth: 'calc(100% - 240px)'
+        platformMainWidth: 'calc(100% - 240px)'
       },
       height: {
         mainHeight: 'calc(100% - 55px)',

@@ -2,7 +2,7 @@ import {
   createRouter,
   createWebHistory,
 } from 'vue-router';
-const PaltformEntry = () => import('@/views/PaltformEntry');
+const PlatformEntry = () => import('@/views/PlatformEntry');
 // 系统管理员
 const SystemManage = () => import('@/views/SystemManage/index');
 // 代码源管理
@@ -14,9 +14,9 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/paltform',
-      name: 'paltform',
-      component: PaltformEntry,
+      path: '/platform',
+      name: 'platform',
+      component: PlatformEntry,
       redirect: () => {
         return { name: 'CodeSourceManage' }
       },
@@ -39,5 +39,11 @@ const router = createRouter({
       ]
     },
   ]
+});
+
+// afterEach
+router.afterEach((to) => {
+  // 同步导航数据
+  window.$syncUrl?.(to.fullPath);
 });
 export default router;

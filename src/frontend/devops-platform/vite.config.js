@@ -7,7 +7,7 @@ import autoprefixer from 'autoprefixer';
 import tailwindcss from 'tailwindcss';
 
 export default defineConfig({
-  base: '/paltform',
+  base: '/platform',
   css: {
     postcss: {
       plugins: [
@@ -22,7 +22,7 @@ export default defineConfig({
   },
   plugins: [vue(), vueJsx()],
   build: {
-    outDir: '../frontend/paltform'
+    outDir: '../frontend/platform'
   },
   resolve: {
     alias: {

@@ -6,7 +6,7 @@ import Plus from '@/css/svg/plus.svg';
 // import CloseSamll from '@/css/svg/close-samll.svg';
 // import EditLine from '@/css/svg/edit-line.svg';
 import ArrowsRight from '@/css/svg/arrows-right.svg'
-import PaltformHeader from '@/components/paltform-header';
+import PlatformHeader from '@/components/platform-header';
 import TimeLimit from '@/components/time-limit'
 import AddDialog from './components/AddDialog';
 import RenewalDialog from './components/RenewalDialog';
@@ -174,7 +174,7 @@ export default defineComponent({
 
     return () => (
       <>
-        <PaltformHeader title={t('系统管理员')} />
+        <PlatformHeader title={t('系统管理员')} />
         <div class="p-[24px] h-mainHeight">
           <div class="flex">
             <div class="flex-1">

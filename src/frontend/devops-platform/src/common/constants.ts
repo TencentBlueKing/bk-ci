@@ -3,7 +3,6 @@
 export const BASE_PREFIX = import.meta.env.DEV ? '/ms' : '';
 export const STORE_TYPE = 'DEVX';
 
-export const BORDER = ['outer', 'row']
 export const TIME_FILTERS = {
   30: '1个月',
   90: '3个月',

@@ -48,7 +48,11 @@ export default defineComponent({
                   <RouterLink
                     to={{ name: nav.router }}
                     key={nav.name}
-                    class={`${nav.meta && nav.meta.includes(String(route.name)) ? 'bg-[#e1ecff] !text-[#3a84ff]' : ''} relative flex items-center px-[23px] h-[40px] leading-[40px] text-[#4D4F56] text-[14px]`}
+                    class={`${
+                      nav.meta && nav.meta.includes(String(route.name))
+                        ? 'bg-[#e1ecff] !text-[#3a84ff]'
+                        : ''
+                    } relative flex items-center px-[23px] h-[40px] leading-[40px] text-[#4D4F56] text-[14px]`}
                   >
                     <i class="text-[16px] mr-[8px]"></i>
                     {nav.name}
@@ -57,7 +61,7 @@ export default defineComponent({
             }
           </ul>
         </aside>
-        <main class="h-full w-paltformMainWidth">
+        <main class="h-full w-platformMainWidth">
           <router-view></router-view>
         </main>
       </article>

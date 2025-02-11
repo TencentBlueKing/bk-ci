@@ -1,18 +1,17 @@
-
-import { useI18n } from 'vue-i18n';
 import { defineComponent, ref, onMounted, h } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Tag, InfoBox } from 'bkui-vue';
-import Plus from '@/css/svg/plus.svg';
+import { Plus } from 'bkui-vue/lib/icon';
+import PlatformHeader from '@/components/platform-header';
 import GitIcon from '@/css/image/git.png';
-import PaltformHeader from '@/components/paltform-header';
-import { BORDER } from "@/common/constants";
+import http from '@/http/api'
 
 export default defineComponent({
   setup() {
     const { t } = useI18n();
     const router = useRouter();
-
+    const borderConfig = ['outer', 'row']
     const tableData = ref([
       {
         ip: '123',
@@ -119,28 +118,38 @@ export default defineComponent({
     const pagination = ref({ count: 0, current: 1, limit: 20 });
 
     onMounted(() => {
-      fetchData();
+      // fetchData();
+      getRepoConfigList();
     });
 
-    function fetchData() {
+    const fetchData = () => {
       pagination.value.count = 10;
     };
 
-    function handlePageLimitChange(limit: number) {
+    const getRepoConfigList = async () => {
+      try {
+        const res = await http.fetchRepoConfigList()
+        console.log(res, 123)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    const handlePageLimitChange = (limit: number) => {
       pagination.value.limit = limit;
     };
 
-    function handlePageValueChange(value: number) {
+    const handlePageValueChange = (value: number) => {
       pagination.value.current = value;
     };
 
-    function goCreateCodeSource() {
+    const goCreateCodeSource = () => {
       router.push({
         name: 'CreateCodeSource'
       })
     };
 
-    function getInfoBox(state, name: string) {
+    const getInfoBox = (state, name: string) => {
       const tip = state === 1 ? t('停用') : t('删除');
       InfoBox({
         confirmText: tip,
@@ -161,16 +170,16 @@ export default defineComponent({
 
     return () => (
       <>
-        <PaltformHeader title={t('代码源管理')} />
+        <PlatformHeader title={t('代码源管理')} />
         <div class="p-[24px] h-mainHeight">
           <bk-button theme="primary" class="mb-[16px]" onClick={goCreateCodeSource}>
-            <img src={Plus} alt="" class="w-[12px] mr-[6px] align-middle" />
+            <Plus class="text-[22px]" />
             {t('新增代码源')}
           </bk-button>
 
           <bk-table
             class="bg-white !h-tableHeight"
-            border={BORDER}
+            border={borderConfig}
             settings={true}
             columns={columns.value}
             data={tableData.value}
