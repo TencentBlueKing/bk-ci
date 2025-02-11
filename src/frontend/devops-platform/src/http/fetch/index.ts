@@ -29,7 +29,7 @@ const allMethods = [...methodsWithoutData, ...methodsWithData];
 
 // 拼装发送请求配置
 const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
-  const execResult = /\/metrics\/([^\/]+)/.exec(location.href);
+  const execResult = /\/platform\/([^\/]+)/.exec(location.href);
   // 合并配置
   let fetchConfig: IFetchConfig = deepMerge(
     {
@@ -65,7 +65,7 @@ const getFetchUrl = (url, method, payload = {}) => {
     const baseUrl = /http(s)?:\/\//.test(import.meta.env.VITE_AJAX_URL_PREFIX)
       ? import.meta.env.VITE_AJAX_URL_PREFIX
       : location.origin + import.meta.env.VITE_AJAX_URL_PREFIX;
-    // 构造 url 对象
+      // 构造 url 对象
     const urlObject: URL = new URL(url, baseUrl);
     if (methodsWithoutData.includes(method)) {
       Object.keys(payload).forEach((key) => {
@@ -82,7 +82,21 @@ const getFetchUrl = (url, method, payload = {}) => {
 };
 
 // 在自定义对象 http 上添加各请求方法
-const http: IHttp = {};
+const http: IHttp = {
+  get(): Promise<any> {
+    throw new Error('Function not implemented.');
+  },
+  post(): Promise<any> {
+    throw new Error('Function not implemented.');
+  },
+  put(): Promise<any> {
+    throw new Error('Function not implemented.');
+  },
+  delete(): Promise<any> {
+    throw new Error('Function not implemented.');
+  }
+};
+
 allMethods.forEach((method) => {
   Object.defineProperty(http, method, {
     get() {

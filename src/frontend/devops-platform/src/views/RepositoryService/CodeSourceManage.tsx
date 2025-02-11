@@ -1,42 +1,29 @@
+import http from '@/http/api'
 import { defineComponent, ref, onMounted, h } from 'vue';
+import { timeFormatter } from '@/common/util';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Tag, InfoBox } from 'bkui-vue';
 import { Plus } from 'bkui-vue/lib/icon';
 import PlatformHeader from '@/components/platform-header';
-import GitIcon from '@/css/image/git.png';
-import http from '@/http/api'
 
 export default defineComponent({
   setup() {
     const { t } = useI18n();
     const router = useRouter();
-    const borderConfig = ['outer', 'row']
-    const tableData = ref([
-      {
-        ip: '123',
-        name: '工蜂',
-        webhook: true,
-        pac: false,
-        state: 1
-      }, {
-        ip: '123',
-        name: '工蜂',
-        webhook: false,
-        pac: true,
-        state: 2
-      }
-    ]);
+    const borderConfig = ['outer', 'row'];
+    const isLoading = ref(false);
+    const tableData = ref([]);
     const columns = ref([
       {
-        "label": t('代码源名称'),
-        "field": "ip",
+        'label': t('代码源名称'),
+        'field': 'name',
         render({ cell, row }) {
           return h('p', {
             class: 'flex items-center'
           }, [
             h('img', {
-              src: GitIcon,
+              src: row.logoUrl,
               class: 'w-[17px] mr-[2px]'
             }),
             h('span', {}, row.name)
@@ -44,50 +31,56 @@ export default defineComponent({
         }
       },
       {
-        "label": t('代码源标识'),
-        "field": "ip",
+        'label': t('代码源标识'),
+        'field': 'scmCode',
       },
       {
-        "label": t('代码源域名'),
-        "field": "ip",
+        'label': t('代码源域名'),
+        'field': 'hosts',
       },
       {
-        "label": "Webhook",
-        "field": "webhook",
+        'label': 'Webhook',
+        'field': 'webhookEnabled',
         render({ cell, row }) {
           return h(Tag, {
-            theme: row.webhook ? 'success' : '',
+            theme: row.webhookEnabled ? 'success' : '',
           }, {
-            default: () => row.webhook ? t('启用') : t('未启用')
+            default: () => row.webhookEnabled ? t('启用') : t('未启用')
           })
         }
       },
       {
-        "label": "PAC",
-        "field": "pac",
+        'label': 'PAC',
+        'field': 'pacEnabled',
         render({ cell, row }) {
           return h(Tag, {
-            theme: row.pac ? 'success' : ''
+            theme: row.pacEnabled ? 'success' : ''
           }, {
-            default: () => row.pac ? t('启用') : t('未启用')
+            default: () => row.pacEnabled ? t('启用') : t('未启用')
           })
         }
       },
       {
-        "label": t('创建人'),
-        "field": "ip",
+        'label': t('创建人'),
+        'field': 'creator',
       },
       {
-        "label": t('创建时间'),
-        "field": "ip",
+        'label': t('创建时间'),
+        'field': 'createTime',
+        render({ cell, row }) {
+          return h('span', [timeFormatter(cell)])
+        }
       },
       {
-        "label": t('最近修改人'),
-        "field": "ip",
+        'label': t('最近修改人'),
+        'field': 'updater',
       },
       {
-        "label": t('最近修改时间'),
-        "field": "ip",
+        'label': t('最近修改时间'),
+        'field': 'updateTime',
+        render({ cell, row }) {
+          return h('span', [timeFormatter(cell)])
+        }
       },
       {
         label: t('操作'),
@@ -100,15 +93,15 @@ export default defineComponent({
             }
           }, [
             h('span', {
-              class: 'text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer',
+              class: 'text-[#3A84FF] text-[12px] mr-[8px] cursor-pointer',
               onClick() {
-                getInfoBox(row.state, row.name)
+                handleToggleConfigStatus(row.state, row.name)
               }
             }, row.state === 1 ? t('启用') : t('停用')),
             h('span', {
-              class: `text-[#3A84FF] text-[12px] mr-[5px] cursor-pointer ${row.state === 2 ? 'text-[#C4C6CC]' : ''}`,
+              class: `text-[#3A84FF] text-[12px] cursor-pointer ${row.state === 2 ? 'text-[#C4C6CC]' : ''}`,
               onClick() {
-                getInfoBox(row.state, row.name)
+                handleDeleteConfig(row.state, row.name)
               }
             }, t('删除'))
           ])
@@ -128,10 +121,14 @@ export default defineComponent({
 
     const getRepoConfigList = async () => {
       try {
-        const res = await http.fetchRepoConfigList()
-        console.log(res, 123)
+        isLoading.value = true;
+        const res = await http.fetchRepoConfigList();
+        tableData.value = res.records;
+        pagination.value.count = res.count;
       } catch (e) {
         console.error(e)
+      } finally {
+        isLoading.value = false;
       }
     }
 
@@ -149,13 +146,31 @@ export default defineComponent({
       })
     };
 
-    const getInfoBox = (state, name: string) => {
-      const tip = state === 1 ? t('停用') : t('删除');
+    const handleToggleConfigStatus = (state, name: string) => {
+      const tip = state === 10 ? t('停用') : t('启用');
       InfoBox({
         confirmText: tip,
         cancelText: t('取消'),
         confirmButtonTheme: 'danger',
         title: t('是否X该代码源？', [tip]),
+        content: h('div', {
+          class: 'text-[14px] text-[#4D4F56]'
+        }, [
+          h('span', `${t('代码源名称')}：`),
+          h('span', { class: 'text-[#313238]' }, name)
+        ]),
+        onConfirm() {
+          console.log('---');
+        },
+      });
+    } 
+
+    const handleDeleteConfig = (state, name: string) => {
+      InfoBox({
+        confirmText: t('删除'),
+        cancelText: t('取消'),
+        confirmButtonTheme: 'danger',
+        title: t('是否X该代码源？', [t('删除')]),
         content: h('div', {
           class: 'text-[14px] text-[#4D4F56]'
         }, [
