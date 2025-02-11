@@ -23,10 +23,10 @@ class TrustDeviceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val trustDeviceDao: TrustDeviceDao
 ) {
-    @Value("\${remotedev.trustDevice.secret:#{null}}")
+    @Value("\${remoteDev.trustDevice.secret:#{null}}")
     private val secret: String? = null
 
-    @Value("\${remotedev.trustDevice.expireDays:#{7}}")
+    @Value("\${remoteDev.trustDevice.expireDays:#{7}}")
     private val expireDays: Int = 7
 
     fun checkTrustDevice(userId: String, deviceId: String, token: String): Boolean {
