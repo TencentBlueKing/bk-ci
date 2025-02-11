@@ -104,7 +104,8 @@ class RepositoryCopilotService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     elementId = elementId,
-                    accessToken = accessToken
+                    accessToken = accessToken,
+                    update = false
                 )
 
             CopilotSummaryCreateStatus.isFinal(record.status) ->
