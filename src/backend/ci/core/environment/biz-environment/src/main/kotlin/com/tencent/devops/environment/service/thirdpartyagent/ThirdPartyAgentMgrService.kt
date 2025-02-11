@@ -109,15 +109,15 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import java.time.LocalDateTime
+import java.util.Date
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -1306,7 +1306,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
             val agentId = HashUtil.decodeIdToLong(agentHashId)
             thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
-            thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
@@ -1439,7 +1438,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 }
             }
 
-            thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentId)
+            logger.warn("old heartbeat , Update the agent($agentId) status to $status")
             agentStatus
         }
     }
