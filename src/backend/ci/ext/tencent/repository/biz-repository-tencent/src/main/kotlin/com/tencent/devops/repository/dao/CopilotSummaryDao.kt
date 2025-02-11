@@ -98,4 +98,40 @@ class CopilotSummaryDao {
                 .execute()
         }
     }
+
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        elementId: String,
+        source: String? = null,
+        target: String? = null,
+        status: Int,
+        summary: String?
+    ) {
+        with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
+            val now = LocalDateTime.now()
+            dslContext.update(this)
+                    .let {
+                        if (!source.isNullOrBlank()) {
+                            it.set(SOURCE_COMMIT, source)
+                        }
+                        if (!target.isNullOrBlank()) {
+                            it.set(TARGET_COMMIT, target)
+                        }
+                        it
+                    }
+                    .set(STATUS, status)
+                    .set(SUMMARY, summary)
+                    .set(CREATE_TIME, now)
+                    .where(
+                        listOf(
+                            PROJECT_ID.eq(projectId),
+                            BUILD_ID.eq(buildId),
+                            ELEMENT_ID.eq(elementId)
+                        )
+                    )
+                    .execute()
+        }
+    }
 }

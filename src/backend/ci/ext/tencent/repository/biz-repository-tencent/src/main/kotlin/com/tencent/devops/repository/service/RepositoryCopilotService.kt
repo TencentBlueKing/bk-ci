@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CopilotSummaryDao
 import com.tencent.devops.repository.enums.CopilotSummaryCreateStatus
@@ -50,7 +52,8 @@ class RepositoryCopilotService @Autowired constructor(
     val dslContext: DSLContext,
     val commitService: CommitService,
     val gitOauthService: IGitOauthService,
-    val copilotSummaryDao: CopilotSummaryDao
+    val copilotSummaryDao: CopilotSummaryDao,
+    val redisOperation: RedisOperation
 ) {
 
     fun createSummary(
@@ -59,37 +62,22 @@ class RepositoryCopilotService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        accessToken: String? = null
+        accessToken: String? = null,
+        update: Boolean = true
     ): CodeGitCopilotSummary {
-        logger.info("start create summary|$projectId|$pipelineId|$buildId|$elementId")
-        val token = accessToken ?: getAccessToken(userId)
-        val (projectName, sourceSha, targetSha) = resolveSummaryParams(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            elementId = elementId
-        )
-        logger.info("async get summary|$projectName|$sourceSha...$targetSha")
-        val copilotSummary = client.getScm(ServiceCopilotResource::class).createSummary(
-            projectName = projectName,
-            source = sourceSha,
-            target = targetSha,
-            token = token
-        ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
-        copilotSummary.projectName = projectName
-        logger.info("save summary|$copilotSummary")
-        copilotSummaryDao.create(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            elementId = elementId,
-            summary = JsonUtil.toJson(copilotSummary, false),
-            source = sourceSha,
-            target = targetSha,
-            projectName = projectName,
-            scmType = COPILOT_SCM_TYPE,
-            status = copilotSummary.status
-        )
-        return copilotSummary
+        val redisLock = RedisLock(redisOperation, getLockKey(projectId, buildId, elementId), EXPIRED_TIME_IN_SECONDS)
+        return redisLock.use {
+            redisLock.lock()
+            generateSummary(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId,
+                accessToken = accessToken,
+                update = update
+            )
+        }
     }
 
     fun getSummary(
@@ -134,17 +122,13 @@ class RepositoryCopilotService @Autowired constructor(
                 copilotSummary.projectName = summary.projectName
                 if (CopilotSummaryCreateStatus.isFinal(copilotSummary.status)) {
                     // 成功获取摘要
-                    logger.info("success get summary|$summary")
-                    copilotSummaryDao.create(
+                    logger.info("success get summary|$projectId|$buildId|$elementId")
+                    copilotSummaryDao.update(
                         dslContext = dslContext,
                         projectId = projectId,
                         buildId = buildId,
                         elementId = elementId,
                         summary = JsonUtil.toJson(copilotSummary, false),
-                        source = record.sourceCommit,
-                        target = record.targetCommit,
-                        projectName = record.projectName,
-                        scmType = COPILOT_SCM_TYPE,
                         status = copilotSummary.status
                     )
                 }
@@ -205,9 +189,66 @@ class RepositoryCopilotService @Autowired constructor(
         return Triple(projectName, sourceSha, targetSha)
     }
 
+    private fun getLockKey(
+        projectId: String,
+        buildId: String,
+        elementId: String
+    ) = "scm:copilot:summary:$projectId:$buildId:$elementId"
+
+    private fun generateSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        accessToken: String? = null,
+        update: Boolean
+    ): CodeGitCopilotSummary {
+        logger.info("start generate summary|$projectId|$pipelineId|$buildId|$elementId")
+        val token = accessToken ?: getAccessToken(userId)
+        val (projectName, sourceSha, targetSha) = resolveSummaryParams(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId
+        )
+        logger.info("async get summary|$projectName|$sourceSha...$targetSha")
+        val copilotSummary = client.getScm(ServiceCopilotResource::class).createSummary(
+            projectName = projectName,
+            source = sourceSha,
+            target = targetSha,
+            token = token
+        ).data ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.EMPTY_COMMIT_RECORD)
+        copilotSummary.projectName = projectName
+        if (update) {
+            copilotSummaryDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                elementId = elementId,
+                summary = JsonUtil.toJson(copilotSummary, false),
+                status = copilotSummary.status
+            )
+        } else {
+            copilotSummaryDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                elementId = elementId,
+                summary = JsonUtil.toJson(copilotSummary, false),
+                source = sourceSha,
+                target = targetSha,
+                projectName = projectName,
+                scmType = COPILOT_SCM_TYPE,
+                status = copilotSummary.status
+            )
+        }
+        return copilotSummary
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryCopilotService::class.java)
         // 现阶段仅支持内网工蜂GIT仓库
-        const val COPILOT_SCM_TYPE = "TGIT"
+        const val COPILOT_SCM_TYPE = "CODE_GIT"
+        private const val EXPIRED_TIME_IN_SECONDS = 30L
     }
 }
