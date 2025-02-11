@@ -91,7 +91,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.HeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentHeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartInfo
