@@ -125,10 +125,6 @@ const fieldMap = [
   {
     current: 'centerName',
     after: 'afterCenterName',
-  },
-  {
-    current: 'loggingLineLimit',
-    after: 'afterLoggingLineLimit'
   }
 ];
 const propertiesFieldMap = [
@@ -140,6 +136,10 @@ const propertiesFieldMap = [
     current: 'pipelineNameFormat',
     after: 'afterPipelineNameFormat',
   },
+  {
+    current: 'loggingLineLimit',
+    after: 'afterLoggingLineLimit'
+  }
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
