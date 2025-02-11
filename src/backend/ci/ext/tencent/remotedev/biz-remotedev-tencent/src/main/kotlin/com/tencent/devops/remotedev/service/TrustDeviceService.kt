@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_SECRET_ERROR
@@ -9,6 +10,7 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.remotedev.dao.TrustDeviceDao
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
+import com.tencent.devops.remotedev.pojo.TrustDeviceInfoDetail
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,12 +38,12 @@ class TrustDeviceService @Autowired constructor(
         return trustDeviceDao.fetchAny(dslContext, userId, deviceId)?.token == token
     }
 
-    fun getOrCreateToken(userId: String, deviceId: String): String {
+    fun getOrCreateToken(userId: String, deviceId: String, detail: TrustDeviceInfoDetail): String {
         // 先看有没有，没有就创建新的，有就返回
         val tokenR = trustDeviceDao.fetchAny(dslContext, userId, deviceId)?.token
         if (tokenR == null || !verifyToken(tokenR)) {
             val tokenN = genToken(userId, deviceId).accessToken!!
-            trustDeviceDao.addOrUpdateDevice(dslContext, userId, deviceId, tokenN)
+            trustDeviceDao.addOrUpdateDevice(dslContext, userId, deviceId, tokenN, detail)
             return tokenN
         }
         return tokenR
@@ -52,7 +54,8 @@ class TrustDeviceService @Autowired constructor(
             TrustDeviceInfo(
                 deviceId = it.deviceId,
                 createTime = it.createTime,
-                updateTime = it.updateTime
+                updateTime = it.updateTime,
+                detail = JsonUtil.to(it.deviceInfo.data(), object : TypeReference<TrustDeviceInfoDetail>() {})
             )
         }
     }

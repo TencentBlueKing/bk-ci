@@ -48,7 +48,7 @@ class UserInfoResourceImpl @Autowired constructor(
     }
 
     override fun getTrustDeviceToken(data: TrustDeviceTokenGetData): Result<String> {
-        return Result(trustDeviceService.getOrCreateToken(data.userId, data.deviceId))
+        return Result(trustDeviceService.getOrCreateToken(data.userId, data.deviceId, data.detail))
     }
 
     override fun verifyTrustDeviceToken(data: TrustDeviceTokenVerifyData): Result<Boolean> {
