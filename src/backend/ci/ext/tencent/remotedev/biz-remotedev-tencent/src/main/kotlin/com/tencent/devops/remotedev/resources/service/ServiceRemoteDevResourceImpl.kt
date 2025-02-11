@@ -485,11 +485,16 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+    override fun getWindowsQuota(
+        userId: String,
+        type: QuotaType?,
+        zoneType: WindowsResourceZoneConfigType
+    ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
+                zoneType = zoneType,
                 withProjectLimit = null
             )
         )
@@ -883,7 +888,12 @@ class ServiceRemoteDevResourceImpl(
         return Result(imageManageService.fetchImages(userId, data))
     }
 
-    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+    override fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): Result<DeleteImageResp> {
         return Result(
             imageManageService.deleteImage(
                 userId = userId,
