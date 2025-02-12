@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.repository.service.ScmUrlProxyService
 import com.tencent.devops.scm.config.GitConfig
@@ -51,6 +52,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import java.net.URLEncoder
 import javax.ws.rs.core.Response
 
@@ -85,8 +87,9 @@ class GithubOAuthService @Autowired constructor(
             specRedirectUrl,
             redirectUrlTypeEnum?.type
         ).joinToString(separator = OAUTH_URL_STATE_SEPARATOR)
+        val encodeState = URLEncoder.encode(state, "UTF-8")
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$encodeState"
         return GithubOauth(redirectUrl)
     }
 
@@ -135,10 +138,11 @@ class GithubOAuthService @Autowired constructor(
         if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
+        val sourceState = URLDecoder.decode(state, "UTF-8")
         // 回调状态信息
         // @see com.tencent.devops.repository.service.github.GithubOAuthService.getGithubOauth
         // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}},{{跳转链接}},{{跳转类型}}
-        val arrays = state.split(OAUTH_URL_STATE_SEPARATOR)
+        val arrays = sourceState.split(OAUTH_URL_STATE_SEPARATOR)
         val userId = arrays[0]
         val projectId = arrays[1]
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""
@@ -151,12 +155,15 @@ class GithubOAuthService @Autowired constructor(
         val specRedirectUrl = arrays.getOrNull(6) ?: ""
         // 重定向类型
         val redirectUrlTypeEnum = RedirectUrlTypeEnum.getRedirectUrlType(arrays.getOrNull(7) ?: "")
+        // 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
+        val userResponse = getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
-            userId = userId,
+            userId = userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
-            githubTokenType = githubTokenType
+            githubTokenType = githubTokenType,
+            operator = userId
         )
         return GithubOauthCallback(
             userId = userId,
@@ -179,11 +186,12 @@ class GithubOAuthService @Autowired constructor(
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            userId = stateMap["userId"]?.toString() ?: userResponse.login,
+            userId = userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
-            githubTokenType = githubTokenType
+            githubTokenType = githubTokenType,
+            operator = stateMap["userId"]?.toString() ?: userResponse.login
         )
         return GithubOauthCallback(
             userId = userResponse.login,
@@ -225,6 +233,10 @@ class GithubOAuthService @Autowired constructor(
             }
             return objectMapper.readValue(data)
         }
+    }
+
+    fun getUser(accessToken: String): GetUserResponse {
+        return githubUserService.getUser(accessToken)
     }
 
     companion object {

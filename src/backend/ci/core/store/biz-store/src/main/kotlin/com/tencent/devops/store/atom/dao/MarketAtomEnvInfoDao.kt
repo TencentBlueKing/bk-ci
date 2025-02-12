@@ -102,7 +102,8 @@ class MarketAtomEnvInfoDao {
         atomCode: String,
         version: String,
         atomDefaultFlag: Boolean,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>?,
+        queryProjectFlag: Boolean = true
     ): Record? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -115,17 +116,21 @@ class MarketAtomEnvInfoDao {
                     atomStatusList = atomStatusList
                 )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         } else {
-            getAtomBaseInfoStep(dslContext, tAtom)
-                .join(tStoreProjectRel)
-                .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
-                .where(queryNormalAtomCondition(
+            val baseStep = getAtomBaseInfoStep(dslContext, tAtom)
+            if (queryProjectFlag) {
+                baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
+            }
+            baseStep.where(
+                queryNormalAtomCondition(
                     tAtom = tAtom,
                     tStoreProjectRel = tStoreProjectRel,
                     projectCode = projectCode,
                     atomCode = atomCode,
                     version = version,
-                    atomStatusList = atomStatusList
-                )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
+                    atomStatusList = atomStatusList,
+                    queryProjectFlag = queryProjectFlag
+                )
+            ).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         }
     }
 
@@ -164,7 +169,7 @@ class MarketAtomEnvInfoDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
         conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
-        if (atomStatusList != null && atomStatusList.isNotEmpty()) {
+        if (!atomStatusList.isNullOrEmpty()) {
             conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
         }
         return conditions
@@ -187,12 +192,15 @@ class MarketAtomEnvInfoDao {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>?,
+        queryProjectFlag: Boolean = true
     ): MutableList<Condition> {
         val conditions = getBaseQueryCondition(tAtom, atomCode, version, atomStatusList)
         conditions.add(tAtom.DEFAULT_FLAG.eq(false)) // 查普通插件
-        conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        if (queryProjectFlag) {
+            conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        }
         return conditions
     }
 

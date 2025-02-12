@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -18,6 +18,7 @@
 | T_REPOSITORY_GIT_CHECK | 工蜂 oauthtoken 表 |
 | T_REPOSITORY_GIT_TOKEN | 工蜂 commitchecker 表 |
 | T_REPOSITORY_PIPELINE_REF | 流水线引用代码库表 |
+| T_REPOSITORY_SCM_TOKEN | 代码仓库 token 表 |
 | T_REPOSITORY_TGIT_TOKEN | 外网工蜂 OAUTHtoken 表 |
 | T_REPOSITORY_WEBHOOK_REQUEST | 代码库 WEBHOOK 请求表 |
 
@@ -228,6 +229,24 @@
 |  18   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  19   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  20   | CHANNEL |   varchar   | 32 |   0    |    Y     |  N   |   BS    | 流水线渠道  |
+
+**表名：** <a>T_REPOSITORY_SCM_TOKEN</a>
+
+**说明：** 代码仓库 token 表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户名  |
+|  3   | SCM_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 代码库类型  |
+|  4   | APP_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | app 类型  |
+|  5   | ACCESS_TOKEN |   varchar   | 256 |   0    |    Y     |  N   |       | accesstoken 密文  |
+|  6   | REFRESH_TOKEN |   varchar   | 256 |   0    |    Y     |  N   |       | accessrefreshtoken  |
+|  7   | EXPIRES_IN |   bigint   | 20 |   0    |    Y     |  N   |       | 过期时间  |
+|  8   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
+|  9   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
 
 **表名：** <a>T_REPOSITORY_TGIT_TOKEN</a>
 

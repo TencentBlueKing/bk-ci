@@ -62,7 +62,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -1085,6 +1084,18 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
+            val templateId = model.templateId
+
+            if (templateId != null) {
+                // 如果是根据模板创建的流水线需为model设置srcTemplateId
+                model.srcTemplateId = templateDao.getSrcTemplateId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    type = TemplateType.CONSTRAINT.name
+                )
+            }
+
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1170,7 +1181,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildNo: BuildNoUpdateReq
+        targetBuildNo: Int
     ) {
         operationLogService.addOperationLog(
             userId = userId,
@@ -1178,14 +1189,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = 0,
             operationLogType = OperationLogType.RESET_RECOMMENDED_VERSION_BUILD_NO,
-            params = buildNo.currentBuildNo.toString(),
+            params = targetBuildNo.toString(),
             description = null
         )
         pipelineBuildSummaryDao.updateBuildNo(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildNo = buildNo.currentBuildNo,
+            buildNo = targetBuildNo,
             debug = false
         )
     }

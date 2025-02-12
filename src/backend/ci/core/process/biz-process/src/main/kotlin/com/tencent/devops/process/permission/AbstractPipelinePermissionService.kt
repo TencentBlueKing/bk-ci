@@ -242,6 +242,6 @@ abstract class AbstractPipelinePermissionService constructor(
     }
 
     override fun isControlPipelineListPermission(projectId: String): Boolean {
-        return true
+        return false
     }
 }
