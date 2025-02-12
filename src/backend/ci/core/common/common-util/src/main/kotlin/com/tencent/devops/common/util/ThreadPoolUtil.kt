@@ -24,9 +24,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.common.utils
+package com.tencent.devops.common.util
 
-import com.tencent.devops.store.atom.service.impl.OpAtomServiceImpl
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -72,5 +71,5 @@ object ThreadPoolUtil {
         logger.info("$actionTitle time cost: ${System.currentTimeMillis() - startTime}")
     }
 
-    private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ThreadPoolUtil::class.java)
 }

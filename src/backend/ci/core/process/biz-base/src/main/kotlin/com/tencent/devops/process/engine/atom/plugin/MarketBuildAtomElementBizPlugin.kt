@@ -28,10 +28,8 @@
 package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
@@ -59,34 +57,14 @@ class MarketBuildAtomElementBizPlugin @Autowired constructor(
         yamlInfo: PipelineYamlVo?
     ) = Unit
 
+    @Suppress("UNCHECKED_CAST")
     override fun beforeDelete(element: MarketBuildAtomElement, param: BeforeDeleteParam) {
         val inputMap = element.data["input"] as Map<String, Any>
         MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), element.version, param)
+        elementBizPluginServices.find {
+            it.supportElement(element)
+        }?.beforeDelete(element = element, param = param)
     }
 
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: MarketBuildAtomElement,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean,
-        oauthUser: String?
-    ): ElementCheckResult {
-        return elementBizPluginServices.find {
-            it.supportElement(element)
-        }?.check(
-            projectId = projectId,
-            userId = userId,
-            stage = stage,
-            container = container,
-            element = element,
-            contextMap = contextMap,
-            appearedCnt = appearedCnt,
-            isTemplate = isTemplate,
-            oauthUser = oauthUser
-        ) ?: ElementCheckResult(true)
-    }
+    override fun check(element: MarketBuildAtomElement, appearedCnt: Int) = Unit
 }

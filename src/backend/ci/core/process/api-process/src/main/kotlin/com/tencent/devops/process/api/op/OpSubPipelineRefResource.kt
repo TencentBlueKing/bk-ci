@@ -25,37 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * 流水线模型插件任务
- */
-data class PipelineModelTask(
-    val projectId: String,
-    val pipelineId: String,
-    val stageId: String,
-    val containerId: String,
-    val taskId: String,
-    val taskSeq: Int,
-    val taskName: String,
-    val atomCode: String,
-    val atomVersion: String? = null,
-    val classType: String,
-    val taskAtom: String,
-    val taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux",
-    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
-    val stageEnable: Boolean = true,
-    val containerEnable: Boolean = true
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
-    }
+@Tag(name = "OP_PIPELINE_AGENT_REF", description = "OP-流水线-更新子流水线引用信息")
+@Path("/op/subpipeline/ref")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpSubPipelineRefResource {
+
+    @Operation(summary = "更新子流水线引用信息")
+    @POST
+    @Path("/create")
+    fun createSubPipelineRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }
