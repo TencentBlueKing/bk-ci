@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
@@ -185,17 +186,18 @@ class SubPipelineStartUpService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId,
+            subBuildId = subBuildId.id,
             subProjectId = fixProjectId
         )
         if (runMode == SYNC_RUN_MODE) {
-            subPipelineStatusService.onStart(subBuildId)
+            subPipelineStatusService.onStart(subBuildId.id)
         }
 
         return Result(
             ProjectBuildId(
-                id = subBuildId,
-                projectId = fixProjectId
+                id = subBuildId.id,
+                projectId = fixProjectId,
+                buildNum = subBuildId.num
             )
         )
     }
@@ -214,7 +216,7 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?
-    ): String {
+    ): BuildId {
 
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
@@ -330,13 +332,13 @@ class SubPipelineStartUpService @Autowired constructor(
                 frequencyLimit = false,
                 versionName = resource.versionName,
                 yamlVersion = resource.yamlVersion
-            ).id
+            )
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId,
+                subBuildId = subBuildId.id,
                 subProjectId = readyToBuildPipelineInfo.projectId
             )
             return subBuildId
