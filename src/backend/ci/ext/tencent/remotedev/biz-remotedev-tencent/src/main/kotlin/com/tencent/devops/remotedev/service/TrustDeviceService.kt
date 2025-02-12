@@ -66,7 +66,7 @@ class TrustDeviceService @Autowired constructor(
 
     private fun verifyToken(token: String): Boolean {
         val tokenInfo = getTokenNoThrow(token)
-        return tokenInfo != null && tokenInfo.expirationTime < System.currentTimeMillis()
+        return tokenInfo != null && tokenInfo.expirationTime > System.currentTimeMillis()
     }
 
     private fun genToken(userId: String, deviceId: String): TokenInfo {
