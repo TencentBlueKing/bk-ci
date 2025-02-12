@@ -256,6 +256,12 @@ spring:
       - index: 65
         name: T_PIPELINE_BUILD_HISTORY_DEBUG
         databaseShardingStrategy: SHARDING
+      - index: 66
+        name: T_PIPELINE_CALLBACK
+        databaseShardingStrategy: SHARDING
+      - index: 67
+        name: T_PIPELINE_SUB_REF
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
