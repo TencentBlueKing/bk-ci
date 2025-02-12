@@ -277,7 +277,7 @@ export default defineStore('userGroupTable', () => {
             count: sourceItem.isAll ? sourceItem.count! : tableData.length 
           },
           ...sourceItem,
-          tableData: tableData.slice(0,11),
+          tableData: tableData,
           count: sourceItem.isAll ? sourceItem.count! : tableData.length,
           ...(!sourceItem.isAll && { groupIds: tableData.map(item => ({ id: item.groupId, memberType: item.memberType })) }),
           ...(!sourceItem.isAll && { isRemotePagination: false }),

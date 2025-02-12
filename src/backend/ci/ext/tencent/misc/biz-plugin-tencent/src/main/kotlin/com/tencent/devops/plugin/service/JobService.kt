@@ -156,6 +156,28 @@ class JobService @Autowired constructor(
         return result
     }
 
+    fun listUsableServerEnvsByUserId(projectId: String, userId: String): Result<List<EnvWithPermission>> {
+        val result = client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
+        logger.debug(
+            "[listUsableServerEnvsByUserId]projectId={}, userId={}, usable envs={}",
+            projectId,
+            userId,
+            result.data?.joinToString(separator = ", ", transform = { it.name }) ?: "[]"
+        )
+        return result
+    }
+
+    fun listUsableServerNodesByUserId(projectId: String, userId: String): Result<List<NodeWithPermission>> {
+        val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
+        logger.debug(
+            "[listUsableServerNodesByUserId]projectId={}, userId={}, usable nodes={}",
+            projectId,
+            userId,
+            result.data?.joinToString(separator = ", ", transform = { it.name }) ?: "[]"
+        )
+        return result
+    }
+
     // 根据pipelineId查出最后修改人
     private fun getLastUpdateUserId(projectId: String, pipelineId: String): String? {
         logger.info("getLastUpdateUserId(pipelineId=$pipelineId)=")

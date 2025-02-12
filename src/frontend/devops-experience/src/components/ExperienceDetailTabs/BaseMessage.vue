@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="main-content">
         <div class="base-content">
             <div class="base-detail-item">
                 <label class="item-label">发布人：</label>
@@ -177,8 +177,13 @@
 
 <style lang="scss" scoped>
     @import '../../scss/conf';
+    .main-content{
+        position: relative;
+    }
     .base-content {
         margin: 20px 0 0;
+        display: inline-flex;
+        flex-wrap: wrap;
 
         .base-detail-item {
             display: flex;
@@ -235,9 +240,9 @@
     }
 
     .qrcode-box {
-        position: relative;
-        left: 870px;
-        top: -240px;
+        position: absolute;
+        right: 50px;
+        top: 50px;
         text-align: center;
         display: inline-block;
 

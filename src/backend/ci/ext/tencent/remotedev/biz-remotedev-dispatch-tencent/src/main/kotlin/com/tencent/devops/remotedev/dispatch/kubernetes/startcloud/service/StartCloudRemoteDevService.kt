@@ -310,7 +310,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         val data = EnvironmentOperateCreateDisk(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
-            action = EnvironmentAction.EXPAND_DISK,
+            action = EnvironmentAction.CREATE_DISK,
             workspaceName = workspaceName,
             environmentOperate = data
         )

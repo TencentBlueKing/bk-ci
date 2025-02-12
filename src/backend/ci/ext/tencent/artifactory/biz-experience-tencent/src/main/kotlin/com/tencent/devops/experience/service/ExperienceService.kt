@@ -1378,7 +1378,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun count(projectIds: Set<String>, expired: Boolean?): Map<String, Int> {
-        val result = experienceDao.count(dslContext, projectIds, expired ?: false)
+        val result = experienceDao.count(dslContext, projectIds)
         return result?.map {
             val count = it[0] as Int
             val projectId = it[1] as String
@@ -1518,12 +1518,29 @@ class ExperienceService @Autowired constructor(
             logger.warn("clean experience id is empty")
             return false
         }
+        delete(experienceIds)
+        return true
+    }
+
+    fun delete(userId: String, projectId: String, experienceHashId: String) {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        experiencePermissionService.validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.DELETE,
+            message = I18nUtil.getCodeLanMessage(ExperienceMessageCode.USER_NOT_PERMISSION)
+        )
+        delete(listOf(experienceId))
+    }
+
+    private fun delete(experienceIds: List<Long>) {
         val experiences = experienceDao.list(dslContext, experienceIds)
         logger.info("clean experience now... , ids: $experienceIds")
         threadPool.submit {
             val now = LocalDateTime.now()
             for (e in experiences) {
-                kotlin.runCatching {
+                runCatching {
                     if (e.endDate.isAfter(now) && e.online) {
                         logger.warn("Could not delete experience: ${e.id}")
                         return@runCatching
@@ -1539,7 +1556,6 @@ class ExperienceService @Autowired constructor(
                 }.onFailure { exception -> logger.warn("delete failed , id: ${e.id}", exception) }
             }
         }
-        return true
     }
 
     companion object {

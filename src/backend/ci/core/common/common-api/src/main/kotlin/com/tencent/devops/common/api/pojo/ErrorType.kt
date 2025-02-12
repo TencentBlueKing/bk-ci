@@ -36,6 +36,7 @@ enum class ErrorType(
     val typeName: String,
     val num: Int
 ) {
+    // 非常注意：此关联前端展示的图标，前端枚举需要同步更新
     SYSTEM("system", 0), // 0 系统运行报错
     USER("user", 1), // 1 用户配置报错
     THIRD_PARTY("thirdParty", 2), // 2 第三方系统接入错误

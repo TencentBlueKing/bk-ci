@@ -45,6 +45,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -447,16 +448,6 @@ class CreateControl @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑，用于客户端上创建
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.CGS_CREATE_CONTENT
-    )
-
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
             ?: throw ErrorCodeException(
@@ -898,7 +889,7 @@ class CreateControl @Autowired constructor(
             projectCode = userProjectId,
             addcloudDesktopNum = null,
             enable = true,
-            rewriteManages = null
+            data = UpdateRemotedevBody(null)
         ).data
 
         if (ok != true) {

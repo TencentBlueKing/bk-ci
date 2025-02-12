@@ -59,4 +59,8 @@ class BuildNodeResourceImpl @Autowired constructor(
     ): Result<List<NodeWithPermission>> {
         return jobService.listUsableServerNodesByLastUpdateUser(projectId, pipelineId)
     }
+
+    override fun listUsableServerNodesByUserId(projectId: String, userId: String): Result<List<NodeWithPermission>> {
+        return jobService.listUsableServerNodesByUserId(projectId, userId)
+    }
 }

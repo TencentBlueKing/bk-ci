@@ -14,6 +14,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.config.async.AsyncExecute
@@ -144,7 +145,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
                 enable = null,
-                rewriteManages = null
+                data = UpdateRemotedevBody(null)
             )
         }
         // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额

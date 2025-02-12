@@ -36,5 +36,7 @@ data class BkDataSourceBillsDTO(
     @JsonProperty(value = "data_source_name", required = true)
     val dataSourceName: String,
     @get:Schema(title = "蓝盾货币化数据")
-    val bills: List<BkBillDTO>
+    val bills: List<BkBillDTO>,
+    @get:Schema(title = "月份")
+    val month: String
 )

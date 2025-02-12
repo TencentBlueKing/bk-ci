@@ -23,7 +23,7 @@
                 {{ name }}为内部测试版本，正在准备下载，请稍等
             </b>
             <span class="signing-duration-tips">
-                仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟
+                仅首次下载需等待，准备时长和包大小有关，大约 5s 内完成准备。
             </span>
             <footer slot="footer">
                 <bk-button

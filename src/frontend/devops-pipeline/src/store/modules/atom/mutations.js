@@ -78,6 +78,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -431,6 +432,11 @@ export default {
     [SET_COMMON_PARAMS]: (state, commonParams) => {
         return Object.assign(state, {
             commonParams
+        })
+    },
+    [SET_TRIGGER_PARAMS]: (state, triggerParams) => {
+        return Object.assign(state, {
+            triggerParams
         })
     },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {

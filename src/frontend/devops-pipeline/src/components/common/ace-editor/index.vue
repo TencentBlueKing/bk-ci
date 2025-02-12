@@ -28,6 +28,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
+    import { mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {
@@ -65,16 +66,32 @@
             highlightRanges: {
                 type: Array,
                 default: () => []
+            },
+            enableCopilot: {
+                type: Boolean,
+                default: true
+            },
+            parentElementAlias: {
+                type: String,
+                default: ''
             }
         },
         data () {
             return {
                 editor: null,
                 isLoading: false,
-                monaco: null
+                monaco: null,
+                gongfengEditor: null
             }
         },
         computed: {
+            ...mapState('atom', [
+                'commonParams',
+                'triggerParams'
+            ]),
+            ...mapGetters('atom', [
+                'allPipelineParams'
+            ]),
             langMap () {
                 return {
                     sh: 'shell',
@@ -84,6 +101,19 @@
                     pwsh: 'powershell',
                     ...(this.aceLangMap ?? {})
                 }
+            },
+            pipelineParams () {
+                return [
+                    this.commonParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []).join(','),
+                    this.triggerParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []).join(','),
+                    this.allPipelineParams.map(param => param.id).join(',')
+                ]
             }
         },
         watch: {
@@ -107,58 +137,25 @@
                 if (parent) {
                     parent.classList.toggle('with-ace-full-screen')
                 }
+            },
+
+            pipelineParams () {
+                this.$nextTick(this.registryCopilotContext)
+            },
+
+            parentElementAlias () {
+                this.$nextTick(this.registryCopilotContext)
             }
         },
         async mounted () {
             this.isLoading = true
-            const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    'monaco-editor'
-                ),
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    '@tencent/gongfeng-copilot-monaco'
-                ),
-                this.getAccessToken(false)
-            ])
-            this.monaco = monaco
-            const gongfengEditor = new GongfengMonacoEditor(this.monaco, {
-                app: {
-                    name: 'bkci',
-                    // 接入方版本号
-                    version: '1.0.0'
-                },
-                // env: ReleaseChannel.INSIDER,
-                env: ReleaseChannel.PRODUCTION,
-                brandPaddingRight: 32,
-                authenticatedSession: {
-                    accessToken,
-                    user: this.$userInfo.username,
-                    refreshToken: this.getAccessToken
-                }
-            })
 
-            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-            this.editor = await gongfengEditor.createEditor(this.$el, {
-                value: this.value,
-                language: this.getLang(this.lang),
-                theme: 'ciYamlTheme',
-                automaticLayout: true,
-                minimap: {
-                    enabled: false
-                },
-                scrollbar: {
-                    alwaysConsumeMouseWheel: false
-                },
-                readOnly: this.readOnly
-            })
+            if (this.enableCopilot) {
+                await this.initCopilotMonaco()
+            } else {
+                await this.initDefaultMonaco()
+            }
+
             this.isLoading = false
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
@@ -200,6 +197,91 @@
                         theme: 'error'
                     })
                 }
+            },
+            async initDefaultMonaco () {
+                const monaco = await import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    'monaco-editor'
+                )
+                this.monaco = monaco
+
+                this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
+                this.editor = await this.monaco.editor.create(this.$el, {
+                    value: this.value,
+                    language: this.getLang(this.lang),
+                    theme: 'ciYamlTheme',
+                    automaticLayout: true,
+                    minimap: {
+                        enabled: false
+                    },
+                    scrollbar: {
+                        alwaysConsumeMouseWheel: false
+                    },
+                    readOnly: this.readOnly
+                })
+            },
+
+            async initCopilotMonaco () {
+                const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    'monaco-editor'
+                ),
+                import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    '@tencent/gongfeng-copilot-monaco'
+                ),
+                this.getAccessToken(false)
+                ])
+                this.monaco = monaco
+                this.gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                    app: {
+                        name: 'bkci',
+                        // 接入方版本号
+                        version: '1.0.0'
+                    },
+
+                    // env: ReleaseChannel.INSIDER,
+                    env: ReleaseChannel.PRODUCTION,
+                    brandPaddingRight: 32,
+                    authenticatedSession: {
+                        accessToken,
+                        user: this.$userInfo.username,
+                        refreshToken: this.getAccessToken
+                    }
+                })
+
+                this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
+                this.editor = await this.gongfengEditor.createEditor(this.$el, {
+                    value: this.value,
+                    language: this.getLang(this.lang),
+                    theme: 'ciYamlTheme',
+                    automaticLayout: true,
+                    minimap: {
+                        enabled: false
+                    },
+                    scrollbar: {
+                        alwaysConsumeMouseWheel: false
+                    },
+                    readOnly: this.readOnly
+                })
+
+                this.registryCopilotContext()
+            },
+            registryCopilotContext () {
+                this.gongfengEditor.registerContextDefinition(this.editor, {
+                    variables: this.pipelineParams,
+                    workspace: this.parentElementAlias
+                })
             }
         }
     }

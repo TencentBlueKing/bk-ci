@@ -345,5 +345,9 @@
                 line-height: 2.5;
             }
         }
+
+        .sub-view-port {
+            position: relative;
+        }
     }
 </style>
