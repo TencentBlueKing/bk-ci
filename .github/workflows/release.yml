@@ -80,8 +80,6 @@ jobs:
           version="$(basename $GITHUB_REF)"
           echo "version=$version" >> $GITHUB_OUTPUT
           ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
-      - name: Setup Docker -- CLOUD NATIVE
-        uses: docker-practice/actions-setup-docker@master
       - name: Create Docker Image -- CLOUD NATIVE
         working-directory: docker-images/core/ci
         run: |
