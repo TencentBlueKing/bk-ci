@@ -41,5 +41,5 @@ data class GitCommit(
     val title: String,
     val committed_date: String,
     @JsonProperty("parent_ids")
-    val parentIds: List<String>?,
+    val parentIds: List<String>?
 )

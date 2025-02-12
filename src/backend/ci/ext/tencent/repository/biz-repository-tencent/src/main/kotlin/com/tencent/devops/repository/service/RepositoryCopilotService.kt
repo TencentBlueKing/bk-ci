@@ -205,7 +205,7 @@ class RepositoryCopilotService @Autowired constructor(
                 null
             } ?: firstCommit
             sourceSha to firstCommit
-        }else{
+        } else {
             firstCommit to commitRecords.last().commit
         }
         return Triple(projectName, sourceSha, targetSha)
