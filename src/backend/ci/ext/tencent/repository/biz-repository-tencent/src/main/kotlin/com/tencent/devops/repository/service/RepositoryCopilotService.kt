@@ -193,7 +193,7 @@ class RepositoryCopilotService @Autowired constructor(
         val firstCommit = commitRecords.first().commit
         // 仅一条变更记录的话，需要查询目标记录的父提交点
         val (sourceSha, targetSha) = if (commitRecords.size == 1) {
-            val sourceSha = try {
+            val target = try {
                 gitService.getRepoRecentCommitInfo(
                     repoName = projectName,
                     sha = firstCommit,
@@ -204,7 +204,7 @@ class RepositoryCopilotService @Autowired constructor(
                 logger.warn("get source commit info failed", ignored)
                 null
             } ?: firstCommit
-            sourceSha to firstCommit
+            firstCommit to target
         } else {
             firstCommit to commitRecords.last().commit
         }
