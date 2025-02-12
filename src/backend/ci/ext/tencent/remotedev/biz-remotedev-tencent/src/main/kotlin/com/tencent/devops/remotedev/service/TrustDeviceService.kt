@@ -101,7 +101,9 @@ class TrustDeviceService @Autowired constructor(
 
     private fun getTokenNoThrow(token: String): TokenInfo? {
         return try {
-            getTokenInfo(token)
+            val info = getTokenInfo(token)
+            logger.debug("getTokenNoThrow|$info")
+            return info
         } catch (ignore: Throwable) {
             null
         }
@@ -123,6 +125,7 @@ class TrustDeviceService @Autowired constructor(
             val tokenInfo = JsonUtil.to(result, TokenInfo::class.java)
             return tokenInfo
         } catch (ignore: Throwable) {
+            logger.error("getTokenInfo|Access token illegal $token", ignore)
             throw ErrorCodeException(
                 errorCode = PARAMETER_VALIDATE_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,

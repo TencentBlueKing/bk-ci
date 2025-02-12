@@ -5,7 +5,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
-import com.tencent.devops.remotedev.pojo.TrustDeviceTokenVerifyData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
@@ -51,8 +50,8 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(trustDeviceService.getOrCreateToken(data.userId, data.deviceId, data.detail))
     }
 
-    override fun verifyTrustDeviceToken(data: TrustDeviceTokenVerifyData): Result<Boolean> {
-        return Result(trustDeviceService.checkTrustDevice(data.userId, data.deviceId, data.token))
+    override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<Boolean> {
+        return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token))
     }
 
     override fun getTrustDeviceList(userId: String): Result<List<TrustDeviceInfo>> {
