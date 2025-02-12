@@ -36,8 +36,8 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CopilotSummaryDao
 import com.tencent.devops.repository.enums.CopilotSummaryCreateStatus
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.service.scm.GitService
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.TencentGitServiceImpl
 import com.tencent.devops.scm.api.ServiceCopilotResource
 import com.tencent.devops.scm.enums.AISummaryRateType
 import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
@@ -56,7 +56,7 @@ class RepositoryCopilotService @Autowired constructor(
     val gitOauthService: IGitOauthService,
     val copilotSummaryDao: CopilotSummaryDao,
     val redisOperation: RedisOperation,
-    val gitService: GitService
+    val gitService: TencentGitServiceImpl
 ) {
 
     fun createSummary(
