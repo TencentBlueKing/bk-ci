@@ -25,37 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.pipeline.SubPipelineUpgradeService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * 流水线模型插件任务
- */
-data class PipelineModelTask(
-    val projectId: String,
-    val pipelineId: String,
-    val stageId: String,
-    val containerId: String,
-    val taskId: String,
-    val taskSeq: Int,
-    val taskName: String,
-    val atomCode: String,
-    val atomVersion: String? = null,
-    val classType: String,
-    val taskAtom: String,
-    val taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux",
-    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
-    val stageEnable: Boolean = true,
-    val containerEnable: Boolean = true
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
+@RestResource
+class OpSubPipelineResourceImpl @Autowired constructor(
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
+) : OpSubPipelineRefResource {
+    override fun createSubPipelineRef(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
+        if (!pipelineId.isNullOrBlank() && !projectId.isNullOrBlank()) {
+            subPipelineUpgradeService.createSubPipelineRef(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
         } else {
-            ""
+            subPipelineUpgradeService.createAllSubPipelineRef(
+                projectId = projectId,
+                userId = userId
+            )
         }
+        return Result(true)
     }
 }

@@ -25,37 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
+import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * 流水线模型插件任务
- */
-data class PipelineModelTask(
-    val projectId: String,
-    val pipelineId: String,
-    val stageId: String,
-    val containerId: String,
-    val taskId: String,
-    val taskSeq: Int,
-    val taskName: String,
-    val atomCode: String,
-    val atomVersion: String? = null,
-    val classType: String,
-    val taskAtom: String,
-    val taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux",
-    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
-    val stageEnable: Boolean = true,
-    val containerEnable: Boolean = true
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
-    }
-}
+@Schema(title = "子流水线插件参数")
+data class SubPipelineTaskParam(
+    @get:Schema(title = "源参数值[projectId]", required = false)
+    val taskProjectId: String = "",
+    @get:Schema(title = "源参数值[type]", required = false)
+    val taskPipelineType: SubPipelineType = SubPipelineType.ID,
+    @get:Schema(title = "源参数值[pipelineId]", required = false)
+    val taskPipelineId: String? = null,
+    @get:Schema(title = "源参数值[pipelineName]", required = false)
+    val taskPipelineName: String? = null,
+    @get:Schema(title = "解析后[projectId]", required = false)
+    val projectId: String = "",
+    @get:Schema(title = "解析后[pipelineId]", required = false)
+    val pipelineId: String = "",
+    @get:Schema(title = "解析后[pipelineName]", required = false)
+    val pipelineName: String = ""
+)

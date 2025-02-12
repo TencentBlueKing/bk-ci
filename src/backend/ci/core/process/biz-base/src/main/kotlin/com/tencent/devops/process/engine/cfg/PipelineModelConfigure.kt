@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.cfg
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
@@ -54,13 +55,15 @@ class PipelineModelConfigure {
         @Autowired pipelineCommonSettingConfig: PipelineCommonSettingConfig,
         @Autowired stageCommonSettingConfig: StageCommonSettingConfig,
         @Autowired jobCommonSettingConfig: JobCommonSettingConfig,
-        @Autowired taskCommonSettingConfig: TaskCommonSettingConfig
+        @Autowired taskCommonSettingConfig: TaskCommonSettingConfig,
+        @Autowired elementBizPluginServices: List<IElementBizPluginService>
     ) = DefaultModelCheckPlugin(
         client = client,
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
-        taskCommonSettingConfig = taskCommonSettingConfig
+        taskCommonSettingConfig = taskCommonSettingConfig,
+        elementBizPluginServices = elementBizPluginServices
     )
 
     @Bean

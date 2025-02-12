@@ -25,37 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
-
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
 /**
- * 流水线模型插件任务
+ * 插件检查参数
  */
-data class PipelineModelTask(
-    val projectId: String,
+data class ElementBatchCheckParam(
+    val projectId: String?,
     val pipelineId: String,
-    val stageId: String,
-    val containerId: String,
-    val taskId: String,
-    val taskSeq: Int,
-    val taskName: String,
-    val atomCode: String,
-    val atomVersion: String? = null,
-    val classType: String,
-    val taskAtom: String,
-    val taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux",
-    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
-    val stageEnable: Boolean = true,
-    val containerEnable: Boolean = true
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
-    }
-}
+    val userId: String,
+    val contextMap: Map<String, String>,
+    val isTemplate: Boolean,
+    val oauthUser: String?
+)
