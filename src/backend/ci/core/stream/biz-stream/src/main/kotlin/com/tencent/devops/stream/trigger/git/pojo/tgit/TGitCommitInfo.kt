@@ -56,7 +56,6 @@ data class TGitCommitInfo(
         author_name = authorName,
         author_email = commitAuthor,
         title = title,
-        committed_date = commitDate,
-        parentIds = listOf()
+        committed_date = commitDate
     )
 }
