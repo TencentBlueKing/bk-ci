@@ -75,7 +75,7 @@ interface UserInfoResource {
     ): Result<String>
 
     @Operation(summary = "校验设备授信Token")
-    @POST
+    @GET
     @Path("/trust/device/token/verify")
     fun verifyTrustDeviceToken(
         @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
