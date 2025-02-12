@@ -35,6 +35,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CopilotSummaryDao
 import com.tencent.devops.repository.enums.CopilotSummaryCreateStatus
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.service.scm.GitService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.scm.api.ServiceCopilotResource
 import com.tencent.devops.scm.enums.AISummaryRateType
@@ -53,7 +55,8 @@ class RepositoryCopilotService @Autowired constructor(
     val commitService: CommitService,
     val gitOauthService: IGitOauthService,
     val copilotSummaryDao: CopilotSummaryDao,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val gitService: GitService
 ) {
 
     fun createSummary(
@@ -167,7 +170,8 @@ class RepositoryCopilotService @Autowired constructor(
     private fun resolveSummaryParams(
         pipelineId: String,
         buildId: String,
-        elementId: String
+        elementId: String,
+        accessToken: String
     ): Triple<String, String, String> {
         val commitRecords = commitService.list(
             buildId = buildId,
@@ -186,7 +190,24 @@ class RepositoryCopilotService @Autowired constructor(
             )
         }
         val projectName = GitUtils.getDomainAndRepoName(repoUrl).second
-        val (sourceSha, targetSha) = commitRecords.first().commit to commitRecords.last().commit
+        val firstCommit = commitRecords.first().commit
+        // 仅一条变更记录的话，需要查询目标记录的父提交点
+        val (sourceSha, targetSha) = if (commitRecords.size == 1) {
+            val sourceSha = try {
+                gitService.getRepoRecentCommitInfo(
+                    repoName = projectName,
+                    sha = firstCommit,
+                    token = accessToken,
+                    tokenType = TokenTypeEnum.OAUTH
+                ).data?.parentIds?.firstOrNull()
+            } catch (ignored: Exception) {
+                logger.warn("get source commit info failed", ignored)
+                null
+            } ?: firstCommit
+            sourceSha to firstCommit
+        }else{
+            firstCommit to commitRecords.last().commit
+        }
         return Triple(projectName, sourceSha, targetSha)
     }
 
@@ -210,7 +231,8 @@ class RepositoryCopilotService @Autowired constructor(
         val (projectName, sourceSha, targetSha) = resolveSummaryParams(
             pipelineId = pipelineId,
             buildId = buildId,
-            elementId = elementId
+            elementId = elementId,
+            accessToken = token
         )
         logger.info("async get summary|$projectName|$sourceSha...$targetSha")
         val copilotSummary = client.getScm(ServiceCopilotResource::class).createSummary(
