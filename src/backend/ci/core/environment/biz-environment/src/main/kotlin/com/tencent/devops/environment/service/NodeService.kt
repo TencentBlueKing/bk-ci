@@ -31,9 +31,18 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.ALIAS
+import com.tencent.devops.common.api.constant.IMPORTER
+import com.tencent.devops.common.api.constant.LATEST_EXECUTE_PIPELINE
+import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
+import com.tencent.devops.common.api.constant.LATEST_MODIFIER
+import com.tencent.devops.common.api.constant.LATEST_UPDATE_TIME
+import com.tencent.devops.common.api.constant.USAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.CsvUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -41,12 +50,19 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.api.ServiceAgentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.AGENT_STATUS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.AGENT_VERSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -59,6 +75,7 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -70,6 +87,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.servlet.http.HttpServletResponse
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -79,6 +97,7 @@ import org.springframework.stereotype.Service
 @Service
 @Suppress("ALL")
 class NodeService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val envDao: EnvDao,
@@ -175,7 +194,15 @@ class NodeService @Autowired constructor(
         createdUser: String?,
         lastModifiedUser: String?,
         keywords: String?,
-        nodeType: NodeType?
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
@@ -190,7 +217,15 @@ class NodeService @Autowired constructor(
                     createdUser = createdUser,
                     lastModifiedUser = lastModifiedUser,
                     keywords = keywords,
-                    nodeType = nodeType
+                    nodeType = nodeType,
+                    nodeStatus = nodeStatus,
+                    agentVersion = agentVersion,
+                    osName = osName,
+                    latestBuildPipelineId = latestBuildPipelineId,
+                    latestBuildTimeStart = latestBuildTimeStart,
+                    latestBuildTimeEnd = latestBuildTimeEnd,
+                    sortType = sortType,
+                    collation = collation
                 )
             } else {
                 nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
@@ -206,14 +241,133 @@ class NodeService @Autowired constructor(
             createdUser = createdUser,
             lastModifiedUser = lastModifiedUser,
             keywords = keywords,
-            nodeType = nodeType
+            nodeType = nodeType,
+            nodeStatus = nodeStatus,
+            agentVersion = agentVersion,
+            osName = osName,
+            latestBuildPipelineId = latestBuildPipelineId,
+            latestBuildTimeStart = latestBuildTimeStart,
+            latestBuildTimeEnd = latestBuildTimeEnd,
+            sortType = sortType,
+            collation = collation
         ).toLong()
+        val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
+
+        val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+            agentIds = nodes.mapNotNull { it.agentHashId }
+        ).associateBy { it.agentId }
+        nodes.forEach {
+            it.latestBuildDetail = agentBuilds[it.agentHashId]?.let { build ->
+                AgentBuildDetail(
+                    nodeId = it.nodeId,
+                    agentId = build.agentId,
+                    projectId = build.projectId,
+                    pipelineId = build.pipelineId,
+                    pipelineName = build.pipelineName,
+                    buildId = build.buildId,
+                    buildNumber = build.buildNum,
+                    vmSetId = build.vmSeqId,
+                    taskName = build.taskName,
+                    status = build.status,
+                    createdTime = build.createdTime,
+                    updatedTime = build.updatedTime,
+                    workspace = build.workspace,
+                    agentTask = null
+                )
+            }
+        }
+        val records = if (sortType == null) NodeUtils.sortByUser(nodes = nodes, userId = userId) else nodes
         return Page(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
             count = count,
-            records = NodeUtils.sortByUser(formatNodeWithPermissions(userId, projectId, nodeRecordList), userId)
+            records = records
         )
+    }
+
+    fun listNewExport(
+        userId: String,
+        projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?,
+        keywords: String?,
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?,
+        response: HttpServletResponse
+    ) {
+        var page = 1
+        val pageSize = 100
+        var count = Long.MAX_VALUE
+        val dataList = mutableListOf<Array<String?>>()
+        while (page * pageSize < count) {
+            val res = listNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = 100,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                keywords = keywords,
+                nodeType = nodeType,
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation
+            )
+            count = res.count
+            page++
+            res.records.forEach { record ->
+                val dataArray = arrayOfNulls<String>(11)
+                dataArray[0] = record.displayName ?: ""
+                dataArray[1] = record.ip
+                dataArray[2] = record.osName ?: ""
+                dataArray[3] = record.nodeStatus
+                dataArray[4] = record.agentVersion ?: ""
+                dataArray[5] = if (record.nodeType == NodeType.THIRDPARTY.name)
+                    I18nUtil.getCodeLanMessage(NODE_USAGE_BUILD)
+                else
+                    I18nUtil.getCodeLanMessage(NODE_USAGE_DEPLOYMENT)
+                dataArray[6] = record.createdUser
+                dataArray[7] = record.lastModifyUser ?: ""
+                dataArray[8] = record.lastModifyTime ?: ""
+                dataArray[9] = record.latestBuildDetail?.pipelineName ?: ""
+                dataArray[10] = record.latestBuildDetail?.createdTime?.let {
+                    DateTimeUtil.convertTimestampToLocalDateTime(it)
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+                } ?: ""
+            }
+        }
+
+        val headers = arrayOf(
+            /*0:别名*/I18nUtil.getCodeLanMessage(ALIAS),
+            /*1:IP*/ "IP",
+            /*2:操作系统*/I18nUtil.getCodeLanMessage(OS_TYPE),
+            /*3:Agent状态*/I18nUtil.getCodeLanMessage(AGENT_STATUS),
+            /*4:Agent版本*/I18nUtil.getCodeLanMessage(AGENT_VERSION),
+            /*5:用途*/I18nUtil.getCodeLanMessage(USAGE),
+            /*6:导入人*/I18nUtil.getCodeLanMessage(IMPORTER),
+            /*7:最近修改人*/I18nUtil.getCodeLanMessage(LATEST_MODIFIER),
+            /*8:最近修改时间*/I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
+            /*9:最近执行流水线*/I18nUtil.getCodeLanMessage(LATEST_EXECUTE_PIPELINE),
+            /*10:最近执行时间*/I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
+        )
+        val bytes = CsvUtil.writeCsv(headers, dataList)
+        CsvUtil.setCsvResponse("$projectId-environment-nodes-data", bytes, response)
     }
 
     fun formatNodeWithPermissions(

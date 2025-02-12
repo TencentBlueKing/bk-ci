@@ -29,18 +29,19 @@ package com.tencent.devops.environment.dao.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -425,6 +426,33 @@ class ThirdPartyAgentDao {
                     }
                 }
                 .fetch()
+        }
+    }
+
+    fun countProjectAgentId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectCount()
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(ID.desc())
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun listProjectAgentId(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): Map<String, String> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.select(ID, NODE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(ID.desc())
+                .limit(offset, limit)
+                .fetch().associate { HashUtil.encodeLongId(it.value1()) to HashUtil.encodeLongId(it.value2())  }
         }
     }
 

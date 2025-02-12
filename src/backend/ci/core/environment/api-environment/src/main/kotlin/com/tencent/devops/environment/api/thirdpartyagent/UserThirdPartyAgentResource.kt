@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
@@ -333,6 +334,24 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
+
+    @Operation(summary = "获取构建机最近执行记录")
+    @GET
+    @Path("/projects/{projectId}/listLatestBuildPipelines")
+    fun listLatestBuildPipelines(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
