@@ -139,12 +139,12 @@ class MetricsEventService @Autowired constructor(
         val dimension = mutableMapOf(
             "source" to "BKCI",
             "domain" to "CICD",
-            "priority" to priority(status),
+            "type" to priority(status),
             "projectId" to projectId,
             "pipelineId" to pipelineId,
             "buildId" to buildId,
             "status" to status,
-            "type" to type.name
+            "eventType" to type.name
         )
         if (labels.isNotEmpty()) {
             labels.forEach { label ->
@@ -182,7 +182,7 @@ class MetricsEventService @Autowired constructor(
         val dimension = mutableMapOf(
             "source" to "BKCI",
             "domain" to "CICD",
-            "priority" to priority(status),
+            "type" to priority(status),
             "projectId" to projectId,
             "pipelineId" to pipelineId,
             "buildId" to buildId,
@@ -190,7 +190,7 @@ class MetricsEventService @Autowired constructor(
             "stageId" to stageId,
             "jobId" to jobId,
             "stepId" to stepId,
-            "type" to type.name
+            "eventType" to type.name
         )
         if (labels.isNotEmpty()) {
             labels.forEach { label ->
