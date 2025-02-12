@@ -101,7 +101,7 @@ jobs:
     - name: Setup Python -- CLOUD NATIVE
       uses: actions/setup-python@v4
       with:
-        python-version: "3.7.15"
+        python-version: "3.13"
     - name: Generate Helm Chart -- CLOUD NATIVE
       working-directory: helm-charts/core/ci
       run: |
