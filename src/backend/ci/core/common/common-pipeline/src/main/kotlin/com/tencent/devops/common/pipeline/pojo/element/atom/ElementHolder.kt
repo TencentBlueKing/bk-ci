@@ -25,37 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.pojo.element.Element
 
 /**
- * 流水线模型插件任务
+ * 插件引用信息
  */
-data class PipelineModelTask(
-    val projectId: String,
-    val pipelineId: String,
-    val stageId: String,
-    val containerId: String,
-    val taskId: String,
-    val taskSeq: Int,
-    val taskName: String,
-    val atomCode: String,
-    val atomVersion: String? = null,
-    val classType: String,
-    val taskAtom: String,
-    val taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux",
-    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
-    val stageEnable: Boolean = true,
-    val containerEnable: Boolean = true
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
-    }
-}
+data class ElementHolder(
+    val element: Element,
+    val stage: Stage,
+    val container: Container
+)
