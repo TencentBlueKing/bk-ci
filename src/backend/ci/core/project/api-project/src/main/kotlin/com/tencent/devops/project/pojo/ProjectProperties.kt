@@ -76,7 +76,8 @@ data class ProjectProperties(
             return this@ProjectProperties.copy(
                 pipelineDialect = pipelineDialect,
                 enablePipelineNameTips = enablePipelineNameTips,
-                pipelineNameFormat = pipelineNameFormat
+                pipelineNameFormat = pipelineNameFormat,
+                loggingLineLimit = loggingLineLimit
             )
         }
     }
