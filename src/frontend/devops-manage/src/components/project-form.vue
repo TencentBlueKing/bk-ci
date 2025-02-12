@@ -519,7 +519,7 @@ onBeforeUnmount(() => {
         <bk-form-item
           :label="t('构建日志归档阈值')"
           property="loggingLineLimit"
-          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下周日志文件到本地查看')"
+          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
         >
           <bk-input
             v-model="projectData.properties.loggingLineLimit"
