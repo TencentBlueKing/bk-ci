@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -52,6 +53,9 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -72,6 +76,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
+import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -124,6 +129,7 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -166,7 +172,8 @@ class PipelineRepositoryService constructor(
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineCallbackDao: PipelineCallbackDao
 ) {
 
     companion object {
@@ -216,6 +223,9 @@ class PipelineRepositoryService constructor(
             }
         }
     }
+
+    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    private val aesKey = ""
 
     fun deployPipeline(
         model: Model,
@@ -834,6 +844,14 @@ class PipelineRepositoryService constructor(
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                // 初始化流水线单体回调
+                savePipelineCallback(
+                    events = model.events,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    projectId = projectId,
+                    dslContext = transactionContext
+                )
             }
         } finally {
             lock.unlock()
@@ -1130,6 +1148,14 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                        // 保存流水线单体回调记录
+                        savePipelineCallback(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            events = model.events
+                        )
                     }
                 }
 
@@ -1350,6 +1376,25 @@ class PipelineRepositoryService constructor(
                         }
                         e.additionalOptions?.customEnv = null
                     }
+                }
+            }
+        }
+        pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = null
+        ).let { records ->
+            if (records.isNotEmpty) {
+                // 填充流水线级别回调
+                resource?.model?.events = records.associate {
+                    it.name to PipelineCallbackEvent(
+                        callbackEvent = CallBackEvent.valueOf(it.eventType),
+                        callbackUrl = it.url,
+                        secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                        region = CallBackNetWorkRegionType.valueOf(it.region),
+                        callbackName = it.name
+                    )
                 }
             }
         }
@@ -2165,5 +2210,42 @@ class PipelineRepositoryService constructor(
             logger.info("get pipeline oauth user fail", ignored)
             null
         }?.handoverFrom
+    }
+
+    /**
+     * 保存流水线单体回调记录
+     */
+    private fun savePipelineCallback(
+        events: Map<String, PipelineCallbackEvent>?,
+        pipelineId: String,
+        projectId: String,
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        if (events.isNullOrEmpty()) return
+        val existEventNames = pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).map { it.name }.toSet()
+        if (existEventNames.isNotEmpty()) {
+            val needDelNames = existEventNames.subtract(events.keys).toSet()
+            pipelineCallbackDao.delete(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                names = needDelNames
+            )
+        }
+        // 保存回调事件
+        pipelineCallbackDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            list = events.map { (key, value) ->
+                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+            }
+        )
     }
 }
