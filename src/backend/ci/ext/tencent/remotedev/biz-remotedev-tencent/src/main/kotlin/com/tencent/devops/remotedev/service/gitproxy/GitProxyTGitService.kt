@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -70,7 +70,7 @@ class GitProxyTGitService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.TGIT_LINK
+            resourceType = TencentResourceTypeId.TGIT_LINK
         ),
         content = TencentActionAuditContent.TGIT_LINK_CREATE_CONTENT
     )
@@ -244,7 +244,7 @@ class GitProxyTGitService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.TGIT_LINK
+            resourceType = TencentResourceTypeId.TGIT_LINK
         ),
         content = TencentActionAuditContent.TGIT_LINK_CALLBACK_CREATE_CONTENT
     )
@@ -482,7 +482,7 @@ class GitProxyTGitService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.TGIT_LINK_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.TGIT_LINK,
+            resourceType = TencentResourceTypeId.TGIT_LINK,
             instanceIds = "#userId",
             instanceNames = "#repoId"
         ),
@@ -800,7 +800,7 @@ class GitProxyTGitService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.TGIT_LINK,
+            resourceType = TencentResourceTypeId.TGIT_LINK,
             instanceIds = "#userId"
         ),
         content = TencentActionAuditContent.TGIT_LINK_CREATE_PROJECT_CONTENT

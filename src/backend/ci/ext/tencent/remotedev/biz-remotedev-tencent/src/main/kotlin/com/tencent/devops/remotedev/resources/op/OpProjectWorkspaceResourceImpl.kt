@@ -10,7 +10,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -40,10 +40,10 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @RestResource
@@ -67,7 +67,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_ASSIGN,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
         content = TencentActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
     )

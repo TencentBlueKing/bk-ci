@@ -31,10 +31,9 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.audit.TencentActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
@@ -82,9 +81,9 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     @ActionAuditRecord(
-        actionId = ActionId.CGS_REBUILD_SYSTEM_DISK,
+        actionId = TencentActionId.CGS_REBUILD_SYSTEM_DISK,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -115,7 +114,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
             )
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)
 
         RedisCallLimit(

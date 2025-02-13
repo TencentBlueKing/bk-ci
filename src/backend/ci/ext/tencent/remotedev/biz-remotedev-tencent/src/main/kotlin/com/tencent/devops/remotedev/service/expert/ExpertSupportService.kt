@@ -10,7 +10,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
@@ -582,7 +582,7 @@ class ExpertSupportService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_EXPAND_DISK,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -722,7 +722,7 @@ class ExpertSupportService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_CREATE_DISK,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),

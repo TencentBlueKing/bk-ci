@@ -13,7 +13,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.remotedev.config.BkConfig
@@ -183,7 +183,7 @@ class RemotedevSdkService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_TOKEN_GENERATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
         attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
         scopeId = "#ws?.projectId",

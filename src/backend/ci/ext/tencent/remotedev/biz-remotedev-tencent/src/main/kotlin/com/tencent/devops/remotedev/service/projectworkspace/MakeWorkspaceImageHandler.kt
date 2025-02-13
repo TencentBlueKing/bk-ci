@@ -31,11 +31,9 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.audit.TencentActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -91,9 +89,9 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_MAKE_IMAGE,
+        actionId = TencentActionId.CGS_MAKE_IMAGE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -123,7 +121,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             )
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)
 
         RedisCallLimit(

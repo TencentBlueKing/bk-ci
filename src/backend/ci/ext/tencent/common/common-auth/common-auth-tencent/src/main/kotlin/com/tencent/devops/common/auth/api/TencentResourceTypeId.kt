@@ -4,4 +4,5 @@ object TencentResourceTypeId {
     // 云桌面
     const val CGS = "cgs"
     const val IMAGE = "image"
+    const val TGIT_LINK = "tgit_link"
 }

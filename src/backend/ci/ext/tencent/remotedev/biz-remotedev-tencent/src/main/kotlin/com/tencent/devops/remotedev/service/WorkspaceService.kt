@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
@@ -161,7 +161,7 @@ class WorkspaceService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -283,7 +283,7 @@ class WorkspaceService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_SHARE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -920,7 +920,7 @@ class WorkspaceService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
@@ -986,11 +986,11 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
+        actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
+        content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {

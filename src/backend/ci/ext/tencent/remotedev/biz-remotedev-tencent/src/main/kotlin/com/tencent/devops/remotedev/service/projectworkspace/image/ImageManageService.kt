@@ -33,7 +33,7 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
@@ -102,7 +102,7 @@ class ImageManageService @Autowired constructor(
     @ActionAuditRecord(
         actionId = TencentActionId.IMAGE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.IMAGE,
+            resourceType = TencentResourceTypeId.IMAGE,
             instanceNames = "#imageId",
             instanceIds = "#imageId"
         ),
