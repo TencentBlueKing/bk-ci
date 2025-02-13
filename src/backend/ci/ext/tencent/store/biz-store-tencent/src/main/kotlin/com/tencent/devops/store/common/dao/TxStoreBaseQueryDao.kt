@@ -25,35 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.dao
+package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.TTemplate
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class TxAtomDao {
+class TxStoreBaseQueryDao {
 
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
+    fun listStoreInitCreator(
+        dslContext: DSLContext,
+        storeTypeEnum: StoreTypeEnum,
+        offset: Int,
+        limit: Int
+    ): Result<Record2<String, String>> {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(STORE_CODE, CREATOR)
                 .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
+                .where(STORE_TYPE.eq(storeTypeEnum.type.toByte()))
+                .and(VERSION.eq(INIT_VERSION))
+                .groupBy(STORE_CODE)
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
+    fun listTempLateInitCreator(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int
+    ): Result<Record2<String, String>> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.select(TEMPLATE_CODE, CREATOR)
                 .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
+                .where(LATEST_FLAG.eq(true))
+                .groupBy(TEMPLATE_CODE)
                 .limit(limit).offset(offset)
                 .fetch()
         }

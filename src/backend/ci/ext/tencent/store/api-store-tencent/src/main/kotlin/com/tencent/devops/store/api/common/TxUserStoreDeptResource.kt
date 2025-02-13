@@ -25,37 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.dao
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.model.store.tables.TAtom
-import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Repository
-class TxAtomDao {
+@Tag(name = "USER_STORE_DEPT", description = "USER-商店-组件所属组织")
+@Path("/user/store/dept")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxUserStoreDeptResource {
 
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
-                .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
-        }
-    }
-
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
+    @Operation(summary = "更新组件所属组织架构")
+    @PUT
+    @Path("/update")
+    fun updateStoreBelongDept(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件所属机构关联信息", required = true)
+        storeBelongDeptRel: StoreBelongDeptRel
+    ): Result<Boolean>
 }

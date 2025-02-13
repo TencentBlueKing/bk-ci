@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.ideatom.dao
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
@@ -531,6 +532,17 @@ class IdeAtomDao {
             return dslContext.selectCount().from(this)
                 .where(ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
+        with(TIdeAtom.T_IDE_ATOM) {
+            return dslContext.select(ATOM_CODE, CREATOR)
+                .from(this)
+                .where(VERSION.eq(INIT_VERSION))
+                .groupBy(ATOM_CODE)
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 }

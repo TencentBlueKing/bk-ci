@@ -25,37 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.dao
+package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.model.store.tables.TAtom
-import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxUserStoreDeptResource
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
+import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import org.springframework.beans.factory.annotation.Autowired
 
-@Repository
-class TxAtomDao {
+@RestResource
+class TxUserStoreDeptResourceImpl @Autowired constructor(
+    private val txStoreBelongDeptService: TxStoreBelongDeptService
+) : TxUserStoreDeptResource {
 
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
-                .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
-        }
-    }
-
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
-                .limit(limit).offset(offset)
-                .fetch()
-        }
+    override fun updateStoreBelongDept(
+        userId: String,
+        storeBelongDeptRel: StoreBelongDeptRel
+    ): Result<Boolean> {
+        return Result(
+            txStoreBelongDeptService.updateStoreBelongDept(userId, storeBelongDeptRel)
+        )
     }
 }

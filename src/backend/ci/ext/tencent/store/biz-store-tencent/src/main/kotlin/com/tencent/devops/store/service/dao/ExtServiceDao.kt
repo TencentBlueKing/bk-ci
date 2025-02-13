@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.dao
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
@@ -867,6 +868,17 @@ class ExtServiceDao {
             return
         }
         dslContext.batchUpdate(serviceRecords).execute()
+    }
+
+    fun listServiceInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            return dslContext.select(SERVICE_CODE, CREATOR)
+                .from(this)
+                .where(VERSION.eq(INIT_VERSION))
+                .groupBy(SERVICE_CODE)
+                .limit(limit).offset(offset)
+                .fetch()
+        }
     }
 
     private val logger = LoggerFactory.getLogger(ExtServiceDao::class.java)

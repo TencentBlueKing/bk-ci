@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.image.dao
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
@@ -381,6 +382,17 @@ class OpImageDao @Autowired constructor() {
         return dslContext.selectFrom(tImage)
             .where(conditions)
             .fetch()
+    }
+
+    fun listImageInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
+        with(TImage.T_IMAGE) {
+            return dslContext.select(IMAGE_CODE, CREATOR)
+                .from(this)
+                .where(VERSION.eq(INIT_VERSION))
+                .groupBy(IMAGE_CODE)
+                .limit(limit).offset(offset)
+                .fetch()
+        }
     }
 
     private val logger = LoggerFactory.getLogger(OpImageDao::class.java)

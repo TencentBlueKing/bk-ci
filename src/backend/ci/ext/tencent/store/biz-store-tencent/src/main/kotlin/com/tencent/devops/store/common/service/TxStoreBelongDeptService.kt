@@ -25,37 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.dao
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.model.store.tables.TAtom
-import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
 
-@Repository
-class TxAtomDao {
+interface TxStoreBelongDeptService {
 
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
-                .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
-        }
-    }
+    /**
+     * 更新组件所属组织架构
+     */
+    fun updateStoreBelongDept(userId: String, storeBelongDeptRel: StoreBelongDeptRel): Boolean
 
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
+    /**
+     * 初始化存量组件所属组织架构
+     */
+    fun initStoreBelongDept(): Boolean
 }

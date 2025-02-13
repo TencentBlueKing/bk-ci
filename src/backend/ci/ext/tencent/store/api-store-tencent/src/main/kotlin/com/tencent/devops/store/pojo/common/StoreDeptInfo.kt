@@ -25,37 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.dao
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.model.store.tables.TAtom
-import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Repository
-class TxAtomDao {
-
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
-                .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
-        }
-    }
-
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-}
+@Schema(title = "组织架构信息")
+data class StoreDeptInfo(
+    @get:Schema(title = "BGID", required = true)
+    val bgId: Int,
+    @get:Schema(title = "BG名称", required = true)
+    val bgName: String,
+    @get:Schema(title = "部门ID", required = false)
+    val deptId: Int?,
+    @get:Schema(title = "部门名称", required = false)
+    val deptName: String?,
+    @get:Schema(title = "中心ID", required = false)
+    val centerId: Int?,
+    @get:Schema(title = "中心名称", required = false)
+    val centerName: String?,
+    @get:Schema(title = "组ID", required = false)
+    val groupId: Int?,
+    @get:Schema(title = "组名称", required = false)
+    val groupName: String?,
+    @get:Schema(title = "业务线ID", required = false)
+    val businessLineId: Long?,
+    @get:Schema(title = "业务线名称", required = false)
+    val businessLineName: String?
+)
