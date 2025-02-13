@@ -20,7 +20,7 @@
                 </div>
                 <div v-if="item.updateLog">
                     <p class="version-light">{{ $t('store.更新日志') }}</p>
-                    <p>{{ item.updateLog }}</p>
+                    <p class="update-log">{{ item.updateLog }}</p>
                 </div>
             </li>
         </ul>
@@ -163,6 +163,10 @@
           .version-light {
             color: #979ba5;
           }
+
+          .update-log {
+            white-space: pre-line;
+        }
       }
   }
 

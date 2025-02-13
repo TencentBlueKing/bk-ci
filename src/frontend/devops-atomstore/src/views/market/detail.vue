@@ -58,7 +58,7 @@
     import yamlDetail from '../../components/common/detailTab/yamlDetail'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
-    import versionLogDetali from '../../components/common/detailTab/versionLogDetali'
+    import versionLogDetail from '../../components/common/detailTab/versionLogDetail'
 
     export default {
         components: {
@@ -71,7 +71,7 @@
             yamlDetail,
             outputDetail,
             qualityDetail,
-            versionLogDetali
+            versionLogDetail
         },
 
         data () {
@@ -100,16 +100,16 @@
                         { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
                         { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
                         { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length },
-                        { componentName: 'versionLogDetali', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ],
                     template: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
-                        { componentName: 'versionLogDetali', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ],
                     image: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
                         { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } },
-                        { componentName: 'versionLogDetali', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
+                        { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
                     ]
                 }
             },
