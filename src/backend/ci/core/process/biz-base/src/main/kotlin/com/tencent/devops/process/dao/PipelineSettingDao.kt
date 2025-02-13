@@ -357,18 +357,18 @@ class PipelineSettingDao {
         dialect: PipelineDialectType
     ): List<String> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            val conditionOr = PIPELINE_AS_CODE_SETTINGS.isNull
+            var conditionsOr = PIPELINE_AS_CODE_SETTINGS.isNull
             val inheritedDialectField =
                 JooqUtils.jsonExtractAny<Boolean?>(PIPELINE_AS_CODE_SETTINGS, "$.inheritedDialect")
             // 继承项目的流水线
-            conditionOr.or(inheritedDialectField.isNull).or(inheritedDialectField.isTrue)
+            conditionsOr = conditionsOr.or(inheritedDialectField.isNull).or(inheritedDialectField.isTrue)
             val pipelineDialectField =
                 JooqUtils.jsonExtract(PIPELINE_AS_CODE_SETTINGS, "$.pipelineDialect", removeDoubleQuotes = true)
             // 没有继承项目语法风格,流水线设置了语法风格
-            conditionOr.or(inheritedDialectField.isFalse.and(pipelineDialectField.eq(dialect.name)))
+            conditionsOr = conditionsOr.or(inheritedDialectField.isFalse.and(pipelineDialectField.eq(dialect.name)))
             return dslContext.select(PIPELINE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(conditionOr)
+                .and(conditionsOr)
                 .fetch(0, String::class.java)
         }
     }
