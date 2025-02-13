@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -37,7 +38,9 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_STORE_DEPT", description = "USER-商店-组件所属组织")
@@ -45,6 +48,20 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxUserStoreDeptResource {
+
+    @Operation(summary = "获取组件所属组织架构")
+    @PUT
+    @Path("codes/{storeCode}/get")
+    fun getStoreBelongDept(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类别", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<StoreBelongDeptRel>
 
     @Operation(summary = "更新组件所属组织架构")
     @PUT
