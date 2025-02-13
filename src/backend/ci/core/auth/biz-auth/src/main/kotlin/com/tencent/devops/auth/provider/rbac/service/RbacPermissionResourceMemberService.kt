@@ -488,6 +488,8 @@ class RbacPermissionResourceMemberService(
 
     override fun roleCodeToIamGroupId(
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleCode: String
     ): Int {
         return if (roleCode == BkAuthGroup.CI_MANAGER.value) {
@@ -502,8 +504,8 @@ class RbacPermissionResourceMemberService(
             authResourceGroupDao.get(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
                 groupCode = roleCode
             )?.relationId
         }?.toInt() ?: throw ErrorCodeException(
