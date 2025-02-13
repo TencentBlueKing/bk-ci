@@ -105,6 +105,8 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -150,6 +152,7 @@ class WorkspaceService @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val taiClient: TaiClient,
     private val taiService: TaiService,
+    private val startCloudClient: StartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
@@ -210,10 +213,10 @@ class WorkspaceService @Autowired constructor(
             workspaceName != null -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ip != null -> workspaceJoinDao.fetchWindowsWorkspacesSimple(
                 dslContext, sip = ip, notStatus = listOf(
-                    WorkspaceStatus.PREPARING,
-                    WorkspaceStatus.DELETED,
-                    WorkspaceStatus.DELIVERING_FAILED
-                ),
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            ),
                 checkField = listOf(TWorkspace.T_WORKSPACE.PROJECT_ID)
             ).firstOrNull()
 
@@ -528,7 +531,9 @@ class WorkspaceService @Autowired constructor(
                     workspaceMountType = it.workspaceMountType,
                     workspaceSystemType = it.workspaceSystemType,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = allWindows[it.workspaceName]?.let { i -> specZoneConfig[i.zoneId] ?: defaultZoneConfig[i.zoneId.removeSuffixNumb()] },
+                    zoneConfig = allWindows[it.workspaceName]?.let { i ->
+                        specZoneConfig[i.zoneId] ?: defaultZoneConfig[i.zoneId.removeSuffixNumb()]
+                    },
                     owner = owners[it.workspaceName],
                     viewers = viewers[it.workspaceName],
                     ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
@@ -898,7 +903,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -980,6 +985,13 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        content = ActionAuditContent.CGS_VIEW_CONTENT
+    )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -990,6 +1002,20 @@ class WorkspaceService @Autowired constructor(
             if (!workspace.status.checkRunning()) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                    params = arrayOf(workspaceName)
+                )
+            }
+
+            // 检测cds的状态
+            val cgsStatus = try {
+                startCloudClient.computerStatus(setOf(workspace.hostIp!!))?.firstOrNull()
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
+            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
                     params = arrayOf(workspaceName)
                 )
             }
@@ -1021,8 +1047,21 @@ class WorkspaceService @Autowired constructor(
                 workspaceNames = public.map { it.value1() }.toSet(),
                 checkField = listOf(TWorkspace.T_WORKSPACE.NAME, TWorkspace.T_WORKSPACE.STATUS)
             ).associateBy({ it.workspaceName }, { it.status })
+
+            // 检测cds的状态
+            val cgsStatus = try {
+                startCloudClient.computerStatus(
+                    public.map { it.value2() }.toSet()
+                )?.associateBy({ it.cgsId }, { it.state })
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
+
             val oneReady = public.filter {
-                loginUserMap[it.value2()].isNullOrEmpty() && workspaceStatus[it.value1()] == WorkspaceStatus.RUNNING
+                loginUserMap[it.value2()].isNullOrEmpty() &&
+                    workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
+                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
@@ -1072,6 +1111,7 @@ class WorkspaceService @Autowired constructor(
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
         val host2NodeMap = public.associateBy { it.value2() }
+        val node2HostMap = public.associateBy({ it.value3() }, { it.value2() })
         val loginUserMap = startWorkspaceService.cachingLoginUsers(public.map { it.value2() ?: "" }.toSet())
         val nodeLoginMap = loginUserMap.mapKeys { host2NodeMap[it.key]?.value3() }
         val workspaceStatus = workspaceJoinDao.fetchWindowsWorkspaces(
@@ -1079,8 +1119,21 @@ class WorkspaceService @Autowired constructor(
             workspaceNames = public.map { it.value1() }.toSet(),
             checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID, TWorkspace.T_WORKSPACE.STATUS)
         ).associateBy({ it.nodeHashId }, { it.status })
+        // 检测cds的状态
+        val cgsStatus = try {
+            startCloudClient.computerStatus(
+                public.map { it.value2() }.toSet()
+            )?.associateBy(
+                { it.cgsId }, { it.state }
+            )
+        } catch (e: Exception) {
+            logger.warn("get computerStatus error", e)
+            null
+        }
+        val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] == WorkspaceStatus.RUNNING } ?: 0
+            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
+                ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
                 projectId = it.projectId,
@@ -1124,15 +1177,6 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
-        ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
-    )
     private fun startCloudWorkspaceDetail(
         userId: String,
         workspace: WorkspaceRecordWithWindows
@@ -1142,7 +1186,10 @@ class WorkspaceService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-            .scopeId = workspace.projectId
+            .setScopeId(workspace.projectId)
+            .setInstanceId(workspace.workspaceName)
+            .setInstanceName(workspace.workspaceName)
+
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val resourceId = if (userId != workspace.createUserId) {
@@ -1316,10 +1363,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
         val record = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext, sip = ip, notStatus = listOf(
-                WorkspaceStatus.PREPARING,
-                WorkspaceStatus.DELETED,
-                WorkspaceStatus.DELIVERING_FAILED
-            ),
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.DELIVERING_FAILED
+        ),
             checkField = listOf(TWorkspace.T_WORKSPACE.NAME)
         ).ifEmpty {
             logger.warn("$ip fetchWorkspaceByIp not found")

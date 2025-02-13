@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
@@ -16,6 +17,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator.Companion.START_VM_TASK_ATOM
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 
 /**
  * AgentReuseMutexTree 组装流水线时通过生成树可以更好地拿到复用互斥关系
@@ -26,42 +28,45 @@ data class AgentReuseMutexTree(
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
 ) {
-
-    fun addNode(container: VMBuildContainer, stageIndex: Int) {
+    fun addNode(container: VMBuildContainer, stageIndex: Int, variables: Map<String, String>) {
         val dispatchType = container.dispatchType
         if (dispatchType !is ThirdPartyAgentDispatch) {
             return
         }
+        // 判断值是否是变量
+        var idIsVar = false
         val reuseId = if (dispatchType.agentType.isReuse()) {
-            dispatchType.value
+            if (PipelineVarUtil.isVar(dispatchType.value)) {
+                idIsVar = true
+            }
+            EnvReplacementParser.parse(dispatchType.value, contextMap = variables)
         } else {
             null
         }
         return addNode(
             jobId = container.jobId,
+            reuseId = reuseId,
             dispatchType = dispatchType,
             // 逻辑上可能需要dependOn复用树
             existDep = (container.jobControlOption?.dependOnId?.contains(reuseId) == true) ||
-                (container.jobControlOption?.dependOnName == reuseId),
+                    (container.jobControlOption?.dependOnName == reuseId),
             stageIndex = stageIndex,
             containerId = container.id,
-            isEnv = dispatchType is ThirdPartyAgentEnvDispatchType
+            isEnv = dispatchType is ThirdPartyAgentEnvDispatchType,
+            idIsVar = idIsVar
         )
     }
 
-    fun addNode(
+    private fun addNode(
         jobId: String?,
+        reuseId: String?,
         dispatchType: ThirdPartyAgentDispatch,
         existDep: Boolean,
         stageIndex: Int,
         containerId: String?,
-        isEnv: Boolean
+        isEnv: Boolean,
+        idIsVar: Boolean
     ) {
-        val reuseId = if (dispatchType.agentType.isReuse()) {
-            dispatchType.value
-        } else {
-            null
-        }
         if (reuseId.isNullOrBlank()) {
             if (jobId.isNullOrBlank()) {
                 return
@@ -78,7 +83,8 @@ data class AgentReuseMutexTree(
                     virtual = false,
                     type = dispatchTypeToType(dispatchType) ?: return,
                     maxStageIndex = stageIndex
-                )
+                ),
+                idIsVar = idIsVar
             )
             return
         }
@@ -99,11 +105,12 @@ data class AgentReuseMutexTree(
             } else {
                 dispatchTypeToType(dispatchType) ?: return
             },
-            isEnv = isEnv
+            isEnv = isEnv,
+            idIsVar = idIsVar
         )
     }
 
-    private fun addRootNode(n: AgentReuseMutexRootNode) {
+    private fun addRootNode(n: AgentReuseMutexRootNode, idIsVar: Boolean) {
         if (n.stageSeq > maxStageIndex) {
             maxStageIndex = n.stageSeq
         }
@@ -113,7 +120,7 @@ data class AgentReuseMutexTree(
             rootNodes.add(n)
             return
         }
-        if (!n.type.checkSameStageType(vRoot.type)) {
+        if (!idIsVar && !n.type.checkSameStageType(vRoot.type)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_ERROR,
                 params = arrayOf(
@@ -154,12 +161,16 @@ data class AgentReuseMutexTree(
         }
     }
 
+    // TODO: 这里有个非紧急BUG
+    //  如果复用了一个还未出现的非根节点，就会把这个非根节点先设为虚根，
+    //  就会存在最后找不到这个非根节点的问题，因为这个非根节点不会走根节点逻辑
     private fun addReuseNode(
         stageSeq: Int,
         reuseJobId: String,
         jobId: String,
         type: AgentReuseMutexType,
-        isEnv: Boolean
+        isEnv: Boolean,
+        idIsVar: Boolean
     ) {
         if (stageSeq > maxStageIndex) {
             maxStageIndex = stageSeq
@@ -175,9 +186,15 @@ data class AgentReuseMutexTree(
         }
 
         if (parentNode != null) {
-            if (parentNode.stageSeq == stageSeq && !parentNode.type.checkSameStageType(type)) {
+            if (!idIsVar && parentNode.stageSeq == stageSeq && !parentNode.type.checkSameStageType(type)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_ERROR,
+                    params = arrayOf("Stage-$stageSeq", "$jobId|$type", "$reuseJobId|${parentNode.type}")
+                )
+            }
+            if (idIsVar && parentNode.stageSeq == stageSeq && type != AgentReuseMutexType.AGENT_DEP_VAR) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_VAR_ERROR,
                     params = arrayOf("Stage-$stageSeq", "$jobId|$type", "$reuseJobId|${parentNode.type}")
                 )
             }
@@ -200,7 +217,13 @@ data class AgentReuseMutexTree(
             }
             return
         }
-        // 一个root节点下的都没有找到就新建一个虚占root
+        // 一个root节点下的都没有找到就新建一个虚占root，使用变量的需要他和vRoot一定存在引用关系
+        if (idIsVar && type != AgentReuseMutexType.AGENT_DEP_VAR) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_VAR_ERROR,
+                params = arrayOf("Stage-$stageSeq", "$jobId|$type", "$reuseJobId|$type")
+            )
+        }
         val nodeType = if (isEnv) {
             AgentReuseMutexType.AGENT_ENV_ID
         } else {
@@ -304,8 +327,8 @@ data class AgentReuseMutexTree(
                     // 修改启动插件
                     buildTaskList.firstOrNull {
                         it.containerId == container.id &&
-                            it.taskType == EnvControlTaskType.VM.name &&
-                            it.taskAtom == START_VM_TASK_ATOM
+                                it.taskType == EnvControlTaskType.VM.name &&
+                                it.taskAtom == START_VM_TASK_ATOM
                     }?.taskParams = container.genTaskParams()
                 }
             if (index == maxStageIndex) {

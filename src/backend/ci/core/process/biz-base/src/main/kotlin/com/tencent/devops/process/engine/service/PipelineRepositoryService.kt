@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -52,12 +53,14 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -72,6 +75,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
+import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -124,6 +128,7 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -166,7 +171,9 @@ class PipelineRepositoryService constructor(
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineCallbackDao: PipelineCallbackDao,
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     companion object {
@@ -216,6 +223,9 @@ class PipelineRepositoryService constructor(
             }
         }
     }
+
+    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    private val aesKey = ""
 
     fun deployPipeline(
         model: Model,
@@ -358,7 +368,8 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             userId = userId,
             oauthUser = getPipelineOauthUser(projectId, pipelineId),
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            pipelineId = pipelineId
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -400,7 +411,8 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    stageIndex = index
                 )
             }
         }
@@ -498,7 +510,8 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlInfo: PipelineYamlVo?,
+        stageIndex: Int
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -508,10 +521,10 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        stage.containers.forEach { c ->
+        stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
-                return@forEach
+                return@forEachIndexed
             }
 
             val mutexGroup = when (c) {
@@ -565,14 +578,6 @@ class PipelineRepositoryService constructor(
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
-                when (e) {
-                    is SubPipelineCallElement -> { // 子流水线循环依赖检查
-                        val existPipelines = HashSet<String>()
-                        existPipelines.add(pipelineId)
-                        checkSubpipeline(projectId, e.subPipelineId, existPipelines)
-                    }
-                }
-
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -602,7 +607,10 @@ class PipelineRepositoryService constructor(
                         classType = e.getClassType(),
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
-                        additionalOptions = e.additionalOptions
+                        additionalOptions = e.additionalOptions,
+                        taskPosition = "$stageIndex-${containerIndex + 1}-$taskSeq",
+                        containerEnable = c.containerEnabled(),
+                        stageEnable = stage.stageEnabled()
                     )
                 )
             }
@@ -834,6 +842,23 @@ class PipelineRepositoryService constructor(
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                // 初始化流水线单体回调
+                savePipelineCallback(
+                    events = model.events,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    projectId = projectId,
+                    dslContext = transactionContext
+                )
+                // 初始化子流水线关联关系
+                subPipelineTaskService.batchAdd(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    channel = channelCode.name,
+                    modelTasks = modelTasks.toList()
+                )
             }
         } finally {
             lock.unlock()
@@ -1130,6 +1155,24 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                        // 保存流水线单体回调记录
+                        savePipelineCallback(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            events = model.events
+                        )
+                        watcher.start("updateSubPipelineRef")
+                        // 批量保存,禁用态的插件需要被删除
+                        subPipelineTaskService.batchAdd(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            model = model,
+                            channel = channelCode.name,
+                            modelTasks = modelTasks.toList()
+                        )
                     }
                 }
 
@@ -1353,6 +1396,25 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
+        pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = null
+        ).let { records ->
+            if (records.isNotEmpty) {
+                // 填充流水线级别回调
+                resource?.model?.events = records.associate {
+                    it.name to PipelineCallbackEvent(
+                        callbackEvent = CallBackEvent.valueOf(it.eventType),
+                        callbackUrl = it.url,
+                        secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                        region = CallBackNetWorkRegionType.valueOf(it.region),
+                        callbackName = it.name
+                    )
+                }
+            }
+        }
         return resource
     }
 
@@ -1549,7 +1611,7 @@ class PipelineRepositoryService constructor(
 
                 pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                 pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-
+                subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
                 pipelineEventDispatcher.dispatch(
                     PipelineDeleteEvent(
                         source = "delete_pipeline",
@@ -1622,57 +1684,6 @@ class PipelineRepositoryService constructor(
         return listInfoByPipelineName.map {
             it.pipelineName to it.pipelineId
         }.toMap()
-    }
-
-    private fun checkSubpipeline(projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
-
-        if (existPipelines.contains(pipelineId)) {
-            logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
-            )
-        }
-        existPipelines.add(pipelineId)
-        val pipeline = getPipelineInfo(projectId, pipelineId)
-        if (pipeline == null) {
-            logger.warn("The sub pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val existModel = getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
-
-        if (existModel == null) {
-            logger.warn("The pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val currentExistPipelines = HashSet<String>(existPipelines)
-        existModel.stages.forEachIndexed stage@{ index, stage ->
-            if (index == 0) {
-                // Ignore the trigger container
-                return@stage
-            }
-            stage.containers.forEach container@{ container ->
-                if (container !is NormalContainer) {
-                    // 只在无构建环境中
-                    return@container
-                }
-
-                container.elements.forEach element@{ element ->
-                    if (element !is SubPipelineCallElement) {
-                        return@element
-                    }
-                    val subpipelineId = element.subPipelineId
-                    if (subpipelineId.isBlank()) {
-                        logger.warn("The sub pipeline id of pipeline($pipeline) is blank")
-                        return@element
-                    }
-                    val exist = HashSet<String>(currentExistPipelines)
-                    checkSubpipeline(projectId = projectId, pipelineId = subpipelineId, existPipelines = exist)
-                    existPipelines.addAll(exist)
-                }
-            }
-        }
     }
 
     fun getBuildNo(projectId: String, pipelineId: String): Int? {
@@ -1922,6 +1933,14 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
+            subPipelineTaskService.batchAdd(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = existModel,
+                channel = channelCode.name,
+                modelTasks = tasks
+            )
         }
 
         val version = pipelineInfoDao.getPipelineVersion(
@@ -2165,5 +2184,42 @@ class PipelineRepositoryService constructor(
             logger.info("get pipeline oauth user fail", ignored)
             null
         }?.handoverFrom
+    }
+
+    /**
+     * 保存流水线单体回调记录
+     */
+    private fun savePipelineCallback(
+        events: Map<String, PipelineCallbackEvent>?,
+        pipelineId: String,
+        projectId: String,
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        if (events.isNullOrEmpty()) return
+        val existEventNames = pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).map { it.name }.toSet()
+        if (existEventNames.isNotEmpty()) {
+            val needDelNames = existEventNames.subtract(events.keys).toSet()
+            pipelineCallbackDao.delete(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                names = needDelNames
+            )
+        }
+        // 保存回调事件
+        pipelineCallbackDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            list = events.map { (key, value) ->
+                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+            }
+        )
     }
 }

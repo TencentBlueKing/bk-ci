@@ -65,16 +65,15 @@
                     class="env-alias-area-item"
                     :label="(isAgentEnv && !isReuseJob) ? $t('editPage.environment') : ''"
                 >
-                    <selector
+                    <select-input
                         v-if="isReuseJob"
                         name="value"
                         :disabled="disabled"
+                        :value="getReuseJobNameByValue(value)"
+                        :options="reuseJobList"
                         :handle-change="handleSelect"
-                        :list="reuseJobList"
-                        :value="value"
-                        :toggle-visible="toggleAgentList"
                     >
-                    </selector>
+                    </select-input>
                     <devops-select
                         v-else
                         name="value"
@@ -114,6 +113,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import { mapActions } from 'vuex'
 
     export default {
@@ -123,6 +123,7 @@
             FormField,
             VuexInput,
             Selector,
+            SelectInput,
             DevopsSelect
         },
         props: {
@@ -326,6 +327,9 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            getReuseJobNameByValue (value) {
+                return this.reuseJobList.find(i => i.id === value)?.name || value
             }
         }
     }

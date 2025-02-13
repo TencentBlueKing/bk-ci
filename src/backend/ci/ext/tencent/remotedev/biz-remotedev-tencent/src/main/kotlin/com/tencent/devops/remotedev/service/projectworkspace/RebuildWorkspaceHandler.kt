@@ -28,8 +28,8 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -87,8 +87,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = ActionAuditContent.CGS_REBUILD_SYSTEM_DISK_CONTENT
     )
     fun rebuildWorkspace(
@@ -115,6 +113,9 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to rebuild $workspaceName")
             )
         }
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
 
         RedisCallLimit(
             redisOperation,
@@ -230,6 +231,14 @@ class RebuildWorkspaceHandler @Autowired constructor(
         if (event.status) {
             // 成功的调用才删除参数
             logger.debug("rebuildWorkspace|getRebuildOptions|${event.workspaceName}|${event.userId}")
+            // 重写IOA注册表
+            if (workspace.workspaceSystemType.needSafeInitialization()) {
+                softwareManageService.safeInitialization(
+                    projectId = workspace.projectId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName
+                )
+            }
             if (options != null) {
                 WorkspaceOperateCommonObject.deleteRebuildOptions(redisOperation, event.taskUid!!)
             }
@@ -255,15 +264,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.REBUILDING,
                         toStatus.name
                     )
-                )
-            }
-
-            // 重写IOA注册表
-            if (workspace.workspaceSystemType.needSafeInitialization()) {
-                softwareManageService.safeInitialization(
-                    projectId = workspace.projectId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName
                 )
             }
         } else {

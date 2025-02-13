@@ -25,10 +25,10 @@
 </template>
 <script>
     import {
-    REPOSITORY_API_URL_PREFIX
-} from '@/store/constants';
-import ciYamlTheme from '@/utils/ciYamlTheme';
-import { mapGetters, mapState } from 'vuex';
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
+    import ciYamlTheme from '@/utils/ciYamlTheme'
+    import { mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {

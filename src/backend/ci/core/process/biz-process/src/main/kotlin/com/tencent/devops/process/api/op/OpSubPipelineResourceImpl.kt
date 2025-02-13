@@ -25,14 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.api.op
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.pipeline.SubPipelineUpgradeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "构建模型-ID")
-data class ProjectBuildId(
-    @get:Schema(title = "构建ID", required = true)
-    val id: String,
-    @get:Schema(title = "项目ID", required = true)
-    val projectId: String
-)
+@RestResource
+class OpSubPipelineResourceImpl @Autowired constructor(
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
+) : OpSubPipelineRefResource {
+    override fun createSubPipelineRef(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
+        if (!pipelineId.isNullOrBlank() && !projectId.isNullOrBlank()) {
+            subPipelineUpgradeService.createSubPipelineRef(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
+        } else {
+            subPipelineUpgradeService.createAllSubPipelineRef(
+                projectId = projectId,
+                userId = userId
+            )
+        }
+        return Result(true)
+    }
+}

@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -73,8 +72,6 @@ class DeliverControl @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = CGS_ASSIGN_USER_CONTENT
     )
     fun assignUser2Workspace(
@@ -96,8 +93,12 @@ class DeliverControl @Autowired constructor(
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
+
         ActionAuditContext.current()
             .addAttribute(ASSIGNS_TEMPLATE, assigns.joinToString(",") { it.userId })
+            .addAttribute(PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
+
         when {
             existOwner == null && assign2Owner != null -> {
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")

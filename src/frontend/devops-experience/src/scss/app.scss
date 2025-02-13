@@ -27,6 +27,7 @@ body {
 	width: 100%;
 	display: flex;
 	min-height: calc(100% - 210px);
+	overflow: hidden;
 	.biz-side-bar {
 		width: 261px;
 		border-right: 1px solid $borderWeightColor;
