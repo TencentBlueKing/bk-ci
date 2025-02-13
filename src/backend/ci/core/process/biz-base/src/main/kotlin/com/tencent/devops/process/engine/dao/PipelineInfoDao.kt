@@ -790,6 +790,27 @@ class PipelineInfoDao {
         }
     }
 
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>,
+        channelCode: ChannelCode? = null,
+        limit: Int,
+        offset: Int
+    ): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .and(DELETE.eq(false))
+                .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
+                .orderBy(CREATE_TIME.desc(), PIPELINE_ID)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
     }

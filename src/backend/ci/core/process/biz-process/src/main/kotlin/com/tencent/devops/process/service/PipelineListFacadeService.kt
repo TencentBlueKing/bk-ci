@@ -48,6 +48,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -2231,5 +2232,55 @@ class PipelineListFacadeService @Autowired constructor(
         projectIds: List<String>
     ): List<PipelineLabelRelateInfo> {
         return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
+    }
+
+    fun countPipelineByDialect(
+        projectId: String,
+        dialect: PipelineDialectType
+    ): Int {
+        val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
+            dslContext = dslContext,
+            projectId = projectId,
+            dialect = dialect
+        )
+        return pipelineInfoDao.countByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineIds = pipelineIds
+        )
+    }
+
+    fun listPipelinesByDialect(
+        projectId: String,
+        dialect: PipelineDialectType,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineIdAndName> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
+            dslContext = dslContext,
+            projectId = projectId,
+            dialect = dialect
+        )
+        val count = pipelineInfoDao.countByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineIds = pipelineIds
+        )
+        val records = pipelineInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            channelCode = ChannelCode.BS,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )?.map {
+            PipelineIdAndName(it.pipelineId, it.pipelineName)
+        } ?: emptyList()
+        return SQLPage(count = count.toLong(), records = records)
     }
 }
