@@ -111,13 +111,13 @@ class PipelineResourceDao {
     ) {
         logger.info("Update the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
-            val modelString = JsonUtil.toJson(model, formatted = false)
             dslContext.update(this)
-                .set(MODEL, modelString)
-                .set(YAML, yamlStr)
-                .set(YAML_VERSION, yamlVersion)
+                .set(VERSION, version)
                 .set(VERSION_NUM, versionNum)
                 .set(VERSION_NAME, versionName)
+                .set(MODEL, JsonUtil.toJson(model, formatted = false))
+                .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
