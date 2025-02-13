@@ -27,6 +27,8 @@
 
 package com.tencent.devops.auth.provider.rbac.config
 
+import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateService
 import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
@@ -77,10 +79,14 @@ class TxRbacAuthConfiguration {
     fun txMigrateService(
         client: Client,
         permissionResourceGroupService: PermissionResourceGroupService,
-        permissionResourceMemberService: PermissionResourceMemberService
+        permissionResourceMemberService: PermissionResourceMemberService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        resourceService: AuthResourceService
     ) = TxMigrateService(
         client = client,
         permissionResourceGroupService = permissionResourceGroupService,
-        permissionResourceMemberService = permissionResourceMemberService
+        permissionResourceMemberService = permissionResourceMemberService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        resourceService = resourceService
     )
 }
