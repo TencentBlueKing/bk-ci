@@ -282,7 +282,8 @@ class ExperienceBaseService @Autowired constructor(
                 for (depts in getGroupIdToDept(groupIds, false).values) {
                     for (dept in depts) {
                         if (userDeptDetail.bgId == dept || userDeptDetail.deptId == dept ||
-                            userDeptDetail.centerId == dept || userDeptDetail.groupId == dept
+                            userDeptDetail.centerId == dept || userDeptDetail.groupId == dept||
+                            userDeptDetail.businessLineId == dept
                         ) {
                             return@lazy true
                         }
