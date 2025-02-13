@@ -976,13 +976,13 @@ class PipelineRepositoryService constructor(
                             draftVersion.version
                         }
                         logger.info(
-                            "PROCESS|updateDraft|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType|base=$realBaseVersion"
+                            "PROCESS|updateDraft|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType|base=$realBaseVersion"
                         )
                     }
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
                     VersionStatus.BRANCH -> {
-                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
+                        // 查询同名分支的最新active版本，存在则设为不活跃，永远新增一个版本
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                             params = arrayOf("branchName")
@@ -994,23 +994,27 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        version = if (activeBranchVersion == null) {
-                            // 创建
-                            branchAction = BranchVersionAction.ACTIVE
+                        version = latestVersion.version + 1
+                        branchAction = BranchVersionAction.ACTIVE
+                        operationLogParams = versionName
+                        if (activeBranchVersion == null) {
+                            // 直接创建
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
-                            operationLogParams = versionName
-                            latestVersion.version + 1
                         } else {
-                            // 更新
+                            // 更新状态
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                            operationLogParams = activeBranchVersion.versionName
-                                ?: activeBranchVersion.version.toString()
-                            branchAction = BranchVersionAction.ACTIVE
-                            activeBranchVersion.version
+                            pipelineResourceVersionDao.updateBranchVersion(
+                                dslContext = transactionContext,
+                                userId = userId,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                branchName = branchName,
+                                branchVersionAction = BranchVersionAction.INACTIVE
+                            )
                         }
                         logger.info(
-                            "PROCESS|updateBranch|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType"
+                            "PROCESS|updateBranch|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType"
                         )
                     }
                     // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
@@ -1044,8 +1048,8 @@ class PipelineRepositoryService constructor(
                             OperationLogType.CREATE_BRANCH_VERSION
                         }
                         logger.info(
-                            "PROCESS|releaseByBranch|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType"
+                            "PROCESS|releaseByBranch|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType"
                         )
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
@@ -1110,7 +1114,10 @@ class PipelineRepositoryService constructor(
                             realBaseVersion = realBaseVersion ?: releaseResource.version
                             latestVersion.version + 1
                         }
-                        logger.info("PROCESS|releasePipeline|version=$version|versionName=$versionName")
+                        logger.info(
+                            "PROCESS|$userId|releasePipeline|$projectId|$pipelineId|" +
+                                "version=$version|versionName=$versionName"
+                        )
                         watcher.start("updatePipelineResource")
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
@@ -1127,17 +1134,10 @@ class PipelineRepositoryService constructor(
                             // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
                             latestVersionStatus = VersionStatus.RELEASED
                         )
-                        pipelineResourceDao.deleteEarlyVersion(
+                        pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            beforeVersion = version
-                        )
-                        pipelineResourceDao.create(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            creator = userId,
                             version = version,
                             model = model,
                             yamlStr = yaml?.yamlStr,
@@ -1214,7 +1214,8 @@ class PipelineRepositoryService constructor(
             lock.unlock()
         }
 
-        pipelineEventDispatcher.dispatch(
+        // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
+        if (versionStatus == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
             PipelineUpdateEvent(
                 source = "update_pipeline",
                 projectId = projectId,
@@ -2080,19 +2081,11 @@ class PipelineRepositoryService constructor(
                     version = version,
                     updateLastModifyUser = updateLastModifyUser
                 )
-                watcher.start("deleteEarlyVersion")
-                pipelineResourceDao.deleteEarlyVersion(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    beforeVersion = version
-                )
                 watcher.start("updatePipelineResource")
-                pipelineResourceDao.create(
+                pipelineResourceDao.updateReleaseVersion(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    creator = userId,
                     version = version,
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
