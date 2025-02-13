@@ -349,15 +349,11 @@ class RbacPermissionResourceMemberService(
         projectCode: String,
         iamGroupId: Int
     ) {
-        val managerId = authResourceService.get(
+        val isGroupBelongToProject = authResourceGroupDao.isGroupBelongToProject(
+            dslContext = dslContext,
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        ).relationId
-        val isGroupBelongToProject = getGroupInfoList(
-            resourceType = AuthResourceType.PROJECT.value,
-            managerId = managerId
-        ).map { it.id }.contains(iamGroupId)
+            groupId = iamGroupId.toString()
+        )
         if (!isGroupBelongToProject) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_GROUP_NOT_BELONG_TO_PROJECT,
