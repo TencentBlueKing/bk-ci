@@ -28,9 +28,12 @@
 package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
+import com.tencent.devops.auth.provider.rbac.service.TxMigrateService
 import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
@@ -68,5 +71,16 @@ class TxRbacAuthConfiguration {
         client = client,
         tokenService = tokenService,
         bkTag = bkTag
+    )
+
+    @Bean
+    fun txMigrateService(
+        client: Client,
+        permissionResourceGroupService: PermissionResourceGroupService,
+        permissionResourceMemberService: PermissionResourceMemberService
+    ) = TxMigrateService(
+        client = client,
+        permissionResourceGroupService = permissionResourceGroupService,
+        permissionResourceMemberService = permissionResourceMemberService
     )
 }
