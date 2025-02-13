@@ -452,7 +452,7 @@ class ThirdPartyAgentDao {
                 .where(PROJECT_ID.eq(projectId))
                 .orderBy(ID.desc())
                 .limit(offset, limit)
-                .fetch().associate { HashUtil.encodeLongId(it.value1()) to HashUtil.encodeLongId(it.value2())  }
+                .fetch().associate { HashUtil.encodeLongId(it.value1()) to HashUtil.encodeLongId(it.value2()) }
         }
     }
 
