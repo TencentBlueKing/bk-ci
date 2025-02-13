@@ -363,6 +363,9 @@ object ProcessMessageCode {
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
     const val ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH = "2101256" // 流水线启动参数{0}超出4000长度限制
 
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点前后顺序不明，使用变量需明确前后顺序
+    const val ERROR_AGENT_REUSE_MUTEX_VAR_ERROR = "2101257"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

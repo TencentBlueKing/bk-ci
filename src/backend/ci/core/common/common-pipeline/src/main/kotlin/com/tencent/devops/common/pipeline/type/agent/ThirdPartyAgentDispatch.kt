@@ -1,5 +1,6 @@
 package com.tencent.devops.common.pipeline.type.agent
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
@@ -33,6 +34,7 @@ abstract class ThirdPartyAgentDispatch(
  * @param agentType 被复用Job的类型
  * @param jobId 非根节点且被复用节点所复用的根jobId
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ReusedInfo(
     val value: String,
     val agentType: AgentType,
