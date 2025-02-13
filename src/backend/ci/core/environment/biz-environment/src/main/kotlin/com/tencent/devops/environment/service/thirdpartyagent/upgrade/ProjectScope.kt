@@ -22,7 +22,7 @@ class ProjectScope @Autowired constructor(private val redisOperation: RedisOpera
 
     private fun getKeyType(upgradeKey: UpgradeKey, type: AgentUpgradeType?): String {
         if (type == AgentUpgradeType.WORKER) {
-            when (upgradeKey) {
+            return when (upgradeKey) {
                 UpgradeKey.PRIORITY_PROJECT -> WORKER_PRIORITY_UPGRADE_PROJECT_SET // 优先升级项目
                 UpgradeKey.DENY_PROJECT -> WORKER_DENY_UPGRADE_PROJECT_SET // 禁止升级项目
             }
