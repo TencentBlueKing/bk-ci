@@ -319,5 +319,19 @@
     "资源授权": "Resource authorization",
     "查看详情": "View details",
     "需先完成交接。": "Handover must be completed first.",
-    "返回": "Return"
+    "返回": "Return",
+    "CLASSICTIP": "In constrained style, pipeline variables can only be referenced using {'${{ xxx }}'}, and not {'${ xxx }'}. Please be aware and inform pipeline maintenance personnel.",
+    "CONSTRAINEDTIP": "In classic style, pipeline variables can be referenced using both {'${{ xxx }}'} and {'${ xxx }'}. This means if a variable defined in a Bash script using Shell syntax has the same name as a pipeline variable, it might be assigned a value before execution.",
+    "示例，存在流水线变量 a=1，则如下脚本打印出的 a为1，而不是脚本中设置的 3": "For example, if there is a pipeline variable a=1, the script below will print a as 1, not the 3 set in the script.",
+    "请知悉，编排流水线时， Bash 脚本中的局部变量请勿与流水线变量重名，避免出现同名赋值问题。": "Please note, when arranging pipelines, avoid naming local variables in Bash scripts the same as pipeline variables to prevent assignment issues.",
+    "危险操作告警：": "Dangerous Operation Warning:",
+    "alarmTip1": "After changing the variable syntax style from 'constrained style' to 'classic style', pipeline variables can be referenced using both {'${{ xxx }}'} and {'${ xxx }'}. If a variable defined in a Bash script using Shell syntax shares a name with a pipeline variable, it might be assigned a value before execution. For example, if there is a pipeline variable a=1, the script below will print a as 1, not the 3 set in the script.",
+    "alarmTip2": "Pipelines inheriting project settings are at risk of execution failure! Please check the pipeline configuration, resolve naming conflicts, or change the pipeline settings to not inherit project settings before confirming this change.",
+    "X条": "{0} items",
+    "我已明确变更风险且已确认变更无影响": "I have acknowledged the change risk and confirmed there is no impact.",
+    "alarmTip3": "After changing the variable syntax style from 'classic style' to 'constrained style', pipeline variables can only be referenced using {'${{ xxx }}'}, and not {'${ xxx }'}.",
+    "alarmTip4": "Pipelines inheriting project settings are at risk of execution failure! Please check the pipeline configuration and change the pipeline settings to not inherit project settings before confirming this change.",
+    "流水线名称": "Pipeline Name",
+    "切换变量语法风格影响的流水线列表": "List of pipelines affected by changing variable syntax style",
+    "共X个": "Total {0}"
 }
