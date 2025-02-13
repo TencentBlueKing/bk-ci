@@ -1575,6 +1575,19 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
             logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
         }
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = if (locked) {
+                OperationLogType.DISABLE_PIPELINE
+            } else {
+                OperationLogType.ENABLE_PIPELINE
+            },
+            params = "",
+            description = null
+        )
 
         return info
     }

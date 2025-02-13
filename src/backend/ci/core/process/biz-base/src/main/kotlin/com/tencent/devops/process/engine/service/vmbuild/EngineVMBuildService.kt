@@ -450,8 +450,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             return false
         }
         val finalBuildStatus = getFinalBuildStatus(buildStatus, buildId, vmSeqId, startUpVMTask)
-        // 如果是完成状态，则更新构建机启动插件的状态
-        if (finalBuildStatus.isFinish()) {
+
+        // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
+        if (!startUpVMTask.status.isFinish() && finalBuildStatus.isFinish()) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
+            // 如果是完成状态，则更新构建机启动插件的状态
             pipelineTaskService.updateTaskStatus(
                 task = startUpVMTask,
                 userId = startUpVMTask.starter,
@@ -460,27 +462,23 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-
-            // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
-            if (!startUpVMTask.status.isFinish()) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
-                pipelineContainerService.updateContainerStatus(
-                    projectId = projectId,
-                    buildId = buildId,
-                    stageId = startUpVMTask.stageId,
-                    containerId = startUpVMTask.containerId,
-                    startTime = LocalDateTime.now(),
-                    endTime = null,
-                    buildStatus = BuildStatus.RUNNING
-                )
-                containerBuildRecordService.containerStarted(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    containerId = vmSeqId,
-                    executeCount = startUpVMTask.executeCount ?: 1,
-                    containerBuildStatus = finalBuildStatus
-                )
-            }
+            pipelineContainerService.updateContainerStatus(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = startUpVMTask.stageId,
+                containerId = startUpVMTask.containerId,
+                startTime = LocalDateTime.now(),
+                endTime = null,
+                buildStatus = BuildStatus.RUNNING
+            )
+            containerBuildRecordService.containerStarted(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                containerId = vmSeqId,
+                executeCount = startUpVMTask.executeCount ?: 1,
+                containerBuildStatus = finalBuildStatus
+            )
         }
 
         // 失败的话就发终止事件
