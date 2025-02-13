@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -124,13 +124,13 @@ class CreateControl @Autowired constructor(
 
     // 用于控制台上创建
     @ActionAuditRecord(
-        actionId = ActionId.CGS_CREATE,
+        actionId = TencentActionId.CGS_CREATE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.CGS_CREATE_CONTENT
+        content = TencentActionAuditContent.CGS_CREATE_CONTENT
     )
     fun projectCreateWorkspace(
         pmUserId: String,

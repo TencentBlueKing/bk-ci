@@ -9,8 +9,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.ci.UserUtil
@@ -581,13 +580,13 @@ class ExpertSupportService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_EXPAND_DISK,
+        actionId = TencentActionId.CGS_EXPAND_DISK,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_EXPAND_DISK_CONTENT
+        content = TencentActionAuditContent.CGS_EXPAND_DISK_CONTENT
     )
     fun expandDisk(
         workspaceName: String,
@@ -614,7 +613,7 @@ class ExpertSupportService @Autowired constructor(
             )
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         // 暂时定死 mountType
@@ -728,7 +727,7 @@ class ExpertSupportService @Autowired constructor(
             instanceIds = "#workspaceName"
         ),
         // TODO: 未来挪了之后需要改成CREATE
-        content = ActionAuditContent.CGS_EXPAND_DISK_CONTENT
+        content = TencentActionAuditContent.CGS_EXPAND_DISK_CONTENT
     )
     fun createDisk(
         workspaceName: String,
@@ -754,7 +753,7 @@ class ExpertSupportService @Autowired constructor(
             )
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         // 暂时定死 mountType

@@ -5,8 +5,8 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
@@ -68,11 +68,11 @@ class GitProxyTGitService @Autowired constructor(
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     @ActionAuditRecord(
-        actionId = ActionId.TGIT_LINK_CREATE,
+        actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.TGIT_LINK
         ),
-        content = ActionAuditContent.TGIT_LINK_CREATE_CONTENT
+        content = TencentActionAuditContent.TGIT_LINK_CREATE_CONTENT
     )
     fun checkUserPermission(
         userId: String,
@@ -138,7 +138,7 @@ class GitProxyTGitService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .setInstanceName(result.toString())
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
         // ITSM单据以及其触发的流水线变量有长度限制，这里分组提单
@@ -242,11 +242,11 @@ class GitProxyTGitService @Autowired constructor(
      * OP回调链接工蜂acl
      */
     @ActionAuditRecord(
-        actionId = ActionId.TGIT_LINK_CREATE,
+        actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.TGIT_LINK
         ),
-        content = ActionAuditContent.TGIT_LINK_CALLBACK_CREATE_CONTENT
+        content = TencentActionAuditContent.TGIT_LINK_CALLBACK_CREATE_CONTENT
     )
     fun linkTGit(
         projectId: String,
@@ -277,7 +277,7 @@ class GitProxyTGitService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .setInstanceName(newRepoIds.toString())
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
         val tokenBox = TokenBox(client, true)
@@ -480,13 +480,13 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.TGIT_LINK_DELETE,
+        actionId = TencentActionId.TGIT_LINK_DELETE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.TGIT_LINK,
             instanceIds = "#userId",
             instanceNames = "#repoId"
         ),
-        content = ActionAuditContent.TGIT_LINK_DELETE_CONTENT
+        content = TencentActionAuditContent.TGIT_LINK_DELETE_CONTENT
     )
     fun deleteTgitLink(
         userId: String,
@@ -496,7 +496,7 @@ class GitProxyTGitService @Autowired constructor(
     ): Boolean {
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .scopeId = projectId
 
         if (onlyDelete == true) {
@@ -798,12 +798,12 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.TGIT_LINK_CREATE,
+        actionId = TencentActionId.TGIT_LINK_CREATE,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.TGIT_LINK,
             instanceIds = "#userId"
         ),
-        content = ActionAuditContent.TGIT_LINK_CREATE_PROJECT_CONTENT
+        content = TencentActionAuditContent.TGIT_LINK_CREATE_PROJECT_CONTENT
     )
     fun createProjectAndLinkTGit(
         userId: String,
@@ -820,7 +820,7 @@ class GitProxyTGitService @Autowired constructor(
         // 审计
         ActionAuditContext.current()
             .setInstanceName("${info.name}|${info.svnProject}|${info.namespaceId}")
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, info.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, info.projectId)
             .scopeId = info.projectId
 
         val data = offshoreTGitApiClient.createProject(

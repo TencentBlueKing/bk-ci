@@ -32,7 +32,9 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -95,7 +97,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_MAKE_IMAGE_CONTENT
+        content = TencentActionAuditContent.CGS_MAKE_IMAGE_CONTENT
     )
     fun makeWorkspaceImage(
         userId: String,

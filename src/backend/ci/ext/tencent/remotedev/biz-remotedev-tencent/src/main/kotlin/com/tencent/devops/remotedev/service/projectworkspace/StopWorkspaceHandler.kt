@@ -31,8 +31,8 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -81,13 +81,13 @@ class StopWorkspaceHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_STOP,
+        actionId = TencentActionId.CGS_STOP,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_STOP_CONTENT
+        content = TencentActionAuditContent.CGS_STOP_CONTENT
     )
     fun stopWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId stop project workspace $workspaceName")
@@ -99,7 +99,7 @@ class StopWorkspaceHandler @Autowired constructor(
         permissionService.checkUserManager(userId, workspace.projectId)
 
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)
 
         RedisCallLimit(
