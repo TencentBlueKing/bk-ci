@@ -283,12 +283,11 @@ const getCountPipelineByDialect = async () => {
   }
 }
 
-const beforeChange = async () => {
-  confirmSwitch.value = '';
-  await getCountPipelineByDialect();
-
-  return new Promise((resolve) => {
+const beforeChange = () => {
+  return new Promise(async (resolve) => {
     if (props.type === 'edit') {
+      confirmSwitch.value = '';
+      await getCountPipelineByDialect();
       const copyText = t('我已明确变更风险且已确认变更无影响');
       const isClassic = projectData.value.properties.pipelineDialect !== 'CLASSIC';
       const title = isClassic ? t('确认切换成“传统风格？') : t('确认切换成“制约风格？');
