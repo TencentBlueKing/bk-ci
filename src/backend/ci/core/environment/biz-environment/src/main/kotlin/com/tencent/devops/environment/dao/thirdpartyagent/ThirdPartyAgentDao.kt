@@ -434,9 +434,8 @@ class ThirdPartyAgentDao {
         projectId: String
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectCount()
+            return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(ID.desc())
                 .fetchOne(0, Long::class.java)!!
         }
     }
