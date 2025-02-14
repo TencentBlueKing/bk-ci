@@ -436,6 +436,7 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status))
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -449,9 +450,10 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.select(ID, NODE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status))
                 .orderBy(ID.desc())
                 .limit(offset, limit)
-                .fetch().associate { HashUtil.encodeLongId(it.value1()) to HashUtil.encodeLongId(it.value2()) }
+                .fetch().associate { HashUtil.encodeLongId(it.value1()) to HashUtil.encodeLongId(it.value2() ?: 0) }
         }
     }
 
