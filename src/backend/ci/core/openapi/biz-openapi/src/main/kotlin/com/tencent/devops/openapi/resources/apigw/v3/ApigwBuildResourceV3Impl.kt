@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -77,13 +78,14 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<ModelDetail> {
+    ): Result<ModelRecord> {
         logger.info("OPENAPI_BUILD_V3|$userId|detail|$projectId|$pipelineId|$buildId")
-        return client.get(ServiceBuildResource::class).getBuildDetail(
+        return client.get(ServiceBuildResource::class).getBuildRecordByExecuteCount(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            executeCount = null,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
