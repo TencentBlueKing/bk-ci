@@ -127,6 +127,16 @@ class PipelineTransferYamlService @Autowired constructor(
                 )
             }
             PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
+            val pipelineInfo = pipelineId?.let {
+                pipelineInfoDao.convert(
+                    t = pipelineInfoDao.getPipelineInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    ),
+                    templateId = null
+                )
+            }
             when (actionType) {
                 TransferActionType.FULL_MODEL2YAML -> {
                     watcher.start("step_1|FULL_MODEL2YAML start")
@@ -137,6 +147,7 @@ class PipelineTransferYamlService @Autowired constructor(
                             userId = userId,
                             model = data.modelAndSetting!!.model,
                             setting = data.modelAndSetting!!.setting,
+                            pipelineInfo = pipelineInfo,
                             version = defaultVersion,
                             aspectWrapper = PipelineTransferAspectWrapper(aspects)
                         )
@@ -160,34 +171,8 @@ class PipelineTransferYamlService @Autowired constructor(
                     watcher.start("step_1|FULL_YAML2MODEL start")
                     PipelineTransferAspectLoader.checkLockResourceJob(aspects)
                     yamlSchemaCheck.check(data.oldYaml)
-                    val pipelineInfo = pipelineId?.let {
-                        pipelineInfoDao.convert(
-                            t = pipelineInfoDao.getPipelineInfo(
-                                dslContext = dslContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId
-                            ),
-                            templateId = null
-                        )
-                    }
-                    val pYml = TransferMapper.getObjectMapper()
-                        .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYamlParser>() {})
                     watcher.start("step_2|parse template")
-                    pYml.replaceTemplate { templateFilter ->
-                        YamlTemplate(
-                            yamlObject = templateFilter,
-                            filePath = TemplatePath(TEMPLATE_ROOT_FILE),
-                            extraParameters = this,
-                            getTemplateMethod = ::getTemplate,
-                            nowRepo = null,
-                            repo = null,
-                            resourcePoolMapExt = null,
-                            // TODO #8161 留给模板时再考虑
-                            conf = YamlTemplateConf(
-                                useOldParametersExpression = false
-                            )
-                        ).replace()
-                    }
+                    val pYml = loadYaml(data.oldYaml)
                     watcher.start("step_3|transfer start")
                     val input = YamlTransferInput(
                         userId = userId,
@@ -214,6 +199,27 @@ class PipelineTransferYamlService @Autowired constructor(
             watcher.stop()
         }
         return TransferResponse()
+    }
+
+    fun loadYaml(yaml: String): IPreTemplateScriptBuildYamlParser {
+        val pYml = TransferMapper.getObjectMapper()
+            .readValue(yaml, object : TypeReference<IPreTemplateScriptBuildYamlParser>() {})
+        pYml.replaceTemplate { templateFilter ->
+            YamlTemplate(
+                yamlObject = templateFilter,
+                filePath = TemplatePath(TEMPLATE_ROOT_FILE),
+                extraParameters = this,
+                getTemplateMethod = ::getTemplate,
+                nowRepo = null,
+                repo = null,
+                resourcePoolMapExt = null,
+                // TODO #8161 留给模板时再考虑
+                conf = YamlTemplateConf(
+                    useOldParametersExpression = false
+                )
+            ).replace()
+        }
+        return pYml
     }
 
     fun modelTaskTransfer(
