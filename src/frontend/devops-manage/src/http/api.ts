@@ -394,12 +394,18 @@ export default {
     return http.post(`${USER_PERFIX}/auth/handover/listGroupsOfHandover`, params);
   },
   /**
-   * 获取全部流水线
+   * 根据流水线方言获取流水线数量
    */
-  listViewPipelines(projectId: string, params: any) {
+  countPipelineByDialect(projectId: string, dialect: any) {
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/countPipelineByDialect?dialect=${dialect}`);
+  },
+  /**
+   * 根据流水线方言获取流水线列表
+   */
+  listPipelinesByDialect(projectId: string, params: any) {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return http.get(`${PIPELINES_PERFIX}/projects/${projectId}/listViewPipelines?${query}`);
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/listPipelinesByDialect?${query}`);
   },
 };

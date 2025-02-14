@@ -13,7 +13,7 @@ import {
 } from 'bkui-vue/lib/icon';
 import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
-import { Message, Popover, InfoBox, Alert, Input } from 'bkui-vue';
+import { Message, Popover, InfoBox, Alert } from 'bkui-vue';
 import http from '@/http/api';
 import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 import copyImg from "@/css/svg/copy.svg";
@@ -112,7 +112,7 @@ const confirmSwitch = ref('');
 const pipelineSideslider = ref(false);
 const pipelineList = ref([]);
 const isLoading = ref(false);
-const pipelinePagination = ref({ count: 0, limit: 100, current: 1 });
+const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
@@ -250,7 +250,7 @@ const changeClassic = () => {
         class: 'tip-blue',
         onClick() {
           pipelineSideslider.value = true;
-          // Message({ theme: 'success', message: t('复制成功') });
+          fetchListViewPipelines()
         },
       }, t('X条', [pipelinePagination.value.count])),
       h('span', t('alarmTip2'))
@@ -259,13 +259,14 @@ const changeClassic = () => {
 };
 
 const changeConstrained = () => {
-  return createAlertContent('危险操作告警：', [
+  return createAlertContent(t('危险操作告警：'), [
     h('p', [
       h('span', t('alarmTip3')),
       h('span', {
         class: 'tip-blue',
         onClick() {
           pipelineSideslider.value = true;
+          fetchListViewPipelines()
         },
       }, t('X条', [pipelinePagination.value.count])),
       h('span', t('alarmTip4'))
@@ -273,8 +274,18 @@ const changeConstrained = () => {
   ]);
 };
 
+const getCountPipelineByDialect = async () => {
+  try {
+    const res = await http.countPipelineByDialect(projectData.value.englishName, projectData.value.properties.pipelineDialect);
+    pipelinePagination.value.count = res;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 const beforeChange = async () => {
   confirmSwitch.value = '';
+  getCountPipelineByDialect();
 
   return new Promise((resolve) => {
     if (props.type === 'edit') {
@@ -337,37 +348,34 @@ const beforeChange = async () => {
 
 const fetchListViewPipelines = async ()=> {
   try {
-    isLoading.value = true
+    isLoading.value = true;
     const params = {
-      showDelete: true,
-      sortType: 'CREATE_TIME',
-      collation: 'DESC',
+      dialect: projectData.value.properties.pipelineDialect,
       page: pipelinePagination.value.current,
       pageSize: pipelinePagination.value.limit,
-      viewId: 'allPipeline'
-    }
-    const res = await http.listViewPipelines(projectData.value.englishName, params)
-    pipelineList.value = res.records
-    pipelinePagination.value.count = res.count
+    };
+    const res = await http.listPipelinesByDialect(projectData.value.englishName, params);
+    pipelineList.value = res.records;
+    pipelinePagination.value.count = res.count;
   } catch (error) {
     console.log(error);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 
 const pageLimitChange = (limit: number) => {
   pipelinePagination.value.limit = limit;
-  fetchListViewPipelines()
+  fetchListViewPipelines();
 }
 
 const pageValueChange = (value:number) => {
   pipelinePagination.value.current = value;
-  fetchListViewPipelines()
+  fetchListViewPipelines();
 }
 
 const handleToPipeline = (row) => {
-  window.open(`/console/pipeline/${row.projectId}/${row.pipelineId}/history/pipeline`, '__blank')
+  window.open(`/console/pipeline/${projectData.value.englishName}/${row.pipelineId}/history/pipeline`, '__blank');
 }
 
 const handleMessage = (event: any) => {
@@ -456,9 +464,6 @@ watch(() => [projectData.value.authSecrecy, projectData.value.projectType, proje
 
 onMounted(async () => {
   await fetchUserDetail();
-  if (props.type === 'edit' && projectData.value.englishName) {
-    fetchListViewPipelines();
-  }
   // await fetchDepartmentList();
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);

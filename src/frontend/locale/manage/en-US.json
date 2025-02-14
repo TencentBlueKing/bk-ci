@@ -333,5 +333,11 @@
     "alarmTip4": "Pipelines inheriting project settings are at risk of execution failure! Please check the pipeline configuration and change the pipeline settings to not inherit project settings before confirming this change.",
     "流水线名称": "Pipeline Name",
     "切换变量语法风格影响的流水线列表": "List of pipelines affected by changing variable syntax style",
-    "共X个": "Total {0}"
+    "共X个": "Total {0}",
+    "确认切换成“传统风格？": "Confirm switch to 'classic style'?",
+    "确认切换成“制约风格？": "Confirm switch to 'constrained style'?",
+    "确认切换": "Confirm switch",
+    "以确认切换": "To confirm switch",
+    "请输入：我已明确变更风险且已确认变更无影响": "Please enter: I have acknowledged the change risk and confirmed there is no impact.",
+    "复制成功": "Copy successful"
 }
