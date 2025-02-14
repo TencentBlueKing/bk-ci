@@ -31,46 +31,49 @@ class TxMigrateService(
                 offset = offset
             ).data ?: break
             migrateProjects.forEach { projectInfo ->
-                migrateRemoteDevManager(projectInfo)
+                try {
+                    migrateRemoteDevManager(projectInfo.englishName)
+                } catch (ex: Exception) {
+                    logger.warn("migrate remote dev manager failed |${projectInfo.englishName}| $ex")
+                }
+
             }
             offset += limit
         } while (migrateProjects.size == limit)
     }
 
-    fun migrateRemoteDevManager(projectInfo: ProjectByConditionDTO) {
-        logger.info("migrate remote dev manager ${projectInfo.englishName}|${projectInfo.remotedevManager}")
-        try {
-            val gradeManagerId = resourceService.get(
-                projectCode = projectInfo.englishName,
-                resourceType = ResourceTypeId.PROJECT,
-                resourceCode = projectInfo.englishName
-            ).relationId
-            permissionGradeManagerService.modifyGradeManager(
-                gradeManagerId = gradeManagerId,
-                projectCode = projectInfo.englishName,
-                projectName = projectInfo.projectName
-            )
-            val groupId = permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
-                projectId = projectInfo.englishName,
-                resourceType = ResourceTypeId.PROJECT,
-                resourceCode = projectInfo.englishName,
-                groupCode = BkAuthGroup.CGS_MANAGER.value
-            )
-            projectInfo.remotedevManager?.let { managers ->
-                val managerList = managers.split(";")
-                managerList.forEach {
-                    permissionResourceMemberService.addGroupMember(
-                        projectCode = projectInfo.englishName,
-                        memberId = it,
-                        memberType = MemberType.USER.type,
-                        expiredAt = 4102444800,
-                        iamGroupId = groupId
-                    )
-                }
+    fun migrateRemoteDevManager(projectCode: String): Int {
+        logger.info("migrate remote dev manager $projectCode")
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data!!
+        val gradeManagerId = resourceService.get(
+            projectCode = projectInfo.englishName,
+            resourceType = ResourceTypeId.PROJECT,
+            resourceCode = projectInfo.englishName
+        ).relationId
+        permissionGradeManagerService.modifyGradeManager(
+            gradeManagerId = gradeManagerId,
+            projectCode = projectInfo.englishName,
+            projectName = projectInfo.projectName
+        )
+        val groupId = permissionResourceGroupService.createGroupAndPermissionsByGroupCode(
+            projectId = projectInfo.englishName,
+            resourceType = ResourceTypeId.PROJECT,
+            resourceCode = projectInfo.englishName,
+            groupCode = BkAuthGroup.CGS_MANAGER.value
+        )
+        projectInfo.properties?.remotedevManager?.let { managers ->
+            val managerList = managers.split(";")
+            managerList.forEach {
+                permissionResourceMemberService.addGroupMember(
+                    projectCode = projectInfo.englishName,
+                    memberId = it,
+                    memberType = MemberType.USER.type,
+                    expiredAt = 4102444800,
+                    iamGroupId = groupId
+                )
             }
-        } catch (ex: Exception) {
-            logger.warn("migrate remote dev manager failed |${projectInfo.englishName}| $ex")
         }
+        return groupId
     }
 
     companion object {
