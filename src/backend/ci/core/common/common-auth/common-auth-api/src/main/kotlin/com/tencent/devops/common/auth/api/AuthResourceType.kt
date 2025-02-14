@@ -60,6 +60,7 @@ enum class AuthResourceType(val value: String) {
     WETEST_EMAIL_GROUP("email_group"), // 体验组
 
     PROJECT("project"), // 项目管理
+    CGS(""),
 
     TURBO("turbo"), // 编译加速
     CODECC_TASK("codecc_task"), // CodeCC任务
