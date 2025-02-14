@@ -63,12 +63,12 @@ object StoreMessageCode {
     const val USER_LOGO_SIZE_IS_INVALID = "2120011" // logo的尺寸应为{0}x{1}
     const val USER_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // logo不支持{0}类型，可以上传{1}类型
     const val UPLOAD_LOGO_IS_TOO_LARGE = "2120013" // 研发商店：上传的logo文件不能超过{0}
-    const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，请检查
+    const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，错误原因:{1}
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
     const val USER_COMPONENT_ADMIN_COUNT_ERROR = "2120016" // 研发商店：管理员个数不能少于1个
     const val ADD_ATOM_PLATFORM_INFO_FAILED = "2120017" // 添加插件对接平台信息失败
     const val USER_ATOM_QUALITY_CONF_INVALID = "2120018" // 研发商店：插件配置文件[quality.json]{0}格式不正确，请检查
-    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
+    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json]失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
     const val USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：组件{0}已发布到商店，请先下架再删除
@@ -83,7 +83,7 @@ object StoreMessageCode {
     const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031" // 研发商店：插件当前版本减少了出参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
     const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
     const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
-    const val USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID = "2120034" // 研发商店：插件配置文件[task.json]{0}操作系统默认环境配置数量为{1}个，默认环境配置数量有且只能为1个
+    const val USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID = "2120034" // 研发商店：配置文件[{0}]{1}操作系统默认环境配置数量为{2}个，默认环境配置数量有且只能为1个
     const val USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL = "2120035" // 研发商店：从[{0}]分支拉取插件配置文件[error.json]失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE = "2120036" // 研发商店：插件配置文件[error.json]errorCode字段数据重复，请检查{0}
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
@@ -91,6 +91,10 @@ object StoreMessageCode {
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
     // 研发商店：插件配置文件[task.json]config配置格式不正确,{0}
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
+    // 研发商店: 拉取文件[{0}]失败，失败原因：{1}
+    const val USER_PULL_FILE_FAIL = "2120041"
+    // 插件包文件[{0}]不存在，请检查文件所在路径是否正确
+    const val ATOM_PACKAGE_FILE_NOT_FOUND = "2120042"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
@@ -165,4 +169,5 @@ object StoreMessageCode {
     // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
     const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
     const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
+    const val STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL = "2120937" // 研发商店：代码库删除失败，失败原因:{0}
 }

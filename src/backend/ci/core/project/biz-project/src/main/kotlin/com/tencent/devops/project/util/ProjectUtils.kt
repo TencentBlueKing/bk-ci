@@ -110,7 +110,9 @@ object ProjectUtils {
                 pipelineLimit = pipelineLimit,
                 routerTag = routerTag,
                 relationId = relationId,
-                properties = properties.takeIf { !it.isNullOrBlank() }?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                properties = properties.takeIf { !it.isNullOrBlank() }
+                    ?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                    ?: ProjectProperties(),
                 subjectScopes = subjectScopes.takeIf { !it.isNullOrBlank() }?.let {
                     JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
                 },
@@ -136,6 +138,8 @@ object ProjectUtils {
             JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
         }
         return with(tProjectRecord) {
+            val projectProperties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+            val projectApprovalProperties = projectApprovalInfo?.properties
             ProjectDiffVO(
                 id = id,
                 projectId = projectId,
@@ -190,7 +194,13 @@ object ProjectUtils {
                 productId = productId,
                 afterProductId = projectApprovalInfo?.productId,
                 productName = beforeProductName,
-                afterProductName = projectApprovalInfo?.productName
+                afterProductName = projectApprovalInfo?.productName,
+                pipelineDialect = projectProperties?.pipelineDialect,
+                afterPipelineDialect = projectApprovalProperties?.pipelineDialect,
+                enablePipelineNameTips = projectProperties?.enablePipelineNameTips,
+                afterEnablePipelineNameTips = projectApprovalProperties?.enablePipelineNameTips,
+                pipelineNameFormat = projectProperties?.pipelineNameFormat,
+                afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat
             )
         }
     }

@@ -61,6 +61,8 @@ data class CodeGitRepository(
 ) : Repository {
     companion object {
         const val classType = "codeGit"
+        // 内部工蜂
+        const val SCM_CODE = "TGIT"
     }
 
     override fun getStartPrefix(): String {

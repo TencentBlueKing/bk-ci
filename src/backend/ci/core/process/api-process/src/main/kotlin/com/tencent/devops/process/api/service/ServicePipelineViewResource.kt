@@ -38,9 +38,9 @@ import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -198,4 +198,24 @@ interface ServicePipelineViewResource {
         isProject: Boolean?,
         pipelineView: PipelineViewForm
     ): Result<Boolean>
+
+    @Operation(summary = "根据流水线ID获取视图ID(流水线组ID)")
+    @GET
+    @Path("/pipelines/{pipelineId}/listViewIds")
+    fun listViewIdsByPipelineId(
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Set<Long>>
+
+    @Operation(summary = "根据视图ID获取流水线ID列表")
+    @POST
+    @Path("/pipelines/listPipelineIdByViewIds")
+    fun listPipelineIdByViewIds(
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "按视图过滤", required = false)
+        viewIdsEncode: List<String>
+    ): Result<List<String>>
 }

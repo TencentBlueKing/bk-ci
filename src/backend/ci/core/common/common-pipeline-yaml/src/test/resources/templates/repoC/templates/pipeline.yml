@@ -74,7 +74,7 @@ stages:
             timeout-minutes: 480
             continue-on-error: false
             retry-times: 0
-#            env:
+            env:
           #          - template: steps.yml
           #            parameters:
           #              username: STEP
@@ -224,4 +224,3 @@ notices:
       # - ww230072302
     content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
     if: FAILURE
-

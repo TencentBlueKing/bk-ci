@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -270,6 +270,7 @@
 |  25   | PROJECT_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 项目类型  |
 |  26   | PRODUCT_ID |   int   | 10 |   0    |    Y     |  N   |       | 运营产品 ID  |
 |  27   | PRODUCT_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 运营产品名称  |
+|  28   | PROPERTIES |   text   | 65535 |   0    |    Y     |  N   |       | 项目其他配置  |
 
 **表名：** <a>T_PROJECT_DATA_MIGRATE_HISTORY</a>
 

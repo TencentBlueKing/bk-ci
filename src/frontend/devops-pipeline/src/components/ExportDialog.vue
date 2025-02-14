@@ -1,17 +1,37 @@
 <template>
     <bk-dialog
         :value="isShow"
-        :width="480"
+        :width="560"
         :auto-close="false"
         :show-footer="false"
         :title="$t('newlist.chooseExport')"
-        @cancel="handleCancel">
+        @cancel="handleCancel"
+    >
         <ul class="export-list">
-            <li v-for="exportItem in exportList" :key="exportItem.exportUrl" class="export-item">
-                <logo :name="exportItem.icon" class="export-icon" />
+            <li
+                v-for="exportItem in exportList"
+                :key="exportItem.exportUrl"
+                class="export-item"
+            >
+                <logo
+                    :name="exportItem.icon"
+                    class="export-icon"
+                />
                 <h5 class="export-title">{{ exportItem.title }}</h5>
-                <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
-                <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
+                <p class="export-tip">
+                    {{ exportItem.tips }}<a
+                        :href="exportItem.tipsLink"
+                        v-if="exportItem.tipsLink"
+                        target="_blank"
+                    >{{ $t('newlist.knowMore') }}</a>
+                </p>
+                <bk-button
+                    class="export-button"
+                    @click="downLoadFromApi(exportItem)"
+                    :loading="isDownLoading"
+                >
+                    {{ $t('newlist.exportPipelineJson') }}
+                </bk-button>
             </li>
         </ul>
     </bk-dialog>
@@ -21,6 +41,7 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import Logo from '@/components/Logo'
     import { mapActions, mapState } from 'vuex'
+    import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -38,6 +59,8 @@
 
         computed: {
             ...mapState('atom', [
+                'pipeline',
+                'pipelineSetting',
                 'pipelineInfo'
             ]),
 
@@ -56,11 +79,27 @@
             exportList () {
                 return [
                     {
+                        type: UI_MODE,
                         title: 'Pipeline Json',
                         icon: 'export-pipeline',
                         name: `${this.pipelineName}.json`,
                         tips: this.$t('newlist.exportJsonTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
+                    },
+                    {
+                        type: CODE_MODE,
+                        title: 'Pipeline YAML',
+                        icon: 'export-pipeline',
+                        name: `${this.pipelineName}.yml`,
+                        tips: this.$t('newlist.exportPipelineYamlTip'),
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${this.projectId}?pipelineId=${this.pipelineId}&actionType=FULL_MODEL2YAML`,
+                        tipsLink: this.BKCI_DOCS?.PAC_GUIDE_DOC,
+                        params: {
+                            modelAndSetting: {
+                                model: this.pipeline,
+                                setting: this.pipelineSetting
+                            }
+                        }
                     }
                 ]
             }
@@ -73,9 +112,10 @@
                 this.$emit('update:isShow', false)
             },
 
-            downLoadFromApi (url, name) {
+            downLoadFromApi (exportItem) {
+                const { exportUrl: url, name, params, type } = exportItem
                 this.isDownLoading = true
-                this.download({ url, name }).catch((e) => {
+                this.download({ url, name, params, type }).catch((e) => {
                     this.handleError(
                         e,
                         {

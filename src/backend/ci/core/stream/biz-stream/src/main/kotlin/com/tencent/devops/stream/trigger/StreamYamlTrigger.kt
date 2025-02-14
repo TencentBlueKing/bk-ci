@@ -194,7 +194,7 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction,
         triggerEvent: Pair<List<Any>?, TriggerResult>?
     ): Boolean {
-        action.data.watcherStart("streamYamlTrigger.triggerBuild")
+        action.data.watcherStart("streamYamlTrigger.triggerBuild.start")
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
                 "|${action.data.context.requestEventId}|action|${action.format()}"
@@ -253,6 +253,7 @@ class StreamYamlTrigger @Autowired constructor(
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
+        action.data.watcherStart("streamYamlTrigger.triggerBuild.isMatch")
         // 前面使用缓存触发器判断过得就不用再判断了
         // 同时使用缓存触发成功的肯定不用在重复注册各类事件了
         val tr = if (triggerEvent?.second != null) {
@@ -427,6 +428,7 @@ class StreamYamlTrigger @Autowired constructor(
     fun prepareCIBuildYaml(
         action: BaseAction
     ): YamlReplaceResult? {
+        action.data.watcherStart("streamYamlTrigger.prepareCIBuildYaml")
         logger.info(
             "StreamYamlTrigger|prepareCIBuildYaml" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
@@ -493,6 +495,7 @@ class StreamYamlTrigger @Autowired constructor(
                     concurrency = concurrency
                 )
             }
+            action.data.watcherStart("streamYamlTrigger.prepareCIBuildYaml.end")
             return YamlReplaceResult(
                 preYaml = newPreYamlObject,
                 normalYaml = normalYaml,

@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -41,11 +40,12 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.PageUtil
@@ -68,10 +68,10 @@ class MigrateV0PolicyService constructor(
     private val migrateIamApiService: MigrateIamApiService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
@@ -82,9 +82,9 @@ class MigrateV0PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService,
+    rbacCommonService = rbacCommonService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
     permissionResourceMemberService = permissionResourceMemberService
 ) {
 
@@ -486,7 +486,7 @@ class MigrateV0PolicyService constructor(
                     groupId = it.toInt(),
                     defaultGroup = true,
                     member = RoleGroupMemberInfo().apply {
-                        type = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)
+                        type = MemberType.TEMPLATE.type
                         id = subjectTemplateId
                         name = subjectTemplateId
                         expiredAt = 0

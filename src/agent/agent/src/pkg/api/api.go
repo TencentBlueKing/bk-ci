@@ -29,6 +29,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"reflect"
 	"strconv"
 
@@ -64,7 +65,7 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 		HostIp:        config.GAgentEnv.GetAgentIp(),
 		DetectOs:      config.GAgentEnv.OsName,
 		MasterVersion: config.AgentVersion,
-		SlaveVersion:  config.GAgentEnv.SlaveVersion,
+		SlaveVersion:  third_components.Worker.GetVersion(),
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(startInfo, false).

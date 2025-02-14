@@ -1,5 +1,6 @@
 package com.tencent.devops.common.pipeline.type.agent
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
@@ -9,6 +10,9 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 abstract class ThirdPartyAgentDispatch(
     override var value: String,
     open val agentType: AgentType,
+    open var workspace: String?,
+    // 第三方构建机用docker作为构建机
+    open val dockerInfo: ThirdPartyAgentDockerInfo?,
     // 类型为REUSE_JOB时，被复用的job的value，防止同一个stage并发下拿不到agent，启动时填充
     open var reusedInfo: ReusedInfo?
 ) : DispatchType(value) {
@@ -19,6 +23,9 @@ abstract class ThirdPartyAgentDispatch(
 
     // 是否在复用锁定链上
     fun hasReuseMutex(): Boolean = this.agentType.isReuse() || this.reusedInfo != null
+
+    fun isEnv() = this is ThirdPartyAgentEnvDispatchType
+    fun isSingle() = this is ThirdPartyAgentIDDispatchType
 }
 
 /**
@@ -27,6 +34,7 @@ abstract class ThirdPartyAgentDispatch(
  * @param agentType 被复用Job的类型
  * @param jobId 非根节点且被复用节点所复用的根jobId
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ReusedInfo(
     val value: String,
     val agentType: AgentType,

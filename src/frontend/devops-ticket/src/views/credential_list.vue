@@ -6,20 +6,67 @@
             </template>
         </content-header>
 
-        <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-            <div v-if="showContent && renderList.length" class="table-container">
+        <section
+            class="sub-view-port"
+            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        >
+            <div
+                v-if="showContent && renderList.length"
+                class="table-container"
+            >
                 <bk-table
                     :data="renderList"
                     size="small"
                     :show-pagination-info="true"
                     :pagination="pagination"
                     @page-change="handlePageChange"
-                    @page-limit-change="handlePageCountChange">
-                    <bk-table-column :label="$t('ticket.id')" prop="credentialId" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('ticket.alias')" prop="credentialName" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('ticket.type')" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
-                    <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('ticket.operation')" width="200">
+                    @page-limit-change="handlePageCountChange"
+                >
+                    <bk-table-column
+                        :label="$t('ticket.id')"
+                        prop="credentialId"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.alias')"
+                        prop="credentialName"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.type')"
+                        prop="credentialType"
+                        :formatter="changeTicketType"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.remark')"
+                        prop="credentialRemark"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.creator')"
+                        prop="createUser"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.creationTime')"
+                        prop="createTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedBy')"
+                        prop="updateUser"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedTime')"
+                        prop="updatedTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.operation')"
+                        width="200"
+                    >
                         <template slot-scope="props">
                             <template v-if="props.row.permissions.use">
                                 <bk-button
@@ -33,7 +80,12 @@
                                             action: CRED_RESOURCE_ACTION.EDIT
                                         }
                                     }"
-                                    theme="primary" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                                    theme="primary"
+                                    text
+                                    @click="handleEditCredential(props.row)"
+                                >
+                                    {{ $t('ticket.edit') }}
+                                </bk-button>
     
                                 <bk-button
                                     v-perm="{
@@ -46,19 +98,32 @@
                                             action: CRED_RESOURCE_ACTION.DELETE
                                         }
                                     }"
-                                    theme="primary" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                                    theme="primary"
+                                    text
+                                    @click="handleDeleteCredentail(props.row)"
+                                >
+                                    {{ $t('ticket.delete') }}
+                                </bk-button>
                             </template>
                             <template v-else>
                                 <bk-button
                                     theme="primary"
                                     outline
-                                    @click="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('ticket.applyPermission') }}
+                                </bk-button>
                             </template>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
-            <empty-tips :title="tip.title" :desc="tip.desc" :btns="tip.btns" v-if="showContent && !renderList.length"></empty-tips>
+            <empty-tips
+                :title="tip.title"
+                :desc="tip.desc"
+                :btns="tip.btns"
+                v-if="showContent && !renderList.length"
+            ></empty-tips>
         </section>
     </article>
 </template>
@@ -67,6 +132,7 @@
     import EmptyTips from '@/components/devops/emptyTips'
     import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
     import { mapGetters } from 'vuex'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -263,6 +329,9 @@
             },
             addCredentialHandler () {
                 this.$router.push('createCredential')
+            },
+            convertToTime (row, cell, time) {
+                return convertTime(time * 1000)
             }
         }
     }

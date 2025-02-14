@@ -44,13 +44,15 @@ class BuildRepositoryMaterialResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
+        pipelineBuildMaterials: List<PipelineBuildMaterial>,
+        taskId: String?
     ): Result<Int> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         return Result(pipelineBuildMaterialService.saveBuildMaterial(
             buildId = buildId,
             projectId = projectId,
-            pipelineBuildMaterials = pipelineBuildMaterials
+            pipelineBuildMaterials = pipelineBuildMaterials,
+            taskId = taskId
         ))
     }
 

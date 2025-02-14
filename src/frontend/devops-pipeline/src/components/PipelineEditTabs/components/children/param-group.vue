@@ -1,22 +1,33 @@
 <template>
     <div class="bk-param-container">
-        <header :active="isShow" @click="toggleContent" class="var-header">
+        <header
+            :active="isShow"
+            @click="toggleContent"
+            class="var-header"
+        >
             <slot name="header">
                 <section class="header-content">
-                    <bk-icon class="toggle-icon" type="right-shape" />
-                    <span class="item-title">{{title}}</span>
+                    <bk-icon
+                        class="toggle-icon"
+                        type="right-shape"
+                    />
+                    <span class="item-title">{{ title }}</span>
                     <i
                         v-if="tips"
                         v-bk-tooltips="{ content: tips }"
-                        class="bk-icon icon-info-circle">
+                        class="bk-icon icon-info-circle"
+                    >
                     </i>
                 </section>
 
-                <span class="item-num">{{itemNum}}</span>
+                <span class="item-num">{{ itemNum }}</span>
             </slot>
         </header>
         <transition name="slideLeft">
-            <section v-show="isShow" class="var-content">
+            <section
+                v-show="isShow"
+                class="var-content"
+            >
                 <slot name="content">
                     <vue-draggable
                         class="bk-param-drag-list"
@@ -24,7 +35,8 @@
                         handle=".drag-area"
                         :list="list"
                         :group="{ name: 'bk-param-list', pull: false, put: false }"
-                        @change="triggerSort">
+                        @change="triggerSort"
+                    >
                         <div
                             v-for="(param) in list"
                             :key="param.id"
@@ -33,23 +45,52 @@
                             }]"
                             @click="handleEdit(param.id)"
                         >
-                            <div v-if="editable" class="drag-area" @click.stop>
+                            <div
+                                v-if="editable"
+                                class="drag-area"
+                                @click.stop
+                            >
                                 <i class="bk-icon icon-grag-fill"></i>
                             </div>
                             <div class="var-con">
-                                <div class="var-names" :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }" v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }">
+                                <div
+                                    class="var-names"
+                                    :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }"
+                                    v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }"
+                                >
                                     <span>{{ param.id }}</span>
                                     <span>({{ param.name || param.id }})</span>
                                 </div>
-                                <div class="value-operate-row" style="justify-content: space-between;">
+                                <div
+                                    class="value-operate-row"
+                                    style="justify-content: space-between;"
+                                >
                                     <div class="param-value">
-                                        <span v-if="param.readOnly" class="read-only">{{$t('readonlyParams')}}</span>
-                                        <span class="default-value">{{ param.defaultValue || '--' }}</span>
+                                        <span
+                                            v-if="param.readOnly"
+                                            class="read-only"
+                                        >{{ $t('readonlyParams') }}</span>
+                                        <span
+                                            class="default-value"
+                                            v-bk-overflow-tips
+                                        >
+                                            {{ param.defaultValue || '--' }}
+                                        </span>
                                     </div>
-                                    <div v-if="editable" class="var-operate">
-                                        <div class="operate-btns" @click.stop>
-                                            <i @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))" class="bk-icon icon-copy"></i>
+                                    <div
+                                        v-if="editable"
+                                        class="var-operate"
+                                    >
+                                        <div
+                                            class="operate-btns"
+                                            @click.stop
+                                        >
+                                            <i
+                                                @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))"
+                                                class="bk-icon icon-copy"
+                                            ></i>
                                             <bk-popconfirm
+                                                ref="removePopConfirmRef"
                                                 :popover-options="{ appendTo: 'parent' }"
                                                 :title="$t('newui.pipelineParam.removeTitle')"
                                                 :confirm-text="$t('newui.pipelineParam.remove')"
@@ -58,10 +99,16 @@
                                                 width="200"
                                                 ext-cls="delete-param-popconfrim"
                                                 ext-popover-cls="delete-param-popconfrim-content"
-                                                @confirm="handleUpdate(param.id)">
+                                                @confirm="handleUpdate(param.id)"
+                                            >
                                                 <i class="bk-icon icon-minus-circle"></i>
                                             </bk-popconfirm>
-                                            <i v-bk-tooltips="{ content: $t('newui.pipelineParam.toTop') }" @click.stop="handleUpdate(param.id, true)" class="bk-icon icon-angle-double-up" style="font-size: 16px">
+                                            <i
+                                                v-bk-tooltips="{ content: $t('newui.pipelineParam.toTop') }"
+                                                @click.stop="handleUpdate(param.id, true)"
+                                                class="bk-icon icon-angle-double-up"
+                                                style="font-size: 16px"
+                                            >
                                             </i>
                                         </div>
                                     </div>
@@ -144,6 +191,7 @@
                 this.isShow = !this.isShow
             },
             triggerSort (event) {
+                this.$refs.removePopConfirmRef.forEach(i => i?.cancel())
                 // 判断拖拽element的newIndex，如果是newIndex=0, 放到最前面， 否则， 找出他的上一个element
                 const { element, newIndex } = event?.moved
                 if (!element?.id) return
@@ -318,6 +366,7 @@
                                 @include ellipsis();
                             }
                             .read-only {
+                                flex-shrink: 0;
                                 font-size: 12px;
                                 color: #63656E;
                                 background: #F0F1F5;

@@ -1,15 +1,9 @@
 <template>
   <bk-loading class="manage" :loading="isLoading"  :zIndex="100">
     <div class="manage-search">
-      <bk-search-select
-        v-model="searchValue"
-        :data="searchData"
-        unique-select
-        class="multi-search"
-        value-behavior="need-key"
-        :placeholder="filterTips"
-        :get-menu-list="getMenuList"
-        @search="handleSearch(searchValue)"
+      <manage-search
+        ref="manageSearchRef"
+        @search-init="init"
       />
     </div>
     <div class="manage-article" v-if="memberList.length">
@@ -22,7 +16,7 @@
           :active-tab="activeTab"
           @refresh="refresh"
           @handle-click="asideClick"
-          @page-change="handleAsidePageChange"
+          @page-change="getAsidePageChange"
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
         />
@@ -275,90 +269,130 @@
 
   <bk-sideslider
     v-model:isShow="isShowSlider"
-    :title="sliderTitle"
+    :title="title"
     :quick-close="false"
     ext-cls="slider"
     width="960"
     @hidden="batchCancel"
+    :before-close="beforeClose"
   >
     <template #default>
-      <div class="slider-main">
-        <p class="main-desc">
-          <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary">{{ totalCount }}</span>
-          </i18n-t>
-          <i18n-t v-if="inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-            <span class="desc-warn">{{ inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
-          </i18n-t>
-        </p>
-        <div>
-          <GroupTab
-            :source-list="selectSourceList"
-            :is-show-operation="false"
-            :aside-item="asideItem"
-            :batch-flag="batchFlag"
-            :page-limit-change="pageLimitChange"
-            :page-value-change="pageValueChange"
-          />
-        </div>
-      </div>
-      <div class="slider-footer">
-        <div class="footer-main">
-          <div v-if="batchFlag === 'renewal'">
-            <div class="main-line">
-              <p class="main-label">{{t("续期对象")}}</p>
-              <span class="main-text">{{t("用户")}}： {{userName}}</span>
-            </div>
-            <div class="main-line">
-              <p class="main-label">{{t("续期时长")}}</p>
-              <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
-            </div>
+      <div v-if="!isDetail" class="slider-content" :style="{height: invalidAuthorizationCount ? 'calc(100vh - 282px)' : 'calc(100vh - 226px)'}">
+        <div class="slider-main">
+          <p class="main-desc">
+            <i18n-t keypath="已选择X个用户组" tag="div">
+              <span class="desc-primary">{{ checkData.totalCount }}</span>
+            </i18n-t>
+
+            <template v-if="checkData.inoperableCount">
+              <i18n-t keypath="；其中X个用户组X，" tag="span">
+                <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
+              </i18n-t>
+              <span v-if="batchFlag === 'remove' && checkData.needToHandover">
+                {{ t("需先完成交接。") }}
+                <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+              </span>
+              <span v-else>{{ t("本次操作将忽略。") }}</span>
+            </template>
+          </p>
+          <div>
+            <GroupTab
+              :source-list="selectSourceList"
+              :is-show-operation="false"
+              :aside-item="asideItem"
+              :batch-flag="batchFlag"
+              :page-limit-change="pageLimitChange"
+              :page-value-change="pageValueChange"
+            />
           </div>
-          <div v-if="batchFlag === 'handover'">
-            <div class="main-line main-line-handover">
-              <p class="main-label">{{t("移交给")}}</p>
-              <bk-form
-                ref="formRef"
-                :rules="rules"
-                :model="handOverForm"
-              >
-                <bk-form-item
-                  required
-                  property="name"
+        </div>
+        <div class="slider-footer" :style="{height: invalidAuthorizationCount || batchFlag === 'renewal' ? '230px' : '170px'}">
+          <div class="footer-main" :class="invalidAuthorizationCount ? '' : 'main-line-handover'">
+            <div v-if="batchFlag === 'renewal'">
+              <div class="main-line">
+                <p class="main-label">{{t("续期对象")}}</p>
+                <span class="main-text">{{t("用户")}}： {{userName}}</span>
+              </div>
+              <div class="main-line">
+                <p class="main-label">{{t("续期时长")}}</p>
+                <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
+              </div>
+            </div>
+            <div class="main-line">
+              <div v-if="batchFlag === 'remove' || batchFlag === 'handover'">
+                <p
+                  v-if="invalidAuthorizationCount"
+                  class="main-text"
                 >
-                  <project-user-selector
-                    class="selector-input"
-                    @change="handleChangeOverFormName"
-                    @removeAll="handleClearOverFormName"
-                    :key="isShowSlider"
+                  <span v-if="batchFlag === 'remove'">{{ t('移出以上用户组，将导致') }}</span>
+                  <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
+
+                  <span v-for="(item, index) in activeItems" :key="item.key">
+                    <i18n-t :keypath="item.keypath" tag="span">
+                      <span class="remove-num">{{ item.count }}</span>
+                    </i18n-t>
+                    <span>{{ index === activeItems.length - 1 ? '。' : '，' }}</span>
+                  </span>
+                  
+                  <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+                  <p v-if="batchFlag === 'remove'">{{ t('请填写交接人，完成交接后才能成功移出。') }}</p>
+                  <p v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</p>
+                </p>
+                <p v-else-if="batchFlag === 'remove'" class="main-label-remove">
+                  <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="span">
+                    <span class="remove-num">{{ checkData.operableCount }}</span><span class="remove-person">{{ userName }}</span>
+                  </i18n-t>
+                </p>
+              </div>
+
+              <div v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.needToHandover)"
+              >
+                <p class="main-label">{{t("移交给")}}</p>
+                <bk-form
+                  ref="formRef"
+                  :rules="rules"
+                  :model="handOverForm"
+                >
+                  <bk-form-item
+                    required
+                    property="name"
                   >
-                  </project-user-selector>
-                </bk-form-item>
-              </bk-form>
+                    <project-user-selector
+                      class="selector-input"
+                      @change="handleChangeOverFormName"
+                      @removeAll="handleClearOverFormName"
+                      :key="isShowSlider"
+                    >
+                    </project-user-selector>
+                  </bk-form-item>
+                </bk-form>
+              </div>
             </div>
           </div>
-          <div v-if="batchFlag === 'remove'">
-            <div class="main-line main-line-remove">
-              <p class="main-label-remove">
-                <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ totalCount - inoperableCount }}</span><span class="remove-person">{{ userName }}</span>
-                </i18n-t>
-              </p>
-            </div>
+          <div class="footer-btn">
+            <bk-button
+              :disabled="!checkData.canHandoverCount && !checkData.operableCount"
+              :theme="batchFlag === 'remove' && !checkData.canHandoverCount && checkData.operableCount ? 'danger' : 'primary'"
+              @click="batchConfirm(batchFlag)"
+              :loading="batchBtnLoading"
+            >
+              {{batchFlag === 'remove' && checkData.needToHandover ? t("确认交接") : t(btnTexts[batchFlag])}}
+            </bk-button>
+            <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
           </div>
-        </div>
-        <div class="footer-btn">
-          <bk-button
-            :disabled="totalCount === inoperableCount"
-            :theme="batchFlag === 'remove' ? 'danger' : 'primary'"
-            @click="batchConfirm(batchFlag)"
-            :loading="batchBtnLoading"
-          >
-            {{t(btnTexts[batchFlag])}}
-          </bk-button>
-          <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
         </div>
       </div>
+      <div class="slider-detail" v-else>
+        <DetailGroupTab
+          :source-list="detailSourceList"
+          :page-limit-change="detailPageLimitChange"
+          :page-value-change="detailPageValueChange"
+          @collapse-click="detailCollapseClick"
+        />
+      </div>
+    </template>
+    <template #footer>
+      <bk-button v-if="isDetail" class="go-back" @click="goBack">{{t("返回")}}</bk-button>
     </template>
   </bk-sideslider>
 </template>
@@ -366,8 +400,8 @@
 <script setup name="ManageAll">
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, watch } from 'vue';
+import { Message, InfoBox } from 'bkui-vue';
+import { ref, onMounted, computed, watch, h } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
@@ -376,8 +410,12 @@ import ProjectUserSelector from '@/components/project-user-selector';
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
+import manageSearch from "./manage-search.vue";
 import { storeToRefs } from 'pinia';
 import { batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants.js";
+import userDetailGroupTable from "@/store/userDetailGroupTable";
+import DetailGroupTab from "./detail-group-tab.vue";
+import { AngleRight  } from 'bkui-vue/lib/icon';
 
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
@@ -403,9 +441,8 @@ const rules = {
     { required: true, message: t('请输入移交人'), trigger: 'blur' },
   ],
 };
-const searchValue = ref([]);
-const inoperableCount = ref();
-const totalCount = ref();
+const checkData = ref();
+const invalidAuthorizationCount = ref();
 const renewalLoading = ref(false);
 const handoverLoading = ref(false);
 const removerLoading = ref(false);
@@ -414,27 +451,12 @@ const loadingMap = {
   handover: handoverLoading,
   remove: removerLoading
 };
-const filterTips = computed(() => {
-  return searchData.value.map(item => item.name).join(' / ');
-});
-const searchData = computed(() => {
-  const data = [
-    {
-      name: t('用户'),
-      id: 'user',
-    },
-    {
-      name: t('组织架构'),
-      id: 'department',
-    },
-  ]
-  return data.filter(data => {
-    return !searchValue.value.find(val => val.id === data.id)
-  })
-});
+const searchGroup = ref();
 const manageAsideRef = ref(null);
+const manageSearchRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
+const detailGroupTable = userDetailGroupTable();
 const operatorLoading = ref(false);
 const userName = computed(() => {
   if(asideItem.value){
@@ -448,7 +470,7 @@ const userName = computed(() => {
 const unableText = {
   renewal: t('无法续期'),
   handover: t('无法移交'),
-  remove: t('无法移出'),
+  remove: t('无法直接移出'),
 }
 const {
   sourceList,
@@ -475,6 +497,7 @@ const {
   handleUpDateRow,
   pageLimitChange,
   pageValueChange,
+  clearPaginations,
 } = groupTableStore;
 
 const {
@@ -496,20 +519,70 @@ const {
   getProjectMembers,
 } = manageAsideStore;
 
+const {
+  detailSourceList
+} = storeToRefs(detailGroupTable);
+const {
+  fetchDetailList,
+  detailCollapseClick,
+  detailPageLimitChange,
+  detailPageValueChange,
+} = detailGroupTable;
+const isDetail = ref(false);
+const title = computed(() => {
+  if (!isDetail.value) {
+    return sliderTitle.value
+  } else {
+    return h('p', { style: { display: 'flex', alignItems: 'center' } },
+      [
+        h('span', {
+          style: { color: '#3A84FF', cursor: 'pointer' },
+          onClick () {
+            goBack()
+          }
+        }, sliderTitle.value),
+        h(AngleRight, { style: { color: '#C4C6CC', fontSize: '22px', magin: '0 5px' } } ),
+        h('span',{ style: { fontSize: '14px', color: '#313238' } },  t('待移交详情'))
+      ]
+    )
+  }
+})
+const activeItems = computed(() => {
+  const items = [
+    {
+      key: 'pipeline',
+      keypath: 'X个流水线权限代持失效',
+      count: checkData.value.invalidPipelineAuthorizationCount
+    },
+    {
+      key: 'repository',
+      keypath: 'X个代码库授权失效',
+      count: checkData.value.invalidRepositoryAuthorizationCount
+    },
+    {
+      key: 'manager',
+      keypath: 'X个资源没有拥有者',
+      count: checkData.value.uniqueManagerCount,
+      condition: batchFlag.value === 'remove'
+    },
+    {
+      key: 'envNode',
+      keypath: 'X个环境节点授权失效',
+      count: checkData.value.invalidEnvNodeAuthorizationCount
+    }
+  ];
+
+  return items.filter(item => item.count && (item.condition === undefined || item.condition));
+})
 onMounted(() => {
   init(true);
 });
 watch(projectId, () => {
   init(true);
 });
-watch(searchValue, (newSearchValue) => {
-  init(undefined, newSearchValue);
-});
-function handleSearch (value) {
-  if(!value.length) return;
-  init(undefined, value);
-}
+
 function init (flag, searchValue) {
+  searchGroup.value = searchValue
   memberPagination.value.current = 1;
   asideItem.value = undefined;
   getProjectMembers(projectId.value, flag, searchValue);
@@ -517,9 +590,12 @@ function init (flag, searchValue) {
 function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
+function getAsidePageChange (current, projectId) {
+  handleAsidePageChange(current, projectId, searchGroup.value)
+}
 async function refresh () {
-  searchValue.value = [];
-  getProjectMembers(projectId.value, true, searchValue.value);
+  manageSearchRef.value?.clearSearch();
+  getProjectMembers(projectId.value, true);
 }
 /**
  * 移交弹窗打开时
@@ -556,7 +632,10 @@ function handleRenewalClosed () {
 async function handleHandoverConfirm () {
   const isValidate = await formRef.value.validate();
   if (!isValidate) return;
-  const param = formatSelectParams(selectedRow.value.groupId);
+  const param = formatSelectParams({
+    id: selectedRow.value.groupId,
+    memberType: selectedRow.value.memberType
+  });
   delete param.renewalDuration;
   if (asideItem.value.id === handOverForm.value.id) {
     showMessage('error', t('目标对象和交接人不允许相同。'));
@@ -590,13 +669,13 @@ async function handleHandoverConfirm () {
 async function handleRemoveConfirm () {
   try {
     operatorLoading.value = true;
-    const param = formatSelectParams(selectedRow.value.groupId);
-    delete param.renewalDuration;
-    await http.batchRemove(projectId.value, param);
-    operatorLoading.value = false;
-    showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
-    handleRemoveRow();
-    isShowRemove.value = false;
+    const res = await http.getIsDirectRemove(projectId.value, selectedRow.value.groupId, asideItem.value);
+    if (res) {
+      operatorLoading.value = false;
+      showMessage('success', t('X 已移出X用户组。', [`${asideItem.value.id}(${asideItem.value.name})`, selectedRow.value.groupName]));
+      handleRemoveRow();
+      isShowRemove.value = false;
+    }
   } catch (error) {
     operatorLoading.value = false;
   }
@@ -633,8 +712,11 @@ async function batchOperator (flag) {
     delete params.renewalDuration
 
     const res = await http.batchOperateCheck(projectId.value, batchOperateTypes[flag], params);
-    totalCount.value = res.totalCount;
-    inoperableCount.value = res.inoperableCount;
+    checkData.value = res;
+    invalidAuthorizationCount.value = res.invalidPipelineAuthorizationCount
+      + res.invalidRepositoryAuthorizationCount
+      + res.uniqueManagerCount
+      + res.invalidEnvNodeAuthorizationCount
     loadingMap[flag].value = false;
 
     sliderTitle.value = t(batchTitle[flag]);
@@ -644,9 +726,26 @@ async function batchOperator (flag) {
     loadingMap[flag].value = false;
   }
 }
+function beforeClose() {
+  return new Promise((resolve, reject) => {
+    if(isDetail.value) {
+      InfoBox({
+        title: t('批量移出操作尚未完成，确认放弃操作吗？'),
+        infoType: 'warning',
+        cancelText: t('取消'),
+        confirmText: t('确定'),
+        onConfirm: () => resolve(true),
+        onCancel: () => reject(),
+      });
+    } else {
+      resolve(true);
+    }
+  });
+}
 
 function batchCancel () {
   cancelClear(batchFlag.value);
+  isDetail.value = false;
 }
 /**
  * 批量操作请求参数获取
@@ -689,31 +788,33 @@ function cancelClear (batchFlag) {
     renewalRef.value.initTime();
     expiredAt.value = 30;
   }
+  clearPaginations();
 }
 /**
  * 侧边栏确认事件
  * @param batchFlag 按钮标识
  */
 async function batchConfirm (batchFlag) {
-  batchBtnLoading.value = true;
 
   let res = null;
   const params = formatSelectParams();
 
   try {
-    if (batchFlag === 'renewal') {
-      res = await http.batchRenewal(projectId.value, params);
-    } else if (batchFlag === 'handover') {
-      const flag = await formRef.value.validate();
-      if (!flag) return;
-      if(asideItem.value.id === handOverForm.value.id){
-        showMessage('error', t('目标对象和交接人不允许相同。'));
-        batchBtnLoading.value = false;
-        return
-      }
-      res = await http.batchHandover(projectId.value, params);
-    } else if (batchFlag === 'remove') {
-      res = await http.batchRemove(projectId.value, params);
+    switch (batchFlag) {
+      case 'renewal':
+        batchBtnLoading.value = true;
+        res = await http.batchRenewal(projectId.value, params);
+        break;
+      case 'handover':
+        if (!(await validateFormAndUser())) return;
+        batchBtnLoading.value = true;
+        res = await http.batchHandover(projectId.value, params);
+        break;
+      case 'remove':
+        if (!(await validateRemoveCondition())) return;
+        batchBtnLoading.value = true;
+        res = await http.batchRemove(projectId.value, params);
+        break;
     }
 
     if (res) {
@@ -726,36 +827,35 @@ async function batchConfirm (batchFlag) {
     batchBtnLoading.value = false;
   }
 }
+async function validateFormAndUser() {
+  const isValid = await formRef.value.validate();
+  if (!isValid) return false;
+
+  if (asideItem.value.id === handOverForm.value.id) {
+    showMessage('error', t('目标对象和交接人不允许相同。'));
+    return false;
+  }
+
+  return true;
+}
+
+async function validateRemoveCondition() {
+  if (!checkData.value.needToHandover && checkData.value.operableCount) return true;
+
+  return await validateFormAndUser();
+}
+
 function showMessage (theme, message) {
   Message({
     theme: theme,
     message: message,
   });
 }
+
 function asideRemoveConfirm (removeUser, handOverForm) {
   handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
 }
 
-async function getMenuList (item, keyword) {
-  const query = {
-    memberType: item.id,
-    page: 1,
-    pageSize: 400
-  }
-  if (item.id === 'user' && keyword) {
-    query.userName = keyword
-  } else if (item.id === 'department' && keyword) {
-    query.deptName = keyword
-  }
-  const res = await http.getProjectMembers(projectId.value, query)
-  return res.records.map(i => {
-    return {
-      ...i,
-      displayName: i.name || i.id,
-      name: i.type === 'user' ? (!i.name ? i.id : `${i.id} (${i.name})`) : i.name,
-    }
-  })
-}
 function handleChangeOverFormName ({list, userList}) {
   if(!list){
     Object.assign(handOverForm.value, getHandOverForm());
@@ -772,6 +872,32 @@ function handleClearOverFormName () {
 function closeDeptListPermissionDialog () {
   showDeptListPermissionDialog.value = false
 }
+/**
+ * 查看详情
+ */
+ async function handleDetail() {
+  const params = formatSelectParams();
+  delete params.renewalDuration;
+  isDetail.value = true;
+
+  const batchOperateType = batchFlag.value === "handover" ? "HANDOVER": batchFlag.value === "remove" ? "REMOVE" : ''
+  const detailParams = {
+    projectCode: projectId.value,
+    queryChannel: "PREVIEW",
+    batchOperateType: batchOperateType,
+    previewConditionReq: {
+      ...params,
+      operateChannel: 'MANAGER'
+    },
+  }
+  fetchDetailList(detailParams);
+}
+/**
+ * 返回
+ */
+function goBack() {
+  isDetail.value = false;
+}
 </script>
 
 <style lang="less" scoped>
@@ -787,10 +913,6 @@ function closeDeptListPermissionDialog () {
     background: #FFFFFF;
     padding: 16px 24px;
     box-shadow: 0 2px 4px 0 #1919290d;
-
-    .multi-search {
-      width: 50%;
-    }
   }
 
   .manage-article {
@@ -993,13 +1115,8 @@ function closeDeptListPermissionDialog () {
 
 .slider{
 
-  ::v-deep .bk-modal-body {
-    background-color: #F0F1F5;
-  }
-
-  ::v-deep .bk-sideslider-content {
+  .slider-content {
     overflow: auto;
-    height: calc(100vh - 282px);
 
       &::-webkit-scrollbar-thumb {
         background-color: #c4c6cc !important;
@@ -1013,8 +1130,35 @@ function closeDeptListPermissionDialog () {
         width: 8px !important;
         height: 8px !important;
       }
-
   }
+
+  .slider-detail {
+    margin: 15px 0 24px;
+    overflow: auto;
+    height: calc(100vh - 135px);
+    &::-webkit-scrollbar-thumb {
+      background-color: #c4c6cc !important;
+      border-radius: 5px !important;
+      &:hover {
+        background-color: #979ba5 !important;
+      }
+    }
+
+    &::-webkit-scrollbar {
+      width: 8px !important;
+      height: 8px !important;
+    }
+  }
+
+  .go-back {
+    position: absolute;
+    bottom: 5px;
+  }
+
+  ::v-deep .bk-modal-body {
+    background-color: #F0F1F5;
+  }
+
   .slider-main {
     margin: 16px 24px;
 
@@ -1043,8 +1187,7 @@ function closeDeptListPermissionDialog () {
     position: fixed;
     bottom: 0;
     z-index: 9;
-    width: 100%;
-    height: 230px;
+    width: 960px;
     padding: 24px 48px;
     background: #FFFFFF;
     box-shadow: 0 -1px 6px 0 #DCDEE5;
@@ -1064,7 +1207,8 @@ function closeDeptListPermissionDialog () {
         }
 
         .main-text {
-          font-size: 12px;
+          font-size: 14px;
+          margin-bottom: 20px;
           color: #63656E;
         }
 
@@ -1079,16 +1223,11 @@ function closeDeptListPermissionDialog () {
         .main-label-remove {
           color: #63656e;
           font-size: 16px;
-
-          .remove-num {
-            color: #3a84ff;
-            font-size: 16px;
-            font-weight: 700;
-          }
+          margin-top: 24px;
 
           .remove-person {
             color: #63656e;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
           }
         }
@@ -1097,16 +1236,11 @@ function closeDeptListPermissionDialog () {
       .main-line-handover {
         margin-top: 26px;
       }
-
-      .main-line-remove {
-        margin-top: 40px;
-      }
     }
 
     .footer-btn {
       position: absolute;
-      bottom: 24px;
-      margin-top: 24px;
+      bottom: 20px;
 
       .bk-button {
         margin-right: 8px;
@@ -1117,5 +1251,15 @@ function closeDeptListPermissionDialog () {
 
 .text-blue {
   color: #699DF4;
+}
+
+.remove-num {
+  color: #3a84ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.remove-detail {
+  cursor: pointer;
 }
 </style>

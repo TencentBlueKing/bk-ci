@@ -357,6 +357,7 @@ abstract class ImageService @Autowired constructor() {
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                     },
                     version = it[KEY_IMAGE_VERSION] as String,
+                    status = ImageStatusEnum.getImageStatus((it.get(KEY_IMAGE_STATUS) as Byte).toInt()),
                     summary = it[KEY_IMAGE_SUMMARY] as? String,
                     score = statistic?.score ?: 0.toDouble(),
                     downloads = statistic?.downloads ?: 0,
@@ -450,6 +451,7 @@ abstract class ImageService @Autowired constructor() {
                     name = it.name,
                     code = it.code,
                     version = it.version,
+                    status = it.status,
                     // 仅用于插件区分Agent/AgentLess
                     type = "",
                     rdType = it.rdType,

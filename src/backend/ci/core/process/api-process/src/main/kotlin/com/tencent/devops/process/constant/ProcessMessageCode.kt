@@ -361,6 +361,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
+    const val ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH = "2101256" // 流水线启动参数{0}超出4000长度限制
+
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点前后顺序不明，使用变量需明确前后顺序
+    const val ERROR_AGENT_REUSE_MUTEX_VAR_ERROR = "2101257"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -520,6 +524,7 @@ object ProcessMessageCode {
     const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+    const val BK_STAGE_REVIEW_EMPTY_REVIEWER = "bkStageReviewEmptyViewer" // 由于无审核人，被系统自动驳回
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
@@ -556,4 +561,21 @@ object ProcessMessageCode {
     // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
         "bkNotSubPipelineExecutePermissionResetErrorTitle"
+
+    // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
+    const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
+    // 子流水线循环依赖错误标题
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
+
+    // 当前流水线存在循环依赖
+    const val BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkCurrentSubPipelineCircularDependencyErrorMessage"
+
+    // 子流水线[xxx]调用了当前流水线，形成循环依赖
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkSubPipelineCircularDependencyErrorMessage"
+
+    // [xxx]流水线循环调用[xxx]流水线，形成循环依赖
+    const val BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkOtherSubPipelineCircularDependencyErrorMessage"
 }

@@ -18,26 +18,73 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button v-if="showVersions && !disabled" @click="editVersions">
-                {{$t('newui.editVersions')}}
+            <bk-button
+                v-if="showVersions && !disabled"
+                @click="editVersions"
+            >
+                {{ $t('newui.editVersions') }}
             </bk-button>
         </div>
-
         <!-- 展示已有的versionlist -->
-        <section v-show="showVersions" class="version-list">
-            <div v-for="param in renderVersions" :key="param.id" class="version-item">
+        <section
+            v-show="showVersions"
+            class="version-list"
+        >
+            <div
+                v-for="param in renderVersions"
+                :key="param.id"
+                class="version-item"
+            >
                 <div class="version-con">
                     <div class="version-names">
-                        <span>{{ param.id }}</span>
-                        <span>({{ param.id === 'BK_CI_BUILD_NO' ? param.desc : $t(param.desc) }})</span>
+                        <div
+                            :class="{ 'baseline-build': param.isBuildNo }"
+                            v-bk-tooltips="{
+                                ...baselineTooltipContent,
+                                disabled: !param.isBuildNo
+                            }"
+                        >
+                            <span>{{ param.id }}</span>
+                            <span>({{ param.isBuildNo ? param.desc : $t(param.desc) }})</span>
+                        </div>
+                        <div
+                            id="baseline-tooltip-content"
+                            v-if="param.isBuildNo"
+                        >
+                            <p
+                                v-for="(tip, index) in buildNoBaselineTips"
+                                :key="index"
+                            >
+                                {{ tip }}
+                            </p>
+                        </div>
                     </div>
                     <div class="value-row">
                         <span class="default-value">
-                            {{ param.id === 'BK_CI_BUILD_NO' ? `${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` : versionValues[param.id] }}
+                            <span v-if="param.isBuildNo">
+                                {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
+                                <span
+                                    class="dafault-value-current"
+                                    v-if="pipelineModel"
+                                >
+                                    {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
+                                    <span
+                                        class="dafault-value-reset"
+                                        @click="goResetBuildNo"
+                                    >{{ $t('buildNoBaseline.resetBuildNo') }}</span>
+                                </span>
+                            </span>
+                            <span v-else>{{ versionValues[param.id] }}</span>
                         </span>
                         <div class="version-operate">
-                            <div class="operate-btns" v-if="!disabled">
-                                <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy"></i>
+                            <div
+                                class="operate-btns"
+                                v-if="!disabled"
+                            >
+                                <i
+                                    @click.stop="handleCopy(bkVarWrapper(param.id))"
+                                    class="bk-icon icon-copy"
+                                ></i>
                             </div>
                         </div>
                     </div>
@@ -46,13 +93,25 @@
         </section>
 
         <!-- 编辑版本号 -->
-        <div v-if="showEditVersion" class="current-edit-param-item">
+        <div
+            v-if="showEditVersion"
+            class="current-edit-param-item"
+        >
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="cancelEditVersion" />
-                {{$t('newui.editVersions')}}
+                <bk-icon
+                    style="font-size: 28px;"
+                    type="arrows-left"
+                    class="back-icon"
+                    @click="cancelEditVersion"
+                />
+                {{ $t('newui.editVersions') }}
             </div>
             <div class="edit-var-content">
-                <bk-form form-type="vertical" :label-width="400" class="new-ui-form">
+                <bk-form
+                    form-type="vertical"
+                    :label-width="400"
+                    class="new-ui-form"
+                >
                     <bk-form-item>
                         <div class="layout-label">
                             <label class="ui-inner-label">
@@ -61,7 +120,15 @@
                             </label>
                         </div>
                         <div class="version-options">
-                            <form-field :hide-colon="true" class="version-form-field" v-for="(v, index) in allVersionKeyList" :key="v" :required="v.required" :is-error="errors.has(`pipelineVersion.${v}`)" :error-msg="errors.first(`pipelineVersion.${v}`)">
+                            <form-field
+                                :hide-colon="true"
+                                class="version-form-field"
+                                v-for="(v, index) in allVersionKeyList"
+                                :key="v"
+                                :required="v.required"
+                                :is-error="errors.has(`pipelineVersion.${v}`)"
+                                :error-msg="errors.first(`pipelineVersion.${v}`)"
+                            >
                                 <vuex-input
                                     v-validate.initial="'required|numeric'"
                                     :data-vv-scope="'pipelineVersion'"
@@ -72,57 +139,153 @@
                                     :value="editVersionValues[v]"
                                     :handle-change="handleEditVersionChange"
                                 />
-                                <span v-if="index < allVersionKeyList.length - 1" class="version-dot">.</span>
+                                <span
+                                    v-if="index < allVersionKeyList.length - 1"
+                                    class="version-dot"
+                                >.</span>
                             </form-field>
                         </div>
                     </bk-form-item>
 
-                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :label="$t('buildNum')" :is-error="errors.has('pipelineVersion.buildNo')" :error-msg="errors.first('pipelineVersion.buildNo')">
-                        <vuex-input
-                            input-type="number"
-                            name="buildNo"
-                            placeholder="BK_CI_BUILD_NO"
-                            style="width: 228px;"
-                            v-validate.initial="'required|numeric'"
-                            :data-vv-scope="'pipelineVersion'"
+                    <bk-form-item
+                        :label="$t('buildNoBaseline.buildNoBaseline')"
+                        :desc="baselineTooltipContent"
+                        required
+                    >
+                        <form-field
+                            :hide-colon="true"
+                            :required="true"
+                            :is-error="errors.has('pipelineVersion.buildNo')"
+                            :error-msg="errors.first('pipelineVersion.buildNo')"
+                        >
+                            <vuex-input
+                                input-type="number"
+                                name="buildNo"
+                                placeholder="BK_CI_BUILD_NO"
+                                style="width: 228px;"
+                                v-validate.initial="'required|numeric'"
+                                :data-vv-scope="'pipelineVersion'"
+                                :disabled="disabled"
+                                :value="editBuildNo.buildNo"
+                                :handle-change="handleEditBuildNoChange"
+                            />
+                        </form-field>
+                        <span class="baseline-tips">
+                            <Logo
+                                size="14"
+                                name="warning-circle-fill"
+                            />
+                            <span class="baseline-tips-text">{{ $t('buildNoBaseline.manualResetRequired') }}</span>
+                        </span>
+                        <div id="baseline-tooltip-content">
+                            <p
+                                v-for="(tip, index) in buildNoBaselineTips"
+                                :key="index"
+                            >
+                                {{ tip }}
+                            </p>
+                        </div>
+                    </bk-form-item>
+
+                    <form-field
+                        :hide-colon="true"
+                        class="buildno-form-field"
+                        :required="true"
+                        :is-error="errors.has('pipelineVersion.buildNoType')"
+                        :error-msg="errors.first('pipelineVersion.buildNoType')"
+                    >
+                        <enum-input
+                            :list="buildNoRules"
                             :disabled="disabled"
-                            :value="editBuildNo.buildNo"
+                            name="buildNoType"
+                            v-validate.initial="'required|string'"
+                            :data-vv-scope="'pipelineVersion'"
+                            :value="editBuildNo.buildNoType"
                             :handle-change="handleEditBuildNoChange"
                         />
                     </form-field>
-
-                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :is-error="errors.has('pipelineVersion.buildNoType')" :error-msg="errors.first('pipelineVersion.buildNoType')">
-                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :data-vv-scope="'pipelineVersion'" :value="editBuildNo.buildNoType" :handle-change="handleEditBuildNoChange" />
-                    </form-field>
                 </bk-form>
             </div>
-            <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" :disabled="disabled" @click="handleSaveVersion">
+            <div
+                class="edit-var-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    :disabled="disabled"
+                    @click="handleSaveVersion"
+                >
                     {{ $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" :disabled="disabled" @click="cancelEditVersion">
+                <bk-button
+                    style="margin-left: 8px;"
+                    :disabled="disabled"
+                    @click="cancelEditVersion"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
         </div>
+
+        <bk-dialog
+            width="480"
+            footer-position="center"
+            v-model="resetBuildNoDialog"
+        >
+            <template #header>
+                <span class="delete-pipeline-warning-icon">
+                    <i class="devops-icon icon-exclamation" />
+                </span>
+                <h3>{{ $t('buildNoBaseline.isSureReset') }}</h3>
+            </template>
+            <div>
+                <p>{{ `${$t('buildNoBaseline.baselineValue')}${buildNo.buildNo}` }}</p>
+                <p class="reset-tips">
+                    <i18n
+                        :path="`buildNoBaseline.${buildNo.buildNoType}`"
+                        tag="p"
+                        slot="title"
+                    >
+                        <span>{{ buildNo.buildNo }}</span>
+                        <span v-if="buildNo.buildNoType !== 'CONSISTENT'">{{ resetBuildNo }}</span>
+                    </i18n>
+                </p>
+            </div>
+            <template slot="footer">
+                <bk-button
+                    theme="primary"
+                    :loading="resetLoading"
+                    @click="handleResetConfirm"
+                >
+                    {{ $t('buildNoBaseline.confirm') }}
+                </bk-button>
+                <bk-button
+                    @click="handleCancelReset"
+                >
+                    {{ $t('cancel') }}
+                </bk-button>
+            </template>
+        </bk-dialog>
     </section>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
     import { getParamsValuesMap, bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
             FormField,
             VuexInput,
             EnumInput,
-            AtomCheckbox
+            AtomCheckbox,
+            Logo
         },
         props: {
             disabled: {
@@ -140,6 +303,14 @@
             updateContainerParams: {
                 type: Function,
                 required: true
+            },
+            isDirectShowVersion: {
+                type: Boolean,
+                default: false
+            },
+            pipelineModel: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -149,8 +320,14 @@
                 showEditVersion: false,
                 renderBuildNo: {},
                 editBuildNo: {},
-                editVersionValues: {}
-
+                editVersionValues: {},
+                baselineTooltipContent: {
+                    allowHTML: true,
+                    width: 610,
+                    content: '#baseline-tooltip-content'
+                },
+                resetBuildNoDialog: false,
+                resetLoading: false
             }
         },
         computed: {
@@ -174,7 +351,8 @@
                     ...this.versions,
                     {
                         id: 'BK_CI_BUILD_NO',
-                        desc: this.$t('buildNo')
+                        desc: this.$t('buildNo'),
+                        isBuildNo: true
                     }
                 ]
             },
@@ -192,6 +370,12 @@
             },
             execuVisible () {
                 return this.buildNo && this.buildNo.required ? this.buildNo.required : false
+            },
+            buildNoBaselineTips () {
+                return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
+            },
+            resetBuildNo () {
+                return this.buildNo.buildNo + 1
             }
         },
         watch: {
@@ -206,8 +390,14 @@
             this.renderBuildNo = this.buildNo
             this.showVersions = this.versions.length !== 0
         },
+        mounted () {
+            if (this.isDirectShowVersion) {
+                this.resetBuildNoDialog = true
+            }
+        },
         methods: {
             bkVarWrapper,
+            ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
             handleCopy (con) {
                 copyToClipboard(con)
                 this.$bkMessage({
@@ -288,6 +478,40 @@
             },
             cancelEditVersion () {
                 this.showEditVersion = false
+            },
+            goResetBuildNo () {
+                this.resetBuildNoDialog = true
+            },
+            async handleResetConfirm () {
+                try {
+                    this.resetLoading = true
+
+                    const { pipelineId, projectId, version } = this.$route.params
+                    const { data } = await this.updateBuildNo({ projectId, pipelineId, currentBuildNo: this.buildNo.buildNo })
+
+                    if (data) {
+                        const pipelineRes = await this.fetchPipelineByVersion({ projectId, pipelineId, version })
+                        
+                        this.updateContainerParams('buildNo', {
+                            ...pipelineRes.modelAndSetting.model.stages[0].containers[0].buildNo
+                        })
+
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: '已成功重置构建号'
+                        })
+                    }
+                    this.resetLoading = false
+                    this.resetBuildNoDialog = false
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                }
+            },
+            handleCancelReset () {
+                this.resetBuildNoDialog = false
             }
         }
     }
@@ -330,6 +554,11 @@
                 overflow: hidden;
                 .version-names {
                     color: #313238;
+
+                    .baseline-build {
+                        display: inline-block;
+                        border-bottom: 1px dashed #979BA5;
+                    }
                 }
                 .value-row {
                     display: flex;
@@ -338,6 +567,14 @@
                     .default-value {
                         color: #979BA5;
                         max-width: 300px;
+                        .dafault-value-current {
+                            // margin-left: 16px;
+                            .dafault-value-reset {
+                                margin-left: 8px;
+                                color: #3A84FF;
+                                cursor: pointer;
+                            }
+                        }
                     }
                 }
             }
@@ -378,6 +615,35 @@
             width: 12px;
             display: inline-block;
         }
+    }
+    .current-edit-param-item {
+        .baseline-tips {
+            svg {
+                vertical-align: middle;
+            }
+            .baseline-tips-text {
+                font-size: 12px;
+                color: #979BA5;
+            }
+        }
+    }
+    .delete-pipeline-warning-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #FFE8C3;
+        color: #FF9C01;
+        width: 42px;
+        height: 42px;
+        font-size: 24px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .reset-tips {
+        width: 100%;
+        padding: 12px 16px;
+        margin: 16px 0;
+        background-color: #F5F6FA;
     }
 
 </style>

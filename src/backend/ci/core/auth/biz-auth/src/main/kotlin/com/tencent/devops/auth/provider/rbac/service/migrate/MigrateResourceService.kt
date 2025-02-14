@@ -42,11 +42,11 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
@@ -66,12 +66,12 @@ import java.util.concurrent.Executors
 @Suppress("LongParameterList", "MagicNumber")
 class MigrateResourceService @Autowired constructor(
     private val resourceService: ResourceService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val rbacPermissionResourceService: RbacPermissionResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
     private val authResourceService: AuthResourceService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val tokenApi: AuthTokenApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
@@ -89,7 +89,7 @@ class MigrateResourceService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes()
+            val resourceTypes = rbacCommonService.listResourceTypes()
                 .map { it.resourceType }
                 .filterNot { noNeedToMigrateResourceType.contains(it) }
 
@@ -340,7 +340,7 @@ class MigrateResourceService @Autowired constructor(
             } ?: return@forEach
 
             // 项目下用户组注册监控权限资源
-            permissionGroupPoliciesService.grantGroupPermission(
+            permissionResourceGroupPermissionService.grantGroupPermission(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,

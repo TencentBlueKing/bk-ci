@@ -1,26 +1,27 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-  computed,
-  onMounted
-} from 'vue';
-import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import {
-  useRoute,
-  useRouter,
-} from 'vue-router';
+handleProjectManageNoPermission,
+RESOURCE_ACTION,
+RESOURCE_TYPE,
+} from '@/utils/permission.js';
 import {
-  Message,
-  InfoBox,
-  Popover
+InfoBox,
+Message,
+Popover
 } from 'bkui-vue';
 import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
+computed,
+onMounted,
+ref,
+watch
+} from 'vue';
+import { useI18n } from 'vue-i18n';
+import {
+useRoute,
+useRouter,
+} from 'vue-router';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -50,7 +51,13 @@ const fetchProjectData = async () => {
       englishName: projectCode,
     })
     .then((res) => {
-      projectData.value = res;
+      projectData.value =  {
+        ...res,
+        properties: {
+          pipelineDialect: 'CLASSIC',
+          ...res.properties,
+        },
+      };
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
@@ -119,16 +126,30 @@ const fieldMap = [
     current: 'centerName',
     after: 'afterCenterName',
   },
-  
+];
+const propertiesFieldMap = [
+  {
+    current: 'pipelineDialect',
+    after: 'afterPipelineDialect',
+  },
+  {
+    current: 'pipelineNameFormat',
+    after: 'afterPipelineNameFormat',
+  },
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
     englishName: projectCode,
   }).then((res) => {
     projectDiffData.value = res;
-    
+
     fieldMap.forEach(field => {
       if (projectData.value[field.current] !== projectDiffData.value[field.after]) {
+        projectData.value[field.after] = projectDiffData.value[field.after];
+      }
+    });
+    propertiesFieldMap.forEach(field => {
+      if (projectData.value?.properties[field.current] !== projectDiffData.value?.[field.after]) {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
@@ -331,170 +352,202 @@ onMounted(async () => {
         <template v-if="hasPermission">
           <template v-if="projectData.projectCode">
             <section class="content-main">
-              <bk-form class="detail-content-form" :label-width="160">
-                <bk-form-item :label="t('项目名称')" property="projectName">
-                  <div class="project-name">
-                    <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
-                    <span class="item-value">{{ projectData.projectName }}</span>
-                    <span class="enable-status">
-                      <img class="enable-status-icon" v-if="projectData.enabled" src="../../../css/svg/normal.svg" alt="">
-                      <img class="enable-status-icon" v-else src="../../../css/svg/unknown.svg" alt="">
-                      {{ projectData.enabled ? t('已启用') : t('已停用') }}
-                    </span>
-                  </div>
-                  <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
-                    <p class="update-title">{{ t('本次更新：') }}</p>
-                    <div class="project-logo-name">
-                      <img v-if="projectData.afterLogoAddr" class="project-logo" :src="projectData.afterLogoAddr" alt="">
-                      <span class="item-value">{{ projectData.afterProjectName || projectData.projectName }}</span>
+              <div class="detail-content-form">
+                <p class="title">{{t('基础信息')}}</p>
+                <bk-form label-position="right" :label-width="200">
+                  <bk-form-item :label="t('项目名称')" property="projectName">
+                    <div class="project-name">
+                      <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
+                      <span class="item-value">{{ projectData.projectName }}</span>
+                      <span class="enable-status">
+                        <img class="enable-status-icon" v-if="projectData.enabled" src="../../../css/svg/normal.svg" alt="">
+                        <img class="enable-status-icon" v-else src="../../../css/svg/unknown.svg" alt="">
+                        {{ projectData.enabled ? t('已启用') : t('已停用') }}
+                      </span>
                     </div>
+                    <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
+                      <p class="update-title">{{ t('本次更新：') }}</p>
+                      <div class="project-logo-name">
+                        <img v-if="projectData.afterLogoAddr" class="project-logo" :src="projectData.afterLogoAddr" alt="">
+                        <span class="item-value">{{ projectData.afterProjectName || projectData.projectName }}</span>
+                      </div>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item :label="t('项目ID')" property="englishName">
+                    <span class="item-value">{{ projectData.englishName }}</span>
+                  </bk-form-item>
+                  <bk-form-item :label="t('项目描述')" property="description">
+                    <span class="item-value">{{ projectData.description }}</span>
+                    <div class="diff-content" v-if="projectData.afterDescription">
+                      <p class="update-title">{{ t('本次更新：') }}</p>
+                      <div>{{ projectData.afterDescription }}</div>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item :label="t('项目类型')" property="bg">
+                    <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
+                    <div class="diff-content" v-if="projectData.afterProjectType">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item v-if="isRbac" :label="t('项目性质')" property="authSecrecy">
+                    <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
+                    <div class="diff-content" v-if="projectData.afterAuthSecrecy">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                        <span class="inApproval">{{ t('(审批中)') }}</span>
+                      </p>
+                      <div>{{ projectData.afterAuthSecrecy ? t('保密项目') : t('私有项目') }}</div>
+                    </div>
+                  </bk-form-item>
+                </bk-form>
+              </div>
+              <div class="detail-content-form">
+                <bk-form label-position="right" :label-width="200">
+                  <p class="title">{{t('高级设置')}}</p>
+                  <div v-if="isRbac">
+                    <div class="sub-title">{{ t('权限')  }}</div>
+                    <bk-form-item  :label="t('项目最大可授权人员范围')" property="subjectScopes">
+                      <span class="item-value">
+                        <bk-tag
+                          v-for="(subjectScope, index) in projectData.subjectScopes"
+                          :key="index"
+                        >
+                          {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
+                        </bk-tag>
+                      </span>
+                      <div class="diff-content scopes-diff" v-if="projectData.afterSubjectScopes">
+                        <p class="update-title">
+                          {{ t('本次更新：') }}
+                          <span class="inApproval">{{ t('(审批中)') }}</span>
+                        </p>
+                        <bk-tag
+                          v-for="(subjectScope, index) in projectData.afterSubjectScopes"
+                          :key="index"
+                        >
+                          {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
+                        </bk-tag>
+                      </div>
+                    </bk-form-item>
                   </div>
-                </bk-form-item>
-                <bk-form-item :label="t('项目ID')" property="englishName">
-                  <span class="item-value">{{ projectData.englishName }}</span>
-                </bk-form-item>
-                <bk-form-item :label="t('项目描述')" property="description">
-                  <span class="item-value">{{ projectData.description }}</span>
-                  <div class="diff-content" v-if="projectData.afterDescription">
-                    <p class="update-title">{{ t('本次更新：') }}</p>
-                    <div>{{ projectData.afterDescription }}</div>
-                  </div>
-                </bk-form-item>
-                <!-- <bk-form-item :label="t('项目所属组织')" property="bg">
-                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
-                  <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
-                  <span>
-                    {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
-                  </span>
-                  </div>
-                </bk-form-item> -->
-                <bk-form-item :label="t('项目类型')" property="bg">
-                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
-                  <div class="diff-content" v-if="projectData.afterProjectType">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
-                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
-                  </div>
-                </bk-form-item>
-                <bk-form-item v-if="isRbac" :label="t('项目性质')" property="authSecrecy">
-                  <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
-                  <div class="diff-content" v-if="projectData.afterAuthSecrecy">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                      <span class="inApproval">{{ t('(审批中)') }}</span>
-                    </p>
-                    <div>{{ projectData.afterAuthSecrecy ? t('保密项目') : t('私有项目') }}</div>
-                  </div>
-                </bk-form-item>
-                <bk-form-item v-if="isRbac" :label="t('项目最大可授权人员范围')" property="subjectScopes">
-                  <span class="item-value">
-                    <bk-tag
-                      v-for="(subjectScope, index) in projectData.subjectScopes"
-                      :key="index"
-                    >
-                      {{ subjectScope.name }}
-                    </bk-tag>
-                  </span>
-                  <div class="diff-content scopes-diff" v-if="projectData.afterSubjectScopes">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                      <span class="inApproval">{{ t('(审批中)') }}</span>
-                    </p>
-                    <bk-tag
-                      v-for="(subjectScope, index) in projectData.afterSubjectScopes"
-                      :key="index"
-                    >
-                      {{ subjectScope.name }}
-                    </bk-tag>
-                  </div>
-                </bk-form-item>
-                <bk-form-item>
-                  <!--
-                    approvalStatus
-                    0-创建成功/修改成功,最终态
-                    1-新增审批
-                    2-正常
-                    3-新增审批拒绝
-                    4-更新审批中
-                  -->
-                  <Popover
-                    :content="statusDisabledTips[projectData.approvalStatus]"
-                    :disabled="![1, 4].includes(projectData.approvalStatus)"
-                    v-perm="{
-                      disablePermissionApi: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
-                      hasPermission: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
-                      permissionData: {
-                        projectId: projectData.projectCode,
-                        resourceType: RESOURCE_TYPE,
-                        resourceCode: projectData.projectCode,
-                        action: RESOURCE_ACTION.EDIT
-                      }
-                    }"
+                  <div class="sub-title">{{ t('流水线')  }}</div>
+                  <bk-form-item
+                    v-if="projectData.properties"
+                    property="pipelineDialect"
                   >
-                    <span>
-                      <bk-button
-                        class="btn mr10"
-                        theme="primary"
-                        :disabled="[1, 4].includes(projectData.approvalStatus)"
-                        @click="handleEdit"
-                      >
-                        {{ t('编辑') }}
-                      </bk-button>
+                    <template #label>
+                      <dialect-popover-table />
+                    </template>
+                    <div>
+                      <span>{{ t(projectData.properties.pipelineDialect) }}</span>
+                      <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                        <p class="update-title">
+                          {{ t('本次更新：') }}
+                        </p>
+                        <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                      </div>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item
+                    :label="t('命名规范提示')"
+                    property="pipelineNameFormat"
+                  >
+                    <span class="item-value">
+                      {{ projectData.properties.enablePipelineNameTips ? (projectData.properties.pipelineNameFormat || '--') : t('未开启') }}
                     </span>
-                  </Popover>
-
-                  <Popover
-                    :content="t('仅更新人可撤销更新')"
-                    :disabled="userName !== projectData.updator">
+                    <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ projectData.afterPipelineNameFormat }}</span>
+                    </div>
+                  </bk-form-item>
+                </bk-form>
+              </div>
+              <div>
+                <!--
+                  approvalStatus
+                  0-创建成功/修改成功,最终态
+                  1-新增审批
+                  2-正常
+                  3-新增审批拒绝
+                  4-更新审批中
+                -->
+                <Popover
+                  :content="statusDisabledTips[projectData.approvalStatus]"
+                  :disabled="![1, 4].includes(projectData.approvalStatus)"
+                  v-perm="{
+                    disablePermissionApi: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
+                    hasPermission: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
+                    permissionData: {
+                      projectId: projectData.projectCode,
+                      resourceType: RESOURCE_TYPE,
+                      resourceCode: projectData.projectCode,
+                      action: RESOURCE_ACTION.EDIT
+                    }
+                  }"
+                >
+                  <span>
                     <bk-button
-                      v-if="[4].includes(projectData.approvalStatus)"
-                      class="btn"
-                      theme="default"
-                      :disabled="userName !== projectData.updator"
-                      @click="handleCancelUpdate"
+                      class="btn mr10"
+                      theme="primary"
+                      :disabled="[1, 4].includes(projectData.approvalStatus)"
+                      @click="handleEdit"
                     >
-                      {{ t('撤销更新') }}
+                      {{ t('编辑') }}
                     </bk-button>
-                  </Popover>
-                  
+                  </span>
+                </Popover>
+
+                <Popover
+                  :content="t('仅更新人可撤销更新')"
+                  :disabled="userName !== projectData.updator">
                   <bk-button
-                    v-if="[1, 3].includes(projectData.approvalStatus)"
+                    v-if="[4].includes(projectData.approvalStatus)"
                     class="btn"
                     theme="default"
-                    @click="handleCancelCreation"
+                    :disabled="userName !== projectData.updator"
+                    @click="handleCancelUpdate"
                   >
-                    {{ t('取消创建') }}
+                    {{ t('撤销更新') }}
                   </bk-button>
-                  <bk-button
-                    v-if="projectData.approvalStatus === 2"
-                    v-perm="{
-                      disablePermissionApi: !projectData.projectCode,
-                      hasPermission: !projectData.projectCode,
-                      permissionData: {
-                        projectId: projectData.projectCode,
-                        resourceType: RESOURCE_TYPE,
-                        resourceCode: projectData.projectCode,
-                        action: RESOURCE_ACTION.ENABLE
-                      }
-                    }"
-                    class="enable-btn"
-                    theme="default"
-                    @click="handleEnabledProject"
-                  >
-                    {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
-                  </bk-button>
-                </bk-form-item>
-              </bk-form>
+                </Popover>
+                
+                <bk-button
+                  v-if="[1, 3].includes(projectData.approvalStatus)"
+                  class="btn"
+                  theme="default"
+                  @click="handleCancelCreation"
+                >
+                  {{ t('取消创建') }}
+                </bk-button>
+                <bk-button
+                  v-if="projectData.approvalStatus === 2"
+                  v-perm="{
+                    disablePermissionApi: !projectData.projectCode,
+                    hasPermission: !projectData.projectCode,
+                    permissionData: {
+                      projectId: projectData.projectCode,
+                      resourceType: RESOURCE_TYPE,
+                      resourceCode: projectData.projectCode,
+                      action: RESOURCE_ACTION.ENABLE
+                    }
+                  }"
+                  class="enable-btn"
+                  theme="default"
+                  @click="handleEnabledProject"
+                >
+                  {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
+                </bk-button>
+              </div>
             </section>
           </template>
         </template>
         <bk-exception
           v-if="showException"
-          class="content-main mt20"
+          class="exception-content mt20"
           :type="exceptionObj.type"
           :title="exceptionObj.title"
           :description="exceptionObj.description"
@@ -515,13 +568,7 @@ onMounted(async () => {
     padding: 24px;
     height: 100%;
     width: 100%;
-  }
-  .content-wrapper {
-    flex: 1;
-    width: 100%;
     overflow: auto;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
@@ -533,6 +580,10 @@ onMounted(async () => {
       width: 8px !important;
       height: 8px !important;
     }
+  }
+  .content-wrapper {
+    flex: 1;
+    width: 100%;
   }
   .project-info-content {
     display: flex;
@@ -562,13 +613,38 @@ onMounted(async () => {
   }
   .content-main {
     color: #313238;
-    padding: 32px 48px;
+  }
+  .exception-content {
+    height: 100%;
+    background-color: #fff;
+    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
   }
   .detail-content-form {
+    margin-bottom: 20px;
+    padding: 32px 48px 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
     :deep(.bk-form-label) {
       font-size: 12px;
       text-align: left;
       color: #979BA5;
+    }
+    .title {
+      width: 56px;
+      height: 22px;
+      margin-bottom: 16px;
+      font-family: MicrosoftYaHei-Bold;
+      font-weight: 700;
+      font-size: 14px;
+      color: #63656E;
+      letter-spacing: 0;
+      line-height: 22px;
+    }
+    .sub-title {
+      font-size: 14px;
+      color: #63656E;
+      border-bottom: 2px solid #DCDEE5;
+      margin-bottom: 15px;
     }
     .project-name {
       display: flex;
@@ -597,6 +673,7 @@ onMounted(async () => {
     .item-value {
       display: inline-block;
       max-width: 800px;
+      white-space: pre-wrap;
     }
     .mr10 {
       margin-right: 10px;
@@ -613,6 +690,7 @@ onMounted(async () => {
       background: #F5F7FA;
       border: 1px solid #DCDEE5;
       border-radius: 2px;
+      white-space: pre-wrap;
     }
     .scopes-diff {
       margin-top: 10px;

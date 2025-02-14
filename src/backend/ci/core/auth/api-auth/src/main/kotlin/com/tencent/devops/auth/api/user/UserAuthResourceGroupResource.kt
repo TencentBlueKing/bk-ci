@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
@@ -92,6 +93,27 @@ interface UserAuthResourceGroupResource {
         @QueryParam("memberId")
         @Parameter(description = "组织ID/成员ID")
         memberId: String,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称")
+        groupName: String?,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?,
+        @QueryParam("relatedResourceType")
+        @Parameter(description = "资源类型")
+        relatedResourceType: String?,
+        @QueryParam("relatedResourceCode")
+        @Parameter(description = "资源ID")
+        relatedResourceCode: String?,
+        @QueryParam("action")
+        @Parameter(description = "操作")
+        action: String?,
+        @QueryParam("operateChannel")
+        @Parameter(description = "操作渠道")
+        operateChannel: OperateChannel?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,
@@ -99,6 +121,27 @@ interface UserAuthResourceGroupResource {
         @QueryParam("limit")
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>>
+
+    @GET
+    @Path("{groupId}/getMemberGroupDetails/")
+    @Operation(summary = "获取用户加入单个组的详情")
+    fun getMemberGroupDetails(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int,
+        @QueryParam("memberId")
+        @Parameter(description = "组织ID/成员ID")
+        memberId: String
+    ): Result<GroupDetailsInfoVo>
 
     @PUT
     @Path("{groupId}/member/renewal")

@@ -76,6 +76,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -322,11 +323,10 @@ export default {
 
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
-            for (const key in newParam) {
-                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data.input, key, newParam[key])
-                }
-            }
+            Vue.set(atom.data, 'input', {
+                ...atom.data.input,
+                ...newParam
+            })
         } catch (e) {
             console.warn(e, 'update atom input error', atom)
         }
@@ -504,5 +504,10 @@ export default {
 
         })
         return state
+    },
+    [SET_PLUGIN_HEAD_TAB]: (state, { isGetPluginHeadTab }) => {
+        return Object.assign(state, {
+            isGetPluginHeadTab
+        })
     }
 }

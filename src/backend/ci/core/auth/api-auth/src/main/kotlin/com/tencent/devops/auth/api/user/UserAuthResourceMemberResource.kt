@@ -2,14 +2,17 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
+import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRenewalConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.pojo.request.ProjectMembersQueryConditionReq
 import com.tencent.devops.auth.pojo.request.RemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.vo.MemberGroupCountWithPermissionsVo
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
@@ -32,6 +35,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/auth/resource/member/{projectId}/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface UserAuthResourceMemberResource {
     @GET
     @Path("/listProjectMembers")
@@ -64,6 +68,20 @@ interface UserAuthResourceMemberResource {
         pageSize: Int
     ): Result<SQLPage<ResourceMemberInfo>>
 
+    @POST
+    @Path("/listProjectMembersByCondition")
+    @Operation(summary = "根据条件获取项目下全体成员")
+    fun listProjectMembersByCondition(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "查询条件", required = true)
+        projectMembersQueryConditionReq: ProjectMembersQueryConditionReq
+    ): Result<SQLPage<ResourceMemberInfo>>
+
     @PUT
     @Path("/renewal")
     @Operation(summary = "续期单个组成员权限--无需进行审批")
@@ -80,8 +98,8 @@ interface UserAuthResourceMemberResource {
 
     @PUT
     @Path("/batch/renewal")
-    @Operation(summary = "批量续期组成员权限--无需进行审批")
-    fun batchRenewalGroupMembers(
+    @Operation(summary = "批量续期组成员权限--管理员视角")
+    fun batchRenewalGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -94,8 +112,8 @@ interface UserAuthResourceMemberResource {
 
     @DELETE
     @Path("/batch/remove")
-    @Operation(summary = "批量移除用户组成员")
-    fun batchRemoveGroupMembers(
+    @Operation(summary = "批量移除用户组成员--管理员视角")
+    fun batchRemoveGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -103,13 +121,47 @@ interface UserAuthResourceMemberResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "批量移除成员请求实体")
-        removeMemberDTO: GroupMemberCommonConditionReq
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch/personal/remove")
+    @Operation(summary = "批量退出用户组成员--个人视角")
+    fun batchRemoveGroupMembersFromPersonal(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "批量移除成员请求实体")
+        removeMemberDTO: GroupMemberRemoveConditionReq
+    ): Result<String>
+
+    @DELETE
+    @Path("/single/{groupId}/{operateChannel}/remove")
+    @Operation(summary = "退出单个组")
+    fun deleteResourceGroupMembers(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "组ID", required = true)
+        @PathParam("groupId")
+        groupId: Int,
+        @Parameter(description = "操作渠道", required = true)
+        @PathParam("operateChannel")
+        operateChannel: OperateChannel,
+        @Parameter(description = "操作对象", required = true)
+        targetMember: ResourceMemberInfo
     ): Result<Boolean>
 
     @PUT
     @Path("/batch/handover")
-    @Operation(summary = "批量交接用户组成员")
-    fun batchHandoverGroupMembers(
+    @Operation(summary = "批量交接用户组成员--管理员视角")
+    fun batchHandoverGroupMembersFromManager(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -119,6 +171,20 @@ interface UserAuthResourceMemberResource {
         @Parameter(description = "批量交接成员请求实体")
         handoverMemberDTO: GroupMemberHandoverConditionReq
     ): Result<Boolean>
+
+    @PUT
+    @Path("/batch/personal/handover")
+    @Operation(summary = "批量交接用户组成员--个人视角")
+    fun batchHandoverApplicationFromPersonal(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "批量交接成员请求实体")
+        handoverMemberDTO: GroupMemberHandoverConditionReq
+    ): Result<String>
 
     @POST
     @Path("/batch/{batchOperateType}/check/")
@@ -177,6 +243,27 @@ interface UserAuthResourceMemberResource {
         projectId: String,
         @QueryParam("memberId")
         @Parameter(description = "组织ID/成员ID")
-        memberId: String
-    ): Result<List<MemberGroupCountWithPermissionsVo>>
+        memberId: String,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称")
+        groupName: String?,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?,
+        @QueryParam("relatedResourceType")
+        @Parameter(description = "资源类型")
+        relatedResourceType: String?,
+        @QueryParam("relatedResourceCode")
+        @Parameter(description = "资源ID")
+        relatedResourceCode: String?,
+        @QueryParam("action")
+        @Parameter(description = "操作")
+        action: String?,
+        @QueryParam("operateChannel")
+        @Parameter(description = "操作渠道")
+        operateChannel: OperateChannel?
+    ): Result<List<ResourceType2CountVo>>
 }

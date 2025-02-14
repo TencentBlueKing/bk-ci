@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -427,6 +427,7 @@
 |  11   | CONDITIONS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 状况  |
 |  12   | CHECK_IN |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 准入检查配置  |
 |  13   | CHECK_OUT |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 准出检查配置  |
+|  14   | STAGE_ID_FOR_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 当前 stageId 阶段 ID(用户可编辑)  |
 
 **表名：** <a>T_PIPELINE_BUILD_SUMMARY</a>
 
@@ -781,6 +782,7 @@
 |  20   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 版本变更说明  |
 |  21   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 最近更新人  |
 |  22   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  23   | RELEASE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 发布时间  |
 
 **表名：** <a>T_PIPELINE_RULE</a>
 
@@ -833,7 +835,7 @@
 |  24   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 成功的企业微信群通知转为 Markdown 格式开关  |
 |  25   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 失败的企业微信群通知转为 Markdown 格式开关  |
 |  26   | MAX_PIPELINE_RES_NUM |   int   | 10 |   0    |    Y     |  N   |   500    | 保存流水线编排的最大个数  |
-|  27   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   50    | 并发构建数量限制  |
+|  27   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,为 null 时表示取系统默认值  |
 |  28   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  29   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
 |  30   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同 group 取消正在执行的流水线  |
@@ -884,6 +886,7 @@
 |  31   | FAIL_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
 |  32   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
 |  33   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  34   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1 时表示取系统默认值。  |
 
 **表名：** <a>T_PIPELINE_STAGE_TAG</a>
 

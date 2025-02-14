@@ -27,7 +27,7 @@
 package com.tencent.devops.store.common.configuration
 
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -36,15 +36,15 @@ class StoreWebsocketConfiguration {
 
 /*    @Bean
     fun getWebsocketPushDispatcher(
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): WebsocketPushDispatcher {
-        return WebsocketPushDispatcher(rabbitTemplate)
+        return WebsocketPushDispatcher(streamBridge)
     }*/
 
     @Bean
     fun getWebSocketDispatcher(
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): WebSocketDispatcher {
-        return WebSocketDispatcher(rabbitTemplate)
+        return WebSocketDispatcher(streamBridge)
     }
 }

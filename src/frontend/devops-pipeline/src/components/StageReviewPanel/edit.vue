@@ -1,55 +1,138 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
-        <form-field :label="$t('stageReview.stageInConditions')" class="stage-rule">
-            <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
-                <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
-                <bk-radio :disabled="disabled" :value="true" style="margin-left:82px">{{
-                    $t('enableStageReviewRadioLabel') }}</bk-radio>
+        <form-field
+            :label="$t('stageReview.stageInConditions')"
+            class="stage-rule"
+        >
+            <bk-radio-group
+                class="stage-review-radio-group"
+                v-model="manualTrigger"
+            >
+                <bk-radio
+                    :disabled="disabled"
+                    :value="false"
+                >
+                    {{ $t('disableStageReviewRadioLabel') }}
+                </bk-radio>
+                <bk-radio
+                    :disabled="disabled"
+                    :value="true"
+                    style="margin-left:82px"
+                >
+                    {{
+                        $t('enableStageReviewRadioLabel') }}
+                </bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
             <bk-divider class="stage-divider"></bk-divider>
 
-            <form-field required :label="$t('stageReview.approvalFlow')" :is-error="!hasTriggerMember"
-                :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
-                <edit-review-flow :review-groups="reviewGroups" :disabled="disabled"
-                    @change="handleUpdateStageControl"></edit-review-flow>
+            <form-field
+                required
+                :label="$t('stageReview.approvalFlow')"
+                :is-error="!hasTriggerMember"
+                :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')"
+            >
+                <edit-review-flow
+                    :review-groups="reviewGroups"
+                    :disabled="disabled"
+                    @change="handleUpdateStageControl"
+                ></edit-review-flow>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')" class="mt14">
-                <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable
-                    :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
+            <form-field
+                :disabled="disabled"
+                :label="$t('stageReviewInputDesc')"
+                class="mt14"
+            >
+                <vuex-textarea
+                    :placeholder="$t('stageReviewInputDescTip')"
+                    name="reviewDesc"
+                    clearable
+                    :disabled="disabled"
+                    :handle-change="handleUpdateStageControl"
+                    :value="reviewDesc"
+                ></vuex-textarea>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewInputNotice')" class="mt14">
-                <atom-checkbox-list :list="notifyTypeList" :disabled="disabled" name="notifyType"
-                    :handle-change="handleUpdateNotifyType" :value="notifyType"></atom-checkbox-list>
+            <form-field
+                :disabled="disabled"
+                :label="$t('stageReviewInputNotice')"
+                class="mt14"
+            >
+                <atom-checkbox-list
+                    :list="notifyTypeList"
+                    :disabled="disabled"
+                    name="notifyType"
+                    :handle-change="handleUpdateNotifyType"
+                    :value="notifyType"
+                ></atom-checkbox-list>
             </form-field>
 
-            <form-field v-if="showNotifyGroup" :disabled="disabled" :required="showNotifyGroup"
-                :label="$t('weChatGroupID')" class="mt14" :is-error="!validWeChatGroupID"
-                :error-msg="$t('stageWeChatGroupIDError')">
-                <vuex-input name="notifyGroup" :disabled="disabled" :placeholder="$t('notifyGroupDesc')" required
-                    :handle-change="handleUpdateNotifyGroup" :value="notifyGroupStr"></vuex-input>
+            <form-field
+                v-if="showNotifyGroup"
+                :disabled="disabled"
+                :required="showNotifyGroup"
+                :label="$t('weChatGroupID')"
+                class="mt14"
+                :is-error="!validWeChatGroupID"
+                :error-msg="$t('stageWeChatGroupIDError')"
+            >
+                <vuex-input
+                    name="notifyGroup"
+                    :disabled="disabled"
+                    :placeholder="$t('notifyGroupDesc')"
+                    required
+                    :handle-change="handleUpdateNotifyGroup"
+                    :value="notifyGroupStr"
+                ></vuex-input>
             </form-field>
 
-            <form-field :disabled="disabled" class="mt14">
-                <atom-checkbox :disabled="disabled" name="markdownContent" :text="$t('markdownContentLabel')"
-                    :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
+            <form-field
+                :disabled="disabled"
+                class="mt14"
+            >
+                <atom-checkbox
+                    :disabled="disabled"
+                    name="markdownContent"
+                    :text="$t('markdownContentLabel')"
+                    :handle-change="handleUpdateStageControl"
+                    :value="markdownContent"
+                ></atom-checkbox>
             </form-field>
 
-            <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14"
-                :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
-                <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
+            <form-field
+                :required="true"
+                :disabled="disabled"
+                :label="$t('stageTimeoutLabel')"
+                class="mt14"
+                :is-error="!validTimeout"
+                :desc="$t('stageTimeoutDesc')"
+                :error-msg="$t('stageTimeoutError')"
+            >
+                <bk-input
+                    type="number"
+                    :disabled="disabled"
+                    v-model="timeout"
+                    :min="1"
+                    :max="720"
+                >
                     <template slot="append">
                         <div class="group-text">{{ $t('timeMap.hours') }}</div>
                     </template>
                 </bk-input>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewParams')" class="mt14">
-                <edit-params :disabled="disabled" :review-params="reviewParams"
-                    @change="handleUpdateStageControl"></edit-params>
+            <form-field
+                :disabled="disabled"
+                :label="$t('stageReviewParams')"
+                class="mt14"
+            >
+                <edit-params
+                    :disabled="disabled"
+                    :review-params="reviewParams"
+                    @change="handleUpdateStageControl"
+                ></edit-params>
             </form-field>
         </template>
     </div>
@@ -112,7 +195,15 @@
                 }
             },
             reviewGroups () {
-                return Array.isArray(this.stageControl?.reviewGroups) ? this.stageControl.reviewGroups : []
+                const reviews = this.stageControl.reviewGroups?.map(i => {
+                    return {
+                        ...i,
+                        reviewType: i?.groups?.length ? 'group' : 'user'
+                    }
+                })
+                return Array.isArray(this.stageControl?.reviewGroups)
+                    ? reviews
+                    : []
             },
             hasTriggerMember () {
                 try {
@@ -156,12 +247,7 @@
             }
         },
         watch: {
-            manualTrigger (val) {
-                if (!val) {
-                    this.stageControl.notifyGroup = []
-                    this.stageControl.notifyType = []
-                    this.stageControl.reviewGroups = []
-                }
+            manualTrigger () {
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             hasTriggerMember () {
@@ -197,10 +283,20 @@
                 })
             },
             handleUpdateStageControl (name, value) {
+                let curVal = value
+                if (name === 'reviewGroups') {
+                    curVal = value.map(i => {
+                        return {
+                            name: i.name,
+                            reviewers: i.reviewers || [],
+                            groups: i.groups || []
+                        }
+                    })
+                }
                 this.setPipelineEditing(true)
                 this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
-                    [name]: value
+                    [name]: curVal
                 })
             },
 

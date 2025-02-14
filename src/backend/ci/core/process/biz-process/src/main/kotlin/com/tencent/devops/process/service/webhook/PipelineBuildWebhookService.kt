@@ -29,19 +29,24 @@ package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
+import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -55,11 +60,13 @@ import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
@@ -71,7 +78,6 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.webhook.PipelineBuildPermissionService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
@@ -93,12 +99,13 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildCommitService: PipelineBuildCommitService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val pipelineBuildPermissionService: PipelineBuildPermissionService,
-    private val pipelineYamlService: PipelineYamlService
+    private val measureEventDispatcher: SampleEventDispatcher,
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+        private const val WEBHOOK_COMMIT_TRIGGER = "webhook_commit_trigger"
     }
 
     fun dispatchTriggerPipelines(
@@ -218,9 +225,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 触发事件保存流水线名称
         builder.pipelineName(pipelineInfo.pipelineName)
         // 获取授权人
-        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: pipelineInfo.lastModifyUser
+        val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+            ?: pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
@@ -238,7 +246,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return@elements
             }
             val webHookParams = WebhookElementParamsRegistrar.getService(element)
-                .getWebhookElementParams(element, variables) ?: return@elements
+                .getWebhookElementParams(element, PipelineVarUtil.fillVariableMap(variables)) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -264,6 +272,11 @@ class PipelineBuildWebhookService @Autowired constructor(
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
             if (matchResult.isMatch) {
                 try {
+                    checkPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
@@ -308,6 +321,19 @@ class PipelineBuildWebhookService @Autowired constructor(
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
                             .buildNum(buildDetail?.buildNum.toString())
                     }
+                } catch (permissionException: PermissionForbiddenException) {
+                    logger.warn("check permission failed", permissionException)
+                    builder.eventSource(repo.repoHashId!!)
+                        .status(PipelineTriggerStatus.FAILED.name)
+                        .reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                        .reasonDetail(
+                            PipelineTriggerFailedErrorCode(
+                                errorCode = ProcessMessageCode.BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION,
+                                params = listOf(userId)
+                            )
+                        )
+                    // 当前流水线没有权限触发
+                    return false
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                     builder.eventSource(eventSource = repo.repoHashId!!)
@@ -397,7 +423,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val container = model.getTriggerContainer()
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
@@ -414,7 +440,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         taskIds.forEach { taskId ->
             val triggerElement = triggerElementMap[taskId] ?: return@forEach
             val webHookParams = WebhookElementParamsRegistrar.getService(triggerElement)
-                .getWebhookElementParams(triggerElement, variables) ?: return@forEach
+                .getWebhookElementParams(triggerElement, PipelineVarUtil.fillVariableMap(variables)) ?: return@forEach
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.repositoryHashId.isNullOrBlank() && repositoryConfig.repositoryName.isNullOrBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -448,7 +474,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         .webhookCommitNew(projectId, webhookCommit).data
                     logger.info(
                         "$pipelineId|${buildId?.id}|webhook trigger|(${triggerElement.name}|" +
-                                "repo(${matcher.getRepoName()})"
+                            "repo(${matcher.getRepoName()})"
                     )
                     return WebhookBuildResult(result = true, pipelineInfo = pipelineInfo, buildId = buildId)
                 } catch (ignore: Exception) {
@@ -509,7 +535,6 @@ class PipelineBuildWebhookService @Autowired constructor(
 //            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
 //        )
         val version = webhookCommit.version ?: pipelineInfo.version
-        checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
@@ -576,14 +601,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     buildId = buildId.id,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+
                 // 上报项目用户度量
                 if (startParams[PIPELINE_START_WEBHOOK_USER_ID] != null) {
-                    measureEventDispatcher.dispatch(
-                        ProjectUserDailyEvent(
-                            projectId = projectId,
-                            userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
-                            theDate = LocalDate.now()
-                        )
+                    uploadProjectUserMetrics(
+                        userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
+                        projectId = projectId,
+                        theDate = LocalDate.now()
                     )
                 }
             }
@@ -597,6 +621,44 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
+    }
+
+    private fun uploadProjectUserMetrics(
+        userId: String,
+        projectId: String,
+        theDate: LocalDate
+    ) {
+        try {
+            val projectUserOperateMetricsKey = ProjectUserOperateMetricsData(
+                projectId = projectId,
+                userId = userId,
+                operate = WEBHOOK_COMMIT_TRIGGER,
+                theDate = theDate
+            ).getProjectUserOperateMetricsKey()
+            measureEventDispatcher.dispatch(
+                ProjectUserDailyEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    theDate = theDate
+                ),
+                ProjectUserOperateMetricsEvent(
+                    userOperateCounterData = UserOperateCounterData().apply {
+                        this.increment(projectUserOperateMetricsKey)
+                    }
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.error("save auth user metrics", ignored)
+        }
     }
 }

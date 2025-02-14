@@ -137,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -212,7 +212,8 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineId,
                         userId = userId,
                         buildId = build.buildId,
-                        status = BuildStatus.TERMINATE
+                        status = BuildStatus.TERMINATE,
+                        executeCount = build.executeCount
                     )
                 )
             }
@@ -225,6 +226,13 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
         return pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId)
+    }
+
+    fun getRunningBuildCount(
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
     /** 根据状态信息获取并发组构建列表
@@ -535,6 +543,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 result.distinct()
             }
+
             else -> emptyList()
         }
         return if (search.isNullOrBlank()) {
@@ -566,7 +575,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.sortedBy { it.aliasName },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
@@ -608,7 +617,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIdsOnly(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
@@ -693,7 +702,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 status = buildStatus,
-                actionType = actionType
+                actionType = actionType,
+                executeCount = executeCount
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
@@ -851,7 +861,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index)
+                    agentReuseMutexTree.addNode(container, index, context.variables)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -964,7 +974,8 @@ class PipelineRuntimeService @Autowired constructor(
                         startTime = stageStartTime,
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
-                        checkOut = stage.checkOut
+                        checkOut = stage.checkOut,
+                        stageIdForUser = stage.stageIdForUser
                     )
                 )
             }

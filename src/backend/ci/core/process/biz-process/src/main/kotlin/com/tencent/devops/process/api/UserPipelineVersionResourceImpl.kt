@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
@@ -246,7 +247,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",
@@ -484,6 +485,21 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             version = version,
             storageType = PipelineStorageType.getActionType(storageType)
         )
+    }
+
+    override fun updateBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNo: BuildNoUpdateReq
+    ): Result<Boolean> {
+        pipelineInfoFacadeService.updateBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            targetBuildNo = buildNo.currentBuildNo
+        )
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String) {

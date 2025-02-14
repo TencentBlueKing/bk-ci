@@ -29,6 +29,7 @@ package com.tencent.devops.common.expression.context
 
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
@@ -46,7 +47,7 @@ internal class RuntimeDictionaryContextDataTest {
     fun contextSingleBuildTest() {
         val context = RuntimeDictionaryContextData(RuntimeNamedValueImpl())
         data.forEach { (k, v) ->
-            Assertions.assertEquals(v, context.tryGetValue(k).first)
+            Assertions.assertEquals(v, context[k])
         }
         Assertions.assertEquals(data.map { it.value }, context.values)
     }
@@ -59,12 +60,13 @@ internal class RuntimeDictionaryContextDataTest {
             "settings.access_token.access_token == '456' => true",
             "settings['appId'].secretKey == '101112' => true",
             "settings.token['username'] == " +
-                "fromJSON('{\"token\":\"212223\",\"username\":\"789\",\"password\":\"123\"}').username => true"
+                    "fromJSON('{\"token\":\"212223\",\"username\":\"789\",\"password\":\"123\"}').username => true"
         ]
     )
     fun contextExpressionParseTest(expAndExpect: String) {
         val (exp, expect) = expAndExpect.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!
+            .evaluate(null, ev, EvaluationOptions(false), null).value
         Assertions.assertEquals(
             if (expect == "true" || expect == "false") {
                 expect.toBoolean()

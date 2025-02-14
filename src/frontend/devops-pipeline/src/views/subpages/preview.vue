@@ -84,7 +84,7 @@
             </template>
         </header>
         <div
-            v-if="activeName.has(3)"
+            v-show="activeName.has(3)"
             class="params-collapse-content"
         >
             <bk-alert
@@ -211,8 +211,9 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
+
     export default {
         components: {
             PipelineVersionsForm,
@@ -326,7 +327,9 @@
                     }
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        isChanged: p.defaultValue !== p.value,
+                        isChanged: isObject(p.defaultValue)
+                            ? !isShallowEqual(p.defaultValue, p.value)
+                            : p.defaultValue !== p.value,
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
@@ -424,7 +427,11 @@
                 this.handleChange('versionParam', ...args)
             },
             handleBuildNoChange (name, value) {
-                this.buildNo.buildNo = value
+                if (name === 'currentBuildNo') {
+                    this.buildNo.currentBuildNo = value
+                } else {
+                    this.buildNo.buildNo = value
+                }
 
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
@@ -473,6 +480,11 @@
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId)
+                Object.keys(params).forEach(key => {
+                    if (key !== 'buildNo' && isObject(params[key])) {
+                        params[key] = JSON.stringify(params[key])
+                    }
+                })
                 const skipAtoms = this.getSkipedAtoms()
                 console.log(params, skipAtoms)
                 try {

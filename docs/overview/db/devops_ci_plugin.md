@@ -2,13 +2,33 @@
 
 **数据库名：** devops_ci_plugin
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_plugin 的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
+| T_AI_SCORE | 脚本执行报错 AI 分析-评分 |
 | T_PLUGIN_GITHUB_CHECK |  |
 | T_PLUGIN_GIT_CHECK |  |
+
+**表名：** <a>T_AI_SCORE</a>
+
+**说明：** 脚本执行报错 AI 分析-评分
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | LABEL |   varchar   | 256 |   0    |    N     |  N   |       | 任务 ID  |
+|  3   | ARCHIVE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否已归档  |
+|  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  5   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  6   | GOOD_USERS |   text   | 65535 |   0    |    Y     |  N   |       | 赞的人  |
+|  7   | BAD_USERS |   text   | 65535 |   0    |    Y     |  N   |       | 踩的人  |
+|  8   | AI_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 大模型生成的内容  |
+|  9   | SYSTEM_MSG |   text   | 65535 |   0    |    Y     |  N   |       | Promptforsystem  |
+|  10   | USER_MSG |   text   | 65535 |   0    |    Y     |  N   |       | Promptforuser  |
 
 **表名：** <a>T_PLUGIN_GITHUB_CHECK</a>
 

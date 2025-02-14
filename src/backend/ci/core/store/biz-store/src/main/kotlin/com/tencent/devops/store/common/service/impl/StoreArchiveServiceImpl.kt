@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,9 +121,17 @@ class StoreArchiveServiceImpl @Autowired constructor(
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean {
+        val storeCode = storePkgInfoUpdateRequest.storeCode
+        val version = storePkgInfoUpdateRequest.version
+        val storeType = storePkgInfoUpdateRequest.storeType
+        val storeId = storeBaseQueryDao.getComponentId(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
@@ -158,8 +167,8 @@ class StoreArchiveServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
             storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
+            storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
-                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
                 storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs!!)
             }
         }

@@ -17,6 +17,7 @@ interface GroupTableType {
   operateSource: string;
   operator: string;
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
+  memberType: string;
 };
 interface Pagination {
   limit: number;
@@ -34,6 +35,7 @@ interface SourceType {
   activeFlag?: boolean;
   tableLoading?: boolean;
   scrollLoading?: boolean;
+  isRemotePagination?: boolean;
   tableData: GroupTableType[];
 }
 interface SelectedDataType {
@@ -44,17 +46,16 @@ interface CollapseListType {
   resourceTypeName: string;
   count: number;
 }
-interface AsideItem {
+export interface AsideItem {
   id: string,
   name: string,
-  type: string
+  type: "department" | "user"
 }
-
-interface ManageAsideType {
-  id: string,
-  name: string,
-  type: string
-};
+export interface SearchParamsType {
+  groupName?: string,
+  minExpiredAt?: number,
+  maxExpiredAt?: number,
+}
 
 export default defineStore('userGroupTable', () => {
   const { t } = useI18n();
@@ -66,7 +67,7 @@ export default defineStore('userGroupTable', () => {
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([]);
-  const memberItem = ref<ManageAsideType>();
+  const memberItem = ref<AsideItem>();
 
   const isShowRenewal = ref(false);
   const isShowHandover = ref(false);
@@ -79,6 +80,7 @@ export default defineStore('userGroupTable', () => {
   const selectedLength = ref(0);
   const isPermission = ref(true);
   let currentRequestId = 0;
+  const seacrhObj = ref<SearchParamsType>();
 
   watch(selectedData, ()=>{
     getSourceList()
@@ -101,10 +103,14 @@ export default defineStore('userGroupTable', () => {
   /**
    * 获取项目成员有权限的用户组数量
    */
-  async function getCollapseList(memberId: string) {
+  async function getCollapseList(memberId: string, seacrhObj: SearchParamsType) {
     paginations.value = []
     try {
-      const res = await http.getMemberGroups(projectId.value, memberId);
+      const query = {
+        memberId,
+        ...seacrhObj,
+      }
+      const res = await http.getMemberGroups(projectId.value, query);
       collapseList.value = res;
       if(res.length){
         isPermission.value = true;
@@ -115,6 +121,7 @@ export default defineStore('userGroupTable', () => {
         ...item,
         tableLoading: false,
         scrollLoading: false,
+        isRemotePagination: true,
         tableData: [],
       }))
 
@@ -129,19 +136,18 @@ export default defineStore('userGroupTable', () => {
    * 获取项目成员有权限的用户组
    * @param resourceType 资源类型
    */
-  async function getGroupList(resourceType: string) {
+  async function getGroupList(resourceType: string, seacrhObj?) {
     if (!collapseList.value.some(item => item.resourceType === resourceType)) {
       return {};
     }
     try {
       const params = {
-        projectId: projectId.value,
-        resourceType,
         memberId: memberItem.value!.id,
         start: paginations.value[resourceType][0],
         limit: paginations.value[resourceType][1],
+        ...seacrhObj,
       }
-      return await http.getMemberGroupsDetails(params);
+      return await http.getMemberGroupsDetails(projectId.value, resourceType, params);
     } catch (error) {
       console.log(error);
     }
@@ -149,16 +155,17 @@ export default defineStore('userGroupTable', () => {
   /**
    * 获取项目成员页面数据
    */
-  async function fetchUserGroupList(asideItem: AsideItem) {
+  async function fetchUserGroupList(asideItem: AsideItem, seacrhParams: SearchParamsType) {
     const requestId = ++currentRequestId;
     initData();
-    asideItem && await getCollapseList(asideItem.id);
+    seacrhObj.value = seacrhParams
+    asideItem && await getCollapseList(asideItem.id, seacrhParams);
     memberItem.value = asideItem;
     try {
       isLoading.value = true;
       const resourceTypes = sourceList.value.map(i => i.resourceType).slice(0, 2);
       const results = await Promise.all(
-        resourceTypes.map(resourceType => getGroupList(resourceType))
+        resourceTypes.map(resourceType => getGroupList(resourceType, seacrhParams))
       );
       if(currentRequestId === requestId) {
         sourceList.value.forEach((item, index) => {
@@ -270,8 +277,10 @@ export default defineStore('userGroupTable', () => {
             count: sourceItem.isAll ? sourceItem.count! : tableData.length 
           },
           ...sourceItem,
-          tableData: tableData.slice(0,11),
-          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) })
+          tableData: tableData,
+          count: sourceItem.isAll ? sourceItem.count! : tableData.length,
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => ({ id: item.groupId, memberType: item.memberType })) }),
+          ...(!sourceItem.isAll && { isRemotePagination: false }),
         };
       });
   }
@@ -290,7 +299,7 @@ export default defineStore('userGroupTable', () => {
 
     if (item){
       item.scrollLoading = true;
-      const res = await getGroupList(resourceType);
+      const res = await getGroupList(resourceType, seacrhObj.value);
       item.scrollLoading = false;
       item.tableData = [...item.tableData, ...res.records];
       if(pagination[2]){
@@ -330,7 +339,7 @@ export default defineStore('userGroupTable', () => {
         try {
           item.tableLoading = true;
           paginations.value[resourceType] = [0, 10]
-          const res = await getGroupList(resourceType);
+          const res = await getGroupList(resourceType, seacrhObj.value);
           item.tableLoading = false;
           item.tableData = res.records;
         } catch (e) {
@@ -340,32 +349,42 @@ export default defineStore('userGroupTable', () => {
     }
   }
   async function pageLimitChange(limit: number, resourceType: string) {
-    paginations.value[resourceType][1] = limit;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-      if(item){
+      if (item) {
+        paginations.value[resourceType][1] = limit;
         item.tableLoading = true;
-        const res = await getGroupList(resourceType)
+        if (item.isRemotePagination) {
+          const res = await getGroupList(resourceType, seacrhObj.value)
+          item.tableData = res.records;
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
       
     }
   }
   async function pageValueChange(value: number, resourceType: string) {
-    paginations.value[resourceType][0] = (value - 1) * 10 + 1;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-      if(item){
+      if (item) {
+        paginations.value[resourceType][0] = (value - 1) * 10 + 1;
         item.tableLoading = true;
-        const res = await getGroupList(resourceType)
+        if (item.isRemotePagination) {
+          const res = await getGroupList(resourceType, seacrhObj.value)
+          item.tableData = res.records;
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
       
     }
+  }
+
+  function clearPaginations() {
+    Object.keys(paginations.value).forEach(key => {
+      paginations.value[key] = [0, 10];
+    });
   }
 
   return {
@@ -394,5 +413,6 @@ export default defineStore('userGroupTable', () => {
     handleUpDateRow,
     pageLimitChange,
     pageValueChange,
+    clearPaginations,
   };
 });

@@ -24,7 +24,7 @@ import {
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from '@/store/constants'
-import { UI_MODE } from '@/utils/pipelineConst'
+import { UI_MODE, CODE_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
 import { areDeeplyEqual } from '../../../utils/util'
@@ -218,7 +218,10 @@ export default {
                 })
             }
 
-            commit(PIPELINE_SETTING_MUTATION, setting)
+            commit(PIPELINE_SETTING_MUTATION, Object.assign(setting, {
+                versionUpdater: pipelineRes.data.updater,
+                versionUpdateTime: pipelineRes.data.updateTime
+            }))
             if (!pipelineRes.data.yamlSupported) {
                 rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             }
@@ -261,7 +264,7 @@ export default {
             }
         }
     },
-    async transfer ({ getters }, { projectId, pipelineId, actionType, ...params }) {
+    async transfer ({ getters, state }, { projectId, pipelineId, actionType, ...params }) {
         const apis = [
             request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
                 params: {
@@ -270,7 +273,7 @@ export default {
                 }
             })
         ]
-        if (actionType === 'FULL_YAML2MODEL') {
+        if (actionType === 'FULL_YAML2MODEL' && !state.editfromImport) {
             apis.push(
                 request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
                     params: params.version ? { version: params.version } : {}
@@ -784,6 +787,65 @@ export default {
         })
     },
 
+    praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.post(url)
+    },
+
+    cancelPraiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.delete(url)
+    },
+
+    getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return request.get(url)
+    },
+
+    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack }) {
+        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
+        if (currentExe) {
+            url += `&executeCount=${currentExe}`
+        }
+        return window.fetch(url, {
+            method: 'post'
+        }).then((response) => {
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
+
+            const readChunk = () => {
+                return reader.read().then(appendChunks)
+            }
+
+            const appendChunks = (result) => {
+                const chunk = decoder.decode(result.value || new Uint8Array(), {
+                    stream: !result.done
+                })
+                if (chunk) {
+                    callBack(chunk)
+                }
+                if (!result.done) {
+                    readChunk()
+                }
+            }
+
+            readChunk()
+        })
+    },
+
+    getAIStatus () {
+        return request.get('/misc/api/user/gpt_config/is_ok')
+    },
+
     getMacSysVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
@@ -802,14 +864,8 @@ export default {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
     },
 
-    download (_, { url, name }) {
-        return fetch(url, { credentials: 'include' }).then((res) => {
-            if (res.status >= 200 && res.status < 300) {
-                return res.blob()
-            } else {
-                return res.json().then((result) => Promise.reject(result))
-            }
-        }).then((blob) => {
+    download (_, { url, name, params, type }) {
+        const fn = (blob) => {
             const a = document.createElement('a')
             const url = window.URL || window.webkitURL || window.moxURL
             a.href = url.createObjectURL(blob)
@@ -817,7 +873,38 @@ export default {
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
-        })
+        }
+
+        if (type === CODE_MODE) {
+            return fetch(url, {
+                credentials: 'include',
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(params)
+            }).then((res) => {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.json()
+                } else {
+                    return res.json().then((result) => Promise.reject(result))
+                }
+            }).then((data) => {
+                const result = data.data.newYaml
+                const blob = new Blob([result])
+                fn(blob)
+            })
+        } else {
+            return fetch(url, { credentials: 'include' }).then((res) => {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.blob()
+                } else {
+                    return res.json().then((result) => Promise.reject(result))
+                }
+            }).then((blob) => {
+                fn(blob)
+            })
+        }
     },
     reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
@@ -868,6 +955,9 @@ export default {
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
+    },
+    updateBuildNo ({ commit }, { projectId, pipelineId, currentBuildNo }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/updateBuildNo`, { currentBuildNo })
     }
 
 }

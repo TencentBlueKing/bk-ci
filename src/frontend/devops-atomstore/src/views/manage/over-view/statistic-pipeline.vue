@@ -1,22 +1,45 @@
 <template>
     <article class="manage-statistic-pipeline">
         <main class="g-scroll-pagination-table">
-            <bk-form form-type="inline" class="statistic-pipeline-head">
+            <bk-form
+                form-type="inline"
+                class="statistic-pipeline-head"
+            >
                 <bk-form-item :label="$t('store.修改时间')">
-                    <bk-date-picker :placeholder="$t('store.请选择起止时间')" type="datetimerange" v-model="searchData.modifyTimeRange" :clearable="false"></bk-date-picker>
+                    <bk-date-picker
+                        :placeholder="$t('store.请选择起止时间')"
+                        type="datetimerange"
+                        v-model="searchData.modifyTimeRange"
+                        :clearable="false"
+                    ></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.版本')">
-                    <bk-input :placeholder="$t('store.请输入版本')" v-model="searchData.version"></bk-input>
+                    <bk-input
+                        :placeholder="$t('store.请输入版本')"
+                        v-model="searchData.version"
+                    ></bk-input>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button theme="primary" @click="handleSearch" :loading="isLoading">{{ $t('store.搜索') }}</bk-button>
+                    <bk-button
+                        theme="primary"
+                        @click="handleSearch"
+                        :loading="isLoading"
+                    >
+                        {{ $t('store.搜索') }}
+                    </bk-button>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button @click="savePipelines" :loading="isSaving">{{ $t('store.导出') }}</bk-button>
+                    <bk-button
+                        @click="savePipelines"
+                        :loading="isSaving"
+                    >
+                        {{ $t('store.导出') }}
+                    </bk-button>
                 </bk-form-item>
             </bk-form>
 
-            <bk-table :data="pipelineList"
+            <bk-table
+                :data="pipelineList"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -27,31 +50,50 @@
             >
                 <bk-table-column :label="$t('store.流水线链接')">
                     <template slot-scope="props">
-                        <a :href="props.row.pipelineUrl" target="_blank" class="text-link">{{ props.row.pipelineUrl }}</a>
+                        <a
+                            :href="props.row.pipelineUrl"
+                            target="_blank"
+                            class="text-link"
+                        >{{ props.row.pipelineUrl }}</a>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.版本')" prop="atomVersion"></bk-table-column>
-                <bk-table-column :label="$t('store.最近修改人')" prop="modifier"></bk-table-column>
-                <bk-table-column :label="$t('store.最近修改时间')" prop="updateTime"></bk-table-column>
-                <bk-table-column :label="$t('store.最近执行人')" prop="executor"></bk-table-column>
-                <bk-table-column :label="$t('store.最近执行时间')" prop="executeTime"></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.版本')"
+                    prop="atomVersion"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.最近修改人')"
+                    prop="modifier"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.最近修改时间')"
+                    prop="updateTime"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.最近执行人')"
+                    prop="executor"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.最近执行时间')"
+                    prop="executeTime"
+                ></bk-table-column>
             </bk-table>
         </main>
     </article>
 </template>
 
 <script>
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import api from '@/api'
 
     function formatterTime (val) {
-        return moment(val).format('YYYY-MM-DD HH:mm:ss')
+        return dayjs(val).format('YYYY-MM-DD HH:mm:ss')
     }
 
     export default {
         data () {
-            const startTime = formatterTime(moment().subtract(7, 'days'))
-            const endTime = formatterTime(moment())
+            const startTime = formatterTime(dayjs().subtract(7, 'days'))
+            const endTime = formatterTime(dayjs())
 
             return {
                 searchData: {

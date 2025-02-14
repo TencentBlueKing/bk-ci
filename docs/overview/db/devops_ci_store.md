@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -1151,6 +1151,7 @@
 |  10   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  13   | ELEMENT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 指标要素标识  |
 
 **表名：** <a>T_STORE_INDEX_LEVEL_INFO</a>
 

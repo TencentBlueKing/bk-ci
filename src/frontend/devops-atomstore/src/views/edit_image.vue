@@ -1,11 +1,28 @@
 <template>
     <article class="edit-image-home">
-        <bread-crumbs :bread-crumbs="navList" type="image">
-            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.镜像指引') }} </a>
+        <bread-crumbs
+            :bread-crumbs="navList"
+            type="image"
+        >
+            <a
+                class="g-title-work"
+                target="_blank"
+                :href="docsLink"
+            > {{ $t('store.镜像指引') }} </a>
         </bread-crumbs>
-        <main v-bkloading="{ isLoading }" class="edit-content">
-            <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
-                <bk-form-item class="wt660"
+        <main
+            v-bkloading="{ isLoading }"
+            class="edit-content"
+        >
+            <bk-form
+                ref="imageForm"
+                class="edit-image"
+                label-width="150"
+                :model="form"
+                v-show="!isLoading"
+            >
+                <bk-form-item
+                    class="wt660"
                     :label="$t('store.镜像名称')"
                     :required="true"
                     property="imageName"
@@ -13,9 +30,13 @@
                     ref="imageName"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
+                    <bk-input
+                        v-model="form.imageName"
+                        :placeholder="$t('store.请输入镜像名称')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item class="wt660"
+                <bk-form-item
+                    class="wt660"
                     :label="$t('store.范畴')"
                     property="category"
                     :required="true"
@@ -23,8 +44,12 @@
                     ref="category"
                     error-display-type="normal"
                 >
-                    <bk-select v-model="form.category" searchable>
-                        <bk-option v-for="(option, index) in categoryList"
+                    <bk-select
+                        v-model="form.category"
+                        searchable
+                    >
+                        <bk-option
+                            v-for="(option, index) in categoryList"
                             :key="index"
                             :id="option.categoryCode"
                             :name="option.categoryName"
@@ -34,7 +59,8 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item class="wt660"
+                <bk-form-item
+                    class="wt660"
                     :label="$t('store.分类')"
                     :required="true"
                     property="classifyCode"
@@ -42,8 +68,12 @@
                     ref="classifyCode"
                     error-display-type="normal"
                 >
-                    <bk-select v-model="form.classifyCode" searchable>
-                        <bk-option v-for="(option, index) in classifys"
+                    <bk-select
+                        v-model="form.classifyCode"
+                        searchable
+                    >
+                        <bk-option
+                            v-for="(option, index) in classifys"
                             :key="index"
                             :id="option.classifyCode"
                             :name="option.classifyName"
@@ -52,10 +82,21 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.标签')" property="labelIdList">
-                    <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
+                <bk-form-item
+                    :label="$t('store.标签')"
+                    property="labelIdList"
+                >
+                    <bk-tag-input
+                        v-model="form.labelIdList"
+                        :list="labelList"
+                        display-key="labelName"
+                        search-key="labelName"
+                        trigger="focus"
+                        :placeholder="$t('store.请选择标签')"
+                    ></bk-tag-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.适用机器')"
+                <bk-form-item
+                    :label="$t('store.适用机器')"
                     property="agentTypeScope"
                     :required="true"
                     :rules="[requireRule]"
@@ -67,8 +108,10 @@
                         v-model="form.agentTypeScope"
                         searchable
                         multiple
-                        show-select-all>
-                        <bk-option v-for="(option, index) in agentTypes"
+                        show-select-all
+                    >
+                        <bk-option
+                            v-for="(option, index) in agentTypes"
                             :key="index"
                             :id="option.code"
                             :name="option.name"
@@ -77,17 +120,25 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.简介')"
+                <bk-form-item
+                    :label="$t('store.简介')"
                     property="summary"
                     :required="true"
                     :rules="[requireRule]"
                     ref="summary"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.summary" :placeholder="$t('store.请输入简介')"></bk-input>
+                    <bk-input
+                        v-model="form.summary"
+                        :placeholder="$t('store.请输入简介')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.描述')" property="description">
-                    <mavon-editor class="image-remark-input"
+                <bk-form-item
+                    :label="$t('store.描述')"
+                    property="description"
+                >
+                    <mavon-editor
+                        class="image-remark-input"
                         ref="mdHook"
                         preview-background="#fff"
                         v-model="form.description"
@@ -102,7 +153,8 @@
                     <p class="form-title"> {{ $t('store.镜像信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('store.镜像源')"
+                <bk-form-item
+                    :label="$t('store.镜像源')"
                     :required="true"
                     property="imageSourceType"
                     class="h32"
@@ -110,23 +162,38 @@
                     ref="imageSourceType"
                     error-display-type="normal"
                 >
-                    <bk-radio-group v-model="form.imageSourceType" @change="clearRepo">
+                    <bk-radio-group
+                        v-model="form.imageSourceType"
+                        @change="clearRepo"
+                    >
                         <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
-                    <bk-input v-model="form.imageRepoUrl" :placeholder="$t('store.imageRepoUrl')"></bk-input>
+                <bk-form-item
+                    :label="$t('store.源镜像库地址')"
+                    property="imageRepoUrl"
+                    :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')"
+                >
+                    <bk-input
+                        v-model="form.imageRepoUrl"
+                        :placeholder="$t('store.imageRepoUrl')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像名称')"
+                <bk-form-item
+                    :label="$t('store.源镜像名称')"
                     property="imageRepoName"
                     :required="true"
                     :rules="[requireRule]"
                     ref="imageRepoName"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
+                    <bk-input
+                        v-model="form.imageRepoName"
+                        :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像Tag')"
+                <bk-form-item
+                    :label="$t('store.源镜像Tag')"
                     property="imageTag"
                     :desc="$t('store.不建议使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')"
                     :required="true"
@@ -134,19 +201,38 @@
                     ref="imageTag"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.imageTag" :placeholder="$t('store.imageTag')"></bk-input>
+                    <bk-input
+                        v-model="form.imageTag"
+                        :placeholder="$t('store.imageTag')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
-                    <bk-select v-model="form.ticketId" searchable :placeholder="$t('store.请选择凭证')">
-                        <bk-option v-for="option in ticketList"
+                <bk-form-item
+                    :label="$t('store.凭证')"
+                    property="ticketId"
+                    :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')"
+                >
+                    <bk-select
+                        v-model="form.ticketId"
+                        searchable
+                        :placeholder="$t('store.请选择凭证')"
+                    >
+                        <bk-option
+                            v-for="option in ticketList"
                             :key="option.credentialId"
                             :id="option.credentialId"
-                            :name="option.credentialId">
+                            :name="option.credentialId"
+                        >
                         </bk-option>
-                        <a v-if="form.projectCode" :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('store.新增凭证') }} </a>
+                        <a
+                            v-if="form.projectCode"
+                            :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                            slot="extension"
+                            target="_blank"
+                        > {{ $t('store.新增凭证') }} </a>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item label="Dockerfile Type"
+                <bk-form-item
+                    label="Dockerfile Type"
                     :required="true"
                     property="dockerFileType"
                     class="h32"
@@ -154,18 +240,36 @@
                     ref="dockerFileType"
                     error-display-type="normal"
                 >
-                    <bk-radio-group v-model="form.dockerFileType" @change="form.dockerFileContent = ''">
-                        <bk-radio value="INPUT" class="mr12"> {{ $t('store.手动录入') }} </bk-radio>
+                    <bk-radio-group
+                        v-model="form.dockerFileType"
+                        @change="form.dockerFileContent = ''"
+                    >
+                        <bk-radio
+                            value="INPUT"
+                            class="mr12"
+                        >
+                            {{ $t('store.手动录入') }}
+                        </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
-                    <code-section :code="form.dockerFileContent" :cursor-blink-rate="530" :read-only="false" ref="codeEditor" />
+                <bk-form-item
+                    label="Dockerfile"
+                    property="dockerFileContent"
+                    ref="dockerFileContent"
+                >
+                    <code-section
+                        :code="form.dockerFileContent"
+                        :cursor-blink-rate="530"
+                        :read-only="false"
+                        ref="codeEditor"
+                    />
                 </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('store.发布类型')"
+                <bk-form-item
+                    :label="$t('store.发布类型')"
                     :required="true"
                     property="releaseType"
                     class="h32"
@@ -175,35 +279,66 @@
                     error-display-type="normal"
                 >
                     <bk-radio-group v-model="form.releaseType">
-                        <bk-radio value="NEW" class="mr12" v-if="form.imageStatus === 'INIT'"> {{ $t('store.新上架') }} </bk-radio>
+                        <bk-radio
+                            value="NEW"
+                            class="mr12"
+                            v-if="form.imageStatus === 'INIT'"
+                        >
+                            {{ $t('store.新上架') }}
+                        </bk-radio>
                         <template v-else>
-                            <bk-radio value="INCOMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.非兼容升级') }} </bk-radio>
-                            <bk-radio value="COMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.兼容式功能更新') }} </bk-radio>
+                            <bk-radio
+                                value="INCOMPATIBILITY_UPGRADE"
+                                class="mr12"
+                            >
+                                {{ $t('store.非兼容升级') }}
+                            </bk-radio>
+                            <bk-radio
+                                value="COMPATIBILITY_UPGRADE"
+                                class="mr12"
+                            >
+                                {{ $t('store.兼容式功能更新') }}
+                            </bk-radio>
                             <bk-radio value="COMPATIBILITY_FIX"> {{ $t('store.兼容式问题修正') }} </bk-radio>
                         </template>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.版本号')" property="version" class="lh30" :required="true">
-                    <span>{{$t('store.semverType', [form.version])}}</span>
-                    <span class="version-modify" @click="form.releaseType = 'COMPATIBILITY_FIX'" v-if="form.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('store.修改') }} </span>
+                <bk-form-item
+                    :label="$t('store.版本号')"
+                    property="version"
+                    class="lh30"
+                    :required="true"
+                >
+                    <span>{{ $t('store.semverType', [form.version]) }}</span>
+                    <span
+                        class="version-modify"
+                        @click="form.releaseType = 'COMPATIBILITY_FIX'"
+                        v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
+                    > {{ $t('store.修改') }} </span>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.发布者')"
+                <bk-form-item
+                    :label="$t('store.发布者')"
                     :required="true"
                     property="publisher"
                     :rules="[requireRule]"
                     ref="publisher"
                     error-display-type="normal"
                 >
-                    <bk-input v-model="form.publisher" :placeholder="$t('store.请输入发布者')"></bk-input>
+                    <bk-input
+                        v-model="form.publisher"
+                        :placeholder="$t('store.请输入发布者')"
+                    ></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.版本日志')"
+                <bk-form-item
+                    :label="$t('store.版本日志')"
                     :required="true"
                     property="versionContent"
                     :rules="[requireRule]"
                     ref="versionContent"
                     error-display-type="normal"
                 >
-                    <mavon-editor class="image-remark-input"
+                    <mavon-editor
+                        class="image-remark-input"
                         :placeholder="$t('store.请输入版本日志')"
                         ref="versionMd"
                         preview-background="#fff"
@@ -215,10 +350,25 @@
                         @imgAdd="uploadimg('versionMd', ...arguments)"
                     />
                 </bk-form-item>
-                <select-logo ref="selectLogo" label="Logo" :form="form" type="IMAGE" :is-err="logoErr" right="25"></select-logo>
+                <select-logo
+                    ref="selectLogo"
+                    label="Logo"
+                    :form="form"
+                    type="IMAGE"
+                    :is-err="logoErr"
+                    right="25"
+                ></select-logo>
             </bk-form>
-            <section class="edit-image button-padding" v-show="!isLoading">
-                <bk-button theme="primary" @click="submitImage"> {{ $t('store.提交') }} </bk-button>
+            <section
+                class="edit-image button-padding"
+                v-show="!isLoading"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="submitImage"
+                >
+                    {{ $t('store.提交') }}
+                </bk-button>
                 <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
             </section>
         </main>

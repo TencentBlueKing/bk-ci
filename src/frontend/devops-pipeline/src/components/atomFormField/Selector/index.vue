@@ -1,13 +1,20 @@
 <template>
-    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
+    <bk-select
+        @toggle="toggleVisible"
+        @change="onChange"
+        v-bind="selectProps"
+    >
         <bk-option
-            v-for="(item, index) in listData"
-            :key="index"
+            v-for="item in listData"
+            :key="item[settingKey]"
             :id="item[settingKey]"
             :name="item[displayKey]"
             :disabled="item.disabled"
         >
-            <slot name="option-item" v-bind="item"></slot>
+            <slot
+                name="option-item"
+                v-bind="item"
+            ></slot>
         </bk-option>
         <div slot="extension">
             <slot></slot>

@@ -31,6 +31,10 @@ class SampleAuthPermissionProjectService : PermissionProjectService {
         return true
     }
 
+    override fun isProjectMember(userId: String, projectCode: String): Boolean {
+        return true
+    }
+
     override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
         return false
     }

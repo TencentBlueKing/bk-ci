@@ -1,5 +1,6 @@
 <template>
-    <selector :popover-min-width="popoverMinWidth"
+    <selector
+        :popover-min-width="popoverMinWidth"
         :tools="tools"
         :name="name"
         :edit="edit"
@@ -15,10 +16,15 @@
         :search-url="searchUrl"
         :replace-key="replaceKey"
         :data-path="dataPath"
+        :setting-key="settingKey"
+        :display-key="displayKey"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
-                <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
+                <a
+                    :href="urlParse(webUrl + itemTargetUrl, { projectId })"
+                    target="_blank"
+                >
                     <i class="devops-icon icon-plus-circle" />
                     {{ itemText || $t('template.relatedCodelib') }}
                 </a>
@@ -80,7 +86,23 @@
             },
             searchUrl: String,
             replaceKey: String,
-            dataPath: String
+            dataPath: String,
+            displayKey: {
+                type: String,
+                default: 'name'
+            },
+            settingKey: {
+                type: String,
+                default: 'id'
+            },
+            initRequest: {
+                type: Boolean,
+                default: true
+            },
+            options: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
@@ -95,7 +117,11 @@
             }
         },
         created () {
-            this.url && this.freshList()
+            if (this.initRequest) {
+                this.url && this.freshList()
+            } else {
+                this.list = this.options
+            }
         },
         methods: {
             edit (index) {
@@ -116,6 +142,8 @@
             getResponseData (response, dataPath = 'data.records', defaultVal = []) {
                 try {
                     switch (true) {
+                        case Array.isArray(response):
+                            return response
                         case response.data && response.data.resources && Array.isArray(response.data.resources):
                             return response.data.resources
                         case response.data && response.data.record && Array.isArray(response.data.record):

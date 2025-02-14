@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -48,16 +48,19 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -72,6 +75,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
+import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -107,6 +111,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
@@ -123,6 +128,7 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -164,7 +170,10 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineCallbackDao: PipelineCallbackDao,
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     companion object {
@@ -181,7 +190,9 @@ class PipelineRepositoryService constructor(
                 )
             }
             if (runLockType == PipelineRunLockType.SINGLE ||
-                runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
+                runLockType == PipelineRunLockType.SINGLE_LOCK ||
+                runLockType == PipelineRunLockType.GROUP_LOCK ||
+                runLockType == PipelineRunLockType.MULTIPLE
             ) {
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -213,6 +224,9 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    private val aesKey = ""
+
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -223,7 +237,6 @@ class PipelineRepositoryService constructor(
         yaml: YamlWithVersion? = null,
         baseVersion: Int? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
@@ -237,6 +250,15 @@ class PipelineRepositoryService constructor(
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
         val pipelineId = signPipelineId ?: pipelineIdGenerator.getNextId()
 
+        val pipelineSetting = if (!create) {
+            setting ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+        } else {
+            setting
+        }
+        val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
+            projectId = projectId,
+            asCodeSettings = pipelineSetting?.pipelineAsCodeSettings
+        )
         val modelTasks = initModel(
             model = model,
             projectId = projectId,
@@ -245,11 +267,14 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo
+            yamlInfo = yamlInfo,
+            pipelineDialect = pipelineDialect
         )
-
-        val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
+        val buildNo = triggerContainer.buildNo?.apply {
+            // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
+            currentBuildNo = null
+        }
         var canManualStartup = false
         var canElementSkip = false
         run lit@{
@@ -267,8 +292,6 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
-            val pipelineSetting = setting
-                ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
             val result = update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -294,7 +317,7 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     model = model,
-                    customSetting = setting,
+                    customSetting = pipelineSetting,
                     yaml = yaml,
                     userId = userId,
                     channelCode = channelCode,
@@ -303,7 +326,6 @@ class PipelineRepositoryService constructor(
                     buildNo = buildNo,
                     modelTasks = modelTasks,
                     useSubscriptionSettings = useSubscriptionSettings,
-                    useLabelSettings = useLabelSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     templateId = templateId,
                     versionStatus = versionStatus,
@@ -338,13 +360,16 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        pipelineDialect: IPipelineDialect? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
             model = model,
             projectId = projectId,
             userId = userId,
-            oauthUser = getPipelineOauthUser(projectId, pipelineId)
+            oauthUser = getPipelineOauthUser(projectId, pipelineId),
+            pipelineDialect = pipelineDialect,
+            pipelineId = pipelineId
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
@@ -386,7 +411,8 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    stageIndex = index
                 )
             }
         }
@@ -484,7 +510,8 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlInfo: PipelineYamlVo?,
+        stageIndex: Int
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -494,10 +521,10 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        stage.containers.forEach { c ->
+        stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
-                return@forEach
+                return@forEachIndexed
             }
 
             val mutexGroup = when (c) {
@@ -551,14 +578,6 @@ class PipelineRepositoryService constructor(
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
-                when (e) {
-                    is SubPipelineCallElement -> { // 子流水线循环依赖检查
-                        val existPipelines = HashSet<String>()
-                        existPipelines.add(pipelineId)
-                        checkSubpipeline(projectId, e.subPipelineId, existPipelines)
-                    }
-                }
-
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -588,7 +607,10 @@ class PipelineRepositoryService constructor(
                         classType = e.getClassType(),
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
-                        additionalOptions = e.additionalOptions
+                        additionalOptions = e.additionalOptions,
+                        taskPosition = "$stageIndex-${containerIndex + 1}-$taskSeq",
+                        containerEnable = c.containerEnabled(),
+                        stageEnable = stage.stageEnabled()
                     )
                 )
             }
@@ -614,6 +636,45 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    /**
+     * 初始化默认的流水线setting
+     */
+    fun createDefaultSetting(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        // 空白流水线设置初始化
+        val maxPipelineResNum = if (
+            channelCode.name in versionConfigure.specChannels.split(",")
+        ) {
+            versionConfigure.specChannelMaxKeepNum
+        } else {
+            versionConfigure.maxKeepNum
+        }
+        val notifyTypes = if (channelCode == ChannelCode.BS) {
+            pipelineInfoExtService.failNotifyChannel()
+        } else {
+            ""
+        }
+        val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failSubscription = Subscription(
+            types = failType,
+            groups = emptySet(),
+            users = "\${{ci.actor}}",
+            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+        ).takeIf { failType.isNotEmpty() }
+        return PipelineSetting.defaultSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            maxPipelineResNum = maxPipelineResNum,
+            failSubscription = failSubscription
+        )
+    }
+
     private fun create(
         projectId: String,
         pipelineId: String,
@@ -628,7 +689,6 @@ class PipelineRepositoryService constructor(
         modelTasks: Collection<PipelineModelTask>,
         baseVersion: Int?,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
@@ -677,29 +737,11 @@ class PipelineRepositoryService constructor(
                     pipelineName = model.name,
                     desc = model.desc ?: ""
                 ) ?: run {
-                    // 空白流水线设置初始化
-                    val maxPipelineResNum = if (
-                        channelCode.name in versionConfigure.specChannels.split(",")
-                    ) {
-                        versionConfigure.specChannelMaxKeepNum
-                    } else {
-                        versionConfigure.maxKeepNum
-                    }
-                    val notifyTypes = if (channelCode == ChannelCode.BS) {
-                        pipelineInfoExtService.failNotifyChannel()
-                    } else {
-                        ""
-                    }
-                    val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
-                        .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                    val failSubscription = Subscription(
-                        types = failType,
-                        groups = emptySet(),
-                        users = "\${{ci.actor}}",
-                        content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-                    ).takeIf { failType.isNotEmpty() }
-                    PipelineSetting.defaultSetting(
-                        projectId, pipelineId, model.name, maxPipelineResNum, failSubscription
+                    createDefaultSetting(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        channelCode = channelCode
                     )
                 }
 
@@ -708,39 +750,19 @@ class PipelineRepositoryService constructor(
                         if (useTemplateSettings(
                                 templateId = templateId,
                                 useSubscriptionSettings = useSubscriptionSettings,
-                                useLabelSettings = useLabelSettings,
                                 useConcurrencyGroup = useConcurrencyGroup
                             )
                         ) {
                             // 沿用模板的配置
                             val setting = getSetting(projectId, templateId!!)
                                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
-                            setting.pipelineId = pipelineId
-                            setting.pipelineName = model.name
                             setting.version = settingVersion
-                            if (useSubscriptionSettings != true) {
-                                setting.successSubscription = null
-                                setting.successSubscriptionList = null
-                                setting.failSubscription = null
-                                setting.failSubscriptionList = newSetting.failSubscriptionList
+                            if (useSubscriptionSettings == true) {
+                                newSetting.copySubscriptionSettings(setting)
                             }
-                            if (useConcurrencyGroup != true) {
-                                setting.concurrencyGroup = null
-                                setting.concurrencyCancelInProgress = false
-                                setting.maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                            if (useConcurrencyGroup == true) {
+                                newSetting.copyConcurrencyGroup(setting)
                             }
-                            if (useLabelSettings != true) {
-                                setting.labels = listOf()
-                            } else {
-                                val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-                                val labels = ArrayList<String>()
-                                groups.forEach {
-                                    labels.addAll(it.labels)
-                                }
-                                setting.labels = labels
-                            }
-                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
-                            newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
                         pipelineSettingDao.saveSetting(transactionContext, newSetting)
@@ -820,6 +842,23 @@ class PipelineRepositoryService constructor(
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                // 初始化流水线单体回调
+                savePipelineCallback(
+                    events = model.events,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    projectId = projectId,
+                    dslContext = transactionContext
+                )
+                // 初始化子流水线关联关系
+                subPipelineTaskService.batchAdd(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    channel = channelCode.name,
+                    modelTasks = modelTasks.toList()
+                )
             }
         } finally {
             lock.unlock()
@@ -854,11 +893,10 @@ class PipelineRepositoryService constructor(
     private fun useTemplateSettings(
         templateId: String? = null,
         useSubscriptionSettings: Boolean? = false,
-        useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false
     ): Boolean {
         return templateId != null &&
-                (useSubscriptionSettings == true || useConcurrencyGroup == true || useLabelSettings == true)
+                (useSubscriptionSettings == true || useConcurrencyGroup == true)
     }
 
     private fun update(
@@ -889,6 +927,7 @@ class PipelineRepositoryService constructor(
         var operationLogParams = versionName
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
+        var updateBuildNo = false
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -937,13 +976,13 @@ class PipelineRepositoryService constructor(
                             draftVersion.version
                         }
                         logger.info(
-                            "PROCESS|updateDraft|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType|base=$realBaseVersion"
+                            "PROCESS|updateDraft|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType|base=$realBaseVersion"
                         )
                     }
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
                     VersionStatus.BRANCH -> {
-                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
+                        // 查询同名分支的最新active版本，存在则设为不活跃，永远新增一个版本
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                             params = arrayOf("branchName")
@@ -955,23 +994,27 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        version = if (activeBranchVersion == null) {
-                            // 创建
-                            branchAction = BranchVersionAction.ACTIVE
+                        version = latestVersion.version + 1
+                        branchAction = BranchVersionAction.ACTIVE
+                        operationLogParams = versionName
+                        if (activeBranchVersion == null) {
+                            // 直接创建
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
-                            operationLogParams = versionName
-                            latestVersion.version + 1
                         } else {
-                            // 更新
+                            // 更新状态
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                            operationLogParams = activeBranchVersion.versionName
-                                ?: activeBranchVersion.version.toString()
-                            branchAction = BranchVersionAction.ACTIVE
-                            activeBranchVersion.version
+                            pipelineResourceVersionDao.updateBranchVersion(
+                                dslContext = transactionContext,
+                                userId = userId,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                branchName = branchName,
+                                branchVersionAction = BranchVersionAction.INACTIVE
+                            )
                         }
                         logger.info(
-                            "PROCESS|updateBranch|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType"
+                            "PROCESS|updateBranch|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType"
                         )
                     }
                     // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
@@ -1005,8 +1048,8 @@ class PipelineRepositoryService constructor(
                             OperationLogType.CREATE_BRANCH_VERSION
                         }
                         logger.info(
-                            "PROCESS|releaseByBranch|version=$version|versionName=$versionName" +
-                                    "operationLogType=$operationLogType"
+                            "PROCESS|releaseByBranch|$userId|$projectId|$pipelineId|version=$version|" +
+                                "versionName=$versionName|operationLogType=$operationLogType"
                         )
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
@@ -1057,6 +1100,13 @@ class PipelineRepositoryService constructor(
                             ) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
                             )
+                            draftVersion.model.getTriggerContainer().buildNo?.let {
+                                val releaseBuildNo = releaseResource.model.getTriggerContainer().buildNo
+                                // [关闭变为开启]或[修改buildNo数值]，都属于更新行为，需要提示更新
+                                if (releaseBuildNo == null || releaseBuildNo.buildNo != it.buildNo) {
+                                    updateBuildNo = true
+                                }
+                            }
                             draftVersion.version
                         } else {
                             // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
@@ -1064,7 +1114,10 @@ class PipelineRepositoryService constructor(
                             realBaseVersion = realBaseVersion ?: releaseResource.version
                             latestVersion.version + 1
                         }
-                        logger.info("PROCESS|releasePipeline|version=$version|versionName=$versionName")
+                        logger.info(
+                            "PROCESS|$userId|releasePipeline|$projectId|$pipelineId|" +
+                                "version=$version|versionName=$versionName"
+                        )
                         watcher.start("updatePipelineResource")
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
@@ -1081,17 +1134,10 @@ class PipelineRepositoryService constructor(
                             // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
                             latestVersionStatus = VersionStatus.RELEASED
                         )
-                        pipelineResourceDao.deleteEarlyVersion(
+                        pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            beforeVersion = version
-                        )
-                        pipelineResourceDao.create(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            creator = userId,
                             version = version,
                             model = model,
                             yamlStr = yaml?.yamlStr,
@@ -1109,6 +1155,24 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+                        // 保存流水线单体回调记录
+                        savePipelineCallback(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            events = model.events
+                        )
+                        watcher.start("updateSubPipelineRef")
+                        // 批量保存,禁用态的插件需要被删除
+                        subPipelineTaskService.batchAdd(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            model = model,
+                            channel = channelCode.name,
+                            modelTasks = modelTasks.toList()
+                        )
                     }
                 }
 
@@ -1150,7 +1214,8 @@ class PipelineRepositoryService constructor(
             lock.unlock()
         }
 
-        pipelineEventDispatcher.dispatch(
+        // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
+        if (versionStatus == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
             PipelineUpdateEvent(
                 source = "update_pipeline",
                 projectId = projectId,
@@ -1182,7 +1247,8 @@ class PipelineRepositoryService constructor(
             pipelineName = model.name,
             version = version,
             versionNum = versionNum,
-            versionName = versionName
+            versionName = versionName,
+            updateBuildNo = updateBuildNo
         )
     }
 
@@ -1331,6 +1397,25 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
+        pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = null
+        ).let { records ->
+            if (records.isNotEmpty) {
+                // 填充流水线级别回调
+                resource?.model?.events = records.associate {
+                    it.name to PipelineCallbackEvent(
+                        callbackEvent = CallBackEvent.valueOf(it.eventType),
+                        callbackUrl = it.url,
+                        secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                        region = CallBackNetWorkRegionType.valueOf(it.region),
+                        callbackName = it.name
+                    )
+                }
+            }
+        }
         return resource
     }
 
@@ -1345,7 +1430,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1365,7 +1450,7 @@ class PipelineRepositoryService constructor(
         )
         // 返回时将别名name补全为id
         resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+            resource.model.getTriggerContainer().params.forEach { param ->
                 param.name = param.name ?: param.id
             }
         }
@@ -1419,6 +1504,7 @@ class PipelineRepositoryService constructor(
             ) ?: releaseResource
 
             // 计算版本号
+            val settingVersion = (latestResource.settingVersion ?: latestResource.version) + 1
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
@@ -1426,7 +1512,7 @@ class PipelineRepositoryService constructor(
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
-                settingVersion = targetVersion.settingVersion,
+                settingVersion = settingVersion,
                 createTime = now,
                 updateTime = now
             )
@@ -1526,7 +1612,7 @@ class PipelineRepositoryService constructor(
 
                 pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                 pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-
+                subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
                 pipelineEventDispatcher.dispatch(
                     PipelineDeleteEvent(
                         source = "delete_pipeline",
@@ -1601,57 +1687,6 @@ class PipelineRepositoryService constructor(
         }.toMap()
     }
 
-    private fun checkSubpipeline(projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
-
-        if (existPipelines.contains(pipelineId)) {
-            logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
-            )
-        }
-        existPipelines.add(pipelineId)
-        val pipeline = getPipelineInfo(projectId, pipelineId)
-        if (pipeline == null) {
-            logger.warn("The sub pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val existModel = getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
-
-        if (existModel == null) {
-            logger.warn("The pipeline($pipelineId) is not exist")
-            return
-        }
-
-        val currentExistPipelines = HashSet<String>(existPipelines)
-        existModel.stages.forEachIndexed stage@{ index, stage ->
-            if (index == 0) {
-                // Ignore the trigger container
-                return@stage
-            }
-            stage.containers.forEach container@{ container ->
-                if (container !is NormalContainer) {
-                    // 只在无构建环境中
-                    return@container
-                }
-
-                container.elements.forEach element@{ element ->
-                    if (element !is SubPipelineCallElement) {
-                        return@element
-                    }
-                    val subpipelineId = element.subPipelineId
-                    if (subpipelineId.isBlank()) {
-                        logger.warn("The sub pipeline id of pipeline($pipeline) is blank")
-                        return@element
-                    }
-                    val exist = HashSet<String>(currentExistPipelines)
-                    checkSubpipeline(projectId = projectId, pipelineId = subpipelineId, existPipelines = exist)
-                    existPipelines.addAll(exist)
-                }
-            }
-        }
-    }
-
     fun getBuildNo(projectId: String, pipelineId: String): Int? {
         return pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)?.buildNo
     }
@@ -1663,11 +1698,13 @@ class PipelineRepositoryService constructor(
     fun getSettingByPipelineVersion(
         projectId: String,
         pipelineId: String,
-        pipelineVersion: Int
+        pipelineVersion: Int?
     ): PipelineSetting? {
-        val resource = pipelineResourceVersionDao.getPipelineVersionSimple(
-            dslContext, projectId, pipelineId, pipelineVersion
-        )
+        val resource = pipelineVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext, projectId, pipelineId, pipelineVersion
+            )
+        }
         return resource?.settingVersion?.let {
             pipelineSettingVersionService.getPipelineSetting(
                 projectId = projectId,
@@ -1690,7 +1727,7 @@ class PipelineRepositoryService constructor(
     ): PipelineName {
         setting.checkParam()
 
-        if (isPipelineExist(
+        if (!isTemplate && isPipelineExist(
                 projectId = setting.projectId,
                 excludePipelineId = setting.pipelineId,
                 pipelineName = setting.pipelineName
@@ -1725,6 +1762,7 @@ class PipelineRepositoryService constructor(
         isTemplate: Boolean
     ): PipelineName {
         var oldName: String = setting.pipelineName
+        setting.pipelineAsCodeSettings?.resetDialect()
         (context ?: dslContext).transaction { t ->
             val transactionContext = DSL.using(t)
             val old = pipelineSettingDao.getSetting(
@@ -1735,7 +1773,7 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (versionStatus.isReleasing()) pipelineInfoDao.update(
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
@@ -1793,7 +1831,11 @@ class PipelineRepositoryService constructor(
                 )
                     .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
                     .scopeId = pipelineModelVersion.projectId
-                pipelineResourceDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    pipelineResourceDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                    pipelineResourceVersionDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
+                }
             } finally {
                 lock.unlock()
             }
@@ -1892,6 +1934,14 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
+            subPipelineTaskService.batchAdd(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = existModel,
+                channel = channelCode.name,
+                modelTasks = tasks
+            )
         }
 
         val version = pipelineInfoDao.getPipelineVersion(
@@ -2031,19 +2081,11 @@ class PipelineRepositoryService constructor(
                     version = version,
                     updateLastModifyUser = updateLastModifyUser
                 )
-                watcher.start("deleteEarlyVersion")
-                pipelineResourceDao.deleteEarlyVersion(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    beforeVersion = version
-                )
                 watcher.start("updatePipelineResource")
-                pipelineResourceDao.create(
+                pipelineResourceDao.updateReleaseVersion(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    creator = userId,
                     version = version,
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
@@ -2135,5 +2177,42 @@ class PipelineRepositoryService constructor(
             logger.info("get pipeline oauth user fail", ignored)
             null
         }?.handoverFrom
+    }
+
+    /**
+     * 保存流水线单体回调记录
+     */
+    private fun savePipelineCallback(
+        events: Map<String, PipelineCallbackEvent>?,
+        pipelineId: String,
+        projectId: String,
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        if (events.isNullOrEmpty()) return
+        val existEventNames = pipelineCallbackDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).map { it.name }.toSet()
+        if (existEventNames.isNotEmpty()) {
+            val needDelNames = existEventNames.subtract(events.keys).toSet()
+            pipelineCallbackDao.delete(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                names = needDelNames
+            )
+        }
+        // 保存回调事件
+        pipelineCallbackDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            list = events.map { (key, value) ->
+                value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
+            }
+        )
     }
 }

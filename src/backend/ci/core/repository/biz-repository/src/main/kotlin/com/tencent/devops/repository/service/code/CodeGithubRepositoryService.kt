@@ -127,7 +127,7 @@ class CodeGithubRepositoryService @Autowired constructor(
             repositoryId = repositoryId
         ).url
         var gitProjectId: Long? = null
-        if (sourceUrl != repository.url) {
+        if (sourceUrl != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
                     "targetUrl=[${repository.url}]"
@@ -151,24 +151,18 @@ class CodeGithubRepositoryService @Autowired constructor(
                 repository.userName,
                 gitProjectId = gitProjectId
             )
-            val githubRepositoryRecord = repositoryGithubDao.get(
-                dslContext = transactionContext,
-                repositoryId = repositoryId
-            )
-            if (githubRepositoryRecord.userName != repository.userName) {
-                repositoryAuthorizationService.batchModifyHandoverFrom(
-                    projectId = projectId,
-                    resourceAuthorizationHandoverList = listOf(
-                        ResourceAuthorizationHandoverDTO(
-                            projectCode = projectId,
-                            resourceType = AuthResourceType.CODE_REPERTORY.value,
-                            resourceName = record.aliasName,
-                            resourceCode = repositoryHashId,
-                            handoverTo = repository.userName
-                        )
+            repositoryAuthorizationService.batchModifyHandoverFrom(
+                projectId = projectId,
+                resourceAuthorizationHandoverList = listOf(
+                    ResourceAuthorizationHandoverDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = record.aliasName,
+                        resourceCode = repositoryHashId,
+                        handoverTo = repository.userName
                     )
                 )
-            }
+            )
         }
     }
 

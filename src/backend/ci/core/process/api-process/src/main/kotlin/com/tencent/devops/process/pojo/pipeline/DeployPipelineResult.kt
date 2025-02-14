@@ -44,5 +44,7 @@ data class DeployPipelineResult(
     @get:Schema(title = "目标链接", required = false)
     val targetUrl: String? = null,
     @get:Schema(title = "yaml信息", required = false)
-    val yamlInfo: PipelineYamlVo? = null
+    val yamlInfo: PipelineYamlVo? = null,
+    @get:Schema(title = "是否更新了推荐版本号基准值", required = false)
+    val updateBuildNo: Boolean? = null
 )

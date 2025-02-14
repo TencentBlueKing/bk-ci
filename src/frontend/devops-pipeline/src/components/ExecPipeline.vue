@@ -1,6 +1,9 @@
 <template>
     <div class="exec-pipeline-wrapper">
-        <div ref="scrollViewPort" class="pipeline-model-scroll-viewport">
+        <div
+            ref="scrollViewPort"
+            class="pipeline-model-scroll-viewport"
+        >
             <p></p>
         </div>
         <div class="pipeline-exec-summary">
@@ -21,7 +24,10 @@
                     >
                         <p class="exec-count-select-option">
                             <span>{{ item.name }}</span>
-                            <span v-if="item.timeCost" class="exec-count-time-cost">{{ item.timeCost }}</span>
+                            <span
+                                v-if="item.timeCost"
+                                class="exec-count-time-cost"
+                            >{{ item.timeCost }}</span>
                             <span class="exec-count-select-option-user">{{ item.user }}</span>
                         </p>
                     </bk-option>
@@ -45,7 +51,10 @@
                 >
                     <span class="title-item">
                         <p>{{ step.title }}</p>
-                        <span v-bk-tooltips="step.popup" class="time-step-divider">
+                        <span
+                            v-bk-tooltips="step.popup"
+                            class="time-step-divider"
+                        >
                             <p></p>
                         </span>
                     </span>
@@ -77,7 +86,11 @@
                 >
                     {{ $t("details.isExpandJob") }}
                 </bk-checkbox>
-                <bk-button text theme="primary" @click="showCompleteLog">
+                <bk-button
+                    text
+                    theme="primary"
+                    @click="showCompleteLog"
+                >
                     <i class="devops-icon icon-txt"></i>
                     {{ $t("history.viewLog") }}
                 </bk-button>
@@ -119,7 +132,12 @@
                     visible: showErrors
                 }"
             >
-                <bk-button text class="drag-dot" theme="normal" @click="toggleErrorPopup">
+                <bk-button
+                    text
+                    class="drag-dot"
+                    theme="normal"
+                    @click="toggleErrorPopup"
+                >
                     <i class="bk-icon icon-angle-up toggle-error-popup-icon" />
                 </bk-button>
                 <bk-tab
@@ -136,7 +154,11 @@
                             :href="pipelineErrorGuideLink"
                         >
                             <span class="fix-error-jump">
-                                <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
+                                <logo
+                                    class="fix-error-jump-icon"
+                                    size="20"
+                                    name="tiaozhuan"
+                                />
                                 {{ $t("details.pipelineErrorGuide") }}
                             </span>
                         </bk-link>
@@ -155,7 +177,10 @@
                             highlight-current-row
                         >
                             <bk-table-column width="80">
-                                <div slot-scope="props" class="exec-error-type-cell">
+                                <div
+                                    slot-scope="props"
+                                    class="exec-error-type-cell"
+                                >
                                     <span class="exec-error-locate-icon">
                                         <Logo
                                             v-if="isActiveErrorAtom(props.row)"
@@ -238,14 +263,21 @@
                 }}</span>
             </div>
             <ul class="pipeline-time-detail-sum-list">
-                <li v-for="cost in timeDetailRows" :key="cost.field">
+                <li
+                    v-for="cost in timeDetailRows"
+                    :key="cost.field"
+                >
                     <span>{{ cost.label }}</span>
                     <span class="constant-width-num">{{ cost.value }}</span>
                 </li>
             </ul>
         </div>
         <template v-if="execDetail && showLog">
-            <complete-log @close="hideCompleteLog" :execute-count="executeCount" :exec-detail="execDetail"></complete-log>
+            <complete-log
+                @close="hideCompleteLog"
+                :execute-count="executeCount"
+                :exec-detail="execDetail"
+            ></complete-log>
         </template>
     </div>
 </template>
@@ -326,8 +358,8 @@
             errorList () {
                 return this.execDetail?.errorInfoList?.map((error, index) => ({
                 ...error,
-                errorTypeAlias: this.$t(errorTypeMap[error.errorType].title),
-                errorTypeConf: errorTypeMap[error.errorType]
+                errorTypeAlias: this.$t(errorTypeMap[error.errorType]?.title ?? errorTypeMap[0]?.title),
+                errorTypeConf: errorTypeMap[error.errorType] ?? errorTypeMap[0]
             }))
             },
             showErrorPopup () {
@@ -686,27 +718,35 @@
                 done
             ) {
                 if (!isContinue) {
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        stageId,
-                        containerId,
-                        taskId,
-                        isContinue,
-                        element: atom
-                    }
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            const postData = {
+                                projectId: this.routerParams.projectId,
+                                pipelineId: this.routerParams.pipelineId,
+                                buildId: this.routerParams.buildNo,
+                                stageId,
+                                containerId,
+                                taskId,
+                                isContinue,
+                                element: atom
+                            }
 
-                    try {
-                        await this.pausePlugin(postData)
-                        await this.requestPipelineExecDetail(this.routerParams)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                        done()
-                    }
+                            try {
+                                await this.pausePlugin(postData)
+                                await this.requestPipelineExecDetail(this.routerParams)
+                            } catch (err) {
+                                this.$showTips({
+                                    message: err.message || err,
+                                    theme: 'error'
+                                })
+                                done()
+                            }
+                        },
+                        cancelFn: () => {
+                            done()
+                        }
+                    })
                 } else {
                     this.toggleAsidePropertyPanel({
                         isShow: true,

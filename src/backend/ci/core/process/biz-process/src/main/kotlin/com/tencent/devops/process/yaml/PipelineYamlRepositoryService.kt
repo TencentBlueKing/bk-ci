@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -41,11 +40,13 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
@@ -625,16 +626,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
         // 删除流水线组
         val yamlViews = pipelineYamlViewService.listRepoYamlView(projectId = projectId, repoHashId = repoHashId)
         yamlViews.forEach { yamlView ->
-            pipelineViewGroupService.deleteViewGroup(
+            deleteYamlView(
                 projectId = projectId,
                 userId = userId,
-                viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
-                checkPac = false
-            )
-            pipelineYamlViewService.deleteYamlView(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                directory = yamlView.directory
+                yamlView = yamlView
             )
         }
         // 删除yaml同步记录
@@ -671,6 +666,27 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = filePath
         )
         if (refreshView) {
+            // 如果PAC流水线组已经没有流水线了,那么就将这个流水线组删除
+            val directory = GitActionCommon.getCiDirectory(filePath)
+            val yamlPipelineCnt = pipelineYamlService.countPipelineYaml(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory
+            )
+            if (yamlPipelineCnt == 0L) {
+                logger.info("delete pipeline yaml view|$projectId|$repoHashId|$directory")
+                pipelineYamlViewService.getPipelineYamlView(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = directory
+                )?.let {
+                    deleteYamlView(
+                        projectId = projectId,
+                        userId = userId,
+                        yamlView = it
+                    )
+                }
+            }
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
             pipelineViewGroupService.updateGroupAfterPipelineUpdate(
                 projectId = projectId,
@@ -680,6 +696,24 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 userId = userId
             )
         }
+    }
+
+    private fun deleteYamlView(
+        projectId: String,
+        userId: String,
+        yamlView: PipelineYamlView
+    ) {
+        pipelineViewGroupService.deleteViewGroup(
+            projectId = projectId,
+            userId = userId,
+            viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
+            checkPac = false
+        )
+        pipelineYamlViewService.deleteYamlView(
+            projectId = projectId,
+            repoHashId = yamlView.repoHashId,
+            directory = yamlView.directory
+        )
     }
 
     /**
@@ -703,10 +737,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return emptyList()
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }.toMutableMap()
+        val triggerContainer = model.getTriggerContainer()
+        val variables = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        ).toMutableMap()
         // 补充yaml流水线代码库信息
         variables[PIPELINE_PAC_REPO_HASH_ID] = repoHashId
 

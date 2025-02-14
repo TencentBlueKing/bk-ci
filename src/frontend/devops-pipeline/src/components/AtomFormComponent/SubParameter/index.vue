@@ -2,15 +2,26 @@
     <div class="sub-parameter">
         <label class="bk-label">
             {{ title }}：
-            <span v-if="!disabled" class="add-params-btn" @click="addParam">
+            <span
+                v-if="!disabled"
+                class="add-params-btn"
+                @click="addParam"
+            >
                 <i class="devops-icon icon-plus-circle"></i>
                 添加参数
             </span>
         </label>
         <div class="sub-params-desc">{{ desc }}</div>
-        <div class="bk-form-content" v-if="parameters.length">
+        <div
+            class="bk-form-content"
+            v-if="parameters.length"
+        >
             <ul v-bkloading="{ isLoading }">
-                <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
+                <li
+                    class="param-input"
+                    v-for="(parameter, index) in parameters"
+                    :key="index"
+                >
                     <bk-select
                         class="input-com"
                         :disabled="disabled"
@@ -29,6 +40,7 @@
                     <bk-input
                         class="input-com"
                         :disabled="disabled"
+                        :title="parameter.value"
                         :value="parameter.value"
                         @change="(val) => handleChangeValue(val, index)"
                     />
@@ -45,6 +57,7 @@
 
 <script>
     import mixins from '../mixins'
+    import { isObject } from '@/utils/util'
     export default {
         name: 'sub-parameter',
         mixins: [mixins],
@@ -91,7 +104,12 @@
             initData () {
                 let values = this.atomValue[this.name] || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
-                this.parameters = values
+                this.parameters = values.map(i => {
+                    return {
+                        ...i,
+                        value: isObject(i.value) ? JSON.stringify(i.value) : i.value
+                    }
+                })
             },
             addParam () {
                 this.parameters.push({
@@ -104,10 +122,14 @@
                 this.updateParameters()
             },
 
-            handleChangeKey (val, index) {
-                this.parameters[index].key = val
-                const defaultValue = this.subParamsKeyList.find(i => i.key === val)?.value
-                if (defaultValue) this.parameters[index].value = defaultValue
+            handleChangeKey (key, index) {
+                this.parameters[index].key = isObject(key) ? JSON.stringify(key) : key
+                const defaultValue = this.subParamsKeyList.find(i => i.key === key)?.value
+                if (defaultValue) {
+                    this.parameters[index].value = isObject(defaultValue) ? JSON.stringify(defaultValue) : defaultValue
+                } else {
+                    this.parameters[index].value = ''
+                }
                 this.updateParameters()
             },
 
@@ -119,7 +141,7 @@
             updateParameters () {
                 const res = this.parameters.map((parameter) => {
                     const key = parameter.key
-                    const value = parameter.value
+                    const value = isObject(parameter.value) ? JSON.stringify(parameter.value) : parameter.value
                     return { key, value }
                 })
                 this.handleChange(this.name, String(JSON.stringify(res)))

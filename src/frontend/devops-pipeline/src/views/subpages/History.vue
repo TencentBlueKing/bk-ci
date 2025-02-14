@@ -1,13 +1,25 @@
 <template>
-    <div :class="['pipeline-detail-entry', {
-        'show-pipeline-var': activeChild.showVar
-    }]">
+    <div
+        :class="['pipeline-detail-entry', {
+            'show-pipeline-var': activeChild.showVar
+        }]"
+    >
         <aside class="pipeline-detail-entry-aside">
-            <ul v-for="item in asideNav" :key="item.title">
+            <ul
+                v-for="item in asideNav"
+                :key="item.title"
+            >
                 <li class="nav-item-title">
                     {{ item.title }}
-                    <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
-                        <logo :name="item.link.icon" size="16"></logo>
+                    <span
+                        class="nav-item-link"
+                        v-if="item.link"
+                        @click="item.link.handler"
+                    >
+                        <logo
+                            :name="item.link.icon"
+                            size="16"
+                        ></logo>
                         {{ item.link.title }}
                     </span>
                 </li>
@@ -27,19 +39,36 @@
                     >
                         {{ child.title }}
                     </li>
-
                 </ul>
             </ul>
-            <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
-                {{$t('switchToReleaseVersion')}}
-                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('switch') }}</span>
+            <div
+                v-for="i in [1,2,3,4]"
+                :key="i"
+                ref="disableToolTips"
+                class="disable-nav-child-item-tooltips"
+            >
+                {{ $t('switchToReleaseVersion') }}
+                <span
+                    v-if="isReleasePipeline"
+                    @click="switchToReleaseVersion"
+                    class="text-link"
+                >{{ $t('switch') }}</span>
             </div>
         </aside>
 
         <main class="pipeline-detail-entry-main">
-            <component :is="activeChild.component" v-bind="activeChild.props" />
+            <component
+                :is="activeChild.component"
+                v-bind="activeChild.props"
+            />
         </main>
-        <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
+        <show-variable
+            v-if="activeChild.showVar && pipeline"
+            :editable="false"
+            :pipeline-model="true"
+            :pipeline="pipeline"
+            :is-direct-show-version="isDirectShowVersion"
+        />
     </div>
 </template>
 
@@ -167,6 +196,9 @@
                         }))
                     }
                 ]
+            },
+            isDirectShowVersion () {
+                return this.$route.params.isDirectShowVersion || false
             }
         },
         beforeDestroy () {

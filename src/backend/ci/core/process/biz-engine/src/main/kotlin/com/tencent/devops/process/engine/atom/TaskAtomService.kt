@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -160,7 +161,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 stepId = task.stepId,
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
-                buildStatus = task.status.name
+                buildStatus = task.status.name,
+                type = when (actionType) {
+                    ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                    ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    else -> null
+                }
             )
         )
     }
@@ -338,15 +344,27 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
         if (atomResponse.buildStatus.isFinish()) {
-            buildLogPrinter.addLine(
-                buildId = task.buildId,
-                message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
-                tag = task.taskId,
-                containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
-                jobId = null,
-                stepId = task.stepId
-            )
+            if (atomResponse.errorCode != null) {
+                buildLogPrinter.addErrorLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus} (${atomResponse.errorMsg})!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            } else {
+                buildLogPrinter.addLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            }
         } else {
             if (stopFlag) {
                 buildLogPrinter.addLine(

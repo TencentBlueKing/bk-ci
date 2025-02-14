@@ -246,7 +246,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",
@@ -450,6 +450,18 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             storageType = PipelineStorageType.getActionType(storageType)
         )
     }
+
+    override fun resetBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) = Result(
+        pipelineInfoFacadeService.resetBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    )
 
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {

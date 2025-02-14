@@ -48,8 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
-import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.ElementUtils
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
@@ -72,11 +72,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -330,7 +330,7 @@ class PipelineContainerService @Autowired constructor(
                         element = atomElement,
                         stageEnableFlag = stage.stageEnabled(),
                         containerEnableFlag = container.containerEnabled(),
-                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
                 ) {
                     val taskVar = atomElement.initTaskVar()
@@ -461,13 +461,13 @@ class PipelineContainerService @Autowired constructor(
                         element = atomElement,
                         stageEnableFlag = stage.stageEnabled(),
                         containerEnableFlag = container.containerEnabled(),
-                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
+                        originMatrixContainerFlag = container.matrixGroupFlag == true
                     )
                 ) {
                     taskBuildRecords.add(
                         BuildRecordTask(
                             projectId = context.projectId, pipelineId = context.pipelineId,
-                            buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                            buildId = context.buildId, stageId = stage.id!!, containerId = container.id!!,
                             taskId = atomElement.id!!, classType = atomElement.getClassType(),
                             atomCode = atomElement.getAtomCode(), executeCount = context.executeCount,
                             resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
@@ -513,7 +513,7 @@ class PipelineContainerService @Autowired constructor(
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
                     // 如果是取消状态的，则不能跳过，取消状态属于要重试再次执行的状态（比如重试的是checkout插件，其post-action如是取消)
                     try {
-                        if (target == null || (target.status.isFinish() && !target.status.isCancel())) {
+                        if (target == null || (target.status.isSuccess() || target.status.isFailure())) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -525,7 +525,7 @@ class PipelineContainerService @Autowired constructor(
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
                 val skipWhenFailed = context.inSkipStage(stage, atomElement)
                 val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
-                val recordStatus = if (skipWhenFailed) BuildStatus.FAILED.name else null
+                val recordStatus = if (skipWhenFailed) BuildStatus.SKIP.name else null
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
@@ -579,7 +579,7 @@ class PipelineContainerService @Autowired constructor(
         container.startVMTaskSeq = startVMTaskSeq
 
         // 构建矩阵永远跟随stage重试，在需要重试的stage中，单独增加重试记录
-        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+        if (container.matrixGroupFlag == true && !context.needSkipWhenStageFailRetry(stage = stage)) {
             container.retryFreshMatrixOption()
             cleanContainersInMatrixGroup(
                 transactionContext = dslContext,
@@ -627,6 +627,10 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
+                                /*重试时重置构建机互斥组名称，以便变量更改时能生效*/
+                                controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
+                                /*重试时重置互斥组名称，以便变量更改时能生效*/
+                                controlOption.mutexGroup?.runtimeMutexGroup = null
                                 updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer
@@ -690,7 +694,7 @@ class PipelineContainerService @Autowired constructor(
                 BuildRecordContainer(
                     projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
-                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    containerId = container.id!!, containerType = container.getClassType(),
                     executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
                     matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()

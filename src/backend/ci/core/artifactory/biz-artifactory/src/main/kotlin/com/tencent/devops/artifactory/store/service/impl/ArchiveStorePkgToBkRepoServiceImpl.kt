@@ -10,12 +10,12 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
-import java.io.InputStream
 import javax.ws.rs.NotFoundException
 
 abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl() {
@@ -34,27 +34,57 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     }
 
     override fun handleArchiveFile(
-        disposition: FormDataContentDisposition,
-        inputStream: InputStream,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        storePkgEnvInfos: List<StorePkgEnvInfo>?
     ) {
-        handlePkgFile(
-            disposition = disposition,
-            inputStream = inputStream,
-            storeType = storeType,
-            storeCode = storeCode,
-            version = version
-        )
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
-        directoryIteration(
-            directoryFile = File(storeArchivePath),
-            prefix = "${getStoreArchiveBasePath()}/${getPkgFileTypeDir(storeType)}",
-            directoryPath = storeArchivePath,
-            repoName = getBkRepoName(storeType),
-            storeType = storeType
-        )
+        val prefix = "${getStoreArchiveBasePath()}/${getPkgFileTypeDir(storeType)}"
+        if (storePkgEnvInfos.isNullOrEmpty()) {
+            directoryIteration(
+                directoryFile = File(storeArchivePath),
+                prefix = prefix,
+                directoryPath = storeArchivePath,
+                repoName = getBkRepoName(storeType),
+                storeType = storeType
+            )
+        } else {
+            storePkgEnvInfos.forEach { storePkgEnvInfo ->
+                val pkgLocalPath = storePkgEnvInfo.pkgLocalPath
+                if (pkgLocalPath.isNullOrBlank()) {
+                    return@forEach
+                }
+                val file = File(storeArchivePath, pkgLocalPath)
+                if (!file.exists()) {
+                    logger.warn("uploadLocalFile file[$pkgLocalPath] not exist!")
+                    return@forEach
+                }
+                val pkgRepoPath = generatePkgRepoPath(
+                    storeCode = storeCode,
+                    version = version,
+                    pkgFileName = file.name,
+                    osName = storePkgEnvInfo.osName,
+                    osArch = storePkgEnvInfo.osArch
+                )
+                uploadLocalFile(
+                    storeType = storeType,
+                    repoName = getBkRepoName(storeType),
+                    path = pkgRepoPath,
+                    file = file
+                )
+            }
+            // 上传配置文件
+            val bkConfigFile = File(storeArchivePath, CONFIG_YML_NAME)
+            if (bkConfigFile.exists()) {
+                uploadLocalFile(
+                    storeType = storeType,
+                    repoName = getBkRepoName(storeType),
+                    path = bkConfigFile.path.removePrefix(prefix),
+                    file = bkConfigFile
+                )
+            }
+        }
         val frontendDir = buildStoreFrontendPath(storeType, storeCode, version)
         frontendDir?.let {
             directoryIteration(
@@ -74,45 +104,62 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         repoName: String,
         storeType: StoreTypeEnum
     ) {
-        directoryFile.walk().filter { it.path != directoryPath }.forEach {
-            if (it.isDirectory) {
+        directoryFile.walk().filter { it.path != directoryPath }.forEach { file ->
+            if (file.isDirectory) {
                 directoryIteration(
-                    directoryFile = it,
+                    directoryFile = file,
                     prefix = prefix,
-                    directoryPath = it.path,
+                    directoryPath = file.path,
                     repoName = repoName,
                     storeType = storeType
                 )
             } else {
-                val path = it.path.removePrefix(prefix)
-                logger.debug("uploadLocalFile fileName=${it.name}|path=$path")
-                val uploadRepoName = if (storeType == StoreTypeEnum.DEVX) {
-                    "$repoName-tmp"
-                } else {
-                    repoName
-                }
-                bkRepoClient.uploadLocalFile(
-                    userId = BKREPO_DEFAULT_USER,
-                    projectId = getBkRepoProjectId(storeType),
-                    repoName = uploadRepoName,
-                    path = path,
-                    file = it,
-                    gatewayFlag = false,
-                    bkrepoApiUrl = "${bkRepoClientConfig.bkRepoIdcHost}/api/generic",
-                    userName = bkRepoStoreConfig.bkrepoStoreUserName,
-                    password = bkRepoStoreConfig.bkrepoStorePassword
-                )
+                val path = file.path.removePrefix(prefix)
+                logger.debug("uploadLocalFile fileName=${file.name}|path=$path")
+                uploadLocalFile(storeType = storeType, repoName = repoName, path = path, file = file)
             }
         }
     }
 
-    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
+    private fun uploadLocalFile(
+        storeType: StoreTypeEnum,
+        repoName: String,
+        path: String,
+        file: File
+    ) {
+        val uploadRepoName = getUploadRepoName(repoName, storeType)
+        bkRepoClient.uploadLocalFile(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = getBkRepoProjectId(storeType),
+            repoName = uploadRepoName,
+            path = path,
+            file = file,
+            gatewayFlag = false,
+            bkrepoApiUrl = "${bkRepoClientConfig.bkRepoIdcHost}/api/generic",
+            userName = bkRepoStoreConfig.bkrepoStoreUserName,
+            password = bkRepoStoreConfig.bkrepoStorePassword
+        )
+    }
+
+    private fun getUploadRepoName(
+        repoName: String,
+        storeType: StoreTypeEnum
+    ): String {
+        return if (storeType == StoreTypeEnum.DEVX) {
+            // devx应用的文件先上传到临时仓库，待签名完成后再上传到正式仓库
+            "$repoName-tmp"
+        } else {
+            repoName
+        }
+    }
+
+    override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String?): String {
         val tmpFile = DefaultPathUtils.randomFile()
         return try {
             bkRepoClient.downloadFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = getBkRepoProjectId(storeType),
-                repoName = getBkRepoName(storeType),
+                repoName = repoName ?: getBkRepoName(storeType),
                 fullPath = filePath,
                 destFile = tmpFile
             )

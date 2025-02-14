@@ -130,6 +130,28 @@ class BuildLogPrinter(
         stepId = stepId
     )
 
+    fun addAIErrorLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        containerHashId: String? = null,
+        executeCount: Int,
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
+    ) {
+        addErrorLine(
+            buildId = buildId,
+            message = "$LOG_AI_FLAG$message",
+            tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            subTag = subTag,
+            jobId = jobId,
+            stepId = stepId
+        )
+    }
+
     fun addErrorLine(
         buildId: String,
         message: String,
@@ -215,7 +237,7 @@ class BuildLogPrinter(
                         tag = tag,
                         subTag = subTag,
                         containerHashId = containerHashId,
-                        logType = LogType.DEBUG,
+                        logType = LogType.WARN,
                         executeCount = executeCount,
                         jobId = jobId,
                         stepId = stepId
@@ -383,5 +405,7 @@ class BuildLogPrinter(
         private const val LOG_ERROR_FLAG = "##[error]"
 
         private const val LOG_WARN_FLAG = "##[warning]"
+
+        private const val LOG_AI_FLAG = "##[ai]"
     }
 }

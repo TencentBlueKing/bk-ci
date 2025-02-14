@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupConfig
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupConfigRecord
 import org.jooq.DSLContext
@@ -110,6 +111,7 @@ class AuthResourceGroupConfigDao {
             dslContext.selectFrom(this)
                 .orderBy(CREATE_TIME.desc(), RESOURCE_TYPE, GROUP_CODE)
                 .limit(pageSize).offset((page - 1) * pageSize)
+                .skipCheck()
                 .fetch()
         }
     }
@@ -121,6 +123,14 @@ class AuthResourceGroupConfigDao {
         if (authAuthResourceGroupConfigs.isEmpty()) {
             return
         }
-        dslContext.batchUpdate(authAuthResourceGroupConfigs).execute()
+        with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            authAuthResourceGroupConfigs.forEach {
+                dslContext.update(this)
+                    .set(GROUP_NAME, it.groupName)
+                    .set(DESCRIPTION, it.description)
+                    .where(ID.eq(it.id))
+                    .execute()
+            }
+        }
     }
 }

@@ -1,18 +1,23 @@
 <template>
-    <div class="create-rule-wrapper"
+    <div
+        class="create-rule-wrapper"
         v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
-        }">
+        }"
+    >
         <div class="info-header">
             <div class="title">
                 <!-- <i class="devops-icon icon-arrows-left" @click="toRuleList"></i> -->
-                <span class="header-text">{{title}}</span>
+                <span class="header-text">{{ title }}</span>
             </div>
         </div>
-        <div class="create-rule-content" v-if="hasPermission && showContent">
+        <div
+            class="create-rule-content"
+            v-if="hasPermission && showContent"
+        >
             <div class="fast-create">
-                <div class="info-title">{{$t('quality.快捷创建规则')}}</div>
+                <div class="info-title">{{ $t('quality.快捷创建规则') }}</div>
                 <ul class="rule-types-container">
                     <li
                         :class="{ 'type-item-card': true, 'active-item': curFastType === entry.hashId }"
@@ -21,86 +26,150 @@
                         :key="index"
                         @click="changeFastType(entry)"
                     >
-                        <div class="template-icon" v-if="templateName.includes(entry.name)">
-                            <icon v-if="['日常构建', 'Daily Build'].includes(entry.name)" name="daily-build" size="14" />
-                            <icon v-if="['版本转测', 'Version Testing'].includes(entry.name)" name="version-test" size="14" />
-                            <icon v-if="['发布上线', 'Deploy to Production'].includes(entry.name)" name="release-online" size="14" />
+                        <div
+                            class="template-icon"
+                            v-if="templateName.includes(entry.name)"
+                        >
+                            <icon
+                                v-if="['日常构建', 'Daily Build'].includes(entry.name)"
+                                name="daily-build"
+                                size="14"
+                            />
+                            <icon
+                                v-if="['版本转测', 'Version Testing'].includes(entry.name)"
+                                name="version-test"
+                                size="14"
+                            />
+                            <icon
+                                v-if="['发布上线', 'Deploy to Production'].includes(entry.name)"
+                                name="release-online"
+                                size="14"
+                            />
                         </div>
-                        <i :class="{ 'devops-icon': true, 'label-icon': true, 'icon-placeholder': true }" v-else></i>
-                        <span class="card-label">{{entry.name}}</span>
-                        <i class="devops-icon icon-check-circle-shape" v-if="curFastType === entry.hashId"></i>
+                        <i
+                            :class="{ 'devops-icon': true, 'label-icon': true, 'icon-placeholder': true }"
+                            v-else
+                        ></i>
+                        <span class="card-label">{{ entry.name }}</span>
+                        <i
+                            class="devops-icon icon-check-circle-shape"
+                            v-if="curFastType === entry.hashId"
+                        ></i>
                     </li>
                 </ul>
             </div>
             <div class="create-steps-rule">
                 <div class="create-rule-form">
-                    <p class="info-title">{{$t('quality.基本信息')}}</p>
+                    <p class="info-title">{{ $t('quality.基本信息') }}</p>
                     <hr>
-                    <bk-form :label-width="100" :model="createRuleForm">
-                        <devops-form-item :label="$t('quality.名称')" :required="true" :property="'name'" :is-error="errors.has('ruleName')" :error-msg="errors.first('ruleName')">
+                    <bk-form
+                        :label-width="100"
+                        :model="createRuleForm"
+                    >
+                        <devops-form-item
+                            :label="$t('quality.名称')"
+                            :required="true"
+                            :property="'name'"
+                            :is-error="errors.has('ruleName')"
+                            :error-msg="errors.first('ruleName')"
+                        >
                             <bk-input
                                 class="rule-name-input"
                                 :placeholder="$t('quality.请输入规则名称')"
                                 name="ruleName"
                                 v-model="createRuleForm.name"
-                                v-validate="'required'">
+                                v-validate="'required'"
+                            >
                             </bk-input>
                         </devops-form-item>
-                        <bk-form-item :label="$t('quality.描述')" :property="'desc'">
+                        <bk-form-item
+                            :label="$t('quality.描述')"
+                            :property="'desc'"
+                        >
                             <bk-input
                                 type="text"
                                 class="rule-desc-input"
                                 :placeholder="$t('quality.请输入描述')"
                                 name="ruleDesc"
-                                v-model="createRuleForm.desc">
+                                v-model="createRuleForm.desc"
+                            >
                             </bk-input>
                         </bk-form-item>
                     </bk-form>
-                    <p class="info-title" style="margin-top: 28px;">{{$t('quality.指标')}}
+                    <p
+                        class="info-title"
+                        style="margin-top: 28px;"
+                    >
+                        {{ $t('quality.指标') }}
                         <bk-popover placement="right">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{$t('quality.选择关注的指标并设置范围，不满足的流水线将会在控制点位置停住')}}</p>
+                                <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ $t('quality.选择关注的指标并设置范围，不满足的流水线将会在控制点位置停住') }}</p>
                             </template>
                         </bk-popover>
-                        <a class="add-indicator" target="_blank" :href="`/console/quality/${projectId}/metadataList`">{{$t('quality.缺少需要的指标？')}}</a>
+                        <a
+                            class="add-indicator"
+                            target="_blank"
+                            :href="`/console/quality/${projectId}/metadataList`"
+                        >{{ $t('quality.缺少需要的指标？') }}</a>
                     </p>
                     <hr>
-                    <table class="rule-metadata-table" v-if="createRuleForm.indicators.length"
-                        style="border-collapse:separate; border-spacing:0px 10px;">
+                    <table
+                        class="rule-metadata-table"
+                        v-if="createRuleForm.indicators.length"
+                        style="border-collapse:separate; border-spacing:0px 10px;"
+                    >
                         <tr>
-                            <th width="323">{{$t('quality.指标名称')}}</th>
-                            <th width="118">{{$t('quality.操作')}}</th>
-                            <th width="118">{{$t('quality.阈值')}}</th>
+                            <th width="323">{{ $t('quality.指标名称') }}</th>
+                            <th width="118">{{ $t('quality.操作') }}</th>
+                            <th width="118">{{ $t('quality.阈值') }}</th>
                             <th width="100"></th>
                         </tr>
-                        <tr v-for="(row, index) of createRuleForm.indicators"
-                            :key="index">
+                        <tr
+                            v-for="(row, index) of createRuleForm.indicators"
+                            :key="index"
+                        >
                             <td class="indicator-item">
-                                <div class="metadata-name" :title="getIndicatorName(row)">{{row.cnName}}
-                                    <span v-if="row.type === 'CUSTOM'">({{row.enName}})</span>
+                                <div
+                                    class="metadata-name"
+                                    :title="getIndicatorName(row)"
+                                >
+                                    {{ row.cnName }}
+                                    <span v-if="row.type === 'CUSTOM'">({{ row.enName }})</span>
                                 </div>
                             </td>
-                            <td class="handler-item" style="border-left: none;">
+                            <td
+                                class="handler-item"
+                                style="border-left: none;"
+                            >
                                 <bk-select
                                     v-model="row.operation"
-                                    :disabled="row.readOnly">
-                                    <bk-option v-for="(option, optionIndex) in row.operationList"
+                                    :disabled="row.readOnly"
+                                >
+                                    <bk-option
+                                        v-for="(option, optionIndex) in row.operationList"
                                         :key="optionIndex"
                                         :id="option.value"
-                                        :name="option.label">
+                                        :name="option.label"
+                                    >
                                     </bk-option>
                                 </bk-select>
                             </td>
-                            <td class="threshold-item" style="border-left: none;">
+                            <td
+                                class="threshold-item"
+                                style="border-left: none;"
+                            >
                                 <bk-select
                                     v-model="row.threshold"
                                     :disabled="row.readOnly"
-                                    v-if="row.thresholdType === 'BOOLEAN'">
-                                    <bk-option v-for="(option, optionIndex) in optionBoolean"
+                                    v-if="row.thresholdType === 'BOOLEAN'"
+                                >
+                                    <bk-option
+                                        v-for="(option, optionIndex) in optionBoolean"
                                         :key="optionIndex"
                                         :id="option.value"
-                                        :name="option.label">
+                                        :name="option.label"
+                                    >
                                     </bk-option>
                                 </bk-select>
                                 <input
@@ -128,56 +197,95 @@
                                 />
                             </td>
                             <td>
-                                <i class="devops-icon icon-plus-circle-shape"
-                                    @click="selectMetadata(index)"></i>
-                                <i class="devops-icon icon-minus-circle-shape"
-                                    @click="reduceMetadata(row, index)"></i>
+                                <i
+                                    class="devops-icon icon-plus-circle-shape"
+                                    @click="selectMetadata(index)"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-minus-circle-shape"
+                                    @click="reduceMetadata(row, index)"
+                                ></i>
                             </td>
                         </tr>
                     </table>
-                    <p class="error-tips open-tips" v-if="includeOpenINdicator">{{$t('quality.腾讯开源规范指标不支持修改')}}</p>
-                    <div class="no-metadata-row" v-if="!createRuleForm.indicators.length">
-                        {{$t('quality.还未添加指标，')}}
-                        <span @click="selectMetadata(0)">{{$t('quality.立即添加')}}</span>
+                    <p
+                        class="error-tips open-tips"
+                        v-if="includeOpenINdicator"
+                    >
+                        {{ $t('quality.腾讯开源规范指标不支持修改') }}
+                    </p>
+                    <div
+                        class="no-metadata-row"
+                        v-if="!createRuleForm.indicators.length"
+                    >
+                        {{ $t('quality.还未添加指标，') }}
+                        <span @click="selectMetadata(0)">{{ $t('quality.立即添加') }}</span>
                     </div>
-                    <p class="info-title" style="margin-top: 28px;">{{$t('quality.控制点')}}
+                    <p
+                        class="info-title"
+                        style="margin-top: 28px;"
+                    >
+                        {{ $t('quality.控制点') }}
                         <bk-popover placement="right">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{$t('quality.控制点插件需要满足全部指标条件才能顺利执行')}}</p>
+                                <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ $t('quality.控制点插件需要满足全部指标条件才能顺利执行') }}</p>
                             </template>
                         </bk-popover>
                     </p>
                     <hr>
 
-                    <bk-form :label-width="100" :model="createRuleForm">
-                        <devops-form-item :label="$t('quality.控制点名称')" :required="true"
+                    <bk-form
+                        :label-width="100"
+                        :model="createRuleForm"
+                    >
+                        <devops-form-item
+                            :label="$t('quality.控制点名称')"
+                            :required="true"
                             :property="'controlPointName'"
                             :is-error="errors.has('controlPoint')"
-                            :error-msg="errors.first('controlPoint')">
+                            :error-msg="errors.first('controlPoint')"
+                        >
                             <bk-input
                                 class="control-point-name"
                                 :placeholder="$t('quality.请选择')"
                                 disabled
                                 name="controlPoint"
                                 v-model="createRuleForm.controlPointName"
-                                v-validate="'required'">
+                                v-validate="'required'"
+                            >
                             </bk-input>
-                            <span class="select-control-point" @click="selectControlPoint()">{{$t('quality.选择控制点')}}</span>
+                            <span
+                                class="select-control-point"
+                                @click="selectControlPoint()"
+                            >{{ $t('quality.选择控制点') }}</span>
                         </devops-form-item>
-                        <bk-form-item :label="$t('quality.红线位置')" :required="true"
+                        <bk-form-item
+                            :label="$t('quality.红线位置')"
+                            :required="true"
                             :property="'controlPointPosition'"
                             :is-error="errors.has('controlPointPosition')"
-                            :error-msg="errors.first('controlPointPosition')">
-                            <bk-select v-model="createRuleForm.controlPointPosition" style="width:467px;">
-                                <bk-option v-for="(option, index) in createRuleForm.availablePosition"
+                            :error-msg="errors.first('controlPointPosition')"
+                        >
+                            <bk-select
+                                v-model="createRuleForm.controlPointPosition"
+                                style="width:467px;"
+                            >
+                                <bk-option
+                                    v-for="(option, index) in createRuleForm.availablePosition"
                                     :key="index"
                                     :id="option.name"
-                                    :name="option.cnName">
+                                    :name="option.cnName"
+                                >
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
-                        <devops-form-item :label="$t('quality.控制点前缀')" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
+                        <devops-form-item
+                            :label="$t('quality.控制点前缀')"
+                            :property="'id'"
+                            :is-error="errors.has('gatewayId')"
+                            :error-msg="errors.first('gatewayId')"
+                        >
                             <bk-input
                                 class="rule-name-input"
                                 :placeholder="$t('quality.默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1')"
@@ -186,23 +294,47 @@
                                 v-validate="{
                                     max: 10,
                                     customRuleId: true
-                                }">
+                                }"
+                            >
                             </bk-input>
                         </devops-form-item>
                         <p class="gateway-id-tips">
                             <i class="devops-icon icon-info-circle-shape"></i>
-                            <span>{{$t('quality.若输入了前缀（例如gate1），红线将只对名称以前缀加下划线开头的控制点生效（例如gate1_XX）')}}</span>
+                            <span>{{ $t('quality.若输入了前缀（例如gate1），红线将只对名称以前缀开头的控制点生效（例如gate1_XX）') }}</span>
                         </p>
-                        <bk-form-item :label="$t('quality.生效范围')" class="blod-label"
-                            :property="'controlPointPosition'">
-                            <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
-                                <bk-button type="primary" slot="dropdown-trigger">
-                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>{{$t('quality.选择流水线/模板')}}</span>
+                        <bk-form-item
+                            :label="$t('quality.生效范围')"
+                            class="blod-label"
+                            :property="'controlPointPosition'"
+                        >
+                            <bk-dropdown-menu
+                                @show="isDropdownShow = true"
+                                @hide="isDropdownShow = false"
+                                ref="dropdown"
+                            >
+                                <bk-button
+                                    type="primary"
+                                    slot="dropdown-trigger"
+                                >
+                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>{{ $t('quality.选择流水线/模板') }}</span>
                                     <i :class="['devops-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
-                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                    <li><a href="javascript:;" @click="triggerHandler('pipeline')">{{$t('quality.单流水线')}}</a></li>
-                                    <li><a href="javascript:;" @click="triggerHandler('template')">{{$t('quality.模板')}}</a></li>
+                                <ul
+                                    class="bk-dropdown-list"
+                                    slot="dropdown-content"
+                                >
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            @click="triggerHandler('pipeline')"
+                                        >{{ $t('quality.单流水线') }}</a>
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            @click="triggerHandler('template')"
+                                        >{{ $t('quality.模板') }}</a>
+                                    </li>
                                 </ul>
                             </bk-dropdown-menu>
                             <div class="pipeline-table-container">
@@ -213,22 +345,36 @@
                                     :data="createRuleForm.pipelineList"
                                     v-bkloading="{
                                         isLoading: tableLoading
-                                    }">
-                                    <bk-table-column :label="$t('quality.名称')" width="200">
+                                    }"
+                                >
+                                    <bk-table-column
+                                        :label="$t('quality.名称')"
+                                        width="200"
+                                    >
                                         <template slot-scope="props">
-                                            <span>{{props.row.type === 'pipeline' ? props.row.pipelineName : props.row.templateName}}</span>
+                                            <span>{{ props.row.type === 'pipeline' ? props.row.pipelineName : props.row.templateName }}</span>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('quality.类型')" prop="elementCount">
+                                    <bk-table-column
+                                        :label="$t('quality.类型')"
+                                        prop="elementCount"
+                                    >
                                         <template slot-scope="props">
-                                            <span>{{props.row.type === 'pipeline' ? $t('quality.单流水线') : $t('quality.模板')}}</span>
+                                            <span>{{ props.row.type === 'pipeline' ? $t('quality.单流水线') : $t('quality.模板') }}</span>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('quality.相关插件')" min-width="260">
+                                    <bk-table-column
+                                        :label="$t('quality.相关插件')"
+                                        min-width="260"
+                                    >
                                         <template slot-scope="props">
-                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="$t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)])">
+                                            <p
+                                                v-if="props.row.lackPointElement.length"
+                                                class="atom-tips"
+                                                :title="$t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)])"
+                                            >
                                                 <span class="mark-circle"></span>
-                                                {{$t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)])}}
+                                                {{ $t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)]) }}
                                             </p>
                                             <p
                                                 v-if="checkAtomAsync(props.row.existElement)"
@@ -236,94 +382,171 @@
                                                 :title="$t('quality.{0}插件不是同步，无法及时获取产出结果', [getAsyncAtom(props.row.existElement)])"
                                             >
                                                 <span class="mark-circle"></span>
-                                                {{$t('quality.{0}插件不是同步，无法及时获取产出结果', [getAsyncAtom(props.row.existElement)])}}
-                                            </p><p style="color: #00C873"
-                                                v-if="!props.row.lackPointElement.length && !checkAtomAsync(props.row.existElement) && !props.row.isSetPipeline">
-                                                {{$t('quality.指标所需插件完整')}}
+                                                {{ $t('quality.{0}插件不是同步，无法及时获取产出结果', [getAsyncAtom(props.row.existElement)]) }}
+                                            </p><p
+                                                style="color: #00C873"
+                                                v-if="!props.row.lackPointElement.length && !checkAtomAsync(props.row.existElement) && !props.row.isSetPipeline"
+                                            >
+                                                {{ $t('quality.指标所需插件完整') }}
                                             </p>
-                                            <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>{{$t('quality.若有多个控制点插件，请将需配置红线的控制点插件名称开头加上控制点前缀+下划线。')}}
+                                            <p
+                                                class="atom-tips"
+                                                v-if="checkAtomCount(props.row.existElement)"
+                                            >
+                                                <span class="mark-circle"></span>{{ $t('quality.若有多个控制点插件，请将需配置红线的控制点插件名称开头加上控制点前缀+下划线。') }}
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
                                     </bk-table-column>
                                     <bk-table-column :label="$t('quality.操作')">
                                         <template slot-scope="props">
-                                            <a class="add-btn"
+                                            <a
+                                                class="add-btn"
                                                 v-if="props.row.type === 'pipeline' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
                                                 :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`"
                                                 @click="updatePipelineStatus(props.row.pipelineId)"
-                                            >{{$t('quality.去修改')}}</a>
-                                            <a class="add-btn"
+                                            >{{ $t('quality.去修改') }}</a>
+                                            <a
+                                                class="add-btn"
                                                 v-else-if="props.row.type === 'template' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
                                                 :href="`/console/pipeline/${projectId}/template/${props.row.templateId}/edit`"
                                                 @click="updateTemplateStatus(props.row.templateId)"
-                                            >{{$t('quality.去修改')}}</a>
-                                            <span v-else-if="props.row.isRefresh" class="add-btn" @click="handleRefresh">{{$t('quality.刷新')}}</span>
+                                            >{{ $t('quality.去修改') }}</a>
+                                            <span
+                                                v-else-if="props.row.isRefresh"
+                                                class="add-btn"
+                                                @click="handleRefresh"
+                                            >{{ $t('quality.刷新') }}</span>
                                             <span v-else>-</span>
                                         </template>
                                     </bk-table-column>
                                     <template slot="empty">
-                                        <div class="no-data">{{$t('quality.未选择流水线')}}</div>
+                                        <div class="no-data">{{ $t('quality.未选择流水线') }}</div>
                                     </template>
                                 </bk-table>
                             </div>
                         </bk-form-item>
-                        <bk-form-item :label="$t('quality.操作')" class="blod-label">
+                        <bk-form-item
+                            :label="$t('quality.操作')"
+                            class="blod-label"
+                        >
                             <div class="rule-item-content notice-type-content">
                                 <bk-radio-group v-model="createRuleForm.operation">
-                                    <bk-radio :value="'END'">{{$t('quality.终止后通知')}}</bk-radio>
-                                    <bk-radio :value="'AUDIT'">{{$t('quality.人工审核')}}</bk-radio>
+                                    <bk-radio :value="'END'">{{ $t('quality.终止后通知') }}</bk-radio>
+                                    <bk-radio :value="'AUDIT'">{{ $t('quality.人工审核') }}</bk-radio>
                                 </bk-radio-group>
-                                <div class="selected-item-tooltips notice-item-tooltips"
-                                    :class="{ 'system-active': createRuleForm.operation === 'END' }">
-                                    <bk-form :label-width="120" :model="createRuleForm" v-if="createRuleForm.operation === 'END'">
-                                        <bk-form-item :label="$t('quality.通知方式')" :required="true" class="notice-type-item">
+                                <div
+                                    class="selected-item-tooltips notice-item-tooltips"
+                                    :class="{ 'system-active': createRuleForm.operation === 'END' }"
+                                >
+                                    <bk-form
+                                        :label-width="120"
+                                        :model="createRuleForm"
+                                        v-if="createRuleForm.operation === 'END'"
+                                    >
+                                        <bk-form-item
+                                            :label="$t('quality.通知方式')"
+                                            :required="true"
+                                            class="notice-type-item"
+                                        >
                                             <bk-checkbox-group v-model="createRuleForm.notifyTypeList">
-                                                <bk-checkbox :value="entry.value" v-for="(entry, index) in noticeTypeList" :key="index">
-                                                    <logo :name="entry.name" size="30" class="nav-icon" />
+                                                <bk-checkbox
+                                                    :value="entry.value"
+                                                    v-for="(entry, index) in noticeTypeList"
+                                                    :key="index"
+                                                >
+                                                    <logo
+                                                        :name="entry.name"
+                                                        size="30"
+                                                        class="nav-icon"
+                                                    />
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
-                                        <bk-form-item :label="$t('quality.发送通知到')" :property="'desc'" class="notice-group-item">
+                                        <bk-form-item
+                                            :label="$t('quality.发送通知到')"
+                                            :property="'desc'"
+                                            class="notice-group-item"
+                                        >
                                             <bk-checkbox-group v-model="createRuleForm.notifyGroupList">
-                                                <bk-checkbox :value="col.groupHashId" v-for="(col, index) in groupList" :key="index">
-                                                    <span class="notice-name" :title="col.name">{{col.name}}</span>
-                                                    <bk-popover :delay="500" placement="top">
+                                                <bk-checkbox
+                                                    :value="col.groupHashId"
+                                                    v-for="(col, index) in groupList"
+                                                    :key="index"
+                                                >
+                                                    <span
+                                                        class="notice-name"
+                                                        :title="col.name"
+                                                    >{{ col.name }}</span>
+                                                    <bk-popover
+                                                        :delay="500"
+                                                        placement="top"
+                                                    >
                                                         <i class="devops-icon icon-member-list"></i>
                                                         <template slot="content">
                                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                                                <span v-for="(entry, opIndex) in col.innerUsers" :key="opIndex">{{entry.replace('"', '')}}<span v-if="opIndex !== (col.innerUsers.length - 1)">,</span></span>
+                                                                <span
+                                                                    v-for="(entry, opIndex) in col.innerUsers"
+                                                                    :key="opIndex"
+                                                                >{{ entry.replace('"', '') }}<span v-if="opIndex !== (col.innerUsers.length - 1)">,</span></span>
                                                             </p>
                                                         </template>
                                                     </bk-popover>
                                                 </bk-checkbox>
-                                                <bk-checkbox class="add-group" :disabled="true" @click.native="toCreateGroup">
+                                                <bk-checkbox
+                                                    class="add-group"
+                                                    :disabled="true"
+                                                    @click.native="toCreateGroup"
+                                                >
                                                     <i class="devops-icon icon-plus-circle"></i>
-                                                    <span class="bk-checkbox-text create-group">{{$t('quality.新增通知组')}}</span>
+                                                    <span class="bk-checkbox-text create-group">{{ $t('quality.新增通知组') }}</span>
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
-                                        <bk-form-item :label="$t('quality.附加通知人员')" :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')">
-                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"></user-input>
+                                        <bk-form-item
+                                            :label="$t('quality.附加通知人员')"
+                                            :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
+                                        >
+                                            <user-input
+                                                :handle-change="handleChange"
+                                                name="attacher"
+                                                :value="createRuleForm.notifyUserList"
+                                                :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
+                                            ></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
-                                    <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item :label="$t('quality.审核人')" :desc="$t('quality.请输入审核人，支持输入流水线变量')" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"></user-input>
+                                    <bk-form
+                                        v-else
+                                        :label-width="120"
+                                        :model="createRuleForm"
+                                        class="user-audit-form"
+                                    >
+                                        <bk-form-item
+                                            :label="$t('quality.审核人')"
+                                            :desc="$t('quality.请输入审核人，支持输入流水线变量')"
+                                            :required="true"
+                                        >
+                                            <user-input
+                                                :handle-change="handleChange"
+                                                name="reviewer"
+                                                :value="createRuleForm.auditUserList"
+                                                :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"
+                                            ></user-input>
                                         </bk-form-item>
                                         <bk-form-item :label="$t('quality.审核超时时间')">
-                                            <bk-input type="number"
+                                            <bk-input
+                                                type="number"
                                                 :placeholder="$t('quality.超时以分钟为单位')"
                                                 :min="1"
                                                 :max="600"
-                                                v-model="createRuleForm.auditTimeoutMinutes">
+                                                v-model="createRuleForm.auditTimeoutMinutes"
+                                            >
                                             </bk-input>
-                                            <span class="time-unit">{{$t('quality.分钟')}}</span>
-                                            <p class="prompt-tips">{{$t('quality.默认为15分钟，最长不超过600分钟')}}</p>
+                                            <span class="time-unit">{{ $t('quality.分钟') }}</span>
+                                            <p class="prompt-tips">{{ $t('quality.默认为15分钟，最长不超过600分钟') }}</p>
                                         </bk-form-item>
                                     </bk-form>
                                 </div>
@@ -331,22 +554,42 @@
                         </bk-form-item>
                     </bk-form>
                     <div>
-                        <bk-button theme="primary" class="submit-handle" @click="submit()">{{$t('quality.提交')}}</bk-button>
-                        <bk-button theme="default" class="submit-handle" @click="toRuleList()">{{$t('quality.取消')}}</bk-button>
+                        <bk-button
+                            theme="primary"
+                            class="submit-handle"
+                            @click="submit()"
+                        >
+                            {{ $t('quality.提交') }}
+                        </bk-button>
+                        <bk-button
+                            theme="default"
+                            class="submit-handle"
+                            @click="toRuleList()"
+                        >
+                            {{ $t('quality.取消') }}
+                        </bk-button>
                     </div>
                 </div>
                 <div class="rule-preview">
-                    <p class="info-title">{{$t('quality.红线预览')}}</p>
+                    <p class="info-title">{{ $t('quality.红线预览') }}</p>
                     <hr>
-                    <p class="priview-tips" v-if="createRuleForm.controlPointPosition === 'AFTER'">
-                        {{$t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
+                    <p
+                        class="priview-tips"
+                        v-if="createRuleForm.controlPointPosition === 'AFTER'"
+                    >
+                        {{ $t('quality.流水线在执行控制点1之后需满足2的阈值条件，否则将不会执行后续插件。', [createRuleForm.controlPointName || '-', currentINdicators || '-']) }}
                     </p>
-                    <p class="priview-tips" v-else>
-                        {{$t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-'])}}
+                    <p
+                        class="priview-tips"
+                        v-else
+                    >
+                        {{ $t('quality.流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。', [createRuleForm.controlPointName || '-', currentINdicators || '-']) }}
                     </p>
                     <div class="preview-image">
-                        <img v-if="createRuleForm.controlPointPosition"
-                            :src="createRuleForm.controlPointPosition === 'BEFORE' ? beforeSiteImg : afterSiteImg">
+                        <img
+                            v-if="createRuleForm.controlPointPosition"
+                            :src="createRuleForm.controlPointPosition === 'BEFORE' ? beforeSiteImg : afterSiteImg"
+                        >
                     </div>
                 </div>
             </div>
@@ -356,22 +599,37 @@
             class="metadata-side-slider"
             :is-show.sync="sideSliderConfig.show"
             :quick-close="sideSliderConfig.quickClose"
-            :width="sideSliderConfig.width">
-            <header class="metadata-panel-header" slot="header">
-                <span>{{sideSliderConfig.title}}</span>
-                <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
-                    <input class="bk-form-input" type="text"
+            :width="sideSliderConfig.width"
+        >
+            <header
+                class="metadata-panel-header"
+                slot="header"
+            >
+                <span>{{ sideSliderConfig.title }}</span>
+                <div
+                    class="search-input-row"
+                    :class="{ 'crtl-point-panel': isCtrPointPanel }"
+                >
+                    <input
+                        class="bk-form-input"
+                        type="text"
                         v-model="searchKey"
-                        @keyup.enter="handleSearch()">
-                    <i class="bk-icon icon-search" @click="handleSearch()"></i>
+                        @keyup.enter="handleSearch()"
+                    >
+                    <i
+                        class="bk-icon icon-search"
+                        @click="handleSearch()"
+                    ></i>
                 </div>
             </header>
             <template slot="content">
-                <div style="width: 100%; height: 100%"
+                <div
+                    style="width: 100%; height: 100%"
                     v-bkloading="{
                         isLoading: sideSliderConfig.loading.isLoading,
                         title: sideSliderConfig.loading.title
-                    }">
+                    }"
+                >
                     <metadata-panel
                         ref="metadataPanel"
                         :is-panel-show="sideSliderConfig.show"
@@ -383,7 +641,6 @@
                     >
                     </metadata-panel>
                 </div>
-
             </template>
         </bk-sideslider>
 

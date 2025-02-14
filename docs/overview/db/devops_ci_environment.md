@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.4
+**文档版本：** 1.0.6
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -264,6 +264,7 @@
 |  29   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
 |  30   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
 |  31   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
+|  32   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
 
 **表名：** <a>T_PROJECT_CONFIG</a>
 

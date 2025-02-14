@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板可见范围请求报文体")

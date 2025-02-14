@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -86,7 +87,6 @@ import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.ThreadPoolUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -327,6 +327,16 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             approveReq.result == PASS
         }
+        // 入库信息，并设置当前版本的LATEST_FLAG
+        marketAtomDao.approveAtomFromOp(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomStatus = atomStatus,
+            approveReq = approveReq,
+            latestFlag = latestFlag,
+            pubTime = LocalDateTime.now()
+        )
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,
@@ -347,16 +357,6 @@ class OpAtomServiceImpl @Autowired constructor(
             // 发送通知消息
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
         }
-        // 入库信息，并设置当前版本的LATEST_FLAG
-        marketAtomDao.approveAtomFromOp(
-            dslContext = dslContext,
-            userId = userId,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
-        )
         // 更新默认插件缓存
         if (approveReq.defaultFlag) {
             redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
@@ -394,7 +394,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                messageCode = StoreMessageCode.ATOM_PACKAGE_FILE_NOT_FOUND,
                 params = arrayOf(TASK_JSON_NAME),
                 language = I18nUtil.getLanguage(userId)
             )
