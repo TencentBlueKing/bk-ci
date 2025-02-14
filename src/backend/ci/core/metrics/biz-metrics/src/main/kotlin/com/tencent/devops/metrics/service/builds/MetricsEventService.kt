@@ -88,7 +88,6 @@ class MetricsEventService @Autowired constructor(
                         buf.clear()
                     }
                 }, retryTime = 3, retryPeriodMills = 5000)
-
             }
         }
 

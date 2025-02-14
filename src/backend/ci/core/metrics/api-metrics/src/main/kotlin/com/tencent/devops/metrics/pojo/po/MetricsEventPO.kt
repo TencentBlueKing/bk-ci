@@ -2,7 +2,6 @@ package com.tencent.devops.metrics.pojo.po
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-
 data class MetricsEventPO(
     @JsonProperty("access_token")
     val accessToken: String,
