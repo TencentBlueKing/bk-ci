@@ -1445,12 +1445,4 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
-
-    override fun getTestAtoms(projectCode: String): List<String> {
-        return storeProjectRelDao.getTestStoreCodes(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            storeType = StoreTypeEnum.ATOM
-        )?.map { it.value1() } ?: emptyList()
-    }
 }

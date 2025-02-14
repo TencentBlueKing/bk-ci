@@ -220,10 +220,4 @@ interface AtomService {
      */
     fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
 
-    /**
-     * 获取已安装的插件列表
-     */
-    fun getTestAtoms(
-        projectCode: String
-    ): List<String>
 }
