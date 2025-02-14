@@ -219,5 +219,4 @@ interface AtomService {
      * @return 插件默认版本号
      */
     fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
-
 }
