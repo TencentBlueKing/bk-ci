@@ -200,7 +200,9 @@ object ProjectUtils {
                 enablePipelineNameTips = projectProperties?.enablePipelineNameTips,
                 afterEnablePipelineNameTips = projectApprovalProperties?.enablePipelineNameTips,
                 pipelineNameFormat = projectProperties?.pipelineNameFormat,
-                afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat
+                afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat,
+                loggingLineLimit = projectProperties?.loggingLineLimit,
+                afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit
             )
         }
     }
