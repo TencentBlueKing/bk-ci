@@ -88,7 +88,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
-            dispatchBroadCastEvent(task, ActionType.START)
+            dispatchBroadCastEvent(task, ActionType.START, task.status)
             // 更新状态
             pipelineTaskService.updateTaskStatus(
                 task = task,
@@ -145,9 +145,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         return atomResponse
     }
 
-    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
+    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType, status: BuildStatus) {
         pipelineEventDispatcher.dispatch(
-            // 内置task启动/结束，包含 startVM、stopVM
+            // 内置task启动/结束，包含 startVM、stopVM、bash、batch
             PipelineBuildStatusBroadCastEvent(
                 source = "task-${task.taskId}",
                 projectId = task.projectId,
@@ -161,7 +161,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 stepId = task.stepId,
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
-                buildStatus = task.status.name,
+                buildStatus = status.name,
                 type = when (actionType) {
                     ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
                     ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
@@ -280,7 +280,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
 
-        dispatchBroadCastEvent(task, ActionType.END)
+        dispatchBroadCastEvent(task, ActionType.END, atomResponse.buildStatus)
 
         buildLogPrinter.stopLog(
             buildId = task.buildId,

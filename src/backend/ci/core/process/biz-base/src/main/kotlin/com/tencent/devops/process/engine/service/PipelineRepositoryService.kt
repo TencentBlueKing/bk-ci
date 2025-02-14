@@ -244,7 +244,8 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -308,7 +309,8 @@ class PipelineRepositoryService constructor(
                 versionStatus = versionStatus,
                 branchName = branchName,
                 description = description,
-                baseVersion = baseVersion
+                baseVersion = baseVersion,
+                pipelineDisable = pipelineDisable
             )
             result
         } else {
@@ -331,7 +333,8 @@ class PipelineRepositoryService constructor(
                     versionStatus = versionStatus,
                     branchName = branchName,
                     description = description,
-                    baseVersion = baseVersion
+                    baseVersion = baseVersion,
+                    pipelineDisable = pipelineDisable
                 )
             }
             operationLogService.addOperationLog(
@@ -693,7 +696,8 @@ class PipelineRepositoryService constructor(
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String?,
-        description: String?
+        description: String?,
+        pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
         val modelVersion = 1
@@ -728,7 +732,8 @@ class PipelineRepositoryService constructor(
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
                     id = id,
-                    latestVersionStatus = versionStatus
+                    latestVersionStatus = versionStatus,
+                    pipelineDisable = pipelineDisable
                 )
                 model.latestVersion = modelVersion
                 var newSetting = customSetting?.copy(
@@ -915,7 +920,8 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         baseVersion: Int?,
         branchName: String?,
-        description: String?
+        description: String?,
+        pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
@@ -1132,7 +1138,8 @@ class PipelineRepositoryService constructor(
                             taskCount = taskCount,
                             latestVersion = model.latestVersion,
                             // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
-                            latestVersionStatus = VersionStatus.RELEASED
+                            latestVersionStatus = VersionStatus.RELEASED,
+                            locked = pipelineDisable
                         )
                         pipelineResourceDao.updateReleaseVersion(
                             dslContext = transactionContext,
