@@ -285,7 +285,7 @@ const getCountPipelineByDialect = async () => {
 
 const beforeChange = async () => {
   confirmSwitch.value = '';
-  getCountPipelineByDialect();
+  await getCountPipelineByDialect();
 
   return new Promise((resolve) => {
     if (props.type === 'edit') {
