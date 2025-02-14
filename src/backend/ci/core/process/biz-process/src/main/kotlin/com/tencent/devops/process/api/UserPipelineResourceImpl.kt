@@ -780,7 +780,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         dialect: PipelineDialectType
-    ): Result<Int> {
+    ): Result<Long> {
         return Result(
             pipelineListFacadeService.countPipelineByDialect(
                 projectId = projectId, dialect = dialect

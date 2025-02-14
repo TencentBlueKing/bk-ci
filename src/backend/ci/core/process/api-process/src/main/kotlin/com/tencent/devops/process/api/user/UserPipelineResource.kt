@@ -644,7 +644,7 @@ interface UserPipelineResource {
         @Parameter(description = "流水线方言")
         @QueryParam("dialect")
         dialect: PipelineDialectType
-    ): Result<Int>
+    ): Result<Long>
 
     @Operation(summary = "获取流水线列表根据流水线方言")
     @GET

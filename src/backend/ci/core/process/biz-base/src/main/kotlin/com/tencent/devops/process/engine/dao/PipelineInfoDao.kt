@@ -194,7 +194,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 

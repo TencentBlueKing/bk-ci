@@ -2237,7 +2237,7 @@ class PipelineListFacadeService @Autowired constructor(
     fun countPipelineByDialect(
         projectId: String,
         dialect: PipelineDialectType
-    ): Int {
+    ): Long {
         val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
             dslContext = dslContext,
             projectId = projectId,
@@ -2248,7 +2248,7 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId,
             channelCode = ChannelCode.BS,
             pipelineIds = pipelineIds
-        )
+        ).toLong()
     }
 
     fun listPipelinesByDialect(
