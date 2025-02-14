@@ -1109,10 +1109,17 @@ class PipelineRepositoryService constructor(
                             // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
                             latestVersionStatus = VersionStatus.RELEASED
                         )
-                        pipelineResourceDao.updateReleaseVersion(
+                        pipelineResourceDao.deleteEarlyVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
+                            beforeVersion = version
+                        )
+                        pipelineResourceDao.create(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            creator = userId,
                             version = version,
                             model = model,
                             yamlStr = yaml?.yamlStr,
@@ -2062,11 +2069,19 @@ class PipelineRepositoryService constructor(
                     version = version,
                     updateLastModifyUser = updateLastModifyUser
                 )
-                watcher.start("updatePipelineResource")
-                pipelineResourceDao.updateReleaseVersion(
+                watcher.start("deleteEarlyVersion")
+                pipelineResourceDao.deleteEarlyVersion(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    beforeVersion = version
+                )
+                watcher.start("updatePipelineResource")
+                pipelineResourceDao.create(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    creator = userId,
                     version = version,
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
