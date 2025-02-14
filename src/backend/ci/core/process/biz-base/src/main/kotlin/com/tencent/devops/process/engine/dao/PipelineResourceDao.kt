@@ -173,11 +173,10 @@ class PipelineResourceDao {
         }
     }
 
-    fun deleteEarlyVersion(dslContext: DSLContext, projectId: String, pipelineId: String, beforeVersion: Int): Int {
+    fun deleteEarlyVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .and(VERSION.lt(beforeVersion))
                 .execute()
         }
     }

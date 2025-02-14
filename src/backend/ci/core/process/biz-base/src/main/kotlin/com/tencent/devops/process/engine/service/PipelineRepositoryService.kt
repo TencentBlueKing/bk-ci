@@ -1112,8 +1112,7 @@ class PipelineRepositoryService constructor(
                         pipelineResourceDao.deleteEarlyVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
-                            pipelineId = pipelineId,
-                            beforeVersion = version
+                            pipelineId = pipelineId
                         )
                         pipelineResourceDao.create(
                             dslContext = transactionContext,
@@ -2073,8 +2072,7 @@ class PipelineRepositoryService constructor(
                 pipelineResourceDao.deleteEarlyVersion(
                     dslContext = transactionContext,
                     projectId = projectId,
-                    pipelineId = pipelineId,
-                    beforeVersion = version
+                    pipelineId = pipelineId
                 )
                 watcher.start("updatePipelineResource")
                 pipelineResourceDao.create(
