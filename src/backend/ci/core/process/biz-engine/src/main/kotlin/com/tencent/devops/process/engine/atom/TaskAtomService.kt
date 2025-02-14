@@ -344,15 +344,27 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
         if (atomResponse.buildStatus.isFinish()) {
-            buildLogPrinter.addLine(
-                buildId = task.buildId,
-                message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
-                tag = task.taskId,
-                containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
-                jobId = null,
-                stepId = task.stepId
-            )
+            if (atomResponse.errorCode != null) {
+                buildLogPrinter.addErrorLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus} (${atomResponse.errorMsg})!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            } else {
+                buildLogPrinter.addLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            }
         } else {
             if (stopFlag) {
                 buildLogPrinter.addLine(

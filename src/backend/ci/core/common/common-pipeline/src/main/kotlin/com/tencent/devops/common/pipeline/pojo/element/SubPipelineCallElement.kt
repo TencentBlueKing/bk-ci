@@ -51,7 +51,8 @@ data class SubPipelineCallElement(
 ) : Element(name, id, status) {
     companion object {
         const val classType = "subPipelineCall"
+        const val TASK_ATOM = "subPipelineCallAtom"
     }
-    override fun getTaskAtom() = "subPipelineCallAtom"
+    override fun getTaskAtom() = TASK_ATOM
     override fun getClassType() = classType
 }

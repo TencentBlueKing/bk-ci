@@ -51,8 +51,8 @@ import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -100,12 +100,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.setupAtomLatestTestFlag(
-                    dslContext = dslContext,
-                    userId = userId,
-                    atomCode = record.atomCode,
-                    atomId = atomId
-                )
+                updateAtomLatestTestFlag(userId, record.atomCode, atomId)
             }
         }
     }

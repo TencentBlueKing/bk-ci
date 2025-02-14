@@ -86,23 +86,19 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         marketAtomService.setAtomBuildStatusByAtomCode(
             atomCode = atomCode,
             version = version,
-            userId = storeBuildResultRequest.userId,
+            userId = atomRecord.modifier,
             atomStatus = atomStatus,
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
+
             RedisLock(
                 redisOperation,
                 "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.setupAtomLatestTestFlag(
-                    dslContext = dslContext,
-                    userId = storeBuildResultRequest.userId,
-                    atomCode = atomCode,
-                    atomId = atomId
-                )
+                atomReleaseService.updateAtomLatestTestFlag(atomRecord.modifier, atomCode, atomId)
             }
             // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(

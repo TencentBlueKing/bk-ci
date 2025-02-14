@@ -40,6 +40,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
+import com.tencent.devops.process.engine.common.VMUtils.getStartVmLabel
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
@@ -175,7 +176,9 @@ class TaskControl @Autowired constructor(
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
                 // 如果是要轮循的才需要定时消息轮循
-                loopDispatch(buildTask = buildTask)
+                if (!taskId.startsWith(getStartVmLabel())) {
+                    loopDispatch(buildTask = buildTask)
+                }
             } else {
                 pipelineBuildTaskService.finishTask(
                     buildTask = buildTask,
