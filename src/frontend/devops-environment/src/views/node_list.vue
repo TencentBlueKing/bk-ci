@@ -69,6 +69,7 @@
                         :label="$t('environment.nodeInfo.displayName')"
                         sortable
                         prop="displayName"
+                        min-width="160"
                     >
                         <template slot-scope="props">
                             <div
@@ -144,7 +145,8 @@
                         label="IP"
                         sortable
                         prop="nodeIp"
-                        min-width="80"
+                        min-width="120"
+                        show-overflow-tooltip
                     >
                         <template slot-scope="props">
                             {{ props.row.ip || '-' }}
@@ -154,6 +156,7 @@
                         v-if="allRenderColumnMap.os"
                         sortable
                         :label="$t('environment.nodeInfo.os')"
+                        min-width="120"
                         prop="osName"
                     >
                         <template slot-scope="props">
@@ -242,7 +245,7 @@
                         :label="$t('environment.nodeInfo.importer')"
                         sortable
                         prop="createdUser"
-                        min-width="80"
+                        min-width="120"
                         show-overflow-tooltip
                     ></bk-table-column>
                     <bk-table-column
@@ -250,7 +253,7 @@
                         :label="$t('environment.lastModifier')"
                         sortable
                         prop="lastModifiedUser"
-                        min-width="80"
+                        min-width="120"
                         show-overflow-tooltip
                     ></bk-table-column>
                     <bk-table-column
@@ -298,7 +301,8 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('environment.operation')"
-                        width="160"
+                        width="180"
+                        fixed="right"
                     >
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
