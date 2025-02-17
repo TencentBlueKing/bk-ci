@@ -46,6 +46,6 @@ data class ProjectCreateUserInfo(
     val deptIds: List<String>? = emptyList(),
     @get:Schema(title = "资源类型")
     val resourceType: String?,
-    @get:Schema(title = "组ID")
+    @get:Schema(title = "资源ID")
     val resourceCode: String?
 )
