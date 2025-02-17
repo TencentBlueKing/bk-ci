@@ -40,7 +40,11 @@
                         @click="setActiveOutput(output)"
                     >
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                        <span :title="output.name">{{ output.name }}</span>
+                        <span
+                            class="output-name"
+                            :title="output.name"
+                        >{{ output.name }}</span>
+                        <span class="output-size">{{ output.size }}</span>
                         <p class="output-hover-icon-box">
                             <artifact-download-button
                                 v-if="output.downloadable"
@@ -89,7 +93,10 @@
                     <div class="pipeline-exec-output-header">
                         <span class="pipeline-exec-output-header-name">
                             <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
-                            <span v-bk-tooltips="activeOutputDetail.name">
+                            <span
+                                :title="activeOutputDetail.name"
+                                class="output-detail-name"
+                            >
                                 {{ activeOutputDetail.name }}
                             </span>
                         </span>
@@ -156,9 +163,19 @@
                                 <li
                                     v-for="row in block.block"
                                     :key="row.key"
+                                    :style="{ 'align-items': row.key === 'fullName' ? 'baseline' : 'center' }"
                                 >
                                     <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
-                                    <span class="pipeline-exec-output-block-row-value">
+                                    <span
+                                        class="pipeline-exec-output-block-row-full_name"
+                                        v-if="row.key === 'fullName'"
+                                    >
+                                        {{ block.value[row.key] || "--" }}
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="pipeline-exec-output-block-row-value"
+                                    >
                                         {{ block.value[row.key] || "--" }}
                                     </span>
                                 </li>
@@ -305,7 +322,11 @@
                         visibleOutputs = [...this.reports, ...thirdReportList]
                         break
                 }
-                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase()))
+
+                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase())).map(({ size, ...rest }) => ({
+                    ...rest,
+                    size: size ? convertFileSize(size, 'B') : '--'
+                }))
             },
             isActiveThirdReport () {
                 return this.isThirdReport(this.activeOutput?.reportType)
@@ -373,6 +394,7 @@
                 ]
             },
             baseInfoRows () {
+                console.log(this.activeOutputDetail.folder, '??????????????????')
                 return this.activeOutputDetail.folder
                     ? [
                         { key: 'name', name: this.$t('details.directoryName') },
@@ -810,7 +832,7 @@
 
             >li {
                 display: flex;
-                align-items: center;
+                align-items: baseline;
                 padding: 10px 19px;
                 cursor: pointer;
                 border-radius: 2px;
@@ -827,7 +849,7 @@
 
                 .output-hover-icon-box {
                     display: flex;
-                    align-items: center;
+                    align-items: baseline;
                     grid-gap: 6px;
 
                     :hover {
@@ -835,13 +857,9 @@
                     }
                 }
 
-                >span {
+                .output-name {
                     flex: 1;
-                    display: -webkit-box;
-                    -webkit-box-orient: vertical;
-                    -webkit-line-clamp: 2;
-                    overflow: hidden;
-                    word-break: break-all;
+                    @include multiline-ellipsis();
                 }
 
                 &.active,
@@ -861,23 +879,20 @@
 
         .pipeline-exec-output-header {
             display: flex;
-            align-items: center;
-            height: 48px;
             background: #fafbfd;
-            padding: 0 24px;
+            padding: 10px 24px;
             flex-shrink: 0;
 
             &-name {
                 display: flex;
                 max-width: 60%;
-                align-items: center;
+                align-items: baseline;
                 font-size: 16px;
                 color: #313238;
                 padding-right: 16px;
-                >span {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
+
+                .output-detail-name {
+                    @include multiline-ellipsis();
                 }
 
                 >i {
@@ -889,7 +904,7 @@
                 display: grid;
                 grid-gap: 16px;
                 grid-auto-flow: column;
-                align-items: center;
+                align-items: baseline;
                 justify-self: flex-end;
                 margin-left: auto;
             }
@@ -915,7 +930,6 @@
 
                 >li {
                     display: flex;
-                    align-items: center;
                     margin-bottom: 16px;
 
                     .pipeline-exec-output-block-row-label {
@@ -924,6 +938,12 @@
                         @include ellipsis();
                         width: 110px;
                         flex-shrink: 0;
+                    }
+
+                    .pipeline-exec-output-block-row-full_name {
+                        flex: 1;
+                        line-height: 1.5;
+                        word-break: break-all;
                     }
 
                     .pipeline-exec-output-block-row-value {

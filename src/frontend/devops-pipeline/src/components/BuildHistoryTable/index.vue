@@ -1412,7 +1412,7 @@
     max-height: calc(100vh / 3);
     overflow: auto;
     > li {
-        height: 38px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1424,7 +1424,7 @@
             grid-auto-flow: column;
             align-items: center;
             .artifact-name-span {
-                @include ellipsis();
+                @include multiline-ellipsis();
             }
 
         }
