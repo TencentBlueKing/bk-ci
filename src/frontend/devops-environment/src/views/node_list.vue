@@ -42,7 +42,7 @@
                     <bk-date-picker
                         ref="dateTimeRangeRef"
                         v-model="dateTimeRange"
-                        :placeholder="$t('environment.选择日期时间范围')"
+                        :placeholder="$t('environment.选择最近执行时间范围')"
                         :type="'datetimerange'"
                         @change="handleDateRangeChange"
                     >
@@ -1152,8 +1152,13 @@
             },
 
             handleSortChange ({ column, prop, order }) {
+                const orderMap = {
+                    ascending: 'ASC',
+                    descending: 'DES'
+                }
                 this.pagination.current = 1
                 this.requestParams.sortType = prop
+                this.requestParams.collation = orderMap[order]
                 this.requestList()
             },
         
@@ -1427,7 +1432,7 @@
         display: flex;
         align-items: center;
         .search-input {
-            width: 500px;
+            width: 680px;
             background: #fff;
             margin-right: 10px;
             ::placeholder {

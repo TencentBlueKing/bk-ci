@@ -287,6 +287,6 @@
     "构建": "Build",
     "部署": "Deploy",
     "version": "Version",
-    "选择日期时间范围": "Select date and time range",
+    "选择最近执行时间范围": "Select the recent execution time range",
     "导出": "Export"
 }

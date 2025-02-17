@@ -303,7 +303,8 @@ const actions = {
     },
 
     exportNodeListCSV ({ commit }, { projectId, params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/listNew_export`, params, {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, {}, {
             originalResponse: true
         }).then(response => {
             return response
