@@ -350,6 +350,7 @@ class NodeService @Autowired constructor(
                     DateTimeUtil.convertTimestampToLocalDateTime(it)
                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
                 } ?: ""
+                dataList.add(dataArray)
             }
         }
 
