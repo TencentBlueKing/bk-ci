@@ -282,13 +282,15 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                             )
                         )
                     }
-                    dslContext.transaction { t ->
-                        val context = DSL.using(t)
-                        storeStatisticTotalDao.batchUpdatePipelineNum(
-                            dslContext = context,
-                            pipelineNumUpdateList = pipelineNumUpdateList,
-                            storeType = StoreTypeEnum.ATOM.type.toByte()
-                        )
+                    pipelineNumUpdateList.forEach { pipelineNumUpdate ->
+                        dslContext.transaction { t ->
+                            val context = DSL.using(t)
+                            storeStatisticTotalDao.updateStorePipelineNum(
+                                dslContext = context,
+                                pipelineNumUpdate = pipelineNumUpdate,
+                                storeType = StoreTypeEnum.ATOM.type.toByte()
+                            )
+                        }
                     }
                 }
             }

@@ -63,5 +63,7 @@ data class BuildVariables(
     @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
-    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
+    @get:Schema(title = "构建日志归档阈值(单位:万)")
+    val loggingLineLimit: Int? = null
 )

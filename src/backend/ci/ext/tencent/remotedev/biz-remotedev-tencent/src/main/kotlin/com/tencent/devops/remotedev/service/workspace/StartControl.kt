@@ -53,15 +53,15 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -99,19 +99,6 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        // 启动时先刷新状态，
-        val fix = workspaceCommon.fixUnexpectedStatus(
-            userId = userId,
-            workspaceName = workspaceName,
-            status = workspace.status,
-            mountType = workspace.workspaceMountType
-        )
-        if (fix.checkException()) {
-            logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
-            )
-        }
 
         // 审计
         ActionAuditContext.current()
