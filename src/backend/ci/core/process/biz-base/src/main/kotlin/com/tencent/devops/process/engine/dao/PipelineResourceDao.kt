@@ -82,6 +82,7 @@ class PipelineResourceDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .onDuplicateKeyUpdate()
+                .set(VERSION, version)
                 .set(MODEL, modelString)
                 .set(YAML, yamlStr)
                 .set(YAML_VERSION, yamlVersion)
