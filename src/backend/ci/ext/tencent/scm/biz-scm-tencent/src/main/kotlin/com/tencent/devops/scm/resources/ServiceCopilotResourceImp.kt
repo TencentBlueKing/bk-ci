@@ -25,76 +25,74 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserCopilotResource
-import com.tencent.devops.repository.service.CopilotOpenTokenService
-import com.tencent.devops.repository.service.RepositoryCopilotService
+import com.tencent.devops.scm.api.ServiceCopilotResource
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.AISummaryRateType
 import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
+import com.tencent.devops.scm.services.api.CopilotApi
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
-@RestResource
-class UserCopilotResourceImpl @Autowired constructor(
-    private val copilotOpenTokenService: CopilotOpenTokenService,
-    private val repositoryCopilotService: RepositoryCopilotService
-) : UserCopilotResource {
-    override fun getCopilotOpenToken(userId: String, refresh: Boolean?): Result<String> {
-        return Result(copilotOpenTokenService.getAccessToken(userId, refresh ?: false))
-    }
+@Service
+class ServiceCopilotResourceImp @Autowired constructor(
+    private val gitConfig: GitConfig
+) : ServiceCopilotResource {
+    val copilotApi = CopilotApi()
 
     override fun createSummary(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        elementId: String
-    ): Result<CodeGitCopilotSummary> {
-        return Result(
-            repositoryCopilotService.createSummary(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                elementId = elementId
-            )
+        token: String,
+        projectName: String,
+        source: String,
+        target: String
+    ): Result<CodeGitCopilotSummary?> {
+        val summary = copilotApi.createSummary(
+            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary",
+            sourceSha = source,
+            targetSha = target,
+            accessToken = token
         )
+        return Result(summary)
     }
 
     override fun getSummary(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        elementId: String
-    ): Result<CodeGitCopilotSummary> {
-        return Result(
-            repositoryCopilotService.getSummary(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                elementId = elementId
-            )
+        token: String,
+        projectName: String,
+        taskId: String
+    ): Result<CodeGitCopilotSummary?> {
+        val summary = copilotApi.getSummary(
+            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary/status",
+            taskId = taskId,
+            accessToken = token
         )
+        return Result(summary)
     }
 
     override fun rateSummary(
-        userId: String,
+        token: String,
         projectName: String,
         processId: String,
         type: AISummaryRateType,
         feedback: String?
     ): Result<Boolean> {
-        repositoryCopilotService.rateSummary(
-            userId = userId,
-            projectName = projectName,
+        copilotApi.rateSummary(
+            url = "${gitConfig.copilotUrl}/projects/${encodeProjectName(projectName)}/summary/rate",
             processId = processId,
             type = type,
-            feedback = feedback
+            feedback = feedback,
+            accessToken = token
         )
         return Result(true)
+    }
+
+    private fun encodeProjectName(projectName: String) =
+        URLEncoder.encode(projectName, "UTF-8")
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceCopilotResourceImp::class.java)
     }
 }

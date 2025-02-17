@@ -24,52 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.scm.enums
 
-package com.tencent.devops.common.api.enums
-
-enum class ScmType(val alis: String) {
-    CODE_SVN("svn"),
-    CODE_GIT("git"),
-    CODE_GITLAB("gitlab"),
-    GITHUB("github"),
-    CODE_TGIT("tgit"),
-    CODE_P4("p4")
-    ;
-
-    companion object {
-        fun parse(type: ScmType): Short {
-            return when (type) {
-                CODE_SVN -> 1.toShort()
-                CODE_GIT -> 2.toShort()
-                CODE_GITLAB -> 3.toShort()
-                GITHUB -> 4.toShort()
-                CODE_TGIT -> 5.toShort()
-                CODE_P4 -> 6.toShort()
-            }
-        }
-
-        fun parse(alis: String?): ScmType? {
-            if (alis.isNullOrBlank()) return null
-            values().forEach {
-                if (alis == it.alis) return it
-            }
-            return null
-        }
-
-        /**
-         * short值转ScmType
-         * @see parse
-         */
-        fun parseShort(scmType: Short): ScmType {
-            return when (scmType) {
-                1.toShort() -> CODE_SVN
-                2.toShort() -> CODE_GIT
-                3.toShort() -> CODE_GITLAB
-                4.toShort() -> GITHUB
-                5.toShort() -> CODE_TGIT
-                6.toShort() -> CODE_P4
-                else -> CODE_GITLAB
-            }
-        }
-    }
+/**
+ * 针对[AI 摘要]的评论类型
+ */
+enum class AISummaryRateType constructor(val value: String) {
+    UP("up"),
+    DOWN("down")
 }

@@ -30,12 +30,15 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -58,4 +61,67 @@ interface UserCopilotResource {
         @QueryParam("refresh")
         refresh: Boolean? = false
     ): Result<String>
+
+    @Operation(summary = "生成AI摘要（异步）")
+    @POST
+    @Path("/summary")
+    fun createSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "插件ID", required = true)
+        @QueryParam("elementId")
+        elementId: String
+    ): Result<CodeGitCopilotSummary>
+
+    @Operation(summary = "获取AI摘要结果")
+    @GET
+    @Path("/summary/status")
+    fun getSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "插件ID", required = true)
+        @QueryParam("elementId")
+        elementId: String
+    ): Result<CodeGitCopilotSummary>
+
+    @Operation(summary = "评价AI结果")
+    @POST
+    @Path("/summary/rate")
+    fun rateSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库名", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "AI摘要任务ID", required = true)
+        @QueryParam("processId")
+        processId: String,
+        @Parameter(description = "评价类型", required = true)
+        @QueryParam("type")
+        type: AISummaryRateType,
+        @Parameter(description = "更多反馈", required = false)
+        @QueryParam("feedback")
+        feedback: String? = null
+    ): Result<Boolean>
 }
