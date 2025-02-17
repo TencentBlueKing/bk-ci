@@ -27,16 +27,25 @@
 
 package com.tencent.devops.process.api.app
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
+import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
@@ -46,7 +55,8 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val client: Client,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val scmProxyService: ScmProxyService
 ) : AppPipelineBuildTencentResource {
 
     @Value("\${gitCI.tag:#{null}}")
@@ -67,15 +77,19 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
             "latest" -> {
                 pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
             }
+
             "latestSucceeded" -> {
                 pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
             }
+
             "latestFailed" -> {
                 pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
             }
+
             "latestFinished" -> {
                 pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
             }
+
             else -> {
                 buildId
             }
@@ -99,6 +113,108 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
         return Result(data)
     }
 
+    override fun listRepoRefs(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ): Result<List<BuildFormValue>> {
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
+        val repoScmType = scmProxyService.getRepo(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig
+        ).getScmType()
+        val formValues = when (repoScmType) {
+            // Git库需要拉分支和Tag
+            in listOf(ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB) -> {
+                getGitRefs(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    search = search
+                )
+            }
+
+            // Svn库仅拉分支
+            ScmType.CODE_SVN -> {
+                scmProxyService.listBranches(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig,
+                    search = search
+                ).data ?: listOf()
+            }
+
+            else -> {
+                throw IllegalArgumentException("Unknown repo type($repoScmType)")
+            }
+        }.map { BuildFormValue(it, it) }
+        return Result(formValues)
+    }
+
+    override fun listRepositoryAliasName(
+        userId: String,
+        projectId: String,
+        repositoryType: String?,
+        permission: Permission,
+        aliasName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            listRepositoryInfo(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                page = page,
+                pageSize = pageSize,
+                aliasName = aliasName
+            ).map { BuildFormValue(it.aliasName, it.aliasName) }
+        )
+    }
+
+    @SuppressWarnings("LongParameterList")
+    private fun listRepositoryInfo(
+        userId: String,
+        projectId: String,
+        repositoryType: String?,
+        page: Int?,
+        pageSize: Int?,
+        aliasName: String?
+    ) = try {
+        client.get(ServiceRepositoryResource::class).hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            permission = Permission.LIST,
+            repositoryType = repositoryType,
+            page = page,
+            pageSize = pageSize,
+            aliasName = aliasName
+        ).data?.records ?: emptyList()
+    } catch (ignore: Exception) {
+        logger.warn("[$userId|$projectId] Fail to get the repository list", ignore)
+        emptyList()
+    }
+
+    private fun getGitRefs(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        search: String?
+    ): List<String> {
+        val result = mutableListOf<String>()
+        val branches = scmProxyService.listBranches(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        val tags = scmProxyService.listTags(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        result.addAll(branches)
+        result.addAll(tags)
+        return result
+    }
+
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -109,5 +225,9 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AppPipelineBuildTencentResourceImpl::class.java)
     }
 }
