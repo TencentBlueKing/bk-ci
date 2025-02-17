@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.CsvUtil
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -346,10 +345,7 @@ class NodeService @Autowired constructor(
                 dataArray[7] = record.lastModifyUser ?: ""
                 dataArray[8] = record.lastModifyTime ?: ""
                 dataArray[9] = record.latestBuildDetail?.pipelineName ?: ""
-                dataArray[10] = record.latestBuildDetail?.createdTime?.let {
-                    DateTimeUtil.convertTimestampToLocalDateTime(it)
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
-                } ?: ""
+                dataArray[10] = record.lastBuildTime ?: ""
                 dataList.add(dataArray)
             }
         }
@@ -464,7 +460,12 @@ class NodeService @Autowired constructor(
                 bkHostId = it.hostId,
                 serverId = it.serverId,
                 size = it.size,
-                envNames = nodeEnvsGroups[it.nodeId]
+                envNames = nodeEnvsGroups[it.nodeId],
+                lastBuildTime = if (null == it.lastBuildTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
+                }
             )
         }
     }
