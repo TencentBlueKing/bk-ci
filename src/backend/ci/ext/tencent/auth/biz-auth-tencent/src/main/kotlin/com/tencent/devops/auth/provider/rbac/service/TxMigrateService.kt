@@ -9,7 +9,6 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import org.slf4j.LoggerFactory
 
 class TxMigrateService(
