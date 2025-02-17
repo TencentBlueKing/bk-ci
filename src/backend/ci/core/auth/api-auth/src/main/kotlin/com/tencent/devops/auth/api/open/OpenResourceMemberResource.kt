@@ -5,16 +5,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.project.pojo.ProjectCreateUserInfo
-import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -68,32 +64,4 @@ interface OpenResourceMemberResource {
         @Parameter(description = "资源code", required = false)
         resourceCode: String
     ): Result<List<BkAuthGroupAndUserList>>
-
-    @POST
-    @Path("/{projectCode}/batchAddResourceGroupMembers/")
-    @Operation(summary = "用户组添加成员")
-    fun batchAddResourceGroupMembers(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "项目Code", required = true)
-        projectCode: String,
-        @Parameter(description = "用户组添加成员请求体", required = true)
-        projectCreateUserInfo: ProjectCreateUserInfo
-    ): Result<Boolean>
-
-    @DELETE
-    @Path("/{projectCode}/batchDeleteResourceGroupMembers/")
-    @Operation(summary = "用户组删除成员")
-    fun batchDeleteResourceGroupMembers(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "项目Code", required = true)
-        projectCode: String,
-        @Parameter(description = "用户组删除成员请求体", required = true)
-        projectDeleteUserInfo: ProjectDeleteUserInfo
-    ): Result<Boolean>
 }

@@ -143,40 +143,6 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun createProjectUser(
-        token: String,
-        userId: String,
-        projectCode: String,
-        role: String
-    ): Result<Boolean> {
-        return Result(
-            permissionProjectService.createProjectUser(
-                userId = userId,
-                projectCode = projectCode,
-                roleCode = role
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun batchCreateProjectUser(
-        token: String,
-        userId: String,
-        projectCode: String,
-        roleCode: String,
-        members: List<String>
-    ): Result<Boolean> {
-        return Result(
-            permissionProjectService.batchCreateProjectUser(
-                userId = userId,
-                projectCode = projectCode,
-                roleCode = roleCode,
-                members = members
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectRoles(
         token: String,
         projectCode: String,
