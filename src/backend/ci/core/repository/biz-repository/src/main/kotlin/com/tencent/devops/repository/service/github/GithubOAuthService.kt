@@ -184,7 +184,7 @@ class GithubOAuthService @Autowired constructor(
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            userId =  stateMap["userId"]?.toString() ?: userResponse.login,
+            userId = stateMap["userId"]?.toString() ?: userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
