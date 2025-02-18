@@ -437,7 +437,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             containerId = containerId, executeCount = executeCount,
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
-                BuildTimestampType.JOB_MUTEX_QUEUE to
+                BuildTimestampType.JOB_AGENT_REUSE_MUTEX_QUEUE to
                         BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
         )
