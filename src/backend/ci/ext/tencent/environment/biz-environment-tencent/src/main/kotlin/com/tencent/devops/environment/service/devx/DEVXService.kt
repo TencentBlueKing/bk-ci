@@ -114,7 +114,7 @@ class DEVXService @Autowired constructor(
                     token = tokenService.getSystemToken(),
                     projectCode = env.projectId,
                     resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
-                    resourceCode = env.envId.toString()
+                    resourceCode = env.envHashId
                 ).data
             }.onFailure {
                 logger.warn("getUserDEVXEnv|getResourceGroupMembers|$env")
