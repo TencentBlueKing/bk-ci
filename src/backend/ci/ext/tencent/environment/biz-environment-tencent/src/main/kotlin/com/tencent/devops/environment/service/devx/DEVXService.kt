@@ -27,13 +27,10 @@
 
 package com.tencent.devops.environment.service.devx
 
-import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS
@@ -66,8 +63,7 @@ class DEVXService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val devxHookDao: DEVXHookDao,
-    private val environmentPermissionService: EnvironmentPermissionService,
-    private val tokenService: ClientTokenService
+    private val environmentPermissionService: EnvironmentPermissionService
 ) {
 
     fun createNode(
