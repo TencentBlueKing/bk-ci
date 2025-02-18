@@ -1892,7 +1892,7 @@ class RbacPermissionManageFacadeServiceImpl(
                     "content" to String.format(
                         request.handoverAction.emailContent,
                         request.flowNo,
-                        overview.approver.plus("($handoverToCnName)"),
+                        overview.approver.plus("($handoverToCnName)")
                     ),
                     "weworkContent" to String.format(
                         request.handoverAction.weworkContent,
