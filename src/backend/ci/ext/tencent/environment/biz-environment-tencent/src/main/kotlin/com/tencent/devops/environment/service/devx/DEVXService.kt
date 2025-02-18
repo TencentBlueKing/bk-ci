@@ -109,19 +109,13 @@ class DEVXService @Autowired constructor(
         }
         val res = mutableListOf<EnvWithNodeCount>()
         envRecordList.forEach { env ->
-            val authUsers = kotlin.runCatching {
-                client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                    token = tokenService.getSystemToken(),
-                    projectCode = env.projectId,
-                    resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
-                    resourceCode = env.envHashId
-                ).data
-            }.onFailure {
-                logger.warn("getUserDEVXEnv|getResourceGroupMembers|$env")
-            }.getOrNull()
-
-            logger.debug("getUserDEVXEnv|authUsers|$env|$authUsers")
-            if (authUsers != null && authUsers.contains(userId)) {
+            if (environmentPermissionService.checkEnvPermission(
+                    userId,
+                    env.projectId,
+                    env.envId,
+                    AuthPermission.USE
+                )
+            ) {
                 val nodeIds = envNodeDao.list(dslContext, env.projectId, listOf(env.envId)).map { node ->
                     node.nodeId
                 }.toSet()
