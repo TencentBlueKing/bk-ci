@@ -193,9 +193,24 @@ abstract class ImageService @Autowired constructor() {
         imageCode: String,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        validationFlag: Boolean = true
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
+        if (validationFlag) {
+            if (!storeMemberDao.isStoreMember(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = GET_INFO_NO_PERMISSION,
+                    params = arrayOf(imageCode)
+                )
+            }
+        }
         // 参数校验
         val validPage = PageUtil.getValidPage(page)
         // 默认拉取所有
