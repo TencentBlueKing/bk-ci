@@ -65,7 +65,8 @@ class PipelineInfoDao {
         canElementSkip: Boolean,
         taskCount: Int,
         id: Long? = null,
-        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED
+        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+        pipelineDisable: Boolean? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -84,7 +85,8 @@ class PipelineInfoDao {
                 ELEMENT_SKIP,
                 TASK_COUNT,
                 ID,
-                LATEST_VERSION_STATUS
+                LATEST_VERSION_STATUS,
+                LOCKED
             )
                 .values(
                     pipelineId,
@@ -99,7 +101,8 @@ class PipelineInfoDao {
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
-                    latestVersionStatus?.name
+                    latestVersionStatus?.name,
+                    pipelineDisable ?: false
                 )
                 .execute()
         }

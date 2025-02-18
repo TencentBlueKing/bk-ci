@@ -319,5 +319,9 @@
     "资源授权": "Resource authorization",
     "查看详情": "View details",
     "需先完成交接。": "Handover must be completed first.",
-    "返回": "Return"
+    "返回": "Return",
+    "单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。": "When an individual step's log reaches the threshold, it will be compressed and archived to the log repository. The log file can be downloaded for local viewing.",
+    "万行": "10k lines",
+    "缺省时默认为10": "Defaults to 10",
+    "构建日志归档阈值": "Build log archival threshold"
 }

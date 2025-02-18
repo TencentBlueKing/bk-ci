@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -39,7 +42,10 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -1411,6 +1417,17 @@ class PipelineBuildFacadeService(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -1465,6 +1482,17 @@ class PipelineBuildFacadeService(
         return newModel
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBuildDetailByBuildNo(
         userId: String,
         projectId: String,
@@ -1502,6 +1530,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBuildRecordByBuildNum(
         userId: String,
         projectId: String,
@@ -1579,6 +1618,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBuildRecord(
         userId: String,
         projectId: String,
@@ -1611,6 +1661,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBuildRecordInfo(
         userId: String,
         projectId: String,
@@ -1637,6 +1698,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun goToLatestFinishedBuild(
         userId: String,
         projectId: String,
@@ -1866,6 +1938,17 @@ class PipelineBuildFacadeService(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getHistoryBuild(
         userId: String?,
         projectId: String,
@@ -1948,6 +2031,17 @@ class PipelineBuildFacadeService(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#pipelineId",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getHistoryBuild(
         userId: String?,
         projectId: String,

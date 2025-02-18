@@ -516,6 +516,23 @@ onBeforeUnmount(() => {
           >
           </bk-input>
         </bk-form-item>
+        <bk-form-item
+          :label="t('构建日志归档阈值')"
+          property="loggingLineLimit"
+          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
+        >
+          <bk-input
+            v-model="projectData.properties.loggingLineLimit"
+            class="log-line-limit-input"
+            type="number"
+            :showControl="false"
+            :min="1"
+            :max="100"
+            :suffix="t('万行')"
+            :placeholder="t('缺省时默认为10')"
+          >
+          </bk-input>
+        </bk-form-item>
       </div>
     </div>
   </bk-form>
@@ -577,6 +594,9 @@ onBeforeUnmount(() => {
   .text-link {
     font-size: 12px;
     color: #3c96ff;
+  }
+  .log-line-limit-input {
+    width: 150px;
   }
 </style>
 
