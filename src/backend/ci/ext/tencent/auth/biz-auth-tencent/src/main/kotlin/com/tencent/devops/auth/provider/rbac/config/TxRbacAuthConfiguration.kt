@@ -76,6 +76,7 @@ class TxRbacAuthConfiguration {
     )
 
     @Bean
+    @Primary
     fun txMigrateService(
         client: Client,
         permissionResourceGroupService: PermissionResourceGroupService,
