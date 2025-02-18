@@ -327,7 +327,7 @@ class ThirdPartyAgentBuildDao {
                         status = PipelineTaskStatus.toStatus(it.value9()).name,
                         createdTime = it.value10().timestamp(),
                         updatedTime = it.value11().timestamp(),
-                        workspace = it.value12()
+                        workspace = it.value12() ?: ""
                     )
                 }
         }
